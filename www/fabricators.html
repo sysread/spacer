@@ -1,0 +1,114 @@
+<div id="spacer-fabricators" class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title" id="">Fabricators</h3>
+  </div>
+  <div class="panel-body">
+    <p>
+      A triumph of cybernetics, the fabricators are able to manufacture nearly
+      anything, given the necessary materials and plans... and a small fee, of
+      course.
+    </p>
+    <div id="spacer-fabricators-msgs"></div>
+    <div id="spacer-recipes"></div>
+  </div>
+</div>
+
+<script type="text/javascript">
+
+$(function() {
+  let table;
+  let msg;
+
+  let refreshFabricators = function() {
+    if (table) table.root().remove();
+    table = new Table(true);
+
+    table.add_columns([
+      'Resource',
+      'Market value',
+      'Turns',
+      'Fee',
+      'Materials',
+    ]);
+
+    table.align_column(1, 'right');
+    table.align_column(2, 'right');
+    table.align_column(3, 'right');
+
+    Object.keys(data.resources).forEach((resource) => {
+      let recipe = data.resources[resource].recipe;
+      let value  = game.place().price(resource);
+
+      if (recipe) {
+        let can_craft = true;
+        let fee = Math.max(1, Math.round(0.0005 * game.place().price(resource)));
+        if (fee > game.player().money) can_craft = false;
+        let fee_cell = fee > game.player().money ? `<div class="text-danger">${fee}</div>` : `${fee}`;
+        let mats = [];
+        let label;
+        let max = null;
+
+        Object.keys(recipe.materials).forEach((key) => {
+          let req = recipe.materials[key];
+          let has = game.player().inventory.get(key);
+          let str = `${key}: ${req}`;
+          mats.push(has < req ? `<span class="text-danger">${str}</span>` : str);
+
+          if (has < req) {
+            can_craft = false;
+          }
+          else {
+            let amt = Math.floor(has/req);
+            max = max === null ? amt : Math.min(max, amt);
+          }
+        });
+
+        if (can_craft) {
+          label = new Button(`<span class="text-capitalize">${resource}</span>`);
+          $(label.root()).addClass(can_craft ? 'btn-primary' : 'btn-danger');
+
+          $(label.root()).click(function(e) {
+            if (msg) msg.detach();
+
+            let ask = new Ask('Push the big red button to start the fabrication process?');
+            if (max >  1)  ask.add_choice('1',  'One');
+            if (max >  5)  ask.add_choice('5',  'Five');
+            if (max >  10) ask.add_choice('10', 'Ten');
+            if (max >= 1)  ask.add_choice(max,  `Max (${max})`);
+
+            ask.set_callback((choice) => {
+              Object.keys(recipe.materials).forEach((key) => {
+                game.player().inventory.dec(key, choice * recipe.materials[key]);
+              });
+
+              game.player().inventory.inc(resource, choice);
+              game.player().money -= fee * choice;
+
+              for (var i = 0; i < choice * recipe.tics; ++i) {
+                game.turn();
+              }
+
+              msg = new Notice('info', `${choice} unit(s) of ${resource} has been placed in your inventory.`);
+              msg.attach('#spacer-fabricators-msgs');
+              refreshFabricators();
+            });
+
+            ask.attach('#space-fabricators');
+            ask.show();
+          });
+        }
+        else {
+          label = `<span class="text-capitalize">${resource}</span>`;
+        }
+
+        table.add_row([label, value, recipe.tics, fee_cell, mats.join('<br>')]);
+      }
+    });
+
+    table.attach('#spacer-recipes');
+  }
+
+  refreshFabricators();
+});
+
+</script>

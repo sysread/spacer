@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">
+      <meta name="format-detection" content="telephone=no">
+      <meta name="msapplication-tap-highlight" content="no">
+      <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+
+      <script type="text/javascript" src="js/vendor/jquery.min.js"></script>
+      <script type="text/javascript" src="js/vendor/bootstrap.min.js"></script>
+
+      <link rel="stylesheet" type="text/css" href="css/vendor/bootstrap.min.css">
+      <link rel="stylesheet" type="text/css" href="css/vendor/bootstrap-theme.min.css">
+      <link rel="stylesheet" type="text/css" href="css/index.css">
+
+      <title>Spacer</title>
+    </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <span class="navbar-brand">Spacer</span>
+        </div>
+        <ul class="nav navbar-nav" id="spacer-nav">
+          <li><a data-path="summary.html"     href="#">Summary</a></li>
+          <li><a data-path="mine.html"        href="#">Mine</a></li>
+          <li><a data-path="dock.html"        href="#">Dock</a></li>
+          <li><a data-path="fabricators.html" href="#">Fabricators</a></li>
+          <li><a data-path="navcomp.html"     href="#">NavComp</a></li>
+        </ul>
+        <p class="navbar-text navbar-right">
+            <span id="spacer-nav-credits"></span>
+          | <span id="spacer-nav-turn"></span>
+        </p>
+      </div>
+    </nav>
+
+    <!-- Content window -->
+    <div id="spacer-content" class=container-fluid"></div>
+
+    <!-- Dialogs -->
+
+    <!-- Libs -->
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="js/vendor/solaris-model/dist/solaris-model.min.js"></script>
+
+    <script type="text/javascript" src="js/data.js"></script>
+    <script type="text/javascript" src="js/util.js"></script>
+    <script type="text/javascript" src="js/system.js"></script>
+    <script type="text/javascript" src="js/action.js"></script>
+    <script type="text/javascript" src="js/agent.js"></script>
+    <script type="text/javascript" src="js/market.js"></script>
+    <script type="text/javascript" src="js/place.js"></script>
+    <script type="text/javascript" src="js/person.js"></script>
+    <script type="text/javascript" src="js/ui.js"></script>
+    <script type="text/javascript" src="js/ui/modal.js"></script>
+    <script type="text/javascript" src="js/ui/form.js"></script>
+    <script type="text/javascript" src="js/ui/table.js"></script>
+    <script type="text/javascript" src="js/game.js"></script>
+
+    <!-- Main -->
+    <script type="text/javascript">
+      const game = new Game;
+    </script>
+  </body>
+</html>

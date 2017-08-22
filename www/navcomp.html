@@ -1,0 +1,39 @@
+<div id="spacer-navcomp" class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Navigation computer</h3>
+  </div>
+  <div class="panel-body">
+    Your navigational computer automatically computes the shortest trajectory
+    between your current location and the other settlements in the system.
+  </div>
+</div>
+
+<script type="text/javascript">
+
+$(function() {
+  let table = new Table(true);
+  table.add_columns(['Destination', 'Type', 'Distance', 'Travel time']);
+  table.align_column(2, 'right');
+  table.align_column(3, 'right');
+
+  let au = 149597870700;
+
+  for (let body of system.bodies().sort()) {
+    if (body != game.place().name) {
+      let [d, t] = system.travel_time(game.place().name, body, 1);
+      let hrs  = number(t);
+      let dist = distance(d);
+
+      table.add_row([
+        `<span class="text-capitalize">${body}</span>`,
+        system.kind(body),
+        dist,
+        `${hrs} hrs`,
+      ]);
+    }
+  }
+
+  table.attach('#spacer-navcomp');
+});
+
+</script>
