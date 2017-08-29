@@ -2,42 +2,56 @@
 
 $(function() {
   let table = $('#navcomp-table tbody');
-  let au = 149597870700;
 
   for (let body of system.bodies().sort()) {
     if (body != game.place().name) {
-      let accel  = 0.3;
-      let name   = system.name(body);
-      let [d, t] = system.travel_time(game.place().name, body, accel);
-      let hrs    = csn(Math.ceil(t));
-      let turns  = Math.ceil(hrs/4);
-      let dist, unit;
+      let max_a = 0.5;
+      let name  = system.name(body);
+      let plan  = system.astrogate(game.place().name, body, max_a);
 
-      if (d < au) {
-        dist = csn(Math.ceil(d/1000));
-        unit = 'km';
+      if (plan !== null) {
+        let hrs, dist, unit, acc, turns;
+        hrs   = csn(Math.ceil(plan.time));
+        turns = Math.ceil(hrs/4);
+        acc   = plan.accel.toFixed(2);
+
+        if (plan.dist < system.AU) {
+          dist = csn(Math.ceil(plan.dist/1000));
+          unit = 'km';
+        }
+        else {
+          dist = (plan.dist/system.AU).toFixed(1);
+          unit = 'AU';
+        }
+
+        let btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-sm btn-light btn-block">${name}</button>`);
+
+        btn.data({
+          destination : [body, name],
+          accel       : acc,
+          distance    : [plan.dist, dist, unit],
+          time        : [plan.time, hrs, turns]
+        });
+
+        table
+          .append($('<tr>')
+            .append($('<td>').append(btn))
+            .append(`<td>${system.kind(body)}</td>`)
+            .append(`<td class="text-right">${dist} ${unit}</td>`)
+            .append(`<td class="text-right">${acc}G</td>`)
+            .append(`<td class="text-right">${hrs} hrs</td>`)
+            .append(`<td class="text-right">${turns}</td>`));
       }
       else {
-        dist = (d/au).toFixed(1);
-        unit = 'AU';
+        table
+          .append($('<tr>')
+            .append(`<td>${name}</td>`)
+            .append(`<td>${system.kind(body)}</td>`)
+            .append(`<td class="text-right">N/A</td>`)
+            .append(`<td class="text-right">N/A</td>`)
+            .append(`<td class="text-right">&gt; 1 year</td>`)
+            .append(`<td class="text-right"></td>`));
       }
-
-      let btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-sm btn-light btn-block">${name}</button>`);
-
-      btn.data({
-        destination : [body, name],
-        accel       : accel,
-        distance    : [d, dist, unit],
-        time        : [t, hrs, turns]
-      });
-
-      table
-        .append($('<tr>')
-          .append($('<td>').append(btn))
-          .append(`<td>${system.kind(body)}</td>`)
-          .append(`<td class="text-right">${dist} ${unit}</td>`)
-          .append(`<td class="text-right">${hrs} hrs</td>`)
-          .append(`<td class="text-right">${turns}</td>`));
     }
   }
 
@@ -65,21 +79,22 @@ $(function() {
 
 </script>
 
-<div class="card mb-3">
+<div class="card p-3">
   <h3 class="card-header">Navigation computer</h3>
   <div class="card-body">
     <div class="card-text">
       <p>
-        Your navigational computer automatically computes the shortest
-        trajectory between your current location and the other settlements in
-        the system.
+        Your navigational computer automatically calculates the optimal
+        trajectory from your current location to the other settlements in the
+        system.
       </p>
       <table class="table table-sm" id="navcomp-table">
         <thead>
           <tr>
             <th>Destination</th>
             <th>Type</th>
-            <th class="text-right">Distance</th>
+            <th class="text-right">Dist.</th>
+            <th class="text-right">Accel.</th>
             <th class="text-right">Time</th>
             <th class="text-right">Turns</th>
           </tr>

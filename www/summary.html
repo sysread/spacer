@@ -19,22 +19,21 @@ $(function() {
 
 </script>
 
-<div class="card mb-3">
+<div class="card p-3">
   <h3 class="card-header text-capitalize" id="place-name"></h3>
   <div class="card-body">
-    <div class="card-text pb-3">
-      <table class="table table-sm">
-        <tr><th>Environ</th><td class="text-capitalize" id="environ"></td></tr>
-        <tr><th>Scale</th><td class="text-capitalize" id="scale"></td></tr>
-        <tr><th>Details</th><td class="text-capitalize" id="traits"></td></tr>
-        <tr><th>Special conditions</th><td class="text-capitalize" id="conditions"></td></tr>
-      </table>
+    <div class="card-text p-1">
+      <div class="row p-1"><div class="col-sm font-weight-bold">Environ</div><div class="col-sm text-capitalize" id="environ"></div></div>
+      <div class="row p-1"><div class="col-sm font-weight-bold">Scale</div><div class="col-sm text-capitalize" id="scale"></div></div>
+      <div class="row p-1"><div class="col-sm font-weight-bold">Details</div><div class="col-sm text-capitalize" id="traits"></div></div>
+      <div class="row p-1"><div class="col-sm font-weight-bold">Special</div><div class="col-sm text-capitalize" id="conditions"></div></div>
+      </div>
     </div>
-    <div>
-      <button type="button" class="btn btn-light card-link" id="btn-wilderness">Wilderness</button>
-      <button type="button" class="btn btn-light card-link" id="btn-commerce">Commerce</button>
-      <button type="button" class="btn btn-light card-link" id="btn-fabricators">Fabricators</button>
-      <button type="button" class="btn btn-light card-link" id="btn-navcomp">Navigation</button>
+    <div class="row p-1">
+      <div class="col-sm py-1"><button type="button" class="btn btn-light btn-sm btn-block card-link" id="btn-wilderness">Wilderness</button></div>
+      <div class="col-sm py-1"><button type="button" class="btn btn-light btn-sm btn-block card-link" id="btn-commerce">Commerce</button></div>
+      <div class="col-sm py-1"><button type="button" class="btn btn-light btn-sm btn-block card-link" id="btn-fabricators">Fabricators</button></div>
+      <div class="col-sm py-1"><button type="button" class="btn btn-light btn-sm btn-block card-link" id="btn-navcomp">Navigation</button></div>
     </div>
   </div>
 </div>
