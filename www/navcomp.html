@@ -13,7 +13,7 @@ $(function() {
         let hrs, dist, unit, acc, turns;
         hrs   = csn(Math.ceil(plan.time));
         turns = Math.ceil(hrs/4);
-        acc   = plan.accel.toFixed(2);
+        acc   = Math.max(0.01, plan.accel.toFixed(2));
 
         if (plan.dist < system.AU) {
           dist = csn(Math.ceil(plan.dist/1000));
@@ -70,7 +70,6 @@ $(function() {
       $('#nav-dialog').off('hide.bs.modal').on('hide.bs.modal', () => {
         for (var i = 0; i < time[2]; ++i) game.turn();
         game.transit(dest[0]);
-        alert(`You have arrived at ${dest[1]} after ${time[1]} hours of travel at ${accel}G.`);
         open('summary');
       });
     });

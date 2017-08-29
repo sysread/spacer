@@ -23,8 +23,13 @@ class Game {
     for (let name of system.bodies())
       this.data.places[name] = new Place(name);
 
-    for (var i = 0; i < 100; ++i)
-      this.turn();
+    // Run the system for a few turns to get the economy moving
+    let init_turns = 500;
+    console.log('Building the Solar System');
+    console.time(`${init_turns} turns`);
+    this.data.date.setHours(this.data.date.getHours() - (4 * init_turns));
+    for (var i = 0; i < init_turns; ++i) this.turn();
+    console.timeEnd(`${init_turns} turns`);
 
     this.save();
   }
