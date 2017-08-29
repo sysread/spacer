@@ -10,9 +10,9 @@ const data = {
   },
 
   resources: {
-    water        : {mine: {tics: 1}},
-    ore          : {mine: {tics: 2}},
-    chemicals    : {mine: {tics: 2}},
+    water        : {mine: {tics: 3}},
+    ore          : {mine: {tics: 6}},
+    chemicals    : {mine: {tics: 6}},
     food         : {recipe: {tics: 1, materials: {water: 1, chemicals: 1}}},
     metal        : {recipe: {tics: 2, materials: {ore: 2}}},
     medicine     : {recipe: {tics: 2, materials: {food: 2, chemicals: 2}}},

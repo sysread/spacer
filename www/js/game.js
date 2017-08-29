@@ -4,33 +4,18 @@ class Game {
   }
 
   onDeviceReady() {
-    let me = this;
-
-    $(function() {
-      me.bindNav();
-      $('#spacer-nav a:first').click();
+    let me  = this;
+    $(() => {
+      open('summary');
       me.begin();
-    });
-  }
-
-  bindNav() {
-    $('#spacer-nav a').click(function(e) {
-      e.preventDefault();
-
-      let link = $(e.target);
-
-      $('#spacer-nav li').removeClass('active');
-      link.parent('li').addClass('active');
-
-      $('#spacer-content').load(link.data('path'));
     });
   }
 
   start() {
     this.data = {
-      date   : new Date('2242-01-01 00:00:01'),
+      date   : new Date(2242, 0, 1),
       turns  : 0,
-      player : new Person({name: 'Jameson'}),
+      player : new Person({name: 'Jameson', money: 1000}),
       places : {},
       place  : 'earth'
     };
@@ -38,52 +23,41 @@ class Game {
     for (let name of system.bodies())
       this.data.places[name] = new Place(name);
 
+    for (var i = 0; i < 100; ++i)
+      this.turn();
+
     this.save();
   }
 
-  save() {
-  }
-
-  load() {
-    return false;
-  }
+  save() {}
+  load() { return false; }
 
   begin() {
-    if (!this.load())
-      this.start();
+    if (!this.load()) this.start();
     this.refresh();
   }
 
-  place(name) {
-    return this.data.places[name || this.data.place];
-  }
-
-  player() {
-    return this.data.player;
-  }
+  player() { return this.data.player }
+  place(name) { return this.data.places[name || this.data.place] }
+  transit(dest) { this.data.place = dest }
 
   date() {
     let y = this.data.date.getFullYear();
     let m = this.data.date.getMonth() + 1;
-    let d = this.data.date.getDay();
-
+    let d = this.data.date.getDate();
     return [y, m < 10 ? `0${m}` : m, d < 10 ? `0${d}` : d].join('-');
   }
 
   refresh() {
-    $('#spacer-nav-credits').text(`${this.data.player.money} credits`);
-    $('#spacer-nav-turn').text(`${this.date()} (turn ${this.data.turns})`);
+    $('#spacer-credits').text(`${this.data.player.money} credits`);
+    $('#spacer-turn').text(`${this.date()}`);
   }
 
   turn() {
     ++this.data.turns;
     this.data.date.setHours(this.data.date.getHours() + 4);
     system.set_date(this.date());
-
-    system.bodies().forEach((name) => {
-      this.place(name).turn();
-    });
-
+    system.bodies().forEach((name) => {this.place(name).turn()});
     this.refresh();
   }
 }

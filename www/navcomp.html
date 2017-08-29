@@ -1,39 +1,119 @@
-<div id="spacer-navcomp" class="panel panel-default">
-  <div class="panel-heading">
-    <h3 class="panel-title">Navigation computer</h3>
-  </div>
-  <div class="panel-body">
-    Your navigational computer automatically computes the shortest trajectory
-    between your current location and the other settlements in the system.
-  </div>
-</div>
-
 <script type="text/javascript">
 
 $(function() {
-  let table = new Table(true);
-  table.add_columns(['Destination', 'Type', 'Distance', 'Travel time']);
-  table.align_column(2, 'right');
-  table.align_column(3, 'right');
-
+  let table = $('#navcomp-table tbody');
   let au = 149597870700;
 
   for (let body of system.bodies().sort()) {
     if (body != game.place().name) {
-      let [d, t] = system.travel_time(game.place().name, body, 1);
-      let hrs  = number(t);
-      let dist = distance(d);
+      let accel  = 0.3;
+      let name   = system.name(body);
+      let [d, t] = system.travel_time(game.place().name, body, accel);
+      let hrs    = csn(Math.ceil(t));
+      let turns  = Math.ceil(hrs/4);
+      let dist, unit;
 
-      table.add_row([
-        `<span class="text-capitalize">${body}</span>`,
-        system.kind(body),
-        dist,
-        `${hrs} hrs`,
-      ]);
+      if (d < au) {
+        dist = csn(Math.ceil(d/1000));
+        unit = 'km';
+      }
+      else {
+        dist = (d/au).toFixed(1);
+        unit = 'AU';
+      }
+
+      let btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-sm btn-light btn-block">${name}</button>`);
+
+      btn.data({
+        destination : [body, name],
+        accel       : accel,
+        distance    : [d, dist, unit],
+        time        : [t, hrs, turns]
+      });
+
+      table
+        .append($('<tr>')
+          .append($('<td>').append(btn))
+          .append(`<td>${system.kind(body)}</td>`)
+          .append(`<td class="text-right">${dist} ${unit}</td>`)
+          .append(`<td class="text-right">${hrs} hrs</td>`)
+          .append(`<td class="text-right">${turns}</td>`));
     }
   }
 
-  table.attach('#spacer-navcomp');
+  $('#nav-dialog').on('show.bs.modal', function(e) {
+    let btn   = $(e.relatedTarget);
+    let dest  = btn.data('destination');
+    let dist  = btn.data('distance');
+    let time  = btn.data('time');
+    let accel = btn.data('accel');
+    $('#nav-accel').text(accel);
+    $('#nav-destination').text(dest[1]);
+    $('#nav-distance').text(`${dist[1]} ${dist[2]}`);
+    $('#nav-time').text(`${time[1]} hours (${time[2]} turns)`);
+
+    $('#nav-complete').off('click').on('click', function(e) {
+      $('#nav-dialog').off('hide.bs.modal').on('hide.bs.modal', () => {
+        for (var i = 0; i < time[2]; ++i) game.turn();
+        game.transit(dest[0]);
+        alert(`You have arrived at ${dest[1]} after ${time[1]} hours of travel at ${accel}G.`);
+        open('summary');
+      });
+    });
+  });
 });
 
 </script>
+
+<div class="card mb-3">
+  <h3 class="card-header">Navigation computer</h3>
+  <div class="card-body">
+    <div class="card-text">
+      <p>
+        Your navigational computer automatically computes the shortest
+        trajectory between your current location and the other settlements in
+        the system.
+      </p>
+      <table class="table table-sm" id="navcomp-table">
+        <thead>
+          <tr>
+            <th>Destination</th>
+            <th>Type</th>
+            <th class="text-right">Distance</th>
+            <th class="text-right">Time</th>
+            <th class="text-right">Turns</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="nav-dialog" data-backdrop="static">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Flight plan</h5>
+      </div>
+      <div class="modal-body">
+        <p>
+          Accelerating at <span id="nav-accel"></span>G, your
+          ship will flip at the midway point and begin its deceleration burn.
+        </p>
+        <table class="table">
+          <tbody>
+            <tr><th scope="row">Destination</th><td id="nav-destination"></td></tr>
+            <tr><th scope="row">Distance</th><td id="nav-distance"></td></tr>
+            <tr><th scope="row">Total time</th><td id="nav-time"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-dismiss="modal" id="nav-complete">Engage</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>

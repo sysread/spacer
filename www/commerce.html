@@ -1,0 +1,160 @@
+<script type="text/javascript">
+
+$(function() {
+  let table  = $('#exchange-table tbody');
+  let player = game.player();
+  let place  = game.place();
+
+  let update_table = function() {
+    let market = place.report();
+    table.empty();
+
+    for (let item of Object.keys(market)) {
+      let dock  = market[item].amount;
+      let ship  = player.inventory.get(item);
+      let price = market[item].price;
+      let max   = Math.min(Math.floor(player.money / price), dock);
+      let btn   = $(`<button type="button" class="btn btn-block btn-sm text-capitalize">${item}</button>`);
+
+      if ((ship > 0) || (dock > 0 && price <= player.money)) {
+        btn.addClass('btn-light').click((e) => {
+          $('#exchange-agent').text('Dock');
+          $('#exchange-resource').text(item);
+          $('#exchange-docks').val(dock);
+          $('#exchange-hold').val(ship);
+          $('#exchange-credits').val(player.money);
+
+          $('#exchange-amount')
+            .attr('min', -ship)
+            .attr('max', max)
+            .data('docks', dock)
+            .data('ship', ship)
+            .data('price', price)
+            .data('money', player.money)
+            .val(0);
+
+          $('#exchange-dialog').modal('show');
+        });
+      }
+      else {
+        btn.addClass('btn-secondary').prop('disabled', true);
+      }
+
+      table
+        .append($('<tr>')
+          .append($('<td>').append(btn))
+          .append(`<td class="text-right">${dock || '&nbsp;'}</td>`)
+          .append(`<td class="text-right">${ship || '&nbsp;'}</td>`)
+          .append(`<td class="text-right">${csn(price)}</td>`));
+    }
+  };
+
+  // Form controls
+  let range = document.getElementById('exchange-amount');
+  let range_monitor;
+
+  $('#exchange-dn').click(function(e)    { range.stepDown(1); $(range).change() });
+  $('#exchange-up').click(function(e)    { range.stepUp(1);   $(range).change() });
+  $('#exchange-dndn').click(function(e)  { range.stepDown(5); $(range).change() });
+  $('#exchange-upup').click(function(e)  { range.stepUp(5);   $(range).change() });
+  $('#exchange-reset').click(function(e) { $(range).val($('#exchange-amount').data('ship')); $(range).change() });
+
+  $('#exchange-amount').mousedown(function(e) {
+    range_monitor = window.setInterval(() => {$('#exchange-amount').change()}, 100);
+  });
+
+  $('#exchange-amount').mouseup(function(e) {
+    window.clearInterval(range_monitor);
+  });
+
+  $('#exchange-amount').change(function(e) {
+    let amt   = $(range);
+    let ship  = parseInt(amt.data('ship'),  10);
+    let docks = parseInt(amt.data('docks'), 10);
+    let money = parseInt(amt.data('money'), 10);
+    let price = parseInt(amt.data('price'), 10);
+    let count = parseInt(amt.val(),         10);
+    let spent = -(count * price);
+    $('#exchange-docks').val(docks - count);
+    $('#exchange-hold').val(ship + count);
+    $('#exchange-credits').val(money + spent);
+  });
+
+  $('#exchange-complete').click(function(e) {
+    let item  = $('#exchange-resource').text();
+    let amt   = $(range);
+    let count = parseInt(amt.val(), 10);
+
+    if (count > 0) {
+      player.money -= place.buy(item, count);
+      player.inventory.inc(item, count);
+    } else {
+      player.money += place.sell(item, -count);
+      player.inventory.dec(item, -count);
+    }
+
+    game.refresh();
+    update_table();
+    $('#exchange-dialog').modal('hide');
+  });
+
+  update_table();
+});
+
+</script>
+
+<div class="card mb-3">
+  <h3 class="card-header">Commerce</h3>
+  <div class="card-body">
+    <div class="card-text">
+      <p>
+        There are endless warehouses along the docks. As you approach the
+        resource exchange, you are approached by several warehouse managers
+        and sales people eager to do business with you.
+      </p>
+      <table class="table table-sm" id="exchange-table">
+        <thead>
+          <tr>
+            <th>Resource</th>
+            <th class="text-right">Docks</th>
+            <th class="text-right">Ship</th>
+            <th class="text-right">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="exchange-dialog" data-backdrop="static">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Exchange of <span id="exchange-resource"></span></h5>
+      </div>
+      <div class="modal-body">
+        <table class="table">
+          <tbody>
+            <tr><th scope="row" id="exchange-agent">Docks</th><td><input class="form-control" disabled type="number" id="exchange-docks"></td></tr>
+            <tr><th scope="row">Hold</th><td><input class="form-control" disabled type="number" id="exchange-hold"></td></tr>
+            <tr><th scope="row">Credits</th><td><input class="form-control" disabled type="number" id="exchange-credits"></td></tr>
+          </tbody>
+        </table>
+        <div class="input-group">
+          <span class="input-group-btn"><button class="btn btn-default" id="exchange-dndn">&#9664;&#9664;</button></span>
+          <span class="input-group-btn"><button class="btn btn-default" id="exchange-dn">&#9664;</button></span>
+          <input type="range" class="form-control" id="exchange-amount" value="0">
+          <span class="input-group-btn"><button class="btn btn-default" id="exchange-up">&#9658;</button></span>
+          <span class="input-group-btn"><button class="btn btn-default" id="exchange-upup">&#9658;&#9658;</button></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" id="exchange-complete">Complete transaction</button>
+        <button type="button" class="btn btn-secondary" id="exchange-reset">Reset</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>

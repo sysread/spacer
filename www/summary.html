@@ -1,47 +1,40 @@
-<div id="spacer-summary" class="panel panel-default">
-  <div class="panel-heading">
-    <h3 class="panel-title" id="spacer-place-name"></h3>
-  </div>
-  <div class="panel-body">
-    <p id="spacer-place-summary">
-      <table class="table">
-        <tr><th>Location</th><td id="spacer-summary-name" class="text-capitalize"></td></tr>
-        <tr><th>Environ</th><td id="spacer-summary-env" class="text-capitalize"></td></tr>
-        <tr><th>Size</th><td id="spacer-summary-size" class="text-capitalize"></td></tr>
-        <tr><th>Details</th><td id="spacer-summary-traits"></td></tr>
-        <tr><th>Special conditions</th><td id="spacer-summary-cond"></td></tr>
-      </table>
-    </p>
-  </div>
-</div>
-
 <script type="text/javascript">
 
 $(function() {
-  let place = game.place();
+  let place  = game.place();
+  let traits = uniq(place.traits, ', ');
+  let conds  = uniq(place.conditions, ', ');
 
-  $('#spacer-place-name').text(place.name);
-  $('#spacer-summary-name').text(place.name);
-  $('#spacer-summary-env').text(place.type);
-  $('#spacer-summary-size').text(place.size);
+  $('#place-name').text(place.name);
+  $('#environ').text(system.kind(place.name));
+  $('#scale').text(place.size);
+  $('#traits').text(traits || 'None');
+  $('#conditions').text(conds || 'None');
 
-  if (place.traits.length > 0) {
-    let traits = [];
-    for (let trait of new Set(place.traits)) {traits.push(trait)}
-    $('#spacer-summary-traits').text(traits.join(', '));
-  }
-  else {
-    $('#spacer-summary-traits').text('-');
-  }
-
-  if (place.conditions.length > 0) {
-    $('#spacer-summary-cond').text(place.conditions.join(', '));
-    $('#spacer-summary-cond').addClass('text-danger');
-  }
-  else {
-    $('#spacer-summary-cond').text('-');
-    $('#spacer-summary-cond').removeClass('text-danger');
-  }
+  $('#btn-wilderness' ).click((e) => {e.preventDefault(); open('wilds')});
+  $('#btn-commerce'   ).click((e) => {e.preventDefault(); open('docks')});
+  $('#btn-fabricators').click((e) => {e.preventDefault(); open('fabs')});
+  $('#btn-navcomp'    ).click((e) => {e.preventDefault(); open('nav')});
 });
 
 </script>
+
+<div class="card mb-3">
+  <h3 class="card-header text-capitalize" id="place-name"></h3>
+  <div class="card-body">
+    <div class="card-text pb-3">
+      <table class="table table-sm">
+        <tr><th>Environ</th><td class="text-capitalize" id="environ"></td></tr>
+        <tr><th>Scale</th><td class="text-capitalize" id="scale"></td></tr>
+        <tr><th>Details</th><td class="text-capitalize" id="traits"></td></tr>
+        <tr><th>Special conditions</th><td class="text-capitalize" id="conditions"></td></tr>
+      </table>
+    </div>
+    <div>
+      <button type="button" class="btn btn-light card-link" id="btn-wilderness">Wilderness</button>
+      <button type="button" class="btn btn-light card-link" id="btn-commerce">Commerce</button>
+      <button type="button" class="btn btn-light card-link" id="btn-fabricators">Fabricators</button>
+      <button type="button" class="btn btn-light card-link" id="btn-navcomp">Navigation</button>
+    </div>
+  </div>
+</div>

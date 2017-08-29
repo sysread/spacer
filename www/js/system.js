@@ -19,6 +19,10 @@ class System {
     return this.system.bodies[name];
   }
 
+  name(name) {
+    return this.body(name).name;
+  }
+
   type(name) {
     return this.system.bodies[name].type;
   }
@@ -55,9 +59,7 @@ class System {
   p2p_distance(p1, p2) {
     let [x1, y1, z1] = p1;
     let [x2, y2, z2] = p2;
-    let v = Math.pow(x1 - x2, 2);
-    let h = Math.pow(y1 - y2, 2);
-    return Math.sqrt(h + v);
+    return Math.hypot(x1 - x2, y1 - y2);
   }
 
   distance(origin, destination) {
@@ -75,7 +77,7 @@ class System {
     return this.p2p_distance(b1.position, b2.position);
   }
 
-  travel_time(origin, target, gravities) {
+  travel_time(origin, target, gravities=1) {
     let acc = 9.80665 * gravities;
     let b1  = this.body(origin);
     let b2  = this.body(target);

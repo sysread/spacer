@@ -1,4 +1,24 @@
 body {
   padding-bottom: 70px;
-  /*background-color: #000000;*/
+  background-color: #050505;
+  background-image: url('../img/bg.jpg');
+  color: #ccc;
+}
+
+.card {
+  border: 1px solid rgb(139,0,0);
+  background-color: rgba(0,0,0,.75);
+}
+
+.modal-content {
+  background-color: #151515;
+  border: 3px solid #666;
+}
+
+#spacer-navbar {
+  background-color: #000;
+}
+
+td, th {
+  border: 0px !important;
 }

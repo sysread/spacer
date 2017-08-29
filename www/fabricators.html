@@ -1,114 +1,116 @@
-<div id="spacer-fabricators" class="panel panel-default">
-  <div class="panel-heading">
-    <h3 class="panel-title" id="">Fabricators</h3>
-  </div>
-  <div class="panel-body">
-    <p>
-      A triumph of cybernetics, the fabricators are able to manufacture nearly
-      anything, given the necessary materials and plans... and a small fee, of
-      course.
-    </p>
-    <div id="spacer-fabricators-msgs"></div>
-    <div id="spacer-recipes"></div>
-  </div>
-</div>
-
 <script type="text/javascript">
 
 $(function() {
-  let table;
-  let msg;
+  let fee_pct = 0.005;
+  let player  = game.player();
+  let table   = $('#recipe-table tbody');
 
-  let refreshFabricators = function() {
-    if (table) table.root().remove();
-    table = new Table(true);
+  let update_recipes = function() {
+    table.empty();
 
-    table.add_columns([
-      'Resource',
-      'Market value',
-      'Turns',
-      'Fee',
-      'Materials',
-    ]);
-
-    table.align_column(1, 'right');
-    table.align_column(2, 'right');
-    table.align_column(3, 'right');
-
-    Object.keys(data.resources).forEach((resource) => {
-      let recipe = data.resources[resource].recipe;
-      let value  = game.place().price(resource);
+    for (let item of Object.keys(data.resources)) {
+      let recipe = data.resources[item].recipe;
+      let value  = game.place().price(item);
 
       if (recipe) {
-        let can_craft = true;
-        let fee = Math.max(1, Math.round(0.0005 * game.place().price(resource)));
-        if (fee > game.player().money) can_craft = false;
-        let fee_cell = fee > game.player().money ? `<div class="text-danger">${fee}</div>` : `${fee}`;
-        let mats = [];
-        let label;
-        let max = null;
+        let btn = $(`<button type="button" class="btn btn-block btn-sm text-capitalize">${item}</button>`);
+        let fee = Math.max(1, Math.round(fee_pct * value));
 
-        Object.keys(recipe.materials).forEach((key) => {
-          let req = recipe.materials[key];
-          let has = game.player().inventory.get(key);
-          let str = `${key}: ${req}`;
-          mats.push(has < req ? `<span class="text-danger">${str}</span>` : str);
+        let mats = $('<div>');
+        for (let material of Object.keys(recipe.materials))
+          mats.append(`<div class="text-capitalize">${material}: ${recipe.materials[material]}</div>`);
 
-          if (has < req) {
-            can_craft = false;
-          }
-          else {
-            let amt = Math.floor(has/req);
-            max = max === null ? amt : Math.min(max, amt);
-          }
-        });
-
-        if (can_craft) {
-          label = new Button(`<span class="text-capitalize">${resource}</span>`);
-          $(label.root()).addClass(can_craft ? 'btn-primary' : 'btn-danger');
-
-          $(label.root()).click(function(e) {
-            if (msg) msg.detach();
-
-            let ask = new Ask('Push the big red button to start the fabrication process?');
-            if (max >  1)  ask.add_choice('1',  'One');
-            if (max >  5)  ask.add_choice('5',  'Five');
-            if (max >  10) ask.add_choice('10', 'Ten');
-            if (max >= 1)  ask.add_choice(max,  `Max (${max})`);
-
-            ask.set_callback((choice) => {
-              Object.keys(recipe.materials).forEach((key) => {
-                game.player().inventory.dec(key, choice * recipe.materials[key]);
-              });
-
-              game.player().inventory.inc(resource, choice);
-              game.player().money -= fee * choice;
-
-              for (var i = 0; i < choice * recipe.tics; ++i) {
-                game.turn();
-              }
-
-              msg = new Notice('info', `${choice} unit(s) of ${resource} has been placed in your inventory.`);
-              msg.attach('#spacer-fabricators-msgs');
-              refreshFabricators();
-            });
-
-            ask.attach('#space-fabricators');
-            ask.show();
+        if (player.can_craft(item) && player.money >= fee) {
+          btn.addClass('btn-light').click(function(e) {
+            $('#craft-resource').text(item);
+            $('#craft-message').empty()
+              .append(`<p>Fabrication of one unit of ${item} takes ${recipe.tics} turn(s) and costs ${fee} credit(s).</p>`)
+              .append('<p>The following materials from your inventory will be used:</p>')
+              .append($(mats).clone());
+            $('#craft-dialog').modal('show');
           });
         }
         else {
-          label = `<span class="text-capitalize">${resource}</span>`;
+          btn.addClass('btn-secondary').prop('disabled', true);
         }
 
-        table.add_row([label, value, recipe.tics, fee_cell, mats.join('<br>')]);
+        table.append($('<tr>')
+          .append($('<td>').append(btn))
+          .append($(`<td class="text-right">${csn(value)}</td>`))
+          .append($(`<td class="text-right">${recipe.tics}</td>`))
+          .append($(`<td class="text-right">${csn(fee)}</td>`))
+          .append($(`<td class="text-right">`).append(mats)));
       }
-    });
-
-    table.attach('#spacer-recipes');
+    }
   }
 
-  refreshFabricators();
+  $('#craft-complete').click(function(e) {
+    let resource = $('#craft-resource').text();
+    let recipe   = data.resources[resource].recipe;
+
+    if (recipe) {
+      let value = game.place().price(resource);
+      player.money -= Math.max(1, Math.round(fee_pct * value));
+
+      for (let mat of Object.keys(recipe.materials)) {
+        player.inventory.dec(mat, recipe.materials[mat]);
+      }
+
+      for (var i = 0; i < recipe.tics; ++i)
+        game.turn();
+
+      player.inventory.inc(resource, 1);
+    }
+
+    update_recipes();
+    $('#craft-dialog').modal('hide');
+    message(`1 unit of ${resource} has been placed in your ship's hold.`, 'info', true);
+  });
+
+  update_recipes();
 });
 
 </script>
+
+<div class="card mb-3">
+  <h3 class="card-header">Fabricators</h3>
+  <div class="card-body">
+    <div class="card-text">
+      <p>
+        A triumph of cybernetics, the fabricators are able to manufacture
+        nearly anything, given the necessary materials and plans... and a small
+        fee, of course.
+      </p>
+      <table class="table table-sm" id="recipe-table">
+        <thead>
+          <tr>
+            <th>Resource</th>
+            <th class="text-right">Market value</th>
+            <th class="text-right">Turns</th>
+            <th class="text-right">Fee</th>
+            <th class="text-right">Materials</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="craft-dialog" data-backdrop="static">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Fabricate <span id="craft-resource"></span></h5>
+      </div>
+      <div class="modal-body">
+        <div id="craft-message"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" id="craft-complete">Push the big red button</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>

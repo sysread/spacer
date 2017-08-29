@@ -1,0 +1,38 @@
+<script type="text/javascript">
+
+$(function() {
+  $('.harvest').click(function(e) {
+    let resource = $(e.target).data('resource');
+    let tics = data.resources[resource].mine.tics;
+
+    if (game.place().mine(resource)) {
+      game.player().inventory.inc(resource, 1);
+      message(`You acquired 1 unit of ${resource}.`, 'success', true);
+    }
+    else {
+      message('No luck! The well was dry.', 'danger', true);
+    }
+
+    for (var i = 0; i < tics; ++i)
+      game.turn();
+  });
+});
+
+</script>
+
+<div class="card b-3">
+  <h3 class="card-header">Natural Resources</h3>
+  <div class="card-body">
+    <div class="card-text pb-3">
+      <p>
+        Harvesting natural resources takes time and hard work, but is a great way
+        to make some extra money while starting out or when bad luck hits.
+      </p>
+    </div>
+    <div>
+      <button type="button" class="btn btn-light card-link harvest" data-resource="water">Mine ice / harvest water</button>
+      <button type="button" class="btn btn-light card-link harvest" data-resource="ore">Mine ore</button>
+      <button type="button" class="btn btn-light card-link harvest" data-resource="chemicals">Rare earths / gas</button>
+    </div>
+  </div>
+</div>
