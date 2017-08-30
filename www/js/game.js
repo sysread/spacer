@@ -15,16 +15,24 @@ class Game {
     this.data = {
       date   : new Date(2242, 0, 1),
       turns  : 0,
-      player : new Person({name: 'Jameson', money: 1000}),
       places : {},
-      place  : 'earth'
+      place  : 'earth',
+      player : new Person({
+        name     : 'Marco Solo',
+        money    : 1000,
+        strength : 5,
+        ship     : new Ship({
+          name      : 'The Boat',
+          shipclass : data.shipclass.corvette
+        })
+      })
     };
 
     for (let name of system.bodies())
       this.data.places[name] = new Place(name);
 
     // Run the system for a few turns to get the economy moving
-    let init_turns = 500;
+    let init_turns = 200;
     console.log('Building the Solar System');
     console.time(`${init_turns} turns`);
     this.data.date.setHours(this.data.date.getHours() - (4 * init_turns));
@@ -54,7 +62,7 @@ class Game {
   }
 
   refresh() {
-    $('#spacer-credits').text(`${this.data.player.money} credits`);
+    $('#spacer-credits').text(`${csn(this.data.player.money)} credits`);
     $('#spacer-turn').text(`${this.date()}`);
   }
 

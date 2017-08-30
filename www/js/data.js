@@ -10,17 +10,17 @@ const data = {
   },
 
   resources: {
-    water        : {mine: {tics: 3}},
-    ore          : {mine: {tics: 6}},
-    chemicals    : {mine: {tics: 6}},
-    food         : {recipe: {tics: 1, materials: {water: 1, chemicals: 1}}},
-    metal        : {recipe: {tics: 2, materials: {ore: 2}}},
-    medicine     : {recipe: {tics: 2, materials: {food: 2, chemicals: 2}}},
-    machines     : {recipe: {tics: 2, materials: {metal: 2, chemicals: 1}}},
-    electronics  : {recipe: {tics: 2, materials: {metal: 1, chemicals: 2}}},
-    cybernetics  : {recipe: {tics: 2, materials: {machines: 1, electronics: 1}}},
-    weapons      : {recipe: {tics: 2, materials: {metal: 1, chemicals: 2}}, contraband: 4},
-    narcotics    : {recipe: {tics: 3, materials: {food: 1, chemicals: 2, medicine: 1}}, contraband: 7}
+    water        : {mass: 200, mine: {tics: 3}},
+    ore          : {mass: 1000, mine: {tics: 6}},
+    chemicals    : {mass: 500, mine: {tics: 6}},
+    food         : {mass: 200, recipe: {tics: 1, materials: {water: 1, chemicals: 1}}},
+    metal        : {mass: 2000, recipe: {tics: 2, materials: {ore: 2}}},
+    medicine     : {mass: 500, recipe: {tics: 2, materials: {food: 2, chemicals: 2}}},
+    machines     : {mass: 1500, recipe: {tics: 2, materials: {metal: 2, chemicals: 1}}},
+    electronics  : {mass: 750, recipe: {tics: 2, materials: {metal: 1, chemicals: 2}}},
+    cybernetics  : {mass: 1800, recipe: {tics: 2, materials: {machines: 1, electronics: 1}}},
+    weapons      : {mass: 1200, recipe: {tics: 2, materials: {metal: 1, chemicals: 2}}, contraband: 4},
+    narcotics    : {mass: 500, recipe: {tics: 3, materials: {food: 1, chemicals: 2, medicine: 1}}, contraband: 7}
   },
 
   market: {
@@ -83,5 +83,16 @@ const data = {
     triton    : {size: 'normal', traits: ['water rich']},
     pluto     : {size: 'small',  traits: ['water rich']},
     eris      : {size: 'small',  traits: ['mineral rich']}
+  },
+
+  shipclass: {
+    corvette: {
+      hull    : 10,
+      armor   : 5,
+      cargo   : 20,
+      hardpts : 4,
+      mass    : 175000,
+      thrust  : 1400000
+    }
   }
 };

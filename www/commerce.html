@@ -11,13 +11,13 @@ $(function() {
 
     for (let item of Object.keys(market)) {
       let dock  = market[item].amount;
-      let ship  = player.inventory.get(item);
+      let ship  = player.ship.cargo.get(item);
       let price = market[item].price;
       let max   = Math.min(Math.floor(player.money / price), dock);
       let btn   = $(`<button type="button" class="btn btn-block btn-sm text-capitalize">${item}</button>`);
 
       if ((ship > 0) || (dock > 0 && price <= player.money)) {
-        btn.addClass('btn-light').click((e) => {
+        btn.addClass('btn-dark').click((e) => {
           $('#exchange-agent').text('Dock');
           $('#exchange-resource').text(item);
           $('#exchange-docks').val(dock);
@@ -87,10 +87,10 @@ $(function() {
 
     if (count > 0) {
       player.money -= place.buy(item, count);
-      player.inventory.inc(item, count);
+      player.ship.load_cargo(item, count);
     } else {
       player.money += place.sell(item, -count);
-      player.inventory.dec(item, -count);
+      player.ship.unload_cargo(item, -count);
     }
 
     game.refresh();
@@ -151,7 +151,7 @@ $(function() {
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-light" id="exchange-complete">Complete transaction</button>
+        <button type="button" class="btn btn-danger" id="exchange-complete">Complete transaction</button>
         <button type="button" class="btn btn-secondary" id="exchange-reset">Reset</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
       </div>

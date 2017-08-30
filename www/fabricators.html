@@ -21,7 +21,7 @@ $(function() {
           mats.append(`<div class="text-capitalize">${material}: ${recipe.materials[material]}</div>`);
 
         if (player.can_craft(item) && player.money >= fee) {
-          btn.addClass('btn-light').click(function(e) {
+          btn.addClass('btn-dark').click(function(e) {
             $('#craft-resource').text(item);
             $('#craft-message').empty()
               .append(`<p>Fabrication of one unit of ${item} takes ${recipe.tics} turn(s) and costs ${fee} credit(s).</p>`)
@@ -53,13 +53,13 @@ $(function() {
       player.money -= Math.max(1, Math.round(fee_pct * value));
 
       for (let mat of Object.keys(recipe.materials)) {
-        player.inventory.dec(mat, recipe.materials[mat]);
+        player.ship.unload_cargo(mat, recipe.materials[mat]);
       }
 
       for (var i = 0; i < recipe.tics; ++i)
         game.turn();
 
-      player.inventory.inc(resource, 1);
+      player.ship.load_cargo(resource, 1);
     }
 
     update_recipes();
@@ -108,7 +108,7 @@ $(function() {
         <div id="craft-message"></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-light" id="craft-complete">Push the big red button</button>
+        <button type="button" class="btn btn-danger" id="craft-complete">Push the big red button</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
       </div>
     </div>

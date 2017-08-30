@@ -6,8 +6,13 @@ $(function() {
     let tics = data.resources[resource].mine.tics;
 
     if (game.place().mine(resource)) {
-      game.player().inventory.inc(resource, 1);
-      message(`You acquired 1 unit of ${resource}.`, 'success', true);
+      if (game.player().ship.hold_is_full) {
+        message("There is no room left in your ship's hold.", 'danger', true);
+      }
+      else {
+        game.player().ship.load_cargo(resource, 1);
+        message(`You acquired 1 unit of ${resource}.`, 'success', true);
+      }
     }
     else {
       message('No luck! The well was dry.', 'danger', true);
@@ -30,9 +35,9 @@ $(function() {
       </p>
     </div>
     <div class="row p-1">
-      <div class="col-sm py-1"><button type="button" class="btn btn-light btn-block btn-sm card-link harvest" data-resource="water">Mine ice / harvest water</button></div>
-      <div class="col-sm py-1"><button type="button" class="btn btn-light btn-block btn-sm card-link harvest" data-resource="ore">Mine ore</button></div>
-      <div class="col-sm py-1"><button type="button" class="btn btn-light btn-block btn-sm card-link harvest" data-resource="chemicals">Rare earths / gas</button></div>
+      <div class="col-sm py-1"><button type="button" class="btn btn-dark btn-block btn-sm card-link harvest" data-resource="water">Mine ice / harvest water</button></div>
+      <div class="col-sm py-1"><button type="button" class="btn btn-dark btn-block btn-sm card-link harvest" data-resource="ore">Mine ore</button></div>
+      <div class="col-sm py-1"><button type="button" class="btn btn-dark btn-block btn-sm card-link harvest" data-resource="chemicals">Rare earths / gas</button></div>
     </div>
   </div>
 </div>
