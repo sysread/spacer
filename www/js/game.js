@@ -32,7 +32,7 @@ class Game {
       this.data.places[name] = new Place(name);
 
     // Run the system for a few turns to get the economy moving
-    let init_turns = 200;
+    let init_turns = 100;
     console.log('Building the Solar System');
     console.time(`${init_turns} turns`);
     this.data.date.setHours(this.data.date.getHours() - (4 * init_turns));

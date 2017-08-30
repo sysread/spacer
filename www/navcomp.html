@@ -24,7 +24,9 @@ $(function() {
           unit = 'AU';
         }
 
-        let btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-sm btn-dark btn-block">${name}</button>`);
+        let btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-sm btn-dark btn-block">`);
+        btn.append(`<span class="float-left">${name}</span>`);
+        btn.append(`<span class="badge badge-pill float-right">${system.kind(body)}</span>`);
 
         btn.data({
           destination : [body, name],
@@ -36,7 +38,6 @@ $(function() {
         table
           .append($('<tr>')
             .append($('<td>').append(btn))
-            .append(`<td>${system.kind(body)}</td>`)
             .append(`<td class="text-right">${dist} ${unit}</td>`)
             .append(`<td class="text-right">${acc}G</td>`)
             .append(`<td class="text-right">${hrs} hrs</td>`)
@@ -45,8 +46,7 @@ $(function() {
       else {
         table
           .append($('<tr>')
-            .append(`<td>${name}</td>`)
-            .append(`<td>${system.kind(body)}</td>`)
+            .append(`<td>${name} <span class="badge badge-pill badge-dark">${system.kind(body)}</span></td>`)
             .append(`<td class="text-right">N/A</td>`)
             .append(`<td class="text-right">N/A</td>`)
             .append(`<td class="text-right">&gt; 1 year</td>`)
@@ -61,23 +61,72 @@ $(function() {
     let dist  = btn.data('distance');
     let time  = btn.data('time');
     let accel = btn.data('accel');
+
     $('#nav-accel').text(accel);
     $('#nav-destination').text(dest[1]);
     $('#nav-distance').text(`${dist[1]} ${dist[2]}`);
     $('#nav-time').text(`${time[1]} hours (${time[2]} turns)`);
 
-    $('#nav-complete').off('click').on('click', function(e) {
-      $('#nav-dialog').off('hide.bs.modal').on('hide.bs.modal', () => {
-        for (var i = 0; i < time[2]; ++i) game.turn();
-        game.transit(dest[0]);
-        open('summary');
-      });
+    $('#nav-transit-dest').text(dest[1]);
+
+    $('#nav-transit').data({
+      destination : dest[0],
+      turns       : time[2],
+      time        : time[1] / 100,
+      distance    : parseFloat(dist[1], 10) / 100,
+      percent     : 100 / time[2]
     });
   });
+
+  let transit_intvl;
+  let pause_transit = () => {window.clearInterval(transit_intvl)}
+  let resume_transit = () => {
+    transit_intvl = window.setInterval(() => {
+      if ($('#nav-transit').data('turns') === 0) {
+        pause_transit();
+
+        $('#nav-transit-distance').text('0 AU');
+        $('#nav-transit-time').text('0 hours');
+        $('#nav-transit-progress').css('width', '100%');
+
+        window.setTimeout(() => {
+          let dest = $('#nav-transit').data('destination');
+          $('#nav-transit .modal-body').empty();
+          $('#nav-transit .modal-header').remove();
+          $('#nav-transit .modal-footer').empty().append('<button type="button" class="btn btn-dark" data-dismiss="modal">Disembark</button>');
+          $('#nav-transit .modal-body').html(`<h1>Welcome to <span class="text-capitalize">${dest}</span></h1>`);
+          $('#nav-transit .modal-body').show();
+        }, 950);
+      }
+      else {
+        game.turn();
+
+        let data  = $('#nav-transit').data();
+        let dist  = data.distance;
+        let turns = data.turns;
+        let pct   = data.percent;
+
+        let p = Math.ceil(100 - (turns * pct));
+        let d = (turns * dist).toFixed(2);
+
+        $('#nav-transit-distance').text(`${d} AU`);
+        $('#nav-transit-progress').css('width', `${p}%`);
+        $('#nav-transit').data('turns', turns - 1);
+      }
+    }, 50);
+  }
+
+  $('#nav-transit')
+    .on('shown.bs.modal', resume_transit)
+    .on('hide.bs.modal', function() {
+      game.transit($('#nav-transit').data('destination'));
+      open('summary');
+    });
 
   $('#nav-player-str').text(game.player().strength);
   $('#nav-player-g'  ).text(game.player().max_acceleration().toFixed(2));
   $('#nav-ship-g'    ).text(game.player().ship_acceleration().toFixed(2));
+  $('#nav-ship-kg'   ).text(csn(game.player().ship.mass));
 });
 
 </script>
@@ -95,13 +144,12 @@ $(function() {
         With a strength of <span id="nav-player-str"></span>, you are able to endure a
         sustained <span id="nav-player-g"></span>G burn. Your ship is capable
         of <span id="nav-ship-g"></span>Gs of acceleration with her current
-        load out.
+        load out (<span id="nav-ship-kg"></span> kg).
       </p>
       <table class="table table-sm" id="navcomp-table">
         <thead>
           <tr>
             <th>Destination</th>
-            <th>Type</th>
             <th class="text-right">Dist.</th>
             <th class="text-right">Accel.</th>
             <th class="text-right">Time</th>
@@ -135,8 +183,27 @@ $(function() {
         </table>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-danger" data-dismiss="modal" id="nav-complete">Engage</button>
+        <button type="button" class="btn btn-dark" data-dismiss="modal" id="nav-complete" data-toggle="modal" data-target="#nav-transit">Engage</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="nav-transit" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">En route to <span class="text-capitalize" id="nav-transit-dest"></span></h5>
+      </div>
+      <div class="modal-body">
+        <div class="progress bg-dark">
+          <div id="nav-transit-progress" class="progress-bar bg-warning" style="height: 35px; width: 0%">
+            <span id="nav-transit-distance" class="badge badge-pill badge-dark float-left m-1 font-weight-normal" style="font-size:14px"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
       </div>
     </div>
   </div>

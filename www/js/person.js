@@ -8,6 +8,7 @@ class Person {
     this.stealth     = opt.stealth     || 1;
     this.strength    = opt.strength    || 1;
     this.tactics     = opt.tactics     || 1;
+    this.xp          = opt.xp          || 0;
     this.health      = opt.health      || 10;
     this.ship        = opt.ship;
   }

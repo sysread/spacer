@@ -1,0 +1,11 @@
+#TODO
+-factions
+-buy/sell ship
+-ship addons
+-pirates/fights
+-save/load game
+-missions
+-conditions
+-character design screen
+-skills/xp
+-faction politics

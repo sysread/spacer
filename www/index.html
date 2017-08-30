@@ -23,9 +23,9 @@
     <!-- Navigation -->
     <nav id="spacer-navbar" data-toggle="collapse" data-target="#spacer-nav" class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
       <a class="navbar-brand" href="#">
-        Spacer
-        <span class="navbar-text badge badge-pill badge-dark" id="spacer-turn"></span>
-        <span class="navbar-text badge badge-pill badge-dark" id="spacer-credits"></span>
+        <span class="pr-3">Spacer</span>
+        <span class="navbar-text badge badge-pill font-weight-normal" id="spacer-turn"></span>
+        <span class="navbar-text badge badge-pill font-weight-normal" id="spacer-credits"></span>
       </a>
 
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#spacer-nav">
@@ -38,6 +38,7 @@
           <li class="nav-item"><a href="#" data-toggle="collapse" data-target="#spacer-nav" data-name="wilds" data-path="wilds.html" class="nav-link">Wilderness</a></li>
           <li class="nav-item"><a href="#" data-toggle="collapse" data-target="#spacer-nav" data-name="docks" data-path="commerce.html" class="nav-link">Commerce</a></li>
           <li class="nav-item"><a href="#" data-toggle="collapse" data-target="#spacer-nav" data-name="fabs" data-path="fabricators.html" class="nav-link">Fabricators</a></li>
+          <li class="nav-item"><a href="#" data-toggle="collapse" data-target="#spacer-nav" data-name="shipyard" data-path="shipyard.html" class="nav-link">Shipyard</a></li>
           <li class="nav-item"><a href="#" data-toggle="collapse" data-target="#spacer-nav" data-name="nav" data-path="navcomp.html" class="nav-link">NavComp</a></li>
         </ul>
       </div>
@@ -74,7 +75,7 @@
         $('#spacer-nav a').removeClass('active');
         $(`#spacer-nav a[data-name="${name}"]`).addClass('active');
         $('#spacer-content').empty().load($(`#spacer-nav a[data-name='${name}']`).data('path'));
-        $('#spacer-nav .collapse').collapse('hide');
+        $('#spacer-nav').collapse('hide');
       }
 
       function clear_messages() {
