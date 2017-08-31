@@ -9,3 +9,5 @@
 -character design screen
 -skills/xp
 -faction politics
+-fuel usage
+-docking fees

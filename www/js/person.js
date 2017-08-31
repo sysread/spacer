@@ -24,7 +24,7 @@ class Person {
   }
 
   max_acceleration() {
-    return 0.1 + (Math.log(this.strength) * 0.5);
+    return 0.2 + (Math.log(this.strength) * 0.7);
   }
 
   ship_acceleration() {

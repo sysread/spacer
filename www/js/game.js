@@ -20,24 +20,31 @@ class Game {
       player : new Person({
         name     : 'Marco Solo',
         money    : 1000,
-        strength : 5,
+        strength : 10,
         ship     : new Ship({
           name      : 'The Boat',
-          shipclass : data.shipclass.corvette
+          shipclass : data.shipclass.cutter
         })
       })
     };
+
+    // DEBUG
+    /*for (let ship of Object.keys(data.shipclass)) {
+      let s = new Ship({shipclass: data.shipclass[ship]});
+      console.log(ship);
+      console.log(`  -nominal: ${csn(s.mass)}t, ${s.acceleration().toFixed(2)}G`);
+      s.load_cargo('machines', s.shipclass.cargo);
+      console.log(`  -loaded:  ${csn(s.mass)}t, ${s.acceleration().toFixed(2)}G`);
+    }*/
 
     for (let name of system.bodies())
       this.data.places[name] = new Place(name);
 
     // Run the system for a few turns to get the economy moving
-    let init_turns = 100;
-    console.log('Building the Solar System');
-    console.time(`${init_turns} turns`);
+    let init_turns = 300;
     this.data.date.setHours(this.data.date.getHours() - (4 * init_turns));
-    for (var i = 0; i < init_turns; ++i) this.turn();
-    console.timeEnd(`${init_turns} turns`);
+    for (var i = 0; i < init_turns; ++i)
+      this.turn();
 
     this.save();
   }
@@ -62,8 +69,9 @@ class Game {
   }
 
   refresh() {
-    $('#spacer-credits').text(`${csn(this.data.player.money)} credits`);
     $('#spacer-turn').text(`${this.date()}`);
+    $('#spacer-credits').text(`${csn(this.data.player.money)} credits`);
+    $('#spacer-cargo').text(`${this.data.player.ship.cargo_used}/${this.data.player.ship.cargo_space} cargo`);
   }
 
   turn() {

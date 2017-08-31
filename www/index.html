@@ -12,6 +12,7 @@
       <script type="text/javascript" src="js/vendor/jquery.min.js"></script>
       <script type="text/javascript" src="js/vendor/popper.js"></script>
       <script type="text/javascript" src="js/vendor/bootstrap.min.js"></script>
+      <script type="text/javascript" src="js/vendor/hammer.min.js"></script>
 
       <title>Spacer</title>
     </head>
@@ -26,19 +27,19 @@
         <span class="pr-3">Spacer</span>
         <span class="navbar-text badge badge-pill font-weight-normal" id="spacer-turn"></span>
         <span class="navbar-text badge badge-pill font-weight-normal" id="spacer-credits"></span>
+        <span class="navbar-text badge badge-pill font-weight-normal" id="spacer-cargo"></span>
       </a>
 
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#spacer-nav">
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <div class="collapse navbar-collapse" id="spacer-nav">
+      <div class="collapse navbar-collapse" id="spacer-nav" data-in-transit="0">
         <ul class="navbar-nav mr-auto">
           <li class="nav-item"><a href="#" data-toggle="collapse" data-target="#spacer-nav" data-name="summary" data-path="summary.html" class="nav-link active">Summary</a></li>
           <li class="nav-item"><a href="#" data-toggle="collapse" data-target="#spacer-nav" data-name="wilds" data-path="wilds.html" class="nav-link">Wilderness</a></li>
           <li class="nav-item"><a href="#" data-toggle="collapse" data-target="#spacer-nav" data-name="docks" data-path="commerce.html" class="nav-link">Commerce</a></li>
           <li class="nav-item"><a href="#" data-toggle="collapse" data-target="#spacer-nav" data-name="fabs" data-path="fabricators.html" class="nav-link">Fabricators</a></li>
-          <li class="nav-item"><a href="#" data-toggle="collapse" data-target="#spacer-nav" data-name="shipyard" data-path="shipyard.html" class="nav-link">Shipyard</a></li>
           <li class="nav-item"><a href="#" data-toggle="collapse" data-target="#spacer-nav" data-name="nav" data-path="navcomp.html" class="nav-link">NavComp</a></li>
         </ul>
       </div>
@@ -61,17 +62,9 @@
 
     <!-- Main -->
     <script type="text/javascript">
-      $('#spacer-navbar').on('click', 'a', function(e) {
-        e.preventDefault();
-        if ($(e.target).hasClass('nav-link')) {
-          $('#messages').empty();
-          $('#spacer-nav a').removeClass('active');
-          $(e.target).addClass('active');
-          open($(e.target).data('name'));
-        }
-      });
-
       function open(name) {
+        if ($('#spacer-nav').data('in-transit'))
+          return;
         $('#spacer-nav a').removeClass('active');
         $(`#spacer-nav a[data-name="${name}"]`).addClass('active');
         $('#spacer-content').empty().load($(`#spacer-nav a[data-name='${name}']`).data('path'));
@@ -112,7 +105,36 @@
         return decimal ? `${integer}.${decimal}` : integer;
       }
 
+      $(function() {
+        $('#spacer-navbar').on('click', 'a', function(e) {
+          e.preventDefault();
+
+          if ($(e.target).hasClass('nav-link')) {
+            $('#messages').empty();
+            $('#spacer-nav a').removeClass('active');
+            $(e.target).addClass('active');
+            open($(e.target).data('name'));
+          }
+        });
+
+        // Set up swipe mechanics
+        let mc = new Hammer(window);
+        mc.get('swipe').set({direction: Hammer.DIRECTION_VERTICAL});
+        mc.on('swipeleft swiperight panleft panright', function(e) {
+          if (!e.isFinal || Math.abs(e.deltaX) < (window.innerWidth / 4))
+            return;
+
+          let name = (e.direction === Hammer.DIRECTION_LEFT)  ? $('#spacer-nav a.active').parent().next().find('a').data('name')
+                   : (e.direction === Hammer.DIRECTION_RIGHT) ? $('#spacer-nav a.active').parent().prev().find('a').data('name')
+                   : undefined;
+
+          if (name !== undefined)
+            open(name);
+        });
+      });
+
       const game = new Game;
+
     </script>
   </body>
 </html>
