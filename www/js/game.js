@@ -19,11 +19,11 @@ class Game {
       place  : 'earth',
       player : new Person({
         name     : 'Marco Solo',
-        money    : 100000,
+        money    : 1000,
         strength : 10,
         ship     : new Ship({
           name      : 'The Boat',
-          shipclass : data.shipclass.hauler
+          shipclass : data.shipclass.clipper
         })
       })
     };

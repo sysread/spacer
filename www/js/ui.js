@@ -124,16 +124,15 @@ class ResourceExchange {
       slider.group.prepend($('<span class="input-group-btn">').append(store));
       slider.group.append($('<span class="input-group-btn">').append(cargo));
 
-      let itemcell = $(`<td class="text-capitalize exchange-item">${item} </td>`);
-      if (this.prices) itemcell.append(`<span class="badge badge-pill">${this.prices[item]}</span>`);
-
-      this.table.append($('<tr>').append(itemcell).append($('<td>').append(slider.group)));
+      this.table
+        .append($('<tr>')
+          .append(`<td class="text-capitalize exchange-item">${item}</td>`)
+          .append($('<td>').append(slider.group)));
     });
   }
 
   get max_cargo() { return this.opt.max_cargo }
   get max_store() { return this.opt.max_store }
-  get prices()    { return this.opt.prices    }
   get approve()   { return this.opt.approve   }
   get callback()  { return this.opt.callback  }
 }

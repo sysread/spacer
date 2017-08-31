@@ -16,14 +16,14 @@ const data = {
     water        : {mass: 10, mine: {tics: 4}},
     ore          : {mass: 90, mine: {tics: 8}},
     chemicals    : {mass: 50, mine: {tics: 6}},
-    food         : {mass: 5, recipe: {tics: 12, materials: {water: 2, chemicals: 2}}},
-    metal        : {mass: 110, recipe: {tics: 3, materials: {ore: 2}}},
+    food         : {mass: 5, recipe: {tics: 12, materials: {water: 4, chemicals: 4}}},
+    metal        : {mass: 110, recipe: {tics: 3, materials: {ore: 4}}},
     medicine     : {mass: 10, recipe: {tics: 4, materials: {food: 2, chemicals: 2}}},
-    machines     : {mass: 75, recipe: {tics: 4, materials: {metal: 2, chemicals: 1}}},
-    electronics  : {mass: 20, recipe: {tics: 6, materials: {metal: 1, chemicals: 2}}},
-    cybernetics  : {mass: 80, recipe: {tics: 8, materials: {machines: 1, electronics: 1}}},
-    weapons      : {mass: 50, recipe: {tics: 6, materials: {metal: 1, chemicals: 2}}, contraband: 4},
-    narcotics    : {mass: 10, recipe: {tics: 5, materials: {food: 1, chemicals: 2, medicine: 1}}, contraband: 7}
+    machines     : {mass: 75, recipe: {tics: 4, materials: {metal: 4, chemicals: 2}}},
+    electronics  : {mass: 20, recipe: {tics: 6, materials: {metal: 2, chemicals: 4}}},
+    cybernetics  : {mass: 80, recipe: {tics: 8, materials: {machines: 2, electronics: 2}}},
+    weapons      : {mass: 50, recipe: {tics: 6, materials: {metal: 2, chemicals: 4}}, contraband: 4},
+    narcotics    : {mass: 10, recipe: {tics: 5, materials: {food: 2, chemicals: 4, medicine: 2}}, contraband: 7}
   },
 
   market: {
