@@ -11,3 +11,5 @@
 -faction politics
 -fuel usage
 -docking fees
+-time-delayed system-wide resource price report
+-sales tax

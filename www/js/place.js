@@ -72,6 +72,20 @@ class Place extends Market {
     return false;
   }
 
+  harvest(turns=1) {
+    let collected = new ResourceCounter;
+
+    for (let i = 1; i <= turns; ++i) {
+      this.resources.each((item, amt) => {
+        let tics = data.resources[item].mine.tics;
+        if ((i >= tics) && (i % tics === 0) && this.mine(item))
+          collected.inc(item, 1);
+      });
+    }
+
+    return collected;
+  }
+
   turn() {
     super.turn();
 

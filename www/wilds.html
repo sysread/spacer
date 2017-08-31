@@ -1,25 +1,40 @@
 <script type="text/javascript">
 
 $(function() {
-  $('.harvest').click(function(e) {
-    let resource = $(e.target).data('resource');
-    let tics = data.resources[resource].mine.tics;
+  let hours = new Slider({
+    min      : 0,
+    max      : 96,
+    step     : 4,
+    initial  : 48,
+    callback : (n) => {$('#harvest-hours').val(n)}
+  });
 
-    if (game.place().mine(resource)) {
-      if (game.player().ship.hold_is_full) {
-        message("There is no room left in your ship's hold.", 'danger', true);
-      }
-      else {
-        game.player().ship.load_cargo(resource, 1);
-        message(`You acquired 1 unit of ${resource}.`, 'success', true);
-      }
-    }
-    else {
-      message('No luck! The well was dry.', 'danger', true);
-    }
+  $('#harvest-hours-chooser').append(hours.group);
+  $('#harvest-dialog').on('show.bs.modal', () => {hours.reset()});
 
-    for (var i = 0; i < tics; ++i)
+  let chooser;
+
+  $('#collect-dialog').on('show.bs.modal', () => {
+    let hrs   = hours.val;
+    let turns = hrs / 4;
+
+    chooser = new ResourceExchange({
+      store      : game.place().harvest(hrs),
+      cargo      : game.player().ship.cargo,
+      max_cargo  : game.player().ship.shipclass.cargo,
+      minmaxbtns : true
+    });
+
+    $('#collect-explain').text(`After ${hrs} hours of work, your crew collected:`);
+    $('#collect-results').empty().append(chooser.table);
+
+    for (let i = 0; i < turns; ++i)
       game.turn();
+  });
+
+  $('#collect-complete').one('click', () => {
+    game.player().ship.cargo = chooser.cargo;
+    game.refresh();
   });
 });
 
@@ -33,11 +48,41 @@ $(function() {
         Harvesting natural resources takes time and hard work, but is a great way
         to make some extra money while starting out or when bad luck hits.
       </p>
+      <button type="button" class="btn btn-dark btn-block btn-sm card-link" data-toggle="modal" data-target="#harvest-dialog">Harvest</button>
     </div>
-    <div class="row p-1">
-      <div class="col-sm py-1"><button type="button" class="btn btn-dark btn-block btn-sm card-link harvest" data-resource="water">Mine ice / harvest water</button></div>
-      <div class="col-sm py-1"><button type="button" class="btn btn-dark btn-block btn-sm card-link harvest" data-resource="ore">Mine ore</button></div>
-      <div class="col-sm py-1"><button type="button" class="btn btn-dark btn-block btn-sm card-link harvest" data-resource="chemicals">Rare earths / gas</button></div>
+  </div>
+</div>
+
+<div class="modal" id="harvest-dialog" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Harvest natural resources</h5></div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="harvest-hours">How many hours will you commit to harvesting natural resources?</label>
+          <input type="number" id="harvest-hours" name="harvest-hours" class="form-control">
+        </div>
+        <div id="harvest-hours-chooser"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" id="harvest-complete" data-dismiss="modal" data-toggle="modal" data-target="#collect-dialog">Harvest</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="collect-dialog" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Harvest results</h5></div>
+      <div class="modal-body">
+        <p id="collect-explain"></p>
+        <div id="collect-results"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="collect-complete" class="btn btn-dark" data-dismiss="modal">Load</button>
+      </div>
     </div>
   </div>
 </div>

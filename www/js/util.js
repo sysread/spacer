@@ -31,6 +31,12 @@ class ResourceCounter extends DefaultMap {
   dec(key, amount) {
     this.set(key, this.get(key) - amount);
   }
+
+  sum() {
+    let n = 0;
+    this.each((item, amount) => { n += amount });
+    return n;
+  }
 }
 
 class ResourceTracker {

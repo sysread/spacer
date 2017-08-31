@@ -13,8 +13,8 @@ const data = {
   },
 
   resources: {
-    water        : {mass: 10, mine: {tics: 3}},
-    ore          : {mass: 90, mine: {tics: 5}},
+    water        : {mass: 10, mine: {tics: 4}},
+    ore          : {mass: 90, mine: {tics: 8}},
     chemicals    : {mass: 50, mine: {tics: 6}},
     food         : {mass: 5, recipe: {tics: 12, materials: {water: 2, chemicals: 2}}},
     metal        : {mass: 110, recipe: {tics: 3, materials: {ore: 2}}},
