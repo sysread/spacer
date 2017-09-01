@@ -13,3 +13,5 @@
 -docking fees
 -time-delayed system-wide resource price report
 -sales tax
+-police/jail time
+  -reputation

@@ -2,12 +2,12 @@ class Person {
   constructor(opt) {
     this.name        = opt.name;
     this.money       = opt.money       || 1000;
-    this.exploration = opt.exploration || 1;
-    this.negotiation = opt.negotiation || 1;
-    this.piloting    = opt.piloting    || 1;
-    this.stealth     = opt.stealth     || 1;
     this.strength    = opt.strength    || 1;
     this.tactics     = opt.tactics     || 1;
+    this.stealth     = opt.stealth     || 1;
+    this.piloting    = opt.piloting    || 1;
+    this.negotiation = opt.negotiation || 1;
+    this.exploration = opt.exploration || 1;
     this.xp          = opt.xp          || 0;
     this.health      = opt.health      || 10;
     this.ship        = opt.ship;
@@ -24,7 +24,7 @@ class Person {
   }
 
   max_acceleration() {
-    return 0.2 + (Math.log(this.strength) * 0.7);
+    return 0.1 + (Math.log(this.strength) * 0.3);
   }
 
   ship_acceleration() {

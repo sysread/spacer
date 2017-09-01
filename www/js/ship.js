@@ -3,12 +3,12 @@ class ShipClass {
     this.opt = opt;
   }
 
-  get hull()    { return this.opt.hull }
-  get armor()   { return this.opt.armor }
-  get cargo()   { return this.opt.cargo }
-  get hardpts() { return this.opt.hardpts }
-  get mass()    { return this.opt.mass }
-  get thrust()  { return this.opt.thrust }
+  get hull()       { return this.opt.hull }
+  get armor()      { return this.opt.armor }
+  get cargo()      { return this.opt.cargo }
+  get hardpoints() { return this.opt.hardpoints }
+  get mass()       { return this.opt.mass }
+  get thrust()     { return this.opt.thrust }
 }
 
 class Ship {

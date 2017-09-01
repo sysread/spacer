@@ -1,0 +1,47 @@
+<script type="text/javascript">
+
+$(function() {
+  let p = game.player();
+  let s = p.ship;
+
+  let row = (lbl, val) => {
+    return `<div class="row p-1"><div class="col-sm font-weight-bold">${lbl}</div><div class="col-sm">${val}</div></div>`;
+  }
+
+  $('#captain').empty()
+    .append(row('Money',       p.money))
+    .append(row('Health',      `${p.health}/10`))
+    .append(row('Experience',  p.xp))
+    .append(row('Strength',    `${p.strength} (max thrust ${p.max_acceleration().toFixed(2)} G)`))
+    .append(row('Tactics',     p.tactics))
+    .append(row('Stealth',     p.tactics))
+    .append(row('Piloting',    p.tactics))
+    .append(row('Negotiation', p.tactics))
+    .append(row('Exploration', p.tactics));
+
+
+  $('#ship').empty()
+    .append(row('Cargo',        `${s.cargo_used}/${s.cargo_space}`))
+    .append(row('Mass',         `${s.mass} Mg (${s.shipclass.mass} nominal)`))
+    .append(row('Thrust',       `${s.shipclass.thrust} kN`))
+    .append(row('Acceleration', `${s.acceleration()} G`))
+    .append(row('Hull',         `?/${s.shipclass.hull}`))
+    .append(row('Armor',        `?/${s.shipclass.armor}`))
+    .append(row('Hardpoints',   `${s.shipclass.hardpoints}`))
+});
+
+</script>
+
+<div class="card p-3 mb-4">
+  <h3 class="card-header">Captain</h3>
+  <div class="card-body">
+    <div class="card-text p-1" id="captain"></div>
+  </div>
+</div>
+
+<div class="card p-3">
+  <h3 class="card-header">Ship</h3>
+  <div class="card-body">
+    <div class="card-text p-1" id="ship"></div>
+  </div>
+</div>

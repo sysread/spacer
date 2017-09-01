@@ -19,8 +19,8 @@ class Game {
       place  : 'earth',
       player : new Person({
         name     : 'Marco Solo',
-        money    : 1000,
-        strength : 10,
+        money    : 2000,
+        strength : 3,
         ship     : new Ship({
           name      : 'The Boat',
           shipclass : data.shipclass.clipper
