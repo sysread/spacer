@@ -4,38 +4,27 @@ class Game {
   }
 
   onDeviceReady() {
-    let me  = this;
-    $(() => {
-      open('summary');
-      me.begin();
+    let me = this;
+
+    $(function() {
+      if (me.data) {
+        open('summary');
+        me.refresh();
+      }
+      else {
+        open('newgame');
+      }
     });
   }
 
-  start() {
+  start(player, place) {
     this.data = {
       date   : new Date(2242, 0, 1),
       turns  : 0,
       places : {},
-      place  : 'earth',
-      player : new Person({
-        name     : 'Marco Solo',
-        money    : 2000,
-        strength : 3,
-        ship     : new Ship({
-          name      : 'The Boat',
-          shipclass : data.shipclass.clipper
-        })
-      })
+      player : player,
+      place  : place
     };
-
-    // DEBUG
-    /*for (let ship of Object.keys(data.shipclass)) {
-      let s = new Ship({shipclass: data.shipclass[ship]});
-      console.log(ship);
-      console.log(`  -nominal: ${csn(s.mass)}t, ${s.acceleration().toFixed(2)}G`);
-      s.load_cargo('machines', s.shipclass.cargo);
-      console.log(`  -loaded:  ${csn(s.mass)}t, ${s.acceleration().toFixed(2)}G`);
-    }*/
 
     for (let name of system.bodies())
       this.data.places[name] = new Place(name);
@@ -46,14 +35,7 @@ class Game {
     for (var i = 0; i < init_turns; ++i)
       this.turn();
 
-    this.save();
-  }
-
-  save() {}
-  load() { return false; }
-
-  begin() {
-    if (!this.load()) this.start();
+    open('summary');
     this.refresh();
   }
 

@@ -1,0 +1,92 @@
+<script type="text/javascript">
+
+$(function() {
+  const points = 5 * Object.keys(data.stats).length;
+  let used = Object.keys(data.stats).length;
+
+  $('#total-points').text(points);
+
+  for (let body in data.bodies) $('#home').append(`<option value="${body}">${body}</option>`);
+  $('#home').val('earth');
+
+  for (let name of Object.keys(data.stats)) {
+    let slider = new Slider({
+      min      : 1,
+      max      : 10,
+      initial  : 1,
+      callback : (value) => {
+        $(`#stat-${name}`).val(value);
+      },
+      approve  : (change, value) => {
+        let remaining = points - used;
+
+        if (change > 0 && remaining < (change + value)) {
+          change = remaining;
+        }
+
+        used += change;
+        return change + value;
+      }
+    });
+
+    let label = $(`<label class="text-capitalize" for="stat-${name}">${name}</label>`);
+    let ctrl  = $(`<div class="id="slider-${name}">`);
+    let stat  = $(`<input class="form-control form-control-sm" type="number" min="1" value="1" id="stat-${name}" readonly>`);
+    let row   = $('<tr class="row">');
+
+    let desc = data.stats[name].desc;
+    let td = $('<td class="col-8">');
+
+    td.append(ctrl.append(slider.group));
+    if (desc) td.append(`<p class="form-text text-muted">${desc}</p>`);
+
+    row.append($('<td class="col-2">').append(label));
+    row.append(td);
+    row.append($('<td class="col-2">').append(stat));
+
+    $('#stats').append(row);
+  }
+
+  $('#start-game').on('click', function(e) {
+    let me = new Person({
+      name     : $('#name').val(),
+      money    : 2000,
+      strength : parseInt($('#stat-strength').val(), 10),
+      ship     : new Ship({
+        name      : $('#ship').val(),
+        shipclass : data.shipclass.clipper
+      })
+    });
+
+    let place = $('#home').val();
+
+    game.start(me, place);
+  });
+});
+
+</script>
+
+<div class="card p-3 mb-4">
+  <h3 class="card-header">New Game</h3>
+  <div class="card-body">
+    <form>
+      <label for="name">Captain name</label>
+      <input class="form-control" type="text" name="name" id="name" placeholder="Jameson">
+      <br>
+
+      <label for="name">Ship name</label>
+      <input class="form-control" type="text" name="name" id="ship" placeholder="The Boat">
+      <br>
+
+      <label for="home">Home</label>
+      <select class="form-control text-capitalize" name="home" id="home"></select>
+      <br>
+
+      <label>Characteristics</label>
+      <p>You have <span id="total-points"></span> points to distribute across your skills.</p>
+      <table id="stats" class="table"></table>
+
+      <div class="float-right"><button id="start-game" type="button" class="btn btn-dark">Start playing</button></div>
+    </form>
+  </div>
+</div>

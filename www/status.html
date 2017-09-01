@@ -13,12 +13,6 @@ $(function() {
     .append(row('Health',      `${p.health}/10`))
     .append(row('Experience',  p.xp))
     .append(row('Strength',    `${p.strength} (max thrust ${p.max_acceleration().toFixed(2)} G)`))
-    .append(row('Tactics',     p.tactics))
-    .append(row('Stealth',     p.tactics))
-    .append(row('Piloting',    p.tactics))
-    .append(row('Negotiation', p.tactics))
-    .append(row('Exploration', p.tactics));
-
 
   $('#ship').empty()
     .append(row('Cargo',        `${s.cargo_used}/${s.cargo_space}`))

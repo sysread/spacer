@@ -2,21 +2,19 @@ class Slider {
   constructor(opt) {
     this.opt = opt || {};
 
-    this.slider = $('<input type="range" class="form-control">');
+    this.slider = $('<input type="range" class="form-control form-control-sm">');
     this.slider.attr('min',  this.min);
     this.slider.attr('max',  this.max);
     this.slider.attr('step', this.step);
-    this.slider.val(this.initial);
 
     this.amount = $('<input type="number" class="form-control" readonly>');
     this.amount.attr('min', this.min);
     this.amount.attr('max', this.max);
-    this.amount.val(this.initial);
 
     this.monitor = null;
-    this.slider.mousedown((e) => {this.monitor = window.setInterval(() => {this.update()}, this.interval)});
-    this.slider.mouseup((e) => {window.clearInterval(this.monitor)});
-    this.slider.change((e) => {this.amount.val(this.slider.val())});
+    this.slider.mousedown((e) => {if (e.button == 0) this.start_monitor()});
+    this.slider.mouseup((e) => {this.stop_monitor()});
+    this.slider.change((e) => {this.val = this.slider.val(); this.stop_monitor();});
 
     this.dn    = $('<button type="button" class="btn btn-dark btn-sm">&#9664;</button>');
     this.up    = $('<button type="button" class="btn btn-dark btn-sm">&#9658;</button>');
@@ -34,12 +32,25 @@ class Slider {
     this.group.append(this.slider);
     this.group.append($('<span class="input-group-btn">').append(this.up));
     if (this.minmaxbtns) this.group.append($('<span class="input-group-btn">').append(this.upup));
+
+    this.value = this.initial;
+    this.update();
+  }
+
+  start_monitor() {
+    this.stop_monitor();
+    this.monitor = window.setInterval(() => {this.val = this.slider.val()}, this.interval);
+  }
+
+  stop_monitor() {
+    window.clearInterval(this.monitor);
+    this.monitor = null;
   }
 
   get min()        { return this.opt.min  || 0 }
   get max()        { return this.opt.max  || 0 }
   get step()       { return this.opt.step || 1 }
-  get val()        { return parseInt(this.slider.val(), 10) }
+  get val()        { return this.value }
   get initial()    { return this.opt.initial || this.min }
   get interval()   { return this.opt.interval || 100 }
   get minmaxbtns() { return this.opt.minmaxbtns }
@@ -47,23 +58,28 @@ class Slider {
   get approve()    { return this.opt.approve }
 
   set val(n) {
+    n = parseInt(`${n}`, 10);
     n = Math.max(n, this.min);
     n = Math.min(n, this.max);
+
+    if (n === this.val)
+      return;
 
     if (this.approve)
       n = this.approve(n - this.val, this.val);
 
-    this.slider.val(n);
+    this.value = n;
     this.update();
+  }
+
+  update() {
+    this.slider.val(this.val);
+    this.amount.val(this.val);
+    if (this.callback) this.callback(this.val);
   }
 
   reset() {
     this.val = this.initial;
-  }
-
-  update() {
-    this.amount.val(this.val);
-    if (this.callback) this.callback(this.val);
   }
 }
 

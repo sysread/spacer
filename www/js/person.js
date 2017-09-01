@@ -1,16 +1,11 @@
 class Person {
   constructor(opt) {
-    this.name        = opt.name;
-    this.money       = opt.money       || 1000;
-    this.strength    = opt.strength    || 1;
-    this.tactics     = opt.tactics     || 1;
-    this.stealth     = opt.stealth     || 1;
-    this.piloting    = opt.piloting    || 1;
-    this.negotiation = opt.negotiation || 1;
-    this.exploration = opt.exploration || 1;
-    this.xp          = opt.xp          || 0;
-    this.health      = opt.health      || 10;
-    this.ship        = opt.ship;
+    this.name     = opt.name;
+    this.money    = opt.money    || 1000;
+    this.strength = opt.strength || 1;
+    this.xp       = opt.xp       || 0;
+    this.health   = opt.health   || 10;
+    this.ship     = opt.ship;
   }
 
   can_craft(item) {

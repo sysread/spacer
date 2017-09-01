@@ -107,5 +107,11 @@ const data = {
     destroyer   : {hull: 15, armor: 12, cargo: 10,  hardpoints: 8,  mass: 1100,  thrust: 4000},
     cruiser     : {hull: 20, armor: 15, cargo: 12,  hardpoints: 10, mass: 1850,  thrust: 7000},
     battleship  : {hull: 35, armor: 25, cargo: 20,  hardpoints: 16, mass: 2700,  thrust: 11500}
+  },
+
+  stats: {
+    strength: {
+      desc: 'Strength determines the level of sustained acceleration you can endure.'
+    }
   }
 };

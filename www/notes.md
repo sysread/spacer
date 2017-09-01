@@ -6,7 +6,6 @@
 -save/load game
 -missions
 -conditions
--character design screen
 -skills/xp
 -faction politics
 -fuel usage
