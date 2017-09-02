@@ -4,6 +4,10 @@
  */
 
 const data = {
+  C  : 299792458,    // m/s
+  G  : 9.80665,      // m/s/s
+  AU : 149597870700, // m
+
   hours_per_turn  : 4,
   initial_turns   : 60,
   demand_history  : 100 * 6, // 6 turns/day
@@ -70,27 +74,27 @@ const data = {
 
   bodies: {
     mercury   : {size: 'normal', traits: ['mineral rich', 'water poor', 'water poor']},
-    earth     : {size: 'huge',   traits: ['water rich', 'water rich', 'mineral rich', 'mineral rich']},
+    earth     : {size: 'huge',   traits: ['water rich', 'mineral rich', 'mineral rich']},
     moon      : {size: 'normal', traits: ['mineral rich']},
     mars      : {size: 'large',  traits: ['water poor', 'mineral rich']},
-    phobos    : {size: 'small',  traits: ['water poor', 'water poor']},
-    deimos    : {size: 'tiny',   traits: ['water poor', 'water poor']},
-    ceres     : {size: 'small',  traits: []},
-    europa    : {size: 'small',  traits: []},
+    phobos    : {size: 'small',  traits: ['water poor', 'water poor', 'mineral poor']},
+    deimos    : {size: 'tiny',   traits: ['water poor', 'water poor', 'mineral poor']},
+    ceres     : {size: 'small',  traits: ['water poor', 'mineral poor']},
+    europa    : {size: 'small',  traits: ['mineral poor']},
     ganymede  : {size: 'normal', traits: ['water rich', 'mineral poor']},
     callisto  : {size: 'normal', traits: []},
     mimas     : {size: 'small',  traits: ['water rich', 'mineral poor']},
     enceladus : {size: 'small',  traits: ['water rich', 'mineral poor']},
     tethys    : {size: 'tiny',   traits: ['water rich', 'mineral poor']},
     dione     : {size: 'small',  traits: ['water rich', 'mineral poor']},
-    rhea      : {size: 'small',  traits: ['water rich', 'mineral poor']},
+    rhea      : {size: 'small',  traits: ['water rich', 'mineral poor', 'mineral poor']},
     titan     : {size: 'normal', traits: ['water rich', 'mineral poor']},
     iapetus   : {size: 'small',  traits: ['water rich', 'mineral poor']},
     phoebe    : {size: 'tiny',   traits: ['water rich', 'mineral poor']},
     titania   : {size: 'small',  traits: ['water rich', 'mineral poor']},
     triton    : {size: 'normal', traits: ['water rich', 'mineral poor']},
     pluto     : {size: 'small',  traits: ['water rich']},
-    eris      : {size: 'small',  traits: ['mineral rich']}
+    eris      : {size: 'small',  traits: ['water poor', 'mineral poor']}
   },
 
   shipclass: {

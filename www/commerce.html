@@ -71,7 +71,9 @@ $(function() {
       game.player.ship.unload_cargo(item, -count);
     }
 
+    game.save_game();
     game.refresh();
+
     update_table();
     $('#exchange-dialog').modal('hide');
   });

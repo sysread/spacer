@@ -7,7 +7,10 @@ class DefaultMap {
   save() {
     let map = {};
     this.each((k, v) => {map[k] = v});
-    return {default_value: this.default_value, map: map};
+    return {
+      default_value: this.default_value,
+      map: map
+    };
   }
 
   load(obj) {

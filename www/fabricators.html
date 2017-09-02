@@ -52,18 +52,21 @@ $(function() {
       let value = game.place().price(resource);
       player.money -= Math.max(1, Math.round(fee_pct * value));
 
-      for (let mat of Object.keys(recipe.materials)) {
+      for (let mat of Object.keys(recipe.materials))
         player.ship.unload_cargo(mat, recipe.materials[mat]);
-      }
 
-      for (var i = 0; i < recipe.tics; ++i)
-        game.turn();
+      game.turn(recipe.tics);
 
       player.ship.load_cargo(resource, 1);
     }
 
+    game.save_game();
+    game.refresh();
+
     update_recipes();
+
     $('#craft-dialog').modal('hide');
+
     message(`1 unit of ${resource} has been placed in your ship's hold.`, 'info', true);
   });
 

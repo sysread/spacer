@@ -6,39 +6,36 @@ $(function() {
 
   for (let body of system.bodies().sort()) {
     if (body != game.place().name) {
-      let name  = system.name(body);
-      let plan  = system.astrogate(game.place().name, body, max_a);
+      let name = system.name(body);
+      let plan = system.astrogate(game.place().name, body, max_a);
 
       if (plan !== null) {
-        let hrs, dist, unit, acc, turns;
-        hrs   = Math.ceil(plan.time);
-        turns = Math.ceil(hrs/4);
-        acc   = Math.max(0.01, plan.accel.toFixed(2));
+        let hrs   = plan.time;
+        let turns = plan.turns;
+        let acc   = plan.accel.toFixed(2);
+        let dist  = plan.au.toFixed(1);
+        let unit  = 'AU';
 
-        if (plan.dist < system.AU) {
-          dist = csn(Math.ceil(plan.dist/1000));
+        if (dist < 1.0) {
+          dist = Math.ceil(plan.km);
           unit = 'km';
-        }
-        else {
-          dist = (plan.dist/system.AU).toFixed(1);
-          unit = 'AU';
         }
 
         let btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-sm btn-dark btn-block">`);
         btn.append(`<span class="float-left">${name}</span>`);
         btn.append(`<span class="badge badge-pill float-right">${system.kind(body)}</span>`);
 
-        btn.data({
-          destination : [body, name],
-          accel       : acc,
-          distance    : [plan.dist, dist, unit],
-          time        : [plan.time, hrs, turns]
-        });
+        btn.data({plan: plan});
+        //  destination : [body, name],
+        //  accel       : acc,
+        //  distance    : [plan.dist, dist, unit],
+        //  time        : [plan.time, hrs, turns]
+        //});
 
         table
           .append($('<tr>')
             .append($('<td>').append(btn))
-            .append(`<td class="text-right">${dist} ${unit}</td>`)
+            .append(`<td class="text-right">${csn(dist)} ${unit}</td>`)
             .append(`<td class="text-right">${acc}G</td>`)
             .append(`<td class="text-right">${csn(hrs)} hrs</td>`)
             .append(`<td class="text-right">${turns}</td>`));
@@ -56,33 +53,32 @@ $(function() {
   }
 
   $('#nav-dialog').on('show.bs.modal', function(e) {
-    let btn   = $(e.relatedTarget);
-    let dest  = btn.data('destination');
-    let dist  = btn.data('distance');
-    let time  = btn.data('time');
-    let accel = btn.data('accel');
+    let plan   = $(e.relatedTarget).data('plan');
+    let target = system.name(plan.dest);
+    let [days, hours] = plan.days_hours;
 
-    $('#nav-accel').text(accel);
-    $('#nav-destination').text(dest[1]);
-    $('#nav-distance').text(`${dist[1]} ${dist[2]}`);
-    $('#nav-time').text(`${csn(time[1])} hours (${time[2]} turns)`);
+    $('#nav-transit').data('plan', plan);
 
-    $('#nav-transit-dest').text(dest[1]);
-
-    $('#nav-transit').data({
-      destination : dest[0],
-      turns       : time[2],
-      time        : time[1] / 100,
-      distance    : parseFloat(dist[1], 10) / 100,
-      percent     : 100 / time[2]
-    });
+    $('#nav-accel').text(plan.accel.toFixed(1));
+    $('#nav-destination').text(target);
+    $('#nav-distance-au').text(plan.au.toFixed(1));
+    $('#nav-distance-km').text(csn(plan.km.toFixed(0)));
+    $('#nav-time').text(`${csn(days)} days, ${csn(hours)} hours (${plan.turns} turns)`);
+    $('#nav-transit-dest').text(target);
   });
 
   let transit_intvl;
-  let pause_transit = () => {window.clearInterval(transit_intvl)}
+
+  let pause_transit = () => {
+    window.clearInterval(transit_intvl);
+    delete transit_intvl;
+  }
+
   let resume_transit = () => {
     transit_intvl = window.setInterval(() => {
-      if ($('#nav-transit').data('turns') === 0) {
+      let plan = $('#nav-transit').data('plan');
+
+      if (plan.left === 0) {
         pause_transit();
 
         $('#nav-transit-distance').text('0 AU');
@@ -90,28 +86,23 @@ $(function() {
         $('#nav-transit-progress').css('width', '100%');
 
         window.setTimeout(() => {
-          let dest = $('#nav-transit').data('destination');
           $('#nav-transit .modal-body').empty();
           $('#nav-transit .modal-header').remove();
-          $('#nav-transit .modal-footer').empty().append('<button type="button" class="btn btn-dark" data-dismiss="modal">Disembark</button>');
-          $('#nav-transit .modal-body').html(`<h1>Welcome to <span class="text-capitalize">${dest}</span></h1>`);
+          $('#nav-transit .modal-body').html(`<h1>Welcome to <span class="text-capitalize">${plan.dest}</span></h1>`);
+          $('#nav-transit .modal-footer').html('<button type="button" class="btn btn-dark" data-dismiss="modal">Disembark</button>');
           $('#nav-transit .modal-body').show();
+
+          $('#spacer-nav').data('in-transit', false);
+          game.transit(plan.dest);
         }, 950);
       }
       else {
+        plan.turn();
         game.turn();
-
-        let data  = $('#nav-transit').data();
-        let dist  = data.distance;
-        let turns = data.turns;
-        let pct   = data.percent;
-
-        let p = Math.ceil(100 - (turns * pct));
-        let d = (turns * dist).toFixed(2);
-
+        let d = plan.dist_left.toFixed(2);
+        let p = plan.pct_complete;
         $('#nav-transit-distance').text(`${d} AU`);
         $('#nav-transit-progress').css('width', `${p}%`);
-        $('#nav-transit').data('turns', turns - 1);
       }
     }, 50);
   }
@@ -122,8 +113,6 @@ $(function() {
       resume_transit();
     })
     .on('hide.bs.modal', () => {
-      $('#spacer-nav').data('in-transit', false);
-      game.transit($('#nav-transit').data('destination'));
       open('summary');
     });
 
@@ -181,7 +170,8 @@ $(function() {
         <table class="table">
           <tbody>
             <tr><th scope="row">Destination</th><td id="nav-destination"></td></tr>
-            <tr><th scope="row">Distance</th><td id="nav-distance"></td></tr>
+            <tr><th scope="row">Distance (AU)</th><td id="nav-distance-au"></td></tr>
+            <tr><th scope="row">Distance (km)</th><td id="nav-distance-km"></td></tr>
             <tr><th scope="row">Total time</th><td id="nav-time"></td></tr>
           </tbody>
         </table>

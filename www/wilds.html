@@ -29,13 +29,13 @@ $(function() {
     $('#collect-explain').text(`After ${hrs} hours of work, your crew collected:`);
     $('#collect-results').empty().append(chooser.table);
 
-    for (let i = 0; i < turns; ++i)
-      game.turn();
+    game.turn(turns);
   });
 
   $('#collect-complete').one('click', () => {
     game.player.ship.cargo = chooser.cargo;
     game.refresh();
+    game.save_game();
   });
 });
 

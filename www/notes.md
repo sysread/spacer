@@ -3,7 +3,6 @@
 -buy/sell ship
 -ship addons
 -pirates/fights
--save/load game
 -missions
 -conditions
 -skills/xp

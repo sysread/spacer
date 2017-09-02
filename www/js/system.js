@@ -1,9 +1,6 @@
 class System {
   constructor() {
     this.system = new SolarSystem;
-    this.C      = 299792458;    // m/s
-    this.G      = 9.80665;      // m/s/s
-    this.AU     = 149597870700; // m
   }
 
   set_date(date) {
@@ -114,7 +111,7 @@ class System {
   astrogate(origin, target, max_g=1) {
     let b1  = this.body(origin);
     let b2  = this.body(target);
-    let max = max_g * this.G;
+    let max = max_g * data.G;
     let p1;
     let time;
     let dist;
@@ -154,7 +151,7 @@ class System {
       if (a <= max) {
         time = t / 60 / 60 * 2; // seconds to hours
         dist = S * 2;           // meters
-        acc  = a / this.G;      // gravities
+        acc  = a / data.G;      // gravities
         break;
       }
     }
@@ -162,11 +159,12 @@ class System {
     if (time === undefined)
       return null;
 
-    return {
-      dist  : dist * 2, // meters
-      time  : time * 2, // hours
-      accel : acc       // gravities
-    };
+    return new Transit({
+      dest  : target,              // destination name
+      dist  : Math.ceil(dist * 2), // meters
+      time  : Math.ceil(time * 2), // hours
+      accel : Math.max(0.01, acc)  // gravities
+    });
   }
 }
 
