@@ -4,6 +4,13 @@
  */
 
 const data = {
+  hours_per_turn  : 4,
+  initial_turns   : 60,
+  demand_history  : 100 * 6, // 6 turns/day
+  base_unit_price : 25,
+  scarcity_markup : 1.25,
+  necessity       : {water: true, food: true, medicine: true},
+
   scales: {
     tiny   : 0.25,
     small  : 0.5,
@@ -13,21 +20,21 @@ const data = {
   },
 
   resources: {
-    water        : {mass: 10, mine: {tics: 4}},
-    ore          : {mass: 90, mine: {tics: 8}},
-    chemicals    : {mass: 50, mine: {tics: 6}},
-    food         : {mass: 5, recipe: {tics: 12, materials: {water: 4, chemicals: 4}}},
-    metal        : {mass: 110, recipe: {tics: 3, materials: {ore: 4}}},
-    medicine     : {mass: 10, recipe: {tics: 4, materials: {food: 2, chemicals: 2}}},
-    machines     : {mass: 75, recipe: {tics: 4, materials: {metal: 4, chemicals: 2}}},
-    electronics  : {mass: 20, recipe: {tics: 6, materials: {metal: 2, chemicals: 4}}},
-    cybernetics  : {mass: 80, recipe: {tics: 8, materials: {machines: 2, electronics: 2}}},
-    weapons      : {mass: 50, recipe: {tics: 6, materials: {metal: 2, chemicals: 4}}, contraband: 4},
-    narcotics    : {mass: 10, recipe: {tics: 5, materials: {food: 2, chemicals: 4, medicine: 2}}, contraband: 7}
+    water        : {mass: 10, mine: {tics: 2}},
+    ore          : {mass: 90, mine: {tics: 6}},
+    chemicals    : {mass: 50, mine: {tics: 4}},
+    food         : {mass: 5, recipe: {tics: 10, materials: {water: 2, chemicals: 2}}},
+    metal        : {mass: 110, recipe: {tics: 3, materials: {ore: 2}}},
+    medicine     : {mass: 10, recipe: {tics: 4, materials: {food: 1, chemicals: 1}}},
+    machines     : {mass: 75, recipe: {tics: 4, materials: {metal: 2, chemicals: 1}}},
+    electronics  : {mass: 20, recipe: {tics: 6, materials: {metal: 1, chemicals: 2}}},
+    cybernetics  : {mass: 80, recipe: {tics: 8, materials: {machines: 1, electronics: 1}}},
+    weapons      : {mass: 50, recipe: {tics: 6, materials: {metal: 1, chemicals: 2}}, contraband: 4},
+    narcotics    : {mass: 10, recipe: {tics: 4, materials: {food: 1, chemicals: 1, medicine: 1}}, contraband: 7}
   },
 
   market: {
-    agents        : 10,
+    agents        : 100,
     agent_money   : 500,
     minability    : 0.25,
     produces: {
@@ -36,8 +43,8 @@ const data = {
       chemicals   : 10
     },
     consumes: {
-      water       : 10,
-      food        : 10,
+      water       : 8,
+      food        : 6,
       medicine    : 3,
       machines    : 2,
       electronics : 2,
@@ -63,14 +70,12 @@ const data = {
 
   bodies: {
     mercury   : {size: 'normal', traits: ['mineral rich', 'water poor', 'water poor']},
-    venus     : {size: 'huge',   traits: ['water poor', 'water poor']},
     earth     : {size: 'huge',   traits: ['water rich', 'water rich', 'mineral rich', 'mineral rich']},
     moon      : {size: 'normal', traits: ['mineral rich']},
     mars      : {size: 'large',  traits: ['water poor', 'mineral rich']},
-    phobos    : {size: 'small',  traits: ['water poor']},
-    deimos    : {size: 'tiny',   traits: ['water poor']},
+    phobos    : {size: 'small',  traits: ['water poor', 'water poor']},
+    deimos    : {size: 'tiny',   traits: ['water poor', 'water poor']},
     ceres     : {size: 'small',  traits: []},
-    io        : {size: 'normal', traits: ['mineral rich', 'water poor']},
     europa    : {size: 'small',  traits: []},
     ganymede  : {size: 'normal', traits: ['water rich', 'mineral poor']},
     callisto  : {size: 'normal', traits: []},

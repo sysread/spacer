@@ -1,7 +1,7 @@
 class Market {
   constructor() {
     this.store           = new ResourceCounter;
-    this.sold            = new ResourceTracker(500);
+    this.sold            = new ResourceTracker(data.demand_history);
     this.sales_this_turn = new ResourceCounter;
     this.sell_total      = new ResourceCounter;
     this.buy_total       = new ResourceCounter;
@@ -40,7 +40,15 @@ class Market {
     let supply  = this.supply(resource);
     let demand  = this.demand(resource) || 1;
     let adjust  = 1 + Math.log10(1 + (demand / (supply || 1)));
-    if (supply == 0) adjust *= 2;
+
+    if (supply == 0) {
+      adjust *= data.scarcity_markup;
+
+      if (data.necessity[resource]) {
+        adjust *= data.scarcity_markup;
+      }
+    }
+
     return adjust;
   }
 
@@ -50,7 +58,7 @@ class Market {
     let value   = null;
 
     if (mine) {
-      value = 50 * mine.tics;
+      value = data.base_unit_price * mine.tics;
     }
     else if (recipe) {
       let mats = recipe.materials;
@@ -101,7 +109,8 @@ class Market {
   }
 
   turn() {
-    this.sales_this_turn.each((k, v) => {
+    Object.keys(data.resources).forEach((k) => {
+    //this.sales_this_turn.each((k, v) => {
       this.sold.add(k, this.sales_this_turn.get(k));
       this.sales_this_turn.delete(k);
     });

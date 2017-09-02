@@ -1,11 +1,12 @@
 class Person {
   constructor(opt) {
-    this.name     = opt.name;
-    this.money    = opt.money    || 1000;
-    this.strength = opt.strength || 1;
-    this.xp       = opt.xp       || 0;
-    this.health   = opt.health   || 10;
-    this.ship     = opt.ship;
+    this.opt      = opt || {};
+    this.name     = this.opt.game;
+    this.money    = this.opt.money    || 1000;
+    this.strength = this.opt.strength || 1;
+    this.xp       = this.opt.xp       || 0;
+    this.health   = this.opt.health   || 10;
+    this.ship     = this.opt.ship     || new Ship;
   }
 
   save() {
