@@ -7,6 +7,22 @@ class Agent {
     this.consumption_threshold = money * 10;
   }
 
+  save() {
+    return {
+      place: this.place,
+      money: this.money,
+      inventory: this.inventory.save(),
+      consumption_threshold: this.consumption_threshold
+    };
+  }
+
+  load(obj) {
+    this.place   = obj.place;
+    this.money   = obj.money;
+    this.pending = null;
+    this.inventory.load(obj.inventory);
+  }
+
   turn() {
     if (!this.pending) {
       this.pending = this.next_action();

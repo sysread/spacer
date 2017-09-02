@@ -1,24 +1,20 @@
-class ShipClass {
-  constructor(opt) {
-    this.opt = opt;
-  }
-
-  get hull()       { return this.opt.hull }
-  get armor()      { return this.opt.armor }
-  get cargo()      { return this.opt.cargo }
-  get hardpoints() { return this.opt.hardpoints }
-  get mass()       { return this.opt.mass }
-  get thrust()     { return this.opt.thrust }
-}
-
 class Ship {
   constructor(opt) {
-    this.opt       = opt;
-    this.cargo     = new ResourceCounter;
-    this.shipclass = new ShipClass(this.opt.shipclass);
+    this.opt   = opt || {};
+    this.cargo = new ResourceCounter;
+  }
+
+  save() {
+    return {opt: this.opt, cargo: this.cargo.save()};
+  }
+
+  load(obj) {
+    this.opt = obj.opt;
+    this.cargo.load(obj.cargo);
   }
 
   get name() { return this.opt.name }
+  get shipclass() { return data.shipclass[this.opt.shipclass] }
   get cargo_space() { return this.shipclass.cargo }
 
   get cargo_used() {

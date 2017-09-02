@@ -1,16 +1,15 @@
 <script type="text/javascript">
 
 $(function() {
-  let table  = $('#exchange-table tbody');
-  let player = game.player();
-  let place  = game.place();
+  let table = $('#exchange-table tbody');
+  let place = game.place();
   let slider;
 
   let update_table = function() {
     table.empty();
 
     for (let item of Object.keys(data.resources)) {
-      let cargo = player.ship.cargo.get(item);
+      let cargo = game.player.ship.cargo.get(item);
       let avail = place.supply(item);
       let price = place.price(item);
       let btn   = $(`<button type="button" class="btn btn-block btn-sm btn-dark text-capitalize" data-toggle="modal" data-target="#exchange-dialog">${item}</button>`);
@@ -33,15 +32,15 @@ $(function() {
     let item  = $(e.relatedTarget).data('resource');
     let price = place.price(item);
     let avail = place.supply(item);
-    let cargo = player.ship.cargo.get(item);
+    let cargo = game.player.ship.cargo.get(item);
 
     $('#exchange-resource').text(item);
     $('#exchange-price').val(price);
     $('#exchange-docks').val(avail);
     $('#exchange-hold').val(cargo);
-    $('#exchange-credits').val(player.money);
+    $('#exchange-credits').val(game.player.money);
 
-    let max = cargo + Math.min(avail, Math.floor(player.money / price), player.ship.cargo_left);
+    let max = cargo + Math.min(avail, Math.floor(game.player.money / price), game.player.ship.cargo_left);
 
     slider = new Slider({
       step       : 1,
@@ -50,10 +49,10 @@ $(function() {
       initial    : cargo,
       minmaxbtns : true,
       callback   : (amount) => {
-        let diff = amount - player.ship.cargo.get(item);
+        let diff = amount - game.player.ship.cargo.get(item);
         $('#exchange-docks').val(avail - diff);
         $('#exchange-hold').val(amount);
-        $('#exchange-credits').val(player.money - (diff * price));
+        $('#exchange-credits').val(game.player.money - (diff * price));
       }
     });
 
@@ -62,14 +61,14 @@ $(function() {
 
   $('#exchange-complete').click(function(e) {
     let item  = $('#exchange-resource').text();
-    let count = slider.val - player.ship.cargo.get(item);
+    let count = slider.val - game.player.ship.cargo.get(item);
 
     if (count > 0) {
-      player.money -= place.buy(item, count);
-      player.ship.load_cargo(item, count);
+      game.player.money -= place.buy(item, count);
+      game.player.ship.load_cargo(item, count);
     } else {
-      player.money += place.sell(item, -count);
-      player.ship.unload_cargo(item, -count);
+      game.player.money += place.sell(item, -count);
+      game.player.ship.unload_cargo(item, -count);
     }
 
     game.refresh();

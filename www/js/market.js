@@ -5,7 +5,27 @@ class Market {
     this.sales_this_turn = new ResourceCounter;
     this.sell_total      = new ResourceCounter;
     this.buy_total       = new ResourceCounter;
-    this._price          = new DefaultMap(() => {return null});
+    this.prices          = new DefaultMap(null);
+  }
+
+  save() {
+    let me = {};
+    me.store           = this.store.save();
+    me.sold            = this.sold.save();
+    me.sales_this_turn = this.sales_this_turn.save();
+    me.sell_total      = this.sell_total.save();
+    me.buy_total       = this.buy_total.save();
+    me.prices          = this.prices.save();
+    return me;
+  }
+
+  load(obj) {
+    this.store.load(obj.store);
+    this.sold.load(obj.sold);
+    this.sales_this_turn.load(obj.sales_this_turn);
+    this.sell_total.load(obj.sell_total);
+    this.buy_total.load(obj.buy_total);
+    this.prices.load(obj.prices);
   }
 
   supply(resource) {
@@ -44,9 +64,9 @@ class Market {
   }
 
   price(resource) {
-    if (!this._price.has(resource))
-      this._price.set(resource, this.calculate_price(resource));
-    return this._price.get(resource);
+    if (!this.prices.has(resource))
+      this.prices.set(resource, this.calculate_price(resource));
+    return this.prices.get(resource);
   }
 
   buy(resource, amount) {
@@ -59,7 +79,7 @@ class Market {
     let price = amount * this.price(resource);
     this.store.dec(resource, amount);
     this.sales_this_turn.inc(resource, amount);
-    this._price.delete(resource);
+    this.prices.delete(resource);
     this.buy_total.inc(resource, amount);
     return price;
   }
@@ -68,7 +88,7 @@ class Market {
     let price = amount * this.price(resource);
     this.store.inc(resource, amount);
     this.sell_total.inc(resource, amount);
-    this._price.delete(resource);
+    this.prices.delete(resource);
     return price;
   }
 

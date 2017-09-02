@@ -2,7 +2,7 @@
 
 $(function() {
   let table = $('#navcomp-table tbody');
-  let max_a = Math.min(game.player().max_acceleration(), game.player().ship_acceleration());
+  let max_a = Math.min(game.player.max_acceleration(), game.player.ship_acceleration());
 
   for (let body of system.bodies().sort()) {
     if (body != game.place().name) {
@@ -127,10 +127,10 @@ $(function() {
       open('summary');
     });
 
-  $('#nav-player-str').text(game.player().strength);
-  $('#nav-player-g'  ).text(game.player().max_acceleration().toFixed(2));
-  $('#nav-ship-g'    ).text(game.player().ship_acceleration().toFixed(2));
-  $('#nav-ship-t'    ).text(csn(game.player().ship.mass));
+  $('#nav-player-str').text(game.player.strength);
+  $('#nav-player-g'  ).text(game.player.max_acceleration().toFixed(2));
+  $('#nav-ship-g'    ).text(game.player.ship_acceleration().toFixed(2));
+  $('#nav-ship-t'    ).text(csn(game.player.ship.mass));
 });
 
 </script>

@@ -87,8 +87,8 @@ class ResourceExchange {
   constructor(opt) {
     this.opt = opt || {};
     this.resources = new ResourceCounter;
-    this.store     = new ResourceCounter(opt.store);
-    this.cargo     = new ResourceCounter(opt.cargo);
+    this.store     = opt.store;
+    this.cargo     = opt.cargo;
     this.table     = $('<table class="table table-sm">');
 
     this.store.each((item, amt) => {this.resources.inc(item, amt)});

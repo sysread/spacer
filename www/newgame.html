@@ -50,11 +50,11 @@ $(function() {
   $('#start-game').on('click', function(e) {
     let me = new Person({
       name     : $('#name').val(),
-      money    : 2000,
+      money    : 1000,
       strength : parseInt($('#stat-strength').val(), 10),
       ship     : new Ship({
         name      : $('#ship').val(),
-        shipclass : data.shipclass.clipper
+        shipclass : 'clipper'
       })
     });
 

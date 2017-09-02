@@ -1,28 +1,49 @@
-class DefaultMap extends Map {
-  constructor(builder, iterable) {
-    super(iterable);
-    this.builder = builder;
+class DefaultMap {
+  constructor(default_value) {
+    this.default_value = default_value;
+    this.map = new Map;
+  }
+
+  save() {
+    let map = {};
+    this.each((k, v) => {map[k] = v});
+    return {default_value: this.default_value, map: map};
+  }
+
+  load(obj) {
+    this.default_value = obj.default_value;
+    this.map.clear();
+    Object.keys(obj.map).forEach((k) => {this.set(k, obj.map[k])});
   }
 
   get(key) {
-    if (!this.has(key)) {
-      this.set(key, this.builder());
-    }
+    if (!this.map.has(key)) this.map.set(key, this.default_value);
+    return this.map.get(key);
+  }
 
-    return super.get(key);
+  set(key, val) {
+    return this.map.set(key, val);
+  }
+
+  has(key) {
+    return this.map.has(key);
+  }
+
+  delete(key) {
+    return this.map.delete(key);
   }
 
   each(f) {
-    this.forEach((val, key, map) => {
-      f(key, val);
-    });
+    this.map.forEach((val, key, map) => {f(key, val)});
   }
 }
 
 class ResourceCounter extends DefaultMap {
-  constructor(iterable) {
-    super(() => {return 0}, iterable);
+  constructor() {
+    super(0);
   }
+
+  save() { return super.save() }
 
   inc(key, amount) {
     this.set(key, this.get(key) + amount);
@@ -45,6 +66,20 @@ class ResourceTracker {
     this.history = {};
     this.summed = new ResourceCounter;
     Object.keys(data.resources).forEach((k) => {this.history[k] = []});
+  }
+
+  save() {
+    let me = {};
+    me.max = this.max;
+    me.history = this.history;
+    me.summed = this.summed.save();
+    return me;
+  }
+
+  load(obj) {
+    this.max = obj.max;
+    this.history = obj.history;
+    this.summed.load(obj.summed);
   }
 
   add(resource, amount) {

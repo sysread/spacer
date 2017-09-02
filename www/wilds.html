@@ -15,13 +15,14 @@ $(function() {
   let chooser;
 
   $('#collect-dialog').on('show.bs.modal', () => {
-    let hrs   = hours.val;
-    let turns = hrs / 4;
+    let hrs     = hours.val;
+    let turns   = hrs / 4;
+    let harvest = game.place().harvest(turns);
 
     chooser = new ResourceExchange({
-      store      : game.place().harvest(hrs),
-      cargo      : game.player().ship.cargo,
-      max_cargo  : game.player().ship.shipclass.cargo,
+      store      : harvest,
+      cargo      : game.player.ship.cargo,
+      max_cargo  : game.player.ship.shipclass.cargo,
       minmaxbtns : true
     });
 
@@ -33,7 +34,7 @@ $(function() {
   });
 
   $('#collect-complete').one('click', () => {
-    game.player().ship.cargo = chooser.cargo;
+    game.player.ship.cargo = chooser.cargo;
     game.refresh();
   });
 });

@@ -8,6 +8,26 @@ class Person {
     this.ship     = opt.ship;
   }
 
+  save() {
+    return {
+      name     : this.name,
+      money    : this.money,
+      strength : this.strength,
+      xp       : this.xp,
+      health   : this.health,
+      ship     : this.ship.save()
+    };
+  }
+
+  load(obj) {
+    this.name     = obj.name;
+    this.money    = obj.money;
+    this.strength = obj.strength;
+    this.xp       = obj.xp;
+    this.health   = obj.health;
+    this.ship.load(obj.ship);
+  }
+
   can_craft(item) {
     let recipe = data.resources[item].recipe.materials;
 
