@@ -24,13 +24,7 @@ $(function() {
         let btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-sm btn-dark btn-block">`);
         btn.append(`<span class="float-left">${name}</span>`);
         btn.append(`<span class="badge badge-pill float-right">${system.kind(body)}</span>`);
-
         btn.data({plan: plan});
-        //  destination : [body, name],
-        //  accel       : acc,
-        //  distance    : [plan.dist, dist, unit],
-        //  time        : [plan.time, hrs, turns]
-        //});
 
         table
           .append($('<tr>')
@@ -55,15 +49,18 @@ $(function() {
   $('#nav-dialog').on('show.bs.modal', function(e) {
     let plan   = $(e.relatedTarget).data('plan');
     let target = system.name(plan.dest);
+    let type   = system.kind(plan.dest);
+    let size   = game.place(plan.dest).size;
+    let traits = uniq(game.place(plan.dest).traits, ', ');
     let [days, hours] = plan.days_hours;
 
     $('#nav-transit').data('plan', plan);
 
     $('#nav-accel').text(plan.accel.toFixed(1));
-    $('#nav-destination').text(target);
     $('#nav-distance-au').text(plan.au.toFixed(1));
     $('#nav-distance-km').text(csn(plan.km.toFixed(0)));
     $('#nav-time').text(`${csn(days)} days, ${csn(hours)} hours (${plan.turns} turns)`);
+    $('#nav-destination').html(`${target}<ul><li>${type}</li><li>${size} economy</li><li>${traits}</li></ul>`);
     $('#nav-transit-dest').text(target);
   });
 
@@ -169,10 +166,10 @@ $(function() {
         </p>
         <table class="table">
           <tbody>
-            <tr><th scope="row">Destination</th><td id="nav-destination"></td></tr>
             <tr><th scope="row">Distance (AU)</th><td id="nav-distance-au"></td></tr>
             <tr><th scope="row">Distance (km)</th><td id="nav-distance-km"></td></tr>
             <tr><th scope="row">Total time</th><td id="nav-time"></td></tr>
+            <tr><th scope="row">Destination</th><td id="nav-destination"></td></tr>
           </tbody>
         </table>
       </div>
