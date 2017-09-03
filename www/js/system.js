@@ -166,6 +166,29 @@ class System {
       accel : Math.max(0.01, acc)  // gravities
     });
   }
+
+  max_distance() {
+    let bodies = new Set;
+    let seen   = new Set;
+    let max    = 0;
+
+    for (let name of this.bodies()) {
+      let body = this.body(name);
+      bodies.add((body.central.name === 'The Sun') ? name : body.central.key);
+    }
+
+    for (let a of bodies.keys()) {
+      for (let b of bodies.keys()) {
+        if (a === b) continue;
+        let key = [a, b].sort().join('-');
+        if (seen.has(key)) continue;
+        seen.add(key);
+        max = Math.max(max, this.distance(a, b));
+      }
+    }
+
+    return max;
+  }
 }
 
 const system = new System;

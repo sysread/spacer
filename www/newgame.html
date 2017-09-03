@@ -7,7 +7,7 @@ $(function() {
   $('#total-points').text(points);
 
   for (let body in data.bodies) $('#home').append(`<option value="${body}">${body}</option>`);
-  $('#home').val('earth');
+  $('#home').val('ganymede');
 
   for (let name of Object.keys(data.stats)) {
     let slider = new Slider({
@@ -60,7 +60,7 @@ $(function() {
 
     let place = $('#home').val();
 
-    game.start(me, place);
+    game.new_game(me, place);
   });
 });
 
@@ -71,7 +71,7 @@ $(function() {
   <div class="card-body">
     <form>
       <label for="name">Captain name</label>
-      <input class="form-control" type="text" name="name" id="name" value="Jameson">
+      <input class="form-control" type="text" name="name" id="name" value="Marco Solo">
       <br>
 
       <label for="name">Ship name</label>

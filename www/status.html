@@ -15,6 +15,8 @@ $(function() {
     .append(row('Strength',    `${p.strength} (max thrust ${p.max_acceleration().toFixed(2)} G)`))
 
   $('#ship').empty()
+    .append(row('Name',         `${s.name}`))
+    .append(row('Class',        `<span class="text-capitalize">${s.opt.shipclass}</span>`))
     .append(row('Cargo',        `${s.cargo_used}/${s.cargo_space}`))
     .append(row('Mass',         `${s.mass} Mg (${s.shipclass.mass} nominal)`))
     .append(row('Thrust',       `${s.shipclass.thrust} kN`))

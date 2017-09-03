@@ -103,14 +103,17 @@ class Market {
   report() {
     let info = {};
     Object.keys(data.resources).forEach((resource) => {
-      info[resource] = {amount: this.supply(resource), price: this.price(resource)};
+      info[resource] = {
+        supply : this.supply(resource),
+        demand : this.demand(resource),
+        price  : this.price(resource)
+      };
     });
     return info;
   }
 
   turn() {
     Object.keys(data.resources).forEach((k) => {
-    //this.sales_this_turn.each((k, v) => {
       this.sold.add(k, this.sales_this_turn.get(k));
       this.sales_this_turn.delete(k);
     });

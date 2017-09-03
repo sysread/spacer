@@ -43,8 +43,16 @@ body {
   background-color: #000;
 }
 
-td, th {
-  border: 0px !important;
+table.table td, table.table th {
+  border: 0px;
+}
+
+table.table-bordered {
+  border: 0px;
+}
+
+table.table-bordered td {
+  border-top: 1px solid rgb(139,0,0);
 }
 
 button.btn-dark {
