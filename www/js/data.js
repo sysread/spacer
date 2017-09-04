@@ -47,11 +47,11 @@ const data = {
       chemicals   : 4,
     },
     consumes: {
-      water       : 8,
-      food        : 4,
-      medicine    : 3,
-      machines    : 2,
-      electronics : 2,
+      water       : 5,
+      food        : 2,
+      medicine    : 1,
+      machines    : 1,
+      electronics : 1,
       cybernetics : 1,
       weapons     : 1,
       narcotics   : 1
