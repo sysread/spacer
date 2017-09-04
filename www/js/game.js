@@ -57,6 +57,13 @@ class Game {
         open('newgame');
       }
     });
+
+    /*for (let sc of Object.keys(data.shipclass)) {
+      let s = new Ship({shipclass: sc});
+      console.log(`${sc} nominal`, s.mass, s.acceleration.toFixed(2));
+      s.load_cargo('water', s.cargo_space);
+      console.log(`${sc} w/cargo`, s.mass, s.acceleration.toFixed(2));
+    }*/
   }
 
   new_game(player, place) {

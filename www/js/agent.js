@@ -113,7 +113,7 @@ class Agent {
       let lack = recipe.materials[item] - this.inventory.get(item);
 
       if (lack > 0) {
-        if (game.place(this.place).supply(item) >= lack) {
+        if (game.place(this.place).current_supply(item) >= lack) {
           cost += lack * game.place(this.place).price(item);
 
           if (cost >= profit)
@@ -161,16 +161,16 @@ class Agent {
       return;
 
     let item = ['cybernetics', 'narcotics'].reduce((a, b) => {
-      return (game.place(this.place).supply(a) > game.place(this.place).supply(b)) ? a : b;
+      return (game.place(this.place).current_supply(a) > game.place(this.place).current_supply(b)) ? a : b;
     });
 
-    let amount = game.place(this.place).supply(item);
+    let amount = game.place(this.place).current_supply(item);
     if (amount == 0) return;
 
     let can_afford = Math.floor((this.money / game.place(this.place).price(item)) / 2);
     if (can_afford == 0) return;
 
-    let to_buy = Math.min(can_afford, game.place(this.place).supply(item));
+    let to_buy = Math.min(can_afford, game.place(this.place).current_supply(item));
 
     let me = this;
     return new Action(1, 2000, function() {game.place(me.place).buy(item, to_buy)}, function(){});

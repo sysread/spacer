@@ -51,35 +51,32 @@ class Place extends Market {
   merge_scale(resources, traits, conditions) {
     let amounts = new DefaultMap(0);
 
-    Object.keys(resources).forEach((resource) => {
+    for (let resource of Object.keys(resources))
       amounts.set(resource, Math.floor(this.scale * resources[resource]));
-    });
 
-    if (traits) {
-      traits.forEach((trait) => {
-        Object.keys(traits).forEach((resource) => {
-          amounts.set(resource, amounts.get(resource) * traits[trait][resource]);
-        });
-      });
-    }
+    if (traits)
+      for (let trait of traits)
+        for (let resource of Object.keys(trait))
+          amounts.set(resource, amounts.get(resource) * trait[resource]);
 
-    if (conditions) {
-      conditions.forEach((cond) => {
-        Object.keys(conditions).forEach((resource) => {
-          amounts.set(resource, amounts.get(resource) * conditions[cond][resource]);
-        });
-      });
-    }
+    if (conditions)
+      for (let cond of conditions)
+        for (let resource of Object.keys(cond))
+          amounts.set(resource, amounts.get(resource) * cond[resource]);
 
     return amounts;
   }
 
-  production() {
-    return this.merge_scale(data.market.produces, this.traits.produces, this.conditions.produces);
+  get production() {
+    let traits = this.traits.map((t)     => {return data.traits[t].produces});
+    let conds  = this.conditions.map((c) => {return data.conditions[c].produces});
+    return this.merge_scale(data.market.produces, traits, conds);
   }
 
-  consumption() {
-    return this.merge_scale(data.market.consumes, this.traits.consumes, this.conditions.consumes);
+  get consumption() {
+    let traits = this.traits.map((t)     => {return data.traits[t].consumes});
+    let conds  = this.conditions.map((c) => {return data.conditions[c].consumes});
+    return this.merge_scale(data.market.consumes, traits, conds);
   }
 
   mine(resource) {
@@ -122,13 +119,13 @@ class Place extends Market {
     }
 
     // Produce
-    this.production().each((resource, amt) => {
+    this.production.each((resource, amt) => {
       this.resources.set(resource, amt);
     });
 
     // Consume
-    this.consumption().each((resource, amt) => {
-      let avail = Math.min(amt, this.supply(resource));
+    this.consumption.each((resource, amt) => {
+      let avail = Math.min(amt, this.current_supply(resource));
       if (avail) this.buy(resource, avail);
     });
 
@@ -137,7 +134,7 @@ class Place extends Market {
     this.agents.forEach((agent) => {agent.turn()});
 
     this.resources.each((resource, amt) => {
-      if (this.supply(resource) == 0 && amt > 0)
+      if (this.current_supply(resource) == 0 && amt > 0)
         this.store.inc(resource, Math.ceil(amt/2));
     });
   }

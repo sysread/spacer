@@ -10,14 +10,14 @@ $(function() {
 
     for (let item of Object.keys(data.resources)) {
       let cargo = game.player.ship.cargo.get(item);
-      let avail = place.supply(item);
+      let avail = place.current_supply(item);
       let price = place.price(item);
       let btn   = $(`<button type="button" class="btn btn-block btn-sm btn-dark text-capitalize" data-toggle="modal" data-target="#exchange-dialog">${item}</button>`);
 
-      if (cargo > 0 || avail > 0)
-        btn.data('resource', item);
-      else
-        btn.addClass('btn-secondary').prop('disabled', true);
+      btn.data('resource', item);
+
+      if (cargo === 0 || avail === 0)
+        btn.addClass('btn-secondary');
 
       table
         .append($('<tr>')
@@ -31,7 +31,7 @@ $(function() {
   $('#exchange-dialog').on('show.bs.modal', function(e) {
     let item  = $(e.relatedTarget).data('resource');
     let price = place.price(item);
-    let avail = place.supply(item);
+    let avail = place.current_supply(item);
     let cargo = game.player.ship.cargo.get(item);
 
     $('#exchange-resource').text(item);
@@ -95,6 +95,7 @@ $(function() {
       let row = $('<tr>');
       row.append(`<td class="text-capitalize">${body}</td>`);
       row.append(`<td class="text-right">${info.price}</td>`);
+      row.append(`<td class="text-right">${info.stock || ''}</td>`);
       row.append(`<td class="text-right">${info.supply}</td>`);
       row.append(`<td class="text-right">${info.demand}</td>`);
       row.append(`<td class="text-right">${report.age}</td>`);
@@ -170,6 +171,7 @@ $(function() {
             <tr>
               <th>Market</th>
               <th class="text-right">Price</th>
+              <th class="text-right">Stock</th>
               <th class="text-right">Supply</th>
               <th class="text-right">Demand</th>
               <th class="text-right">Age (hours)</th>

@@ -44,6 +44,6 @@ class Person {
   }
 
   ship_acceleration() {
-    return this.ship.acceleration();
+    return this.ship.acceleration;
   }
 }

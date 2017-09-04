@@ -25,16 +25,19 @@ class Ship {
 
   get cargo_left() { return this.cargo_space - this.cargo_used }
   get hold_is_full() { return this.cargo_left === 0 }
+  get thrust() { return this.shipclass.drives * data.drives[this.shipclass.drive].thrust }
 
   get mass() {
     let m = this.shipclass.mass;
     this.cargo.each((item, amt) => {m += data.resources[item].mass * amt});
+
+    for (let i = 0; i < this.shipclass.drives; ++i)
+      m += data.drives[this.shipclass.drive].mass;
+
     return m;
   }
 
-  acceleration() {
-    return this.shipclass.thrust / this.mass;
-  }
+  get acceleration() { return this.thrust / this.mass }
 
   load_cargo(resource, amount) {
     if (this.cargo_left < amount)
