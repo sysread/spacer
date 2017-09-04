@@ -6,6 +6,7 @@ class Game {
     this.player  = new Person;
     this.places  = {};
     this.markets = {}; // hourly market reports for light speed market data
+    this.agents  = [];
     document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
   }
 
@@ -16,18 +17,22 @@ class Game {
     me.player  = this.player.save();
     me.places  = {};
     me.markets = {};
+    me.agents  = [];
 
     Object.keys(data.bodies).forEach((name) => {
       me.places[name]  = this.places[name].save();
       me.markets[name] = this.markets[name].slice(0, this.markets[name].length);
     });
 
+    this.agents.forEach((agent) => {me.agents.push(agent.save())});
+
     return me;
   }
 
   load(obj) {
-    this.turns = obj.turns;
-    this.locus = obj.locus;
+    this.turns  = obj.turns;
+    this.locus  = obj.locus;
+    this.agents = [];
 
     this.date = new Date(2242, 0, 1);
     this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
@@ -38,6 +43,12 @@ class Game {
       this.places[name] = new Place;
       this.places[name].load(obj.places[name]);
       this.markets[name] = obj.markets[name];
+    });
+
+    obj.agents.forEach((agent) => {
+      let a = new HaulerAgent;
+      a.load(agent);
+      this.agents.push(a);
     });
 
     open('summary');
@@ -81,11 +92,13 @@ class Game {
       this.markets[name] = [];
     }
 
-    // Run the system for a few turns to get the economy moving
-    let initial_turns = Math.max(data.initial_turns, this.light_turns(system.max_distance()));
-    this.turn(initial_turns);
-    this.refresh();
-    open('summary');
+    for (let name of system.bodies()) {
+      for (let i = 0; i < data.haulers_per_place; ++i) {
+        let agent = new HaulerAgent(name, data.hauler_money * this.places[name].scale);
+        agent.turn(); // choose first action
+        this.agents.push(agent);
+      }
+    }
   }
 
   save_game() {
@@ -110,6 +123,7 @@ class Game {
     $('#spacer-turn').text(`${this.strdate()}`);
     $('#spacer-credits').text(`${csn(this.player.money)} credits`);
     $('#spacer-cargo').text(`${this.player.ship.cargo_used}/${this.player.ship.cargo_space} cargo`);
+    $('#spacer-location').text(this.locus);
   }
 
   light_hours(meters) {
@@ -130,6 +144,7 @@ class Game {
         this.markets[name].unshift(this.place(name).report());
       });
 
+      this.agents.forEach((agent) => {agent.turn()});
       this.refresh();
     }
 

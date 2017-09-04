@@ -14,12 +14,6 @@ class Action {
       this.value = Math.ceil(this.profit / this.tics);
   }
 
-  save() {
-  }
-
-  static load(obj) {
-  }
-
   perform() {
     if (!this.prepped) {
       if (this.prep)

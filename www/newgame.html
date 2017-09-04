@@ -47,7 +47,9 @@ $(function() {
     $('#stats').append(row);
   }
 
-  $('#start-game').on('click', function(e) {
+  $('#starting-game').on('shown.bs.modal', (e) => {
+    $('#starting-game-progress').css('width', '0%');
+
     let me = new Person({
       name     : $('#name').val(),
       money    : 1000,
@@ -59,8 +61,32 @@ $(function() {
     });
 
     let place = $('#home').val();
-
     game.new_game(me, place);
+
+    $('#starting-game-progress').css('width', '5%');
+    let turns = data.initial_turns;
+    let step  = Math.ceil(turns/5);
+    let done  = 0;
+
+    let intvl;
+    intvl = window.setInterval(() => {
+      if (done < turns) {
+        done += step;
+        let pct = Math.max(5, Math.ceil((done / turns) * 100));
+        $('#starting-game-progress').css('width', `${pct}%`);
+        game.turn(step);
+      }
+      else {
+        $('#starting-game-progress').css('width', '100%');
+        window.clearInterval(intvl);
+        $('#starting-game .modal-footer button').prop('disabled', false);
+      }
+    }, 5);
+  });
+
+  $('#starting-game').on('hidden.bs.modal', (e) => {
+    game.refresh();
+    open('summary');
   });
 });
 
@@ -86,7 +112,28 @@ $(function() {
       <p>You have <span id="total-points"></span> points to distribute across your skills.</p>
       <table id="stats" class="table"></table>
 
-      <div class="float-right"><button id="start-game" type="button" class="btn btn-dark">Start playing</button></div>
+      <div class="float-right">
+        <button id="start-game" type="button" class="btn btn-dark" data-toggle="modal" data-target="#starting-game">Start playing</button>
+      </div>
     </form>
+  </div>
+</div>
+
+<div class="modal" id="starting-game" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Starting game</h5>
+      </div>
+      <div class="modal-body">
+        <div class="progress bg-dark">
+          <div id="starting-game-progress" class="progress-bar bg-warning" style="height: 35px; width: 0%">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" data-dismiss="modal" disabled>Ok</button>
+      </div>
+    </div>
   </div>
 </div>

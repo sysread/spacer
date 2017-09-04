@@ -8,12 +8,14 @@ const data = {
   G  : 9.80665,      // m/s/s
   AU : 149597870700, // m
 
-  hours_per_turn  : 4,
-  initial_turns   : 60,
-  demand_history  : 100 * 6, // 6 turns/day
-  base_unit_price : 25,
-  scarcity_markup : 1.25,
-  necessity       : {water: true, food: true, medicine: true},
+  hours_per_turn    : 4,
+  initial_turns     : 60,
+  demand_history    : 100 * 6, // 6 turns/day
+  base_unit_price   : 25,
+  scarcity_markup   : 1.25,
+  necessity         : {water: true, food: true, medicine: true},
+  haulers_per_place : 50,
+  hauler_money      : 100,
 
   scales: {
     tiny   : 0.25,
@@ -29,7 +31,7 @@ const data = {
     chemicals    : {mass: 50,  mine: {tics: 4}},
     food         : {mass: 5,   recipe: {tics: 10, materials: {water: 2, chemicals: 2}}},
     metal        : {mass: 110, recipe: {tics: 3, materials: {ore: 2}}},
-    medicine     : {mass: 10,  recipe: {tics: 4, materials: {food: 1, chemicals: 1}}},
+    medicine     : {mass: 10,  recipe: {tics: 4, materials: {food: 2, chemicals: 2}}},
     machines     : {mass: 75,  recipe: {tics: 4, materials: {metal: 2, chemicals: 1}}},
     electronics  : {mass: 20,  recipe: {tics: 6, materials: {metal: 1, chemicals: 2}}},
     cybernetics  : {mass: 80,  recipe: {tics: 8, materials: {machines: 1, electronics: 1}}},
@@ -38,8 +40,8 @@ const data = {
   },
 
   market: {
-    agents        : 100,
-    agent_money   : 500,
+    agents        : 200,
+    agent_money   : 100,
     minability    : 0.25,
     produces: {
       water       : 10,

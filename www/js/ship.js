@@ -39,6 +39,15 @@ class Ship {
 
   get acceleration() { return this.thrust / this.mass }
 
+  acceleration_for_mass(cargo_mass) {
+    let m = this.shipclass.mass + cargo_mass;
+
+    for (let i = 0; i < this.shipclass.drives; ++i)
+      m += data.drives[this.shipclass.drive].mass;
+
+    return this.thrust / this.mass;
+  }
+
   load_cargo(resource, amount) {
     if (this.cargo_left < amount)
       throw new Error('no room left in the hold');

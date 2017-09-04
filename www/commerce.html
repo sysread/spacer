@@ -96,8 +96,6 @@ $(function() {
       row.append(`<td class="text-capitalize">${body}</td>`);
       row.append(`<td class="text-right">${info.price}</td>`);
       row.append(`<td class="text-right">${info.stock || ''}</td>`);
-      row.append(`<td class="text-right">${info.supply}</td>`);
-      row.append(`<td class="text-right">${info.demand}</td>`);
       row.append(`<td class="text-right">${report.age}</td>`);
       $('#market-dialog tbody').append(row);
     }
@@ -172,8 +170,6 @@ $(function() {
               <th>Market</th>
               <th class="text-right">Price</th>
               <th class="text-right">Stock</th>
-              <th class="text-right">Supply</th>
-              <th class="text-right">Demand</th>
               <th class="text-right">Age (hours)</th>
             </tr>
           </thead>

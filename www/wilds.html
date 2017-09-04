@@ -19,17 +19,23 @@ $(function() {
     let turns   = hrs / 4;
     let harvest = game.place().harvest(turns);
 
-    chooser = new ResourceExchange({
-      store      : harvest,
-      cargo      : game.player.ship.cargo,
-      max_cargo  : game.player.ship.shipclass.cargo,
-      minmaxbtns : true
-    });
-
-    $('#collect-explain').text(`After ${hrs} hours of work, your crew collected:`);
-    $('#collect-results').empty().append(chooser.table);
-
     game.turn(turns);
+
+    if (harvest.sum() === 0) {
+      $('#collect-explain').text('No luck! The well was dry.');
+      $('#collect-results').empty();
+    }
+    else {
+      chooser = new ResourceExchange({
+        store      : harvest,
+        cargo      : game.player.ship.cargo,
+        max_cargo  : game.player.ship.shipclass.cargo,
+        minmaxbtns : true
+      });
+
+      $('#collect-explain').text(`After ${hrs} hours of work, your crew collected:`);
+      $('#collect-results').empty().append(chooser.table);
+    }
   });
 
   $('#collect-complete').on('click', () => {
