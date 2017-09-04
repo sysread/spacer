@@ -71,10 +71,11 @@ $(function() {
     let intvl;
     intvl = window.setInterval(() => {
       if (done < turns) {
-        done += step;
+        let count = Math.min(turns - done, step);
+        done += count;
         let pct = Math.max(5, Math.ceil((done / turns) * 100));
         $('#starting-game-progress').css('width', `${pct}%`);
-        game.turn(step);
+        game.turn(count);
       }
       else {
         $('#starting-game-progress').css('width', '100%');

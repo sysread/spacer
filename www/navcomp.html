@@ -106,14 +106,19 @@ $(function() {
         }, 950);
       }
       else {
-        plan.turn();
-        game.turn();
+        let count = Math.min(plan.left, 5);
+        for (let i = 0; i < count; ++i) plan.turn();
+
         let d = plan.dist_left.toFixed(2);
         let p = plan.pct_complete;
+        console.log(p);
+
         $('#nav-transit-distance').text(`${d} AU`);
         $('#nav-transit-progress').css('width', `${p}%`);
+
+        game.turn(count);
       }
-    }, 100);
+    }, 200);
   }
 
   $('#nav-transit')
@@ -201,7 +206,7 @@ $(function() {
       </div>
       <div class="modal-body">
         <div class="progress bg-dark">
-          <div id="nav-transit-progress" class="progress-bar bg-warning" style="height: 35px; width: 0%">
+          <div id="nav-transit-progress" class="progress-bar progress-bar-animated bg-warning" style="height: 35px; width: 5%">
             <span id="nav-transit-distance" class="badge badge-pill badge-dark float-left m-1 font-weight-normal" style="font-size:14px"></span>
           </div>
         </div>
