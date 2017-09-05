@@ -85,6 +85,10 @@ class ResourceTracker {
     this.summed.load(obj.summed);
   }
 
+  length(resource) {
+    return this.history[resource].length;
+  }
+
   add(resource, amount) {
     this.history[resource].unshift(amount);
     this.summed.inc(resource, amount);
@@ -93,14 +97,32 @@ class ResourceTracker {
     }
   }
 
-  sum(resource) {
-    return this.summed.get(resource);
+  sum(resource, length) {
+    if (length === undefined) {
+      return this.summed.get(resource);
+    }
+    else {
+      let n = 0;
+
+      for (let i = 0; i < length && i < this.history[resource].length; ++i)
+        n += this.history[resource][i];
+
+      return n;
+    }
   }
 
-  avg(resource) {
-    let sum = this.sum(resource);
-    return (sum > 0)
-      ? Math.ceil(this.sum(resource) / this.history[resource].length)
-      : 0;
+  avg(resource, length) {
+    let sum, count;
+
+    if (length === undefined) {
+      sum   = this.sum(resource);
+      count = this.length(resource);
+    }
+    else {
+      sum   = this.sum(resource, length);
+      count = Math.min(length, this.length(resource));
+    }
+
+    return (sum > 0) ? Math.ceil(sum / count) : 0;
   }
 }

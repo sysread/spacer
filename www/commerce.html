@@ -91,11 +91,15 @@ $(function() {
       if (report === null)
         continue;
 
-      let info = report.data[item];
+      let name  = `${body} <span class="badge badge-pill float-right">${system.kind(body)}</span>`;
+      let info  = report.data[item];
+      let trend = info.trend > 0 ? `+${info.trend}` : (info.trend || '');
+
       let row = $('<tr>');
-      row.append(`<td class="text-capitalize">${body}</td>`);
+      row.append(`<td class="text-capitalize">${name}</td>`);
       row.append(`<td class="text-right">${info.price}</td>`);
       row.append(`<td class="text-right">${info.stock || ''}</td>`);
+      row.append(`<td class="text-right">${trend}</td>`);
       row.append(`<td class="text-right">${report.age}</td>`);
       $('#market-dialog tbody').append(row);
     }
@@ -164,13 +168,14 @@ $(function() {
         <h5 class="modal-title">System market report for <span id="market-data-resource"></span></h5>
       </div>
       <div class="modal-body">
-        <table class="table table-bordered table-sm">
+        <table class="table table-sm">
           <thead>
             <tr>
               <th>Market</th>
               <th class="text-right">Price</th>
               <th class="text-right">Stock</th>
-              <th class="text-right">Age (hours)</th>
+              <th class="text-right">Trend</th>
+              <th class="text-right" title="Light speed time delay of market data in hours">Age</th>
             </tr>
           </thead>
           <tbody>

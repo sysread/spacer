@@ -17,14 +17,12 @@ class Game {
     me.player  = this.player.save();
     me.places  = {};
     me.markets = {};
-    me.agents  = [];
+    me.agents  = this.agents.map((agent) => {return agent.save()});
 
     Object.keys(data.bodies).forEach((name) => {
       me.places[name]  = this.places[name].save();
       me.markets[name] = this.markets[name].slice(0, this.markets[name].length);
     });
-
-    this.agents.forEach((agent) => {me.agents.push(agent.save())});
 
     return me;
   }
@@ -32,7 +30,11 @@ class Game {
   load(obj) {
     this.turns  = obj.turns;
     this.locus  = obj.locus;
-    this.agents = [];
+    this.agents = obj.agents.map((agent) => {
+      let a = new HaulerAgent();
+      a.load(agent);
+      return a;
+    });
 
     this.date = new Date(2242, 0, 1);
     this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
@@ -43,12 +45,6 @@ class Game {
       this.places[name] = new Place;
       this.places[name].load(obj.places[name]);
       this.markets[name] = obj.markets[name];
-    });
-
-    obj.agents.forEach((agent) => {
-      let a = new HaulerAgent;
-      a.load(agent);
-      this.agents.push(a);
     });
 
     open('summary');
@@ -86,17 +82,20 @@ class Game {
     this.turns   = 0;
     this.places  = {};
     this.markets = {};
+    this.agents  = [];
 
-    for (let name of system.bodies()) {
+    let bodies = system.bodies();
+
+    for (let name of bodies) {
       this.places[name]  = new Place(name);
       this.markets[name] = [];
     }
 
-    for (let name of system.bodies()) {
-      for (let i = 0; i < data.haulers_per_place; ++i) {
-        let agent = new HaulerAgent(name, data.hauler_money * this.places[name].scale);
-        agent.turn(); // choose first action
+    if (this.agents.length < (bodies.length * data.haulers)) {
+      for (let name of bodies) {
+        let agent = new HaulerAgent(name, data.hauler_money);
         this.agents.push(agent);
+        agent.turn(); // stagger initialization
       }
     }
   }
@@ -139,17 +138,18 @@ class Game {
       ++this.turns;
       this.date.setHours(this.date.getHours() + data.hours_per_turn);
 
+      this.agents.forEach((agent) => {agent.turn()});
+
       system.bodies().forEach((name) => {
         this.place(name).turn();
         this.markets[name].unshift(this.place(name).report());
       });
 
-      this.agents.forEach((agent) => {agent.turn()});
       this.refresh();
     }
 
     system.bodies().forEach((name) => {
-      while (this.markets[name].length > 100)
+      while (this.markets[name].length > 50)
         this.markets[name].pop();
     });
 
@@ -157,16 +157,31 @@ class Game {
   }
 
   market(there) {
-    let distance = system.distance(this.locus, there);
-    let idx = this.light_turns(distance);
+    let data;
+    let age;
+    let turns;
 
-    if (this.markets[there].length <= idx)
-      return null;
+    if (there === this.locus) {
+      data  = this.place().report();
+      age   = 0;
+      turns = this.turns;
+    }
+    else {
+      let distance = system.distance(this.locus, there);
+      let idx = this.light_turns(distance);
+
+      if (this.markets[there].length <= idx)
+        return null;
+
+      data  = this.markets[there][idx];
+      age   = this.light_hours(distance);
+      turns = this.turns - idx;
+    }
 
     return {
-      data: this.markets[there][idx],
-      age:  this.light_hours(distance),
-      turn: this.turns - idx
+      data: data,
+      age:  age,
+      turn: turns
     }
   }
 }

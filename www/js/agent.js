@@ -40,7 +40,6 @@ class Agent {
     Object.keys(data.resources).forEach((item) => {
       chooser.add(this.action_craft(item));
       chooser.add(this.action_sell(item));
-      chooser.add(this.action_mine(item));
     });
 
     return chooser.action;
@@ -60,38 +59,19 @@ class Agent {
 
     let price = game.place(this.place).price(resource);
     let profit = amt * price;
-    let me = this;
 
     return new Action(1, profit, null,
-      function() {
+      () => {
         // Busted and fined
         if (contraband && ((Math.random() * 10) <= contraband)) {
-          me.money -= 100 * contraband;
-          if (me.money < 0)
-            me.money = 50;
+          this.money -= 100 * contraband;
+          if (this.money < 0)
+            this.money = 50;
           return;
         }
 
-        me.money += game.place(me.place).sell(resource, amt);
-        me.inventory.dec(resource, amt);
-      }
-    );
-  }
-
-  action_mine(resource) {
-    let info = data.resources[resource].mine;
-
-    if (!info)
-      return;
-
-    let chance = game.place(this.place).minability;
-    let profit = game.place(this.place).price(resource) * chance;
-    let me = this;
-
-    return new Action(info.tics, profit, null,
-      function() {
-        if (game.place(me.place).mine(resource))
-          me.inventory.inc(resource, 1);
+        this.money += game.place(this.place).sell(resource, amt);
+        this.inventory.dec(resource, amt);
       }
     );
   }
@@ -130,26 +110,25 @@ class Agent {
       return;
 
     profit -= cost;
-    let me = this;
 
     return new Action(recipe.tics, profit,
-      function() {
+      () => {
         // Purchase any materials we don't have
         Object.keys(recipe.materials).forEach((item) => {
-          let need = recipe.materials[item] - me.inventory.get(item);
+          let need = recipe.materials[item] - this.inventory.get(item);
 
           if (need > 0) {
-            me.money -= game.place(me.place).buy(item, need);
-            me.inventory.inc(item, need);
+            this.money -= game.place(this.place).buy(item, need);
+            this.inventory.inc(item, need);
           }
         });
       },
-      function() {
+      () => {
         Object.keys(recipe.materials).forEach((item) => {
-          me.inventory.dec(item, recipe.materials[item]);
+          this.inventory.dec(item, recipe.materials[item]);
         });
 
-        me.inventory.inc(resource, 1);
+        this.inventory.inc(resource, 1);
       }
     );
   }
@@ -172,6 +151,38 @@ class Agent {
 
     let me = this;
     return new Action(1, 2000, function() {game.place(me.place).buy(item, to_buy)}, function(){});
+  }
+}
+
+class MinerAgent {
+  constructor(place) {
+    this.place = place;
+    this.inventory = new ResourceCounter;
+    this.timer = null;
+  }
+
+  save() {
+    return {place: this.place, inventory: this.inventory};
+  }
+
+  load(obj) {
+    this.place = obj.place;
+    this.inventory = new ResourceCounter;
+    this.inventory.load(obj.inventory);
+  }
+
+  turn() {
+    if (this.timer === null)
+      this.timer = 6;
+
+    if (--this.timer === 0) {
+      let harvest = game.place(this.place).harvest(6);
+      harvest.each((resource, amount) => {
+        game.place(this.place).sell(resource, amount);
+      });
+
+      this.timer = null;
+    }
   }
 }
 
@@ -201,8 +212,9 @@ class HaulerAgent {
   }
 
   turn() {
-    if (this.pending === null)
+    if (this.pending === null) {
       this.pending = this.choose_action();
+    }
 
     let action = this.pending.shift();
 
@@ -215,6 +227,7 @@ class HaulerAgent {
       case 'sell':
         this.money += game.place(action[1]).sell(action[2], action[3]);
         this.ship.unload_cargo(action[2], action[3]);
+        //console.log(`[${this.place} -> ${action[1]}] Delivered ${action[3]} units of ${action[2]}`);
         break;
 
       case 'set':
@@ -226,12 +239,17 @@ class HaulerAgent {
         break;
     }
 
-    if (this.pending.length === 0)
+    if (this.pending.length === 0) {
       this.pending = null;
+      if (this.money < 200) {
+        this.money = data.hauler_money;
+      }
+    }
   }
 
   choose_action() {
-    let here = game.place(this.place).report();
+    let avail = Math.ceil(this.money * 0.5);
+    let here  = game.place(this.place).report();
     let best;
 
     for (let target of Object.keys(data.bodies)) {
@@ -241,34 +259,71 @@ class HaulerAgent {
       if (there === null) continue;
 
       for (let resource of Object.keys(here)) {
-        if (here[resource].stock === 0) continue;
+        let price_here  = here[resource].price;
+        let price_there = there.data[resource].price;
 
-        let profit_per_unit = here[resource].price - there.data[resource].price;
-        if (profit_per_unit < 1) continue;
+        // proposition: buy here, sell there
+        if (price_here < price_there) {
+          // Are there any units to buy there?
+          if (here[resource].stock === 0) continue;
 
-        let units = Math.min(
-          here[resource].stock,
-          Math.floor(this.money / here[resource].price),
-          this.ship.cargo_left
-        );
+          // Is this resource profitable?
+          let profit_per_unit = price_there - price_here;
+          if (profit_per_unit < 1) continue;
 
-        if (units === 0) continue;
+          // How many units can we afford?
+          let units = Math.min(here[resource].stock, Math.floor(avail / here[resource].price), this.ship.cargo_left);
+          if (units === 0) continue;
 
-        let mass   = units * data.resources[resource].mass;
-        let plan   = system.astrogate(target, this.place, this.ship.acceleration_for_mass(mass));
-        let turns  = Math.ceil(plan.time / data.hours_per_turn);
-        let profit = profit_per_unit * units;
-        let value  = Math.ceil(profit / turns);
+          // Is the net profit worth our time?
+          let profit = profit_per_unit * units;
+          if (profit < Math.ceil(this.money * 0.1)) continue;
 
-        if (best === undefined || best.value < value) {
-          best = {
-            target   : target,
-            resource : resource,
-            profit   : profit,
-            turns    : turns,
-            units    : units,
-            value    : value
-          };
+          // How far/long a trip?
+          let mass  = units * data.resources[resource].mass;
+          let plan  = system.astrogate(target, this.place, this.ship.acceleration_for_mass(mass));
+          let turns = Math.ceil(plan.time / data.hours_per_turn);
+
+          if (best === undefined || best.profit < profit) {
+            best = {
+              target   : target,
+              resource : resource,
+              profit   : profit,
+              turns    : turns,
+              units    : units
+            };
+          }
+        }
+        // proposition: go to where the goods are cheap
+        // TODO buy local goods to sell at target
+        else if (price_here > price_there) {
+          // Are there any units to buy there?
+          if (there.data[resource].stock === 0) continue;
+
+          // Is this resource profitable?
+          let profit_per_unit = price_here - price_there;
+          if (profit_per_unit < 1) continue;
+
+          // How many units can we afford?
+          let units = Math.min(there.data[resource].stock, Math.floor(avail / price_there), this.ship.cargo_left);
+          if (units === 0) continue;
+
+          // Is the net profit worth our time?
+          let profit = profit_per_unit * units;
+          if (profit < Math.ceil(this.money * 0.1)) continue;
+
+          // How far/long a trip?
+          let plan  = system.astrogate(target, this.place, this.ship.acceleration);
+          let turns = Math.ceil(plan.time / data.hours_per_turn);
+
+          if (best === undefined || best.profit < profit) {
+            best = {
+              target   : target,
+              resource : resource,
+              profit   : profit,
+              turns    : turns
+            };
+          }
         }
       }
     }
@@ -276,10 +331,16 @@ class HaulerAgent {
     let actions = [];
 
     if (best) {
-      actions.push(['buy', this.place, best.resource, best.units]);
-      for (let i = 0; i < best.turns; ++i) actions.push(['wait']);
-      actions.push(['set', 'place', best.target]);
-      actions.push(['sell', best.target, best.resource, best.units]);
+      if (best.units) {
+        actions.push(['buy', this.place, best.resource, best.units]);
+        for (let i = 0; i < best.turns; ++i) actions.push(['wait']);
+        actions.push(['sell', best.target, best.resource, best.units]);
+        actions.push(['set', 'place', best.target]);
+      }
+      else {
+        for (let i = 0; i < best.turns; ++i) actions.push(['wait']);
+        actions.push(['set', 'place', best.target]);
+      }
     }
     else {
       actions.push(['wait']);

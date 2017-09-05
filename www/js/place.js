@@ -4,6 +4,7 @@ class Place extends Market {
     this.name       = name;
     this.conditions = [];
     this.agents     = [];
+    this.miners     = [];
     this.resources  = new ResourceCounter;
     this.mine_total = new ResourceCounter;
   }
@@ -21,9 +22,10 @@ class Place extends Market {
     me.resources  = this.resources.save();
     me.mine_total = this.mine_total.save();
     me.agents     = [];
+    me.miners     = [];
 
-    for (let agent of this.agents)
-      me.agents.push(agent.save());
+    this.agents.forEach((agent) => {me.agents.push(agent.save())});
+    this.miners.forEach((miner) => {me.miners.push(miner.save())});
 
     return me;
   }
@@ -34,12 +36,20 @@ class Place extends Market {
     this.conditions = obj.conditions;
     this.resources.load(obj.resources);
     this.mine_total.load(obj.mine_total);
+    this.agents = [];
+    this.miners = [];
 
-    for (let agent_data of obj.agents) {
-      let agent = this.agents.shift() || new Agent(this.place);
-      agent.load(agent_data);
+    obj.agents.forEach((data) => {
+      let agent = new Agent(this.place);
+      agent.load(data);
       this.agents.push(agent);
-    }
+    });
+
+    obj.miners.forEach((data) => {
+      let miner = new MinerAgent(this.place);
+      miner.load(data);
+      this.miners.push(miner);
+    });
   }
 
   demand(resource) {
@@ -49,20 +59,25 @@ class Place extends Market {
   }
 
   merge_scale(resources, traits, conditions) {
-    let amounts = new DefaultMap(0);
+    let amounts = new ResourceCounter(0);
 
     for (let resource of Object.keys(resources))
-      amounts.set(resource, Math.floor(this.scale * resources[resource]));
+      amounts.inc(resource, resources[resource]);
 
     if (traits)
       for (let trait of traits)
         for (let resource of Object.keys(trait))
-          amounts.set(resource, amounts.get(resource) * trait[resource]);
+          amounts.inc(resource, trait[resource]);
 
     if (conditions)
       for (let cond of conditions)
         for (let resource of Object.keys(cond))
-          amounts.set(resource, amounts.get(resource) * cond[resource]);
+          amounts.inc(resource, cond[resource]);
+
+    amounts.each((resource, amount) => {
+      let scaled = amount * this.scale;
+      amounts.set(resource, Math.round(scaled * 100) / 100);
+    });
 
     return amounts;
   }
@@ -111,11 +126,13 @@ class Place extends Market {
     super.turn();
 
     // Start agents if needed
-    if (this.agents.length === 0) {
+    if (this.agents.length < data.market.agents * this.scale) {
       let money = data.market.agent_money * this.scale;
-      for (var i = 0; i < this.scale * data.market.agents; ++i) {
-        this.agents.push(new Agent(this.name, money));
-      }
+      this.agents.push(new Agent(this.name, money));
+    }
+
+    if (this.miners.length < data.market.miners * this.scale) {
+      this.miners.push(new MinerAgent(this.name));
     }
 
     // Produce
@@ -129,8 +146,12 @@ class Place extends Market {
       if (avail) this.buy(resource, avail);
     });
 
+    // Miners
+    this.miners.push(this.miners.shift()); // Shuffle order
+    this.miners.forEach((miner) => {miner.turn()});
+
     // Agents
-    this.agents.push(this.agents.shift()); // Shuffle agent order
+    this.agents.push(this.agents.shift()); // Shuffle order
     this.agents.forEach((agent) => {agent.turn()});
 
     this.resources.each((resource, amt) => {

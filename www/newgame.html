@@ -65,7 +65,7 @@ $(function() {
 
     $('#starting-game-progress').css('width', '5%');
     let turns = data.initial_turns;
-    let step  = Math.ceil(turns/5);
+    let step  = Math.ceil(turns/10);
     let done  = 0;
 
     let intvl;
@@ -82,7 +82,7 @@ $(function() {
         window.clearInterval(intvl);
         $('#starting-game .modal-footer button').prop('disabled', false);
       }
-    }, 5);
+    }, 10);
   });
 
   $('#starting-game').on('hidden.bs.modal', (e) => {

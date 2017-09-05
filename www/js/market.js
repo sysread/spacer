@@ -42,7 +42,9 @@ class Market {
   }
 
   supply(resource) {
-    return Math.max(1, this.bought.avg(resource));
+    let stock = this.current_supply(resource) || 1;
+    let avg   = this.bought.avg(resource)     || 1;
+    return stock * (1 + Math.log10(avg));
   }
 
   demand(resource) {
@@ -50,20 +52,19 @@ class Market {
   }
 
   adjustment(resource) {
-    let supply = this.supply(resource);
+    let supply = this.supply(resource) || 1;
     let demand = this.demand(resource) || 1;
-    //let adjust = 1 + Math.log10(1 + (demand / (supply || 1)));
-    let adjust = demand / (supply || 1);
+    let adjust = demand / supply;
 
     if (this.current_supply(resource) == 0) {
-      adjust *= data.scarcity_markup;
+      adjust += data.scarcity_markup;
 
       if (data.necessity[resource]) {
-        adjust *= data.scarcity_markup;
+        adjust += data.scarcity_markup;
       }
     }
 
-    return adjust;
+    return 1 + Math.log(1 + adjust);
   }
 
   calculate_price(resource) {
@@ -115,14 +116,25 @@ class Market {
     return price;
   }
 
+  trend(resource, days=10) {
+    let turns     = days * (24 / data.hours_per_turn);
+    let long_avg  = this.bought.avg(resource) + this.sold.avg(resource);
+    let short_avg = this.bought.avg(resource, turns) + this.sold.avg(resource, turns);
+    return short_avg - long_avg;
+  }
+
   report() {
     let info = {};
     Object.keys(data.resources).forEach((resource) => {
+      let supply = (Math.round(this.supply(resource) * 100) / 100);
+      let demand = (Math.round(this.demand(resource) * 100) / 100);
+
       info[resource] = {
-        supply : this.supply(resource),
-        demand : this.demand(resource),
+        supply : supply,
+        demand : demand,
         stock  : this.current_supply(resource),
-        price  : this.price(resource)
+        price  : this.price(resource),
+        trend  : this.trend(resource)
       };
     });
     return info;

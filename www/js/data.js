@@ -8,14 +8,14 @@ const data = {
   G  : 9.80665,      // m/s/s
   AU : 149597870700, // m
 
-  hours_per_turn    : 4,
-  initial_turns     : 60,
-  demand_history    : 100 * 6, // 6 turns/day
-  base_unit_price   : 25,
-  scarcity_markup   : 1.25,
-  necessity         : {water: true, food: true, medicine: true},
-  haulers_per_place : 50,
-  hauler_money      : 100,
+  hours_per_turn  : 4,
+  initial_turns   : 600,
+  demand_history  : 100 * 6, // 6 turns/day
+  base_unit_price : 25,
+  scarcity_markup : 0.1,
+  necessity       : {water: true, food: true, medicine: true},
+  haulers         : 4, // per body
+  hauler_money    : 1000,
 
   scales: {
     tiny   : 0.25,
@@ -29,9 +29,9 @@ const data = {
     water        : {mass: 10,  mine: {tics: 2}},
     ore          : {mass: 90,  mine: {tics: 6}},
     chemicals    : {mass: 50,  mine: {tics: 4}},
-    food         : {mass: 5,   recipe: {tics: 10, materials: {water: 2, chemicals: 2}}},
-    metal        : {mass: 110, recipe: {tics: 3, materials: {ore: 2}}},
-    medicine     : {mass: 10,  recipe: {tics: 4, materials: {food: 2, chemicals: 2}}},
+    food         : {mass: 5,   mine: {tics: 8}, recipe: {tics: 2, materials: {water: 1, chemicals: 1}}},
+    metal        : {mass: 110, recipe: {tics: 3, materials: {ore: 4}}},
+    medicine     : {mass: 10,  recipe: {tics: 4, materials: {food: 1, chemicals: 2}}},
     machines     : {mass: 75,  recipe: {tics: 4, materials: {metal: 2, chemicals: 1}}},
     electronics  : {mass: 20,  recipe: {tics: 6, materials: {metal: 1, chemicals: 2}}},
     cybernetics  : {mass: 80,  recipe: {tics: 8, materials: {machines: 1, electronics: 1}}},
@@ -40,63 +40,66 @@ const data = {
   },
 
   market: {
-    agents        : 200,
-    agent_money   : 100,
+    agents        : 100,
+    miners        : 10,
+    agent_money   : 500,
     minability    : 0.25,
     produces: {
-      water       : 10,
+      water       : 12,
       ore         : 6,
-      chemicals   : 4,
+      chemicals   : 2,
+      food        : 0
     },
     consumes: {
-      water       : 5,
-      food        : 2,
-      medicine    : 1,
-      machines    : 1,
-      electronics : 1,
+      water       : 8,
+      food        : 6,
+      medicine    : 2,
+      machines    : 2,
+      electronics : 2,
       cybernetics : 1,
       weapons     : 1,
-      narcotics   : 1
+      narcotics   : 0
     }
   },
 
   traits: {
-    'mineral rich' : {produces: {ore: 1.5, chemicals: 1.25}, consumes: {}},
-    'mineral poor' : {produces: {ore: 0.5, chemicals: 0.75}, consumes: {}},
-    'water rich'   : {produces: {water: 1.5}, consumes: {}},
-    'water poor'   : {produces: {water: 0.5}, consumes: {}},
+    'mineral rich' : {produces: {ore: 2, chemicals: 1}, consumes: {}},
+    'mineral poor' : {produces: {ore: -2, chemicals: -1}, consumes: {}},
+    'water rich'   : {produces: {water: 3}, consumes: {}},
+    'water poor'   : {produces: {water: -3}, consumes: {}},
+    'habitable'    : {produces: {food: 6}, consumes: {}}
   },
 
   conditions: {
-    drought : {produces: {water: 0.75}, consumes: {medicine: 1.5}},
-    famine  : {produces: {food: 0.75}, consumes: {medicine: 1.5}},
-    plague  : {produces: {}, consumes: {medicine: 2, narcotics: 1.5}},
-    war     : {produces: {}, consumes: {metal: 1.25, chemicals: 1.25, weapons: 3, medicine: 2, narcotics: 1.2}},
+    drought : {produces: {water: -4}, consumes: {medicine: 1}},
+    famine  : {produces: {food: -2}, consumes: {medicine: 1}},
+    plague  : {produces: {}, consumes: {medicine: 2, narcotics: 1}},
+    war     : {produces: {}, consumes: {metal: 4, food: 2, chemicals: 2, weapons: 4, medicine: 2, narcotics: 1}},
   },
 
   bodies: {
     mercury   : {size: 'normal', traits: ['mineral rich', 'water poor', 'water poor']},
-    earth     : {size: 'huge',   traits: []},
-    moon      : {size: 'normal', traits: []},
+    earth     : {size: 'huge',   traits: ['habitable']},
+    moon      : {size: 'large',  traits: ['water poor']},
     mars      : {size: 'large',  traits: ['water poor', 'mineral rich']},
     phobos    : {size: 'small',  traits: ['water poor', 'water poor', 'mineral poor']},
     deimos    : {size: 'tiny',   traits: ['water poor', 'water poor', 'mineral poor']},
-    ceres     : {size: 'small',  traits: ['water poor', 'mineral poor']},
+    ceres     : {size: 'normal', traits: ['water poor', 'mineral poor']},
     europa    : {size: 'small',  traits: ['mineral poor']},
-    ganymede  : {size: 'normal', traits: ['water rich', 'mineral poor']},
+    ganymede  : {size: 'large',  traits: ['water rich', 'mineral poor']},
     callisto  : {size: 'normal', traits: []},
-    mimas     : {size: 'small',  traits: ['water rich', 'mineral poor']},
+    //mimas     : {size: 'small',  traits: ['water rich', 'mineral poor']},
     enceladus : {size: 'small',  traits: ['water rich', 'mineral poor']},
-    tethys    : {size: 'tiny',   traits: ['water rich', 'mineral poor']},
-    dione     : {size: 'small',  traits: ['water rich', 'mineral poor']},
+    //tethys    : {size: 'tiny',   traits: ['water rich', 'mineral poor']},
+    //dione     : {size: 'small',  traits: ['water rich', 'mineral poor']},
     rhea      : {size: 'small',  traits: ['water rich', 'mineral poor', 'mineral poor']},
     titan     : {size: 'normal', traits: ['water rich', 'mineral poor']},
-    iapetus   : {size: 'small',  traits: ['water rich', 'mineral poor']},
+    //iapetus   : {size: 'small',  traits: ['water rich', 'mineral poor']},
     phoebe    : {size: 'tiny',   traits: ['water rich', 'mineral poor']},
-    titania   : {size: 'small',  traits: ['water rich', 'mineral poor']},
+    //titania   : {size: 'small',  traits: ['water rich', 'mineral poor']},
     triton    : {size: 'normal', traits: ['water rich', 'mineral poor']},
     pluto     : {size: 'small',  traits: ['water rich']},
-    eris      : {size: 'small',  traits: ['water poor', 'mineral poor']}
+    eris      : {size: 'normal', traits: ['water poor', 'mineral poor']}
   },
 
   drives: {
