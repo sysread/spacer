@@ -92,6 +92,9 @@ class Market {
     return this.prices.get(resource);
   }
 
+  buy_price(resource)  { return this.price(resource) }
+  sell_price(resource) { return this.price(resource) }
+
   buy(resource, amount) {
     let available = this.current_supply(resource);
 
@@ -99,7 +102,7 @@ class Market {
       throw new Error(`buy: requested ${amount} but only ${available} available of ${resource}`);
     }
 
-    let price = amount * this.price(resource);
+    let price = amount * this.buy_price(resource);
     this.store.dec(resource, amount);
     this.sales_this_turn.inc(resource, amount);
     this.buy_total.inc(resource, amount);
@@ -108,7 +111,7 @@ class Market {
   }
 
   sell(resource, amount) {
-    let price = amount * this.price(resource);
+    let price = amount * this.sell_price(resource);
     this.store.inc(resource, amount);
     this.buys_this_turn.inc(resource, amount);
     this.sell_total.inc(resource, amount);
@@ -133,8 +136,10 @@ class Market {
         supply : supply,
         demand : demand,
         stock  : this.current_supply(resource),
+        trend  : this.trend(resource),
         price  : this.price(resource),
-        trend  : this.trend(resource)
+        buy    : this.buy_price(resource),
+        sell   : this.sell_price(resource)
       };
     });
     return info;

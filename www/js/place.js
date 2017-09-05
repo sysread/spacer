@@ -14,6 +14,8 @@ class Place extends Market {
   get size()       {return data.bodies[this.name].size}
   get traits()     {return data.bodies[this.name].traits}
   get minability() {return data.market.minability * this.scale}
+  get faction()    {return data.bodies[this.name].faction}
+  get sales_tax()  {return data.factions[this.faction].sales_tax}
 
   save() {
     let me        = super.save();
@@ -50,6 +52,11 @@ class Place extends Market {
       miner.load(data);
       this.miners.push(miner);
     });
+  }
+
+  buy_price(resource) {
+    let price = this.price(resource);
+    return price + Math.ceil(price * this.sales_tax);
   }
 
   demand(resource) {
@@ -131,6 +138,7 @@ class Place extends Market {
       this.agents.push(new Agent(this.name, money));
     }
 
+    // Start miners if needed
     if (this.miners.length < data.market.miners * this.scale) {
       this.miners.push(new MinerAgent(this.name));
     }
@@ -152,7 +160,11 @@ class Place extends Market {
 
     // Agents
     this.agents.push(this.agents.shift()); // Shuffle order
-    this.agents.forEach((agent) => {agent.turn()});
+    this.agents.forEach((agent) => {
+      let money = data.market.agent_money * this.scale;
+      if (agent.money <= (money / 4)) agent.money = money;
+      agent.turn()
+    });
 
     this.resources.each((resource, amt) => {
       if (this.current_supply(resource) == 0 && amt > 0)

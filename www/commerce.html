@@ -29,13 +29,17 @@ $(function() {
   };
 
   $('#exchange-dialog').on('show.bs.modal', function(e) {
-    let item  = $(e.relatedTarget).data('resource');
-    let price = place.price(item);
-    let avail = place.current_supply(item);
-    let cargo = game.player.ship.cargo.get(item);
+    let item     = $(e.relatedTarget).data('resource');
+    let tax_rate = place.sales_tax;
+    let price    = place.price(item);
+    let tax      = Math.ceil(price * tax_rate);
+    let avail    = place.current_supply(item);
+    let cargo    = game.player.ship.cargo.get(item);
 
     $('#exchange-resource').text(item);
+    $('#exchange-tax-rate').text((tax_rate * 100) + '%');
     $('#exchange-price').val(price);
+    $('#exchange-tax').val(tax);
     $('#exchange-docks').val(avail);
     $('#exchange-hold').val(cargo);
     $('#exchange-credits').val(game.player.money);
@@ -52,7 +56,10 @@ $(function() {
         let diff = amount - game.player.ship.cargo.get(item);
         $('#exchange-docks').val(avail - diff);
         $('#exchange-hold').val(amount);
-        $('#exchange-credits').val(game.player.money - (diff * price));
+        if (diff > 0)
+          $('#exchange-credits').val(game.player.money - (diff * (price + tax)));
+        else
+          $('#exchange-credits').val(game.player.money - (diff * price));
       }
     });
 
@@ -97,7 +104,8 @@ $(function() {
 
       let row = $('<tr>');
       row.append(`<td class="text-capitalize">${name}</td>`);
-      row.append(`<td class="text-right">${info.price}</td>`);
+      row.append(`<td class="text-right">${info.buy}</td>`);
+      row.append(`<td class="text-right">${info.sell}</td>`);
       row.append(`<td class="text-right">${info.stock || ''}</td>`);
       row.append(`<td class="text-right">${trend}</td>`);
       row.append(`<td class="text-right">${report.age}</td>`);
@@ -145,6 +153,7 @@ $(function() {
         <table class="table">
           <tbody>
             <tr><th scope="row">Price</th><td><input class="form-control" disabled type="number" id="exchange-price"></td></tr>
+            <tr><th scope="row">Sales tax <span id="exchange-tax-rate" class="badge badge-pill"></span></th><td><input class="form-control" disabled type="number" id="exchange-tax"></td></tr>
             <tr><th scope="row">Docks</th><td><input class="form-control" disabled type="number" id="exchange-docks"></td></tr>
             <tr><th scope="row">Hold</th><td><input class="form-control" disabled type="number" id="exchange-hold"></td></tr>
             <tr><th scope="row">Credits</th><td><input class="form-control" disabled type="number" id="exchange-credits"></td></tr>
@@ -172,7 +181,8 @@ $(function() {
           <thead>
             <tr>
               <th>Market</th>
-              <th class="text-right">Price</th>
+              <th class="text-right">Buy</th>
+              <th class="text-right">Sell</th>
               <th class="text-right">Stock</th>
               <th class="text-right">Trend</th>
               <th class="text-right" title="Light speed time delay of market data in hours">Age</th>

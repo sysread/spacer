@@ -7,6 +7,7 @@ class Person {
     this.xp       = this.opt.xp       || 0;
     this.health   = this.opt.health   || 10;
     this.ship     = this.opt.ship     || new Ship;
+    this.faction  = this.opt.faction;
   }
 
   save() {

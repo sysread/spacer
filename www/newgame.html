@@ -7,7 +7,16 @@ $(function() {
   $('#total-points').text(points);
 
   for (let body in data.bodies) $('#home').append(`<option value="${body}">${body}</option>`);
+
+  $('#home').change((e) => {
+    let home = $('#home').val();
+    let faction = data.bodies[home].faction;
+    $('#faction').val(data.factions[faction].full_name);
+    $('#faction-info').html($('#' + faction).html());
+  });
+
   $('#home').val('ganymede');
+  $('#home').change();
 
   for (let name of Object.keys(data.stats)) {
     let slider = new Slider({
@@ -109,6 +118,11 @@ $(function() {
       <select class="form-control text-capitalize" name="home" id="home"></select>
       <br>
 
+      <label for="faction">Faction</label>
+      <input class="form-control" type="text" name="faction" id="faction" readonly>
+      <div class="form-text text-muted" id="faction-info"></div>
+      <br>
+
       <label>Characteristics</label>
       <p>You have <span id="total-points"></span> points to distribute across your skills.</p>
       <table id="stats" class="table"></table>
@@ -138,3 +152,93 @@ $(function() {
     </div>
   </div>
 </div>
+
+<div hidden id="UN">
+  <p>
+    After the outbreak of hostilities with Mars more than 80 years ago and the
+    treaties that followed, the UN assumed the role of the unified sovereign
+    government over the Earth, Moon, and Mercury. Known for its glacial
+    bureaucracy and stodgy leaders, Earth remains an economic powerhouse,
+    largly as a result of remaining the sole inhabitable body in the system.
+  </p>
+  <p>
+    Despite the fragile treaty after the War of Martian Independence, the UN
+    member nations continue to see Mars as selfish and ungrateful.
+  </p>
+</div>
+
+<div hidden id="MC">
+  <p>
+    Nearly 50 years after its founding as a science outpost in the early 22nd
+    century, Mars declared independence from an Earth that it increasingly
+    viewed as a distant, intrusive micromanager. In the 84 years since its
+    founding, Mars has grown into a military power rivaling Earth, with a
+    thriving economy and highly educated populace. Since its independence, Mars
+    has focused its significant resources toward the scientific and
+    technological achievements necessary to realize its population's dream of a
+    "Green Mars".
+  </p>
+  <p>
+    The Martian Commonwealth controls Mars and its moons as well as the Jovian
+    system, providing the infrastructure and resource to maintain and grow the
+    domed habitats of Jupiter's moons, whose proximity to the gas giant makes
+    them the bread basket of the outer planets.
+  </p>
+</div>
+
+<div hidden id="SPC">
+  <p>
+    Those who live in the outer planets are exquisitely aware of the fragile
+    existence they lead, completely dependent on shipments of food, water,
+    medicine, and technology from the inner planets in order to survive.
+  </p>
+  <p>
+    When Mars broke from Earth, deliveries to the furthest installations on
+    Pluto and Eris ceased in the face of privateering and the realities of a
+    war economy. Those who survived the rioting came under the authoritarian
+    rule of the Supreme Plutonian Command.
+  </p>
+  <p>
+    With resources stretched and hungry mouths to feed, the SPC offers the
+    lowest tax rates in the system, promising a hefty margin to any traders
+    willing to make the "Long Haul", as it is popularly known. Given the
+    limited number of warships available to the SPC and the vast volume of
+    space its member systems cover, making the Long Haul can as be perilous as
+    it is profitable.
+  </p>
+</div>
+
+<div hidden id="ICS">
+  <p>
+    Faced with the same economic constraints and pressures as the outer planets
+    during the war but with much closer and more powerful corporate interests
+    at hand, the Saturnian moons joined with the Ceres Corporation to form the
+    Interplanetary Commercial Syndicate. With Ceres holding an orbit favorable as a
+    trade nexus between Earth and Mars and the Saturn system holding much of
+    the accessible water in the system, the ICS has become a force unto itself,
+    patrolling the belt and outer planet trade routes with its corporate fleet.
+  </p>
+  <p>
+    Life in the domes of Saturn is difficult, and the harvesting of ice and ore
+    in the outer system is dangerous work, but citizen employees can rest
+    assured that the Board of Directors has their best interests at heart, or
+    at least their compound interest at heart, as much of the population is
+    bound by contract or debt their Syndicate.
+  </p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

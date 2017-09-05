@@ -8,9 +8,10 @@ const data = {
   G  : 9.80665,      // m/s/s
   AU : 149597870700, // m
 
+  start_date      : new Date(2242, 0, 1),
   hours_per_turn  : 4,
   initial_turns   : 600,
-  demand_history  : 100 * 6, // 6 turns/day
+  demand_history  : 300 * 6, // 6 turns/day
   base_unit_price : 25,
   scarcity_markup : 0.1,
   necessity       : {water: true, food: true, medicine: true},
@@ -41,7 +42,7 @@ const data = {
 
   market: {
     agents        : 100,
-    miners        : 10,
+    miners        : 16,
     agent_money   : 500,
     minability    : 0.25,
     produces: {
@@ -77,29 +78,101 @@ const data = {
     war     : {produces: {}, consumes: {metal: 4, food: 2, chemicals: 2, weapons: 4, medicine: 2, narcotics: 1}},
   },
 
+  factions: {
+    'UN': {
+      full_name : 'United Nations',
+      sales_tax : 0.15
+    },
+    'MC': {
+      full_name : 'Martian Commonwealth',
+      sales_tax : 0.1
+    },
+    'SPC': {
+      full_name : 'Supreme Plutonian Command',
+      sales_tax : 0.005
+    },
+    'ICS': {
+      full_name : 'Interplanetary Commercial Syndicate',
+      sales_tax : 0.05
+    }
+  },
+
   bodies: {
-    mercury   : {size: 'normal', traits: ['mineral rich', 'water poor', 'water poor']},
-    earth     : {size: 'huge',   traits: ['habitable']},
-    moon      : {size: 'large',  traits: ['water poor']},
-    mars      : {size: 'large',  traits: ['water poor', 'mineral rich']},
-    phobos    : {size: 'small',  traits: ['water poor', 'water poor', 'mineral poor']},
-    deimos    : {size: 'tiny',   traits: ['water poor', 'water poor', 'mineral poor']},
-    ceres     : {size: 'normal', traits: ['water poor', 'mineral poor']},
-    europa    : {size: 'small',  traits: ['mineral poor']},
-    ganymede  : {size: 'large',  traits: ['water rich', 'mineral poor']},
-    callisto  : {size: 'normal', traits: []},
-    //mimas     : {size: 'small',  traits: ['water rich', 'mineral poor']},
-    enceladus : {size: 'small',  traits: ['water rich', 'mineral poor']},
-    //tethys    : {size: 'tiny',   traits: ['water rich', 'mineral poor']},
-    //dione     : {size: 'small',  traits: ['water rich', 'mineral poor']},
-    rhea      : {size: 'small',  traits: ['water rich', 'mineral poor', 'mineral poor']},
-    titan     : {size: 'normal', traits: ['water rich', 'mineral poor']},
-    //iapetus   : {size: 'small',  traits: ['water rich', 'mineral poor']},
-    phoebe    : {size: 'tiny',   traits: ['water rich', 'mineral poor']},
-    //titania   : {size: 'small',  traits: ['water rich', 'mineral poor']},
-    triton    : {size: 'normal', traits: ['water rich', 'mineral poor']},
-    pluto     : {size: 'small',  traits: ['water rich']},
-    eris      : {size: 'normal', traits: ['water poor', 'mineral poor']}
+    mercury: {
+      size     : 'normal',
+      traits   : ['mineral rich', 'water poor', 'water poor'],
+      faction  : 'UN'
+    },
+    earth: {
+      size     : 'huge',
+      traits   : ['habitable'],
+      faction  : 'UN'
+    },
+    moon: {
+      size     : 'large',
+      traits   : ['water poor'],
+      faction  : 'UN'
+    },
+    mars: {
+      size     : 'large',
+      traits   : ['water poor', 'mineral rich'],
+      faction  : 'MC'
+    },
+    phobos: {
+      size     : 'small',
+      traits   : ['water poor', 'water poor', 'mineral poor'],
+      faction  : 'MC'
+    },
+    deimos: {
+      size     : 'tiny',
+      traits   : ['water poor', 'water poor', 'mineral poor'],
+      faction  : 'MC'
+    },
+    ceres: {
+      size     : 'normal',
+      traits   : ['water poor', 'mineral poor'],
+      faction  : 'ICS'
+    },
+    europa: {
+      size     : 'small',
+      traits   : ['mineral poor'],
+      faction  : 'MC'
+    },
+    ganymede: {
+      size     : 'large',
+      traits   : ['water rich', 'mineral poor'],
+      faction  : 'MC'
+    },
+    callisto: {
+      size     : 'normal',
+      traits   : [],
+      faction  : 'MC'
+    },
+    enceladus: {
+      size     : 'small',
+      traits   : ['water rich', 'mineral poor'],
+      faction  : 'ICS'
+    },
+    rhea: {
+      size     : 'tiny',
+      traits   : ['water rich', 'mineral poor'],
+      faction  : 'ICS'
+    },
+    triton: {
+      size     : 'normal',
+      traits   : ['water rich', 'mineral poor'],
+      faction  : 'ICS'
+    },
+    pluto: {
+      size     : 'small',
+      traits   : ['water rich'],
+      faction  : 'SPC'
+    },
+    eris: {
+      size     : 'tiny',
+      traits   : ['water poor', 'mineral poor'],
+      faction  : 'SPC'
+    }
   },
 
   drives: {

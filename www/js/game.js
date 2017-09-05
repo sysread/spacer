@@ -1,6 +1,6 @@
 class Game {
   constructor() {
-    this.date    = new Date(2242, 0, 1);
+    this.date    = new Date(data.start_date);
     this.turns   = 0;
     this.locus   = null;
     this.player  = new Person;
@@ -36,7 +36,7 @@ class Game {
       return a;
     });
 
-    this.date = new Date(2242, 0, 1);
+    this.date = new Date(data.start_date);
     this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
 
     this.player.load(obj.player);
@@ -64,13 +64,6 @@ class Game {
         open('newgame');
       }
     });
-
-    /*for (let sc of Object.keys(data.shipclass)) {
-      let s = new Ship({shipclass: sc});
-      console.log(`${sc} nominal`, s.mass, s.acceleration.toFixed(2));
-      s.load_cargo('water', s.cargo_space);
-      console.log(`${sc} w/cargo`, s.mass, s.acceleration.toFixed(2));
-    }*/
   }
 
   new_game(player, place) {
@@ -78,7 +71,7 @@ class Game {
 
     this.player  = player;
     this.locus   = place;
-    this.date    = new Date(2242, 0, 1);
+    this.date    = new Date(data.start_date);
     this.turns   = 0;
     this.places  = {};
     this.markets = {};
@@ -138,12 +131,21 @@ class Game {
       ++this.turns;
       this.date.setHours(this.date.getHours() + data.hours_per_turn);
 
-      this.agents.forEach((agent) => {agent.turn()});
-
       system.bodies().forEach((name) => {
         this.place(name).turn();
         this.markets[name].unshift(this.place(name).report());
       });
+
+      this.agents.forEach((agent) => {agent.turn()});
+
+      let bodies = system.bodies();
+      if (this.agents.length < (bodies.length * data.haulers)) {
+        for (let name of bodies) {
+          let agent = new HaulerAgent(name, data.hauler_money);
+          this.agents.push(agent);
+          agent.turn(); // stagger initialization
+        }
+      }
 
       this.refresh();
     }
