@@ -4,7 +4,7 @@ $(function() {
   let adjust = function(n) {
     let inverse = (100 - Math.abs(n)) >> 4;
     if (inverse < 1) return 1;
-    let adjust = Math.round(Math.log(inverse) * 100) / 100;
+    let adjust = 1.75 * Math.round(Math.log(inverse) * 100) / 100;
     if (adjust < 1) return 1;
     return adjust;
   };
@@ -36,8 +36,8 @@ $(function() {
       if (point[key] === undefined) {
         point[key] = [name];
 
-        let item = $(`<a href="#" class="p-1" id="${key}">&bull;</a>`)
-          .css({'line-height': 1, position: 'absolute', top: top, left: left})
+        let item = $(`<a href="#" class="plot-locus p-1" id="${key}">&bull;</a>`)
+          .css({top: top, left: left})
           .data({'point': point});
 
         if (body == 'sun') item.addClass('text-warning').addClass('font-weight-bold');
@@ -52,6 +52,7 @@ $(function() {
     }
 
     plot.empty().append(zero);
+    $('.plot-locus.text-success').click();
   };
 
   $('#plot').on('click', 'a', (e) => {
@@ -63,29 +64,27 @@ $(function() {
     let point = $(e.target).data('point');
     let key = e.target.id;
 
-    if (point[key].length > 1) {
-      $('#plot-dialog-select .modal-body').html(`<p>There are ${point[key].length} stations at this location.</p>`);
-
-      point[key].forEach((place) => {
-        let b = $(`<button type="button" class="btn btn-dark" data-place="${place}" data-dismiss="modal" data-toggle="modal" data-target="#plot-dialog-info">`);
-        $('#plot-dialog-select .modal-body').append(b.append(place)).append(' ');
-      });
+    let badges = $('<ul class="plot-selected">');
+    for (let place of point[key]) {
+      let badge = $('<span class="badge badge-dark ml-1">').append(place);
+      if ($(e.target).hasClass('text-success')) badge.append(' (you)');
+      badges.append($('<li>').append(badge));
     }
 
-    $('#plot-dialog-select').modal('show');
+    let pos   = $(e.target).position();
+    let width = $(e.target).outerWidth();
+    badges.css({left: pos.left + 20, top: pos.top});
+
+    $('.plot-selected').remove();
+    $('#plot-zero-zero').append(badges);
   });
 
   $('#plot').on('click', (e) => {
     $('#plot a').removeClass('border').removeClass('border-danger');
+    $('.plot-selected').remove();
   });
 
-  $('#plot-dialog-select').on('show.bs.modal', (e) => {
-    console.log('select');
-  });
-
-  $('#plot-dialog-info').on('show.bs.modal', (e) => {
-    console.log($(e.relatedTarget).data('place'));
-  });
+  $('#plot-back').on('click', (e)=>{open('navcomp')});
 
   replot();
 });
@@ -93,29 +92,11 @@ $(function() {
 </script>
 
 <div class="card p-3">
-  <h3 class="card-header">System map</h3>
+  <h3 class="card-header">
+    System map
+    <button type="button" class="btn btn-dark float-right" id="plot-back">Back</button>
+  </h3>
   <div class="card-body p-1">
     <div class="card-text" id="plot"></div>
-  </div>
-</div>
-
-<div class="modal" id="plot-dialog-select">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-body"></div>
-    </div>
-  </div>
-</div>
-
-<div class="modal" id="plot-dialog-info" data-backdrop="static">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">Stuff</h5></div>
-      <div class="modal-body">
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
-      </div>
-    </div>
   </div>
 </div>

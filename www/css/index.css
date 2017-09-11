@@ -93,3 +93,23 @@ button.btn-secondary:disabled {
   font-size: 12px;
   font-weight: lighter;
 }
+
+.plot-locus {
+  font-size: 1.7em;
+  line-height: 0.6 !important;
+  padding: 1px 2px;
+  vertical-align: middle;
+  position: absolute;
+}
+
+.plot-locus:hover {
+  text-decoration: none;
+  color: white;
+}
+
+.plot-selected {
+  position: absolute;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
