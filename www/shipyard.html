@@ -1,0 +1,93 @@
+<script type="text/javascript">
+
+$(function() {
+  let refresh = function() {
+    if (game.player.ship.tank_is_full() || (data.fuel_price > game.player.money))
+      $('#refuel-btn').prop('disabled', true).addClass('disabled');
+    else
+      $('#refuel-btn').prop('disabled', false).removeClass('disabled');
+  };
+
+  $('#refuel').on('show.bs.modal', (e) => {
+    let need = game.player.ship.refuel_units();
+    let max  = Math.min(need, Math.floor(game.player.money / data.fuel_price));
+
+    let slider = new Slider({
+      min        : 0,
+      max        : max,
+      step       : 1,
+      initial    : max,
+      minmaxbtns : true,
+      callback   : (n) => {$('#refuel-units').val(n)}
+    });
+
+    $('#refuel-slider').empty().append(slider.group);
+
+    $('#refuel-confirm').off('click').on('click', (e) => {
+      let units = parseInt($('#refuel-units').val(), 10);
+
+      if (units !== NaN && units > 0 && units <= max) {
+        game.player.ship.refuel(units);
+        game.player.debit(units * data.fuel_price);
+        game.save_game();
+        game.refresh();
+        refresh();
+      }
+    });
+  });
+
+  refresh();
+});
+
+</script>
+
+<div class="card p-3">
+  <h3 class="card-header text-capitalize">Shipyard</h3>
+  <div class="card-body">
+    <div class="card-text">
+      <p class="mb-3">
+        The shipyard is like shipyards everywhere. There are piles of vaguely
+        forgotten things, robotic lifters trundling around, "gently used" ships
+        parked in distant berths, the occassional newly laid vessel standing
+        out for its lack of patches and hull corrosion.
+      </p>
+      <p class="mb-3">
+        And, of course, the yard manager who is only too happy to top off your
+        fuel tank, repair any damage your ship might have sustained, no
+        questions asked, heh, heh, and perform maintenance that cannot easily
+        be done while underway.
+      </p>
+      <p class="mb-3">
+        For a nominal fee, they will throw in an invisible corrosion protectant
+        coating, too. If you are looking for something new, they have a hauler
+        just came in, very good condition, barely a nick on her, pilot was a
+        nice older lady...
+      </p>
+    </div>
+    <div class="row p-1">
+      <button type="button" disabled class="btn btn-dark m-1 disabled" id="refuel-btn" data-toggle="modal" data-target="#refuel">Refuel</button>
+      <button type="button" disabled class="btn btn-dark m-1 disabled">Repair</button>
+      <button type="button" disabled class="btn btn-dark m-1 disabled">Upgrades</button>
+      <button type="button" disabled class="btn btn-dark m-1 disabled">Trade in</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="refuel">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Refuel your ship?</h5></div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-2">Price</div>
+          <div class="col-4"><input type="number" class="form-control" id="refuel-units" min="0" readonly></div>
+        </div>
+        <div id="refuel-slider"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" id="refuel-confirm" data-dismiss="modal">Fill her up</button>
+      </div>
+    </div>
+  </div>
+</div>
+

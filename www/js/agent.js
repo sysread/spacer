@@ -226,6 +226,12 @@ class HaulerAgent {
     let action = this.pending.shift();
 
     switch (action[0]) {
+      case 'refuel':
+        let units = this.ship.refuel_units();
+        this.money -= units * data.fuel_price;
+        this.ship.refuel(units);
+        break;
+
       case 'buy':
         this.money -= game.place(action[1]).buy(action[2], action[3]);
         this.ship.load_cargo(action[2], action[3]);
@@ -234,11 +240,15 @@ class HaulerAgent {
       case 'sell':
         this.money += game.place(action[1]).sell(action[2], action[3]);
         this.ship.unload_cargo(action[2], action[3]);
-        console.log(`[${this.place} -> ${action[1]}] Delivered ${action[3]} units of ${action[2]}`);
+        //console.log(`[${this.place} -> ${action[1]}] Delivered ${action[3]} units of ${action[2]}`);
         break;
 
       case 'set':
         this[action[1]] = action[2];
+        break;
+
+      case 'burn':
+        this.ship.burn(action[1]);
         break;
 
       case 'wait':
@@ -262,13 +272,21 @@ class HaulerAgent {
 
     if (this.trips % 4 === 0 && this.place !== this.home) {
       bodies = [this.home];
-      let plan  = system.astrogate(this.place, this.home, this.ship.acceleration);
-      let turns = Math.ceil(plan.time / data.hours_per_turn);
-      best = {
-        value  : 0,
-        target : this.home,
-        turns  : turns
-      };
+      let plan = system.astrogate(this.place, this.home, this.ship.acceleration);
+
+      if (plan) {
+        let turns = Math.ceil(plan.time / data.hours_per_turn);
+        let refuel = false;
+        if (turns > this.ship.range(plan.accel, true))
+          refuel = true;
+
+        best = {
+          value  : 0,
+          target : this.home,
+          turns  : turns,
+          refuel : true
+        };
+      }
     }
 
     for (let target of bodies) {
@@ -296,9 +314,21 @@ class HaulerAgent {
           if (profit < Math.ceil(this.money * 0.1)) continue;
 
           // How far/long a trip?
-          let mass  = units * data.resources[resource].mass;
-          let plan  = system.astrogate(this.place, target, this.ship.acceleration_for_mass(mass));
-          let turns = Math.ceil(plan.time / data.hours_per_turn);
+          let mass = units * data.resources[resource].mass;
+          let plan = system.astrogate(this.place, target, this.ship.acceleration_for_mass(mass));
+          if (!plan) continue;
+
+          // Add fuel expense
+          let turns  = Math.ceil(plan.time / data.hours_per_turn);
+          let refuel = false;
+          if (turns > this.ship.range(plan.accel, true)) {
+            profit -= this.ship.refuel_units() * data.fuel_price;;
+            refuel = true;
+          }
+
+          if (profit < 0) continue;
+
+          // Estimate value
           let value = profit / Math.log10(Math.ceil(turns/2));
 
           if (best === undefined || best.value < value) {
@@ -308,6 +338,8 @@ class HaulerAgent {
               resource : resource,
               profit   : profit,
               turns    : turns,
+              accel    : plan.accel,
+              refuel   : refuel,
               units    : units
             };
           }
@@ -331,8 +363,20 @@ class HaulerAgent {
           if (profit < Math.ceil(this.money * 0.1)) continue;
 
           // How far/long a trip?
-          let plan  = system.astrogate(this.place, target, this.ship.acceleration);
-          let turns = Math.ceil(plan.time / data.hours_per_turn);
+          let plan = system.astrogate(this.place, target, this.ship.acceleration);
+          if (!plan) continue;
+
+          // Add fuel expense
+          let turns  = Math.ceil(plan.time / data.hours_per_turn);
+          let refuel = false;
+          if (turns > this.ship.range(plan.accel, true)) {
+            profit -= this.ship.refuel_units() * data.fuel_price;;
+            refuel = true;
+          }
+
+          if (profit < 0) continue;
+
+          // Estimate value
           let value = profit / Math.log10(Math.ceil(turns/2));
 
           if (best === undefined || best.value < value) {
@@ -341,7 +385,9 @@ class HaulerAgent {
               target   : target,
               resource : resource,
               profit   : profit,
-              turns    : turns
+              turns    : turns,
+              accel    : plan.accel,
+              refuel   : refuel
             };
           }
         }
@@ -355,12 +401,14 @@ class HaulerAgent {
 
       if (best.units) {
         actions.push(['buy', this.place, best.resource, best.units]);
-        for (let i = 0; i < best.turns; ++i) actions.push(['wait']);
+        if (best.refuel) actions.push(['refuel']);
+        for (let i = 0; i < best.turns; ++i) actions.push(['burn', best.accel]);
         actions.push(['sell', best.target, best.resource, best.units]);
         actions.push(['set', 'place', best.target]);
       }
       else {
-        for (let i = 0; i < best.turns; ++i) actions.push(['wait']);
+        if (best.refuel) actions.push(['refuel']);
+        for (let i = 0; i < best.turns; ++i) actions.push(['burn', best.accel]);
         actions.push(['set', 'place', best.target]);
       }
     }

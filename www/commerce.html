@@ -71,10 +71,10 @@ $(function() {
     let count = slider.val - game.player.ship.cargo.get(item);
 
     if (count > 0) {
-      game.player.money -= place.buy(item, count);
+      game.player.debit(place.buy(item, count));
       game.player.ship.load_cargo(item, count);
     } else {
-      game.player.money += place.sell(item, -count);
+      game.player.credit(place.sell(item, -count));
       game.player.ship.unload_cargo(item, -count);
     }
 

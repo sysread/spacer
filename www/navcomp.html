@@ -1,52 +1,49 @@
 <script type="text/javascript">
 
-$(function() {
-  let table = $('#navcomp-table tbody');
-  let max_a = Math.min(game.player.max_acceleration(), game.player.ship_acceleration());
+$(() => {
+  let table = $('#navcomp-table tbody').empty();
+  let max_acc = Math.min(game.player.max_acceleration(), game.player.ship_acceleration());
 
   for (let body of system.bodies().sort()) {
     if (body != game.place().name) {
       let name = system.name(body);
-      let plan = system.astrogate(game.place().name, body, max_a);
+      let plan = system.astrogate(game.place().name, body, max_acc);
+      let btn, dist, acc, time, turns, range;
 
       if (plan !== null) {
-        let hrs   = plan.time;
-        let turns = plan.turns;
-        let acc   = plan.accel.toFixed(2);
-        let dist  = plan.au.toFixed(1);
-        let unit  = 'AU';
+        time  = csn(plan.time);
+        turns = plan.turns;
+        acc   = plan.accel.toFixed(2);
+        dist  = plan.au.toFixed(2) || '< 0.01AU';
+        range = Math.floor(game.player.ship.range(acc));
 
-        if (dist < 1.0) {
-          dist = Math.ceil(plan.km);
-          unit = 'km';
-        }
-
-        let btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-sm btn-dark btn-block">`);
+        btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-sm btn-dark btn-block">`);
         btn.append(`<span class="float-left">${name}</span>`);
         btn.append(`<span class="badge badge-pill float-right">${system.kind(body)}</span>`);
-        btn.data({plan: plan});
 
-        table
-          .append($('<tr>')
-            .append($('<td>').append(btn))
-            .append(`<td class="text-right">${csn(dist)} ${unit}</td>`)
-            .append(`<td class="text-right">${acc}G</td>`)
-            .append(`<td class="text-right">${csn(hrs)} hrs</td>`)
-            .append(`<td class="text-right">${turns}</td>`));
+        if (turns > range)
+          btn.addClass('disabled').removeAttr('data-toggle').removeAttr('data-target').prop('disabled', true);
+        else
+          btn.data({plan: plan});
       }
       else {
-        let btn = $(`<button type="button" class="btn btn-sm btn-dark btn-block disabled">`);
+        time  = 'Out of range';
+        turns = 'N/A';
+        acc   = 'N/A';
+        dist  = 'N/A';
+
+        btn = $(`<button type="button" class="btn btn-sm btn-dark btn-block disabled">`);
         btn.append(`<span class="float-left">${name}</span>`);
         btn.append(`<span class="badge badge-pill float-right">${system.kind(body)}</span>`);
-
-        table
-          .append($('<tr>')
-            .append($('<td>').append(btn))
-            .append(`<td class="text-right">N/A</td>`)
-            .append(`<td class="text-right">N/A</td>`)
-            .append(`<td class="text-right">&gt; 1 year</td>`)
-            .append(`<td class="text-right"></td>`));
       }
+
+      table
+        .append($('<tr>')
+          .append($('<td>').append(btn))
+          .append(`<td class="text-right">${csn(dist)}`)
+          .append(`<td class="text-right">${acc}G</td>`)
+          .append(`<td class="text-right">${time}</td>`)
+          .append(`<td class="text-right">${range * data.hours_per_turn}</td>`));
     }
   }
 
@@ -107,7 +104,10 @@ $(function() {
       }
       else {
         let count = Math.min(plan.left, 5);
-        for (let i = 0; i < count; ++i) plan.turn();
+        for (let i = 0; i < count; ++i) {
+          game.player.ship.burn(plan.accel);
+          plan.turn();
+        }
 
         let d = plan.dist_left.toFixed(2);
         let p = plan.pct_complete;
@@ -117,7 +117,7 @@ $(function() {
 
         game.turn(count);
       }
-    }, 200);
+    }, 50);
   }
 
   $('#nav-transit')
@@ -152,14 +152,18 @@ $(function() {
         of <span id="nav-ship-g"></span>Gs of acceleration with her current
         load out (<span id="nav-ship-t"></span> metric tonnes).
       </p>
+      <p>
+        For each destination, your ship's range at the required burn rate is
+        provided.
+      </p>
       <table class="table table-sm" id="navcomp-table">
         <thead>
           <tr>
             <th>Destination</th>
-            <th class="text-right">Dist.</th>
+            <th class="text-right">AU</th>
             <th class="text-right">Accel.</th>
-            <th class="text-right">Time</th>
-            <th class="text-right">Turns</th>
+            <th class="text-right">Hours</th>
+            <th class="text-right">Range</th>
           </tr>
         </thead>
         <tbody>

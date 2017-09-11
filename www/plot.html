@@ -1,0 +1,121 @@
+<script type="text/javascript">
+
+$(function() {
+  let adjust = function(n) {
+    let inverse = (100 - Math.abs(n)) >> 4;
+    if (inverse < 1) return 1;
+    let adjust = Math.round(Math.log(inverse) * 100) / 100;
+    if (adjust < 1) return 1;
+    return adjust;
+  };
+
+  let replot = function() {
+    let plot = $('#plot');
+    plot.height(plot.width());
+
+    let zero   = $('<div id="plot-zero-zero" class="p-0 m-0" style="position:absolute;left:50%;top:50%;">');
+    let data   = system.plot();
+    let bodies = data.bodies;
+    let width  = plot.width();
+    let height = plot.height();
+    let point  = {};
+
+    for (let i = 0; i < bodies.length; ++i) {
+      let [body, x, y] = bodies[i];
+      let adjust_x = adjust(x);
+      let adjust_y = adjust(y);
+
+      let left = Math.ceil(width  * x * adjust_x / 100 / 2);
+      let top  = Math.ceil(height * y * adjust_y / 100 / 2);
+
+      let key     = `p-${left}-${top}`;
+      let name    = system.name(body);
+      let central = system.central(body);
+      if (central && central !== 'sun') name += ` (${system.name(central)})`;
+
+      if (point[key] === undefined) {
+        point[key] = [name];
+
+        let item = $(`<a href="#" class="p-1" id="${key}">&bull;</a>`)
+          .css({'line-height': 1, position: 'absolute', top: top, left: left})
+          .data({'point': point});
+
+        if (body == 'sun') item.addClass('text-warning').addClass('font-weight-bold');
+        if (body == game.locus) item.addClass('text-success font-weight-bold');
+
+        zero.append(item);
+      }
+      else {
+        point[key].push(name);
+        if (body == game.locus) $(`#${key}`).addClass('text-success font-weight-bold');
+      }
+    }
+
+    plot.empty().append(zero);
+  };
+
+  $('#plot').on('click', 'a', (e) => {
+    e.stopPropagation();
+
+    $('#plot a').removeClass('border').removeClass('border-danger');
+    $(e.target).addClass('border border-danger');
+
+    let point = $(e.target).data('point');
+    let key = e.target.id;
+
+    if (point[key].length > 1) {
+      $('#plot-dialog-select .modal-body').html(`<p>There are ${point[key].length} stations at this location.</p>`);
+
+      point[key].forEach((place) => {
+        let b = $(`<button type="button" class="btn btn-dark" data-place="${place}" data-dismiss="modal" data-toggle="modal" data-target="#plot-dialog-info">`);
+        $('#plot-dialog-select .modal-body').append(b.append(place)).append(' ');
+      });
+    }
+
+    $('#plot-dialog-select').modal('show');
+  });
+
+  $('#plot').on('click', (e) => {
+    $('#plot a').removeClass('border').removeClass('border-danger');
+  });
+
+  $('#plot-dialog-select').on('show.bs.modal', (e) => {
+    console.log('select');
+  });
+
+  $('#plot-dialog-info').on('show.bs.modal', (e) => {
+    console.log($(e.relatedTarget).data('place'));
+  });
+
+  replot();
+});
+
+</script>
+
+<div class="card p-3">
+  <h3 class="card-header">System map</h3>
+  <div class="card-body p-1">
+    <div class="card-text" id="plot"></div>
+  </div>
+</div>
+
+<div class="modal" id="plot-dialog-select">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-body"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="plot-dialog-info" data-backdrop="static">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Stuff</h5></div>
+      <div class="modal-body">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>

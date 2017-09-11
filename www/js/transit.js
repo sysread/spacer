@@ -7,7 +7,7 @@ class Transit {
   get dest()    { return this.opt.dest  }           // destination body name
   get dist()    { return this.opt.dist  }           // meters
   get time()    { return this.opt.time  }           // hours
-  get hours()   { return this.opt.time  }
+  get hours()   { return this.opt.time  }           // also hours
   get accel()   { return this.opt.accel }           // gravities
   get turns()   { return Math.ceil(this.time / 4) } // total trip turns
   get turnpct() { return 100 / this.turns }         // percent of trip per turn

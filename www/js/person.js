@@ -41,10 +41,18 @@ class Person {
   }
 
   max_acceleration() {
-    return 0.1 + (Math.log(this.strength) * 0.3);
+    return 0.1 + (this.strength * 0.115);
   }
 
   ship_acceleration() {
     return this.ship.acceleration;
+  }
+
+  credit(n) {
+    this.money += n;
+  }
+
+  debit(n) {
+    this.money -= n;
   }
 }

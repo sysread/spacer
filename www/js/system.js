@@ -1,9 +1,13 @@
 class System {
   constructor() {
     this.system = new SolarSystem;
+    this.cache  = new Map;
   }
 
   set_date(date) {
+    if (new Date(date + ' 01:00:00').getDate() !== this.system.time.getDate())
+      this.cache.clear();
+
     this.system.setTime(date);
   }
 
@@ -20,11 +24,19 @@ class System {
   }
 
   name(name) {
-    return this.body(name).name;
+    let n = this.body(name).name;
+    if (n == 'The Moon') return 'Luna';
+    return n;
   }
 
   type(name) {
     return this.system.bodies[name].type;
+  }
+
+  central(name) {
+    let body = this.body(name);
+    if (body.central) return body.central.key;
+    return;
   }
 
   kind(name) {
@@ -34,7 +46,7 @@ class System {
     if (type == 'dwarfPlanet') {
       type = 'Dwarf planet';
     }
-    else if (body.central.name != 'The Sun') {
+    else if (body.central && body.central.name != 'The Sun') {
       type = `Moon of ${body.central.name}`;
     }
     else {
@@ -53,7 +65,9 @@ class System {
   }
 
   orbit(name) {
-    return this.body(name).getOrbitPath();
+    if (!this.cache.has(name))
+      this.cache.set(name, this.body(name).getOrbitPath());
+    return this.cache.get(name);
   }
 
   orbit_by_turns(orbit) {
@@ -108,7 +122,8 @@ class System {
    *   S = 0.5 * a * t^2
    *   a = (S * 2) / t^2
    */
-  astrogate(origin, target, max_g=1) {
+  astrogate(origin, target, max_g) {
+    if (max_g === undefined) max_g = 1.0;
     let b1  = this.body(origin);
     let b2  = this.body(target);
     let max = max_g * data.G;
@@ -136,7 +151,7 @@ class System {
       p1 = b1.position;
     }
 
-    let orbit = this.orbit_by_turns(b2.getOrbitPath());
+    let orbit = this.orbit_by_turns(this.orbit(b2.key));
 
     for (var i = 1; i < orbit.length; ++i) {
       // Calculate distance to flip point
@@ -145,11 +160,14 @@ class System {
       // Calculate time to flip point
       let t = i * 4 * 60 * 60 * 0.5; // turns to seconds / 2
 
+      // Convert seconds to hours
+      let hrs = t / 60 / 60 * 2;
+
       // Calculate acceleration required to reach flip point
       let a = S / (t * t) * 0.5;
 
       if (a <= max) {
-        time = t / 60 / 60 * 2; // seconds to hours
+        time = t / 60 / 60 * 2; // hours
         dist = S * 2;           // meters
         acc  = a / data.G;      // gravities
         break;
@@ -167,27 +185,48 @@ class System {
     });
   }
 
-  max_distance() {
-    let bodies = new Set;
-    let seen   = new Set;
-    let max    = 0;
+  plot() {
+    let abs    = Math.abs;
+    let ceil   = Math.ceil;
+    let floor  = Math.floor;
+    let max    = Math.max;
+    let round  = Math.round;
+    let bodies = this.bodies();
+    let pos    = {};
 
-    for (let name of this.bodies()) {
+    // Get coordinates and hypot for each body, scaled down
+    for (let name of bodies) {
       let body = this.body(name);
-      bodies.add((body.central.name === 'The Sun') ? name : body.central.key);
+
+      if (body.type === 'moon')
+        body = body.central;
+
+      let [x, y, z] = body.position;
+      x = ceil(x / 1000);
+      y = ceil(y / 1000);
+
+      pos[name] = {x:x, y:y};
     }
 
-    for (let a of bodies.keys()) {
-      for (let b of bodies.keys()) {
-        if (a === b) continue;
-        let key = [a, b].sort().join('-');
-        if (seen.has(key)) continue;
-        seen.add(key);
-        max = Math.max(max, this.distance(a, b));
-      }
+    // Calculate max values for x and y
+    let max_x = Object.values(pos).reduce((acc, val) => {return max(acc, abs(val.x))}, 0);
+    let max_y = Object.values(pos).reduce((acc, val) => {return max(acc, abs(val.y))}, 0);
+
+    // Calculate scaled coordinates
+    let plot  = [['sun', 0, 0]];
+    for (let name of bodies) {
+      let p     = pos[name];
+      let pct_x = round(p.x / max_x * 100);
+      let pct_y = round(p.y / max_y * 100);
+
+      plot.push([name, pct_x, pct_y]);
     }
 
-    return max;
+    return {
+      max_x  : plot.reduce((acc, val) => {return max(acc, abs(val[1]))}, 0),
+      max_y  : plot.reduce((acc, val) => {return max(acc, abs(val[2]))}, 0),
+      bodies : plot
+    };
   }
 }
 

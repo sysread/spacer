@@ -11,11 +11,6 @@ $(function() {
   $('#scale').text(place.size);
   $('#traits').text(traits || 'None');
   $('#conditions').text(conds || 'None');
-
-  $('#btn-wilderness' ).click((e) => {e.preventDefault(); open('wilds')});
-  $('#btn-commerce'   ).click((e) => {e.preventDefault(); open('docks')});
-  $('#btn-fabricators').click((e) => {e.preventDefault(); open('fabs')});
-  $('#btn-navcomp'    ).click((e) => {e.preventDefault(); open('nav')});
 });
 
 </script>
@@ -30,12 +25,6 @@ $(function() {
       <div class="row p-1"><div class="col-sm font-weight-bold">Details</div><div class="col-sm text-capitalize" id="traits"></div></div>
       <div class="row p-1"><div class="col-sm font-weight-bold">Special</div><div class="col-sm text-capitalize" id="conditions"></div></div>
       </div>
-    </div>
-    <div class="row p-1">
-      <div class="col-sm py-1"><button type="button" class="btn btn-dark btn-sm btn-block card-link" id="btn-wilderness">Wilderness</button></div>
-      <div class="col-sm py-1"><button type="button" class="btn btn-dark btn-sm btn-block card-link" id="btn-commerce">Commerce</button></div>
-      <div class="col-sm py-1"><button type="button" class="btn btn-dark btn-sm btn-block card-link" id="btn-fabricators">Fabricators</button></div>
-      <div class="col-sm py-1"><button type="button" class="btn btn-dark btn-sm btn-block card-link" id="btn-navcomp">Navigation</button></div>
     </div>
   </div>
 </div>

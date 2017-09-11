@@ -8,7 +8,7 @@ const data = {
   G  : 9.80665,      // m/s/s
   AU : 149597870700, // m
 
-  start_date      : new Date(2242, 0, 1),
+  start_date      : new Date(2242, 0, 1, 1),
   hours_per_turn  : 4,
   initial_turns   : 600,
   demand_history  : 300 * 6, // 6 turns/day
@@ -17,6 +17,7 @@ const data = {
   necessity       : {water: true, food: true, medicine: true},
   haulers         : 4, // per body
   hauler_money    : 1000,
+  fuel_price      : 50,
 
   scales: {
     tiny   : 0.25,
@@ -81,19 +82,23 @@ const data = {
   factions: {
     'UN': {
       full_name : 'United Nations',
-      sales_tax : 0.15
+      sales_tax : 0.18
     },
     'MC': {
       full_name : 'Martian Commonwealth',
-      sales_tax : 0.1
+      sales_tax : 0.12
     },
-    'SPC': {
-      full_name : 'Supreme Plutonian Command',
-      sales_tax : 0.005
+    'TRANSA': {
+      full_name : 'Trans-Neptunian Authority',
+      sales_tax : 0.01
     },
     'ICS': {
       full_name : 'Interplanetary Commercial Syndicate',
-      sales_tax : 0.05
+      sales_tax : 0.08
+    },
+    'CERES': {
+      full_name : 'Ceres',
+      sales_tax : 0.06
     }
   },
 
@@ -130,8 +135,8 @@ const data = {
     },
     ceres: {
       size     : 'normal',
-      traits   : ['water poor', 'mineral poor'],
-      faction  : 'ICS'
+      traits   : ['water rich', 'mineral rich'],
+      faction  : 'CERES'
     },
     europa: {
       size     : 'small',
@@ -161,60 +166,58 @@ const data = {
     triton: {
       size     : 'normal',
       traits   : ['water rich', 'mineral poor'],
-      faction  : 'ICS'
+      faction  : 'TRANSA'
     },
     pluto: {
       size     : 'small',
       traits   : ['water rich'],
-      faction  : 'SPC'
-    },
-    eris: {
-      size     : 'tiny',
-      traits   : ['water poor', 'mineral poor'],
-      faction  : 'SPC'
+      faction  : 'TRANSA'
     }
   },
 
   drives: {
     ion: {
-      name   : 'HDI',
-      desc   : '(pulsed inductive thruster) something about high power from fusion reactors, highly pressurized containment for reaction mass, and bolting them together by the hundreds, workhorse of the cargo fleet',
-      thrust : 80,
-      mass   : 5
+      name      : 'Ion',
+      thrust    : 80,
+      mass      : 5,
+      desc      : 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the hundreds, they are the work horse of the cargo fleet.',
+      burn_rate : 0.01,
     },
     plasma: {
-      name   : 'Boswell',
-      desc   : 'Having solved the problems of heat dissipation and electromagnetic interactions with modern ceramics and alloys, the original concept behind the VASIMR drive dates back more than two centuries. The modern Boswell drive is powerful enough to push even the largest craft efficiently, if not quickly.',
-      thrust : 150,
-      mass   : 10
+      name      : 'Boswell',
+      thrust    : 200,
+      mass      : 10,
+      desc      : 'Having solved the problems of heat dissipation and electromagnetic interactions with modern ceramics and alloys, the original concept behind the VASIMR drive dates back more than two centuries. The modern Boswell drive is powerful enough to push even the largest craft efficiently, if not quickly.',
+      burn_rate : 0.08,
     },
     fusion: {
-      name   : 'Fusion',
-      desc   : 'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
-      thrust : 1000,
-      mass   : 30
+      name      : 'Fusion',
+      thrust    : 1000,
+      mass      : 40,
+      desc      : 'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
+      burn_rate : 0.15,
     }
   },
 
   shipclass: {
     /* Civilian */
-    shuttle     : {hull: 3,  armor: 1,  cargo: 4,   hardpoints: 1,  mass: 100,   drives: 1,   drive: 'plasma'},
-    cutter      : {hull: 4,  armor: 2,  cargo: 10,  hardpoints: 1,  mass: 200,   drives: 2,   drive: 'plasma'},
-    yacht       : {hull: 6,  armor: 2,  cargo: 6,   hardpoints: 2,  mass: 350,   drives: 4,   drive: 'plasma'},
-    schooner    : {hull: 8,  armor: 4,  cargo: 12,  hardpoints: 2,  mass: 400,   drives: 8,   drive: 'plasma'},
+    shuttle     : {hull: 3,  armor: 1,  cargo: 5,   hardpoints: 1,  mass: 100,   tank: 2,   drives: 1,   drive: 'plasma'},
+    cutter      : {hull: 4,  armor: 2,  cargo: 10,  hardpoints: 1,  mass: 250,   tank: 4,   drives: 2,   drive: 'plasma'},
+    yacht       : {hull: 6,  armor: 2,  cargo: 7,   hardpoints: 2,  mass: 300,   tank: 6,   drives: 2,   drive: 'plasma'},
+    schooner    : {hull: 8,  armor: 4,  cargo: 12,  hardpoints: 2,  mass: 400,   tank: 10,  drives: 10,  drive: 'ion'},
 
     /* Merchant */
-    merchantman : {hull: 7,  armor: 2,  cargo: 25,  hardpoints: 2,  mass: 4000,  drives: 50,  drive: 'ion'},
-    freighter   : {hull: 10, armor: 2,  cargo: 50,  hardpoints: 2,  mass: 6500,  drives: 80,  drive: 'ion'},
-    hauler      : {hull: 20, armor: 5,  cargo: 100, hardpoints: 4,  mass: 10000, drives: 130, drive: 'ion'},
+    merchantman : {hull: 7,  armor: 2,  cargo: 25,  hardpoints: 2,  mass: 4000,  tank: 40,  drives: 50,  drive: 'ion'},
+    freighter   : {hull: 10, armor: 2,  cargo: 50,  hardpoints: 2,  mass: 6500,  tank: 100, drives: 80,  drive: 'ion'},
+    hauler      : {hull: 20, armor: 5,  cargo: 100, hardpoints: 4,  mass: 10000, tank: 250, drives: 130, drive: 'ion'},
 
     /* Military */
-    transport   : {hull: 20, armor: 10, cargo: 50,  hardpoints: 6,  mass: 8000,  drives: 180, drive: 'ion'},
-    corvette    : {hull: 10, armor: 5,  cargo: 5,   hardpoints: 4,  mass: 550,   drives: 2,   drive: 'fusion'},
-    frigate     : {hull: 10, armor: 5,  cargo: 25,  hardpoints: 4,  mass: 800,   drives: 4,   drive: 'fusion'},
-    destroyer   : {hull: 15, armor: 12, cargo: 10,  hardpoints: 8,  mass: 1100,  drives: 6,   drive: 'fusion'},
-    cruiser     : {hull: 20, armor: 15, cargo: 12,  hardpoints: 10, mass: 1850,  drives: 12,  drive: 'fusion'},
-    battleship  : {hull: 35, armor: 25, cargo: 20,  hardpoints: 16, mass: 2300,  drives: 16,  drive: 'fusion'}
+    transport   : {hull: 20, armor: 10, cargo: 50,  hardpoints: 6,  mass: 8000,  tank: 250, drives: 200, drive: 'ion'},
+    corvette    : {hull: 10, armor: 5,  cargo: 5,   hardpoints: 4,  mass: 550,   tank: 10,  drives: 2,   drive: 'fusion'},
+    frigate     : {hull: 10, armor: 5,  cargo: 25,  hardpoints: 4,  mass: 800,   tank: 26,  drives: 4,   drive: 'fusion'},
+    destroyer   : {hull: 15, armor: 12, cargo: 10,  hardpoints: 8,  mass: 1100,  tank: 40,  drives: 8,   drive: 'fusion'},
+    cruiser     : {hull: 20, armor: 15, cargo: 12,  hardpoints: 10, mass: 1850,  tank: 100, drives: 16,  drive: 'fusion'},
+    battleship  : {hull: 35, armor: 25, cargo: 20,  hardpoints: 16, mass: 2300,  tank: 140, drives: 20,  drive: 'fusion'}
   },
 
   stats: {

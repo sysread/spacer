@@ -5,27 +5,30 @@ $(function() {
   let s = p.ship;
 
   let row = (lbl, val) => {
-    return `<div class="row p-1"><div class="col-sm font-weight-bold">${lbl}</div><div class="col-sm">${val}</div></div>`;
+    return `<div class="row p-1"><div class="col-sm-3 font-weight-bold">${lbl}</div><div class="col-sm">${val}</div></div>`;
   }
 
   $('#captain').empty()
-    .append(row('Money',       p.money))
-    .append(row('Health',      `${p.health}/10`))
-    .append(row('Experience',  p.xp))
-    .append(row('Strength',    `${p.strength} (max thrust ${p.max_acceleration().toFixed(2)} G)`))
+    .append(row('Money', p.money))
+    .append(row('Health', `${p.health}/10`))
+    .append(row('Experience', p.xp))
+    .append(row('Strength', `${p.strength} (max thrust ${p.max_acceleration().toFixed(2)} G)`))
 
   $('#ship').empty()
-    .append(row('Name',         `${s.name}`))
-    .append(row('Class',        `<span class="text-capitalize">${s.opt.shipclass}</span>`))
-    .append(row('Cargo',        `${s.cargo_used}/${s.cargo_space}`))
-    .append(row('Mass',         `${s.mass} Mg (${s.shipclass.mass} nominal)`))
-    .append(row('No. drives',   `${s.shipclass.drives}`))
-    .append(row('Drive type',   `<span class="text-capitalize">${s.shipclass.drive}</span>`))
-    .append(row('Thrust',       `${s.thrust} kN`))
-    .append(row('Acceleration', `${s.acceleration.toFixed(2)} G`))
-    .append(row('Hull',         `?/${s.shipclass.hull}`))
-    .append(row('Armor',        `?/${s.shipclass.armor}`))
-    .append(row('Hardpoints',   `${s.shipclass.hardpoints}`))
+    .append(row('Name', `${s.name}`))
+    .append(row('Class', `<span class="text-capitalize">${s.opt.shipclass}</span>`))
+    .append(row('Cargo', `${s.cargo_used}/${s.cargo_space}`))
+    .append(row('Hull', `?/${s.shipclass.hull}`))
+    .append(row('Armor', `?/${s.shipclass.armor}`))
+    .append(row('Hardpoints', `${s.shipclass.hardpoints}`))
+    .append(row('Mass', `${s.mass} Mg (${s.shipclass.mass} nominal)`))
+    .append(row('Thrust', `${s.thrust} kN`))
+    .append(row('Fuel', `${s.fuel}/${s.tank}`))
+    .append(row('Range', `${s.range() * data.hours_per_turn} hours at ${s.acceleration.toFixed(2)}G`))
+    .append(row('Drives', `${s.shipclass.drives}`))
+    .append(row('Drive type', `<span class="text-capitalize">${s.shipclass.drive}</span><p class="form-text text-muted">${data.drives[s.shipclass.drive].desc}</p>`));
+
+  $('#newgame').on('click', () => {open('newgame')});
 });
 
 </script>
@@ -34,6 +37,9 @@ $(function() {
   <h3 class="card-header">Captain</h3>
   <div class="card-body">
     <div class="card-text p-1" id="captain"></div>
+    <div class="card-text p-1">
+      <button type="button" class="btn btn-dark" id="newgame">New game</button>
+    </div>
   </div>
 </div>
 

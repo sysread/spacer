@@ -15,7 +15,7 @@ $(function() {
     $('#faction-info').html($('#' + faction).html());
   });
 
-  $('#home').val('ganymede');
+  $('#home').val('ceres');
   $('#home').change();
 
   for (let name of Object.keys(data.stats)) {
@@ -59,15 +59,19 @@ $(function() {
   $('#starting-game').on('shown.bs.modal', (e) => {
     $('#starting-game-progress').css('width', '0%');
 
+    let ship = 'cutter';
+
     let me = new Person({
       name     : $('#name').val(),
       money    : 1000,
       strength : parseInt($('#stat-strength').val(), 10),
       ship     : new Ship({
         name      : $('#ship').val(),
-        shipclass : 'cutter'
+        shipclass : ship,
       })
     });
+
+    me.ship.fuel = data.shipclass[ship].tank;
 
     let place = $('#home').val();
     game.new_game(me, place);
@@ -83,11 +87,11 @@ $(function() {
         let count = Math.min(turns - done, step);
         done += count;
         let pct = Math.max(5, Math.ceil((done / turns) * 100));
-        $('#starting-game-progress').css('width', `${pct}%`);
+        $('#starting-game-progress').css('width', `${pct}%`).text(`${pct}%`);
         game.turn(count);
       }
       else {
-        $('#starting-game-progress').css('width', '100%');
+        $('#starting-game-progress').css('width', '100%').text('Done!');
         window.clearInterval(intvl);
         $('#starting-game .modal-footer button').prop('disabled', false);
       }
@@ -186,7 +190,7 @@ $(function() {
   </p>
 </div>
 
-<div hidden id="SPC">
+<div hidden id="TRANSA">
   <p>
     Those who live in the outer planets are exquisitely aware of the fragile
     existence they lead, completely dependent on shipments of food, water,
@@ -194,12 +198,13 @@ $(function() {
   </p>
   <p>
     When Mars broke from Earth, deliveries to the furthest installations on
-    Pluto and Eris ceased in the face of privateering and the realities of a
-    war economy. Those who survived the rioting came under the authoritarian
-    rule of the Supreme Plutonian Command.
+    Pluto and Triton ceased in the face of privateering and the realities of a
+    war economy. Those who survived the food riots shortly found themselves
+    under the unforgiving, magnetic boot of a coalition of thugs and vigilante
+    gangs collectively calling themselves the Trans-Neptunian Authority.
   </p>
   <p>
-    With resources stretched and hungry mouths to feed, the SPC offers the
+    With resources stretched and hungry mouths to feed, TRANSA offers the
     lowest tax rates in the system, promising a hefty margin to any traders
     willing to make the "Long Haul", as it is popularly known. Given the
     limited number of warships available to the SPC and the vast volume of
@@ -208,37 +213,34 @@ $(function() {
   </p>
 </div>
 
+<div hidden id="CERES">
+  <p>
+    Holding a favorable position orbiting within the asteroid belt, Ceres has
+    long served as a center of trade between the inner and outer planets. Its
+    location also serves to make it a launching point for mining operations
+    within the asteroid belt.
+  </p>
+  <p>
+    A number of shipyards have grown up around Ceres, taking advantage of the
+    central location and ease of access to materials to make Ceres the primary
+    ship-bulding center in the system.
+  </p>
+</div>
+
 <div hidden id="ICS">
   <p>
     Faced with the same economic constraints and pressures as the outer planets
     during the war but with much closer and more powerful corporate interests
-    at hand, the Saturnian moons joined with the Ceres Corporation to form the
-    Interplanetary Commercial Syndicate. With Ceres holding an orbit favorable as a
-    trade nexus between Earth and Mars and the Saturn system holding much of
-    the accessible water in the system, the ICS has become a force unto itself,
-    patrolling the belt and outer planet trade routes with its corporate fleet.
+    at hand, the Saturnian moons controlling interests joined to form the
+    Interplanetary Commercial Syndicate. Funded by some of the richest
+    corporations on Earth, the ICS has become a force unto itself, patrolling
+    the outer planets' trade routes with its corporate fleet.
   </p>
   <p>
     Life in the domes of Saturn is difficult, and the harvesting of ice and ore
     in the outer system is dangerous work, but citizen employees can rest
     assured that the Board of Directors has their best interests at heart, or
-    at least their compound interest at heart, as much of the population is
-    bound by contract or debt their Syndicate.
+    at least their compound interest at heart, as many are bound by contract or
+    debt to their Syndicate.
   </p>
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

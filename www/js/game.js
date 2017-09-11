@@ -7,7 +7,28 @@ class Game {
     this.places  = {};
     this.markets = {}; // hourly market reports for light speed market data
     this.agents  = [];
-    document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
+
+    $(() => {
+      let saved = window.localStorage.getItem('game');
+
+      if (saved) {
+        this.load(JSON.parse(saved));
+        this.refresh();
+        open('summary');
+      }
+      else {
+        open('newgame');
+      }
+    });
+  }
+
+  test() {
+    Object.keys(data.shipclass).forEach((sc) => {
+      let s = new Ship({shipclass: sc});
+      s.fuel = s.tank;
+      let a = s.acceleration.toFixed(2);
+      console.log(sc, s.range(a) * 4, 'hrs at', a);
+    });
   }
 
   save() {
@@ -47,23 +68,7 @@ class Game {
       this.markets[name] = obj.markets[name];
     });
 
-    open('summary');
-    this.refresh();
-  }
-
-  onDeviceReady() {
-    $(() => {
-      let saved = window.localStorage.getItem('game');
-
-      if (saved) {
-        this.load(JSON.parse(saved));
-        this.refresh();
-        open('summary');
-      }
-      else {
-        open('newgame');
-      }
-    });
+    system.set_date(this.strdate());
   }
 
   new_game(player, place) {
@@ -102,6 +107,7 @@ class Game {
   transit(dest) {
     this.locus = dest;
     this.save_game();
+    this.refresh();
   }
 
   strdate() {
@@ -112,10 +118,11 @@ class Game {
   }
 
   refresh() {
-    $('#spacer-turn').text(`${this.strdate()}`);
-    $('#spacer-credits').text(`${csn(this.player.money)} credits`);
-    $('#spacer-cargo').text(`${this.player.ship.cargo_used}/${this.player.ship.cargo_space} cargo`);
     $('#spacer-location').text(this.locus);
+    $('#spacer-credits').text(`${csn(this.player.money)}c`);
+    $('#spacer-cargo').text(`${this.player.ship.cargo_used}/${this.player.ship.cargo_space} cu`);
+    $('#spacer-fuel').text(`${this.player.ship.fuel}/${this.player.ship.tank} fuel`);
+    $('#spacer-turn').text(`${this.strdate()}`);
   }
 
   light_hours(meters) {
@@ -130,6 +137,7 @@ class Game {
     for (let i = 0; i < n; ++i) {
       ++this.turns;
       this.date.setHours(this.date.getHours() + data.hours_per_turn);
+      system.set_date(this.strdate());
 
       system.bodies().forEach((name) => {
         this.place(name).turn();

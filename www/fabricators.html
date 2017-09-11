@@ -50,7 +50,7 @@ $(function() {
 
     if (recipe) {
       let value = game.place().price(resource);
-      player.money -= Math.max(1, Math.round(fee_pct * value));
+      player.debit(Math.max(1, Math.round(fee_pct * value)));
 
       for (let mat of Object.keys(recipe.materials))
         player.ship.unload_cargo(mat, recipe.materials[mat]);
