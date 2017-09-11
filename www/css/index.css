@@ -90,6 +90,6 @@ button.btn-secondary:disabled {
   border: 1px solid rgb(129,0,0);
   background-color: #101010;
   color: rgb(200, 140, 50) !important;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: lighter;
 }

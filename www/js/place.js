@@ -83,7 +83,7 @@ class Place extends Market {
 
     amounts.each((resource, amount) => {
       let scaled = amount * this.scale;
-      amounts.set(resource, Math.round(scaled * 100) / 100);
+      amounts.set(resource, Math.max(0, Math.round(scaled * 100) / 100));
     });
 
     return amounts;

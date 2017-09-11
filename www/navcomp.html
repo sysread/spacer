@@ -14,7 +14,7 @@ $(() => {
         time  = csn(plan.time);
         turns = plan.turns;
         acc   = plan.accel.toFixed(2);
-        dist  = plan.au.toFixed(2) || '< 0.01AU';
+        dist  = (plan.au.toFixed(2) || '< 0.01') + ' AU';
         range = Math.floor(game.player.ship.range(acc));
 
         btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-sm btn-dark btn-block">`);
@@ -25,12 +25,15 @@ $(() => {
           btn.addClass('disabled').removeAttr('data-toggle').removeAttr('data-target').prop('disabled', true);
         else
           btn.data({plan: plan});
+
+        acc   += ' G';
+        range *= data.hours_per_turn;
       }
       else {
-        time  = 'Out of range';
-        turns = 'N/A';
-        acc   = 'N/A';
-        dist  = 'N/A';
+        dist  = '<span class="badge badge-pill">Out of range</span>';
+        acc   = '';
+        time  = '';
+        range = '';
 
         btn = $(`<button type="button" class="btn btn-sm btn-dark btn-block disabled">`);
         btn.append(`<span class="float-left">${name}</span>`);
@@ -41,9 +44,7 @@ $(() => {
         .append($('<tr>')
           .append($('<td>').append(btn))
           .append(`<td class="text-right">${csn(dist)}`)
-          .append(`<td class="text-right">${acc}G</td>`)
-          .append(`<td class="text-right">${time}</td>`)
-          .append(`<td class="text-right">${range * data.hours_per_turn}</td>`));
+          .append(`<td class="text-right">${csn(time)}</td>`));
     }
   }
 
@@ -58,6 +59,7 @@ $(() => {
     $('#nav-transit').data('plan', plan);
 
     $('#nav-accel').text(plan.accel.toFixed(1));
+    $('#nav-flip').text(Math.ceil(plan.time/2));
     $('#nav-distance-au').text(plan.au.toFixed(1));
     $('#nav-distance-km').text(csn(plan.km.toFixed(0)));
     $('#nav-time').text(`${csn(days)} days, ${csn(hours)} hours (${plan.turns} turns)`);
@@ -133,6 +135,7 @@ $(() => {
   $('#nav-player-g'  ).text(game.player.max_acceleration().toFixed(2));
   $('#nav-ship-g'    ).text(game.player.ship_acceleration().toFixed(2));
   $('#nav-ship-t'    ).text(csn(game.player.ship.mass));
+  $('#nav-ship-range').text(game.player.ship.range(undefined, true) * data.hours_per_turn);
 });
 
 </script>
@@ -147,23 +150,16 @@ $(() => {
         system.
       </p>
       <p>
-        With a strength of <span id="nav-player-str"></span>, you are able to endure a
-        sustained <span id="nav-player-g"></span>G burn. Your ship is capable
-        of <span id="nav-ship-g"></span>Gs of acceleration with her current
-        load out (<span id="nav-ship-t"></span> metric tonnes).
-      </p>
-      <p>
-        For each destination, your ship's range at the required burn rate is
-        provided.
+        With a strength of <span id="nav-player-str"></span>, you are able to endure a sustained <span id="nav-player-g"></span>G burn.
+        Your ship is capable of <span id="nav-ship-g"></span>Gs of acceleration with her current load out (<span id="nav-ship-t"></span> metric tonnes).
+        Your ship has a nominal range of <span id="nav-ship-range"></span> hours at this acceleration.
       </p>
       <table class="table table-sm" id="navcomp-table">
         <thead>
           <tr>
             <th>Destination</th>
-            <th class="text-right">AU</th>
-            <th class="text-right">Accel.</th>
+            <th class="text-right">Distance</th>
             <th class="text-right">Hours</th>
-            <th class="text-right">Range</th>
           </tr>
         </thead>
         <tbody>
@@ -181,13 +177,14 @@ $(() => {
       </div>
       <div class="modal-body">
         <p>
-          Accelerating at <span id="nav-accel"></span>G, your
-          ship will flip at the midway point and begin its deceleration burn.
+          At <span id="nav-accel"></span>G, your ship will flip after
+          <span id="nav-flip"></span> hours of acceleration and begin
+          its deceleration burn.
         </p>
         <table class="table">
           <tbody>
-            <tr><th scope="row">Distance (AU)</th><td id="nav-distance-au"></td></tr>
-            <tr><th scope="row">Distance (km)</th><td id="nav-distance-km"></td></tr>
+            <tr><th scope="row">AU</th><td id="nav-distance-au"></td></tr>
+            <tr><th scope="row">km</th><td id="nav-distance-km"></td></tr>
             <tr><th scope="row">Total time</th><td id="nav-time"></td></tr>
             <tr><th scope="row">Destination</th><td id="nav-destination"></td></tr>
           </tbody>

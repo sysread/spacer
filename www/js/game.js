@@ -121,7 +121,7 @@ class Game {
     $('#spacer-location').text(this.locus);
     $('#spacer-credits').text(`${csn(this.player.money)}c`);
     $('#spacer-cargo').text(`${this.player.ship.cargo_used}/${this.player.ship.cargo_space} cu`);
-    $('#spacer-fuel').text(`${this.player.ship.fuel}/${this.player.ship.tank} fuel`);
+    $('#spacer-fuel').text(`${Math.floor(this.player.ship.fuel)}/${this.player.ship.tank} fuel`);
     $('#spacer-turn').text(`${this.strdate()}`);
   }
 

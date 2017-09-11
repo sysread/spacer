@@ -44,13 +44,14 @@ class System {
     let type = this.type(name);
 
     if (type == 'dwarfPlanet') {
-      type = 'Dwarf planet';
+      type = 'dwarf';
     }
     else if (body.central && body.central.name != 'The Sun') {
-      type = `Moon of ${body.central.name}`;
+      type = body.central.name;
+      //type = `Moon of ${body.central.name}`;
     }
     else {
-      type = 'Planet';
+      type = 'planet';
     }
 
     return type;
@@ -71,16 +72,17 @@ class System {
   }
 
   orbit_by_turns(orbit) {
-    let point = orbit.shift();
+    let point = orbit[0];
     let path  = [point];
+    let turns_per_day = 24 / data.hours_per_turn;
 
-    while (orbit.length > 0) {
-      let next = orbit.shift();
-      let dx = (point[0] - next[0]) / 6;
-      let dy = (point[1] - next[1]) / 6;
-      let dz = (point[2] - next[2]) / 6;
+    for (let day = 1; day < orbit.length; ++day) {
+      let next = orbit[day];
+      let dx = (point[0] - next[0]) / turns_per_day;
+      let dy = (point[1] - next[1]) / turns_per_day;
+      let dz = (point[2] - next[2]) / turns_per_day;
 
-      for (var i = 1; i < 6; ++i) {
+      for (var i = 1; i < turns_per_day; ++i) {
         path.push([
           point[0] + (i * dx),
           point[1] + (i * dy),

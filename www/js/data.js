@@ -11,12 +11,15 @@ const data = {
   start_date      : new Date(2242, 0, 1, 1),
   hours_per_turn  : 4,
   initial_turns   : 600,
+
   demand_history  : 300 * 6, // 6 turns/day
   base_unit_price : 25,
   scarcity_markup : 0.1,
   necessity       : {water: true, food: true, medicine: true},
+
   haulers         : 4, // per body
   hauler_money    : 1000,
+
   fuel_price      : 50,
 
   scales: {
@@ -47,10 +50,6 @@ const data = {
     agent_money   : 500,
     minability    : 0.25,
     produces: {
-      water       : 12,
-      ore         : 6,
-      chemicals   : 2,
-      food        : 0
     },
     consumes: {
       water       : 8,
@@ -69,7 +68,14 @@ const data = {
     'mineral poor' : {produces: {ore: -2, chemicals: -1}, consumes: {}},
     'water rich'   : {produces: {water: 3}, consumes: {}},
     'water poor'   : {produces: {water: -3}, consumes: {}},
-    'habitable'    : {produces: {food: 6}, consumes: {}}
+
+    'ringed'       : {produces: {water: 4}, consumes: {}},
+    'asteroids'    : {produces: {water: 1, ore: 8}, consumes: {}},
+
+    'habitable'    : {produces: {water: 12, ore: 8, chemicals: 2, food: 6}, consumes: {}},
+    'orbital'      : {produces: {water:  2, ore: 0, chemicals: 0, food: 1}, consumes: {}},
+    'domed'        : {produces: {water:  8, ore: 6, chemicals: 1, food: 4}, consumes: {}},
+    'subterranean' : {produces: {water:  4, ore: 2, chemicals: 1, food: 2}, consumes: {}},
   },
 
   conditions: {
@@ -105,72 +111,72 @@ const data = {
   bodies: {
     mercury: {
       size     : 'normal',
-      traits   : ['mineral rich', 'water poor', 'water poor'],
+      traits   : ['subterranean', 'mineral rich', 'water poor', 'water poor'],
       faction  : 'UN'
     },
     earth: {
       size     : 'huge',
-      traits   : ['habitable'],
+      traits   : ['habitable', 'orbital'],
       faction  : 'UN'
     },
     moon: {
       size     : 'large',
-      traits   : ['water poor'],
+      traits   : ['domed', 'subterranean', 'water poor'],
       faction  : 'UN'
     },
     mars: {
       size     : 'large',
-      traits   : ['water poor', 'mineral rich'],
+      traits   : ['domed', 'subterranean', 'orbital', 'water poor', 'mineral rich'],
       faction  : 'MC'
     },
     phobos: {
       size     : 'small',
-      traits   : ['water poor', 'water poor', 'mineral poor'],
+      traits   : ['subterranean', 'water poor', 'water poor', 'mineral poor'],
       faction  : 'MC'
     },
     deimos: {
       size     : 'tiny',
-      traits   : ['water poor', 'water poor', 'mineral poor'],
+      traits   : ['subterranean', 'water poor', 'water poor', 'mineral poor'],
       faction  : 'MC'
     },
     ceres: {
-      size     : 'normal',
-      traits   : ['water rich', 'mineral rich'],
+      size     : 'large',
+      traits   : ['subterranean', 'asteroids', 'water rich', 'mineral rich'],
       faction  : 'CERES'
     },
     europa: {
       size     : 'small',
-      traits   : ['mineral poor'],
+      traits   : ['subterranean'],
       faction  : 'MC'
     },
     ganymede: {
       size     : 'large',
-      traits   : ['water rich', 'mineral poor'],
+      traits   : ['domed', 'subterranean', 'orbital', 'water rich', 'mineral poor'],
       faction  : 'MC'
     },
     callisto: {
       size     : 'normal',
-      traits   : [],
+      traits   : ['subterranean'],
       faction  : 'MC'
     },
     enceladus: {
       size     : 'small',
-      traits   : ['water rich', 'mineral poor'],
+      traits   : ['orbital', 'ringed', 'water rich', 'mineral poor'],
       faction  : 'ICS'
     },
     rhea: {
-      size     : 'tiny',
-      traits   : ['water rich', 'mineral poor'],
+      size     : 'small',
+      traits   : ['subterranean', 'orbital', 'ringed', 'water rich', 'water rich', 'mineral poor'],
       faction  : 'ICS'
     },
     triton: {
       size     : 'normal',
-      traits   : ['water rich', 'mineral poor'],
+      traits   : ['orbital', 'ringed', 'water rich', 'water rich', 'mineral poor'],
       faction  : 'TRANSA'
     },
     pluto: {
-      size     : 'small',
-      traits   : ['water rich'],
+      size     : 'normal',
+      traits   : ['domed', 'subterranean', 'water rich'],
       faction  : 'TRANSA'
     }
   },
