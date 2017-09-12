@@ -24,10 +24,13 @@ class Game {
 
   test() {
     Object.keys(data.shipclass).forEach((sc) => {
-      let s = new Ship({shipclass: sc});
-      s.fuel = s.tank;
+      let s = new Ship({shipclass: sc, fuel: data.shipclass[sc].tank});
       let a = s.acceleration.toFixed(2);
-      console.log(sc, s.range(a) * 4, 'hrs at', a);
+      let kg = data.shipclass[sc].cargo * data.resources['ore'].mass;
+      let kgacc = s.acceleration_for_mass(kg).toFixed(2);
+      console.log('--');
+      console.log(sc, s.range(a)     * data.hours_per_turn, 'hrs at max acceleration', a);
+      console.log(sc, s.range(kgacc) * data.hours_per_turn, 'hrs at', kgacc, 'with', kg, 'kg of cargo');
     });
   }
 

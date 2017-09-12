@@ -44,7 +44,7 @@ class Ship {
     for (let i = 0; i < this.shipclass.drives; ++i)
       m += data.drives[this.shipclass.drive].mass;
 
-    return this.thrust / this.mass;
+    return this.thrust / m;
   }
 
   range(accel, nominal=false) {

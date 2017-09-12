@@ -18,13 +18,16 @@ $(function() {
       step       : 1,
       initial    : max,
       minmaxbtns : true,
-      callback   : (n) => {$('#refuel-units').val(n)}
+      callback   : (n) => {
+        $('#refuel-price').val(n * data.fuel_price);
+        $('#refuel-units').val(n);
+      }
     });
 
     $('#refuel-slider').empty().append(slider.group);
 
     $('#refuel-confirm').off('click').on('click', (e) => {
-      let units = parseInt($('#refuel-units').val(), 10);
+      let units = slider.val;
 
       if (units !== NaN && units > 0 && units <= max) {
         game.player.ship.refuel(units);
@@ -79,10 +82,12 @@ $(function() {
       <div class="modal-header"><h5 class="modal-title">Refuel your ship?</h5></div>
       <div class="modal-body">
         <div class="row">
-          <div class="col-2">Price</div>
+          <div class="col-2">Units</div>
           <div class="col-4"><input type="number" class="form-control" id="refuel-units" min="0" readonly></div>
+          <div class="col-2">Price</div>
+          <div class="col-4"><input type="number" class="form-control" id="refuel-price" min="0" readonly></div>
         </div>
-        <div id="refuel-slider"></div>
+        <div id="refuel-slider" class="row p-3"></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-dark" id="refuel-confirm" data-dismiss="modal">Fill her up</button>

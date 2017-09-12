@@ -44,7 +44,8 @@ class Market {
   supply(resource) {
     let stock = this.current_supply(resource) || 1;
     let avg   = this.bought.avg(resource)     || 1;
-    return stock * (1 + Math.log10(avg));
+    return (stock + (3 * avg)) / 4;
+    //return stock * (1 + Math.log10(avg));
   }
 
   demand(resource) {
@@ -52,8 +53,8 @@ class Market {
   }
 
   adjustment(resource) {
-    let supply = this.supply(resource) || 1;
-    let demand = this.demand(resource) || 1;
+    let supply = this.supply(resource);
+    let demand = this.demand(resource);
     let adjust = demand / supply;
 
     if (this.current_supply(resource) == 0) {
@@ -106,7 +107,6 @@ class Market {
     this.store.dec(resource, amount);
     this.sales_this_turn.inc(resource, amount);
     this.buy_total.inc(resource, amount);
-    this.prices.delete(resource);
     return price;
   }
 
@@ -115,7 +115,6 @@ class Market {
     this.store.inc(resource, amount);
     this.buys_this_turn.inc(resource, amount);
     this.sell_total.inc(resource, amount);
-    this.prices.delete(resource);
     return price;
   }
 
@@ -151,6 +150,7 @@ class Market {
       this.sales_this_turn.delete(k);
       this.bought.add(k, this.buys_this_turn.get(k));
       this.buys_this_turn.delete(k);
+      this.prices.delete(k);
     });
   }
 }

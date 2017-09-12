@@ -44,7 +44,7 @@ $(function() {
     $('#exchange-hold').val(cargo);
     $('#exchange-credits').val(game.player.money);
 
-    let max = cargo + Math.min(avail, Math.floor(game.player.money / price), game.player.ship.cargo_left);
+    let max = cargo + Math.min(avail, Math.floor(game.player.money / place.buy_price(item)), game.player.ship.cargo_left);
 
     slider = new Slider({
       step       : 1,
@@ -103,6 +103,7 @@ $(function() {
       let trend = info.trend > 0 ? `+${info.trend}` : (info.trend || '');
 
       let row = $('<tr>');
+      if (body === game.locus) row.addClass('bg-dark');
       row.append(`<td class="text-capitalize">${name}</td>`);
       row.append(`<td class="text-right">${info.buy}</td>`);
       row.append(`<td class="text-right">${info.sell}</td>`);

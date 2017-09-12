@@ -11,7 +11,7 @@ $(() => {
       let btn, dist, acc, time, turns, range;
 
       if (plan !== null) {
-        time  = csn(plan.time);
+        time  = plan.time;
         turns = plan.turns;
         acc   = plan.accel.toFixed(2);
         dist  = (plan.au.toFixed(2) || '< 0.01') + ' AU';
@@ -119,7 +119,7 @@ $(() => {
 
         game.turn(count);
       }
-    }, 50);
+    }, 200);
   }
 
   $('#nav-transit')
@@ -135,7 +135,7 @@ $(() => {
   $('#nav-player-g'  ).text(game.player.max_acceleration().toFixed(2));
   $('#nav-ship-g'    ).text(game.player.ship_acceleration().toFixed(2));
   $('#nav-ship-t'    ).text(csn(game.player.ship.mass));
-  $('#nav-ship-fuel' ).text(game.player.ship.fuel.toFixed(3));
+  $('#nav-ship-fuel' ).text(Math.round(game.player.ship.fuel * 1000) / 1000);
   $('#nav-ship-range').text(game.player.ship.range(max_acc) * data.hours_per_turn);
 
   $('#nav-system-map').on('click', (e)=>{open('plot')});

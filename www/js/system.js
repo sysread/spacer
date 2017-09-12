@@ -1,12 +1,12 @@
 class System {
   constructor() {
     this.system = new SolarSystem;
-    this.cache  = new Map;
+    this.cache  = {};
   }
 
   set_date(date) {
     if (new Date(date + ' 01:00:00').getDate() !== this.system.time.getDate())
-      this.cache.clear();
+      this.cache = {};
 
     this.system.setTime(date);
   }
@@ -66,40 +66,42 @@ class System {
   }
 
   orbit(name) {
-    if (!this.cache.has(name))
-      this.cache.set(name, this.body(name).getOrbitPath());
-    return this.cache.get(name);
+    let key = `${name}.orbit`;
+    if (!this.cache.hasOwnProperty(key))
+      this.cache[key] = this.body(name).getOrbitPath();
+    return this.cache[key];
   }
 
-  orbit_by_turns(orbit) {
-    let point = orbit[0];
-    let path  = [point];
-    let turns_per_day = 24 / data.hours_per_turn;
+  orbit_by_turns(name) {
+    let key = `${name}.orbit.byturns`;
+    if (!this.cache.hasOwnProperty(key)) {
+      let orbit = this.orbit(name);
+      let point = orbit[0];
+      let path  = [point];
+      let end   = orbit.length;
+      let turns_per_day = 24 / data.hours_per_turn;
 
-    for (let day = 1; day < orbit.length; ++day) {
-      let next = orbit[day];
-      let dx = (point[0] - next[0]) / turns_per_day;
-      let dy = (point[1] - next[1]) / turns_per_day;
-      let dz = (point[2] - next[2]) / turns_per_day;
+      for (let day = 1; day < end; ++day) {
+        let next = orbit[day];
+        let dx = (point[0] - next[0]) / turns_per_day;
+        let dy = (point[1] - next[1]) / turns_per_day;
+        let dz = (point[2] - next[2]) / turns_per_day;
 
-      for (var i = 1; i < turns_per_day; ++i) {
-        path.push([
-          point[0] + (i * dx),
-          point[1] + (i * dy),
-          point[2] + (i * dz)
-        ]);
+        for (var i = 1; i < turns_per_day; ++i) {
+          path.push([
+            point[0] + (i * dx),
+            point[1] + (i * dy),
+            point[2] + (i * dz)
+          ]);
+        }
+
+        point = next;
       }
 
-      point = next;
+      this.cache[key] = path;
     }
 
-    return path;
-  }
-
-  p2p_distance(p1, p2) {
-    let [x1, y1, z1] = p1;
-    let [x2, y2, z2] = p2;
-    return Math.hypot(x1 - x2, y1 - y2, z1 - z2);
+    return this.cache[key];
   }
 
   distance(origin, destination) {
@@ -114,7 +116,18 @@ class System {
       b2 = b2.central;
     }
 
-    return this.p2p_distance(b1.position, b2.position);
+    return Math.hypot(
+      b1.position[0] - b2.position[0],
+      b1.position[1] - b2.position[1],
+      b1.position[2] - b2.position[2]
+    );
+  }
+
+  astrogate(origin, target, max_g) {
+    let key = [origin, target, max_g, 'route'].join('.');
+    if (!this.cache.hasOwnProperty(key))
+      this.cache[key] = this._astrogate(origin, target, max_g);
+    return this.cache[key];
   }
 
   /*
@@ -124,7 +137,7 @@ class System {
    *   S = 0.5 * a * t^2
    *   a = (S * 2) / t^2
    */
-  astrogate(origin, target, max_g) {
+  _astrogate(origin, target, max_g) {
     if (max_g === undefined) max_g = 1.0;
     let b1  = this.body(origin);
     let b2  = this.body(target);
@@ -153,23 +166,27 @@ class System {
       p1 = b1.position;
     }
 
-    let orbit = this.orbit_by_turns(this.orbit(b2.key));
+    let orbit         = this.orbit_by_turns(b2.key);
+    let turns_per_day = 24 / data.hours_per_turn;
+    let secs_per_hr   = 60 * 60;
+    let turns_to_secs = turns_per_day * secs_per_hr;
 
     for (var i = 1; i < orbit.length; ++i) {
       // Calculate distance to flip point
-      let S = this.p2p_distance(p1, orbit[i]) * 0.5;
+      let S = Math.hypot(p1[0] - orbit[i][0], p1[1] - orbit[i][1], p1[2] - orbit[i][2]) * 0.5;
 
       // Calculate time to flip point
-      let t = i * 4 * 60 * 60 * 0.5; // turns to seconds / 2
+      let t1 = i * turns_to_secs;
+      let t2 = t1 * 0.5;
 
       // Convert seconds to hours
-      let hrs = t / 60 / 60 * 2;
+      let hrs = t1 / secs_per_hr;
 
       // Calculate acceleration required to reach flip point
-      let a = S / (t * t) * 0.5;
+      let a = S / (t2 * t2) * 0.5;
 
       if (a <= max) {
-        time = t / 60 / 60 * 2; // hours
+        time = hrs,
         dist = S * 2;           // meters
         acc  = a / data.G;      // gravities
         break;

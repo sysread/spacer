@@ -3,10 +3,16 @@ body {
   background-color: #050505;
   background-image: url('../img/bg.jpg');
   color: #ccc;
+  font-size: 0.9rem;
 }
 
 .spacer-header {
+  font-size: 0.8rem;
   background-color: rgba(0,0,0,.75);
+}
+
+.spacer-header .navbar-text {
+  color: rgb(200, 140, 50);
 }
 
 .card {
@@ -61,12 +67,14 @@ table.table-bordered td {
 
 button.btn-dark {
   background-color: #202020;
+  border-right: 1px solid rgb(139,0,0);
   border-bottom: 1px solid rgb(139,0,0);
 }
 
 button.btn-dark:hover:not(.disabled) {
-  border-bottom: 1px solid rgb(200,0,0);
   background-color: #303030;
+  border-right: 1px solid rgb(200,0,0);
+  border-bottom: 1px solid rgb(200,0,0);
 }
 
 button.btn-dark.disabled {

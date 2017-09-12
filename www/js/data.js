@@ -9,18 +9,18 @@ const data = {
   AU : 149597870700, // m
 
   start_date      : new Date(2242, 0, 1, 1),
-  hours_per_turn  : 4,
-  initial_turns   : 600,
+  hours_per_turn  : 8,
+  initial_turns   : 300,
 
-  demand_history  : 300 * 6, // 6 turns/day
+  demand_history  : 300 * 3, // * turns/day
   base_unit_price : 25,
   scarcity_markup : 0.1,
   necessity       : {water: true, food: true, medicine: true},
 
-  haulers         : 4, // per body
+  haulers         : 2, // per body
   hauler_money    : 1000,
 
-  fuel_price      : 50,
+  fuel_price      : 200,
 
   scales: {
     tiny   : 0.25,
@@ -45,13 +45,12 @@ const data = {
   },
 
   market: {
-    agents        : 100,
-    miners        : 16,
+    agents        : 80,
+    miners        : 10,
     agent_money   : 500,
     minability    : 0.25,
-    produces: {
-    },
-    consumes: {
+    produces      : {},
+    consumes      : {
       water       : 8,
       food        : 6,
       medicine    : 2,
@@ -70,12 +69,14 @@ const data = {
     'water poor'   : {produces: {water: -3}, consumes: {}},
 
     'ringed'       : {produces: {water: 4}, consumes: {}},
-    'asteroids'    : {produces: {water: 1, ore: 8}, consumes: {}},
+    'asteroids'    : {produces: {water: 1, ore: 4}, consumes: {}},
+    'rocky'        : {produces: {ore: 2, chemicals: 1}, consumes: {}},
+    'icy'          : {produces: {water: 2, chemicals: 1}, consumes: {}},
 
-    'habitable'    : {produces: {water: 12, ore: 8, chemicals: 2, food: 6}, consumes: {}},
-    'orbital'      : {produces: {water:  2, ore: 0, chemicals: 0, food: 1}, consumes: {}},
-    'domed'        : {produces: {water:  8, ore: 6, chemicals: 1, food: 4}, consumes: {}},
-    'subterranean' : {produces: {water:  4, ore: 2, chemicals: 1, food: 2}, consumes: {}},
+    'habitable'    : {produces: {water: 12, food: 8}, consumes: {}},
+    'orbital'      : {produces: {water: 2}, consumes: {}},
+    'domed'        : {produces: {water: 8}, consumes: {}},
+    'subterranean' : {produces: {water: 4}, consumes: {}},
   },
 
   conditions: {
@@ -111,72 +112,72 @@ const data = {
   bodies: {
     mercury: {
       size     : 'normal',
-      traits   : ['subterranean', 'mineral rich', 'water poor', 'water poor'],
+      traits   : ['subterranean', 'rocky', 'mineral rich', 'water poor', 'water poor'],
       faction  : 'UN'
     },
     earth: {
       size     : 'huge',
-      traits   : ['habitable', 'orbital'],
+      traits   : ['habitable', 'orbital', 'rocky'],
       faction  : 'UN'
     },
     moon: {
       size     : 'large',
-      traits   : ['domed', 'subterranean', 'water poor'],
+      traits   : ['domed', 'subterranean', 'rocky', 'water poor'],
       faction  : 'UN'
     },
     mars: {
       size     : 'large',
-      traits   : ['domed', 'subterranean', 'orbital', 'water poor', 'mineral rich'],
+      traits   : ['domed', 'subterranean', 'orbital', 'rocky', 'water poor', 'mineral rich'],
       faction  : 'MC'
     },
     phobos: {
       size     : 'small',
-      traits   : ['subterranean', 'water poor', 'water poor', 'mineral poor'],
+      traits   : ['subterranean', 'rocky', 'water poor', 'water poor', 'mineral poor'],
       faction  : 'MC'
     },
     deimos: {
       size     : 'tiny',
-      traits   : ['subterranean', 'water poor', 'water poor', 'mineral poor'],
+      traits   : ['subterranean', 'rocky', 'water poor', 'water poor', 'mineral poor'],
       faction  : 'MC'
     },
     ceres: {
       size     : 'large',
-      traits   : ['subterranean', 'asteroids', 'water rich', 'mineral rich'],
+      traits   : ['subterranean', 'rocky', 'asteroids', 'water rich', 'mineral rich'],
       faction  : 'CERES'
     },
     europa: {
       size     : 'small',
-      traits   : ['subterranean'],
+      traits   : ['subterranean', 'rocky'],
       faction  : 'MC'
     },
     ganymede: {
       size     : 'large',
-      traits   : ['domed', 'subterranean', 'orbital', 'water rich', 'mineral poor'],
-      faction  : 'MC'
+      traits   : ['domed', 'subterranean', 'orbital', 'rocky', 'water rich', 'mineral poor'],
+      faction  : 'ICS'
     },
     callisto: {
       size     : 'normal',
-      traits   : ['subterranean'],
+      traits   : ['subterranean', 'rocky'],
       faction  : 'MC'
     },
     enceladus: {
       size     : 'small',
-      traits   : ['orbital', 'ringed', 'water rich', 'mineral poor'],
+      traits   : ['orbital', 'icy', 'ringed', 'water rich', 'mineral poor'],
       faction  : 'ICS'
     },
     rhea: {
       size     : 'small',
-      traits   : ['subterranean', 'orbital', 'ringed', 'water rich', 'water rich', 'mineral poor'],
+      traits   : ['orbital', 'icy', 'ringed', 'water rich', 'water rich', 'mineral poor'],
       faction  : 'ICS'
     },
     triton: {
       size     : 'normal',
-      traits   : ['orbital', 'ringed', 'water rich', 'water rich', 'mineral poor'],
+      traits   : ['orbital', 'icy', 'ringed', 'water rich', 'water rich', 'mineral poor'],
       faction  : 'TRANSA'
     },
     pluto: {
       size     : 'normal',
-      traits   : ['domed', 'subterranean', 'water rich'],
+      traits   : ['domed', 'subterranean', 'rocky', 'water rich'],
       faction  : 'TRANSA'
     }
   },
@@ -184,22 +185,15 @@ const data = {
   drives: {
     ion: {
       name      : 'Ion',
-      thrust    : 80,
-      mass      : 5,
-      desc      : 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the hundreds, they are the work horse of the cargo fleet.',
-      burn_rate : 0.01,
-    },
-    plasma: {
-      name      : 'Boswell',
-      thrust    : 200,
+      thrust    : 40,
       mass      : 10,
-      desc      : 'Having solved the problems of heat dissipation and electromagnetic interactions with modern ceramics and alloys, the original concept behind the VASIMR drive dates back more than two centuries. The modern Boswell drive is powerful enough to push even the largest craft efficiently, if not quickly.',
-      burn_rate : 0.08,
+      desc      : 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the hundreds, they are the work horse of the cargo fleet.',
+      burn_rate : 0.02,
     },
     fusion: {
       name      : 'Fusion',
       thrust    : 1000,
-      mass      : 40,
+      mass      : 80,
       desc      : 'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
       burn_rate : 0.15,
     }
@@ -207,13 +201,13 @@ const data = {
 
   shipclass: {
     /* Civilian */
-    shuttle     : {hull: 3,  armor: 1,  cargo: 5,   hardpoints: 1,  mass: 100,   tank: 2,   drives: 1,   drive: 'plasma'},
-    cutter      : {hull: 4,  armor: 2,  cargo: 10,  hardpoints: 1,  mass: 250,   tank: 4,   drives: 2,   drive: 'plasma'},
-    yacht       : {hull: 6,  armor: 2,  cargo: 7,   hardpoints: 2,  mass: 300,   tank: 6,   drives: 2,   drive: 'plasma'},
-    schooner    : {hull: 8,  armor: 4,  cargo: 12,  hardpoints: 2,  mass: 400,   tank: 10,  drives: 10,  drive: 'ion'},
+    shuttle     : {hull: 3,  armor: 1,  cargo: 2,   hardpoints: 1,  mass: 200,   tank: 2,   drives: 1,   drive: 'ion'},
+    cutter      : {hull: 4,  armor: 2,  cargo: 10,  hardpoints: 1,  mass: 250,   tank: 8,   drives: 6,   drive: 'ion'},
+    yacht       : {hull: 6,  armor: 2,  cargo: 6,   hardpoints: 2,  mass: 300,   tank: 10,  drives: 8,   drive: 'ion'},
+    schooner    : {hull: 8,  armor: 4,  cargo: 12,  hardpoints: 2,  mass: 450,   tank: 14,  drives: 8,   drive: 'ion'},
 
     /* Merchant */
-    merchantman : {hull: 7,  armor: 2,  cargo: 25,  hardpoints: 2,  mass: 4000,  tank: 40,  drives: 50,  drive: 'ion'},
+    merchantman : {hull: 7,  armor: 2,  cargo: 25,  hardpoints: 2,  mass: 4000,  tank: 80,  drives: 80,  drive: 'ion'},
     freighter   : {hull: 10, armor: 2,  cargo: 50,  hardpoints: 2,  mass: 6500,  tank: 100, drives: 80,  drive: 'ion'},
     hauler      : {hull: 20, armor: 5,  cargo: 100, hardpoints: 4,  mass: 10000, tank: 250, drives: 130, drive: 'ion'},
 

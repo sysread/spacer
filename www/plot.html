@@ -20,6 +20,8 @@ $(function() {
     let height = plot.height();
     let point  = {};
 
+    plot.empty().append(zero);
+
     for (let i = 0; i < bodies.length; ++i) {
       let [body, x, y] = bodies[i];
       let adjust_x = adjust(x);
@@ -51,7 +53,6 @@ $(function() {
       }
     }
 
-    plot.empty().append(zero);
     $('.plot-locus.text-success').click();
   };
 
@@ -67,7 +68,6 @@ $(function() {
     let badges = $('<ul class="plot-selected">');
     for (let place of point[key]) {
       let badge = $('<span class="badge badge-dark ml-1">').append(place);
-      if ($(e.target).hasClass('text-success')) badge.append(' (you)');
       badges.append($('<li>').append(badge));
     }
 
