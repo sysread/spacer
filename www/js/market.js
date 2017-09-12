@@ -1,39 +1,30 @@
 class Market {
   constructor() {
     this.store           = new ResourceCounter;
-
-    this.sold            = new ResourceTracker(data.demand_history);
-    this.sales_this_turn = new ResourceCounter;
-
     this.bought          = new ResourceTracker(data.demand_history);
+    this.sold            = new ResourceTracker(data.demand_history);
     this.buys_this_turn  = new ResourceCounter;
-
-    this.sell_total      = new ResourceCounter;
-    this.buy_total       = new ResourceCounter;
+    this.sales_this_turn = new ResourceCounter;
     this.prices          = new DefaultMap(null);
   }
 
   save() {
     let me = {};
     me.store           = this.store.save();
-    me.sold            = this.sold.save();
-    me.sales_this_turn = this.sales_this_turn.save();
     me.bought          = this.bought.save();
+    me.sold            = this.sold.save();
     me.buys_this_turn  = this.buys_this_turn.save();
-    me.sell_total      = this.sell_total.save();
-    me.buy_total       = this.buy_total.save();
+    me.sales_this_turn = this.sales_this_turn.save();
     me.prices          = this.prices.save();
     return me;
   }
 
   load(obj) {
     this.store.load(obj.store);
-    this.sold.load(obj.sold);
-    this.sales_this_turn.load(obj.sales_this_turn);
     this.bought.load(obj.sold);
+    this.sold.load(obj.sold);
     this.buys_this_turn.load(obj.buys_this_turn);
-    this.sell_total.load(obj.sell_total);
-    this.buy_total.load(obj.buy_total);
+    this.sales_this_turn.load(obj.sales_this_turn);
     this.prices.load(obj.prices);
   }
 
@@ -43,9 +34,11 @@ class Market {
 
   supply(resource) {
     let stock = this.current_supply(resource) || 1;
-    let avg   = this.bought.avg(resource)     || 1;
-    return (stock + (3 * avg)) / 4;
-    //return stock * (1 + Math.log10(avg));
+    //let avg   = this.bought.avg(resource)     || 1;
+    //return (stock + avg) / 2
+    //return (stock + (3 * avg)) / 4;
+    //return stock * (1 + Math.log10(1 + avg));
+    return stock;
   }
 
   demand(resource) {
@@ -106,7 +99,6 @@ class Market {
     let price = amount * this.buy_price(resource);
     this.store.dec(resource, amount);
     this.sales_this_turn.inc(resource, amount);
-    this.buy_total.inc(resource, amount);
     return price;
   }
 
@@ -114,7 +106,6 @@ class Market {
     let price = amount * this.sell_price(resource);
     this.store.inc(resource, amount);
     this.buys_this_turn.inc(resource, amount);
-    this.sell_total.inc(resource, amount);
     return price;
   }
 

@@ -4,7 +4,7 @@ $(() => {
   let table = $('#navcomp-table tbody').empty();
   let max_acc = Math.min(game.player.max_acceleration(), game.player.ship_acceleration());
 
-  for (let body of system.bodies().sort()) {
+  for (let body of system.bodies()) {
     if (body != game.place().name) {
       let name = system.name(body);
       let plan = system.astrogate(game.place().name, body, max_acc);

@@ -10,7 +10,7 @@ const data = {
 
   start_date      : new Date(2242, 0, 1, 1),
   hours_per_turn  : 8,
-  initial_turns   : 300,
+  initial_turns   : 500,
 
   demand_history  : 300 * 3, // * turns/day
   base_unit_price : 25,
@@ -32,7 +32,7 @@ const data = {
 
   resources: {
     water        : {mass: 10,  mine: {tics: 2}},
-    ore          : {mass: 90,  mine: {tics: 6}},
+    ore          : {mass: 90,  mine: {tics: 5}},
     chemicals    : {mass: 50,  mine: {tics: 4}},
     food         : {mass: 5,   mine: {tics: 8}, recipe: {tics: 2, materials: {water: 1, chemicals: 1}}},
     metal        : {mass: 110, recipe: {tics: 3, materials: {ore: 4}}},
@@ -45,14 +45,14 @@ const data = {
   },
 
   market: {
-    agents        : 80,
-    miners        : 10,
+    agents        : 40,
+    miners        : 20,
     agent_money   : 500,
     minability    : 0.25,
     produces      : {},
     consumes      : {
-      water       : 8,
-      food        : 6,
+      water       : 4,
+      food        : 4,
       medicine    : 2,
       machines    : 2,
       electronics : 2,
@@ -63,20 +63,20 @@ const data = {
   },
 
   traits: {
-    'mineral rich' : {produces: {ore: 2, chemicals: 1}, consumes: {}},
-    'mineral poor' : {produces: {ore: -2, chemicals: -1}, consumes: {}},
+    'mineral rich' : {produces: {ore: 3, chemicals: 2}, consumes: {}},
+    'mineral poor' : {produces: {ore: -3, chemicals: -2}, consumes: {}},
     'water rich'   : {produces: {water: 3}, consumes: {}},
     'water poor'   : {produces: {water: -3}, consumes: {}},
 
     'ringed'       : {produces: {water: 4}, consumes: {}},
     'asteroids'    : {produces: {water: 1, ore: 4}, consumes: {}},
     'rocky'        : {produces: {ore: 2, chemicals: 1}, consumes: {}},
-    'icy'          : {produces: {water: 2, chemicals: 1}, consumes: {}},
+    'icy'          : {produces: {water: 4, chemicals: 2}, consumes: {}},
 
-    'habitable'    : {produces: {water: 12, food: 8}, consumes: {}},
-    'orbital'      : {produces: {water: 2}, consumes: {}},
-    'domed'        : {produces: {water: 8}, consumes: {}},
-    'subterranean' : {produces: {water: 4}, consumes: {}},
+    'habitable'    : {produces: {water: 2, food: 4}, consumes: {machines: 1}},
+    'domed'        : {produces: {}, consumes: {machines: 1, electronics: 1, cybernetics: 1}},
+    'subterranean' : {produces: {}, consumes: {machines: 1, electronics: 1}},
+    'orbital'      : {produces: {}, consumes: {electronics: 1}}
   },
 
   conditions: {
@@ -111,13 +111,13 @@ const data = {
 
   bodies: {
     mercury: {
-      size     : 'normal',
+      size     : 'small',
       traits   : ['subterranean', 'rocky', 'mineral rich', 'water poor', 'water poor'],
       faction  : 'UN'
     },
     earth: {
       size     : 'huge',
-      traits   : ['habitable', 'orbital', 'rocky'],
+      traits   : ['habitable', 'orbital', 'rocky', 'water rich'],
       faction  : 'UN'
     },
     moon: {
@@ -142,7 +142,7 @@ const data = {
     },
     ceres: {
       size     : 'large',
-      traits   : ['subterranean', 'rocky', 'asteroids', 'water rich', 'mineral rich'],
+      traits   : ['subterranean', 'rocky', 'asteroids', 'mineral rich'],
       faction  : 'CERES'
     },
     europa: {

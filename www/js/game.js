@@ -34,6 +34,19 @@ class Game {
     });
   }
 
+  net_resources() {
+    Object.keys(this.places).forEach((place) => {
+      let prod = this.places[place].production;
+      let cons = this.places[place].consumption;
+
+      console.log(place);
+
+      Object.keys(data.resources).forEach((item) => {
+        console.log('  -', item, prod.get(item) - cons.get(item));
+      });
+    });
+  }
+
   save() {
     let me = {};
     me.turns   = this.turns;
@@ -55,7 +68,7 @@ class Game {
     this.turns  = obj.turns;
     this.locus  = obj.locus;
     this.agents = obj.agents.map((agent) => {
-      let a = new HaulerAgent();
+      let a = new Hauler();
       a.load(agent);
       return a;
     });
@@ -94,7 +107,7 @@ class Game {
 
     if (this.agents.length < (bodies.length * data.haulers)) {
       for (let name of bodies) {
-        let agent = new HaulerAgent(name, data.hauler_money);
+        let agent = new Hauler({place: name});
         this.agents.push(agent);
         agent.turn(); // stagger initialization
       }
@@ -152,7 +165,7 @@ class Game {
       let bodies = system.bodies();
       if (this.agents.length < (bodies.length * data.haulers)) {
         for (let name of bodies) {
-          let agent = new HaulerAgent(name, data.hauler_money);
+          let agent = new Hauler({place: name});
           this.agents.push(agent);
           agent.turn(); // stagger initialization
         }

@@ -44,14 +44,13 @@ class System {
     let type = this.type(name);
 
     if (type == 'dwarfPlanet') {
-      type = 'dwarf';
+      type = 'Dwarf';
     }
     else if (body.central && body.central.name != 'The Sun') {
       type = body.central.name;
-      //type = `Moon of ${body.central.name}`;
     }
     else {
-      type = 'planet';
+      type = 'Planet';
     }
 
     return type;

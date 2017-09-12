@@ -67,14 +67,14 @@ table.table-bordered td {
 
 button.btn-dark {
   background-color: #202020;
-  border-right: 1px solid rgb(139,0,0);
   border-bottom: 1px solid rgb(139,0,0);
+  /*border-right: 1px solid rgb(139,0,0);*/
 }
 
 button.btn-dark:hover:not(.disabled) {
   background-color: #303030;
-  border-right: 1px solid rgb(200,0,0);
   border-bottom: 1px solid rgb(200,0,0);
+  /*border-right: 1px solid rgb(200,0,0);*/
 }
 
 button.btn-dark.disabled {

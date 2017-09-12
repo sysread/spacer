@@ -23,8 +23,9 @@ $(function() {
         .append($('<tr>')
           .append($('<td>').append(btn))
           .append(`<td class="text-right">${avail || '&nbsp;'}</td>`)
+          .append(`<td class="text-right">${csn(place.buy_price(item))}</td>`)
           .append(`<td class="text-right">${cargo || '&nbsp;'}</td>`)
-          .append(`<td class="text-right">${csn(price)}</td>`));
+          .append(`<td class="text-right">${csn(place.sell_price(item))}</td>`));
     }
   };
 
@@ -92,7 +93,7 @@ $(function() {
 
     $('#market-data-resource').text(item);
 
-    for (const body of Object.keys(data.bodies).sort()) {
+    for (const body of Object.keys(data.bodies)) {
       let report = game.market(body);
 
       if (report === null)
@@ -133,8 +134,9 @@ $(function() {
           <tr>
             <th>Resource</th>
             <th class="text-right">Docks</th>
+            <th class="text-right">Buy</th>
             <th class="text-right">Ship</th>
-            <th class="text-right">Price</th>
+            <th class="text-right">Sell</th>
           </tr>
         </thead>
         <tbody>

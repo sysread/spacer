@@ -13,7 +13,6 @@ class Place extends Market {
   get scale()      {return data.scales[this.size]}
   get size()       {return data.bodies[this.name].size}
   get traits()     {return data.bodies[this.name].traits}
-  get minability() {return data.market.minability * this.scale}
   get faction()    {return data.bodies[this.name].faction}
   get sales_tax()  {return data.factions[this.faction].sales_tax}
 
@@ -41,15 +40,15 @@ class Place extends Market {
     this.agents = [];
     this.miners = [];
 
-    obj.agents.forEach((data) => {
+    obj.agents.forEach((info) => {
       let agent = new Agent(this.place);
-      agent.load(data);
+      agent.load(info);
       this.agents.push(agent);
     });
 
-    obj.miners.forEach((data) => {
-      let miner = new MinerAgent(this.place);
-      miner.load(data);
+    obj.miners.forEach((info) => {
+      let miner = new Miner({place: this.name});
+      miner.load(info);
       this.miners.push(miner);
     });
   }
@@ -83,7 +82,7 @@ class Place extends Market {
 
     amounts.each((resource, amount) => {
       let scaled = amount * this.scale;
-      amounts.set(resource, Math.max(0, Math.round(scaled * 100) / 100));
+      amounts.set(resource, Math.max(0, Math.ceil(scaled)));
     });
 
     return amounts;
@@ -105,7 +104,7 @@ class Place extends Market {
     let count = this.resources.get(resource);
 
     if (count > 0) {
-      if (Math.random() <= this.minability) {
+      if (Math.random() <= data.market.minability) {
         this.resources.dec(resource, 1);
         this.mine_total.inc(resource, 1);
         return true;
@@ -140,7 +139,7 @@ class Place extends Market {
 
     // Start miners if needed
     if (this.miners.length < data.market.miners * this.scale) {
-      this.miners.push(new MinerAgent(this.name));
+      this.miners.push(new Miner({place: this.name}));
     }
 
     // Produce

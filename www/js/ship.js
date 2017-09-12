@@ -1,19 +1,22 @@
 class Ship {
   constructor(opt) {
-    this.opt = opt || {};
+    this.opt   = opt || {};
+    this.fuel  = opt.fuel || data.shipclass[opt.shipclass].tank;
     this.cargo = new ResourceCounter;
   }
 
   save() {
     return {
       opt   : this.opt,
+      fuel  : this.fuel,
       cargo : this.cargo.save()
     };
   }
 
-  load(obj) {
-    this.opt = obj.opt;
-    this.cargo.load(obj.cargo);
+  load(info) {
+    this.opt  = info.opt;
+    this.fuel = info.fuel;
+    this.cargo.load(info.cargo);
   }
 
   get name()          { return this.opt.name }
@@ -24,7 +27,6 @@ class Ship {
   get hold_is_full()  { return this.cargo_left === 0 }
   get thrust()        { return this.shipclass.drives * data.drives[this.shipclass.drive].thrust }
   get acceleration()  { return this.thrust / this.mass }
-  get fuel()          { return this.opt.fuel }
   get tank()          { return this.shipclass.tank }
   get burn_rate()     { return this.shipclass.drives * data.drives[this.shipclass.drive].burn_rate }
 
@@ -59,11 +61,11 @@ class Ship {
   tank_is_empty() {return this.fuel === 0}
 
   refuel(units) {
-    this.opt.fuel = Math.min(this.tank, this.fuel + units);
+    this.fuel = Math.min(this.tank, this.fuel + units);
   }
 
   burn(accel) {
-    this.opt.fuel = Math.max(0, (this.fuel - (this.burn_rate * (accel / this.acceleration))));
+    this.fuel = Math.max(0, this.fuel - (this.burn_rate * (accel / this.acceleration)));
     return this.fuel;
   }
 
