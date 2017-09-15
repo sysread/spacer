@@ -24,8 +24,9 @@ class System {
   }
 
   name(name) {
-    let n = this.body(name).name;
-    if (n == 'The Moon') return 'Luna';
+    if (data.bodies.hasOwnProperty(name))
+      return data.bodies[name].name;
+    return this.body(name).name;
     return n;
   }
 
@@ -106,27 +107,9 @@ class System {
   distance(origin, destination) {
     let b1 = this.body(origin);
     let b2 = this.body(destination);
-
-    if (b1.type == 'moon' && b1.central.name != b2.name) {
-      b1 = b1.central;
-    }
-
-    if (b2.type == 'moon' && b2.central.name != b1.name) {
-      b2 = b2.central;
-    }
-
-    return Math.hypot(
-      b1.position[0] - b2.position[0],
-      b1.position[1] - b2.position[1],
-      b1.position[2] - b2.position[2]
-    );
-  }
-
-  astrogate(origin, target, max_g) {
-    let key = [origin, target, max_g, 'route'].join('.');
-    if (!this.cache.hasOwnProperty(key))
-      this.cache[key] = this._astrogate(origin, target, max_g);
-    return this.cache[key];
+    if (b1.type === 'moon' && b1.central.name !== b2.name) b1 = b1.central;
+    if (b2.type === 'moon' && b2.central.name !== b1.name) b2 = b2.central;
+    return Physics.distance(b1.position, b2.position);
   }
 
   /*
@@ -136,15 +119,10 @@ class System {
    *   S = 0.5 * a * t^2
    *   a = (S * 2) / t^2
    */
-  _astrogate(origin, target, max_g) {
-    if (max_g === undefined) max_g = 1.0;
-    let b1  = this.body(origin);
-    let b2  = this.body(target);
-    let max = max_g * data.G;
+  *astrogator(origin, target) {
+    let b1 = this.body(origin);
+    let b2 = this.body(target);
     let p1;
-    let time;
-    let dist;
-    let acc;
 
     // body to body in the same system
     if (b1.central.name == b2.central.name) {
@@ -165,42 +143,21 @@ class System {
       p1 = b1.position;
     }
 
-    let orbit         = this.orbit_by_turns(b2.key);
-    let turns_per_day = 24 / data.hours_per_turn;
-    let secs_per_hr   = 60 * 60;
-    let turns_to_secs = turns_per_day * secs_per_hr;
+    let orbit = this.orbit_by_turns(b2.key);
+    const s_per_turn = (24 / data.hours_per_turn) * 3600;
 
     for (var i = 1; i < orbit.length; ++i) {
-      // Calculate distance to flip point
-      let S = Math.hypot(p1[0] - orbit[i][0], p1[1] - orbit[i][1], p1[2] - orbit[i][2]) * 0.5;
+      const S = Physics.distance(p1, orbit[i]) * 0.5;    // distance to flip point
+      const t = i * s_per_turn;                          // seconds until target is at destination
+      const a = Physics.deltav_for_distance(t * 0.5, S); // deltav to reach flip point
 
-      // Calculate time to flip point
-      let t1 = i * turns_to_secs;
-      let t2 = t1 * 0.5;
-
-      // Convert seconds to hours
-      let hrs = t1 / secs_per_hr;
-
-      // Calculate acceleration required to reach flip point
-      let a = S / (t2 * t2) * 0.5;
-
-      if (a <= max) {
-        time = hrs,
-        dist = S * 2;           // meters
-        acc  = a / data.G;      // gravities
-        break;
-      }
+      yield new Transit({
+        dest  : target,
+        dist  : S * 2,
+        turns : i,
+        accel : Physics.G(a)
+      });
     }
-
-    if (time === undefined)
-      return null;
-
-    return new Transit({
-      dest  : target,              // destination name
-      dist  : Math.ceil(dist * 2), // meters
-      time  : Math.ceil(time * 2), // hours
-      accel : Math.max(0.01, acc)  // gravities
-    });
   }
 
   plot() {

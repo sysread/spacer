@@ -36,6 +36,10 @@ class DefaultMap {
     return this.map.delete(key);
   }
 
+  clear() {
+    this.map.clear();
+  }
+
   each(f) {
     this.map.forEach((val, key, map) => {f(key, val)});
   }

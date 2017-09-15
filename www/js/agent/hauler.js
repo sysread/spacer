@@ -1,28 +1,39 @@
-var log = {};
-Object.keys(data.resources).forEach((k)=>{log[k] = 0});
-
-function note(resource) {
-  ++log[resource];
-}
+var hauler_note = {};
 
 class Hauler extends Actor {
   constructor(opt) {
     opt = opt || {};
     super(opt);
-    this.home = opt.place;
-    this.ship = new Ship({shipclass: opt.ship || 'merchantman'});
+    this.home  = opt.place;
+    this.ship  = new Ship({shipclass: opt.ship || 'trader'});
+    this.trips = 0;
+
+    // Delay start
+    let turns = Math.floor(Math.random() * 10) + 1;
+    for (let i = 0; i < turns; ++i)
+      this.enqueue('wait');
   }
 
+note(dest, res, amt) {
+  let p = this.place;
+  if (!hauler_note.hasOwnProperty(p)) hauler_note[p] = {};
+  if (!hauler_note[p].hasOwnProperty(dest)) hauler_note[p][dest] = {};
+  if (!hauler_note[p][dest].hasOwnProperty(res)) hauler_note[p][dest][res] = 0;
+  hauler_note[p][dest][res] += amt;
+}
+
   save() {
-    let obj  = super.save();
-    obj.home = this.home;
-    obj.ship = this.ship.save();
+    let obj   = super.save();
+    obj.home  = this.home;
+    obj.ship  = this.ship.save();
+    obj.trips = this.trips;
     return obj;
   }
 
   load(obj) {
     super.load(obj);
-    this.home = obj.home;
+    this.home  = obj.home;
+    this.trips = obj.trips;
     this.ship.load(obj.ship);
   }
 
@@ -36,29 +47,86 @@ class Hauler extends Actor {
     let [place, item, amount] = info;
     this.gain(game.place(place).sell(item, amount));
     this.ship.unload_cargo(item, amount);
-    note(item);
-  }
-
-  arrive(info) {
-    let [place] = info;
-    this.place = place;
-
-    // Nuts
-    if (data.fuel_price > this.money)
-      this.money = data.hauler_money;
-
-    // Refuel
-    let want   = this.ship.refuel_units();
-    let afford = Math.floor(this.money / data.fuel_price);
-    let get    = Math.min(want, afford);
-
-    this.cost(get * data.fuel_price);
-    this.ship.refuel(get);
   }
 
   burn(info) {
     let [acc] = info;
     this.ship.burn(acc);
+  }
+
+  arrive(info) {
+    let [place] = info;
+    this.place = place;
+    this.trips++;
+    this.refuel();
+  }
+
+  refuel() {
+    let place = game.place(this.place);
+    let price = place.buy_price('fuel');
+    let want  = this.ship.refuel_units();
+    let avail = place.current_supply('fuel');
+    let get   = Math.min(avail, want, Math.floor(this.money / price));
+
+    if (get > 0) {
+      this.cost(place.buy('fuel', get));
+      this.ship.refuel(get);
+    }
+
+    let unfilled = this.ship.refuel_units();
+    if (unfilled > 0)
+      place.inc_demand('fuel', unfilled);
+  }
+
+  harvest(info) {
+    let [turns] = info;
+    let resources = game.place(this.place).harvest(turns);
+    let profit = 0;
+
+    resources.each((item, amt) => {
+      profit += game.place(this.place).sell(item, amt);
+    });
+
+    this.money += profit;
+  }
+
+  astrogate(target, cargo_mass=0) {
+    let maxdv = this.ship.acceleration_with_mass(cargo_mass);
+    let paths = system.astrogator(this.place, target);
+    let plan;
+
+    for (let path of paths) {
+      if (path.accel > maxdv) continue;
+      if (path.turns > this.ship.max_burn_time(path.accel)) continue;
+      plan = path;
+      break;
+    }
+
+    return plan;
+  }
+
+  value(profit, turns) {
+    return profit / Math.log2(1 + turns);
+  }
+
+  go_home() {
+    if (this.home === this.place)
+      return;
+
+    let plan = this.astrogate(this.home);
+
+    if (plan && plan.turns * (24 / data.hours_per_turn) < 100) {
+      let turns = Math.ceil(plan.time / data.hours_per_turn);
+      if (this.ship.thrust_ratio(plan.accel) > 0.8) return;
+      if (turns * (24 / data.hours_per_turn) > 100) return;
+      for (let i = 0; i < plan.turns; ++i) this.enqueue('burn', [plan.accel]);
+      this.enqueue('arrive', [this.home]);
+      return true;
+    }
+
+    this.enqueue('refuel');
+
+    return false;
   }
 
   plan() {
@@ -67,11 +135,100 @@ class Hauler extends Actor {
     let here   = game.place(this.place).report();
     let best;
 
-    for (let target of bodies) {
-      if (target === this.place) continue;
+    if (this.place === this.home) {
+      for (let target of bodies) {
+        if (target === this.place) continue;
 
-      let there = game.market(target);
-      if (there === null) continue;
+        let there = game.market(target);
+        if (there === null) continue;
+
+        for (let resource of Object.keys(here)) {
+          // proposition: buy here, sell there
+          if (here[resource].buy < there.data[resource].sell) {
+            // Are there any units to buy there?
+            if (here[resource].stock === 0) continue;
+
+            // Is this resource profitable?
+            let profit_per_unit = there.data[resource].sell - here[resource].buy;
+            if (profit_per_unit < 1) continue;
+
+            // How many units can we afford?
+            let units = Math.min(here[resource].stock, Math.floor(this.money / here[resource].buy), this.ship.cargo_left);
+            if (units === 0) continue;
+
+            // Is the net profit worth our time?
+            let profit = profit_per_unit * units;
+            if (profit < 1) continue;
+
+            // How far/long a trip?
+            let mass = units * data.resources[resource].mass;
+            let plan = this.astrogate(target, mass);
+            if (!plan) continue;
+            if (plan.turns * (24 / data.hours_per_turn) > 100) continue;
+
+            // Adjust profit for fuel usage
+            profit -= there.data.fuel.buy * plan.turns * this.ship.burn_rate(plan.accel);
+
+            // Estimate value
+            let value = this.value(profit, plan.turns);
+
+            if (best === undefined || best.value < value) {
+              best = {
+                value    : value,
+                target   : target,
+                resource : resource,
+                profit   : profit,
+                turns    : plan.turns,
+                accel    : plan.accel,
+                units    : units
+              };
+            }
+          }
+          // proposition: go to where the goods are cheap
+          // TODO buy local goods to sell at target
+          else if (here[resource].buy > there.data[resource].sell) {
+            // Are there any units to buy there?
+            if (there.data[resource].stock === 0) continue;
+
+            // Is this resource profitable?
+            let profit_per_unit = there.data[resource].buy - here[resource].sell;
+            if (profit_per_unit < 1) continue;
+
+            // How many units can we afford?
+            let units = Math.min(there.data[resource].stock, Math.floor(this.money / there.data[resource].buy), this.ship.cargo_left);
+            if (units === 0) continue;
+
+            // Is the net profit worth our time?
+            let profit = profit_per_unit * units;
+            if (profit < 1) continue;
+
+            // How far/long a trip?
+            let plan = this.astrogate(target);
+            if (!plan) continue;
+            if (plan.turns * (24 / data.hours_per_turn) > 100) continue;
+
+            // Adjust profit for fuel usage
+            profit -= there.data.fuel.buy * plan.turns * this.ship.burn_rate(plan.accel);
+
+            // Estimate value
+            let value = this.value(profit, plan.turns);
+
+            if (best === undefined || best.value < value) {
+              best = {
+                value    : value,
+                target   : target,
+                resource : resource,
+                profit   : profit,
+                turns    : plan.turns,
+                accel    : plan.accel
+              };
+            }
+          }
+        }
+      }
+    }
+    else {
+      let there = game.market(this.home);
 
       for (let resource of Object.keys(here)) {
         // proposition: buy here, sell there
@@ -84,93 +241,37 @@ class Hauler extends Actor {
           if (profit_per_unit < 1) continue;
 
           // How many units can we afford?
-          let units = Math.min(here[resource].stock, Math.floor(avail / here[resource].buy), this.ship.cargo_left);
+          let units = Math.min(here[resource].stock, Math.floor(this.money / here[resource].buy), this.ship.cargo_left);
           if (units === 0) continue;
 
           // Is the net profit worth our time?
           let profit = profit_per_unit * units;
           if (profit < 1) continue;
-          //if (profit < Math.ceil(this.money * 0.1)) continue;
 
           // How far/long a trip?
           let mass = units * data.resources[resource].mass;
-          let plan = system.astrogate(this.place, target, this.ship.acceleration_for_mass(mass));
+          let plan = this.astrogate(this.home, mass);
           if (!plan) continue;
 
-          // Estimate value
-          let turns = Math.ceil(plan.time / data.hours_per_turn);
-          let value = profit / (1 + Math.log10(1 + turns));
-
-          if (best === undefined || best.value < value) {
+          if (best === undefined || best.value < profit) {
             best = {
-              value    : value,
-              target   : target,
+              value    : profit,
+              target   : this.home,
               resource : resource,
               profit   : profit,
-              turns    : turns,
+              turns    : plan.turns,
               accel    : plan.accel,
               units    : units
             };
           }
         }
-        // proposition: go to where the goods are cheap
-        // TODO buy local goods to sell at target
-        else if (here[resource].buy > there.data[resource].sell) {
-          // Are there any units to buy there?
-          if (there.data[resource].stock === 0) continue;
-
-          // Is this resource profitable?
-          let profit_per_unit = there.data[resource].buy - here[resource].sell;
-          if (profit_per_unit < 1) continue;
-
-          // How many units can we afford?
-          let units = Math.min(there.data[resource].stock, Math.floor(avail / there.data[resource].buy), this.ship.cargo_left);
-          if (units === 0) continue;
-
-          // Is the net profit worth our time?
-          let profit = profit_per_unit * units;
-          if (profit < 1) continue;
-          //if (profit < Math.ceil(this.money * 0.1)) continue;
-
-          // How far/long a trip?
-          let plan = system.astrogate(this.place, target, this.ship.acceleration);
-          if (!plan) continue;
-
-          // Estimate value
-          let turns = Math.ceil(plan.time / data.hours_per_turn);
-          let value = profit / (1 + Math.log10(1 + turns));
-
-          if (best === undefined || best.value < value) {
-            best = {
-              value    : value,
-              target   : target,
-              resource : resource,
-              profit   : profit,
-              turns    : turns,
-              accel    : plan.accel
-            };
-          }
-        }
-      }
-    }
-
-    if (!best && this.place != this.home) {
-      let plan = system.astrogate(this.place, this.home, this.ship.acceleration);
-
-      if (plan) {
-        let turns = Math.ceil(plan.time / data.hours_per_turn);
-
-        best = {
-          value  : 0,
-          target : this.home,
-          turns  : turns,
-          accel  : plan.accel
-        };
       }
     }
 
     if (best) {
       if (best.units) {
+//console.log(`<${this.home}> ${this.place} --> ${best.target} : ${best.resource}`);
+this.note(best.target, best.resource, best.units);
         this.enqueue('buy', [this.place, best.resource, best.units]);
         for (let i = 0; i < best.turns; ++i) this.enqueue('burn', [best.accel]);
         this.enqueue('arrive', [best.target]);
@@ -182,10 +283,11 @@ class Hauler extends Actor {
       }
     }
     else {
-      this.enqueue('wait');
-
-      if (this.money < data.hauler_money)
-        this.money = data.hauler_money;
+      if (!this.go_home()) {
+        let turns = (24 / data.hours_per_turn) * (Math.floor(Math.random() * 4) + 1);
+        for (let i = 0; i < turns; ++i) this.enqueue('wait');
+        this.enqueue('harvest', [turns]);
+      }
     }
   }
 }

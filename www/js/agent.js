@@ -1,11 +1,31 @@
+var agent_accept  = {};
+var agent_decline = {};
+
 class Agent {
   constructor(place, money) {
     this.place     = place;
     this.money     = money;
     this.pending   = null;
     this.inventory = new ResourceCounter;
-    this.consumption_threshold = money * 10;
+    this.consumption_threshold = money * 2;
   }
+
+accept(ev, res, amt) {
+  let p = this.place;
+  if (!agent_accept.hasOwnProperty(p)) agent_accept[p] = {};
+  if (!agent_accept[p].hasOwnProperty(ev)) agent_accept[p][ev] = {};
+  if (!agent_accept[p][ev].hasOwnProperty(res)) agent_accept[p][ev][res] = 0;
+  agent_accept[p][ev][res] += amt;
+}
+
+decline(ev, res, why) {
+  let p = this.place;
+  if (!agent_decline.hasOwnProperty(p)) agent_decline[p] = {};
+  if (!agent_decline[p].hasOwnProperty(ev)) agent_decline[p][ev] = {};
+  if (!agent_decline[p][ev].hasOwnProperty(res)) agent_decline[p][ev][res] = {};
+  if (!agent_decline[p][ev][res].hasOwnProperty(why)) agent_decline[p][ev][res][why] = 0;
+  agent_decline[p][ev][res][why]++;
+}
 
   save() {
     return {
@@ -46,6 +66,16 @@ class Agent {
     return chooser.action;
   }
 
+  max_can_buy(item) {
+    let available = game.place(this.place).current_supply(item);
+    if (available == 0) return 0;
+
+    let price = game.place(this.place).price(item);
+    if (price > this.money) return 0;
+
+    return Math.min(available, Math.floor(this.money / price));
+  }
+
   action_sell(resource) {
     let amt = this.inventory.get(resource);
 
@@ -65,6 +95,7 @@ class Agent {
       () => {
         // Busted and fined
         if (contraband && ((Math.random() * 10) <= contraband)) {
+this.accept('busted', resource, amt);
           this.money -= 100 * contraband;
           if (this.money < 0)
             this.money = 50;
@@ -84,7 +115,7 @@ class Agent {
       return;
 
     let profit = game.place(this.place).sell_price(resource);
-    let cost   = 0;
+    let cost   = profit * data.craft_fee;
     let stop   = false;
 
     Object.keys(recipe.materials).forEach((item) => {
@@ -95,14 +126,20 @@ class Agent {
         if (game.place(this.place).current_supply(item) >= lack) {
           cost += lack * game.place(this.place).buy_price(item);
 
-          if (cost >= profit)
+          if (cost >= profit) {
             stop = true;
+this.decline('craft', resource, 'profit');
+          }
 
-          if (cost > this.money)
+          if (cost > this.money) {
             stop = true;
+this.decline('craft', resource, `afford/${item}`);
+          }
         }
         else {
           stop = true;
+this.decline('craft', resource, `supply/${item}`);
+          game.place(this.place).inc_demand(item);
         }
       }
     });
@@ -127,30 +164,36 @@ class Agent {
       () => {
         Object.keys(recipe.materials).forEach((item) => {
           this.inventory.dec(item, recipe.materials[item]);
+this.accept('use', item, recipe.materials[item]);
         });
 
+        this.money -= game.place(this.place).price(resource);
         this.inventory.inc(resource, 1);
+this.accept('craft', resource, 1);
       }
     );
   }
 
   action_consume() {
-    if (this.money < this.consumption_threshold)
-      return;
+    if (this.money < this.consumption_threshold) return;
 
-    let item = ['cybernetics', 'narcotics'].reduce((a, b) => {
-      return (game.place(this.place).current_supply(a) > game.place(this.place).current_supply(b)) ? a : b;
-    });
+    let place   = game.place(this.place);
+    let items   = ['food', 'medicine', 'cybernetics', 'narcotics', 'weapons'];
+    let options = items.filter((item) => {return place.current_supply(item) > 0 && place.price(item) < this.money / 3});
+    if (options.length === 0) return;
 
-    let amount = game.place(this.place).current_supply(item);
-    if (amount == 0) return;
+    let item   = options.reduce((a, b) => {return place.price(a) > place.price(b) ? a : b});
+    let to_buy = Math.ceil(this.max_can_buy(item) / 2);
 
-    let can_afford = Math.floor((this.money / game.place(this.place).buy_price(item)) / 2);
-    if (can_afford == 0) return;
+    if (to_buy === 0) return;
 
-    let to_buy = Math.min(can_afford, game.place(this.place).current_supply(item));
-
-    let me = this;
-    return new Action(1, 2000, function() {game.place(me.place).buy(item, to_buy)}, function(){});
+    return new Action(1, 5000,
+      () => {
+        game.place(this.place).buy(item, to_buy);
+      },
+      () => {
+this.accept('consume', item, to_buy);
+      }
+    );
   }
 }

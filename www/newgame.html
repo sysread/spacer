@@ -1,12 +1,8 @@
 <script type="text/javascript">
 
 $(function() {
-  const points = 5 * Object.keys(data.stats).length;
-  let used = Object.keys(data.stats).length;
-
-  $('#total-points').text(points);
-
-  for (let body in data.bodies) $('#home').append(`<option value="${body}">${body}</option>`);
+  for (let body in data.bodies)
+    $('#home').append(`<option value="${body}">${system.name(body)}</option>`);
 
   $('#home').change((e) => {
     let home = $('#home').val();
@@ -15,66 +11,28 @@ $(function() {
     $('#faction-info').html($('#' + faction).html());
   });
 
-  $('#home').val('ceres');
+  $('#home').val('mars');
   $('#home').change();
-
-  for (let name of Object.keys(data.stats)) {
-    let slider = new Slider({
-      min      : 1,
-      max      : 10,
-      initial  : 1,
-      callback : (value) => {
-        $(`#stat-${name}`).val(value);
-      },
-      approve  : (change, value) => {
-        let remaining = points - used;
-
-        if (change > 0 && remaining < (change + value)) {
-          change = remaining;
-        }
-
-        used += change;
-        return change + value;
-      }
-    });
-
-    let label = $(`<label class="text-capitalize" for="stat-${name}">${name}</label>`);
-    let ctrl  = $(`<div class="id="slider-${name}">`);
-    let stat  = $(`<input class="form-control form-control-sm" type="number" min="1" value="1" id="stat-${name}" readonly>`);
-    let row   = $('<tr class="row">');
-
-    let desc = data.stats[name].desc;
-    let td = $('<td class="col-8">');
-
-    td.append(ctrl.append(slider.group));
-    if (desc) td.append(`<p class="form-text text-muted">${desc}</p>`);
-
-    row.append($('<td class="col-2">').append(label));
-    row.append(td);
-    row.append($('<td class="col-2">').append(stat));
-
-    $('#stats').append(row);
-  }
 
   $('#starting-game').on('shown.bs.modal', (e) => {
     $('#starting-game-progress').css('width', '0%');
 
-    let ship = 'cutter';
+    let place   = $('#home').val();
+    let faction = data.bodies[place].faction;
+    let ship    = faction === 'TRANSA' ? 'neptune' : 'trader';
 
     let me = new Person({
-      name     : $('#name').val(),
-      money    : 1000,
-      strength : parseInt($('#stat-strength').val(), 10),
-      ship     : new Ship({
-        name      : $('#ship').val(),
+      name    : $('#name').val(),
+      home    : place,
+      faction : faction,
+      money   : 1000,
+      ship    : new Ship({
         shipclass : ship,
         fuel      : data.shipclass[ship].tank
       })
     });
 
     me.ship.fuel = data.shipclass[ship].tank;
-
-    let place = $('#home').val();
     game.new_game(me, place);
 
     $('#starting-game-progress').css('width', '5%');
@@ -87,21 +45,22 @@ $(function() {
       if (done < turns) {
         let count = Math.min(turns - done, step);
         done += count;
+
         let pct = Math.max(5, Math.ceil((done / turns) * 100));
-        $('#starting-game-progress').css('width', `${pct}%`).text(`${pct}%`);
+
         game.turn(count);
+
+        $('#starting-game-progress').text(`${pct}%`);
+        $('#starting-game-progress').css('width', `${pct}%`);
       }
       else {
         $('#starting-game-progress').css('width', '100%').text('Done!');
         window.clearInterval(intvl);
-        $('#starting-game .modal-footer button').prop('disabled', false);
+        game.refresh();
+        $('#starting-game').modal('hide');
+        open('summary');
       }
-    }, 10);
-  });
-
-  $('#starting-game').on('hidden.bs.modal', (e) => {
-    game.refresh();
-    open('summary');
+    }, 50);
   });
 });
 
@@ -115,10 +74,6 @@ $(function() {
       <input class="form-control" type="text" name="name" id="name" value="Marco Solo">
       <br>
 
-      <label for="name">Ship name</label>
-      <input class="form-control" type="text" name="name" id="ship" value="The Boat">
-      <br>
-
       <label for="home">Home</label>
       <select class="form-control text-capitalize" name="home" id="home"></select>
       <br>
@@ -127,10 +82,6 @@ $(function() {
       <input class="form-control" type="text" name="faction" id="faction" readonly>
       <div class="form-text text-muted" id="faction-info"></div>
       <br>
-
-      <label>Characteristics</label>
-      <p>You have <span id="total-points"></span> points to distribute across your skills.</p>
-      <table id="stats" class="table"></table>
 
       <div class="float-right">
         <button id="start-game" type="button" class="btn btn-dark" data-toggle="modal" data-target="#starting-game">Start playing</button>
@@ -150,9 +101,6 @@ $(function() {
           <div id="starting-game-progress" class="progress-bar bg-warning" style="height: 35px; width: 0%">
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-dark" data-dismiss="modal" disabled>Ok</button>
       </div>
     </div>
   </div>

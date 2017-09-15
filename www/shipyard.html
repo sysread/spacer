@@ -2,15 +2,17 @@
 
 $(function() {
   let refresh = function() {
-    if (game.player.ship.tank_is_full() || (data.fuel_price > game.player.money))
+    if (!game.place().current_supply('fuel') || game.player.ship.tank_is_full() || (game.place().buy_price('fuel') > game.player.money))
       $('#refuel-btn').prop('disabled', true).addClass('disabled');
     else
       $('#refuel-btn').prop('disabled', false).removeClass('disabled');
   };
 
   $('#refuel').on('show.bs.modal', (e) => {
-    let need = game.player.ship.refuel_units();
-    let max  = Math.min(need, Math.floor(game.player.money / data.fuel_price));
+    let price = game.place().buy_price('fuel');
+    let have  = game.place().current_supply('fuel');
+    let need  = game.player.ship.refuel_units();
+    let max   = Math.min(have, need, Math.floor(game.player.money / price));
 
     let slider = new Slider({
       min        : 0,
@@ -19,7 +21,7 @@ $(function() {
       initial    : max,
       minmaxbtns : true,
       callback   : (n) => {
-        $('#refuel-price').val(n * data.fuel_price);
+        $('#refuel-price').val(n * price);
         $('#refuel-units').val(n);
       }
     });
@@ -30,14 +32,20 @@ $(function() {
       let units = slider.val;
 
       if (units !== NaN && units > 0 && units <= max) {
+        game.player.debit(game.place().buy('fuel', units));
         game.player.ship.refuel(units);
-        game.player.debit(units * data.fuel_price);
+
+        if (units === max && game.player.ship.refuel_units() > 0)
+          game.place().inc_demand('fuel', game.player.ship.refuel_units());
+
         game.save_game();
         game.refresh();
         refresh();
       }
     });
   });
+
+  $('#trade-in').on('click', (e) => {open('ships')});
 
   refresh();
 });
@@ -68,10 +76,10 @@ $(function() {
       </p>
     </div>
     <div class="row p-1">
-      <button type="button" disabled class="btn btn-dark m-1 disabled" id="refuel-btn" data-toggle="modal" data-target="#refuel">Refuel</button>
+      <button type="button" class="btn btn-dark m-1" data-toggle="modal" data-target="#refuel" id="refuel-btn">Refuel</button>
       <button type="button" disabled class="btn btn-dark m-1 disabled">Repair</button>
       <button type="button" disabled class="btn btn-dark m-1 disabled">Upgrades</button>
-      <button type="button" disabled class="btn btn-dark m-1 disabled">Trade in</button>
+      <button type="button" class="btn btn-dark m-1" id="trade-in">Ships</button>
     </div>
   </div>
 </div>
@@ -95,4 +103,3 @@ $(function() {
     </div>
   </div>
 </div>
-

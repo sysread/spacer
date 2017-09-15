@@ -15,6 +15,7 @@ class Game {
         this.load(JSON.parse(saved));
         this.refresh();
         open('summary');
+        //open('ships');
       }
       else {
         open('newgame');
@@ -22,19 +23,7 @@ class Game {
     });
   }
 
-  test() {
-    Object.keys(data.shipclass).forEach((sc) => {
-      let s = new Ship({shipclass: sc, fuel: data.shipclass[sc].tank});
-      let a = s.acceleration.toFixed(2);
-      let kg = data.shipclass[sc].cargo * data.resources['ore'].mass;
-      let kgacc = s.acceleration_for_mass(kg).toFixed(2);
-      console.log('--');
-      console.log(sc, s.range(a)     * data.hours_per_turn, 'hrs at max acceleration', a);
-      console.log(sc, s.range(kgacc) * data.hours_per_turn, 'hrs at', kgacc, 'with', kg, 'kg of cargo');
-    });
-  }
-
-  net_resources() {
+  net_production() {
     Object.keys(this.places).forEach((place) => {
       let prod = this.places[place].production;
       let cons = this.places[place].consumption;
@@ -43,6 +32,18 @@ class Game {
 
       Object.keys(data.resources).forEach((item) => {
         console.log('  -', item, prod.get(item) - cons.get(item));
+      });
+    });
+  }
+
+  net_stores() {
+    Object.keys(this.markets).forEach((name) => {
+      let report = this.markets[name][0];
+      console.log(name);
+
+      Object.keys(report).forEach((item) => {
+        if (report[item].stock > 0)
+          console.log(`  -${item}: ${report[item].stock} @ ${report[item].buy}`);
       });
     });
   }
@@ -101,15 +102,40 @@ class Game {
     let bodies = system.bodies();
 
     for (let name of bodies) {
-      this.places[name]  = new Place(name);
-      this.markets[name] = [];
-    }
+      let place = new Place(name);
 
-    if (this.agents.length < (bodies.length * data.haulers)) {
-      for (let name of bodies) {
-        let agent = new Hauler({place: name});
-        this.agents.push(agent);
-        agent.turn(); // stagger initialization
+      this.places[name]  = place;
+      this.markets[name] = [];
+
+      let haulers = Math.max(1, Math.ceil(place.scale * data.haulers));
+      let ship;
+
+      switch (place.size) {
+        case 'tiny':
+          ship = 'shuttle';
+          break;
+        case 'small':
+          ship = 'trader';
+          break;
+        case 'normal':
+          ship = 'merchantman';
+          break;
+        case 'large':
+          ship = 'freighter';
+          break;
+        case 'huge':
+          ship = 'hauler';
+          break;
+        default:
+          break;
+      }
+
+      if (place.faction == 'TRANSA') {
+        ship = 'neptune';
+      }
+
+      for (let i = 0; i < haulers; ++i) {
+        this.agents.push(new Hauler({place: name, ship: ship}));
       }
     }
   }
@@ -161,17 +187,9 @@ class Game {
       });
 
       this.agents.forEach((agent) => {agent.turn()});
-
-      let bodies = system.bodies();
-      if (this.agents.length < (bodies.length * data.haulers)) {
-        for (let name of bodies) {
-          let agent = new Hauler({place: name});
-          this.agents.push(agent);
-          agent.turn(); // stagger initialization
-        }
-      }
-
       this.refresh();
+
+      if (i > 0 && i % 99 == 0) console.log(`turns: ${i + 1}`);
     }
 
     system.bodies().forEach((name) => {

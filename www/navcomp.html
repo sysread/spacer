@@ -1,39 +1,63 @@
 <script type="text/javascript">
 
 $(() => {
-  let table = $('#navcomp-table tbody').empty();
+  let ship    = game.player.ship;
+  let table   = $('#navcomp-table tbody').empty();
   let max_acc = Math.min(game.player.max_acceleration(), game.player.ship_acceleration());
+
+  $('#nav-player-home' ).text(data.bodies[game.player.home].name);
+  $('#nav-player-g'    ).text(data.bodies[game.player.home].gravity);
+  $('#nav-player-max-g').text(game.player.max_acceleration().toFixed(2));
+  $('#nav-ship-g'      ).text(game.player.ship_acceleration().toFixed(2));
+  $('#nav-ship-t'      ).text(csn(game.player.ship.current_mass()));
+  $('#nav-ship-fuel'   ).text(Math.round(game.player.ship.fuel * 100) / 100);
+  $('#nav-ship-burn'   ).text(game.player.ship.max_burn_time() * data.hours_per_turn);
 
   for (let body of system.bodies()) {
     if (body != game.place().name) {
-      let name = system.name(body);
-      let plan = system.astrogate(game.place().name, body, max_acc);
-      let btn, dist, acc, time, turns, range;
+      let name  = system.name(body);
+      let kind  = system.kind(body);
+      let paths = system.astrogator(game.place().name, body);
+      let plan;
 
-      if (plan !== null) {
-        time  = plan.time;
+      for (let path of paths) {
+        if (path.accel > max_acc) continue;
+        if (path.turns > ship.max_burn_time(path.accel)) continue;
+        plan = path;
+        break;
+      }
+
+      let btn, dist, acc, time, turns, max_burn_time;
+
+      if (plan !== undefined) {
+        time  = plan.hours;
         turns = plan.turns;
         acc   = plan.accel.toFixed(2);
         dist  = (plan.au.toFixed(2) || '< 0.01') + ' AU';
-        range = Math.floor(game.player.ship.range(acc));
+        max_burn_time = Math.floor(game.player.ship.max_burn_time(plan.accel));
 
         btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-sm btn-dark btn-block">`);
         btn.append(`<span class="float-left">${name}</span>`);
-        btn.append(`<span class="badge badge-pill float-right">${system.kind(body)}</span>`);
 
-        if (turns > range)
+        if (kind !== 'Planet')
+          btn.append(`<span class="badge badge-pill float-right">${kind}</span>`);
+
+        if (turns > max_burn_time)
           btn.addClass('disabled').removeAttr('data-toggle').removeAttr('data-target').prop('disabled', true);
         else
-          btn.data({plan: plan});
+          btn.data({
+            plan      : plan,
+            burn_rate : game.player.ship.burn_rate(plan.accel)
+          });
 
-        acc   += ' G';
-        range *= data.hours_per_turn;
+        acc += ' G';
+        max_burn_time *= data.hours_per_turn;
       }
       else {
-        dist  = '<span class="badge badge-pill">Out of range</span>';
-        acc   = '';
-        time  = '';
-        range = '';
+        dist = '<span class="badge badge-pill">Out of range</span>';
+        acc  = '';
+        time = '';
+        max_burn_time = '';
 
         btn = $(`<button type="button" class="btn btn-sm btn-dark btn-block disabled">`);
         btn.append(`<span class="float-left">${name}</span>`);
@@ -50,6 +74,7 @@ $(() => {
 
   $('#nav-dialog').on('show.bs.modal', function(e) {
     let plan   = $(e.relatedTarget).data('plan');
+    let rate   = $(e.relatedTarget).data('burn_rate');
     let target = system.name(plan.dest);
     let type   = system.kind(plan.dest);
     let size   = game.place(plan.dest).size;
@@ -57,11 +82,14 @@ $(() => {
     let [days, hours] = plan.days_hours;
 
     $('#nav-transit').data('plan', plan);
+    $('#nav-transit').data('burn_rate', rate);
 
-    $('#nav-accel').text(plan.accel.toFixed(1));
-    $('#nav-flip').text(Math.ceil(plan.time/2));
+    $('#nav-accel').text(plan.accel.toFixed(2));
+    $('#nav-flip').text(plan.hours/2);
     $('#nav-distance-au').text(plan.au.toFixed(1));
     $('#nav-distance-km').text(csn(plan.km.toFixed(0)));
+    $('#nav-deltav').text(plan.accel.toFixed(2));
+    $('#nav-fuel').text((Math.round(rate * plan.turns * 100) / 100) + ' tonnes (est)');
     $('#nav-time').text(`${csn(days)} days, ${csn(hours)} hours (${plan.turns} turns)`);
 
     let notes = $('<ul>')
@@ -85,6 +113,7 @@ $(() => {
   let resume_transit = () => {
     transit_intvl = window.setInterval(() => {
       let plan = $('#nav-transit').data('plan');
+      let rate = $('#nav-transit').data('burn_rate');
 
       if (plan.left === 0) {
         pause_transit();
@@ -94,14 +123,10 @@ $(() => {
         $('#nav-transit-progress').css('width', '100%');
 
         window.setTimeout(() => {
-          $('#nav-transit .modal-body').empty();
-          $('#nav-transit .modal-header').remove();
-          $('#nav-transit .modal-body').html(`<h1>Welcome to <span class="text-capitalize">${plan.dest}</span></h1>`);
-          $('#nav-transit .modal-footer').html('<button type="button" class="btn btn-dark" data-dismiss="modal">Disembark</button>');
-          $('#nav-transit .modal-body').show();
-
+          $('#nav-transit').modal('hide');
           $('#spacer-nav').data('in-transit', false);
           game.transit(plan.dest);
+          open('summary');
         }, 950);
       }
       else {
@@ -122,21 +147,10 @@ $(() => {
     }, 200);
   }
 
-  $('#nav-transit')
-    .on('shown.bs.modal', () => {
-      $('#spacer-nav').data('in-transit', true);
-      resume_transit();
-    })
-    .on('hide.bs.modal', () => {
-      open('summary');
-    });
-
-  $('#nav-player-str').text(game.player.strength);
-  $('#nav-player-g'  ).text(game.player.max_acceleration().toFixed(2));
-  $('#nav-ship-g'    ).text(game.player.ship_acceleration().toFixed(2));
-  $('#nav-ship-t'    ).text(csn(game.player.ship.mass));
-  $('#nav-ship-fuel' ).text(Math.round(game.player.ship.fuel * 1000) / 1000);
-  $('#nav-ship-range').text(game.player.ship.range(max_acc) * data.hours_per_turn);
+  $('#nav-transit').on('shown.bs.modal', () => {
+    $('#spacer-nav').data('in-transit', true);
+    resume_transit();
+  });
 
   $('#nav-system-map').on('click', (e)=>{open('plot')});
 });
@@ -156,9 +170,16 @@ $(() => {
         system.
       </p>
       <p>
-        With a strength of <span id="nav-player-str"></span>, you are able to endure a sustained <span id="nav-player-g"></span>G burn.
-        Your ship is capable of <span id="nav-ship-g"></span>Gs of acceleration with her current load out (<span id="nav-ship-t"></span> metric tonnes).
-        With <span id="nav-ship-fuel"></span> tonnes of fuel, your ship has a nominal range of <span id="nav-ship-range"></span> hours at max acceleration.
+        Being born on <span id="nav-player-home"></span>, your body is adapted
+        to <span id="nav-player-g"></span>G, allowing you to endure a sustained
+        burn at <span id="nav-player-max-g"></span>G.
+      </p>
+      <p>
+        Your ship is capable of <span id="nav-ship-g"></span>Gs of acceleration
+        with her current load out (<span id="nav-ship-t"></span> metric
+        tonnes). With <span id="nav-ship-fuel"></span> tonnes of fuel, your
+        ship has a maximum burn time of <span id="nav-ship-burn"></span> hours
+        at maximum thrust.
       </p>
       <p>
       </p>
@@ -179,7 +200,7 @@ $(() => {
 </div>
 
 <div class="modal" id="nav-dialog" data-backdrop="static">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Flight plan</h5>
@@ -194,6 +215,8 @@ $(() => {
           <tbody>
             <tr><th scope="row">AU</th><td id="nav-distance-au"></td></tr>
             <tr><th scope="row">km</th><td id="nav-distance-km"></td></tr>
+            <tr><th scope="row">Acceleration</th><td><span id="nav-deltav"></span> G</td></tr>
+            <tr><th scope="row">Fuel usage</th><td id="nav-fuel"></td></tr>
             <tr><th scope="row">Total time</th><td id="nav-time"></td></tr>
             <tr><th scope="row">Destination</th><td id="nav-destination"></td></tr>
           </tbody>
@@ -219,8 +242,6 @@ $(() => {
             <span id="nav-transit-distance" class="badge badge-pill badge-dark float-left m-1 font-weight-normal" style="font-size:14px"></span>
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
       </div>
     </div>
   </div>

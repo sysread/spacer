@@ -61,7 +61,7 @@ table.table-bordered {
   border: 0px;
 }
 
-table.table-bordered td {
+table.table-bordered td, table.table-bordered th {
   border-top: 1px solid rgb(139,0,0);
 }
 

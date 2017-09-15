@@ -1,32 +1,28 @@
 class Person {
   constructor(opt) {
     opt = opt || {};
-    this.name     = opt.name;
-    this.money    = opt.money    || 1000;
-    this.strength = opt.strength || 1;
-    this.xp       = opt.xp       || 0;
-    this.health   = opt.health   || 10;
-    this.ship     = opt.ship     || new Ship({shipclass: 'shuttle'});
-    this.faction  = opt.faction;
+    this.name    = opt.name;
+    this.home    = opt.home;
+    this.faction = opt.faction;
+    this.money   = opt.money || 1000;
+    this.ship    = opt.ship  || new Ship({shipclass: 'shuttle'});
   }
 
   save() {
     return {
-      name     : this.name,
-      money    : this.money,
-      strength : this.strength,
-      xp       : this.xp,
-      health   : this.health,
-      ship     : this.ship.save()
+      name    : this.name,
+      home    : this.home,
+      faction : this.faction,
+      money   : this.money,
+      ship    : this.ship.save()
     };
   }
 
   load(obj) {
-    this.name     = obj.name;
-    this.money    = obj.money;
-    this.strength = obj.strength;
-    this.xp       = obj.xp;
-    this.health   = obj.health;
+    this.name    = obj.name;
+    this.home    = obj.home;
+    this.faction = obj.faction;
+    this.money   = obj.money;
     this.ship.load(obj.ship);
   }
 
@@ -41,11 +37,11 @@ class Person {
   }
 
   max_acceleration() {
-    return 0.1 + (this.strength * 0.115);
+    return data.bodies[this.home].gravity * 1.5;
   }
 
   ship_acceleration() {
-    return this.ship.acceleration;
+    return this.ship.current_acceleration();
   }
 
   credit(n) {

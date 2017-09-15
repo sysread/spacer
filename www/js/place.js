@@ -4,29 +4,24 @@ class Place extends Market {
     this.name       = name;
     this.conditions = [];
     this.agents     = [];
-    this.miners     = [];
     this.resources  = new ResourceCounter;
-    this.mine_total = new ResourceCounter;
   }
 
-  get type()       {return system.type(this.name)}
-  get scale()      {return data.scales[this.size]}
-  get size()       {return data.bodies[this.name].size}
-  get traits()     {return data.bodies[this.name].traits}
-  get faction()    {return data.bodies[this.name].faction}
-  get sales_tax()  {return data.factions[this.faction].sales_tax}
+  get type()      {return system.type(this.name)}
+  get size()      {return data.bodies[this.name].size}
+  get scale()     {return data.scales[this.size]}
+  get traits()    {return data.bodies[this.name].traits}
+  get faction()   {return data.bodies[this.name].faction}
+  get sales_tax() {return data.factions[this.faction].sales_tax}
 
   save() {
     let me        = super.save();
     me.name       = this.name;
     me.conditions = this.conditions;
     me.resources  = this.resources.save();
-    me.mine_total = this.mine_total.save();
     me.agents     = [];
-    me.miners     = [];
 
     this.agents.forEach((agent) => {me.agents.push(agent.save())});
-    this.miners.forEach((miner) => {me.miners.push(miner.save())});
 
     return me;
   }
@@ -36,20 +31,12 @@ class Place extends Market {
     this.name = obj.name;
     this.conditions = obj.conditions;
     this.resources.load(obj.resources);
-    this.mine_total.load(obj.mine_total);
     this.agents = [];
-    this.miners = [];
 
     obj.agents.forEach((info) => {
       let agent = new Agent(this.place);
       agent.load(info);
       this.agents.push(agent);
-    });
-
-    obj.miners.forEach((info) => {
-      let miner = new Miner({place: this.name});
-      miner.load(info);
-      this.miners.push(miner);
     });
   }
 
@@ -100,13 +87,42 @@ class Place extends Market {
     return this.merge_scale(data.market.consumes, traits, conds);
   }
 
+  static build_resource_tree(acc) {
+    let items = [];
+
+    acc.each((item, amt) => {
+      for (let i = 0; i < amt; ++i)
+        items.push(item);
+    });
+
+    items.forEach((item) => {
+      Market.tally_needs(item, acc)
+    });
+
+    return acc;
+  }
+
+  static tally_needs(resource, acc) {
+    let recipe = data.resources[resource].recipe;
+
+    if (recipe) {
+      let materials = Object.keys(recipe.materials);
+
+      materials.forEach((mat) => {
+        acc.inc(mat, recipe.materials[mat]);
+        Market.tally_needs(mat, acc);
+      });
+    }
+
+    return acc;
+  }
+
   mine(resource) {
     let count = this.resources.get(resource);
 
     if (count > 0) {
       if (Math.random() <= data.market.minability) {
         this.resources.dec(resource, 1);
-        this.mine_total.inc(resource, 1);
         return true;
       }
     }
@@ -137,25 +153,13 @@ class Place extends Market {
       this.agents.push(new Agent(this.name, money));
     }
 
-    // Start miners if needed
-    if (this.miners.length < data.market.miners * this.scale) {
-      this.miners.push(new Miner({place: this.name}));
-    }
-
     // Produce
     this.production.each((resource, amt) => {
       this.resources.set(resource, amt);
+      if (game.turns % data.resources[resource].mine.tics === 0) {
+        this.sell(resource, amt);
+      }
     });
-
-    // Consume
-    this.consumption.each((resource, amt) => {
-      let avail = Math.min(amt, this.current_supply(resource));
-      if (avail) this.buy(resource, avail);
-    });
-
-    // Miners
-    this.miners.push(this.miners.shift()); // Shuffle order
-    this.miners.forEach((miner) => {miner.turn()});
 
     // Agents
     this.agents.push(this.agents.shift()); // Shuffle order
@@ -165,9 +169,11 @@ class Place extends Market {
       agent.turn()
     });
 
-    this.resources.each((resource, amt) => {
-      if (this.current_supply(resource) == 0 && amt > 0)
-        this.store.inc(resource, Math.ceil(amt/2));
+    // Consume
+    this.consumption.each((resource, amt) => {
+      let avail = Math.min(amt, this.current_supply(resource));
+      if (avail) this.buy(resource, avail);
+      if (avail < amt) this.inc_demand(resource, amt - avail);
     });
   }
 }

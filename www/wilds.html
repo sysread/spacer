@@ -2,11 +2,12 @@
 
 $(function() {
   let hours = new Slider({
-    min      : 0,
-    max      : 96,
-    step     : 4,
-    initial  : 48,
-    callback : (n) => {$('#harvest-hours').val(n)}
+    min        : 0,
+    max        : 96,
+    step       : 4,
+    initial    : 48,
+    minmaxbtns : true,
+    callback   : (n) => {$('#harvest-hours').val(n)}
   });
 
   $('#harvest-hours-chooser').empty().append(hours.group);
@@ -24,6 +25,7 @@ $(function() {
     if (harvest.sum() === 0) {
       $('#collect-explain').text('No luck! The well was dry.');
       $('#collect-results').empty();
+      $('#collect-complete').addClass('disabled');
     }
     else {
       chooser = new ResourceExchange({
@@ -35,6 +37,7 @@ $(function() {
 
       $('#collect-explain').text(`After ${hrs} hours of work, your crew collected:`);
       $('#collect-results').empty().append(chooser.table);
+      $('#collect-complete').removeClass('disabled');
     }
   });
 
