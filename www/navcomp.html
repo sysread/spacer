@@ -1,9 +1,10 @@
 <script type="text/javascript">
 
 $(() => {
-  let ship    = game.player.ship;
   let table   = $('#navcomp-table tbody').empty();
-  let max_acc = Math.min(game.player.max_acceleration(), game.player.ship_acceleration());
+  let ship    = game.player.ship;
+  let navcomp = new NavComp(game.player.max_acceleration, ship, game.place().name);
+
 
   $('#nav-player-home' ).text(data.bodies[game.player.home].name);
   $('#nav-player-g'    ).text(data.bodies[game.player.home].gravity);
@@ -17,24 +18,17 @@ $(() => {
     if (body != game.place().name) {
       let name  = system.name(body);
       let kind  = system.kind(body);
-      let paths = system.astrogator(game.place().name, body);
-      let plan;
+      let best  = navcomp.fastest(body);
+      let plan  = best.transit;
 
-      for (let path of paths) {
-        if (path.accel > max_acc) continue;
-        if (path.turns > ship.max_burn_time(path.accel)) continue;
-        plan = path;
-        break;
-      }
-
-      let btn, dist, acc, time, turns, max_burn_time;
+      let btn, dist, acc, time, turns, burn;
 
       if (plan !== undefined) {
+        burn  = best.burn;
         time  = plan.hours;
         turns = plan.turns;
         acc   = plan.accel.toFixed(2);
         dist  = (plan.au.toFixed(2) || '< 0.01') + ' AU';
-        max_burn_time = Math.floor(game.player.ship.max_burn_time(plan.accel));
 
         btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-sm btn-dark btn-block">`);
         btn.append(`<span class="float-left">${name}</span>`);
@@ -42,22 +36,14 @@ $(() => {
         if (kind !== 'Planet')
           btn.append(`<span class="badge badge-pill float-right">${kind}</span>`);
 
-        if (turns > max_burn_time)
-          btn.addClass('disabled').removeAttr('data-toggle').removeAttr('data-target').prop('disabled', true);
-        else
-          btn.data({
-            plan      : plan,
-            burn_rate : game.player.ship.burn_rate(plan.accel)
-          });
+        btn.data({selected: best});
 
         acc += ' G';
-        max_burn_time *= data.hours_per_turn;
       }
       else {
         dist = '<span class="badge badge-pill">Out of range</span>';
         acc  = '';
         time = '';
-        max_burn_time = '';
 
         btn = $(`<button type="button" class="btn btn-sm btn-dark btn-block disabled">`);
         btn.append(`<span class="float-left">${name}</span>`);
@@ -73,7 +59,8 @@ $(() => {
   }
 
   $('#nav-dialog').on('show.bs.modal', function(e) {
-    let plan   = $(e.relatedTarget).data('plan');
+    let best   = $(e.relatedTarget).data('selected');
+    let plan   = best.transit;
     let rate   = $(e.relatedTarget).data('burn_rate');
     let target = system.name(plan.dest);
     let type   = system.kind(plan.dest);
@@ -81,16 +68,31 @@ $(() => {
     let traits = uniq(game.place(plan.dest).traits, ', ');
     let [days, hours] = plan.days_hours;
 
-    $('#nav-transit').data('plan', plan);
-    $('#nav-transit').data('burn_rate', rate);
+    let slider = new Slider({
+      min        : 0,
+      max        : navcomp.transits[plan.dest].length - 1,
+      step       : 1,
+      initial    : best.index,
+      minmaxbtns : true,
+      callback   : (n) => {
+        let transit = navcomp.transits[plan.dest][n];
+        plan = transit.transit;
+        [days, hours] = plan.days_hours;
 
-    $('#nav-accel').text(plan.accel.toFixed(2));
-    $('#nav-flip').text(plan.hours/2);
-    $('#nav-distance-au').text(plan.au.toFixed(1));
-    $('#nav-distance-km').text(csn(plan.km.toFixed(0)));
-    $('#nav-deltav').text(plan.accel.toFixed(2));
-    $('#nav-fuel').text((Math.round(rate * plan.turns * 100) / 100) + ' tonnes (est)');
-    $('#nav-time').text(`${csn(days)} days, ${csn(hours)} hours (${plan.turns} turns)`);
+        $('#nav-transit').data('plan', plan);
+        $('#nav-transit').data('burn_rate', rate);
+
+        $('#nav-accel').text(plan.accel.toFixed(2));
+        $('#nav-flip').text(csn(plan.hours/2));
+        $('#nav-distance-au').text(plan.au.toFixed(1));
+        $('#nav-distance-km').text(csn(plan.km.toFixed(0)));
+        $('#nav-deltav').text(plan.accel.toFixed(2));
+        $('#nav-fuel').text((Math.round(transit.fuel * 100) / 100) + ' tonnes (est)');
+        $('#nav-time').text(`${csn(days)} days, ${csn(hours)} hours (${plan.turns} turns)`);
+      }
+    });
+
+    $('#nav-adjust').append(slider.group);
 
     let notes = $('<ul>')
       .append(`<li>${type}</li>`)
@@ -211,6 +213,7 @@ $(() => {
           <span id="nav-flip"></span> hours of acceleration and begin
           its deceleration burn.
         </p>
+        <div id="nav-adjust"></div>
         <table class="table">
           <tbody>
             <tr><th scope="row">AU</th><td id="nav-distance-au"></td></tr>

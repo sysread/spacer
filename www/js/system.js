@@ -112,13 +112,6 @@ class System {
     return Physics.distance(b1.position, b2.position);
   }
 
-  /*
-   * S = (v * t) + (0.5 * a * t^2)
-   *
-   * pretending initial velocity is 0:
-   *   S = 0.5 * a * t^2
-   *   a = (S * 2) / t^2
-   */
   *astrogator(origin, target) {
     let b1 = this.body(origin);
     let b2 = this.body(target);
