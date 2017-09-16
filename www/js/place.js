@@ -4,7 +4,8 @@ class Place extends Market {
     this.name       = name;
     this.conditions = [];
     this.agents     = [];
-    this.resources  = new ResourceCounter;
+    this.resources  = new ResourceCounter(0);
+    this.using      = new ResourceCounter(0)
   }
 
   get type()      {return system.type(this.name)}
@@ -19,6 +20,7 @@ class Place extends Market {
     me.name       = this.name;
     me.conditions = this.conditions;
     me.resources  = this.resources.save();
+    me.using      = this.using.save();
     me.agents     = [];
 
     this.agents.forEach((agent) => {me.agents.push(agent.save())});
@@ -31,10 +33,12 @@ class Place extends Market {
     this.name = obj.name;
     this.conditions = obj.conditions;
     this.resources.load(obj.resources);
+    this.using.load(obj.using);
     this.agents = [];
 
     obj.agents.forEach((info) => {
-      let agent = new Agent(this.place);
+      //let agent = new Agent(this.place);
+      let agent = new Crafter
       agent.load(info);
       this.agents.push(agent);
     });
@@ -69,7 +73,7 @@ class Place extends Market {
 
     amounts.each((resource, amount) => {
       let scaled = amount * this.scale;
-      amounts.set(resource, Math.max(0, Math.ceil(scaled)));
+      amounts.set(resource, Math.max(0, scaled));
     });
 
     return amounts;
@@ -85,36 +89,6 @@ class Place extends Market {
     let traits = this.traits.map((t)     => {return data.traits[t].consumes});
     let conds  = this.conditions.map((c) => {return data.conditions[c].consumes});
     return this.merge_scale(data.market.consumes, traits, conds);
-  }
-
-  static build_resource_tree(acc) {
-    let items = [];
-
-    acc.each((item, amt) => {
-      for (let i = 0; i < amt; ++i)
-        items.push(item);
-    });
-
-    items.forEach((item) => {
-      Market.tally_needs(item, acc)
-    });
-
-    return acc;
-  }
-
-  static tally_needs(resource, acc) {
-    let recipe = data.resources[resource].recipe;
-
-    if (recipe) {
-      let materials = Object.keys(recipe.materials);
-
-      materials.forEach((mat) => {
-        acc.inc(mat, recipe.materials[mat]);
-        Market.tally_needs(mat, acc);
-      });
-    }
-
-    return acc;
   }
 
   mine(resource) {
@@ -150,7 +124,8 @@ class Place extends Market {
     // Start agents if needed
     if (this.agents.length < data.market.agents * this.scale) {
       let money = data.market.agent_money * this.scale;
-      this.agents.push(new Agent(this.name, money));
+      //this.agents.push(new Agent(this.name, money));
+      this.agents.push(new Crafter({place: this.name, money: money}));
     }
 
     // Produce
@@ -170,10 +145,21 @@ class Place extends Market {
     });
 
     // Consume
-    this.consumption.each((resource, amt) => {
-      let avail = Math.min(amt, this.current_supply(resource));
-      if (avail) this.buy(resource, avail);
-      if (avail < amt) this.inc_demand(resource, amt - avail);
+    this.consumption.each((item, amt) => {
+      if (this.using.get(item) < amt) {
+        let want  = Math.ceil(amt);
+        let avail = Math.min(want, this.current_supply(item));
+
+        if (avail) {
+          this.buy(item, avail);
+          this.using.inc(item, avail);
+        }
+
+        if (avail < want)
+          this.inc_demand(item, want - avail);
+
+        this.using.dec(item, amt);
+      }
     });
   }
 }

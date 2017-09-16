@@ -3,8 +3,7 @@
 $(() => {
   let table   = $('#navcomp-table tbody').empty();
   let ship    = game.player.ship;
-  let navcomp = new NavComp(game.player.max_acceleration, ship, game.place().name);
-
+  let navcomp = new NavComp(game.player.max_acceleration(), ship, game.place().name);
 
   $('#nav-player-home' ).text(data.bodies[game.player.home].name);
   $('#nav-player-g'    ).text(data.bodies[game.player.home].gravity);

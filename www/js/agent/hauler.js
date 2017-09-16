@@ -90,19 +90,16 @@ note(dest, res, amt) {
     this.money += profit;
   }
 
-  astrogate(target, cargo_mass=0) {
-    let maxdv = this.ship.acceleration_with_mass(cargo_mass);
+  *astrogate(target, cargo_mass=0) {
+    // Calculate max acceleration for ship, assuming staff can handle 0.5G
+    let maxdv = Math.min(0.5, this.ship.acceleration_with_mass(cargo_mass));
     let paths = system.astrogator(this.place, target);
-    let plan;
 
     for (let path of paths) {
       if (path.accel > maxdv) continue;
       if (path.turns > this.ship.max_burn_time(path.accel)) continue;
-      plan = path;
-      break;
+      yield path;
     }
-
-    return plan;
   }
 
   value(profit, turns) {
@@ -162,15 +159,25 @@ note(dest, res, amt) {
 
             // How far/long a trip?
             let mass = units * data.resources[resource].mass;
-            let plan = this.astrogate(target, mass);
+            let nav = this.astrogate(target, mass);
+            let fuel;
+            let value;
+            let plan;
+
+            for (let path of nav) {
+              let fuel_cost = there.data.fuel.buy * path.turns * this.ship.burn_rate(path.accel);
+              let net = (profit - fuel_cost) / path.turns;
+
+              if (value === undefined || net > value) {
+                value = net;
+                plan  = path;
+                fuel  = fuel_cost;
+              }
+            }
+
             if (!plan) continue;
-            if (plan.turns * (24 / data.hours_per_turn) > 100) continue;
 
-            // Adjust profit for fuel usage
-            profit -= there.data.fuel.buy * plan.turns * this.ship.burn_rate(plan.accel);
-
-            // Estimate value
-            let value = this.value(profit, plan.turns);
+            profit -= fuel;
 
             if (best === undefined || best.value < value) {
               best = {
@@ -203,15 +210,25 @@ note(dest, res, amt) {
             if (profit < 1) continue;
 
             // How far/long a trip?
-            let plan = this.astrogate(target);
+            let nav = this.astrogate(target);
+            let fuel;
+            let value;
+            let plan;
+
+            for (let path of nav) {
+              let fuel_cost = there.data.fuel.buy * path.turns * this.ship.burn_rate(path.accel);
+              let net = (profit - fuel_cost) / path.turns;
+
+              if (value === undefined || net > value) {
+                value = net;
+                plan  = path;
+                fuel  = fuel_cost;
+              }
+            }
+
             if (!plan) continue;
-            if (plan.turns * (24 / data.hours_per_turn) > 100) continue;
 
-            // Adjust profit for fuel usage
-            profit -= there.data.fuel.buy * plan.turns * this.ship.burn_rate(plan.accel);
-
-            // Estimate value
-            let value = this.value(profit, plan.turns);
+            profit -= fuel;
 
             if (best === undefined || best.value < value) {
               best = {
@@ -270,7 +287,7 @@ note(dest, res, amt) {
 
     if (best) {
       if (best.units) {
-//console.log(`<${this.home}> ${this.place} --> ${best.target} : ${best.resource}`);
+console.log(`<${this.home}> ${this.place} --> ${best.target} : ${best.resource}`);
 this.note(best.target, best.resource, best.units);
         this.enqueue('buy', [this.place, best.resource, best.units]);
         for (let i = 0; i < best.turns; ++i) this.enqueue('burn', [best.accel]);

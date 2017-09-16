@@ -14,7 +14,7 @@ const data = {
   craft_fee       : 0.005,
 
   market_history  : 100,
-  base_unit_price : 50,
+  base_unit_price : 200,
   scarcity_markup : 0.1,
   necessity       : {water: true, food: true, medicine: true, fuel: true},
 
@@ -33,40 +33,49 @@ const data = {
     water        : {mass: 10,  mine: {tics: 2}},
     ore          : {mass: 90,  mine: {tics: 4}},
     chemicals    : {mass: 50,  mine: {tics: 3}},
-    food         : {mass: 5,   mine: {tics: 5}, recipe: {tics: 2, materials: {water: 1, chemicals: 1}}},
-    fuel         : {mass: 1,   recipe: {tics: 1, materials: {ore: 2}}},
+    food         : {mass: 5,   mine: {tics: 7}, recipe: {tics: 5, materials: {water: 3, chemicals: 2}}},
+    fuel         : {mass: 1,   recipe: {tics: 2, materials: {ore: 2}}},
     metal        : {mass: 110, recipe: {tics: 2, materials: {ore: 4}}},
-    medicine     : {mass: 10,  recipe: {tics: 1, materials: {food: 1, chemicals: 2}}},
-    machines     : {mass: 75,  recipe: {tics: 1, materials: {metal: 1, chemicals: 1}}},
-    electronics  : {mass: 20,  recipe: {tics: 1, materials: {metal: 1, chemicals: 4}}},
-    cybernetics  : {mass: 80,  recipe: {tics: 1, materials: {machines: 1, electronics: 1}}},
-    weapons      : {mass: 50,  recipe: {tics: 1, materials: {metal: 1, chemicals: 3}}, contraband: 4},
-    narcotics    : {mass: 10,  recipe: {tics: 1, materials: {food: 1, chemicals: 1, medicine: 1}}, contraband: 7}
+    medicine     : {mass: 10,  recipe: {tics: 3, materials: {food: 1, chemicals: 2}}},
+    machines     : {mass: 75,  recipe: {tics: 4, materials: {metal: 3, water: 1}}},
+    electronics  : {mass: 20,  recipe: {tics: 4, materials: {metal: 2, chemicals: 4}}},
+    cybernetics  : {mass: 80,  recipe: {tics: 5, materials: {machines: 3, electronics: 2}}},
+    weapons      : {mass: 50,  recipe: {tics: 3, materials: {metal: 2, chemicals: 3}}, contraband: 4},
+    narcotics    : {mass: 10,  recipe: {tics: 3, materials: {food: 2, chemicals: 2, medicine: 2}}, contraband: 7}
   },
 
   market: {
-    agents        : 10,
-    agent_money   : 1000,
-    minability    : 0.25,
-    produces      : {},
-    consumes      : {water: 0.5, food: 0.5}
+    agents      : 2,
+    agent_money : 1000,
+    minability  : 0.25,
+    produces    : {},
+    consumes    : {
+      water       : 0.5,
+      food        : 0.4,
+      medicine    : 0.2,
+      machines    : 0.4,
+      electronics : 0.4,
+      cybernetics : 0.3,
+      weapons     : 0.1,
+      narcotics   : 0.1
+    }
   },
 
   traits: {
-    'mineral rich' : {produces: {ore:    0.5, chemicals:  0.5}, consumes: {}},
-    'mineral poor' : {produces: {ore:   -0.5, chemicals: -0.5}, consumes: {}},
-    'water rich'   : {produces: {water:  0.5}, consumes: {}},
-    'water poor'   : {produces: {water: -0.5}, consumes: {}},
+    'mineral rich' : {produces: {ore:    0.25, chemicals:  0.25}, consumes: {}},
+    'mineral poor' : {produces: {ore:   -0.25, chemicals: -0.25}, consumes: {}},
+    'water rich'   : {produces: {water:  0.25}, consumes: {}},
+    'water poor'   : {produces: {water: -0.25}, consumes: {}},
 
-    'asteroids'    : {produces: {ore:   1.00, chemicals: 0.50}, consumes: {}},
-    'ringed'       : {produces: {water: 1.00, chemicals: 0.50}, consumes: {}},
-    'rocky'        : {produces: {ore:   0.75, chemicals: 0.25, water: 0.20}, consumes: {}},
-    'icy'          : {produces: {water: 0.75, chemicals: 0.25, ore:   0.20}, consumes: {}},
+    'asteroids'    : {produces: {ore:   0.5,  chemicals: 0.25}, consumes: {}},
+    'ringed'       : {produces: {water: 0.5,  chemicals: 0.25}, consumes: {}},
+    'rocky'        : {produces: {ore:   0.25, chemicals: 0.1, water: 0.1}, consumes: {}},
+    'icy'          : {produces: {water: 0.25, chemicals: 0.1, ore:   0.1}, consumes: {}},
 
-    'habitable'    : {produces: {water: 1, food: 1}, consumes: {machines: 1}},
-    'domed'        : {produces: {}, consumes: {machines: 1, electronics: 1, cybernetics: 1}},
-    'subterranean' : {produces: {}, consumes: {machines: 1, electronics: 1}},
-    'orbital'      : {produces: {}, consumes: {machines: 1, electronics: 1}}
+    'habitable'    : {produces: {water: 0.5, food: 0.2}, consumes: {machines: 0.1, fuel: 1.0}},
+    'domed'        : {produces: {}, consumes: {machines: 0.1, electronics: 0.1, cybernetics: 0.4, fuel: 0.5}},
+    'subterranean' : {produces: {}, consumes: {machines: 0.1, electronics: 0.1, cybernetics: 0.3, fuel: 0.5}},
+    'orbital'      : {produces: {}, consumes: {machines: 0.1, electronics: 0.1, cybernetics: 0.2, fuel: 0.75}}
   },
 
   conditions: {
@@ -176,7 +185,7 @@ const data = {
       gravity  : 0.126
     },
     enceladus: {
-      name     : 'Enceladus Supply Station',
+      name     : 'Enceladus Depot',
       size     : 'small',
       traits   : ['orbital', 'icy', 'ringed', 'water rich', 'mineral poor'],
       faction  : 'ICS',
@@ -217,15 +226,15 @@ const data = {
       name      : 'Ion',
       thrust    : 80,
       mass      : 10,
-      desc      : 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the hundreds, they are the work horse of the cargo fleet.',
-      burn_rate : 0.01,
+      desc      : 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
+      burn_rate : 0.05,
     },
     fusion: {
       name      : 'Fusion',
       thrust    : 900,
       mass      : 40,
       desc      : 'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
-      burn_rate : 0.25,
+      burn_rate : 0.7,
     }
   },
 

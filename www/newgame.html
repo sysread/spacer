@@ -67,7 +67,12 @@ $(function() {
 </script>
 
 <div class="card p-3 mb-4">
-  <h3 class="card-header">New Game</h3>
+  <h3 class="card-header">
+    New Game
+    <span class="float-right">
+      <button id="start-game" type="button" class="btn btn-dark" data-toggle="modal" data-target="#starting-game">Start game</button>
+    </span>
+  </h3>
   <div class="card-body">
     <form>
       <label for="name">Captain name</label>
@@ -80,12 +85,8 @@ $(function() {
 
       <label for="faction">Faction</label>
       <input class="form-control" type="text" name="faction" id="faction" readonly>
-      <div class="form-text text-muted" id="faction-info"></div>
+      <div class="form-text text-muted p-3" id="faction-info"></div>
       <br>
-
-      <div class="float-right">
-        <button id="start-game" type="button" class="btn btn-dark" data-toggle="modal" data-target="#starting-game">Start playing</button>
-      </div>
     </form>
   </div>
 </div>

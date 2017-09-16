@@ -73,7 +73,7 @@ class Ship {
   }
 
   current_mass() {
-    return this.mass + this.cargo_mass() + this.fuel;
+    return this.mass + this.cargo_mass() + (data.resources['fuel'].mass * this.fuel);
   }
 
   current_acceleration() {

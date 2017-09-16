@@ -63,7 +63,7 @@
     <script type="text/javascript" src="js/action.js"></script>
     <script type="text/javascript" src="js/agent/base.js"></script>
     <script type="text/javascript" src="js/agent.js"></script>
-    <script type="text/javascript" src="js/agent/miner.js"></script>
+    <script type="text/javascript" src="js/agent/crafter.js"></script>
     <script type="text/javascript" src="js/agent/hauler.js"></script>
     <script type="text/javascript" src="js/market.js"></script>
     <script type="text/javascript" src="js/place.js"></script>
@@ -130,6 +130,10 @@
             $(e.target).addClass('active');
             open($(e.target).data('name'));
           }
+        });
+
+        $(window).on('click', function(e) {
+          $('#spacer-nav').collapse('hide');
         });
       });
     </script>

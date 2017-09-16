@@ -188,8 +188,6 @@ class Game {
 
       this.agents.forEach((agent) => {agent.turn()});
       this.refresh();
-
-      if (i > 0 && i % 99 == 0) console.log(`turns: ${i + 1}`);
     }
 
     system.bodies().forEach((name) => {

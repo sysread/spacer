@@ -46,11 +46,21 @@ class DefaultMap {
 }
 
 class ResourceCounter extends DefaultMap {
-  constructor() {
+  constructor(min) {
     super(0);
+    this.min = min;
   }
 
-  save() { return super.save() }
+  save() {
+    let me = super.save();
+    me.min = this.min;
+    return me;
+  }
+
+  load(obj) {
+    super.load(obj);
+    this.min = obj.min;
+  }
 
   inc(key, amount) {
     this.set(key, this.get(key) + amount);
@@ -58,6 +68,8 @@ class ResourceCounter extends DefaultMap {
 
   dec(key, amount) {
     this.set(key, this.get(key) - amount);
+    if (this.min !== undefined && this.get(key) < this.min)
+      this.set(key, this.min);
   }
 
   sum() {
@@ -68,8 +80,8 @@ class ResourceCounter extends DefaultMap {
 }
 
 class ResourceTracker {
-  constructor(max) {
-    this.max = max;
+  constructor(len) {
+    this.len = len;
     this.history = {};
     this.summed = new ResourceCounter;
     Object.keys(data.resources).forEach((k) => {this.history[k] = []});
@@ -77,14 +89,14 @@ class ResourceTracker {
 
   save() {
     let me = {};
-    me.max = this.max;
+    me.len = this.len;
     me.history = this.history;
     me.summed = this.summed.save();
     return me;
   }
 
   load(obj) {
-    this.max = obj.max;
+    this.len = obj.len;
     this.history = obj.history;
     this.summed.load(obj.summed);
   }
@@ -96,7 +108,7 @@ class ResourceTracker {
   add(resource, amount) {
     this.history[resource].unshift(amount);
     this.summed.inc(resource, amount);
-    while (this.history[resource].length > this.max) {
+    while (this.history[resource].length > this.len) {
       this.summed.dec(resource, this.history[resource].pop());
     }
   }

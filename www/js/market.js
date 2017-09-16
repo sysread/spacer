@@ -29,7 +29,7 @@ class Market {
   }
 
   current_supply(resource) {
-    return this.store.get(resource);
+    return Math.floor(this.store.get(resource));
   }
 
   inc_demand(resource, amount) {
