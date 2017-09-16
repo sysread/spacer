@@ -287,7 +287,7 @@ note(dest, res, amt) {
 
     if (best) {
       if (best.units) {
-console.log(`<${this.home}> ${this.place} --> ${best.target} : ${best.resource}`);
+//console.log(`<${this.home}> ${this.place} --> ${best.target} : ${best.resource}`);
 this.note(best.target, best.resource, best.units);
         this.enqueue('buy', [this.place, best.resource, best.units]);
         for (let i = 0; i < best.turns; ++i) this.enqueue('burn', [best.accel]);
