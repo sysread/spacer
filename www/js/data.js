@@ -21,19 +21,19 @@ const data = {
   necessity       : {water: true, food: true, medicine: true, fuel: true},
 
   scales: {
-    tiny   : 0.5,
-    small  : 0.75,
+    tiny   : 0.66,
+    small  : 0.83,
     normal : 1,
-    large  : 1.25,
-    huge   : 1.5
+    large  : 1.17,
+    huge   : 1.33
   },
 
   resources: {
     water        : {mass: 10, mine: {tics: 2}},
     ore          : {mass: 60, mine: {tics: 3}},
     minerals     : {mass: 50, mine: {tics: 4}},
-    food         : {mass: 10, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 2, ore: 1, minerals: 1}}},
-    fuel         : {mass: 10, recipe: {tics: 1, materials: {water: 1, minerals: 1}}},
+    food         : {mass: 30, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 2, ore: 1, minerals: 1}}},
+    fuel         : {mass: 4,  recipe: {tics: 2, materials: {water: 1, ore: 1, minerals: 1}}},
     metal        : {mass: 90, recipe: {tics: 2, materials: {ore: 4}}},
     ceramics     : {mass: 30, recipe: {tics: 3, materials: {minerals: 1, water: 1}}},
     medicine     : {mass: 10, recipe: {tics: 4, materials: {food: 1, water: 1}}},
@@ -222,7 +222,7 @@ const data = {
       thrust    : 80,
       mass      : 10,
       desc      : 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
-      burn_rate : 0.008,
+      burn_rate : 0.015,
     },
     fusion: {
       name      : 'Fusion',
@@ -235,7 +235,7 @@ const data = {
 
   shipclass: {
     /* Civilian */
-    shuttle     : {hull: 3,  armor: 1,  cargo: 2,   hardpoints: 0,  mass: 200,   tank: 1,   drives: 1,   drive: 'ion'},
+    shuttle     : {hull: 3,  armor: 1,  cargo: 2,   hardpoints: 0,  mass: 200,   tank: 2,   drives: 1,   drive: 'ion'},
     cutter      : {hull: 4,  armor: 2,  cargo: 6,   hardpoints: 1,  mass: 250,   tank: 2,   drives: 2,   drive: 'ion'},
     yacht       : {hull: 6,  armor: 2,  cargo: 6,   hardpoints: 2,  mass: 300,   tank: 4,   drives: 3,   drive: 'ion'},
     schooner    : {hull: 8,  armor: 4,  cargo: 10,  hardpoints: 2,  mass: 450,   tank: 6,   drives: 4,   drive: 'ion'},
@@ -246,15 +246,24 @@ const data = {
     freighter   : {hull: 10, armor: 3,  cargo: 50,  hardpoints: 2,  mass: 6800,  tank: 110, drives: 80,  drive: 'ion'},
     hauler      : {hull: 20, armor: 5,  cargo: 100, hardpoints: 4,  mass: 10000, tank: 150, drives: 100, drive: 'ion'},
 
-    /* Ultra-long range */
-    neptune     : {hull: 10, armor: 5,  cargo: 40,  hardpoints: 3,  mass: 5000,  tank: 80,  drives: 40,  drive: 'ion'},
-
     /* Military */
     transport   : {hull: 40, armor: 10, cargo: 50,  hardpoints: 6,  mass: 8000,  tank: 180, drives: 220, drive: 'ion'},
     corvette    : {hull: 25, armor: 5,  cargo: 10,  hardpoints: 4,  mass: 550,   tank: 25,  drives: 2,   drive: 'fusion'},
     frigate     : {hull: 30, armor: 5,  cargo: 30,  hardpoints: 4,  mass: 800,   tank: 40,  drives: 4,   drive: 'fusion'},
     destroyer   : {hull: 45, armor: 12, cargo: 12,  hardpoints: 8,  mass: 1100,  tank: 40,  drives: 8,   drive: 'fusion'},
     cruiser     : {hull: 60, armor: 15, cargo: 15,  hardpoints: 10, mass: 1850,  tank: 100, drives: 16,  drive: 'fusion'},
-    battleship  : {hull: 85, armor: 25, cargo: 20,  hardpoints: 16, mass: 2300,  tank: 140, drives: 20,  drive: 'fusion'}
-  }
+    battleship  : {hull: 85, armor: 25, cargo: 20,  hardpoints: 16, mass: 2300,  tank: 140, drives: 20,  drive: 'fusion'},
+
+    /* Faction ships */
+    neptune     : {hull: 10, armor: 4,  cargo: 40,  hardpoints: 3,  mass: 3200,  tank: 80,  drives: 40,  drive: 'ion',    faction: 'TRANSA'},
+    barsoom     : {hull: 35, armor: 8,  cargo: 30,  hardpoints: 4,  mass: 600,   tank: 30,  drives: 4,   drive: 'fusion', faction: 'MC'}
+  },
 };
+
+/*
+ * Descriptions
+ */
+data.shipclass.neptune.desc = 'Designed and built in TRANSA\'s own shipyards, the Neptune class cargo hauler has the longest range of any vessel while retaining low mass and reasonable cargo space. A favorite of traders and smugglers on the Long Haul alike, it has the armor and hard points to defend itself in the unguarded outer oribts.';
+data.shipclass.barsoom.desc = 'The Barsoomian class frigate adopts the latest advances in Martian technology resulting in a frigate class ship with more range, speed, and enough firepower to act as its own escort.';
+
+

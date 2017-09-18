@@ -100,12 +100,12 @@ class Ship {
     return Math.floor(fuel / this.burn_rate(accel, mass));
   }
 
-  refuel_units()  {return Math.ceil(this.tank - this.fuel) }
+  refuel_units()  {return Math.ceil((this.tank - this.fuel) / data.resources.fuel.mass) }
   tank_is_full()  {return this.fuel === this.tank}
   tank_is_empty() {return this.fuel === 0}
 
   refuel(units) {
-    this.fuel = Math.min(this.tank, this.fuel + (units * data.resources['fuel'].mass));
+    this.fuel = Math.min(this.tank, this.fuel + (units * data.resources.fuel.mass));
   }
 
   burn(deltav) {
@@ -125,13 +125,41 @@ class Ship {
     this.cargo.dec(resource, amount);
   }
 
-  price() {
-    let info = this.shipclass;
-    let price = (info.mass  * 100)
-              + (info.hull  * 1000)
-              + (info.armor * 8000)
-              + (info.tank  * 150)
-              + (info.cargo * 65);
+  ship_value() {
+    let sc = this.shipclass;
+
+    let price
+      = (sc.mass  * 80)
+      + (sc.hull  * 1000)
+      + (sc.armor * 8000)
+      + (sc.tank  * 150)
+      + (sc.cargo * 65);
+
+    if (this.shipclass.drive === 'ion')
+      price += 500 + (this.shipclass.drives * 30);
+    else if (this.shipclass.drive === 'fusion')
+      price += 100000 + (this.shipclass.drives * 5000);
+
     return price;
+  }
+
+  cargo_value() {
+    let place = game.place();
+    let price = 0;
+    this.cargo.each((item, amt) => {price += place.sell_price(item) * amt});
+    return price;
+  }
+
+  fuel_value() {
+    let place = game.place();
+    return place.sell_price('fuel') * Math.floor(this.fuel / data.resources.fuel.mass);
+  }
+
+  price(tradein) {
+    let cargo = this.cargo_value();
+    let fuel  = this.fuel_value();
+    let ship  = this.ship_value();
+    if (tradein) ship = Math.ceil(ship * 0.7);
+    return ship + cargo + fuel;
   }
 }

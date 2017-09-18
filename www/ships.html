@@ -5,29 +5,46 @@ $(function() {
     return `<div class="row p-1"><div class="col-sm font-weight-bold">${dt}</div><div class="col-sm">${dd}</div></div>`;
   };
 
+  let tradein = game.player.ship.price(true);
+
   Object.keys(data.shipclass).forEach((sc) => {
     let info = data.shipclass[sc];
-    let ship = new Ship({shipclass: sc, fuel: info.tank});
+    let faction_adjustment = 1.0;
 
+    if (info.hasOwnProperty('faction')) {
+      if (info.faction !== game.place().faction) return;
+      if (info.faction !== game.player.faction)  return;
+      faction_adjustment = 0.8;
+    }
+
+    let ship = new Ship({shipclass: sc, fuel: info.tank});
     let deltav = Math.round(ship.current_acceleration() * 100) / 100;
     let burn_time = ship.max_burn_time(deltav, true) * data.hours_per_turn;
     let maxg_range = Physics.AU(Physics.range(burn_time * 3600, 0, deltav));
 
-    let nominal_dv = Math.round(Math.min(0.8, deltav * 0.6) * 100) / 100;
+    let nominal_dv = Math.round(Math.min(0.5, deltav * 0.6) * 100) / 100;
     let nominal_burn_time = ship.max_burn_time(nominal_dv, true) * data.hours_per_turn;
     let nominal_range = Physics.AU(Physics.range(nominal_burn_time * 3600, 0, 1));
 
     let price = ship.price();
-    price = Math.ceil(price + (price * game.place().sales_tax));
+    price += Math.ceil(price * game.place().sales_tax);
+    price *= faction_adjustment;
 
-    if      (info.drive === 'ion')    price += 500    + (info.drives * 30);
-    else if (info.drive === 'fusion') price += 100000 + (info.drives * 5000);
+    let card = $('<div class="card m-3">');
+    let hdr  = $('<h5 class="card-header text-capitalize">').append(sc);
 
-    let card  = $('<div class="card m-3">');
-    let btn   = $('<button type="button" class="btn btn-dark btn-sm float-right">Trade in</button>');
-    let hdr   = $('<h5 class="card-header text-capitalize">').append(sc).append(btn);
-    let body  = $('<div class="card-body">');
-    let rows  = $('<div class="card-text p-1">');
+    let btn = $(`<button type="button" class="btn btn-dark btn-sm float-right" data-toggle="modal" data-target="#tradein">Trade in</button>`);
+    if (game.player.money > price - tradein)
+      btn.data({shipclass: sc, ship: ship, price: price});
+    else
+      btn.addClass('disabled').prop('disabled', true);
+
+    hdr.append(btn);
+
+    let body = $('<div class="card-body">');
+    let rows = $('<div class="card-text p-1">');
+
+    if (info.desc) body.append($('<div class="card-text p-1 mb-3 font-italic">').append(info.desc));
 
     rows.append(row('Price', csn(price)));
 
@@ -50,8 +67,55 @@ $(function() {
 
     $('#ships').append(card);
   });
+
+  $('#tradein').on('show.bs.modal', function(e) {
+    let ship  = $(e.relatedTarget).data('shipclass');
+    let price = $(e.relatedTarget).data('price');
+    let cost  = price - tradein;
+
+    $('#tradein-value').text(csn(tradein));
+    $('#new-ship-price').text(csn(price));
+    $('#your-ship').text(game.player.ship.opt.shipclass);
+    $('#new-ship').text(ship);
+
+    if (cost < 0)
+      $('#tradein-result').text(`You will make ${csn(-cost)} profit with this deal.`);
+    else
+      $('#tradein-result').text(`You will pay ${csn(cost)} with this deal.`);
+
+    $(this).data($(e.relatedTarget).data());
+  });
+
+  $('#tradein-complete').on('click', (e) => {
+    let ship  = $('#tradein').data('ship');
+    let price = $('#tradein').data('price');
+    game.player.money += tradein;
+    game.player.money -= price;
+    game.player.ship = new Ship({shipclass: ship, fuel: data.shipclass[ship].tank});
+    game.save_game();
+  });
 });
 
 </script>
 
 <div id="ships" class="container p-0 m-0"></div>
+
+<div class="modal" id="tradein">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Purchase ship</h5>
+      </div>
+      <div class="modal-body">
+        <p>You will receive <span id="tradein-value"></span> credits for trading in your ship.</p>
+        <p>You will pay <span id="new-ship-price"></span> credits for a shiny, new <span id="new-ship"></span>.</p>
+        <p id="tradein-result"></p>
+        <p>Do you wish to complete this exchange?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" data-dismiss="modal" id="tradein-complete">Trade in</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>

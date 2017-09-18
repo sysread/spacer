@@ -2,6 +2,7 @@
 
 $(function() {
   $('#refuel').on('show.bs.modal', (e) => {
+    let tank = game.player.ship.fuel;
     let need = game.player.ship.refuel_units();
     let have = game.player.ship.cargo.get('fuel');
     let max  = Math.min(have, need);
@@ -10,9 +11,12 @@ $(function() {
       min        : 0,
       max        : max,
       step       : 1,
-      initial    : max,
+      initial    : 0,
       minmaxbtns : true,
-      callback   : (n) => {$('#refuel-units').val(n)}
+      callback   : (n) => {
+        $('#refuel-units').val(n);
+        $('#refuel-tonnes').val(Math.min(game.player.ship.tank, tank + (n * data.resources.fuel.mass)));
+      }
     });
 
     $('#refuel-slider').empty().append(slider.group);
@@ -29,6 +33,7 @@ $(function() {
     });
   });
 
+  $('#fuel-mass').text(data.resources.fuel.mass);
   $('#trade-in').on('click', (e) => {open('ships')});
 });
 
@@ -71,10 +76,13 @@ $(function() {
       <div class="modal-body">
         <p id="refuel-desc">
           You may transfer fuel purchased in the market from your cargo hold to your ship's fuel tank here.
+          One cargo unit of fuel masses <span id="fuel-mass"></span> metric tonnes.
         </p>
         <div class="row">
-          <div class="col-2">Units</div>
-          <div class="col-4"><input type="number" class="form-control" id="refuel-units" min="0" value="0" readonly></div>
+          <div class="col-3">Cargo (units)</div>
+          <div class="col-3"><input type="number" class="form-control" id="refuel-units" min="0" value="0" readonly></div>
+          <div class="col-3">Tank (tonnes)</div>
+          <div class="col-3"><input type="number" class="form-control" id="refuel-tonnes" min="0" value="0" readonly></div>
         </div>
         <div id="refuel-slider" class="row p-3"></div>
       </div>
