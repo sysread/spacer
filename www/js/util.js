@@ -1,48 +1,24 @@
 class DefaultMap {
   constructor(default_value) {
     this.default_value = default_value;
-    this.map = new Map;
-  }
-
-  save() {
-    let map = {};
-    this.each((k, v) => {map[k] = v});
-    return {
-      default_value: this.default_value,
-      map: map
-    };
+    this.data = {};
   }
 
   load(obj) {
     this.default_value = obj.default_value;
-    this.map.clear();
-    Object.keys(obj.map).forEach((k) => {this.set(k, obj.map[k])});
+    this.data = obj.data;
   }
 
-  get(key) {
-    if (!this.map.has(key)) this.map.set(key, this.default_value);
-    return this.map.get(key);
-  }
-
-  set(key, val) {
-    return this.map.set(key, val);
-  }
-
-  has(key) {
-    return this.map.has(key);
-  }
-
-  delete(key) {
-    return this.map.delete(key);
-  }
-
-  clear() {
-    this.map.clear();
-  }
-
-  each(f) {
-    this.map.forEach((val, key, map) => {f(key, val)});
-  }
+  save()        {return {default_value: this.default_value, data: this.data}}
+  has(key)      {return this.data.hasOwnProperty(key)}
+  get(key)      {return this.has(key) ? this.data[key] : this.default_value}
+  set(key, val) {this.data[key] = val}
+  delete(key)   {delete this.data[key]}
+  clear()       {this.data = {}}
+  each(f)       {for (let key of Object.keys(this.data)) f(key, this.data[key])}
+  *keys()       {for (let key of Object.keys(this.data)) yield key}
+  *values()     {for (let key of this.keys()) yield this.get(key)}
+  *entries()    {for (let key of this.keys()) yield [key, this.get(key)]}
 }
 
 class ResourceCounter extends DefaultMap {
@@ -77,7 +53,7 @@ class ResourceCounter extends DefaultMap {
 
   sum() {
     let n = 0;
-    for (let amount of this.map.values()) n += amount;
+    for (let amount of this.values()) n += amount;
     return n;
   }
 }
