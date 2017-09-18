@@ -58,13 +58,14 @@ $(() => {
   }
 
   $('#nav-dialog').on('show.bs.modal', function(e) {
-    let best   = $(e.relatedTarget).data('selected');
-    let plan   = best.transit;
-    let rate   = $(e.relatedTarget).data('burn_rate');
-    let target = system.name(plan.dest);
-    let type   = system.kind(plan.dest);
-    let size   = game.place(plan.dest).size;
-    let traits = uniq(game.place(plan.dest).traits, ', ');
+    let best    = $(e.relatedTarget).data('selected');
+    let plan    = best.transit;
+    let rate    = $(e.relatedTarget).data('burn_rate');
+    let target  = system.name(plan.dest);
+    let type    = system.kind(plan.dest);
+    let size    = game.place(plan.dest).size;
+    let traits  = uniq(game.place(plan.dest).traits, ', ');
+    let faction = data.factions[game.place(plan.dest).faction].full_name;
     let [days, hours] = plan.days_hours;
 
     let slider = new Slider({
@@ -94,6 +95,7 @@ $(() => {
     $('#nav-adjust').empty().append(slider.group);
 
     let notes = $('<ul>')
+      .append(`<li>${faction} member</li>`)
       .append(`<li>${type}</li>`)
       .append(`<li>${size} economy</li>`);
 

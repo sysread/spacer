@@ -15,7 +15,7 @@ $(function() {
       minmaxbtns : true,
       callback   : (n) => {
         $('#refuel-units').val(n);
-        $('#refuel-tonnes').val(Math.min(game.player.ship.tank, tank + (n * data.resources.fuel.mass)));
+        $('#refuel-tonnes').val(Math.round(Math.min(game.player.ship.tank, tank + (n * data.resources.fuel.mass)) * 10) / 10);
       }
     });
 

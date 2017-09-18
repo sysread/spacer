@@ -11,9 +11,12 @@ $(function() {
     let info = data.shipclass[sc];
     let faction_adjustment = 1.0;
 
+    if (info.restricted && game.player.faction !== game.place().faction)
+      return;
+
     if (info.hasOwnProperty('faction')) {
       if (info.faction !== game.place().faction) return;
-      if (info.faction !== game.player.faction)  return;
+      if (info.faction !== game.player.faction) return;
       faction_adjustment = 0.8;
     }
 
