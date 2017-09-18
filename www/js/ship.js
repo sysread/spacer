@@ -105,7 +105,7 @@ class Ship {
   tank_is_empty() {return this.fuel === 0}
 
   refuel(units) {
-    this.fuel = Math.min(this.tank, this.fuel + units);
+    this.fuel = Math.min(this.tank, this.fuel + (units * data.resources['fuel'].mass));
   }
 
   burn(deltav) {

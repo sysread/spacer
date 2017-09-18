@@ -40,6 +40,7 @@ class NavComp {
   }
 
   fastest(destination) {
+    if (this.transits[destination].length === 0) return;
     return this.transits[destination].reduce((a, b) => {
       return a.turns < b.turns ? a : b;
     });

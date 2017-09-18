@@ -6,6 +6,7 @@ class Place extends Market {
     this.agents     = [];
     this.resources  = new ResourceCounter(0);
     this.using      = new ResourceCounter(0)
+    this.fabricator = data.fabricators;
   }
 
   get type()      {return system.type(this.name)}
@@ -14,6 +15,7 @@ class Place extends Market {
   get traits()    {return data.bodies[this.name].traits}
   get faction()   {return data.bodies[this.name].faction}
   get sales_tax() {return data.factions[this.faction].sales_tax}
+  get max_fabs()  {return Math.ceil(data.fabricators * this.scale)}
 
   save() {
     let me        = super.save();
@@ -21,6 +23,7 @@ class Place extends Market {
     me.conditions = this.conditions;
     me.resources  = this.resources.save();
     me.using      = this.using.save();
+    me.fabricator = this.fabricator;
     me.agents     = [];
 
     this.agents.forEach((agent) => {me.agents.push(agent.save())});
@@ -32,6 +35,7 @@ class Place extends Market {
     super.load(obj);
     this.name = obj.name;
     this.conditions = obj.conditions;
+    this.fabricator = obj.fabricator;
     this.resources.load(obj.resources);
     this.using.load(obj.using);
     this.agents = [];
@@ -118,6 +122,45 @@ class Place extends Market {
     return collected;
   }
 
+  /*
+   * Returns the percentage of total fabrication resources currently available
+   * for commercial use.
+   */
+  fabrication_availability() {
+    return Math.min(100, Math.round(this.fabricator / this.max_fabs * 1000) / 10);
+  }
+
+  /*
+   * Given a resource name, returns the adjusted number of turns based on the
+   * fabrication resources available.
+   */
+  fabrication_time(item) {
+    let recipe = data.resources[item].recipe;
+    if (!recipe) return;
+    let turns = recipe.tics;
+    if (turns <= this.fabricator)
+      return Math.ceil(turns / 2);
+    else
+      return Math.max(1, Math.ceil((turns - this.fabricator) / 2));
+  }
+
+  /*
+   * "Wears out" the fabricator while crafting for the specified number of
+   * turns.
+   */
+  fabricate(item) {
+    let recipe = data.resources[item].recipe;
+    if (!recipe) return;
+    let turns = recipe.tics;
+    let adjusted = this.fabrication_time(item);
+    this.fabricator = Math.max(0, this.fabricator - turns);
+    return adjusted;
+  }
+
+  craft_time(item) {
+    return this.fabrication_time(item);
+  }
+
   turn() {
     super.turn();
 
@@ -131,9 +174,9 @@ class Place extends Market {
     // Produce
     this.production.each((resource, amt) => {
       this.resources.set(resource, amt);
-      if (game.turns % data.resources[resource].mine.tics === 0) {
-        this.sell(resource, amt);
-      }
+      if (game.turns % data.resources[resource].mine.tics !== 0) return;
+      if (game.system_need(resource) < 1.0 && this.is_over_supplied(resource)) return;
+      this.sell(resource, amt);
     });
 
     // Agents
@@ -161,5 +204,20 @@ class Place extends Market {
         this.using.dec(item, amt);
       }
     });
+
+    // Restore fabricators
+    if (this.fabricator < (this.max_fabs * 0.7)) {
+      let each  = data.fab_health;
+      let want  = Math.floor((this.max_fabs - this.fabricator) / each);
+      let avail = Math.min(want, this.current_supply('cybernetics'));
+
+      if (avail > 0) {
+        this.buy('cybernetics', avail);
+        this.fabricator += avail * each;
+      }
+
+      if (avail < want)
+        this.inc_demand('cybernetics', want - avail);
+    }
   }
 }

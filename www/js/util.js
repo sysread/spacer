@@ -63,18 +63,21 @@ class ResourceCounter extends DefaultMap {
   }
 
   inc(key, amount) {
-    this.set(key, this.get(key) + amount);
+    let n = this.get(key) + amount;
+    this.set(key, n);
+
+    if (this.min !== undefined && n < this.min) {
+      this.set(key, this.min);
+    }
   }
 
   dec(key, amount) {
-    this.set(key, this.get(key) - amount);
-    if (this.min !== undefined && this.get(key) < this.min)
-      this.set(key, this.min);
+    this.inc(key, -amount);
   }
 
   sum() {
     let n = 0;
-    this.each((item, amount) => { n += amount });
+    for (let amount of this.map.values()) n += amount;
     return n;
   }
 }

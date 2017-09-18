@@ -1,5 +1,3 @@
-var hauler_note = {};
-
 class Hauler extends Actor {
   constructor(opt) {
     opt = opt || {};
@@ -13,14 +11,6 @@ class Hauler extends Actor {
     for (let i = 0; i < turns; ++i)
       this.enqueue('wait');
   }
-
-note(dest, res, amt) {
-  let p = this.place;
-  if (!hauler_note.hasOwnProperty(p)) hauler_note[p] = {};
-  if (!hauler_note[p].hasOwnProperty(dest)) hauler_note[p][dest] = {};
-  if (!hauler_note[p][dest].hasOwnProperty(res)) hauler_note[p][dest][res] = 0;
-  hauler_note[p][dest][res] += amt;
-}
 
   save() {
     let obj   = super.save();
@@ -39,14 +29,16 @@ note(dest, res, amt) {
 
   buy(info) {
     let [place, item, amount] = info;
-    this.cost(game.place(place).buy(item, amount));
+    game.place(place).buy(item, amount);
     this.ship.load_cargo(item, amount);
   }
 
   sell(info) {
     let [place, item, amount] = info;
-    this.gain(game.place(place).sell(item, amount));
     this.ship.unload_cargo(item, amount);
+
+    if (!this.busted(item, amount))
+      game.place(place).sell(item, amount);
   }
 
   burn(info) {
@@ -66,10 +58,10 @@ note(dest, res, amt) {
     let price = place.buy_price('fuel');
     let want  = this.ship.refuel_units();
     let avail = place.current_supply('fuel');
-    let get   = Math.min(avail, want, Math.floor(this.money / price));
+    let get   = Math.min(avail, want);
 
     if (get > 0) {
-      this.cost(place.buy('fuel', get));
+      place.buy('fuel', get);
       this.ship.refuel(get);
     }
 
@@ -81,23 +73,22 @@ note(dest, res, amt) {
   harvest(info) {
     let [turns] = info;
     let resources = game.place(this.place).harvest(turns);
-    let profit = 0;
 
     resources.each((item, amt) => {
-      profit += game.place(this.place).sell(item, amt);
+      game.place(this.place).sell(item, amt);
     });
-
-    this.money += profit;
   }
 
   *astrogate(target, cargo_mass=0) {
-    // Calculate max acceleration for ship, assuming staff can handle 0.5G
-    let maxdv = Math.min(0.5, this.ship.acceleration_with_mass(cargo_mass));
+    // Calculate max acceleration for ship, assuming staff can handle 0.65G
+    let maxdv = Math.min(0.65, this.ship.acceleration_with_mass(cargo_mass));
+    let maxf  = Math.ceil(this.ship.fuel * 0.5);
     let paths = system.astrogator(this.place, target);
 
     for (let path of paths) {
-      if (path.accel > maxdv) continue;
-      if (path.turns > this.ship.max_burn_time(path.accel)) continue;
+      if (path.accel > maxdv) continue;                                  // to high a burn
+      if (path.turns > this.ship.max_burn_time(path.accel)) continue;    // out of range
+      if (path.turns * this.ship.burn_rate(path.accel) > maxf) continue; // fuel usage too high
       yield path;
     }
   }
@@ -106,40 +97,21 @@ note(dest, res, amt) {
     return profit / Math.log2(1 + turns);
   }
 
-  go_home() {
-    if (this.home === this.place)
-      return;
-
-    let plan = this.astrogate(this.home);
-
-    if (plan && plan.turns * (24 / data.hours_per_turn) < 100) {
-      let turns = Math.ceil(plan.time / data.hours_per_turn);
-      if (this.ship.thrust_ratio(plan.accel) > 0.8) return;
-      if (turns * (24 / data.hours_per_turn) > 100) return;
-      for (let i = 0; i < plan.turns; ++i) this.enqueue('burn', [plan.accel]);
-      this.enqueue('arrive', [this.home]);
-      return true;
-    }
-
-    this.enqueue('refuel');
-
-    return false;
-  }
-
   plan() {
     let bodies = Object.keys(data.bodies);
-    let avail  = Math.ceil(this.money * 0.5);
     let here   = game.place(this.place).report();
     let best;
 
-    if (this.place === this.home) {
+    if (this.trips === 0 || this.trips % 4 !== 0) {
       for (let target of bodies) {
         if (target === this.place) continue;
 
-        let there = game.market(target);
+        let there = game.market(target, this.place);
         if (there === null) continue;
 
         for (let resource of Object.keys(here)) {
+          if (this.is_over_supplied(resource, target)) continue;
+
           // proposition: buy here, sell there
           if (here[resource].buy < there.data[resource].sell) {
             // Are there any units to buy there?
@@ -150,7 +122,7 @@ note(dest, res, amt) {
             if (profit_per_unit < 1) continue;
 
             // How many units can we afford?
-            let units = Math.min(here[resource].stock, Math.floor(this.money / here[resource].buy), this.ship.cargo_left);
+            let units = Math.min(here[resource].stock, this.ship.cargo_left);
             if (units === 0) continue;
 
             // Is the net profit worth our time?
@@ -161,27 +133,24 @@ note(dest, res, amt) {
             let mass = units * data.resources[resource].mass;
             let nav = this.astrogate(target, mass);
             let fuel;
-            let value;
             let plan;
 
             for (let path of nav) {
-              let fuel_cost = there.data.fuel.buy * path.turns * this.ship.burn_rate(path.accel);
-              let net = (profit - fuel_cost) / path.turns;
-
-              if (value === undefined || net > value) {
-                value = net;
-                plan  = path;
-                fuel  = fuel_cost;
-              }
+              fuel = there.data.fuel.buy * path.turns * this.ship.burn_rate(path.accel);
+              plan = path;
+              break;
             }
 
             if (!plan) continue;
-
             profit -= fuel;
 
-            if (best === undefined || best.value < value) {
+            if (data.bodies[target].faction === data.bodies[this.home].faction)
+              profit *= 1.5;
+
+            if (best === undefined || best.profit < profit) {
+              if (this.contra_rand(resource)) continue; // just say no
+
               best = {
-                value    : value,
                 target   : target,
                 resource : resource,
                 profit   : profit,
@@ -202,7 +171,7 @@ note(dest, res, amt) {
             if (profit_per_unit < 1) continue;
 
             // How many units can we afford?
-            let units = Math.min(there.data[resource].stock, Math.floor(this.money / there.data[resource].buy), this.ship.cargo_left);
+            let units = Math.min(there.data[resource].stock, this.ship.cargo_left);
             if (units === 0) continue;
 
             // Is the net profit worth our time?
@@ -212,27 +181,20 @@ note(dest, res, amt) {
             // How far/long a trip?
             let nav = this.astrogate(target);
             let fuel;
-            let value;
             let plan;
 
             for (let path of nav) {
-              let fuel_cost = there.data.fuel.buy * path.turns * this.ship.burn_rate(path.accel);
-              let net = (profit - fuel_cost) / path.turns;
-
-              if (value === undefined || net > value) {
-                value = net;
-                plan  = path;
-                fuel  = fuel_cost;
-              }
+              fuel = there.data.fuel.buy * path.turns * this.ship.burn_rate(path.accel);
+              plan = path;
+              break;
             }
 
             if (!plan) continue;
 
             profit -= fuel;
 
-            if (best === undefined || best.value < value) {
+            if (best === undefined || best.profit < profit) {
               best = {
-                value    : value,
                 target   : target,
                 resource : resource,
                 profit   : profit,
@@ -245,9 +207,11 @@ note(dest, res, amt) {
       }
     }
     else {
-      let there = game.market(this.home);
+      let there = game.market(this.home, this.place);
 
       for (let resource of Object.keys(here)) {
+        if (this.is_over_supplied(resource, this.home)) continue;
+
         // proposition: buy here, sell there
         if (here[resource].buy < there.data[resource].sell) {
           // Are there any units to buy there?
@@ -258,7 +222,7 @@ note(dest, res, amt) {
           if (profit_per_unit < 1) continue;
 
           // How many units can we afford?
-          let units = Math.min(here[resource].stock, Math.floor(this.money / here[resource].buy), this.ship.cargo_left);
+          let units = Math.min(here[resource].stock, this.ship.cargo_left);
           if (units === 0) continue;
 
           // Is the net profit worth our time?
@@ -267,12 +231,21 @@ note(dest, res, amt) {
 
           // How far/long a trip?
           let mass = units * data.resources[resource].mass;
-          let plan = this.astrogate(this.home, mass);
-          if (!plan) continue;
+          let nav = this.astrogate(this.home, mass);
+          let fuel;
+          let plan;
 
-          if (best === undefined || best.value < profit) {
+          for (let path of nav) {
+            fuel = there.data.fuel.buy * path.turns * this.ship.burn_rate(path.accel);
+            plan = path;
+            break;
+          }
+
+          if (!plan) continue;
+          profit -= fuel;
+
+          if (best === undefined || best.profit < profit) {
             best = {
-              value    : profit,
               target   : this.home,
               resource : resource,
               profit   : profit,
@@ -287,24 +260,21 @@ note(dest, res, amt) {
 
     if (best) {
       if (best.units) {
-//console.log(`<${this.home}> ${this.place} --> ${best.target} : ${best.resource}`);
-this.note(best.target, best.resource, best.units);
+console.log(`<${this.home}> ${this.place} --> ${best.target} : ${best.resource}`);
         this.enqueue('buy', [this.place, best.resource, best.units]);
         for (let i = 0; i < best.turns; ++i) this.enqueue('burn', [best.accel]);
         this.enqueue('arrive', [best.target]);
         this.enqueue('sell', [best.target, best.resource, best.units]);
       }
       else {
+console.log(`<${this.home}> ${this.place} --> ${best.target}`);
         for (let i = 0; i < best.turns; ++i) this.enqueue('burn', [best.accel]);
         this.enqueue('arrive', [best.target]);
       }
     }
     else {
-      if (!this.go_home()) {
-        let turns = (24 / data.hours_per_turn) * (Math.floor(Math.random() * 4) + 1);
-        for (let i = 0; i < turns; ++i) this.enqueue('wait');
-        this.enqueue('harvest', [turns]);
-      }
+      this.enqueue('harvest', [2]);
+      this.enqueue('refuel');
     }
   }
 }

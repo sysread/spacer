@@ -6,6 +6,10 @@ $(function() {
 
   $('#home').change((e) => {
     let home = $('#home').val();
+    $('#home-info').html($('#' + home).html());
+    $('#home-grav').text(data.bodies[home].gravity);
+    $('#home-deltav').text(data.bodies[home].gravity * 2);
+
     let faction = data.bodies[home].faction;
     $('#faction').val(data.factions[faction].full_name);
     $('#faction-info').html($('#' + faction).html());
@@ -19,7 +23,7 @@ $(function() {
 
     let place   = $('#home').val();
     let faction = data.bodies[place].faction;
-    let ship    = faction === 'TRANSA' ? 'neptune' : 'trader';
+    let ship    = data.factions[faction].ship;
 
     let me = new Person({
       name    : $('#name').val(),
@@ -81,11 +85,17 @@ $(function() {
 
       <label for="home">Home</label>
       <select class="form-control text-capitalize" name="home" id="home"></select>
+      <div class="form-text text-muted" id="home-info"></div>
+      <div class="form-text text-muted">
+        As a native growing up under <span id="home-grav"></span>G of
+        gravity, your physiology can tolerate a maximum sustained acceleration
+        of <span id="home-deltav"></span>G.
+      </div>
       <br>
 
       <label for="faction">Faction</label>
       <input class="form-control" type="text" name="faction" id="faction" readonly>
-      <div class="form-text text-muted p-3" id="faction-info"></div>
+      <div class="form-text text-muted" id="faction-info"></div>
       <br>
     </form>
   </div>
@@ -105,6 +115,144 @@ $(function() {
       </div>
     </div>
   </div>
+</div>
+
+<div hidden id="mercury">
+  <p>
+    Too close to the sun to permit domed habitations, Mercury's single city,
+    Quicksilver, lies deep underground, providing it with a modicum of
+    protection against the intense solar radiation bathing the surface.
+  </p>
+  <p>
+    Known for its rich mineral deposits and hard-nosed populace, the knowledge
+    gained during the process of excavating and settling Mercury was a major
+    factor in the success of later colonies. Although nominally a member of the
+    UN, Mercury is widely known to be effectively run by the unions, who work
+    to ensure that Mercury is not unfairly exploited by Earth. <i>Nobody</i>
+    messes with the local 127.
+  </p>
+</div>
+
+<div hidden id="earth">
+  <p>
+    Under the unified governance of the UN, Earth has been at peace for
+    decades. As the sole habital body in the system, Earth remains the largest
+    population, economy, and military force in the system.
+  </p>
+</div>
+
+<div hidden id="moon">
+  <p>
+    A natural target for the first extension of humanity into space, the Moon's
+    domed cities and vast, subterranean passages hold the second largest
+    population in the system as well as some of its best shipyards.
+  </p>
+  <p>
+    With its lower gravity, excellent amenities, and close proximity to Earth,
+    Luna hosts the official embassies of both the Martian Commonwealth and
+    TRANSA.
+  </p>
+</div>
+
+<div hidden id="mars">
+  <p>
+    Rising from the ashes of the Earth fleet's systemic bombardment during the
+    war for independence, the Martian capitol of Barsoom is home to the most
+    widely respected universities and scientific institutions in the system.
+  </p>
+  <p>
+    The memories of those scars still fresh, Mars continues to sink a sizable
+    proportion of its resources into its fleet and planetary defenses. Although
+    smaller than the UN fleet, the Martian navy's vessels are newer and have a
+    small but not inconsiderable tech advantage on Earth's aging ships.
+  </p>
+</div>
+
+<div hidden id="phobos">
+  <p>
+    More akin to a captured asteroid than a moon, Phobos was hollowed out, its
+    spin increased, and made home to the largest research facility in the solar
+    system.
+  </p>
+</div>
+
+<div hidden id="deimos">
+  <p>
+    Home to the Martian Commonwealth Navy, Deimos Command Station is well
+    defended and hosts the primary Martian naval shipyard and officer's
+    academy.
+  </p>
+</div>
+
+<div hidden id="ceres">
+  <p>
+    Large enough to be given a spin gravity of nearly 0.5G, the hollowed out
+    planetoid Ceres is a major shipping and commercial hub between the inner
+    and outer planets.
+  </p>
+</div>
+
+<div hidden id="europa">
+  <p>
+    One of the two Jovian moons claimed by Mars during the war, Europa is the
+    source of much mineral wealth to the Commonwealth and is patrolled by the
+    Martian fleet.
+  </p>
+</div>
+
+<div hidden id="callisto">
+  <p>
+    Callisto's vast domed farms produce tons of food that are shipped across
+    the system, supporting many of the outer colonies that cannot produce
+    enough food to be self sufficient. It also hosts the regional Martian
+    command orbital and dock yards.
+  </p>
+</div>
+
+<div hidden id="ganymede">
+  <p>
+    The official headquarters of the SCS, Ganymede also hosts excellent
+    agricultural facilities and shipyards, making it a commercial hub of the
+    outer system.
+  </p>
+</div>
+
+<div hidden id="enceladus">
+  <p>
+    The supply station orbiting Enceladus boasts the best views in the system
+    and is the nexus for the harvesting and shipping of water from Saturn's
+    rings.
+  </p>
+</div>
+
+<div hidden id="rhea">
+  <p>
+    The Rhea Orbital Lab is the primary research and development platform of
+    the SCS and maintains a small population serving the needs of the research
+    community there.
+  </p>
+</div>
+
+<div hidden id="triton">
+  <p>
+    In retrograde orbit of Neptune, the Triton orbital hosts the meager
+    Plutonian Naval Command and acts as their primary supply station.
+  </p>
+</div>
+
+<div hidden id="titania">
+  <p>
+    Rich in heavy organic compounds, Titania is the primary source of raw
+    materials and shipping for TRANSA. With nearly a third of Earth's gravity
+    and supported by a growing commercial mining industry, it is also one of
+    the few TRANSA properties with a growing population.
+  </p>
+</div>
+
+<div hidden id="pluto">
+  <p>
+    The furthest outpost of humanity, Pluto 
+  </p>
 </div>
 
 <div hidden id="UN">
@@ -144,22 +292,25 @@ $(function() {
   <p>
     Those who live in the outer planets are exquisitely aware of the fragile
     existence they lead, completely dependent on shipments of food, water,
-    medicine, and technology from the inner planets in order to survive.
+    medicine, and technology in order to survive.
   </p>
   <p>
     When Mars broke from Earth, deliveries to the furthest installations in the
     outer system ceased in the face of privateering and the realities of a war
     economy. Those who survived the food riots shortly found themselves under
-    the magnetic boot of a coalition of thugs and vigilante gangs collectively
-    calling themselves the Trans-Neptunian Authority.
+    the magnetic boot of a coalition of gangs collectively calling themselves
+    the Trans-Neptunian Authority.
   </p>
   <p>
     With resources stretched and hungry mouths to feed, TRANSA offers the
-    lowest tax rates in the system, promising a hefty margin to any traders
-    willing to make the "Long Haul", as it is popularly known. Given the
-    limited number of warships available to the SPC and the vast volume of
-    space its member systems cover, the Long Haul can as be perilous as it is
-    profitable.
+    lowest tax rate in the system, promising a hefty margin to any traders
+    willing to make the "Long Haul", as it is popularly known. Given the size
+    of TRANSA's tiny fleet and the vast volume of space it patrols, the Long
+    Haul can as be perilous as it is profitable.
+  </p>
+  <p>
+    TRANSA's traders, having the longest routes, begin the game with a Neptune
+    class vessel, capable of longer runs than the default starting ship.
   </p>
 </div>
 
@@ -177,14 +328,14 @@ $(function() {
   </p>
 </div>
 
-<div hidden id="ICS">
+<div hidden id="SCS">
   <p>
     Faced with the same economic constraints and pressures as the outer planets
     during the war but with much closer and more powerful corporate interests
-    at hand, the Saturnian moons controlling interests joined to form the
-    Interplanetary Commercial Syndicate. Funded by some of the richest
-    corporations on Earth, the ICS has become a force unto itself, patrolling
-    the outer planets' trade routes with its corporate fleet.
+    at hand, the Saturnian moons controlling interests joined to form the Solar
+    Commercial Syndicate. Funded by some of the richest corporations on Earth,
+    the SCS has become a force unto itself, patrolling the outer planets' trade
+    routes with its corporate fleet.
   </p>
   <p>
     Life in the domes of Saturn is difficult, and the harvesting of ice and ore

@@ -10,16 +10,15 @@ const data = {
 
   start_date      : new Date(2242, 0, 1, 1),
   hours_per_turn  : 8,
-  initial_turns   : 300,
-  craft_fee       : 0.005,
-
-  market_history  : 100,
-  base_unit_price : 200,
-  scarcity_markup : 0.1,
-  necessity       : {water: true, food: true, medicine: true, fuel: true},
-
+  initial_turns   : 800,
+  craft_fee       : 0.05,
+  fabricators     : 100,
+  fab_health      : 50,
   haulers         : 2, // per body
-  hauler_money    : 1000,
+  market_history  : 30,
+  base_unit_price : 100,
+  scarcity_markup : 0.3,
+  necessity       : {water: true, food: true, medicine: true, fuel: true},
 
   scales: {
     tiny   : 0.5,
@@ -30,52 +29,43 @@ const data = {
   },
 
   resources: {
-    water        : {mass: 10,  mine: {tics: 2}},
-    ore          : {mass: 90,  mine: {tics: 4}},
-    chemicals    : {mass: 50,  mine: {tics: 3}},
-    food         : {mass: 5,   mine: {tics: 7}, recipe: {tics: 5, materials: {water: 3, chemicals: 2}}},
-    fuel         : {mass: 1,   recipe: {tics: 2, materials: {ore: 2}}},
-    metal        : {mass: 110, recipe: {tics: 2, materials: {ore: 4}}},
-    medicine     : {mass: 10,  recipe: {tics: 3, materials: {food: 1, chemicals: 2}}},
-    machines     : {mass: 75,  recipe: {tics: 4, materials: {metal: 3, water: 1}}},
-    electronics  : {mass: 20,  recipe: {tics: 4, materials: {metal: 2, chemicals: 4}}},
-    cybernetics  : {mass: 80,  recipe: {tics: 5, materials: {machines: 3, electronics: 2}}},
-    weapons      : {mass: 50,  recipe: {tics: 3, materials: {metal: 2, chemicals: 3}}, contraband: 4},
-    narcotics    : {mass: 10,  recipe: {tics: 3, materials: {food: 2, chemicals: 2, medicine: 2}}, contraband: 7}
+    water        : {mass: 10, mine: {tics: 2}},
+    ore          : {mass: 60, mine: {tics: 3}},
+    minerals     : {mass: 50, mine: {tics: 4}},
+    food         : {mass: 10, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 2, ore: 1, minerals: 1}}},
+    fuel         : {mass: 10, recipe: {tics: 1, materials: {water: 1, minerals: 1}}},
+    metal        : {mass: 90, recipe: {tics: 2, materials: {ore: 4}}},
+    ceramics     : {mass: 30, recipe: {tics: 3, materials: {minerals: 1, water: 1}}},
+    medicine     : {mass: 10, recipe: {tics: 4, materials: {food: 1, water: 1}}},
+    machines     : {mass: 75, recipe: {tics: 4, materials: {metal: 2, water: 1}}},
+    electronics  : {mass: 20, recipe: {tics: 5, materials: {metal: 1, ceramics: 1, minerals: 1}}},
+    cybernetics  : {mass: 80, recipe: {tics: 6, materials: {metal: 1, ceramics: 1, machines: 1, electronics: 1}}}
   },
 
   market: {
-    agents      : 2,
-    agent_money : 1000,
+    agents      : 4,
     minability  : 0.25,
+    fabricators : 2,
     produces    : {},
-    consumes    : {
-      water       : 0.5,
-      food        : 0.4,
-      medicine    : 0.2,
-      machines    : 0.4,
-      electronics : 0.4,
-      cybernetics : 0.3,
-      weapons     : 0.1,
-      narcotics   : 0.1
-    }
+    consumes    : {water: 1, food: 1}
   },
 
   traits: {
-    'mineral rich' : {produces: {ore:    0.25, chemicals:  0.25}, consumes: {}},
-    'mineral poor' : {produces: {ore:   -0.25, chemicals: -0.25}, consumes: {}},
-    'water rich'   : {produces: {water:  0.25}, consumes: {}},
-    'water poor'   : {produces: {water: -0.25}, consumes: {}},
+    'mineral rich' : {produces: {ore:    0.3, minerals:  0.1}, consumes: {}},
+    'mineral poor' : {produces: {ore:   -0.3, minerals: -0.1}, consumes: {}},
+    'water rich'   : {produces: {water:  0.3}, consumes: {}},
+    'water poor'   : {produces: {water: -0.3}, consumes: {}},
 
-    'asteroids'    : {produces: {ore:   0.5,  chemicals: 0.25}, consumes: {}},
-    'ringed'       : {produces: {water: 0.5,  chemicals: 0.25}, consumes: {}},
-    'rocky'        : {produces: {ore:   0.25, chemicals: 0.1, water: 0.1}, consumes: {}},
-    'icy'          : {produces: {water: 0.25, chemicals: 0.1, ore:   0.1}, consumes: {}},
+    'asteroids'    : {produces: {ore:   0.5, minerals: 0.5}, consumes: {}},
+    'ringed'       : {produces: {water: 0.5, minerals: 0.1}, consumes: {}},
+    'rocky'        : {produces: {ore:   0.2, minerals: 0.25}, consumes: {}},
+    'icy'          : {produces: {water: 0.2}, consumes: {}},
 
-    'habitable'    : {produces: {water: 0.5, food: 0.2}, consumes: {machines: 0.1, fuel: 1.0}},
-    'domed'        : {produces: {}, consumes: {machines: 0.1, electronics: 0.1, cybernetics: 0.4, fuel: 0.5}},
-    'subterranean' : {produces: {}, consumes: {machines: 0.1, electronics: 0.1, cybernetics: 0.3, fuel: 0.5}},
-    'orbital'      : {produces: {}, consumes: {machines: 0.1, electronics: 0.1, cybernetics: 0.2, fuel: 0.75}}
+    'agricultural' : {produces: {food: 0.3}, consumes: {water: 0.2, ore: 0.1, minerals: 0.1}},
+    'habitable'    : {produces: {food: 0.7}, consumes: {}},
+    'subterranean' : {produces: {food: 0.2}, consumes: {}},
+    'domed'        : {produces: {food: 0.5}, consumes: {}},
+    'orbital'      : {produces: {food: 0.1}, consumes: {}}
   },
 
   conditions: {
@@ -89,27 +79,32 @@ const data = {
     'UN': {
       full_name : 'United Nations',
       capital   : 'Earth',
-      sales_tax : 0.18
+      sales_tax : 0.12,
+      ship      : 'trader'
     },
     'MC': {
       full_name : 'Martian Commonwealth',
       capital   : 'Mars',
-      sales_tax : 0.12
+      sales_tax : 0.10,
+      ship      : 'trader'
     },
     'TRANSA': {
       full_name : 'Trans-Neptunian Authority',
       capital   : 'Pluto',
-      sales_tax : 0.01
+      sales_tax : 0.02,
+      ship      : 'neptune'
     },
-    'ICS': {
-      full_name : 'Interplanetary Commercial Syndicate',
+    'SCS': {
+      full_name : 'Solar Commercial Syndicate',
       capital   : 'Ganymede',
-      sales_tax : 0.08
+      sales_tax : 0.08,
+      ship      : 'trader'
     },
     'CERES': {
       full_name : 'Ceres',
       capital   : 'Ceres',
-      sales_tax : 0.06
+      sales_tax : 0.06,
+      ship      : 'trader'
     }
   },
 
@@ -138,7 +133,7 @@ const data = {
     mars: {
       name     : 'Mars',
       size     : 'large',
-      traits   : ['domed', 'subterranean', 'orbital', 'rocky', 'water poor'],
+      traits   : ['domed', 'subterranean', 'orbital', 'rocky', 'water poor', 'mineral rich'],
       faction  : 'MC',
       gravity  : 0.378
     },
@@ -170,32 +165,32 @@ const data = {
       faction  : 'MC',
       gravity  : 0.134
     },
-    ganymede: {
-      name     : 'Ganymede',
-      size     : 'large',
-      traits   : ['domed', 'subterranean', 'orbital', 'rocky', 'water rich', 'mineral poor'],
-      faction  : 'ICS',
-      gravity  : 0.146
-    },
     callisto: {
       name     : 'Callisto',
       size     : 'normal',
-      traits   : ['subterranean', 'rocky'],
+      traits   : ['domed', 'subterranean', 'orbital', 'rocky', 'agricultural'],
       faction  : 'MC',
       gravity  : 0.126
+    },
+    ganymede: {
+      name     : 'Ganymede',
+      size     : 'large',
+      traits   : ['domed', 'subterranean', 'orbital', 'rocky', 'mineral poor', 'agricultural'],
+      faction  : 'SCS',
+      gravity  : 0.146
     },
     enceladus: {
       name     : 'Enceladus Depot',
       size     : 'small',
       traits   : ['orbital', 'icy', 'ringed', 'water rich', 'mineral poor'],
-      faction  : 'ICS',
+      faction  : 'SCS',
       gravity  : 0.35
     },
     rhea: {
       name     : 'Rhea Orbital Lab',
       size     : 'small',
       traits   : ['orbital', 'icy', 'ringed', 'water rich', 'mineral poor'],
-      faction  : 'ICS',
+      faction  : 'SCS',
       gravity  : 0.35
     },
     triton: {
@@ -227,14 +222,14 @@ const data = {
       thrust    : 80,
       mass      : 10,
       desc      : 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
-      burn_rate : 0.05,
+      burn_rate : 0.008,
     },
     fusion: {
       name      : 'Fusion',
-      thrust    : 900,
+      thrust    : 800,
       mass      : 40,
       desc      : 'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
-      burn_rate : 0.7,
+      burn_rate : 0.25,
     }
   },
 
@@ -252,7 +247,7 @@ const data = {
     hauler      : {hull: 20, armor: 5,  cargo: 100, hardpoints: 4,  mass: 10000, tank: 150, drives: 100, drive: 'ion'},
 
     /* Ultra-long range */
-    neptune     : {hull: 10, armor: 5,  cargo: 45,  hardpoints: 3,  mass: 5000,  tank: 80,  drives: 40,  drive: 'ion'},
+    neptune     : {hull: 10, armor: 5,  cargo: 40,  hardpoints: 3,  mass: 5000,  tank: 80,  drives: 40,  drive: 'ion'},
 
     /* Military */
     transport   : {hull: 40, armor: 10, cargo: 50,  hardpoints: 6,  mass: 8000,  tank: 180, drives: 220, drive: 'ion'},

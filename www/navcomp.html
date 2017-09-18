@@ -15,14 +15,14 @@ $(() => {
 
   for (let body of system.bodies()) {
     if (body != game.place().name) {
-      let name  = system.name(body);
-      let kind  = system.kind(body);
-      let best  = navcomp.fastest(body);
-      let plan  = best.transit;
+      let name = system.name(body);
+      let kind = system.kind(body);
+      let best = navcomp.fastest(body);
 
       let btn, dist, acc, time, turns, burn;
 
-      if (plan !== undefined) {
+      if (best !== undefined) {
+        let plan = best.transit;
         burn  = best.burn;
         time  = plan.hours;
         turns = plan.turns;
@@ -91,7 +91,7 @@ $(() => {
       }
     });
 
-    $('#nav-adjust').append(slider.group);
+    $('#nav-adjust').empty().append(slider.group);
 
     let notes = $('<ul>')
       .append(`<li>${type}</li>`)
@@ -138,14 +138,14 @@ $(() => {
         }
 
         let d = plan.dist_left.toFixed(2);
-        let p = plan.pct_complete;
+        let p = Math.round(plan.pct_complete);
 
         $('#nav-transit-distance').text(`${d} AU`);
         $('#nav-transit-progress').css('width', `${p}%`);
 
         game.turn(count);
       }
-    }, 200);
+    }, 100);
   }
 
   $('#nav-transit').on('shown.bs.modal', () => {
@@ -240,7 +240,7 @@ $(() => {
       </div>
       <div class="modal-body">
         <div class="progress bg-dark">
-          <div id="nav-transit-progress" class="progress-bar progress-bar-animated bg-warning" style="height: 35px; width: 5%">
+          <div id="nav-transit-progress" class="progress-bar bg-warning" style="height: 35px">
             <span id="nav-transit-distance" class="badge badge-pill badge-dark float-left m-1 font-weight-normal" style="font-size:14px"></span>
           </div>
         </div>

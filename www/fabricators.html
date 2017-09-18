@@ -6,6 +6,8 @@ $(function() {
   let table   = $('#recipe-table tbody');
 
   let update_recipes = function() {
+    $('#craft-availability').text(game.place().fabrication_availability());
+
     table.empty();
 
     for (let item of Object.keys(data.resources)) {
@@ -13,8 +15,9 @@ $(function() {
       let value  = game.place().price(item);
 
       if (recipe) {
-        let btn = $(`<button type="button" class="btn btn-block btn-sm text-capitalize">${item}</button>`);
-        let fee = Math.max(1, Math.round(fee_pct * value));
+        let btn  = $(`<button type="button" class="btn btn-block btn-sm text-capitalize">${item}</button>`);
+        let fee  = Math.max(1, Math.round(fee_pct * value));
+        let tics = game.place().fabrication_time(item);
 
         let mats = $('<div>');
         for (let material of Object.keys(recipe.materials))
@@ -24,7 +27,7 @@ $(function() {
           btn.addClass('btn-dark').click(function(e) {
             $('#craft-resource').text(item);
             $('#craft-message').empty()
-              .append(`<p>Fabrication of one unit of ${item} takes ${recipe.tics} turn(s) and costs ${fee} credit(s).</p>`)
+              .append(`<p>Fabrication of one unit of ${item} takes ${tics} turn(s) and costs ${fee} credit(s).</p>`)
               .append('<p>The following materials from your inventory will be used:</p>')
               .append($(mats).clone());
             $('#craft-dialog').modal('show');
@@ -37,7 +40,7 @@ $(function() {
         table.append($('<tr>')
           .append($('<td>').append(btn))
           .append($(`<td class="text-right">${csn(value)}</td>`))
-          .append($(`<td class="text-right">${recipe.tics}</td>`))
+          .append($(`<td class="text-right">${tics}</td>`))
           .append($(`<td class="text-right">${csn(fee)}</td>`))
           .append($(`<td class="text-right">`).append(mats)));
       }
@@ -49,13 +52,14 @@ $(function() {
     let recipe   = data.resources[resource].recipe;
 
     if (recipe) {
+      let tics = game.place().fabricate(resource);
       let value = game.place().price(resource);
       player.debit(Math.max(1, Math.round(fee_pct * value)));
 
       for (let mat of Object.keys(recipe.materials))
         player.ship.unload_cargo(mat, recipe.materials[mat]);
 
-      game.turn(recipe.tics);
+      game.turn(tics);
 
       player.ship.load_cargo(resource, 1);
     }
@@ -84,6 +88,10 @@ $(function() {
         nearly anything, given the necessary materials and plans... and a small
         fee, of course.
       </p>
+      <p>
+        <span id="craft-availability"></span>% of fabricator capacity is
+        available at this time.
+      </p>
       <table class="table table-sm" id="recipe-table">
         <thead>
           <tr>
@@ -101,7 +109,7 @@ $(function() {
   </div>
 </div>
 
-<div class="modal" id="craft-dialog" data-backdrop="static">
+<div class="modal" id="craft-dialog">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">

@@ -1,31 +1,46 @@
 class Actor {
   constructor(opt) {
     opt = opt || {};
-    this.money = opt.money || 0;
+    this.last  = null;
     this.place = opt.place;
     this.queue = [];
   }
 
   save() {
     return {
-      money : this.money,
       place : this.place,
       queue : this.queue
     };
   }
 
   load(obj) {
-    this.money = obj.money;
     this.place = obj.place;
     this.queue = obj.queue;
   }
 
-  gain(amount) {
-    this.money += amount;
+  is_over_supplied(item, place) {
+    place = place || this.place;
+    return game.place(place).is_over_supplied(item);
   }
 
-  cost(amount) {
-    this.money -= amount;
+  /*
+   * Randomly returns true or false, skewed toward true based on the specified
+   * item's contraband index.
+   */
+  contra_rand(item) {
+    let contraband = data.resources[item].contraband;
+    return contraband && (Math.random() * 10) <= contraband;
+  }
+
+  /*
+   * Decides whether the actor gets busted with a contraband item.
+   */
+  busted(item, amount) {
+    if (this.contra_rand(item)) {
+      return true
+    }
+
+    return false;
   }
 
   has_pending() {
@@ -50,6 +65,8 @@ class Actor {
 
     let [action, info] = this.dequeue();
     this[action].call(this, info);
+
+    this.last = action;
   }
 
   // Do nothing for one turn

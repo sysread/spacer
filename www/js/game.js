@@ -15,13 +15,14 @@ class Game {
         this.load(JSON.parse(saved));
         this.refresh();
         open('summary');
-        //open('ships');
       }
       else {
         open('newgame');
       }
     });
   }
+
+  get here() {return this.place(this.locus)}
 
   net_production() {
     Object.keys(this.places).forEach((place) => {
@@ -40,6 +41,7 @@ class Game {
     Object.keys(this.markets).forEach((name) => {
       let report = this.markets[name][0];
       console.log(name);
+      console.log('  -fabricators: ', this.place(name).fabricator, '/', this.place(name).max_fabs);
 
       Object.keys(report).forEach((item) => {
         if (report[item].stock > 0)
@@ -198,18 +200,19 @@ class Game {
     this.save_game();
   }
 
-  market(there) {
+  market(there, here) {
+    here = here || this.locus;
     let data;
     let age;
     let turns;
 
-    if (there === this.locus) {
-      data  = this.place().report();
+    if (there === here) {
+      data  = this.place(here).report();
       age   = 0;
       turns = this.turns;
     }
     else {
-      let distance = system.distance(this.locus, there);
+      let distance = system.distance(here, there);
       let idx = this.light_turns(distance);
 
       if (this.markets[there].length <= idx)
@@ -225,5 +228,28 @@ class Game {
       age:  age,
       turn: turns
     }
+  }
+
+  *reports(here) {
+    here = here || this.locus;
+    for (let body of Object.keys(this.markets)) {
+      let report = this.market(body, here);
+      if (report === null) return;
+      yield [body, this.market(body, here)];
+    }
+  }
+
+  system_need(resource) {
+    let demand  = 1;
+    let supply  = 1;
+    let reports = 1;
+
+    for (let body of Object.keys(this.markets)) {
+      demand += this.markets[body][0][resource].demand;
+      supply += this.markets[body][0][resource].supply;
+      ++reports;
+    }
+
+    return demand / supply;
   }
 }

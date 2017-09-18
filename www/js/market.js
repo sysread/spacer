@@ -1,30 +1,27 @@
 class Market {
   constructor() {
     this.store           = new ResourceCounter;
-    this.bought          = new ResourceTracker(data.market_history);
-    this.sold            = new ResourceTracker(data.market_history);
+    this.demand_history  = new ResourceTracker(data.market_history);
+    this.supply_history  = new ResourceTracker(data.market_history);
     this.buys_this_turn  = new ResourceCounter;
-    this.sales_this_turn = new ResourceCounter;
     this.prices          = new DefaultMap(null);
   }
 
   save() {
     let me = {};
     me.store           = this.store.save();
-    me.bought          = this.bought.save();
-    me.sold            = this.sold.save();
+    me.demand_history  = this.demand_history.save();
+    me.supply_history  = this.supply_history.save();
     me.buys_this_turn  = this.buys_this_turn.save();
-    me.sales_this_turn = this.sales_this_turn.save();
     me.prices          = this.prices.save();
     return me;
   }
 
   load(obj) {
     this.store.load(obj.store);
-    this.bought.load(obj.sold);
-    this.sold.load(obj.sold);
+    this.demand_history.load(obj.supply_history);
+    this.supply_history.load(obj.supply_history);
     this.buys_this_turn.load(obj.buys_this_turn);
-    this.sales_this_turn.load(obj.sales_this_turn);
     this.prices.load(obj.prices);
   }
 
@@ -36,18 +33,27 @@ class Market {
     this.buys_this_turn.inc(resource, amount);
   }
 
-  inc_supply(resource, amount) {
-    this.sales_this_turn.inc(resource, amount);
-  }
-
   supply(resource) {
     let stock = this.current_supply(resource) || 1;
-    let avg   = this.sold.avg(resource)       || 1;
+    let avg   = this.supply_history.avg(resource) || 1;
     return Math.max(1, (stock + (3 * avg)) / 4);
   }
 
   demand(resource) {
-    return Math.max(1, this.bought.avg(resource));
+    let demand = Math.max(1, this.demand_history.avg(resource));
+
+    // Increment demand based on items whose recipes include this resource
+    for (let item of Object.keys(data.resources)) {
+      let recipe = data.resources[item].recipe;
+
+      if (recipe !== undefined && recipe.materials.hasOwnProperty(resource)) {
+        // Boost demand by the amount of the resource required in this recipe
+        // times the demand of the item itself.
+        demand += recipe.materials[resource] * this.demand(item);
+      }
+    }
+
+    return demand;
   }
 
   adjustment(resource) {
@@ -64,33 +70,46 @@ class Market {
       }
     }
 
-    if (adjust > 1.1) {
-      return markup + 1 + Math.log2(adjust);
+    if (adjust > 1) {
+      adjust =  Math.min(2, Math.log10(adjust));
     }
-    else if (adjust < 0.9) {
-      //return Math.atanh(adjust) / Math.asinh(adjust) / 2;
-      return markup + Math.sqrt(adjust);
+    else if (adjust < 1) {
+      adjust = Math.max(0.5, Math.sqrt(adjust));
     }
-    else {
-      return markup + 1;
-    }
+
+    if (adjust > 1) return markup + Math.min(2.00, adjust);
+    if (adjust < 1) return markup + Math.max(0.5, adjust);
+    return 1 + markup;
+  }
+
+  is_over_supplied(item, margin=0.5) {
+    return (Math.round(this.demand(item) / this.supply(item) * 100) / 100) < margin;
+  }
+
+  craft_time(item) {
+    let recipe = data.resources[ite].recipe;
+    if (recipe) return recipe.tics;
+    return;
   }
 
   calculate_price(resource) {
-    let mine    = data.resources[resource].mine;
-    let recipe  = data.resources[resource].recipe;
-    let value   = null;
+    let mine   = data.resources[resource].mine;
+    let recipe = data.resources[resource].recipe;
+    let value  = 0;
 
     if (mine) {
       value = data.base_unit_price * mine.tics;
     }
     else if (recipe) {
-      let mats = recipe.materials;
-      let keys = Object.keys(mats);
-      let val  = keys.reduce((acc, k) => {return acc + (mats[k] * this.buy_price(k))}, 0);
-      if (value === null || val < value)
-        value = val;
+      for (let mat of Object.keys(recipe.materials)) {
+        value += recipe.materials[mat] * this.buy_price(mat);
+      }
     }
+
+    let craft_time = this.craft_time(resource);
+
+    if (craft_time !== undefined)
+      value += Math.ceil(Math.log(value * craft_time));
 
     return Math.ceil(value * this.adjustment(resource));
   }
@@ -120,14 +139,13 @@ class Market {
   sell(resource, amount) {
     let price = amount * this.sell_price(resource);
     this.store.inc(resource, amount);
-    this.inc_supply(resource, amount);
     return price;
   }
 
   trend(resource, days=10) {
-    let turns     = days * (24 / data.hours_per_turn);
-    let long_avg  = this.bought.avg(resource) + this.sold.avg(resource);
-    let short_avg = this.bought.avg(resource, turns) + this.sold.avg(resource, turns);
+    let turns = days * (24 / data.hours_per_turn);
+    let long_avg = this.demand_history.avg(resource) + this.supply_history.avg(resource);
+    let short_avg = this.demand_history.avg(resource, turns) + this.supply_history.avg(resource, turns);
     return short_avg - long_avg;
   }
 
@@ -152,11 +170,10 @@ class Market {
 
   turn() {
     Object.keys(data.resources).forEach((k) => {
-      this.sold.add(k, this.sales_this_turn.get(k));
-      this.bought.add(k, this.buys_this_turn.get(k));
+      this.supply_history.add(k, this.current_supply(k));
+      this.demand_history.add(k, this.buys_this_turn.get(k));
     });
 
-    this.sales_this_turn.clear();
     this.buys_this_turn.clear();
     this.prices.clear();
   }

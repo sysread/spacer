@@ -37,7 +37,7 @@ class Person {
   }
 
   max_acceleration() {
-    return data.bodies[this.home].gravity * 1.5;
+    return data.bodies[this.home].gravity * 2;
   }
 
   ship_acceleration() {
