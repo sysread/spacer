@@ -27,7 +27,7 @@ $(() => {
         time  = plan.hours;
         turns = plan.turns;
         acc   = plan.accel.toFixed(2);
-        dist  = (plan.au.toFixed(2) || '< 0.01') + ' AU';
+        dist  = plan.au.toFixed(2) || '< 0.01';
 
         btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-sm btn-dark btn-block">`);
         btn.append(`<span class="float-left">${name}</span>`);
@@ -192,8 +192,8 @@ $(() => {
         <thead>
           <tr>
             <th>Destination</th>
-            <th class="text-right">Distance</th>
-            <th class="text-right">Hours</th>
+            <th class="text-right">AU</th>
+            <th class="text-right">Hr</th>
           </tr>
         </thead>
         <tbody>

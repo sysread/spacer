@@ -1,14 +1,14 @@
 body {
   padding-bottom: 70px;
-  background-color: #050505;
+  background-color: #000000;
   background-image: url('../img/bg.jpg');
   color: #ccc;
-  font-size: 0.9rem;
+  /*font-size: 0.9rem;*/
 }
 
 .spacer-header {
   font-size: 0.8rem;
-  background-color: rgba(0,0,0,.75);
+  background-color: rgb(0,0,0);
 }
 
 .spacer-header .navbar-text {

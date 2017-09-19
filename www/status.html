@@ -4,10 +4,6 @@ $(function() {
   let p = game.player;
   let s = p.ship;
 
-  let row = (lbl, val) => {
-    return `<div class="row py-2"><div class="col-sm b">${lbl}</div><div class="col-sm text-capitalize mute">${val}</div></div>`;
-  }
-
   $('#captain').empty()
     .append(row('Money',     csn(p.money)))
     .append(row('Home',      data.bodies[p.home].name))

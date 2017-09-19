@@ -10,6 +10,7 @@
       <link rel="stylesheet" type="text/css" href="css/index.css">
 
       <script type="text/javascript" src="cordova.js"></script>
+      <script type='application/javascript' src='js/vendor/fastclick.js'></script>
       <script type="text/javascript" src="js/vendor/jquery.min.js"></script>
       <script type="text/javascript" src="js/vendor/popper.min.js"></script>
       <script type="text/javascript" src="js/vendor/bootstrap.min.js"></script>
@@ -119,6 +120,10 @@
         return decimal ? `${integer}.${decimal}` : integer;
       }
 
+      function row(dt, dd) {
+        return `<div class="row py-2"><div class="col-sm b">${dt}</div><div class="col-sm text-capitalize mute">${dd}</div></div>`;
+      }
+
       $(function() {
         $('#spacer-navbar').on('click', 'a', function(e) {
           e.preventDefault();
@@ -131,10 +136,18 @@
           }
         });
 
-        $(window).on('click', function(e) {
-          $('#spacer-nav').collapse('hide');
-        });
+        $(window).on('click', (e) => { $('#spacer-nav').collapse('hide')});
+        $('html').on('click', (e) => { $('#spacer-nav').collapse('hide')});
+
+        FastClick.attach(document.body);
       });
+
+      document.addEventListener("deviceready", onDeviceReady, false);
+
+      function onDeviceReady() {
+        if (StatusBar.isVisible)
+          StatusBar.hide();
+      }
     </script>
   </body>
 </html>
