@@ -94,7 +94,8 @@ $(function() {
     let price = $('#tradein').data('price');
     game.player.money += tradein;
     game.player.money -= price;
-    game.player.ship = new Ship({shipclass: ship, fuel: data.shipclass[ship].tank});
+    game.player.ship = ship;
+    game.turn();
     game.save_game();
   });
 });

@@ -121,3 +121,11 @@ button.btn-secondary:disabled {
   margin: 0;
   padding: 0;
 }
+
+.b {
+  font-weight: bold !important;
+}
+
+.mute {
+  color: #868e96 !important;
+}

@@ -31,38 +31,34 @@ class Market {
 
   inc_demand(resource, amount) {
     this.buys_this_turn.inc(resource, amount);
+
+    // Increment demand for all ingredients of this (if craftable)
+    let recipe = data.resources[resource].recipe;
+
+    if (recipe) {
+      for (let item of Object.keys(recipe.materials)) {
+        this.inc_demand(item, recipe.materials[item]);
+      }
+    }
   }
 
   supply(resource) {
     let stock = this.current_supply(resource) || 1;
     let avg   = this.supply_history.avg(resource) || 1;
-    return Math.max(1, (stock + (3 * avg)) / 4);
+    return Math.max(1, (stock + avg) / 2);
   }
 
   demand(resource) {
-    let demand = Math.max(1, this.demand_history.avg(resource));
-
-    // Increment demand based on items whose recipes include this resource
-    for (let item of Object.keys(data.resources)) {
-      let recipe = data.resources[item].recipe;
-
-      if (recipe !== undefined && recipe.materials.hasOwnProperty(resource)) {
-        // Boost demand by the amount of the resource required in this recipe
-        // times the demand of the item itself.
-        demand += recipe.materials[resource] * this.demand(item);
-      }
-    }
-
-    return demand;
+    return Math.max(1, this.demand_history.avg(resource));
   }
 
   adjustment(resource) {
-    const supply = this.supply(resource);
-    const demand = this.demand(resource);
-    let adjust = demand / supply;
+    const loc = this.local_need(resource);
+    const sys = game.system_need(resource);
+    const adjust = (loc + loc + loc + sys) / 3;
     let markup = 0;
 
-    if (this.current_supply(resource) == 0) {
+    if (this.current_supply(resource) === 0) {
       markup += data.scarcity_markup;
 
       if (data.necessity[resource]) {
@@ -71,23 +67,29 @@ class Market {
     }
 
     if (adjust > 1) {
-      adjust =  Math.min(2, Math.log10(adjust));
+      return 1 + markup + Math.log10(adjust);
     }
     else if (adjust < 1) {
-      adjust = Math.max(0.5, Math.sqrt(adjust));
+      return markup + Math.max(0.1, Math.sqrt(adjust));
     }
 
-    if (adjust > 1) return markup + Math.min(2.00, adjust);
-    if (adjust < 1) return markup + Math.max(0.5, adjust);
     return 1 + markup;
   }
 
-  is_over_supplied(item, margin=0.5) {
-    return (Math.round(this.demand(item) / this.supply(item) * 100) / 100) < margin;
+  local_need(resource) {
+    return this.demand(resource) / this.supply(resource);
+  }
+
+  is_over_supplied(resource) {
+    const loc = this.local_need(resource);
+    const sys = game.system_need(resource);
+    if (loc < 0.75) return true;
+    if (sys < 0.9 && loc < 0.9) return true;
+    return false;
   }
 
   craft_time(item) {
-    let recipe = data.resources[ite].recipe;
+    let recipe = data.resources[item].recipe;
     if (recipe) return recipe.tics;
     return;
   }

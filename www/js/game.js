@@ -188,14 +188,18 @@ class Game {
         this.markets[name].unshift(this.place(name).report());
       });
 
-      this.agents.forEach((agent) => {agent.turn()});
+      if (this.turns > data.initial_turns) {
+        for (let agent of this.agents)
+          agent.turn();
+      }
+
       this.refresh();
     }
 
-    system.bodies().forEach((name) => {
+    for (let name of system.bodies()) {
       while (this.markets[name].length > 50)
         this.markets[name].pop();
-    });
+    };
 
     this.save_game();
   }
@@ -245,9 +249,11 @@ class Game {
     let reports = 1;
 
     for (let body of Object.keys(this.markets)) {
-      demand += this.markets[body][0][resource].demand;
-      supply += this.markets[body][0][resource].supply;
-      ++reports;
+      if (this.markets[body].length > 1) {
+        demand += this.markets[body][0][resource].demand;
+        supply += this.markets[body][0][resource].supply;
+        ++reports;
+      }
     }
 
     return demand / supply;

@@ -9,7 +9,7 @@ $(() => {
   $('#nav-player-g'    ).text(data.bodies[game.player.home].gravity);
   $('#nav-player-max-g').text(game.player.max_acceleration().toFixed(2));
   $('#nav-ship-g'      ).text(game.player.ship_acceleration().toFixed(2));
-  $('#nav-ship-t'      ).text(csn(game.player.ship.current_mass()));
+  $('#nav-ship-t'      ).text(csn(Math.round(game.player.ship.current_mass())));
   $('#nav-ship-fuel'   ).text(Math.round(game.player.ship.fuel * 100) / 100);
   $('#nav-ship-burn'   ).text(game.player.ship.max_burn_time() * data.hours_per_turn);
 
@@ -146,8 +146,9 @@ $(() => {
         $('#nav-transit-progress').css('width', `${p}%`);
 
         game.turn(count);
+        $('#nav-transit-progress').finish();
       }
-    }, 100);
+    }, 10);
   }
 
   $('#nav-transit').on('shown.bs.modal', () => {

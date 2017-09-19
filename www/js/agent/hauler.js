@@ -130,13 +130,16 @@ class Hauler extends Actor {
             if (profit < 1) continue;
 
             // How far/long a trip?
+            let slow_burn = there.data.fuel.supply < 4; // can we get home?
             let mass = units * data.resources[resource].mass;
             let nav = this.astrogate(target, mass);
             let fuel;
             let plan;
 
             for (let path of nav) {
-              fuel = there.data.fuel.buy * path.turns * this.ship.burn_rate(path.accel);
+              let burn = path.turns * this.ship.burn_rate(path.accel);
+              if (slow_burn && burn > this.fuel / 2) continue;
+              fuel = there.data.fuel.buy * burn;
               plan = path;
               break;
             }
@@ -179,12 +182,15 @@ class Hauler extends Actor {
             if (profit < 1) continue;
 
             // How far/long a trip?
+            let slow_burn = there.data.fuel.supply < 4; // can we get home?
             let nav = this.astrogate(target);
             let fuel;
             let plan;
 
             for (let path of nav) {
-              fuel = there.data.fuel.buy * path.turns * this.ship.burn_rate(path.accel);
+              let burn = path.turns * this.ship.burn_rate(path.accel);
+              if (slow_burn && burn > this.fuel / 2) continue;
+              fuel = there.data.fuel.buy * burn;
               plan = path;
               break;
             }
@@ -260,14 +266,14 @@ class Hauler extends Actor {
 
     if (best) {
       if (best.units) {
-//console.log(`<${this.home}> ${this.place} --> ${best.target} : ${best.resource}`);
+console.log(`<${this.home}> ${this.place} --> ${best.target} : ${best.resource}`);
         this.enqueue('buy', [this.place, best.resource, best.units]);
         for (let i = 0; i < best.turns; ++i) this.enqueue('burn', [best.accel]);
         this.enqueue('arrive', [best.target]);
         this.enqueue('sell', [best.target, best.resource, best.units]);
       }
       else {
-//console.log(`<${this.home}> ${this.place} --> ${best.target}`);
+console.log(`<${this.home}> ${this.place} --> ${best.target}`);
         for (let i = 0; i < best.turns; ++i) this.enqueue('burn', [best.accel]);
         this.enqueue('arrive', [best.target]);
       }

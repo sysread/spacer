@@ -3,13 +3,15 @@ class Ship {
     this.opt   = opt || {};
     this.fuel  = opt.fuel || data.shipclass[opt.shipclass].tank;
     this.cargo = new ResourceCounter;
+    this.dmg   = new DefaultMap(0);
   }
 
   save() {
     return {
       opt   : this.opt,
       fuel  : this.fuel,
-      cargo : this.cargo.save()
+      cargo : this.cargo.save(),
+      dmg   : this.dmg.save()
     };
   }
 
@@ -17,6 +19,7 @@ class Ship {
     this.opt  = info.opt;
     this.fuel = info.fuel;
     this.cargo.load(info.cargo);
+    this.dmg.load(info.dmg);
   }
 
   /*

@@ -175,7 +175,7 @@ class Place extends Market {
     this.production.each((resource, amt) => {
       this.resources.set(resource, amt);
       if (game.turns % data.resources[resource].mine.tics !== 0) return;
-      if (game.system_need(resource) < 1.0 && this.is_over_supplied(resource)) return;
+      if (this.is_over_supplied(resource)) return;
       this.sell(resource, amt);
     });
 

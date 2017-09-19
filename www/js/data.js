@@ -11,14 +11,14 @@ const data = {
   start_date      : new Date(2242, 0, 1, 1),
   hours_per_turn  : 8,
   initial_turns   : 800,
-  craft_fee       : 0.05,
-  fabricators     : 100,
-  fab_health      : 50,
-  haulers         : 2, // per body
   market_history  : 30,
   base_unit_price : 100,
   scarcity_markup : 0.3,
   necessity       : {water: true, food: true, medicine: true, fuel: true},
+  craft_fee       : 0.05,
+  fabricators     : 100,
+  fab_health      : 50,
+  haulers         : 2, // per body
 
   scales: {
     tiny   : 0.66,
@@ -33,21 +33,21 @@ const data = {
     ore          : {mass: 60, mine: {tics: 3}},
     minerals     : {mass: 50, mine: {tics: 4}},
     food         : {mass: 30, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 2, ore: 1, minerals: 1}}},
-    fuel         : {mass: 2,  recipe: {tics: 2, materials: {water: 1, ore: 1, minerals: 1}}},
+    fuel         : {mass: 2,  recipe: {tics: 2, materials: {water: 1, minerals: 1}}},
     metal        : {mass: 90, recipe: {tics: 2, materials: {ore: 4}}},
     ceramics     : {mass: 30, recipe: {tics: 3, materials: {minerals: 1, water: 1}}},
-    medicine     : {mass: 10, recipe: {tics: 4, materials: {food: 1, water: 1}}},
-    machines     : {mass: 75, recipe: {tics: 4, materials: {metal: 2, water: 1}}},
-    electronics  : {mass: 20, recipe: {tics: 5, materials: {metal: 1, ceramics: 1, minerals: 1}}},
+    medicine     : {mass: 10, recipe: {tics: 4, materials: {food: 1, minerals: 1}}},
+    machines     : {mass: 75, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}},
+    electronics  : {mass: 20, recipe: {tics: 5, materials: {ceramics: 2, minerals: 1}}},
     cybernetics  : {mass: 80, recipe: {tics: 6, materials: {metal: 1, ceramics: 1, machines: 1, electronics: 1}}}
   },
 
   market: {
-    agents      : 4,
+    agents      : 6,
     minability  : 0.25,
     fabricators : 2,
     produces    : {},
-    consumes    : {water: 1, food: 1}
+    consumes    : {water: 0.75, food: 0.75}
   },
 
   traits: {
@@ -56,16 +56,16 @@ const data = {
     'water rich'   : {produces: {water:  0.3}, consumes: {}},
     'water poor'   : {produces: {water: -0.3}, consumes: {}},
 
-    'asteroids'    : {produces: {ore:   0.5, minerals: 0.5}, consumes: {}},
-    'ringed'       : {produces: {water: 0.5, minerals: 0.1}, consumes: {}},
-    'rocky'        : {produces: {ore:   0.2, minerals: 0.25}, consumes: {}},
-    'icy'          : {produces: {water: 0.2}, consumes: {}},
+    'asteroids'    : {produces: {ore:   1.0, minerals: 0.75}, consumes: {}},
+    'ringed'       : {produces: {water: 1.0, minerals: 0.25}, consumes: {}},
+    'rocky'        : {produces: {ore:   0.6, minerals: 0.25}, consumes: {}},
+    'icy'          : {produces: {water: 0.3, minerals: 0.15}, consumes: {}},
 
-    'agricultural' : {produces: {food: 0.3}, consumes: {water: 0.2, ore: 0.1, minerals: 0.1}},
+    'agricultural' : {produces: {food: 0.3}, consumes: {machines: 0.2, fuel: 0.025, water: 0.2, ore: 0.1, minerals: 0.1}},
     'habitable'    : {produces: {food: 0.7}, consumes: {}},
-    'subterranean' : {produces: {food: 0.2}, consumes: {}},
-    'domed'        : {produces: {food: 0.5}, consumes: {}},
-    'orbital'      : {produces: {food: 0.1}, consumes: {}}
+    'subterranean' : {produces: {}, consumes: {fuel: 0.1, electronics: 0.05, machines: 0.05}},
+    'domed'        : {produces: {food: 0.1}, consumes: {fuel: 0.2, electronics: 0.05, machines: 0.05, water: 0.1, ore: 0.05, minerals: 0.05}},
+    'orbital'      : {produces: {}, consumes: {fuel: 0.3, electronics: 0.1, machines: 0.1}}
   },
 
   conditions: {
@@ -79,31 +79,31 @@ const data = {
     'UN': {
       full_name : 'United Nations',
       capital   : 'Earth',
-      sales_tax : 0.12,
+      sales_tax : 0.1135,
       ship      : 'trader'
     },
     'MC': {
       full_name : 'Martian Commonwealth',
       capital   : 'Mars',
-      sales_tax : 0.10,
+      sales_tax : 0.0925,
       ship      : 'barsoom'
     },
     'TRANSA': {
       full_name : 'Trans-Neptunian Authority',
       capital   : 'Pluto',
-      sales_tax : 0.02,
+      sales_tax : 0.025,
       ship      : 'neptune'
     },
     'SCS': {
       full_name : 'Solar Commercial Syndicate',
       capital   : 'Ganymede',
-      sales_tax : 0.08,
+      sales_tax : 0.0822,
       ship      : 'trader'
     },
     'CERES': {
       full_name : 'Ceres',
       capital   : 'Ceres',
-      sales_tax : 0.06,
+      sales_tax : 0.065,
       ship      : 'trader'
     }
   },
@@ -222,14 +222,14 @@ const data = {
       thrust    : 80,
       mass      : 10,
       desc      : 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
-      burn_rate : 0.015,
+      burn_rate : 0.008,
     },
     fusion: {
       name      : 'Fusion',
       thrust    : 800,
       mass      : 40,
       desc      : 'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
-      burn_rate : 0.25,
+      burn_rate : 0.20,
     }
   },
 

@@ -19,14 +19,16 @@ $(function() {
       if (cargo === 0 || avail === 0)
         btn.addClass('btn-secondary');
 
-      let dock_count = avail ? `<span class="badge badge-pill">${csn(avail)}</span>&nbsp;&nbsp;` : '';
-      let hold_count = cargo ? `<span class="badge badge-pill">${csn(cargo)}</span>&nbsp;&nbsp;` : '';
+      let dock_count = avail ? `<span class="float-right badge badge-pill">${csn(avail)}</span>&nbsp;&nbsp;` : '';
+      let hold_count = cargo ? `<span class="float-right badge badge-pill">${csn(cargo)}</span>&nbsp;&nbsp;` : '';
 
       table
         .append($('<tr>')
           .append($('<td>').append(btn))
-          .append(`<td class="text-right">${dock_count}${csn(place.buy_price(item))}</td>`)
-          .append(`<td class="text-right">${hold_count}${csn(place.sell_price(item))}</td>`));
+          .append(`<td class="text-right">${csn(place.buy_price(item))}</td>`)
+          .append(`<td class="text-right">${csn(avail || '')}</td>`)
+          .append(`<td class="text-right">${csn(place.sell_price(item))}</td>`)
+          .append(`<td class="text-right">${csn(cargo || '')}</td>`));
     }
   };
 
@@ -39,7 +41,7 @@ $(function() {
     let cargo    = game.player.ship.cargo.get(item);
 
     $('#exchange-resource').text(item);
-    $('#exchange-tax-rate').text((tax_rate * 100) + '%');
+    $('#exchange-tax-rate').text((Math.round(tax_rate * 10000) / 100) + '%');
     $('#exchange-price').val(price);
     $('#exchange-tax').val(tax);
     $('#exchange-docks').val(avail);
@@ -89,6 +91,7 @@ $(function() {
 
   $('#market-dialog').on('show.bs.modal', function(e) {
     let item  = $('#exchange-resource').text();
+    let price = game.place().buy_price(item);
     let tbody = $('#market-dialog tbody');
     tbody.empty();
 
@@ -105,13 +108,20 @@ $(function() {
       let trend = info.trend > 0 ? `+${info.trend}` : (info.trend || '');
 
       let row = $('<tr>');
-      if (body === game.locus) row.addClass('bg-dark');
       row.append(`<td class="text-capitalize">${system.name(body)}</td>`);
-      row.append(`<td class="text-right">${info.buy}</td>`);
-      row.append(`<td class="text-right">${info.sell}</td>`);
+      row.append(`<td class="text-right">${csn(info.buy)}</td>`);
+      row.append(`<td class="text-right">${csn(info.sell)}</td>`);
       row.append(`<td class="text-right">${info.stock || ''}</td>`);
       row.append(`<td class="text-right">${trend}</td>`);
       row.append(`<td class="text-right">${report.age}</td>`);
+
+      if (body === game.locus) {
+        row.addClass('border');
+      }
+      else if (price >= info.sell) {
+        row.addClass('text-muted');
+      }
+
       $('#market-dialog tbody').append(row);
     }
   });
@@ -135,7 +145,9 @@ $(function() {
           <tr>
             <th>Resource</th>
             <th class="text-right">Buy</th>
+            <th class="text-right">Stock</th>
             <th class="text-right">Sell</th>
+            <th class="text-right">Hold</th>
           </tr>
         </thead>
         <tbody>

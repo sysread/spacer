@@ -5,11 +5,11 @@ $(function() {
   let s = p.ship;
 
   let row = (lbl, val) => {
-    return `<div class="row p-1"><div class="col-sm-3 font-weight-bold">${lbl}</div><div class="col-sm">${val}</div></div>`;
+    return `<div class="row py-2"><div class="col-sm b">${lbl}</div><div class="col-sm text-capitalize mute">${val}</div></div>`;
   }
 
   $('#captain').empty()
-    .append(row('Money',     p.money))
+    .append(row('Money',     csn(p.money)))
     .append(row('Home',      data.bodies[p.home].name))
     .append(row('Faction',   p.faction))
     .append(row('Endurance', `${p.max_acceleration().toFixed(2)} G`));
@@ -25,7 +25,7 @@ $(function() {
     .append(row('Fuel',       `${Math.round(s.fuel * 100) / 100}/${s.tank}`))
     .append(row('Max burn',   `${csn(s.max_burn_time() * data.hours_per_turn)} hours at maximum thrust`))
     .append(row('Drives',     `${s.shipclass.drives}`))
-    .append(row('Drive type', `<span class="text-capitalize">${s.shipclass.drive}</span><p class="form-text text-muted">${data.drives[s.shipclass.drive].desc}</p>`));
+    .append(row('Drive type', `<span class="text-capitalize">${s.shipclass.drive}</span>`));
 
   $('#newgame').on('click', () => {open('newgame')});
 });

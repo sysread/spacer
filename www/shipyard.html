@@ -1,6 +1,13 @@
 <script type="text/javascript">
 
 $(function() {
+  let refresh = function() {
+    if (game.player.ship.cargo.get('fuel') === 0 || game.player.ship.tank_is_full())
+      $('#refuel-cargo-btn').prop('disabled', true).addClass('disabled');
+    else
+      $('#refuel-cargo-btn').prop('disabled', false).removeClass('disabled');
+  };
+
   $('#refuel').on('show.bs.modal', (e) => {
     let tank = game.player.ship.fuel;
     let need = game.player.ship.refuel_units();
@@ -14,7 +21,7 @@ $(function() {
       initial    : 0,
       minmaxbtns : true,
       callback   : (n) => {
-        $('#refuel-units').val(n);
+        $('#refuel-units').val(have - n);
         $('#refuel-tonnes').val(Math.round(Math.min(game.player.ship.tank, tank + (n * data.resources.fuel.mass)) * 10) / 10);
       }
     });
@@ -27,14 +34,19 @@ $(function() {
       if (units !== NaN && units > 0 && units <= max) {
         game.player.ship.refuel(units);
         game.player.ship.cargo.dec('fuel', units);
+        game.turn();
         game.save_game();
         game.refresh();
       }
+
+      refresh();
     });
   });
 
   $('#fuel-mass').text(data.resources.fuel.mass);
   $('#trade-in').on('click', (e) => {open('ships')});
+
+  refresh();
 });
 
 </script>

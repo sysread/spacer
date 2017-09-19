@@ -1,17 +1,17 @@
 class DefaultMap {
-  constructor(default_value) {
-    this.default_value = default_value;
+  constructor(dfltval) {
+    this.dfltval = dfltval;
     this.data = {};
   }
 
   load(obj) {
-    this.default_value = obj.default_value;
+    this.dfltval = obj.dfltval;
     this.data = obj.data;
   }
 
-  save()        {return {default_value: this.default_value, data: this.data}}
+  save()        {return {dfltval: this.dfltval, data: this.data}}
   has(key)      {return this.data.hasOwnProperty(key)}
-  get(key)      {return this.has(key) ? this.data[key] : this.default_value}
+  get(key)      {return this.has(key) ? this.data[key] : this.dfltval}
   set(key, val) {this.data[key] = val}
   delete(key)   {delete this.data[key]}
   clear()       {this.data = {}}
