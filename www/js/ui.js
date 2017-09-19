@@ -16,10 +16,10 @@ class Slider {
     this.slider.mouseup((e) => {this.stop_monitor()});
     this.slider.change((e) => {this.val = this.slider.val(); this.stop_monitor();});
 
-    this.dn    = $('<button type="button" class="btn btn-dark btn-sm">&#9664;</button>');
-    this.up    = $('<button type="button" class="btn btn-dark btn-sm">&#9658;</button>');
-    this.dndn  = $('<button type="button" class="btn btn-dark btn-sm">&#9664;&#9664;</button>');
-    this.upup  = $('<button type="button" class="btn btn-dark btn-sm">&#9658;&#9658;</button>');
+    this.dn    = $('<button type="button" class="btn btn-dark">&#9664;</button>');
+    this.up    = $('<button type="button" class="btn btn-dark">&#9658;</button>');
+    this.dndn  = $('<button type="button" class="btn btn-dark">&#9664;&#9664;</button>');
+    this.upup  = $('<button type="button" class="btn btn-dark">&#9658;&#9658;</button>');
 
     this.dn.click((e) => {this.val -= this.step});
     this.up.click((e) => {this.val += this.step});
@@ -97,8 +97,8 @@ class ResourceExchange {
     this.resources.each((item, amt) => {
       if (amt === 0) return;
 
-      let store = $('<button type="button" class="btn btn-sm btn-dark">').append(this.store.get(item)).css('width', '50px');
-      let cargo = $('<button type="button" class="btn btn-sm btn-dark">').append(this.cargo.get(item)).css('width', '50px');
+      let store = $('<button type="button" class="btn btn-dark">').append(this.store.get(item)).css('width', '50px');
+      let cargo = $('<button type="button" class="btn btn-dark">').append(this.cargo.get(item)).css('width', '50px');
 
       let slider = new Slider({
         step     : 1,

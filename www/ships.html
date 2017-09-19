@@ -2,21 +2,13 @@
 
 $(function() {
   let tradein = game.player.ship.price(true);
+  let list = $('#ships');
 
-  Object.keys(data.shipclass).forEach((sc) => {
-    let info = data.shipclass[sc];
-    let faction_adjustment = 1.0;
+  $('#ship-detail').on('show.bs.modal', function(e) {
+    let ship  = $(e.relatedTarget).data('ship');
+    let price = $(e.relatedTarget).data('price');
+    let sc    = ship.opt.shipclass;
 
-    if (info.restricted && game.player.faction !== game.place().faction)
-      return;
-
-    if (info.hasOwnProperty('faction')) {
-      if (info.faction !== game.place().faction) return;
-      if (info.faction !== game.player.faction) return;
-      faction_adjustment = 0.8;
-    }
-
-    let ship = new Ship({shipclass: sc, fuel: info.tank});
     let deltav = Math.round(ship.current_acceleration() * 100) / 100;
     let burn_time = ship.max_burn_time(deltav, true) * data.hours_per_turn;
     let maxg_range = Physics.AU(Physics.range(burn_time * 3600, 0, deltav));
@@ -25,57 +17,42 @@ $(function() {
     let nominal_burn_time = ship.max_burn_time(nominal_dv, true) * data.hours_per_turn;
     let nominal_range = Physics.AU(Physics.range(nominal_burn_time * 3600, 0, 1));
 
-    let price = ship.price();
-    price += Math.ceil(price * game.place().sales_tax);
-    price *= faction_adjustment;
+    $('#ship-detail .modal-title').text(sc);
+    $('#ship-detail .modal-body').empty();
+    $('#ship-detail .modal-body')
+      .append(row('Price', csn(price)))
+      .append(row(`Range (${deltav.toFixed(2)} G max)`,`${maxg_range.toFixed(2)} AU / ${csn(burn_time)} hr`))
+      .append(row(`Range (${nominal_dv.toFixed(2)} G cruise)`, `${nominal_range.toFixed(2)} AU / ${csn(nominal_burn_time)} hr`))
+      .append(row('Drive', `${ship.shipclass.drives} ${ship.drive.name}`))
+      .append(row('Maximum thrust', `${csn(ship.thrust)} kN`))
+      .append(row('Fuel tanks', ship.shipclass.tank))
+      .append(row('Hull mass', `${csn(ship.shipclass.mass)} tonnes`))
+      .append(row('Drive mass', `${csn(ship.drive_mass)} tonnes`))
+      .append(row('Total mass (fueled)', `${csn(ship.current_mass())} tonnes`))
+      .append(row('Cargo', ship.shipclass.cargo))
+      .append(row('Hull', ship.shipclass.hull))
+      .append(row('Armor', ship.shipclass.armor))
+      .append(row('Hard points', ship.shipclass.hardpoints));
 
-    let card = $('<div class="card m-3">');
-    let hdr  = $('<h5 class="card-header text-capitalize">').append(sc);
-
-    let btn = $(`<button type="button" class="btn btn-dark btn-sm float-right" data-toggle="modal" data-target="#tradein">Trade in</button>`);
-    if (game.player.money > price - tradein)
-      btn.data({shipclass: sc, ship: ship, price: price});
-    else
-      btn.addClass('disabled').prop('disabled', true);
-
-    hdr.append(btn);
-
-    let body = $('<div class="card-body">');
-    let rows = $('<div class="card-text p-1">');
-
-    if (info.desc) body.append($('<div class="card-text p-1 mb-3 font-italic">').append(info.desc));
-
-    rows.append(row('Price', csn(price)));
-
-    rows.append(row(`Range (${deltav.toFixed(2)} G max)`,`${maxg_range.toFixed(2)} AU / ${csn(burn_time)} hr`));
-    rows.append(row(`Range (${nominal_dv.toFixed(2)} G cruise)`, `${nominal_range.toFixed(2)} AU / ${csn(nominal_burn_time)} hr`));
-
-    rows.append(row('Drive', `${info.drives} ${ship.drive.name}`));
-    rows.append(row('Maximum thrust', `${csn(ship.thrust)} kN`));
-    rows.append(row('Fuel tanks', info.tank));
-    rows.append(row('Hull mass', `${csn(ship.shipclass.mass)} tonnes`));
-    rows.append(row('Drive mass', `${csn(ship.drive_mass)} tonnes`));
-    rows.append(row('Total mass (fueled)', `${csn(ship.current_mass())} tonnes`));
-
-    rows.append(row('Cargo', info.cargo));
-    rows.append(row('Hull', info.hull));
-    rows.append(row('Armor', info.armor));
-    rows.append(row('Hard points', info.hardpoints));
-
-    card.append(hdr).append(body.append(rows));
-
-    $('#ships').append(card);
+    if (sc === game.player.ship.opt.shipclass || game.player.money < price - tradein) {
+      $('#btn-tradein').prop('disabled', true).addClass('disabled');
+      $('#tradein').data({});
+    }
+    else {
+      $('#btn-tradein').prop('disabled', false).removeClass('disabled');
+      $('#tradein').data($(e.relatedTarget).data());
+    }
   });
 
   $('#tradein').on('show.bs.modal', function(e) {
-    let ship  = $(e.relatedTarget).data('shipclass');
-    let price = $(e.relatedTarget).data('price');
+    let ship  = $('#tradein').data('ship');
+    let price = $('#tradein').data('price');
     let cost  = price - tradein;
 
     $('#tradein-value').text(csn(tradein));
     $('#new-ship-price').text(csn(price));
     $('#your-ship').text(game.player.ship.opt.shipclass);
-    $('#new-ship').text(ship);
+    $('#new-ship').text(ship.opt.shipclass);
 
     if (cost < 0)
       $('#tradein-result').text(`You will make ${csn(-cost)} profit with this deal.`);
@@ -94,14 +71,60 @@ $(function() {
     game.turn();
     game.save_game();
   });
+
+  for (let sc of Object.keys(data.shipclass)) {
+    let info = data.shipclass[sc];
+    let faction_adjustment = 1.0;
+
+    if (info.restricted && game.player.faction !== game.place().faction)
+      return;
+
+    if (info.hasOwnProperty('faction')) {
+      if (info.faction !== game.place().faction) return;
+      if (info.faction !== game.player.faction) return;
+      faction_adjustment = 0.8;
+    }
+
+    let ship = new Ship({shipclass: sc, fuel: info.tank});
+    let price = ship.price();
+    price += Math.ceil(price * game.place().sales_tax);
+    price *= faction_adjustment;
+
+    let name = $(`<h5 class="text-capitalize">${sc}</h5>`);
+    let btn  = $(`<button type="button" class="btn btn-dark float-right" data-toggle="modal" data-target="#ship-detail">Info</button>`);
+    btn.data({ship: ship, price: price});
+
+    list.append(row(name.append(btn), `${csn(price)}`));
+  }
 });
 
 </script>
 
-<div id="ships" class="container p-0 m-0"></div>
+<div class="card">
+  <h3 class="card-header">Ships</h3>
+  <div class="card-body">
+    <div id="ships" class="card-text">
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="ship-detail">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-capitalize"></h5>
+        <button type="button" id="btn-tradein" class="btn btn-dark float-right" data-dismiss="modal" data-toggle="modal" data-target="#tradein">Trade in</button>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="modal" id="tradein">
-  <div class="modal-dialog modal-lg" role="document">
+  <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Purchase ship</h5>

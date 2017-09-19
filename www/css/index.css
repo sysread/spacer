@@ -1,9 +1,9 @@
 body {
   padding-bottom: 70px;
-  background-color: #000000;
+  background-color: rgb(0, 0, 0);
   background-image: url('../img/bg.jpg');
-  color: #ccc;
-  /*font-size: 0.9rem;*/
+  color: #bbb;
+  font-size: 0.9rem;
 }
 
 .spacer-header {
@@ -51,6 +51,7 @@ body {
 
 #spacer-navbar {
   background-color: #000;
+  font-size: 1.1rem;
 }
 
 table.table td, table.table th {

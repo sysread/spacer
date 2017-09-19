@@ -12,23 +12,21 @@ $(function() {
       let cargo = game.player.ship.cargo.get(item);
       let avail = place.current_supply(item);
       let price = place.price(item);
-      let btn   = $(`<button type="button" class="btn btn-block btn-sm btn-dark text-capitalize" data-toggle="modal" data-target="#exchange-dialog">${item}</button>`);
+      let btn   = $(`<button type="button" class="btn btn-block btn-dark text-capitalize" data-toggle="modal" data-target="#exchange-dialog">${item}</button>`);
 
       btn.data('resource', item);
 
       if (cargo === 0 || avail === 0)
         btn.addClass('btn-secondary');
 
-      let dock_count = avail ? `<span class="float-right badge badge-pill">${csn(avail)}</span>&nbsp;&nbsp;` : '';
-      let hold_count = cargo ? `<span class="float-right badge badge-pill">${csn(cargo)}</span>&nbsp;&nbsp;` : '';
+      let dock_count = avail ? `<span class="badge badge-pill">${csn(avail)}</span>&nbsp;&nbsp;` : '';
+      let hold_count = cargo ? `<span class="badge badge-pill">${csn(cargo)}</span>&nbsp;&nbsp;` : '';
 
       table
         .append($('<tr>')
           .append($('<td>').append(btn))
-          .append(`<td class="text-right">${csn(place.buy_price(item))}</td>`)
-          .append(`<td class="text-right">${csn(avail || '')}</td>`)
-          .append(`<td class="text-right">${csn(place.sell_price(item))}</td>`)
-          .append(`<td class="text-right">${csn(cargo || '')}</td>`));
+          .append(`<td class="text-right">${dock_count}${csn(place.buy_price(item))}</td>`)
+          .append(`<td class="text-right">${hold_count}${csn(place.sell_price(item))}</td>`));
     }
   };
 
@@ -103,16 +101,14 @@ $(function() {
       if (report === null)
         continue;
 
-      let name  = `${body} <span class="badge badge-pill float-right">${system.kind(body)}</span>`;
-      let info  = report.data[item];
-      let trend = info.trend > 0 ? `+${info.trend}` : (info.trend || '');
+      let name = `${body} <span class="badge badge-pill float-right">${system.kind(body)}</span>`;
+      let info = report.data[item];
 
       let row = $('<tr>');
       row.append(`<td class="text-capitalize">${system.name(body)}</td>`);
       row.append(`<td class="text-right">${csn(info.buy)}</td>`);
       row.append(`<td class="text-right">${csn(info.sell)}</td>`);
       row.append(`<td class="text-right">${info.stock || ''}</td>`);
-      row.append(`<td class="text-right">${trend}</td>`);
       row.append(`<td class="text-right">${report.age}</td>`);
 
       if (body === game.locus) {
@@ -131,7 +127,7 @@ $(function() {
 
 </script>
 
-<div class="card p-3">
+<div class="card">
   <h3 class="card-header">Commerce</h3>
   <div class="card-body">
     <div class="card-text">
@@ -140,14 +136,12 @@ $(function() {
         resource exchange, you are approached by several warehouse managers
         and sales people eager to do business with you.
       </p>
-      <table class="table table-sm" id="exchange-table">
+      <table class="table" id="exchange-table">
         <thead>
           <tr>
             <th>Resource</th>
             <th class="text-right">Buy</th>
-            <th class="text-right">Stock</th>
             <th class="text-right">Sell</th>
-            <th class="text-right">Hold</th>
           </tr>
         </thead>
         <tbody>
@@ -158,34 +152,34 @@ $(function() {
 </div>
 
 <div class="modal" id="exchange-dialog">
-  <div class="modal-dialog modal-lg" role="document">
+  <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Exchange of <span id="exchange-resource"></span></h5>
+        <button type="button" class="btn btn-secondary float-right" data-toggle="modal" data-target="#market-dialog">Report</button>
       </div>
       <div class="modal-body">
         <table class="table">
           <tbody>
-            <tr><th scope="row">Price</th><td><input class="form-control" disabled type="number" id="exchange-price"></td></tr>
-            <tr><th scope="row">Sales tax <span id="exchange-tax-rate" class="badge badge-pill"></span></th><td><input class="form-control" disabled type="number" id="exchange-tax"></td></tr>
-            <tr><th scope="row">Market</th><td><input class="form-control" disabled type="number" id="exchange-docks"></td></tr>
-            <tr><th scope="row">Hold</th><td><input class="form-control" disabled type="number" id="exchange-hold"></td></tr>
-            <tr><th scope="row">Credits</th><td><input class="form-control" disabled type="number" id="exchange-credits"></td></tr>
+            <tr><th scope="row">Price</th><td><input class="form-control" readonly type="number" id="exchange-price"></td></tr>
+            <tr><th scope="row">Sales tax <span id="exchange-tax-rate" class="badge badge-pill"></span></th><td><input class="form-control" readonly type="number" id="exchange-tax"></td></tr>
+            <tr><th scope="row">Market</th><td><input class="form-control" readonly type="number" id="exchange-docks"></td></tr>
+            <tr><th scope="row">Hold</th><td><input class="form-control" readonly type="number" id="exchange-hold"></td></tr>
+            <tr><th scope="row">Credits</th><td><input class="form-control" readonly type="number" id="exchange-credits"></td></tr>
           </tbody>
         </table>
         <div id="exchange-form"></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-sm btn-dark" id="exchange-complete">Complete transaction</button>
-        <button type="button" class="btn btn-sm btn-secondary" data-toggle="modal" data-target="#market-dialog">Market data</button>
-        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-dark" id="exchange-complete">Complete Transaction</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
       </div>
     </div>
   </div>
 </div>
 
 <div class="modal" id="market-dialog">
-  <div class="modal-dialog modal-lg" role="document">
+  <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">System market report for <span id="market-data-resource"></span></h5>
@@ -198,7 +192,6 @@ $(function() {
               <th class="text-right">Buy</th>
               <th class="text-right">Sell</th>
               <th class="text-right">Stock</th>
-              <th class="text-right">Trend</th>
               <th class="text-right" title="Light speed time delay of market data in hours">Age</th>
             </tr>
           </thead>
@@ -207,7 +200,7 @@ $(function() {
         </table>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-sm btn-dark" data-dismiss="modal">Ok</button>
+        <button type="button" class="btn btn-dark" data-dismiss="modal">Ok</button>
       </div>
     </div>
   </div>
