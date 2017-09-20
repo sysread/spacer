@@ -4,45 +4,31 @@ $(function() {
   let p = game.player;
   let s = p.ship;
 
-  $('#captain').empty()
-    .append(row('Money',     csn(p.money)))
-    .append(row('Home',      data.bodies[p.home].name))
-    .append(row('Faction',   p.faction))
-    .append(row('Endurance', `${p.max_acceleration().toFixed(2)} G`));
+  let cap = new Card;
+  cap.set_header('Captain');
+  cap.add_header_button('New game').on('click', ()=>{open('newgame')});
+  cap.add_def('Money',     csn(p.money) + 'c');
+  cap.add_def('Home',      data.bodies[p.home].name);
+  cap.add_def('Faction',  data.factions[p.faction].full_name);
+  cap.add_def('Endurance', p.max_acceleration().toFixed(2) + 'G');
 
-  $('#ship').empty()
-    .append(row('Class',      `<span class="text-capitalize">${s.opt.shipclass}</span>`))
-    .append(row('Cargo',      `${s.cargo_used}/${s.cargo_space}`))
-    .append(row('Hull',       `${s.shipclass.hull}`))
-    .append(row('Armor',      `${s.shipclass.armor}`))
-    .append(row('Hardpoints', `${s.shipclass.hardpoints}`))
-    .append(row('Mass',       `${csn(Math.floor(s.current_mass()))} tonnes`))
-    .append(row('Thrust',     `${csn(s.thrust)} kN`))
-    .append(row('Fuel',       `${Math.round(s.fuel * 100) / 100}/${s.tank}`))
-    .append(row('Max burn',   `${csn(s.max_burn_time() * data.hours_per_turn)} hours at maximum thrust`))
-    .append(row('Drives',     `${s.shipclass.drives}`))
-    .append(row('Drive type', `<span class="text-capitalize">${s.shipclass.drive}</span>`));
+  let ship = new Card;
+  ship.set_header('Ship');
+  ship.add_def('Class',      `<span class="text-capitalize">${s.opt.shipclass}</span>`);
+  ship.add_def('Cargo',      `${s.cargo_used}/${s.cargo_space}`);
+  ship.add_def('Hull',       s.shipclass.hull);
+  ship.add_def('Armor',      s.shipclass.armor);
+  ship.add_def('Hardpoints', s.shipclass.hardpoints);
+  ship.add_def('Mass',       csn(Math.floor(s.current_mass())) + 'tonnes');
+  ship.add_def('Thrust',     csn(s.thrust) + 'kN');
+  ship.add_def('Fuel',       `${Math.round(s.fuel * 100) / 100}/${s.tank}`);
+  ship.add_def('Max burn',   `${csn(s.max_burn_time() * data.hours_per_turn)} hours at maximum thrust`);
+  ship.add_def('Drives',     s.shipclass.drives);
+  ship.add_def('Drive type', `<span class="text-capitalize">${s.shipclass.drive}</span>`);;
 
-  $('#newgame').on('click', () => {open('newgame')});
+  $('#status').append(cap.card).append(ship.card);
 });
 
 </script>
 
-<div class="card mb-3">
-  <h3 class="card-header">
-    Captain
-    <span class="float-right">
-      <button type="button" class="btn btn-dark" id="newgame">New game</button>
-    </span>
-  </h3>
-  <div class="card-body">
-    <div class="card-text p-1" id="captain"></div>
-  </div>
-</div>
-
-<div class="card">
-  <h3 class="card-header">Ship</h3>
-  <div class="card-body">
-    <div class="card-text p-1" id="ship"></div>
-  </div>
-</div>
+<div id="status"></div>

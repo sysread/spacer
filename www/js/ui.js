@@ -174,21 +174,21 @@ class Row {
     return col;
   }
 
-  term(body) {
-    return this.col(body, 4).addClass('font-weight-bold');
+  term(body, size=3) {
+    return this.col(body, size).addClass('font-weight-bold');
   }
 
-  def(body) {
-    return this.col(body).addClass('text-muted');
+  def(body, size) {
+    return this.col(body, size).addClass('text-muted');
   }
 }
 
-class Deck {
+class Container {
   constructor() {
     this.base = $('<div class="container">');
   }
 
-  get deck() {return this.base}
+  get container() {return this.base}
 
   add(thing) {
     this.base.append(thing);

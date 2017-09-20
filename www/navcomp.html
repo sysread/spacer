@@ -1,7 +1,6 @@
 <script type="text/javascript">
 
 $(() => {
-  let table   = $('#navcomp-table tbody').empty();
   let ship    = game.player.ship;
   let navcomp = new NavComp(game.player.max_acceleration(), ship, game.place().name);
 
@@ -13,9 +12,11 @@ $(() => {
   $('#nav-ship-fuel'   ).text(Math.round(game.player.ship.fuel * 100) / 100);
   $('#nav-ship-burn'   ).text(game.player.ship.max_burn_time() * data.hours_per_turn);
 
+  let nav = $('<div>');
+
   for (let body of system.bodies()) {
     if (body != game.place().name) {
-      let name = system.name(body);
+      let name = system.short_name(body);
       let kind = system.kind(body);
       let best = navcomp.fastest(body);
 
@@ -24,12 +25,12 @@ $(() => {
       if (best !== undefined) {
         let plan = best.transit;
         burn  = best.burn;
-        time  = plan.hours;
         turns = plan.turns;
         acc   = plan.accel.toFixed(2);
         dist  = plan.au.toFixed(2) || '< 0.01';
+        time  = csn(plan.hours);
 
-        btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-sm btn-dark btn-block">`);
+        btn = $(`<button data-toggle="modal" data-target="#nav-dialog" type="button" class="btn btn-dark btn-block">`);
         btn.append(`<span class="float-left">${name}</span>`);
 
         if (kind !== 'Planet')
@@ -49,13 +50,16 @@ $(() => {
         btn.append(`<span class="badge badge-pill float-right">${system.kind(body)}</span>`);
       }
 
-      table
-        .append($('<tr>')
-          .append($('<td>').append(btn))
-          .append(`<td class="text-right">${csn(dist)}`)
-          .append(`<td class="text-right">${csn(time)}</td>`));
+      let row = $('<div class="row py-2">');
+      row.append( $('<div class="col-12 col-sm-4">').append(btn) );
+      row.append(`<div class="col-sm mute">${dist} AU</div>`);
+      row.append(`<div class="col-sm mute">${time} hours</div>`);
+
+      nav.append(row);
     }
   }
+
+  $('#navcomp').append(nav);
 
   $('#nav-dialog').on('show.bs.modal', function(e) {
     let best    = $(e.relatedTarget).data('selected');
@@ -148,7 +152,7 @@ $(() => {
         game.turn(count);
         $('#nav-transit-progress').finish();
       }
-    }, 10);
+    }, 30);
   }
 
   $('#nav-transit').on('shown.bs.modal', () => {
@@ -185,20 +189,7 @@ $(() => {
         ship has a maximum burn time of <span id="nav-ship-burn"></span> hours
         at maximum thrust.
       </p>
-      <p>
-      </p>
-
-      <table class="table table-sm" id="navcomp-table">
-        <thead>
-          <tr>
-            <th>Destination</th>
-            <th class="text-right">AU</th>
-            <th class="text-right">Hr</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
+      <div id="navcomp"></div>
     </div>
   </div>
 </div>

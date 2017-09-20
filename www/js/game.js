@@ -14,7 +14,9 @@ class Game {
       if (saved) {
         this.load(JSON.parse(saved));
         this.refresh();
-        open('summary');
+        //open('summary');
+        //open('fabricators');
+        open('commerce');
       }
       else {
         open('newgame');
@@ -105,6 +107,8 @@ class Game {
 
     for (let name of bodies) {
       let place = new Place(name);
+      for (let item of (Object.keys(data.resources)))
+        place.store.inc(item, Math.ceil(place.scale * 10));
 
       this.places[name]  = place;
       this.markets[name] = [];

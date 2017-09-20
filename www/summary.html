@@ -5,28 +5,17 @@ $(function() {
   let traits = uniq(place.traits, ', ');
   let conds  = uniq(place.conditions, ', ');
 
-  $('#place-name').text(place.name);
-  $('#environ').text(system.kind(place.name));
-  $('#faction').text(data.factions[place.faction].full_name);
-  $('#scale').text(place.size);
-  $('#traits').text(traits || 'None');
-  $('#conditions').text(conds || 'None');
+  let card = new Card;
+  card.set_header(place.name).addClass('text-capitalize');
+  card.add_def('Environment', system.kind(place.name));
+  card.add_def('Faction',     data.factions[place.faction].full_name);
+  card.add_def('Economy',     place.size).addClass('text-capitalize');
+  card.add_def('Details',     traits || 'None').addClass('text-capitalize');
+  card.add_def('Special',     conds  || 'None').addClass('text-capitalize');
+
+  $('#summary').append(card.card);
 });
 
 </script>
 
-<div class="card">
-  <h3 class="card-header text-capitalize" id="place-name"></h3>
-  <div class="card-body">
-    <div class="card-text">
-      <div class="container-fluid">
-        <div class="row py-2"><div class="col-sm b">Environ</div><div class="col-sm text-capitalize mute" id="environ"></div></div>
-        <div class="row py-2"><div class="col-sm b">Faction</div><div class="col-sm text-capitalize mute" id="faction"></div></div>
-        <div class="row py-2"><div class="col-sm b">Economy</div><div class="col-sm text-capitalize mute" id="scale"></div></div>
-        <div class="row py-2"><div class="col-sm b">Details</div><div class="col-sm text-capitalize mute" id="traits"></div></div>
-        <div class="row py-2"><div class="col-sm b">Special</div><div class="col-sm text-capitalize mute" id="conditions"></div></div>
-      </div>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="summary"></div>

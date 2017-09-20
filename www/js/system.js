@@ -23,11 +23,15 @@ class System {
     return this.system.bodies[name];
   }
 
+  short_name(name) {
+    if (name === 'moon') return 'Luna';
+    return this.body(name).name;
+  }
+
   name(name) {
     if (data.bodies.hasOwnProperty(name))
       return data.bodies[name].name;
     return this.body(name).name;
-    return n;
   }
 
   type(name) {

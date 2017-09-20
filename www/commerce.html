@@ -1,7 +1,7 @@
 <script type="text/javascript">
 
 $(function() {
-  let table = $('#exchange-table tbody');
+  let table = $('#exchange-table');
   let place = game.place();
   let slider;
 
@@ -9,24 +9,32 @@ $(function() {
     table.empty();
 
     for (let item of Object.keys(data.resources)) {
-      let cargo = game.player.ship.cargo.get(item);
-      let avail = place.current_supply(item);
-      let price = place.price(item);
-      let btn   = $(`<button type="button" class="btn btn-block btn-dark text-capitalize" data-toggle="modal" data-target="#exchange-dialog">${item}</button>`);
+      let hold = game.player.ship.cargo.get(item);
+      let dock = place.current_supply(item);
+      let btn  = $(`<button type="button" class="btn btn-block btn-dark text-capitalize">${item}</button>`);
 
-      btn.data('resource', item);
+      if (dock === 0 && hold === 0) {
+        btn.addClass('disabled');
+        btn.prop('disabled', true);
+      }
+      else {
+        btn.attr({'data-toggle': 'modal', 'data-target': '#exchange-dialog'});
+        btn.data('resource', item);
+      }
 
-      if (cargo === 0 || avail === 0)
-        btn.addClass('btn-secondary');
-
-      let dock_count = avail ? `<span class="badge badge-pill">${csn(avail)}</span>&nbsp;&nbsp;` : '';
-      let hold_count = cargo ? `<span class="badge badge-pill">${csn(cargo)}</span>&nbsp;&nbsp;` : '';
-
-      table
-        .append($('<tr>')
-          .append($('<td>').append(btn))
-          .append(`<td class="text-right">${dock_count}${csn(place.buy_price(item))}</td>`)
-          .append(`<td class="text-right">${hold_count}${csn(place.sell_price(item))}</td>`));
+      table.append(
+        $('<div class="row">')
+          .append( $('<div class="col col-md-4 py-2">').append(btn) )
+          .append(
+            $('<div class="row col-12 col-md-8 py-2">')
+              .append($('<div class="col-3">Buy</div>'))
+              .append($('<div class="col-3 mute">').append(csn(place.buy_price(item))))
+              .append($('<div class="col-3">Sell</div>'))
+              .append($('<div class="col-3 mute">').append(csn(place.sell_price(item))))
+              .append($('<div class="col-3">Dock</div>'))
+              .append($('<div class="col-3 mute">').append(csn(dock)))
+              .append($('<div class="col-3">Ship</div>'))
+              .append($('<div class="col-3 mute">').append(csn(hold)))));
     }
   };
 
@@ -136,17 +144,7 @@ $(function() {
         resource exchange, you are approached by several warehouse managers
         and sales people eager to do business with you.
       </p>
-      <table class="table" id="exchange-table">
-        <thead>
-          <tr>
-            <th>Resource</th>
-            <th class="text-right">Buy</th>
-            <th class="text-right">Sell</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
+      <div id="exchange-table" class="container container-fluid"></div>
     </div>
   </div>
 </div>
