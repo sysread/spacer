@@ -6,72 +6,105 @@ $(function() {
   let table   = $('#recipe-table tbody');
 
   let update_recipes = function() {
-    $('#craft-availability').text(game.place().fabrication_availability());
+    let deck = new Deck;
 
-    table.empty();
+    let info = new Card;
+    info.set_header('Fabricators');
+    info.add_text('A triumph of cybernetics, the fabricators are able to manufacture nearly anything, given the necessary materials and plans... and a small fee, of course.');
+    info.add_text(`${game.place().fabrication_availability()}% of fabricator capacity is available at this time.`);
+    deck.add(info.card);
 
     for (let item of Object.keys(data.resources)) {
       let recipe = data.resources[item].recipe;
-      let value  = game.place().price(item);
 
       if (recipe) {
-        let btn  = $(`<button type="button" class="btn btn-block btn-sm text-capitalize">${item}</button>`);
-        let fee  = Math.max(1, Math.round(fee_pct * value));
-        let tics = game.place().fabrication_time(item);
+        let val   = game.place().price(item);
+        let fee   = Math.max(1, Math.round(fee_pct * val));
+        let amt   = Math.min(Math.floor(player.money / fee), player.can_craft(item));
+        let turns = game.place().fabrication_time(item);
 
-        let mats = $('<div>');
-        for (let material of Object.keys(recipe.materials))
-          mats.append(`<div class="text-capitalize">${material}: ${recipe.materials[material]}</div>`);
+        let card = new Card;
+        card.set_header(item).addClass('text-capitalize');
+        card.add_text(`You have the resources to fabricate ${amt} of this item.`);
 
-        if (player.can_craft(item) && player.money >= fee) {
-          btn.addClass('btn-dark').click(function(e) {
-            $('#craft-resource').text(item);
-            $('#craft-message').empty()
-              .append(`<p>Fabrication of one unit of ${item} takes ${tics} turn(s) and costs ${fee} credit(s).</p>`)
-              .append('<p>The following materials from your inventory will be used:</p>')
-              .append($(mats).clone());
-            $('#craft-dialog').modal('show');
+        if (amt > 0) {
+          let btn = card.add_header_button(`${csn(fee)}c`).attr({'data-toggle': 'modal', 'data-target': '#craft-dialog'});
+
+          btn.data({
+            item      : item,
+            fee       : fee,
+            amt       : amt,
+            turns     : turns,
+            materials : recipe.materials
           });
         }
-        else {
-          btn.addClass('btn-secondary').prop('disabled', true);
+
+        card.add_def('Value', csn(val) + 'c');
+        card.add_def('Turns', turns);
+
+        let materials = $('<div>');
+        for (let m of Object.keys(recipe.materials)) {
+          let row = new Row;
+          row.term(m).addClass('text-capitalize');
+          row.def(recipe.materials[m]);
+          materials.append(row.row);
         }
 
-        table.append($('<tr>')
-          .append($('<td>').append(btn))
-          .append($(`<td class="text-right">${csn(value)}</td>`))
-          .append($(`<td class="text-right">${tics}</td>`))
-          .append($(`<td class="text-right">${csn(fee)}</td>`))
-          .append($(`<td class="text-right">`).append(mats)));
+        card.add_def('Materials', materials);
+
+        deck.add(card.card);
       }
     }
-  }
+
+    $('#fabrication').empty().append(deck.deck);
+  };
+
+  $('#craft-dialog').on('show.bs.modal', function(e) {
+    let btn = $(e.relatedTarget);
+
+    $('#craft-slider').empty();
+    $('#craft-resource').text(btn.data('item'));
+    $('#craft-complete').data(btn.data());
+    $('#craft-amount').val(1);
+
+    if (btn.data('amt') > 1) {
+      let slider = new Slider({
+        min      : 1,
+        max      : btn.data('amt'),
+        step     : 1,
+        initial  : 1,
+        callback : (n) => {$('#craft-amount').val(n)}
+      });
+
+      $('#craft-slider').append(slider.group);
+    }
+  });
 
   $('#craft-complete').click(function(e) {
-    let resource = $('#craft-resource').text();
-    let recipe   = data.resources[resource].recipe;
+    let data     = $(this).data();
+    let resource = data.item;
+    let recipe   = data.materials;
+    let amt      = parseInt($('#craft-amount').val(), 10);
 
     if (recipe) {
-      let tics = game.place().fabricate(resource);
-      let value = game.place().price(resource);
-      player.debit(Math.max(1, Math.round(fee_pct * value)));
+      for (let i = 0; i < amt; ++i) {
+        player.debit(data.fee);
 
-      for (let mat of Object.keys(recipe.materials))
-        player.ship.unload_cargo(mat, recipe.materials[mat]);
+        for (let mat of Object.keys(recipe))
+          player.ship.unload_cargo(mat, recipe[mat]);
 
-      game.turn(tics);
-
-      player.ship.load_cargo(resource, 1);
+        game.turn(data.turns);
+        player.ship.load_cargo(resource, 1);
+        game.refresh();
+      }
     }
 
     game.save_game();
-    game.refresh();
-
     update_recipes();
-
     $('#craft-dialog').modal('hide');
 
-    message(`1 unit of ${resource} has been placed in your ship's hold.`, 'info', true);
+    let msg = new Ok(`${amt} unit(s) of ${resource} has been placed in your ship's hold.`);
+    msg.show();
   });
 
   update_recipes();
@@ -79,44 +112,22 @@ $(function() {
 
 </script>
 
-<div class="card p-3">
-  <h3 class="card-header">Fabricators</h3>
-  <div class="card-body">
-    <div class="card-text">
-      <p>
-        A triumph of cybernetics, the fabricators are able to manufacture
-        nearly anything, given the necessary materials and plans... and a small
-        fee, of course.
-      </p>
-      <p>
-        <span id="craft-availability"></span>% of fabricator capacity is
-        available at this time.
-      </p>
-      <table class="table table-sm" id="recipe-table">
-        <thead>
-          <tr>
-            <th>Resource</th>
-            <th class="text-right">Market value</th>
-            <th class="text-right">Turns</th>
-            <th class="text-right">Fee</th>
-            <th class="text-right">Materials</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
+<div id="fabrication"></div>
 
 <div class="modal" id="craft-dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Fabricate <span id="craft-resource"></span></h5>
+        <h5 class="modal-title">Fabricate <span class="text-capitalize" id="craft-resource"></span></h5>
       </div>
       <div class="modal-body">
-        <div id="craft-message"></div>
+        <div class="row p-2">
+          <div class="col"><label for="craft-amount">Units</label></div>
+          <div class="col"><input type="number" class="form-control" id="craft-amount" readonly></div>
+        </div>
+        <div class="row p-2">
+          <div class="col" id="craft-slider"></div>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-dark" id="craft-complete">Push the big red button</button>

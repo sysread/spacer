@@ -28,12 +28,13 @@ class Person {
 
   can_craft(item) {
     let recipe = data.resources[item].recipe.materials;
+    let counts = [];
 
-    for (let mat of Object.keys(recipe))
-      if (recipe[mat] > this.ship.cargo.get(mat))
-        return false;
+    for (let mat of Object.keys(recipe)) {
+      counts.push(Math.floor(this.ship.cargo.get(mat) / recipe[mat]));
+    }
 
-    return true;
+    return counts.reduce((a,b) => {return Math.min(a, b)});
   }
 
   max_acceleration() {

@@ -1,0 +1,110 @@
+<script type="text/javascript">
+
+$(function() {
+  let hours = new Slider({
+    min        : 0,
+    max        : 96,
+    step       : data.hours_per_turn,
+    initial    : data.hours_per_turn,
+    minmaxbtns : true,
+    callback   : (n) => {$('#work-hours').val(n)}
+  });
+
+  $('#work-hours-chooser').empty().append(hours.group);
+  $('#work-dialog').on('show.bs.modal', () => {hours.reset()});
+
+  let chooser;
+
+  $('#collect-dialog').on('show.bs.modal', () => {
+    let hrs     = hours.val;
+    let turns   = hrs / 4;
+    let harvest = game.place().harvest(turns);
+    let pay     = 20 * turns;
+
+    game.turn(turns);
+    game.player.credit(pay);
+    game.refresh();
+    game.save_game();
+
+    if (harvest.sum() === 0) {
+      $('#collect-explain').text(`We appreciate you helping out. No luck on beating the quota, but you did earn an honest paycheck to the tune of ${pay}c.`);
+      $('#collect-results').empty();
+      $('#collect-complete').addClass('disabled');
+    }
+    else {
+      chooser = new ResourceExchange({
+        store      : harvest,
+        cargo      : game.player.ship.cargo,
+        max_cargo  : game.player.ship.shipclass.cargo,
+        minmaxbtns : true
+      });
+
+      $('#collect-explain').text(`In addition to ${pay}c in wages, your crew collected extra resources over the quota which you are entitled to keep:`);
+      $('#collect-results').empty().append(chooser.table);
+      $('#collect-complete').removeClass('disabled');
+    }
+  });
+
+  $('#collect-complete').on('click', () => {
+    game.player.ship.cargo = chooser.cargo;
+    game.refresh();
+    game.save_game();
+  });
+});
+
+</script>
+
+<div class="card">
+  <h3 class="card-header">Work crews</h3>
+  <div class="card-body">
+    <div class="card-text pb-3">
+      <p>
+        Sometimes you may find yourself stuck somewhere for a while or you just
+        need to make a few extra bucks to put you ahead. In those situations,
+        you can find work on one of the numerous work crews hiring short term
+        laborers to help mine water ice, minerals, ore, or even to hep with the
+        work. The pay isn't great, but if you work hard and end up over
+        quota, you are often allowed to keep your take.
+      </p>
+      <button type="button" class="btn btn-dark btn-block card-link" data-toggle="modal" data-target="#work-dialog">
+        Get a job
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="work-dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Find work</h5></div>
+      <div class="modal-body">
+        <p>The pay is 20c/hr. You get to keep anything you collect over the quota. How long are you available for?</p>
+        <div class="row p-2">
+          <div class="col-3"><label for="work-hours">Hours</label></div>
+          <div class="col"><input type="number" class="form-control" id="work-hours" readonly></div>
+        </div>
+        <div id="work-hours-chooser"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-dark" id="work-complete" data-dismiss="modal" data-toggle="modal" data-target="#collect-dialog">Get to work</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="collect-dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Earnings</h5></div>
+      <div class="modal-body">
+        <p id="collect-explain"></p>
+        <div id="collect-results"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="collect-complete" class="btn btn-dark" data-dismiss="modal">Load</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Leave</button>
+      </div>
+    </div>
+  </div>
+</div>

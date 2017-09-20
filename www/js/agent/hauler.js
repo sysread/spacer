@@ -266,14 +266,14 @@ class Hauler extends Actor {
 
     if (best) {
       if (best.units) {
-console.log(`<${this.home}> ${this.place} --> ${best.target} : ${best.resource}`);
+//console.log(`<${this.home}> ${this.place} --> ${best.target} : ${best.resource}`);
         this.enqueue('buy', [this.place, best.resource, best.units]);
         for (let i = 0; i < best.turns; ++i) this.enqueue('burn', [best.accel]);
         this.enqueue('arrive', [best.target]);
         this.enqueue('sell', [best.target, best.resource, best.units]);
       }
       else {
-console.log(`<${this.home}> ${this.place} --> ${best.target}`);
+//console.log(`<${this.home}> ${this.place} --> ${best.target}`);
         for (let i = 0; i < best.turns; ++i) this.enqueue('burn', [best.accel]);
         this.enqueue('arrive', [best.target]);
       }
