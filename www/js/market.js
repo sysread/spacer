@@ -81,8 +81,10 @@ class Market {
   }
 
   is_under_supplied(resource) {
-    return this.local_need(resource) > 1
-      && this.current_supply(resource) < 10;
+    return this.current_supply(resource) < 5
+        && (this.demand(resource) / Math.max(1, this.current_supply(resource))) > 1;
+    //return this.local_need(resource) > 1
+    //  && this.current_supply(resource) < 5;
   }
 
   is_over_supplied(resource) {

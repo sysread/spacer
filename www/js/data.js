@@ -18,7 +18,6 @@ const data = {
   craft_fee       : 0.05,
   fabricators     : 100,
   fab_health      : 50,
-  //haulers         : 2, // per body
 
   scales: {
     tiny   : 0.66,
@@ -43,7 +42,6 @@ const data = {
   },
 
   market: {
-    agents      : 6,
     minability  : 0.25,
     fabricators : 2,
     produces    : {},

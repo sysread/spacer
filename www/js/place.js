@@ -226,7 +226,7 @@ class Place extends Market {
      * Process deliveries
      */
     if (this.deliveries.length < 2) {
-      // Sort by distance
+      // Sort by faction and then distance
       let bodies = Object.keys(data.bodies).sort((a, b) => {
         let a_faction = data.bodies[a].faction === this.faction;
         let b_faction = data.bodies[b].faction === this.faction;
@@ -242,10 +242,15 @@ class Place extends Market {
         }
       });
 
+      // Shopping ordered by need
+      let needed = Object.keys(data.resources)
+        .filter((r) => {return this.is_under_supplied(r)})
+        .sort((a, b) => {return this.local_need(a) > this.local_need(b)});
+
       // Order supplies
-      ITEM:for (let item of Object.keys(data.resources)) {
-        // We need it
-        if (!this.is_under_supplied(item)) continue ITEM;
+      ITEM:for (let item of needed) {
+        if (this.deliveries.length >= 2)
+          break;
 
         // Filter out bodies which are poorly supplied in what we need
         let possibilities = bodies.filter((b) => {
@@ -253,13 +258,18 @@ class Place extends Market {
               && game.place(b).is_over_supplied(item);
         });
 
+        if (possibilities.length === 0)
+          continue ITEM;
+
         BODY:for (let body of possibilities) {
           let place = game.place(body);
 
-          if (!place.is_over_supplied(item)) continue BODY;
+          if (!place.is_over_supplied(item))
+            continue BODY;
 
           let amt = Math.floor(place.current_supply(item) / 2);
-          if (amt === 0) continue BODY;
+          if (amt === 0)
+            continue BODY;
 
           let dist  = Physics.AU(system.distance(this.name, body));
           let turns = Math.ceil((24 / data.hours_per_turn) * 5 * dist);
@@ -279,6 +289,7 @@ class Place extends Market {
           };
 
           this.deliveries.push(delivery);
+          break ITEM;
         }
       }
     }
