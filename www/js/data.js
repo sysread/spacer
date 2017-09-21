@@ -4,10 +4,6 @@
  */
 
 const data = {
-  C  : 299792458,    // m/s
-  G  : 9.80665,      // m/s/s
-  AU : 149597870700, // m
-
   start_date      : new Date(2242, 0, 1, 1),
   hours_per_turn  : 8,
   initial_turns   : 500,
