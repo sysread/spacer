@@ -55,7 +55,6 @@ class Hauler extends Actor {
 
   refuel() {
     let place = game.place(this.place);
-    let price = place.buy_price('fuel');
     let want  = this.ship.refuel_units();
     let avail = place.current_supply('fuel');
     let get   = Math.min(avail, want);

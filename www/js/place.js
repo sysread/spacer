@@ -232,15 +232,21 @@ class Place extends Market {
         if (!this.is_under_supplied(item)) continue ITEM;
 
         BODY:for (let body of Object.keys(data.bodies)) {
-          if (!game.place(body).is_over_supplied(item)) continue BODY;
+          let place = game.place(body);
 
-          let amt = Math.floor(game.place(body).current_supply(item) / 2);
+          if (!place.is_over_supplied(item)) continue BODY;
+
+          let amt = Math.floor(place.current_supply(item) / 2);
           if (amt === 0) continue BODY;
 
-          let dist  = system.distance(this.name, body);
-          let turns = Math.ceil((24 / data.hours_per_turn) * 5 * Physics.AU(dist));
+          let dist  = Physics.AU(system.distance(this.name, body));
+          let turns = Math.ceil((24 / data.hours_per_turn) * 5 * dist);
+          place.store.dec(item, amt);
 
-          game.place(body).store.dec(item, amt);
+          let want = Math.ceil(dist / 2);
+          let get  = Math.min(want, place.current_supply('fuel'));
+          place.store.dec('fuel', get);
+          if (want < get) place.store.inc_demand(want - get);
 
           this.deliveries.push({
             turns  : turns,
