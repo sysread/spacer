@@ -57,11 +57,11 @@ $(function() {
           mats.append( $('<div class="col-sm-4">').append(`(${recipe.materials[m]}) ${m}`) );
         }
 
-        container.add(card.card);
+        container.add(card.root);
       }
     }
 
-    $('#fabrication').empty().append(container.container);
+    $('#fabrication').empty().append(container.root);
   };
 
   $('#craft-dialog').on('show.bs.modal', function(e) {

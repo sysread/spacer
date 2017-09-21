@@ -18,6 +18,7 @@ const data = {
   craft_fee       : 0.05,
   fabricators     : 100,
   fab_health      : 50,
+  base_pay        : 20,
 
   scales: {
     tiny   : 0.66,

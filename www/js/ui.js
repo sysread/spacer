@@ -1,6 +1,14 @@
-class Slider {
+class UI {
   constructor(opt) {
     this.opt = opt || {};
+  }
+
+  get root() {return $('<div>')};
+}
+
+class Slider extends UI {
+  constructor(opt) {
+    super(opt);
 
     this.slider = $('<input type="range" class="form-control form-control-sm">');
     this.slider.attr('min',  this.min);
@@ -47,6 +55,7 @@ class Slider {
     this.monitor = null;
   }
 
+  get root()       { return this.group }
   get min()        { return this.opt.min  || 0 }
   get max()        { return this.opt.max  || 0 }
   get step()       { return this.opt.step || 1 }
@@ -83,9 +92,10 @@ class Slider {
   }
 }
 
-class ResourceExchange {
+class ResourceExchange extends UI {
   constructor(opt) {
-    this.opt = opt || {};
+    super(opt);
+
     this.resources = new ResourceCounter;
     this.store     = opt.store;
     this.cargo     = opt.cargo;
@@ -147,19 +157,22 @@ class ResourceExchange {
     });
   }
 
+  get root()      { return this.table }
   get max_cargo() { return this.opt.max_cargo }
   get max_store() { return this.opt.max_store }
   get approve()   { return this.opt.approve   }
   get callback()  { return this.opt.callback  }
 }
 
-class Row {
-  constructor(breaks) {
+class Row extends UI {
+  constructor(breaks, opt) {
+    super(opt);
     this.base = $('<div class="row py-2">');
     this.breaks = breaks;
   }
 
-  get row() {return this.base}
+  get root() {return this.base}
+  get row()  {return this.base}
 
   colwidth(size) {
     let parts = ['col'];
@@ -183,11 +196,13 @@ class Row {
   }
 }
 
-class Container {
-  constructor() {
+class Container extends UI {
+  constructor(opt) {
+    super(opt);
     this.base = $('<div class="container">');
   }
 
+  get root()      {return this.base}
   get container() {return this.base}
 
   add(thing) {
@@ -196,13 +211,15 @@ class Container {
   }
 }
 
-class Card {
-  constructor() {
+class Card extends UI {
+  constructor(opt) {
+    super(opt);
     this.base = $('<div class="card mb-3">');
     this.body = $('<div class="card-body bg-black">');
     this.base.append(this.body);
   }
 
+  get root() {return this.base}
   get card() {return this.base}
 
   data(opt) {this.base.data(opt)}
@@ -276,8 +293,9 @@ class Card {
   }
 }
 
-class Modal {
-  constructor(cancellable=true) {
+class Modal extends UI {
+  constructor(opt) {
+    super(opt);
     this.base    = $('<div class="modal">');
     this.dialog  = $('<div class="modal-dialog" role="document">');
     this.content = $('<div class="modal-content">');
@@ -287,10 +305,12 @@ class Modal {
     this.dialog.append(this.content);
     this.content.append(this.body);
 
-    if (!cancellable) this.base.attr('data-backdrop', 'static');
+    if (!this.cancellable) this.base.attr('data-backdrop', 'static');
   }
 
-  get modal() {return this.base}
+  get root()        {return this.base}
+  get modal()       {return this.base}
+  get cancellable() {return this.opt.cancellable}
 
   show() {this.base.modal('show')}
   hide() {this.base.modal('hide')}
@@ -339,8 +359,8 @@ class Modal {
 }
 
 class Ok extends Modal {
-  constructor(msg) {
-    super();
+  constructor(msg, opt) {
+    super(opt);
     this.add_text(msg);
     this.add_footer_button('Ok').attr('data-dismiss', 'modal');
   }

@@ -1,6 +1,8 @@
 <script type="text/javascript">
 
 $(function() {
+  let payRate = game.place().payRate;
+
   let hours = new Slider({
     min        : 0,
     max        : 96,
@@ -10,19 +12,19 @@ $(function() {
     callback   : (n) => {$('#work-hours').val(n)}
   });
 
-  $('#work-hours-chooser').empty().append(hours.group);
+  $('#work-hours-chooser').empty().append(hours.root);
   $('#work-dialog').on('show.bs.modal', () => {hours.reset()});
+  $('#pay-rate').text(payRate);
 
   let chooser;
 
-  $('#collect-dialog').on('show.bs.modal', () => {
+  $('#collect-dialog').on('shown.bs.modal', () => {
     let hrs     = hours.val;
     let turns   = hrs / 4;
     let harvest = game.place().harvest(turns);
-    let pay     = 20 * turns;
 
     game.turn(turns);
-    game.player.credit(pay);
+    game.player.credit(payRate);
     game.refresh();
     game.save_game();
 
@@ -40,7 +42,7 @@ $(function() {
       });
 
       $('#collect-explain').text(`In addition to ${pay}c in wages, your crew collected extra resources over the quota which you are entitled to keep:`);
-      $('#collect-results').empty().append(chooser.table);
+      $('#collect-results').empty().append(chooser.root);
       $('#collect-complete').removeClass('disabled');
     }
   });
@@ -78,7 +80,7 @@ $(function() {
     <div class="modal-content">
       <div class="modal-header"><h5 class="modal-title">Find work</h5></div>
       <div class="modal-body">
-        <p>The pay is 20c/hr. You get to keep anything you collect over the quota. How long are you available for?</p>
+        <p>The pay is <span id="pay-rate"></span>c/hr. You get to keep anything you collect over the quota. How long are you available for?</p>
         <div class="row p-2">
           <div class="col-3"><label for="work-hours">Hours</label></div>
           <div class="col"><input type="number" class="form-control" id="work-hours" readonly></div>

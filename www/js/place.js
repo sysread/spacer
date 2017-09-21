@@ -97,6 +97,10 @@ class Place extends Market {
     return this.merge_scale(data.market.consumes, traits, conds);
   }
 
+  get payRate() {
+    return Math.round(data.base_pay * this.scale);
+  }
+
   mine(resource) {
     let count = this.resources.get(resource);
 
