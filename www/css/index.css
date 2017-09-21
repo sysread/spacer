@@ -135,6 +135,6 @@ button.btn-secondary:disabled {
   font-weight: bold !important;
 }
 
-.mute {
-  color: #868e96 !important;
+.mute, .text-muted {
+  color: #bba !important;
 }
