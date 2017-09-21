@@ -28,11 +28,12 @@ const data = {
     water        : {mass: 10, mine: {tics: 2}},
     ore          : {mass: 60, mine: {tics: 3}},
     minerals     : {mass: 50, mine: {tics: 4}},
-    food         : {mass: 30, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 1, ore: 1, minerals: 1}}},
+    hydrocarbons : {mass: 8,  mine: {tics: 4}},
+    food         : {mass: 30, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 1, hydrocarbons: 2}}},
     fuel         : {mass: 2,  recipe: {tics: 2, materials: {water: 1, minerals: 1}}},
     metal        : {mass: 90, recipe: {tics: 2, materials: {ore: 4}}},
     ceramics     : {mass: 30, recipe: {tics: 3, materials: {minerals: 1, water: 1}}},
-    medicine     : {mass: 10, recipe: {tics: 4, materials: {food: 1, minerals: 1}}},
+    medicine     : {mass: 10, recipe: {tics: 4, materials: {food: 1, hydrocarbons: 1}}},
     machines     : {mass: 75, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}},
     electronics  : {mass: 20, recipe: {tics: 5, materials: {ceramics: 2, minerals: 1}}},
     cybernetics  : {mass: 80, recipe: {tics: 6, materials: {metal: 1, ceramics: 1, machines: 1, electronics: 1}}}
@@ -47,21 +48,22 @@ const data = {
   },
 
   traits: {
-    'mineral rich' : {produces: {ore:    0.5, minerals:  0.25}, consumes: {}},
-    'mineral poor' : {produces: {ore:   -0.5, minerals: -0.25}, consumes: {}},
-    'water rich'   : {produces: {water:  0.5}, consumes: {}},
-    'water poor'   : {produces: {water: -0.5}, consumes: {}},
+    'mineral rich'     : {produces: {ore:    0.5, minerals:  0.25}, consumes: {}},
+    'mineral poor'     : {produces: {ore:   -0.5, minerals: -0.25}, consumes: {}},
+    'water rich'       : {produces: {water:  0.5}, consumes: {}},
+    'water poor'       : {produces: {water: -0.5}, consumes: {}},
+    'hydrocarbon rich' : {produces: {hydrocarbons: 0.5}, consumes: {}},
+    'hydrocarbon poor' : {produces: {hydrocarbons: 0.5}, consumes: {}},
 
-    'asteroids'    : {produces: {ore:   1.0, minerals: 0.75}, consumes: {}},
-    'ringed'       : {produces: {water: 1.5, minerals: 0.25}, consumes: {}},
-    'rocky'        : {produces: {ore:   0.6, minerals: 0.25}, consumes: {}},
-    'icy'          : {produces: {water: 0.6, minerals: 0.25}, consumes: {}},
+    'asteroids'        : {produces: {ore:   1.0, minerals: 0.75}, consumes: {}},
+    'rocky'            : {produces: {ore:   0.6, minerals: 0.35}, consumes: {}},
+    'icy'              : {produces: {water: 0.8, minerals: 0.35}, consumes: {}},
 
-    'agricultural' : {produces: {food: 0.3}, consumes: {machines: 0.2, fuel: 0.025, water: 0.2, ore: 0.1, minerals: 0.1}},
-    'habitable'    : {produces: {food: 0.7}, consumes: {}},
-    'subterranean' : {produces: {}, consumes: {fuel: 0.1, electronics: 0.05, machines: 0.05}},
-    'domed'        : {produces: {food: 0.1}, consumes: {fuel: 0.2, electronics: 0.05, machines: 0.05, water: 0.1, ore: 0.05, minerals: 0.05}},
-    'orbital'      : {produces: {}, consumes: {fuel: 0.3, electronics: 0.1, machines: 0.1}}
+    'agricultural'     : {produces: {food: 0.3, hydrocarbons: 0.1}, consumes: {machines: 0.2, fuel: 0.025, water: 0.2, hydrocarbons: 0.4}},
+    'habitable'        : {produces: {food: 0.7, hydrocarbons: 0.3}, consumes: {}},
+    'domed'            : {produces: {food: 0.1, hydrocarbons: 0.05}, consumes: {fuel: 0.2, electronics: 0.05, machines: 0.05, water: 0.1, hydrocarbons: 0.2}},
+    'subterranean'     : {produces: {}, consumes: {fuel: 0.1, electronics: 0.05, machines: 0.05}},
+    'orbital'          : {produces: {}, consumes: {fuel: 0.3, electronics: 0.1, machines: 0.1}}
   },
 
   conditions: {
@@ -178,28 +180,35 @@ const data = {
     enceladus: {
       name     : 'Enceladus Depot',
       size     : 'small',
-      traits   : ['orbital', 'icy', 'ringed', 'water rich', 'mineral poor'],
+      traits   : ['orbital', 'icy', 'water rich', 'mineral poor', 'hydrocarbon rich'],
       faction  : 'SCS',
       gravity  : 0.35
     },
     rhea: {
       name     : 'Rhea Orbital Lab',
       size     : 'small',
-      traits   : ['orbital', 'icy', 'ringed', 'water rich', 'mineral poor'],
+      traits   : ['orbital', 'icy', 'water rich', 'mineral poor'],
       faction  : 'SCS',
       gravity  : 0.35
+    },
+    titan: {
+      name     : 'Titan',
+      size     : 'normal',
+      traits   : ['domed', 'icy', 'water rich', 'hydrocarbon rich'],
+      faction  : 'TRANSA',
+      gravity  : 0.14
     },
     triton: {
       name     : 'Triton Command',
       size     : 'small',
-      traits   : ['orbital', 'icy', 'ringed', 'mineral poor'],
+      traits   : ['orbital', 'icy', 'water rich', 'mineral poor'],
       faction  : 'TRANSA',
       gravity  : 0.35
     },
     titania: {
       name     : 'Titania Outpost',
       size     : 'small',
-      traits   : ['subterranean', 'icy', 'rocky', 'ringed'],
+      traits   : ['subterranean', 'icy', 'rocky', 'hydrocarbon rich'],
       faction  : 'TRANSA',
       gravity  : 0.39
     },

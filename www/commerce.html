@@ -114,16 +114,13 @@ $(function() {
 
       let row = $('<tr>');
       row.append(`<td class="text-capitalize">${system.name(body)}</td>`);
-      row.append(`<td class="text-right">${csn(info.buy)}</td>`);
-      row.append(`<td class="text-right">${csn(info.sell)}</td>`);
+      row.append( $(`<td class="text-right">${csn(info.buy)}</td>`).addClass(game.place().sell_price(item) > info.buy ? 'text-success' : '') );
+      row.append( $(`<td class="text-right">${csn(info.sell)}</td>`).addClass(price < info.sell ? 'text-success' : '') );
       row.append(`<td class="text-right">${info.stock || ''}</td>`);
       row.append(`<td class="text-right">${report.age}</td>`);
 
       if (body === game.locus) {
         row.addClass('border');
-      }
-      else if (price >= info.sell) {
-        row.addClass('text-muted');
       }
 
       $('#market-dialog tbody').append(row);

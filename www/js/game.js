@@ -6,7 +6,6 @@ class Game {
     this.player  = new Person;
     this.places  = {};
     this.markets = {}; // hourly market reports for light speed market data
-    //this.agents  = [];
     this.cache   = {};
 
     $(() => {
@@ -58,7 +57,6 @@ class Game {
     me.player  = this.player.save();
     me.places  = {};
     me.markets = {};
-    //me.agents  = this.agents.map((agent) => {return agent.save()});
 
     Object.keys(data.bodies).forEach((name) => {
       me.places[name]  = this.places[name].save();
@@ -71,11 +69,6 @@ class Game {
   load(obj) {
     this.turns  = obj.turns;
     this.locus  = obj.locus;
-    /*this.agents = obj.agents.map((agent) => {
-      let a = new Hauler();
-      a.load(agent);
-      return a;
-    });*/
 
     this.date = new Date(data.start_date);
     this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
@@ -100,7 +93,6 @@ class Game {
     this.turns   = 0;
     this.places  = {};
     this.markets = {};
-    //this.agents  = [];
 
     let bodies = system.bodies();
 
@@ -111,37 +103,6 @@ class Game {
 
       this.places[name]  = place;
       this.markets[name] = [];
-
-      /*let haulers = Math.max(1, Math.ceil(place.scale * data.haulers));
-      let ship;
-
-      switch (place.size) {
-        case 'tiny':
-          ship = 'shuttle';
-          break;
-        case 'small':
-          ship = 'trader';
-          break;
-        case 'normal':
-          ship = 'merchantman';
-          break;
-        case 'large':
-          ship = 'freighter';
-          break;
-        case 'huge':
-          ship = 'hauler';
-          break;
-        default:
-          break;
-      }
-
-      if (place.faction == 'TRANSA') {
-        ship = 'neptune';
-      }
-
-      for (let i = 0; i < haulers; ++i) {
-        this.agents.push(new Hauler({place: name, ship: ship}));
-      }*/
     }
   }
 
@@ -173,7 +134,7 @@ class Game {
   }
 
   light_hours(meters) {
-    return Math.ceil(meters / data.C / 60 / 60);
+    return Math.ceil(Physics.C(meters) / 3600);
   }
 
   light_turns(meters) {
@@ -190,11 +151,6 @@ class Game {
         this.place(name).turn();
         this.markets[name].unshift(this.place(name).report());
       });
-
-      /*if (this.turns > data.initial_turns) {
-        for (let agent of this.agents)
-          agent.turn();
-      }*/
 
       this.refresh();
     }
