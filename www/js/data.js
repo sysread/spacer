@@ -31,7 +31,7 @@ const data = {
     water        : {mass: 10, mine: {tics: 2}},
     ore          : {mass: 60, mine: {tics: 3}},
     minerals     : {mass: 50, mine: {tics: 4}},
-    food         : {mass: 30, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 2, ore: 1, minerals: 1}}},
+    food         : {mass: 30, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 1, ore: 1, minerals: 1}}},
     fuel         : {mass: 2,  recipe: {tics: 2, materials: {water: 1, minerals: 1}}},
     metal        : {mass: 90, recipe: {tics: 2, materials: {ore: 4}}},
     ceramics     : {mass: 30, recipe: {tics: 3, materials: {minerals: 1, water: 1}}},
@@ -42,22 +42,23 @@ const data = {
   },
 
   market: {
-    minability  : 0.25,
+    agents      : 2,
     fabricators : 2,
+    minability  : 0.25,
     produces    : {},
-    consumes    : {water: 0.75, food: 0.75}
+    consumes    : {water: 0.5, food: 0.5}
   },
 
   traits: {
-    'mineral rich' : {produces: {ore:    0.3, minerals:  0.1}, consumes: {}},
-    'mineral poor' : {produces: {ore:   -0.3, minerals: -0.1}, consumes: {}},
-    'water rich'   : {produces: {water:  0.3}, consumes: {}},
-    'water poor'   : {produces: {water: -0.3}, consumes: {}},
+    'mineral rich' : {produces: {ore:    0.5, minerals:  0.25}, consumes: {}},
+    'mineral poor' : {produces: {ore:   -0.5, minerals: -0.25}, consumes: {}},
+    'water rich'   : {produces: {water:  0.5}, consumes: {}},
+    'water poor'   : {produces: {water: -0.5}, consumes: {}},
 
     'asteroids'    : {produces: {ore:   1.0, minerals: 0.75}, consumes: {}},
-    'ringed'       : {produces: {water: 1.0, minerals: 0.25}, consumes: {}},
+    'ringed'       : {produces: {water: 1.5, minerals: 0.25}, consumes: {}},
     'rocky'        : {produces: {ore:   0.6, minerals: 0.25}, consumes: {}},
-    'icy'          : {produces: {water: 0.3, minerals: 0.15}, consumes: {}},
+    'icy'          : {produces: {water: 0.6, minerals: 0.25}, consumes: {}},
 
     'agricultural' : {produces: {food: 0.3}, consumes: {machines: 0.2, fuel: 0.025, water: 0.2, ore: 0.1, minerals: 0.1}},
     'habitable'    : {produces: {food: 0.7}, consumes: {}},

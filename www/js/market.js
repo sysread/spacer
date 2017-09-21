@@ -81,20 +81,19 @@ class Market {
   }
 
   is_under_supplied(resource) {
-    return this.current_supply(resource) < 5
-        && (this.demand(resource) / Math.max(1, this.current_supply(resource))) > 1;
-    //return this.local_need(resource) > 1
-    //  && this.current_supply(resource) < 5;
+    if (this.current_supply(resource) < 5) return false;
+    if (this.demand(resource) / Math.max(1, this.current_supply(resource)) > 1) return false;
+    return true;
   }
 
   is_over_supplied(resource) {
     if (this.current_supply(resource) === 0) return false;
 
     const loc = this.local_need(resource);
-    if (loc < 0.75) return true;
+    if (loc < 0.5) return true;
 
     const sys = game.system_need(resource);
-    if (sys < 0.9 && loc < 0.9) return true;
+    if (sys < 0.9 && loc < 0.75) return true;
 
     return false;
   }

@@ -32,9 +32,9 @@ $(function() {
               .append($('<div class="col-3">Sell</div>'))
               .append($('<div class="col-3 mute">').append(csn(place.sell_price(item))))
               .append($('<div class="col-3">Dock</div>'))
-              .append($('<div class="col-3">').append(csn(dock)).addClass(dock > 0 ? 'b' : 'mute'))
+              .append($('<div class="col-3">').append(csn(dock)).addClass(dock > 0 ? 'b text-success' : 'mute'))
               .append($('<div class="col-3">Ship</div>'))
-              .append($('<div class="col-3">').append(csn(hold)).addClass(hold > 0 ? 'b' : 'mute'))))
+              .append($('<div class="col-3">').append(csn(hold)).addClass(hold > 0 ? 'b text-success' : 'mute'))))
     }
   };
 
