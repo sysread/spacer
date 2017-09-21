@@ -138,7 +138,8 @@ $(() => {
         }, 950);
       }
       else {
-        let count = Math.min(plan.left, 5);
+        let count = Math.min(plan.left, 20);
+
         for (let i = 0; i < count; ++i) {
           game.player.ship.burn(plan.accel);
           plan.turn();

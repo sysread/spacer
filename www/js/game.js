@@ -7,6 +7,7 @@ class Game {
     this.places  = {};
     this.markets = {}; // hourly market reports for light speed market data
     this.agents  = [];
+    this.cache   = {};
 
     $(() => {
       let saved = window.localStorage.getItem('game');
@@ -203,6 +204,8 @@ class Game {
         this.markets[name].pop();
     };
 
+    this.cache.system_need = {};
+
     this.save_game();
   }
 
@@ -246,18 +249,25 @@ class Game {
   }
 
   system_need(resource) {
-    let demand  = 1;
-    let supply  = 1;
-    let reports = 1;
+    if (!this.cache.hasOwnProperty('system_need'))
+      this.cache.system_need = {};
 
-    for (let body of Object.keys(this.markets)) {
-      if (this.markets[body].length > 1) {
-        demand += this.markets[body][0][resource].demand;
-        supply += this.markets[body][0][resource].supply;
-        ++reports;
+    if (!this.cache.system_need.hasOwnProperty(resource)) {
+      let demand  = 1;
+      let supply  = 1;
+      let reports = 1;
+
+      for (let body of Object.keys(this.markets)) {
+        if (this.markets[body].length > 1) {
+          demand += this.markets[body][0][resource].demand;
+          supply += this.markets[body][0][resource].supply;
+          ++reports;
+        }
       }
+
+      this.cache.system_need[resource] = demand / supply;
     }
 
-    return demand / supply;
+    return this.cache.system_need[resource];
   }
 }
