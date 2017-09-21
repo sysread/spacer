@@ -86,6 +86,8 @@ class Market {
   }
 
   is_over_supplied(resource) {
+    if (this.current_supply(resource) === 0) return false;
+
     const loc = this.local_need(resource);
     if (loc < 0.75) return true;
 
