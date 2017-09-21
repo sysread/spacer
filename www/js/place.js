@@ -226,12 +226,34 @@ class Place extends Market {
      * Process deliveries
      */
     if (this.deliveries.length < 2) {
+      // Sort by distance
+      let bodies = Object.keys(data.bodies).sort((a, b) => {
+        let a_faction = data.bodies[a].faction === this.faction;
+        let b_faction = data.bodies[b].faction === this.faction;
+
+        if ((a_faction && b_faction) || (!a_faction && !b_faction)) {
+          return system.distance(this.name, a) < system.distance(this.name, b);
+        }
+        else if (a_faction) {
+          return -1;
+        }
+        else {
+          return 1;
+        }
+      });
+
       // Order supplies
       ITEM:for (let item of Object.keys(data.resources)) {
         // We need it
         if (!this.is_under_supplied(item)) continue ITEM;
 
-        BODY:for (let body of Object.keys(data.bodies)) {
+        // Filter out bodies which are poorly supplied in what we need
+        let possibilities = bodies.filter((b) => {
+          return game.place(b).current_supply(item) > 0
+              && game.place(b).is_over_supplied(item);
+        });
+
+        BODY:for (let body of possibilities) {
           let place = game.place(body);
 
           if (!place.is_over_supplied(item)) continue BODY;
@@ -243,17 +265,20 @@ class Place extends Market {
           let turns = Math.ceil((24 / data.hours_per_turn) * 5 * dist);
           place.store.dec(item, amt);
 
-          let want = Math.ceil(dist / 2);
+          let want = Math.ceil(dist / 4);
           let get  = Math.min(want, place.current_supply('fuel'));
           place.store.dec('fuel', get);
           if (want < get) place.store.inc_demand(want - get);
 
-          this.deliveries.push({
-            turns  : turns,
+          let delivery = {
+            origin : body,
             item   : item,
             amt    : amt,
-            origin : body
-          });
+            turns  : turns,
+            dist   : dist
+          };
+
+          this.deliveries.push(delivery);
         }
       }
     }

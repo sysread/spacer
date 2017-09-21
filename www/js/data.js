@@ -9,8 +9,8 @@ const data = {
   AU : 149597870700, // m
 
   start_date      : new Date(2242, 0, 1, 1),
-  hours_per_turn  : 12,
-  initial_turns   : 100,
+  hours_per_turn  : 8,
+  initial_turns   : 500,
   market_history  : 20,
   base_unit_price : 100,
   scarcity_markup : 0.3,
