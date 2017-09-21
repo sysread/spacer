@@ -50,12 +50,13 @@ $(() => {
         btn.append(`<span class="badge badge-pill float-right">${system.kind(body)}</span>`);
       }
 
-      let row = $('<div class="row py-2">');
-      row.append( $('<div class="col-12 col-sm-4">').append(btn) );
-      row.append(`<div class="col-sm mute">${dist} AU</div>`);
-      row.append(`<div class="col-sm mute">${time} hours</div>`);
-
-      nav.append(row);
+      nav.append(
+        $('<div class="row">')
+          .append( $('<div class="col col-sm-6 py-2">').append(btn) )
+          .append(
+            $('<div class="row col-12 col-sm-6 py-2">')
+              .append($('<div class="col-6 mute">').append(dist + ' AU'))
+              .append($('<div class="col-6 mute">').append(time + ' hours'))));
     }
   }
 

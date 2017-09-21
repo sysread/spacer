@@ -39,17 +39,23 @@ $(function() {
           });
         }
 
-        card.add_def('Value', csn(val) + 'c');
-        card.add_def('Turns', turns);
+        let mats = $('<div class="row">');
 
-        let mats = $('<div>');
+        card.add(
+          $('<div class="row">')
+            .append(
+              $('<div class="row col-12 py-2">')
+                .append($('<div class="col-6 col-sm-3">Value</div>'))
+                .append($('<div class="col-6 col-sm-3 mute">').append(csn(val) + 'c'))
+                .append($('<div class="col-6 col-sm-3">Turns</div>'))
+                .append($('<div class="col-6 col-sm-3 mute">').append(turns))
+                .append($('<div class="col-6 col-sm-3">Materials</div>'))
+                .append($('<div class="col-6 col-sm-9 mute">').append(mats))));
+
+
         for (let m of Object.keys(recipe.materials)) {
-          let row = new Row('sm');
-          row.col(`(${recipe.materials[m]}) ${m}`);
-          mats.append(row.row.removeClass('py-2'));
+          mats.append( $('<div class="col-sm-4">').append(`(${recipe.materials[m]}) ${m}`) );
         }
-
-        card.add_def('Materials', mats);
 
         container.add(card.card);
       }

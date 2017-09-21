@@ -14,9 +14,7 @@ class Game {
       if (saved) {
         this.load(JSON.parse(saved));
         this.refresh();
-        //open('summary');
-        //open('fabricators');
-        open('commerce');
+        open('summary');
       }
       else {
         open('newgame');
