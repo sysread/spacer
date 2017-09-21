@@ -6,7 +6,7 @@ class Game {
     this.player  = new Person;
     this.places  = {};
     this.markets = {}; // hourly market reports for light speed market data
-    this.agents  = [];
+    //this.agents  = [];
     this.cache   = {};
 
     $(() => {
@@ -58,7 +58,7 @@ class Game {
     me.player  = this.player.save();
     me.places  = {};
     me.markets = {};
-    me.agents  = this.agents.map((agent) => {return agent.save()});
+    //me.agents  = this.agents.map((agent) => {return agent.save()});
 
     Object.keys(data.bodies).forEach((name) => {
       me.places[name]  = this.places[name].save();
@@ -71,11 +71,11 @@ class Game {
   load(obj) {
     this.turns  = obj.turns;
     this.locus  = obj.locus;
-    this.agents = obj.agents.map((agent) => {
+    /*this.agents = obj.agents.map((agent) => {
       let a = new Hauler();
       a.load(agent);
       return a;
-    });
+    });*/
 
     this.date = new Date(data.start_date);
     this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
@@ -100,7 +100,7 @@ class Game {
     this.turns   = 0;
     this.places  = {};
     this.markets = {};
-    this.agents  = [];
+    //this.agents  = [];
 
     let bodies = system.bodies();
 
@@ -112,7 +112,7 @@ class Game {
       this.places[name]  = place;
       this.markets[name] = [];
 
-      let haulers = Math.max(1, Math.ceil(place.scale * data.haulers));
+      /*let haulers = Math.max(1, Math.ceil(place.scale * data.haulers));
       let ship;
 
       switch (place.size) {
@@ -141,7 +141,7 @@ class Game {
 
       for (let i = 0; i < haulers; ++i) {
         this.agents.push(new Hauler({place: name, ship: ship}));
-      }
+      }*/
     }
   }
 
@@ -191,10 +191,10 @@ class Game {
         this.markets[name].unshift(this.place(name).report());
       });
 
-      if (this.turns > data.initial_turns) {
+      /*if (this.turns > data.initial_turns) {
         for (let agent of this.agents)
           agent.turn();
-      }
+      }*/
 
       this.refresh();
     }

@@ -88,10 +88,14 @@ button.btn-dark.disabled, button.btn-dark:disabled {
 
 button.btn-secondary {
   background-color: #202020;
+  border: 1px solid #202020;
+  border-bottom: 1px solid rgb(0,0,0);
 }
 
 button.btn-secondary:hover {
   background-color: #303030;
+  border: 1px solid #202020;
+  border-bottom: 1px solid rgb(10,10,10);
 }
 
 button.btn-secondary:disabled {

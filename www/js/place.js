@@ -7,6 +7,7 @@ class Place extends Market {
     this.resources  = new ResourceCounter(0);
     this.using      = new ResourceCounter(0)
     this.fabricator = data.fabricators;
+    this.deliveries = [];
   }
 
   get type()      {return system.type(this.name)}
@@ -24,6 +25,7 @@ class Place extends Market {
     me.resources  = this.resources.save();
     me.using      = this.using.save();
     me.fabricator = this.fabricator;
+    me.deliveries = this.deliveries;
     me.agents     = [];
 
     this.agents.forEach((agent) => {me.agents.push(agent.save())});
@@ -36,6 +38,7 @@ class Place extends Market {
     this.name = obj.name;
     this.conditions = obj.conditions;
     this.fabricator = obj.fabricator;
+    this.deliveries = obj.deliveries;
     this.resources.load(obj.resources);
     this.using.load(obj.using);
     this.agents = [];
@@ -167,7 +170,6 @@ class Place extends Market {
     // Start agents if needed
     if (this.agents.length < data.market.agents * this.scale) {
       let money = data.market.agent_money * this.scale;
-      //this.agents.push(new Agent(this.name, money));
       this.agents.push(new Crafter({place: this.name, money: money}));
     }
 
@@ -219,5 +221,43 @@ class Place extends Market {
       if (avail < want)
         this.inc_demand('cybernetics', want - avail);
     }
+
+    /*
+     * Process deliveries
+     */
+    if (this.deliveries.length < 2) {
+      // Order supplies
+      ITEM:for (let item of Object.keys(data.resources)) {
+        // We need it
+        if (!this.is_under_supplied(item)) continue ITEM;
+
+        BODY:for (let body of Object.keys(data.bodies)) {
+          if (!game.place(body).is_over_supplied(item)) continue BODY;
+
+          let amt = Math.floor(game.place(body).current_supply(item) / 2);
+          if (amt === 0) continue BODY;
+
+          let dist  = system.distance(this.name, body);
+          let turns = Math.ceil((24 / data.hours_per_turn) * 5 * Physics.AU(dist));
+
+          game.place(body).store.dec(item, amt);
+
+          this.deliveries.push({
+            turns  : turns,
+            item   : item,
+            amt    : amt,
+            origin : body
+          });
+        }
+      }
+    }
+
+    for (let d of this.deliveries) {
+      if (--d.turns === 0) {
+        this.store.inc(d.item, d.turns);
+      }
+    }
+
+    this.deliveries = this.deliveries.filter((d)=>{return d.turns > 0});
   }
 }

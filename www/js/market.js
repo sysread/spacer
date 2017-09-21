@@ -80,11 +80,18 @@ class Market {
     return this.demand(resource) / this.supply(resource);
   }
 
+  is_under_supplied(resource) {
+    return this.local_need(resource) > 1
+      && this.current_supply(resource) < 10;
+  }
+
   is_over_supplied(resource) {
     const loc = this.local_need(resource);
-    const sys = game.system_need(resource);
     if (loc < 0.75) return true;
+
+    const sys = game.system_need(resource);
     if (sys < 0.9 && loc < 0.9) return true;
+
     return false;
   }
 
