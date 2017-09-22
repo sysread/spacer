@@ -29,7 +29,7 @@ $(function() {
     game.save_game();
 
     if (harvest.sum() === 0) {
-      $('#collect-explain').text(`We appreciate you helping out. No luck on beating the quota, but you did earn an honest paycheck to the tune of ${pay}c.`);
+      $('#collect-explain').text(`We appreciate you helping out. No luck on beating the quota, but you did earn an honest paycheck to the tune of ${payRate}c.`);
       $('#collect-results').empty();
       $('#collect-complete').addClass('disabled');
     }
@@ -41,7 +41,7 @@ $(function() {
         minmaxbtns : true
       });
 
-      $('#collect-explain').text(`In addition to ${pay}c in wages, your crew collected extra resources over the quota which you are entitled to keep:`);
+      $('#collect-explain').text(`In addition to ${payRate}c in wages, your crew collected extra resources over the quota which you are entitled to keep:`);
       $('#collect-results').empty().append(chooser.root);
       $('#collect-complete').removeClass('disabled');
     }
