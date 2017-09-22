@@ -13,7 +13,7 @@ const data = {
   necessity       : {water: true, food: true, medicine: true, fuel: true},
   craft_fee       : 0.05,
   fabricators     : 100,
-  fab_health      : 50,
+  fab_health      : 20,
   base_pay        : 20,
 
   scales: {
@@ -27,10 +27,10 @@ const data = {
   resources: {
     water        : {mass: 10, mine: {tics: 2}},
     ore          : {mass: 60, mine: {tics: 3}},
-    minerals     : {mass: 50, mine: {tics: 4}},
+    minerals     : {mass: 50, mine: {tics: 3}},
     hydrocarbons : {mass: 8,  mine: {tics: 4}},
-    food         : {mass: 30, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 1, hydrocarbons: 2}}},
-    fuel         : {mass: 2,  recipe: {tics: 2, materials: {water: 1, minerals: 1}}},
+    food         : {mass: 30, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 1, minerals: 1, hydrocarbons: 2}}},
+    fuel         : {mass: 4,  recipe: {tics: 2, materials: {minerals: 1}}},
     metal        : {mass: 90, recipe: {tics: 2, materials: {ore: 4}}},
     ceramics     : {mass: 30, recipe: {tics: 3, materials: {minerals: 1, water: 1}}},
     medicine     : {mass: 10, recipe: {tics: 4, materials: {food: 1, hydrocarbons: 1}}},
@@ -44,20 +44,20 @@ const data = {
     fabricators : 2,
     minability  : 0.25,
     produces    : {},
-    consumes    : {water: 0.5, food: 0.5}
+    consumes    : {water: 1, food: 1}
   },
 
   traits: {
-    'mineral rich'     : {produces: {ore:    0.5, minerals:  0.25}, consumes: {}},
+    'mineral rich'     : {produces: {ore:    0.5, minerals:  0.5}, consumes: {}},
     'mineral poor'     : {produces: {ore:   -0.5, minerals: -0.25}, consumes: {}},
     'water rich'       : {produces: {water:  0.5}, consumes: {}},
     'water poor'       : {produces: {water: -0.5}, consumes: {}},
-    'hydrocarbon rich' : {produces: {hydrocarbons: 0.5}, consumes: {}},
-    'hydrocarbon poor' : {produces: {hydrocarbons: 0.5}, consumes: {}},
+    'hydrocarbon rich' : {produces: {hydrocarbons: 0.5, minerals: 0.2}, consumes: {}},
+    'hydrocarbon poor' : {produces: {hydrocarbons: -0.5, minerals: -0.2}, consumes: {}},
 
     'asteroids'        : {produces: {ore:   1.0, minerals: 0.75}, consumes: {}},
-    'rocky'            : {produces: {ore:   0.6, minerals: 0.35}, consumes: {}},
-    'icy'              : {produces: {water: 0.8, minerals: 0.35}, consumes: {}},
+    'rocky'            : {produces: {ore:   0.6, minerals: 0.5} , consumes: {}},
+    'icy'              : {produces: {water: 0.8, minerals: 0.35, hydrocarbons: 0.2}, consumes: {}},
 
     'agricultural'     : {produces: {food: 0.3, hydrocarbons: 0.1}, consumes: {machines: 0.2, fuel: 0.025, water: 0.2, hydrocarbons: 0.4}},
     'habitable'        : {produces: {food: 0.7, hydrocarbons: 0.3}, consumes: {}},

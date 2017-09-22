@@ -25,6 +25,12 @@ class Market {
     this.prices.load(obj.prices);
   }
 
+  craft_time(item) {
+    let recipe = data.resources[item].recipe;
+    if (recipe) return recipe.tics;
+    return;
+  }
+
   current_supply(resource) {
     return Math.floor(this.store.get(resource));
   }
@@ -43,19 +49,41 @@ class Market {
   }
 
   supply(resource) {
-    let stock = this.current_supply(resource) || 1;
-    let avg   = this.supply_history.avg(resource) || 1;
-    return Math.max(1, (stock + avg) / 2);
+    let stock = this.current_supply(resource);
+    let avg   = this.supply_history.avg(resource);
+    return 1 + ((stock + avg) / 2);
   }
 
   demand(resource) {
-    return Math.max(1, this.demand_history.avg(resource));
+    return 1 + this.demand_history.avg(resource);
   }
 
-  adjustment(resource) {
+  local_need(resource) {
+    return this.demand(resource) / this.supply(resource);
+  }
+
+  is_under_supplied(resource) {
+    return this.demand(resource) > Math.max(1, this.current_supply(resource));
+  }
+
+  is_over_supplied(resource) {
+    if (this.current_supply(resource) === 0)
+      return false;
+
     const loc = this.local_need(resource);
+
+    if (loc < 0.5)
+      return true;
+
     const sys = game.system_need(resource);
-    const adjust = (loc + loc + loc + sys) / 3;
+
+    if (sys < 0.9 && loc < 0.75)
+      return true;
+
+    return false;
+  }
+
+  scarcityMarkup(resource) {
     let markup = 0;
 
     if (this.current_supply(resource) === 0) {
@@ -66,6 +94,15 @@ class Market {
       }
     }
 
+    return markup;
+  }
+
+  adjustment(resource) {
+    const loc = this.local_need(resource);
+    const sys = game.system_need(resource);
+    const adjust = (loc + loc + loc + sys) / 4;
+    const markup = this.scarcityMarkup(resource);;
+
     if (adjust > 1) {
       return 1 + markup + Math.log10(adjust);
     }
@@ -74,34 +111,6 @@ class Market {
     }
 
     return 1 + markup;
-  }
-
-  local_need(resource) {
-    return this.demand(resource) / this.supply(resource);
-  }
-
-  is_under_supplied(resource) {
-    if (this.current_supply(resource) < 5) return false;
-    if (this.demand(resource) / Math.max(1, this.current_supply(resource)) > 1) return false;
-    return true;
-  }
-
-  is_over_supplied(resource) {
-    if (this.current_supply(resource) === 0) return false;
-
-    const loc = this.local_need(resource);
-    if (loc < 0.5) return true;
-
-    const sys = game.system_need(resource);
-    if (sys < 0.9 && loc < 0.75) return true;
-
-    return false;
-  }
-
-  craft_time(item) {
-    let recipe = data.resources[item].recipe;
-    if (recipe) return recipe.tics;
-    return;
   }
 
   calculate_price(resource) {
@@ -168,13 +177,13 @@ class Market {
       let demand = (Math.round(this.demand(resource) * 100) / 100);
 
       info[resource] = {
-        supply : supply,
-        demand : demand,
         stock  : this.current_supply(resource),
-        trend  : this.trend(resource),
         price  : this.price(resource),
         buy    : this.buy_price(resource),
-        sell   : this.sell_price(resource)
+        sell   : this.sell_price(resource),
+        supply : supply,
+        demand : demand,
+        trend  : this.trend(resource)
       };
     });
     return info;

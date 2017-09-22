@@ -3,7 +3,7 @@ class Crafter extends Actor {
     let place = game.place(this.place);
     let items = data.resources;
 
-    CRAFT: for (let item of Object.keys(items)) {
+    CRAFT: for (let item of place.resourcesNeeded()) {
       let recipe = items[item].recipe;
 
       if (recipe === undefined)
@@ -29,6 +29,9 @@ class Crafter extends Actor {
       }
 
       profit -= cost;
+
+      if (item === 'fuel')
+        profit *= 2;
 
       // Just say no
       if (this.contra_rand(item))
