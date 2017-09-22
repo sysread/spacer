@@ -2,7 +2,7 @@
 
 $(function() {
   let refresh = function() {
-    if (game.player.ship.cargo.get('fuel') === 0 || game.player.ship.tank_is_full())
+    if (game.player.ship.cargo.get('fuel') === 0 || game.player.ship.tankIsFull())
       $('#refuel-cargo-btn').prop('disabled', true).addClass('disabled');
     else
       $('#refuel-cargo-btn').prop('disabled', false).removeClass('disabled');
@@ -10,7 +10,7 @@ $(function() {
 
   $('#refuel').on('show.bs.modal', (e) => {
     let tank = game.player.ship.fuel;
-    let need = game.player.ship.refuel_units();
+    let need = game.player.ship.refuelUnits();
     let have = game.player.ship.cargo.get('fuel');
     let max  = Math.min(have, need);
 

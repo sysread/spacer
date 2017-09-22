@@ -25,25 +25,25 @@ class Ship {
   /*
    * Shipclass properties or those derived from them
    */
-  get shipclass()     { return data.shipclass[this.opt.shipclass] }
-  get cargo_space()   { return this.shipclass.cargo }
-  get tank()          { return this.shipclass.tank }
-  get drive()         { return data.drives[this.shipclass.drive] }
-  get drives()        { return this.shipclass.drives }
-  get drive_mass()    { return this.drives * this.drive.mass }
-  get mass()          { return this.shipclass.mass + this.drive_mass }
-  get thrust()        { return this.shipclass.drives * this.drive.thrust }
-  get acceleration()  { return Physics.deltav(this.thrust, this.mass) }
+  get shipclass()    { return data.shipclass[this.opt.shipclass] }
+  get cargoSpace()   { return this.shipclass.cargo }
+  get tank()         { return this.shipclass.tank }
+  get drive()        { return data.drives[this.shipclass.drive] }
+  get drives()       { return this.shipclass.drives }
+  get driveMass()    { return this.drives * this.drive.mass }
+  get mass()         { return this.shipclass.mass + this.driveMass }
+  get thrust()       { return this.shipclass.drives * this.drive.thrust }
+  get acceleration() { return Physics.deltav(this.thrust, this.mass) }
 
   /*
    * Properties of the ship itself
    */
-  get cargo_used()    { return this.cargo.sum() }
-  get cargo_left()    { return this.cargo_space - this.cargo_used }
-  get hold_is_full()  { return this.cargo_left === 0 }
+  get cargoUsed()  { return this.cargo.sum() }
+  get cargoLeft()  { return this.cargoSpace - this.cargoUsed }
+  get holdIsFull() { return this.cargoLeft === 0 }
 
-  thrust_ratio(deltav, mass) {
-    if (mass === undefined) mass = this.current_mass();
+  thrustRatio(deltav, mass) {
+    if (mass === undefined) mass = this.currentMass();
 
     // Calculate thrust required to accelerate our mass at deltav
     let thrust = Physics.force(mass, deltav);
@@ -52,83 +52,83 @@ class Ship {
     return thrust / this.thrust;
   }
 
-  burn_rate(deltav, mass) {
+  burnRate(deltav, mass) {
     // Calculate fraction of full thrust required
-    let thrust_ratio = this.thrust_ratio(deltav, mass);
+    let thrustRatio = this.thrustRatio(deltav, mass);
 
     // Calculate nominal burn rate
-    let burn_rate = this.drives * this.drive.burn_rate;
+    let burnRate = this.drives * this.drive.burn_rate;
 
     // Reduce burn rate by the fraction of thrust being used
-    return burn_rate * thrust_ratio;
+    return burnRate * thrustRatio;
   }
 
-  cargo_mass() {
+  cargoMass() {
     let m = 0;
     this.cargo.each((item, amt) => {m += data.resources[item].mass * amt});
     return m;
   }
 
-  nominal_mass(full_tank=false) {
+  nominalMass(full_tank=false) {
     let m = this.mass;
     if (full_tank) m += this.tank;
     return m;
   }
 
-  current_mass() {
-    return this.mass + this.cargo_mass() + (data.resources['fuel'].mass * this.fuel);
+  currentMass() {
+    return this.mass + this.cargoMass() + (data.resources['fuel'].mass * this.fuel);
   }
 
-  current_acceleration() {
-    return Physics.deltav(this.thrust, this.current_mass());
+  currentAcceleration() {
+    return Physics.deltav(this.thrust, this.currentMass());
   }
 
-  acceleration_with_mass(mass) {
-    return Physics.deltav(this.thrust, this.current_mass() + mass);
+  accelerationWithMass(mass) {
+    return Physics.deltav(this.thrust, this.currentMass() + mass);
   }
 
-  max_burn_time(accel, nominal=false) {
+  maxBurnTime(accel, nominal=false) {
     let fuel = this.fuel;
-    let mass = this.current_mass();
+    let mass = this.currentMass();
 
     if (nominal) {
       fuel = this.tank;
-      mass = this.nominal_mass(true);
+      mass = this.nominalMass(true);
       if (accel === undefined) accel = Physics.deltav(this.thrust, mass);
     }
     else {
-      if (accel === undefined) accel = this.current_acceleration();
+      if (accel === undefined) accel = this.currentAcceleration();
     }
 
-    return Math.floor(fuel / this.burn_rate(accel, mass));
+    return Math.floor(fuel / this.burnRate(accel, mass));
   }
 
-  refuel_units()  {return Math.ceil((this.tank - this.fuel) / data.resources.fuel.mass) }
-  tank_is_full()  {return this.fuel === this.tank}
-  tank_is_empty() {return this.fuel === 0}
+  refuelUnits() {return Math.ceil((this.tank - this.fuel) / data.resources.fuel.mass) }
+  tankIsFull()  {return this.fuel === this.tank}
+  tankIsEmpty() {return this.fuel === 0}
 
   refuel(units) {
     this.fuel = Math.min(this.tank, this.fuel + (units * data.resources.fuel.mass));
   }
 
   burn(deltav) {
-    this.fuel = Math.max(0, this.fuel - this.burn_rate(deltav));
+    this.fuel = Math.max(0, this.fuel - this.burnRate(deltav));
     return this.fuel;
   }
 
-  load_cargo(resource, amount) {
-    if (this.cargo_left < amount)
+  loadCargo(resource, amount) {
+    if (this.cargoLeft < amount)
       throw new Error('no room left in the hold');
     this.cargo.inc(resource, amount);
   }
 
-  unload_cargo(resource, amount) {
+  unloadCargo(resource, amount) {
     if (this.cargo.get(resource) < amount)
       throw new Error('you do not have that many units available');
     this.cargo.dec(resource, amount);
   }
 
-  ship_value() {
+  shipValue() {
     let sc = this.shipclass;
 
     let price
@@ -146,22 +146,22 @@ class Ship {
     return price;
   }
 
-  cargo_value() {
+  cargoValue() {
     let place = game.place();
     let price = 0;
-    this.cargo.each((item, amt) => {price += place.sell_price(item) * amt});
+    this.cargo.each((item, amt) => {price += place.sellPrice(item) * amt});
     return price;
   }
 
-  fuel_value() {
+  fuelValue() {
     let place = game.place();
-    return place.sell_price('fuel') * Math.floor(this.fuel / data.resources.fuel.mass);
+    return place.sellPrice('fuel') * Math.floor(this.fuel / data.resources.fuel.mass);
   }
 
   price(tradein) {
-    let cargo = this.cargo_value();
-    let fuel  = this.fuel_value();
-    let ship  = this.ship_value();
+    let cargo = this.cargoValue();
+    let fuel  = this.fuelValue();
+    let ship  = this.shipValue();
     if (tradein) ship = Math.ceil(ship * 0.7);
     return ship + cargo + fuel;
   }

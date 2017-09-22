@@ -50,7 +50,7 @@ class Place extends Market {
     });
   }
 
-  buy_price(resource) {
+  buyPrice(resource) {
     let price = this.price(resource);
     return price + Math.ceil(price * this.sales_tax);
   }
@@ -61,7 +61,7 @@ class Place extends Market {
     return actual + (base * this.scale);
   }
 
-  merge_scale(resources, traits, conditions) {
+  mergeScale(resources, traits, conditions) {
     let amounts = new ResourceCounter(0);
 
     for (let resource of Object.keys(resources))
@@ -88,13 +88,13 @@ class Place extends Market {
   get production() {
     let traits = this.traits.map((t)     => {return data.traits[t].produces});
     let conds  = this.conditions.map((c) => {return data.conditions[c].produces});
-    return this.merge_scale(data.market.produces, traits, conds);
+    return this.mergeScale(data.market.produces, traits, conds);
   }
 
   get consumption() {
     let traits = this.traits.map((t)     => {return data.traits[t].consumes});
     let conds  = this.conditions.map((c) => {return data.conditions[c].consumes});
-    return this.merge_scale(data.market.consumes, traits, conds);
+    return this.mergeScale(data.market.consumes, traits, conds);
   }
 
   get payRate() {
@@ -140,7 +140,7 @@ class Place extends Market {
    * Given a resource name, returns the adjusted number of turns based on the
    * fabrication resources available.
    */
-  fabrication_time(item) {
+  fabricationTime(item) {
     let recipe = data.resources[item].recipe;
     if (!recipe) return;
     let turns = recipe.tics;
@@ -158,13 +158,13 @@ class Place extends Market {
     let recipe = data.resources[item].recipe;
     if (!recipe) return;
     let turns = recipe.tics;
-    let adjusted = this.fabrication_time(item);
+    let adjusted = this.fabricationTime(item);
     this.fabricator = Math.max(0, this.fabricator - turns);
     return adjusted;
   }
 
-  craft_time(item) {
-    return this.fabrication_time(item);
+  craftTime(item) {
+    return this.fabricationTime(item);
   }
 
   resourcesNeeded() {
@@ -185,7 +185,7 @@ class Place extends Market {
     }
 
     // Distance bonus
-    let stock = place.current_supply(resource);
+    let stock = place.currentSupply(resource);
     let distance = Physics.AU(system.distance(this.name, origin));
     let rating = stock / distance;
 
@@ -201,8 +201,8 @@ class Place extends Market {
   }
 
   deliveryAmount(origin, resource) {
-    let remoteStock = game.place(origin).current_supply(resource);
-    let localSupply = this.current_supply(resource) + this.supply_history.avg(resource);
+    let remoteStock = game.place(origin).currentSupply(resource);
+    let localSupply = this.currentSupply(resource) + this.supplyHistory.avg(resource);
     let localDemand = this.demand(resource);
 
     for (let i = 1; i <= remoteStock; ++i) {
@@ -233,7 +233,7 @@ class Place extends Market {
         let dist  = Physics.AU(system.distance(this.name, place.name));
         let turns = Math.ceil((24 / data.hours_per_turn) * 8 * dist);
         let fuel  = Math.ceil(dist / 8);
-        let avail = place.current_supply('fuel');
+        let avail = place.currentSupply('fuel');
 
         // If getting fuel delivered, adjust the delivery amount until there is
         // at least enough fuel to make the delivery.
@@ -247,13 +247,13 @@ class Place extends Market {
 
         // After adjustments, is the amount still positive?
         if (amt === 0) {
-          place.inc_demand(resource, want);
+          place.incDemand(resource, want);
           continue;
         }
 
         // Is there enough fuel available to make the delivery?
         if (avail < fuel) {
-          place.inc_demand('fuel', fuel);
+          place.incDemand('fuel', fuel);
           continue;
         }
 
@@ -312,11 +312,11 @@ class Place extends Market {
     super.turn();
 
     // Boost demand for economic drivers
-    if (this.current_supply('fuel') < 5)
-      this.inc_demand('fuel', 5);
+    if (this.currentSupply('fuel') < 5)
+      this.incDemand('fuel', 5);
 
     if (this.fabricator < (this.max_fabs / 2))
-      this.inc_demand('cybernetics', 1);
+      this.incDemand('cybernetics', 1);
 
     // Start agents if needed
     if (this.agents.length < data.market.agents * this.scale) {
@@ -335,7 +335,7 @@ class Place extends Market {
     this.consumption.each((item, amt) => {
       if (this.using.get(item) < amt) {
         let want  = Math.ceil(amt);
-        let avail = Math.min(want, this.current_supply(item));
+        let avail = Math.min(want, this.currentSupply(item));
 
         if (avail) {
           this.buy(item, avail);
@@ -343,7 +343,7 @@ class Place extends Market {
         }
 
         if (avail < want)
-          this.inc_demand(item, want - avail);
+          this.incDemand(item, want - avail);
 
         this.using.dec(item, amt);
       }
@@ -353,7 +353,7 @@ class Place extends Market {
     if (this.fabricator < (this.max_fabs * 0.7)) {
       let each  = data.fab_health;
       let want  = Math.floor((this.max_fabs - this.fabricator) / each);
-      let avail = Math.min(want, this.current_supply('cybernetics'));
+      let avail = Math.min(want, this.currentSupply('cybernetics'));
 
       if (avail > 0) {
         this.buy('cybernetics', avail);
@@ -361,7 +361,7 @@ class Place extends Market {
       }
 
       if (avail < want)
-        this.inc_demand('cybernetics', want - avail);
+        this.incDemand('cybernetics', want - avail);
     }
 
     this.deliverySchedule();

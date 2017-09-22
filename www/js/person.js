@@ -26,7 +26,7 @@ class Person {
     this.ship.load(obj.ship);
   }
 
-  can_craft(item) {
+  canCraft(item) {
     let recipe = data.resources[item].recipe.materials;
     let counts = [];
 
@@ -37,12 +37,12 @@ class Person {
     return counts.reduce((a,b) => {return Math.min(a, b)});
   }
 
-  max_acceleration() {
+  maxAcceleration() {
     return data.bodies[this.home].gravity * 2;
   }
 
-  ship_acceleration() {
-    return this.ship.current_acceleration();
+  shipAcceleration() {
+    return this.ship.currentAcceleration();
   }
 
   credit(n) {

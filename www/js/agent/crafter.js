@@ -12,17 +12,17 @@ class Crafter extends Actor {
       if (this.is_over_supplied(item))
         continue;
 
-      let profit = place.sell_price(item);
+      let profit = place.sellPrice(item);
       let cost   = 0;
       let need   = {};
 
       for (let mat of Object.keys(recipe.materials)) {
         need[mat] = recipe.materials[mat];
 
-        if (place.current_supply(mat) < need[mat])
+        if (place.currentSupply(mat) < need[mat])
           continue CRAFT;
 
-        cost += place.buy_price(mat);
+        cost += place.buyPrice(mat);
 
         if (cost >= profit)
           continue CRAFT;
@@ -80,7 +80,7 @@ class Crafter extends Actor {
   consume() {
     for (let item of 'water food medicine electronics'.split(' ')) {
       let price  = game.place(this.place).price(item);
-      let supply = game.place(this.place).current_supply(item);
+      let supply = game.place(this.place).currentSupply(item);
 
       if (supply === 0) continue;
 

@@ -20,8 +20,8 @@ $(function() {
       if (recipe) {
         let val   = game.place().price(item);
         let fee   = Math.max(1, Math.round(fee_pct * val));
-        let amt   = Math.min(Math.floor(player.money / fee), player.can_craft(item));
-        let turns = game.place().fabrication_time(item);
+        let amt   = Math.min(Math.floor(player.money / fee), player.canCraft(item));
+        let turns = game.place().fabricationTime(item);
 
         let card = new Card;
         card.set_header(item).addClass('text-capitalize');
@@ -96,10 +96,10 @@ $(function() {
         player.debit(data.fee);
 
         for (let mat of Object.keys(recipe))
-          player.ship.unload_cargo(mat, recipe[mat]);
+          player.ship.unloadCargo(mat, recipe[mat]);
 
         game.turn(data.turns);
-        player.ship.load_cargo(resource, 1);
+        player.ship.loadCargo(resource, 1);
         game.refresh();
       }
     }

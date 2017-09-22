@@ -9,12 +9,12 @@ $(function() {
     let price = $(e.relatedTarget).data('price');
     let sc    = ship.opt.shipclass;
 
-    let deltav = Math.round(ship.current_acceleration() * 100) / 100;
-    let burn_time = ship.max_burn_time(deltav, true) * data.hours_per_turn;
+    let deltav = Math.round(ship.currentAcceleration() * 100) / 100;
+    let burn_time = ship.maxBurnTime(deltav, true) * data.hours_per_turn;
     let maxg_range = Physics.AU(Physics.range(burn_time * 3600, 0, deltav));
 
     let nominal_dv = Math.round(Math.min(0.5, deltav * 0.6) * 100) / 100;
-    let nominal_burn_time = ship.max_burn_time(nominal_dv, true) * data.hours_per_turn;
+    let nominal_burn_time = ship.maxBurnTime(nominal_dv, true) * data.hours_per_turn;
     let nominal_range = Physics.AU(Physics.range(nominal_burn_time * 3600, 0, 1));
 
     $('#ship-detail .modal-title').text(sc);
@@ -27,8 +27,8 @@ $(function() {
       .append(row('Maximum thrust', `${csn(ship.thrust)} kN`))
       .append(row('Fuel tanks', ship.shipclass.tank))
       .append(row('Hull mass', `${csn(ship.shipclass.mass)} tonnes`))
-      .append(row('Drive mass', `${csn(ship.drive_mass)} tonnes`))
-      .append(row('Total mass (fueled)', `${csn(ship.current_mass())} tonnes`))
+      .append(row('Drive mass', `${csn(ship.driveMass)} tonnes`))
+      .append(row('Total mass (fueled)', `${csn(ship.currentMass())} tonnes`))
       .append(row('Cargo', ship.shipclass.cargo))
       .append(row('Hull', ship.shipclass.hull))
       .append(row('Armor', ship.shipclass.armor))

@@ -2,15 +2,15 @@
 
 $(() => {
   let ship    = game.player.ship;
-  let navcomp = new NavComp(game.player.max_acceleration(), ship, game.place().name);
+  let navcomp = new NavComp(game.player.maxAcceleration(), ship, game.place().name);
 
   $('#nav-player-home' ).text(data.bodies[game.player.home].name);
   $('#nav-player-g'    ).text(data.bodies[game.player.home].gravity);
-  $('#nav-player-max-g').text(game.player.max_acceleration().toFixed(2));
-  $('#nav-ship-g'      ).text(game.player.ship_acceleration().toFixed(2));
-  $('#nav-ship-t'      ).text(csn(Math.round(game.player.ship.current_mass())));
+  $('#nav-player-max-g').text(game.player.maxAcceleration().toFixed(2));
+  $('#nav-ship-g'      ).text(game.player.shipAcceleration().toFixed(2));
+  $('#nav-ship-t'      ).text(csn(Math.round(game.player.ship.currentMass())));
   $('#nav-ship-fuel'   ).text(Math.round(game.player.ship.fuel * 100) / 100);
-  $('#nav-ship-burn'   ).text(game.player.ship.max_burn_time() * data.hours_per_turn);
+  $('#nav-ship-burn'   ).text(game.player.ship.maxBurnTime() * data.hours_per_turn);
 
   let nav = $('<div>');
 
@@ -65,7 +65,7 @@ $(() => {
   $('#nav-dialog').on('show.bs.modal', function(e) {
     let best    = $(e.relatedTarget).data('selected');
     let plan    = best.transit;
-    let rate    = $(e.relatedTarget).data('burn_rate');
+    let rate    = $(e.relatedTarget).data('burnRate');
     let target  = system.name(plan.dest);
     let type    = system.kind(plan.dest);
     let size    = game.place(plan.dest).size;
@@ -85,7 +85,7 @@ $(() => {
         [days, hours] = plan.days_hours;
 
         $('#nav-transit').data('plan', plan);
-        $('#nav-transit').data('burn_rate', rate);
+        $('#nav-transit').data('burnRate', rate);
 
         $('#nav-accel').text(plan.accel.toFixed(2));
         $('#nav-flip').text(csn(plan.hours/2));
@@ -121,7 +121,7 @@ $(() => {
   let resume_transit = () => {
     transit_intvl = window.setInterval(() => {
       let plan = $('#nav-transit').data('plan');
-      let rate = $('#nav-transit').data('burn_rate');
+      let rate = $('#nav-transit').data('burnRate');
 
       if (plan.left === 0) {
         pause_transit();

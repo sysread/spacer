@@ -5,7 +5,7 @@ class NavComp {
     this.orig = origin;
   }
 
-  get maxdv() { return Math.min(this.max, this.ship.current_acceleration()) }
+  get maxdv() { return Math.min(this.max, this.ship.currentAcceleration()) }
 
   get transits() {
     if (this.data === undefined) {
@@ -16,9 +16,9 @@ class NavComp {
 
         for (let transit of system.astrogator(this.orig, dest)) {
           if (transit.accel > this.maxdv) continue;
-          if (transit.turns > this.ship.max_burn_time(transit.accel)) continue;
+          if (transit.turns > this.ship.maxBurnTime(transit.accel)) continue;
 
-          let burn = this.ship.burn_rate(transit.accel, this.ship.current_mass());
+          let burn = this.ship.burnRate(transit.accel, this.ship.currentMass());
 
           this.data[dest].push({
             index   : this.data[dest].length,
