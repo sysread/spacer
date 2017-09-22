@@ -132,7 +132,7 @@ class Place extends Market {
    * Returns the percentage of total fabrication resources currently available
    * for commercial use.
    */
-  fabrication_availability() {
+  fabricationAvailability() {
     return Math.min(100, Math.round(this.fabricator / this.max_fabs * 1000) / 10);
   }
 
@@ -314,9 +314,6 @@ class Place extends Market {
     // Boost demand for economic drivers
     if (this.currentSupply('fuel') < 5)
       this.incDemand('fuel', 5);
-
-    if (this.fabricator < (this.max_fabs / 2))
-      this.incDemand('cybernetics', 1);
 
     // Start agents if needed
     if (this.agents.length < data.market.agents * this.scale) {

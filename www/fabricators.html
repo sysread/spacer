@@ -11,7 +11,7 @@ $(function() {
     let info = new Card;
     info.set_header('Fabricators');
     info.add_text('A triumph of cybernetics, the fabricators are able to manufacture nearly anything, given the necessary materials and plans... and a small fee, of course.');
-    info.add_text(`${game.place().fabrication_availability()}% of fabricator capacity is available at this time.`);
+    info.add_text(`${game.place().fabricationAvailability()}% of fabricator capacity is available at this time.`);
     container.add(info.card);
 
     for (let item of Object.keys(data.resources)) {

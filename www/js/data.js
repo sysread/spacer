@@ -6,14 +6,14 @@
 const data = {
   start_date      : new Date(2242, 0, 1, 1),
   hours_per_turn  : 8,
-  initial_turns   : 500,
-  market_history  : 20,
+  initial_turns   : 1000,
+  market_history  : 30,
   base_unit_price : 100,
   scarcity_markup : 0.3,
   necessity       : {water: true, food: true, medicine: true, fuel: true},
   craft_fee       : 0.05,
   fabricators     : 100,
-  fab_health      : 20,
+  fab_health      : 40,
   base_pay        : 20,
 
   scales: {
