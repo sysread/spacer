@@ -12,8 +12,8 @@ const data = {
   scarcity_markup : 0.3,
   necessity       : {water: true, food: true, medicine: true, fuel: true},
   craft_fee       : 0.05,
-  fabricators     : 100,
-  fab_health      : 40,
+  fabricators     : 40,
+  fab_health      : 20,
   base_pay        : 20,
 
   scales: {
