@@ -1,32 +1,8 @@
 <script type="text/javascript">
 
 $(function() {
-  let p = game.player;
-  let s = p.ship;
-
-  let cap = new Card;
-  cap.set_header('Captain');
-  cap.add_header_button('New game').on('click', ()=>{open('newgame')});
-  cap.add_def('Money',     csn(p.money) + 'c');
-  cap.add_def('Home',      data.bodies[p.home].name);
-  cap.add_def('Faction',   data.factions[p.faction].full_name);
-  cap.add_def('Endurance', p.maxAcceleration().toFixed(2) + 'G');
-
-  let ship = new Card;
-  ship.set_header('Ship');
-  ship.add_def('Class',      `<span class="text-capitalize">${s.opt.shipclass}</span>`);
-  ship.add_def('Cargo',      `${s.cargoUsed}/${s.cargoSpace}`);
-  ship.add_def('Hull',       s.shipclass.hull);
-  ship.add_def('Armor',      s.shipclass.armor);
-  ship.add_def('Hardpoints', s.shipclass.hardpoints);
-  ship.add_def('Mass',       csn(Math.floor(s.currentMass())) + 'tonnes');
-  ship.add_def('Thrust',     csn(s.thrust) + 'kN');
-  ship.add_def('Fuel',       `${Math.round(s.fuel * 100) / 100}/${s.tank}`);
-  ship.add_def('Max burn',   `${csn(s.maxBurnTime() * data.hours_per_turn)} hours at maximum thrust`);
-  ship.add_def('Drives',     s.shipclass.drives);
-  ship.add_def('Drive type', `<span class="text-capitalize">${s.shipclass.drive}</span>`);;
-
-  $('#status').append(cap.card).append(ship.card);
+  let playerStatus = new PlayerStatus({player: game.player});
+  $('#status').append(playerStatus.root);
 });
 
 </script>

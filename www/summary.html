@@ -1,19 +1,8 @@
 <script type="text/javascript">
 
 $(function() {
-  let place  = game.place();
-  let traits = uniq(place.traits, ', ');
-  let conds  = uniq(place.conditions, ', ');
-
-  let card = new Card;
-  card.set_header(place.name).addClass('text-capitalize');
-  card.add_def('Environment', system.kind(place.name));
-  card.add_def('Faction',     data.factions[place.faction].full_name);
-  card.add_def('Economy',     place.size).addClass('text-capitalize');
-  card.add_def('Details',     traits || 'None').addClass('text-capitalize');
-  card.add_def('Special',     conds  || 'None').addClass('text-capitalize');
-
-  $('#summary').append(card.card);
+  let summary = new PlaceSummary({place: game.place()});
+  $('#summary').append(summary.root);
 });
 
 </script>

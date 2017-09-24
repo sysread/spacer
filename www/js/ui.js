@@ -1,9 +1,10 @@
 class UI {
   constructor(opt) {
-    this.opt = opt || {};
+    this.opt  = opt || {};
+    this.base = $('<div>');
   }
 
-  get root() {return $('<div>')};
+  get root() {return this.base}
 }
 
 class Slider extends UI {
