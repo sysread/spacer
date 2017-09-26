@@ -7,6 +7,12 @@ class PlaceSummary extends Card {
 
     this.set_header(this.place.title).addClass('text-capitalize');
 
+    if (this.place.name !== game.locus) {
+      this.add_def('Location', Math.round(Physics.AU(system.distance(game.locus, this.place.name)) * 100) / 100 + ' AU away');
+    } else {
+      this.add_def('Location', 'Docked');
+    }
+
     this.add_def('Environment', system.kind(this.place.name));
     this.add_def('Faction', data.factions[this.place.faction].full_name);
     this.add_def('Economy', this.place.size).addClass('text-capitalize');
