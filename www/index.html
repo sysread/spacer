@@ -34,7 +34,7 @@
 
     <!-- Navigation -->
     <nav id="spacer-navbar" data-toggle="collapse" data-target="#spacer-nav" class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
-      <a class="navbar-brand" href="#">Spacer</a>
+      <span class="navbar-brand">Spacer</span>
 
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#spacer-nav">
         <span class="navbar-toggler-icon"></span>
@@ -140,8 +140,11 @@
           }
         });
 
-        //$(window).on('click', (e) => { $('#spacer-nav').collapse('hide')});
-        //$('html').on('click', (e) => { $('#spacer-nav').collapse('hide')});
+        $(window).on('click', (e) => {
+          if ($('#spacer-nav').hasClass('show')) {
+            $('#spacer-nav').collapse('hide');
+          }
+        });
 
         FastClick.attach(document.body);
       });
