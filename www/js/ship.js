@@ -1,25 +1,25 @@
 class Ship {
   constructor(opt) {
-    this.opt   = opt || {};
-    this.fuel  = opt.fuel || data.shipclass[opt.shipclass].tank;
-    this.cargo = new ResourceCounter;
-    this.dmg   = new DefaultMap(0);
+    this.opt    = opt || {};
+    this.fuel   = opt.fuel || data.shipclass[opt.shipclass].tank;
+    this.addons = new Array;
+    this.cargo  = new ResourceCounter;
   }
 
   save() {
     return {
-      opt   : this.opt,
-      fuel  : this.fuel,
-      cargo : this.cargo.save(),
-      dmg   : this.dmg.save()
+      opt    : this.opt,
+      fuel   : this.fuel,
+      addons : this.addons,
+      cargo  : this.cargo.save()
     };
   }
 
   load(info) {
-    this.opt  = info.opt;
-    this.fuel = info.fuel;
+    this.opt    = info.opt;
+    this.fuel   = info.fuel;
+    this.addons = info.addons;
     this.cargo.load(info.cargo);
-    this.dmg.load(info.dmg);
   }
 
   /*
@@ -69,6 +69,13 @@ class Ship {
     return m;
   }
 
+  addOnMass() {
+    let m = 0;
+    for (let addon of this.addons)
+      m += data.shipAddOns[addon].mass;
+    return m;
+  }
+
   nominalMass(full_tank=false) {
     let m = this.mass;
     if (full_tank) m += this.tank;
@@ -76,7 +83,7 @@ class Ship {
   }
 
   currentMass() {
-    return this.mass + this.cargoMass() + (data.resources['fuel'].mass * this.fuel);
+    return this.mass + this.cargoMass() + this.addOnMass() + (data.resources['fuel'].mass * this.fuel);
   }
 
   currentAcceleration() {

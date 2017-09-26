@@ -254,7 +254,7 @@ const data = {
     /* Military */
     transport   : {hull: 40, armor: 10, cargo: 50,  hardpoints: 6,  mass: 8000,  tank: 180, drives: 220, drive: 'ion',    restricted: true},
     corvette    : {hull: 25, armor: 5,  cargo: 10,  hardpoints: 4,  mass: 550,   tank: 25,  drives: 2,   drive: 'fusion', restricted: true},
-    frigate     : {hull: 30, armor: 5,  cargo: 30,  hardpoints: 4,  mass: 800,   tank: 40,  drives: 4,   drive: 'fusion', restricted: true},
+    frigate     : {hull: 30, armor: 5,  cargo: 30,  hardpoints: 6,  mass: 800,   tank: 40,  drives: 4,   drive: 'fusion', restricted: true},
     destroyer   : {hull: 45, armor: 12, cargo: 12,  hardpoints: 8,  mass: 1100,  tank: 40,  drives: 8,   drive: 'fusion', restricted: true},
     cruiser     : {hull: 60, armor: 15, cargo: 15,  hardpoints: 10, mass: 1850,  tank: 100, drives: 16,  drive: 'fusion', restricted: true},
     battleship  : {hull: 85, armor: 25, cargo: 20,  hardpoints: 16, mass: 2300,  tank: 140, drives: 20,  drive: 'fusion', restricted: true},
@@ -263,6 +263,48 @@ const data = {
     neptune     : {hull: 10, armor: 4,  cargo: 45,  hardpoints: 3,  mass: 3200,  tank: 80,  drives: 40,  drive: 'ion',    restricted: true, faction: 'TRANSA'},
     barsoom     : {hull: 35, armor: 6,  cargo: 30,  hardpoints: 4,  mass: 600,   tank: 30,  drives: 4,   drive: 'fusion', restricted: true, faction: 'MC'}
   },
+
+  shipAddOns: {
+    cargoPod: {
+      name  : 'External cargo pod',
+      desc  : 'Welds an additional cargo hold onto the outer hull, increasing total cargo space but reducing armor.',
+      hdpts : 1,
+      mass  : 10,
+      info  : {
+        cargo :  20,
+        armor : -2
+      }
+    },
+    pds: {
+      name  : 'Point defense system',
+      desc  : 'Mounts a computer-controlled network of small, magnetically propelled, point defense turrets around the ship to stop incoming torpedos at a safe range.',
+      hdpts : 1,
+      mass  : 5,
+      info  : {
+        damage    : 1,
+        intercept : 0.75
+      }
+    },
+    railGun: {
+      name  : 'Rail gun',
+      desc  : 'A military-grade rail gun turret, magnetically accelerating 100kg rounds at an appreciable fraction of the speed of light.',
+      hdpts : 1,
+      mass  : 15,
+      info  : {
+        damage : 10
+      }
+    },
+    torpedoTube: {
+      name  : 'Torpedo tube',
+      desc  : 'Adds a self-guided torpedo launcher. torpedos sold separately.',
+      hdpts : 1,
+      mass  : 20,
+      info  : {
+        damage : 10,
+        hull   : 0.15
+      }
+    }
+  }
 };
 
 /*
