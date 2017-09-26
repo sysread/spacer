@@ -35,6 +35,22 @@ class ShipStatus extends Card {
     this.add_def('Fuel',       `${Math.round(this.ship.fuel * 100) / 100}/${this.ship.tank}`);
     this.add_def('Max burn',   `${csn(this.ship.maxBurnTime() * data.hours_per_turn)} hours at maximum thrust`);
     this.add_def('Drives',     this.ship.shipclass.drives);
-    this.add_def('Drive type', `<span class="text-capitalize">${this.ship.shipclass.drive}</span>`);;
+    this.add_def('Drive type', `<span class="text-capitalize">${this.ship.shipclass.drive}</span>`);
+
+    if (this.ship.cargo.sum() > 0) {
+      let cargo = $('<ul>');
+
+      for (let [item, amt] of this.ship.cargo.entries()) {
+        if (amt > 0) {
+          let li =  $('<li>').append(`${amt} ${item}`);
+          cargo.append(li);
+        }
+      }
+
+      this.add_def('Cargo', cargo);
+    }
+    else {
+      this.add_def('Cargo', 'Empty');
+    }
   }
 }
