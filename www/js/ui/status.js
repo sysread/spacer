@@ -42,7 +42,8 @@ class ShipStatus extends Card {
 
       for (let [item, amt] of this.ship.cargo.entries()) {
         if (amt > 0) {
-          let li =  $('<li>').append(`${amt} ${item}`);
+          let mass = csn(data.resources[item].mass * amt);
+          let li =  $('<li>').append(`${mass} tonnes of ${item} (${amt} cu)`);
           cargo.append(li);
         }
       }
