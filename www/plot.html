@@ -1,92 +1,12 @@
 <script type="text/javascript">
 
 $(function() {
-  let adjust = function(n) {
-    let inverse = (100 - Math.abs(n)) >> 4;
-    if (inverse < 1) return 1;
-    let adjust = 1.75 * Math.round(Math.log(inverse) * 100) / 100;
-    if (adjust < 1) return 1;
-    return adjust;
-  };
-
-  let replot = function() {
-    let plot = $('#plot');
-    plot.height(plot.width());
-
-    let zero   = $('<div id="plot-zero-zero" class="p-0 m-0" style="position:absolute;left:50%;top:50%;">');
-    let data   = system.plot();
-    let bodies = data.bodies;
-    let width  = plot.width();
-    let height = plot.height();
-    let point  = {};
-
-    plot.empty().append(zero);
-
-    for (let i = 0; i < bodies.length; ++i) {
-      let [body, x, y] = bodies[i];
-      let adjust_x = adjust(x);
-      let adjust_y = adjust(y);
-
-      let left = Math.ceil(width  * x * adjust_x / 100 / 2);
-      let top  = Math.ceil(height * y * adjust_y / 100 / 2);
-
-      let key     = `p-${left}-${top}`;
-      let name    = system.name(body);
-      let central = system.central(body);
-      if (central && central !== 'sun') name += ` (${system.name(central)})`;
-
-      if (point[key] === undefined) {
-        point[key] = [name];
-
-        let item = $(`<a href="#" class="plot-locus p-1" id="${key}">&bull;</a>`)
-          .css({top: top, left: left})
-          .data({'point': point});
-
-        if (body == 'sun') item.addClass('text-warning').addClass('font-weight-bold');
-        if (body == game.locus) item.addClass('text-success font-weight-bold');
-
-        zero.append(item);
-      }
-      else {
-        point[key].push(name);
-        if (body == game.locus) $(`#${key}`).addClass('text-success font-weight-bold');
-      }
-    }
-
-    $('.plot-locus.text-success').click();
-  };
-
-  $('#plot').on('click', 'a', (e) => {
-    e.stopPropagation();
-
-    $('#plot a').removeClass('border').removeClass('border-danger');
-    $(e.target).addClass('border border-danger');
-
-    let point = $(e.target).data('point');
-    let key = e.target.id;
-
-    let badges = $('<ul class="plot-selected">');
-    for (let place of point[key]) {
-      let badge = $('<span class="badge badge-dark ml-1">').append(place);
-      badges.append($('<li>').append(badge));
-    }
-
-    let pos   = $(e.target).position();
-    let width = $(e.target).outerWidth();
-    badges.css({left: pos.left + 20, top: pos.top});
-
-    $('.plot-selected').remove();
-    $('#plot-zero-zero').append(badges);
-  });
-
-  $('#plot').on('click', (e) => {
-    $('#plot a').removeClass('border').removeClass('border-danger');
-    $('.plot-selected').remove();
-  });
-
   $('#plot-back').on('click', (e)=>{open('navcomp')});
+  $('#plot').height( $('#plot').width() );
 
-  replot();
+  let plot = new Plot;
+  $('#plot').append(plot.root);
+  plot.rePlot();
 });
 
 </script>

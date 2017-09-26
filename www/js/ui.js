@@ -306,7 +306,8 @@ class Modal extends UI {
     this.dialog.append(this.content);
     this.content.append(this.body);
 
-    if (!this.cancellable) this.base.attr('data-backdrop', 'static');
+    if (!this.cancellable)
+      this.base.attr('data-backdrop', 'static');
   }
 
   get root()        {return this.base}
@@ -344,8 +345,12 @@ class Modal extends UI {
     return btn;
   }
 
+  add(stuff) {
+    this.body.append(stuff);
+  }
+
   add_text(text) {
-    let p = $(`<p>${text}</p>`);
+    let p = $('<p>').append(text);
     this.body.append(p);
     return p;
   }
@@ -362,9 +367,22 @@ class Modal extends UI {
 class Ok extends Modal {
   constructor(msg, opt) {
     super(opt);
-    this.add_text(msg);
+    if (msg) this.add_text(msg);
     this.add_footer_button('Ok').attr('data-dismiss', 'modal');
   }
 
   get ok() {return this.modal}
+}
+
+class InfoPopUp extends Modal {
+  constructor(opt) {
+    super(opt);
+    this.body.addClass('p-0 m-0');
+    this.add_footer_button('Done').attr('data-dismiss', 'modal');
+  }
+
+  addCard(card) {
+    card.root.removeClass('mb-3').addClass('border-0');
+    this.body.append(card.root);
+  }
 }

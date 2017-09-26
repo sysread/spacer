@@ -70,6 +70,7 @@
     <script type="text/javascript" src="js/ui.js"></script>
     <script type="text/javascript" src="js/ui/summary.js"></script>
     <script type="text/javascript" src="js/ui/status.js"></script>
+    <script type="text/javascript" src="js/ui/plot.js"></script>
 
     <script type="text/javascript" src="js/game.js"></script>
 
@@ -97,7 +98,7 @@
 
       function uniq(items, sep=' ') {
         if (!(items instanceof Array))
-          items = `${str}`.split(sep).filter((s) => {return s != ''});
+          items = `${items}`.split(sep).filter((s) => {return s != ''});
         let set = new Set(items);
         let arr = [];
         set.forEach((val) => {arr.push(val)});

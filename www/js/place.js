@@ -10,6 +10,7 @@ class Place extends Market {
     this.deliveries = [];
   }
 
+  get title()     {return data.bodies[this.name].name}
   get type()      {return system.type(this.name)}
   get size()      {return data.bodies[this.name].size}
   get scale()     {return data.scales[this.size]}

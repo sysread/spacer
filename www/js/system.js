@@ -162,6 +162,7 @@ class System {
     let ceil   = Math.ceil;
     let floor  = Math.floor;
     let max    = Math.max;
+    let min    = Math.min;
     let round  = Math.round;
     let bodies = this.bodies();
     let pos    = {};
@@ -181,23 +182,39 @@ class System {
     }
 
     // Calculate max values for x and y
-    let max_x = Object.values(pos).reduce((acc, val) => {return max(acc, abs(val.x))}, 0);
-    let max_y = Object.values(pos).reduce((acc, val) => {return max(acc, abs(val.y))}, 0);
+    let max_x = Math.ceil(1.2 * Object.values(pos).reduce((acc, val) => {return max(acc, val.x)}, 0));
+    let min_x = Math.ceil(1.2 * Object.values(pos).reduce((acc, val) => {return min(acc, val.x)}, 0));
+    let max_y = Math.ceil(1.2 * Object.values(pos).reduce((acc, val) => {return max(acc, val.y)}, 0));
+    let min_y = Math.ceil(1.2 * Object.values(pos).reduce((acc, val) => {return min(acc, val.y)}, 0));
 
     // Calculate scaled coordinates
-    let plot  = [['sun', 0, 0]];
-    for (let name of bodies) {
-      let p     = pos[name];
-      let pct_x = round(p.x / max_x * 100);
-      let pct_y = round(p.y / max_y * 100);
+    let plot   = [['sun', 0, 0]];
+    let points = {'sun': [0, 0]};
 
+    for (let name of bodies) {
+      let p = pos[name];
+      let pct_x = 0;
+      let pct_y = 0;
+
+      if (p.x > 0)
+        pct_x = round(p.x / max_x * 100);
+      else if (p.x < 0)
+        pct_x = -round(p.x / min_x * 100);
+
+      if (p.y > 0)
+        pct_y = round(p.y / max_y * 100);
+      else if (p.y < 0)
+        pct_y = -round(p.y / min_y * 100);
+
+      points[name] = [pct_x, pct_y];
       plot.push([name, pct_x, pct_y]);
     }
 
     return {
       max_x  : plot.reduce((acc, val) => {return max(acc, abs(val[1]))}, 0),
       max_y  : plot.reduce((acc, val) => {return max(acc, abs(val[2]))}, 0),
-      bodies : plot
+      bodies : plot,
+      points : points
     };
   }
 }

@@ -5,7 +5,7 @@ class PlaceSummary extends Card {
     this.traits = uniq(this.place.traits, ', ');
     this.conds  = uniq(this.place.conditions, ', ');
 
-    this.set_header(this.place.name).addClass('text-capitalize');
+    this.set_header(this.place.title).addClass('text-capitalize');
 
     this.add_def('Environment', system.kind(this.place.name));
     this.add_def('Faction', data.factions[this.place.faction].full_name);
