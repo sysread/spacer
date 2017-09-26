@@ -14,8 +14,7 @@ class Game {
       if (saved) {
         this.load(JSON.parse(saved));
         this.refresh();
-        //open('summary');
-        open('plot');
+        open('summary');
       }
       else {
         open('newgame');
