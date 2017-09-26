@@ -8,7 +8,7 @@ class PlaceSummary extends Card {
     this.set_header(this.place.title).addClass('text-capitalize');
 
     if (this.place.name !== game.locus) {
-      this.add_def('Location', Math.round(Physics.AU(system.distance(game.locus, this.place.name)) * 100) / 100 + ' AU away');
+      this.add_def('Distance', Math.round(Physics.AU(system.distance(game.locus, this.place.name)) * 100) / 100 + ' AU');
     } else {
       this.add_def('Location', 'Docked');
     }
