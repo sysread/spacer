@@ -99,9 +99,9 @@ class Place extends Market {
   }
 
   get payRate() {
-    let rate = Math.round(data.base_pay * this.scale);
+    let rate = data.base_pay * this.scale;
     rate -= rate * this.sales_tax;
-    return rate;
+    return Math.round(rate);
   }
 
   mine(resource) {
