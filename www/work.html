@@ -3,33 +3,37 @@
 $(function() {
   let payRate = game.place().payRate;
 
-  let hours = new Slider({
+  let daySlider = new Slider({
     min        : 0,
-    max        : 96,
-    step       : data.hours_per_turn,
-    initial    : data.hours_per_turn,
+    max        : 7,
+    step       : 1,
+    initial    : 1,
     minmaxbtns : true,
-    callback   : (n) => {$('#work-hours').val(n)}
+    callback   : (n) => {
+      $('#work-days').val(n);
+      $('#work-pay').val(n * payRate);
+    }
   });
 
-  $('#work-hours-chooser').empty().append(hours.root);
-  $('#work-dialog').on('show.bs.modal', () => {hours.reset()});
+  $('#work-days-chooser').empty().append(daySlider.root);
+  $('#work-dialog').on('show.bs.modal', () => {daySlider.reset()});
   $('#pay-rate').text(payRate);
 
   let chooser;
 
   $('#collect-dialog').on('shown.bs.modal', () => {
-    let hrs     = hours.val;
-    let turns   = hrs / 4;
+    let days    = daySlider.val;
+    let turns   = days * 24 / data.hours_per_turn;
     let harvest = game.place().harvest(turns);
+    let pay     = days * payRate;
 
     game.turn(turns);
-    game.player.credit(payRate);
+    game.player.credit(pay);
     game.refresh();
     game.save_game();
 
     if (harvest.sum() === 0) {
-      $('#collect-explain').text(`We appreciate you helping out. No luck on beating the quota, but you did earn an honest paycheck to the tune of ${payRate}c.`);
+      $('#collect-explain').text(`We appreciate you helping out. No luck on beating the quota, but you did earn an honest paycheck to the tune of ${pay}c.`);
       $('#collect-results').empty();
       $('#collect-complete').addClass('disabled');
     }
@@ -80,12 +84,20 @@ $(function() {
     <div class="modal-content">
       <div class="modal-header"><h5 class="modal-title">Find work</h5></div>
       <div class="modal-body">
-        <p>The pay is <span id="pay-rate"></span>c/hr. You get to keep anything you collect over the quota. How long are you available for?</p>
+        <p>
+          The pay is <span id="pay-rate"></span>c/day.
+          You get to keep anything you collect over the quota.
+          How long are you available for?
+        </p>
         <div class="row p-2">
-          <div class="col-3"><label for="work-hours">Hours</label></div>
-          <div class="col"><input type="number" class="form-control" id="work-hours" readonly></div>
+          <div class="col-3"><label for="work-days">Days</label></div>
+          <div class="col"><input type="number" class="form-control" id="work-days" readonly></div>
         </div>
-        <div id="work-hours-chooser"></div>
+        <div class="row p-2">
+          <div class="col-3"><label for="work-pay">Pay</label></div>
+          <div class="col"><input type="number" class="form-control" id="work-pay" readonly></div>
+        </div>
+        <div id="work-days-chooser"></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-dark" id="work-complete" data-dismiss="modal" data-toggle="modal" data-target="#collect-dialog">Get to work</button>

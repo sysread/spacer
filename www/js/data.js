@@ -14,14 +14,14 @@ const data = {
   craft_fee       : 0.05,
   fabricators     : 40,
   fab_health      : 20,
-  base_pay        : 20,
+  base_pay        : 80, // credits/day
 
   scales: {
-    tiny   : 0.66,
-    small  : 0.83,
+    tiny   : 0.6,
+    small  : 0.8,
     normal : 1,
-    large  : 1.17,
-    huge   : 1.33
+    large  : 1.2,
+    huge   : 1.4
   },
 
   resources: {
