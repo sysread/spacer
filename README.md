@@ -1,5 +1,10 @@
-# spacer
-Like a cross between TradeWars and The Expanse
+# Spacer
+Like a cross between TradeWars, Elite, The Expanse, and Firefly.
 
-# testing
+# Testing
+
+## Chrome
     cordova run browser -- --live-reload
+
+## iOS
+    cordova run ios
