@@ -111,34 +111,18 @@ $(() => {
     $('#nav-transit-dest').text(target);
   });
 
-  let transit_intvl;
+  $('#nav-transit').on('shown.bs.modal', () => {
+    $('#spacer-nav').data('in-transit', true);
 
-  let pause_transit = () => {
-    window.clearInterval(transit_intvl);
-    delete transit_intvl;
-  }
+    let plan = $('#nav-transit').data('plan');
+    let rate = $('#nav-transit').data('burnRate');
+    let timer;
 
-  let resume_transit = () => {
-    transit_intvl = window.setInterval(() => {
-      let plan = $('#nav-transit').data('plan');
-      let rate = $('#nav-transit').data('burnRate');
+    let interval = function() {
+      if (plan.left > 0) {
+        $('#nav-transit-progress').finish();
 
-      if (plan.left === 0) {
-        pause_transit();
-
-        $('#nav-transit-distance').text('0 AU');
-        $('#nav-transit-time').text('0 hours');
-        $('#nav-transit-progress').css('width', '100%');
-
-        window.setTimeout(() => {
-          $('#nav-transit').modal('hide');
-          $('#spacer-nav').data('in-transit', false);
-          game.transit(plan.dest);
-          open('summary');
-        }, 950);
-      }
-      else {
-        let count = Math.min(plan.left, 20);
+        let count = Math.min(plan.left, Math.floor(plan.turns / 10));
 
         for (let i = 0; i < count; ++i) {
           game.player.ship.burn(plan.accel);
@@ -152,14 +136,17 @@ $(() => {
         $('#nav-transit-progress').css('width', `${p}%`);
 
         game.turn(count);
-        $('#nav-transit-progress').finish();
+        timer = window.setTimeout(interval, 200);
       }
-    }, 30);
-  }
+      else {
+        $('#nav-transit').modal('hide');
+        $('#spacer-nav').data('in-transit', false);
+        game.transit(plan.dest);
+        open('summary');
+      }
+    };
 
-  $('#nav-transit').on('shown.bs.modal', () => {
-    $('#spacer-nav').data('in-transit', true);
-    resume_transit();
+    timer = window.setTimeout(interval, 50);
   });
 
   $('#nav-system-map').on('click', (e)=>{open('plot')});

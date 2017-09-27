@@ -40,33 +40,30 @@ $(function() {
     me.ship.fuel = data.shipclass[ship].tank;
     game.new_game(me, place);
 
-    $('#starting-game-progress').css('width', '5%');
     let turns = data.initial_turns;
     let step  = Math.ceil(turns/10);
     let done  = 0;
+    let timer;
 
-    let intvl;
-    intvl = window.setInterval(() => {
+    let interval = function() {
       if (done < turns) {
         let count = Math.min(turns - done, step);
+        let pct = Math.ceil((done / turns) * 100);
         done += count;
-
-        let pct = Math.max(5, Math.ceil((done / turns) * 100));
-
         game.turn(count);
-
-        $('#starting-game-progress').text(`${pct}%`);
-        $('#starting-game-progress').css('width', `${pct}%`);
+        $('#starting-game-progress').text(`${pct}%`).css('width', `${pct}%`);
+        timer = window.setTimeout(interval, 200);
       }
       else {
         $('#starting-game-progress').css('width', '100%').text('Done!');
-        window.clearInterval(intvl);
         game.refresh();
         $('#starting-game').modal('hide');
         $('#spacer-nav').data('in-transit', false);
-        open('summary');
+        window.setTimeout(() => {open('summary')}, 100);
       }
-    }, 30);
+    };
+
+    timer = window.setTimeout(interval, 50);
   });
 });
 
@@ -111,8 +108,7 @@ $(function() {
       </div>
       <div class="modal-body">
         <div class="progress bg-dark">
-          <div id="starting-game-progress" class="progress-bar bg-warning" style="height: 35px; width: 0%">
-          </div>
+          <div id="starting-game-progress" class="progress-bar bg-warning" style="height: 35px; width: 0%">0%</div>
         </div>
       </div>
     </div>

@@ -246,10 +246,10 @@ const data = {
     schooner    : {hull: 8,  armor: 4,  cargo: 10,  hardpoints: 2,  mass: 450,   tank: 6,   drives: 4,   drive: 'ion',    restricted: false},
 
     /* Merchant */
-    trader      : {hull: 4,  armor: 1,  cargo: 25,  hardpoints: 1,  mass: 2500,  tank: 35,  drives: 30,  drive: 'ion',    restricted: false},
-    merchantman : {hull: 7,  armor: 2,  cargo: 30,  hardpoints: 2,  mass: 4000,  tank: 60,  drives: 50,  drive: 'ion',    restricted: false},
-    freighter   : {hull: 10, armor: 3,  cargo: 50,  hardpoints: 2,  mass: 6800,  tank: 110, drives: 80,  drive: 'ion',    restricted: false},
-    hauler      : {hull: 20, armor: 5,  cargo: 100, hardpoints: 4,  mass: 10000, tank: 150, drives: 100, drive: 'ion',    restricted: false},
+    trader      : {hull: 4,  armor: 1,  cargo: 25,  hardpoints: 2,  mass: 2500,  tank: 35,  drives: 30,  drive: 'ion',    restricted: false},
+    merchantman : {hull: 7,  armor: 2,  cargo: 30,  hardpoints: 3,  mass: 4000,  tank: 60,  drives: 50,  drive: 'ion',    restricted: false},
+    freighter   : {hull: 10, armor: 3,  cargo: 50,  hardpoints: 3,  mass: 6800,  tank: 110, drives: 80,  drive: 'ion',    restricted: false},
+    hauler      : {hull: 20, armor: 5,  cargo: 100, hardpoints: 5,  mass: 10000, tank: 150, drives: 100, drive: 'ion',    restricted: false},
 
     /* Military */
     transport   : {hull: 40, armor: 10, cargo: 50,  hardpoints: 6,  mass: 8000,  tank: 180, drives: 220, drive: 'ion',    restricted: true},
@@ -260,49 +260,63 @@ const data = {
     battleship  : {hull: 85, armor: 25, cargo: 20,  hardpoints: 16, mass: 2300,  tank: 140, drives: 20,  drive: 'fusion', restricted: true},
 
     /* Faction ships */
-    neptune     : {hull: 10, armor: 4,  cargo: 45,  hardpoints: 3,  mass: 3200,  tank: 80,  drives: 40,  drive: 'ion',    restricted: true, faction: 'TRANSA'},
+    neptune     : {hull: 10, armor: 4,  cargo: 45,  hardpoints: 3,  mass: 3200,  tank: 60,  drives: 30,  drive: 'ion',    restricted: true, faction: 'TRANSA'},
     barsoom     : {hull: 35, armor: 6,  cargo: 30,  hardpoints: 4,  mass: 600,   tank: 30,  drives: 4,   drive: 'fusion', restricted: true, faction: 'MC'}
   },
 
+  /*
+   * keys:
+   *    reload    : combat turns between use
+   *    rate      : rate of fire (uses per turn after reload)
+   *    damage    : max damage against enemy vessel
+   *    intercept : chance of intercepting and disabling a missile
+   */
   shipAddOns: {
     cargoPod: {
-      name  : 'External cargo pod',
-      desc  : 'Welds an additional cargo hold onto the outer hull, increasing total cargo space but reducing armor.',
-      hdpts : 1,
-      mass  : 10,
-      info  : {
-        cargo :  20,
-        armor : -2
-      }
+      name      : 'External cargo pod',
+      desc      : 'Welds an additional cargo hold onto the outer hull, increasing total cargo space but reducing armor.',
+      hdpts     : 1,
+      mass      : 10,
+      cargo     : 20,
+      armor     : -2
     },
     pds: {
-      name  : 'Point defense system',
-      desc  : 'Mounts a computer-controlled network of small, magnetically propelled, point defense turrets around the ship to stop incoming torpedos at a safe range.',
-      hdpts : 1,
-      mass  : 5,
-      info  : {
-        damage    : 1,
-        intercept : 0.75
-      }
+      name      : 'Point defense system',
+      desc      : 'Mounts a computer-controlled network of small, magnetically propelled, point defense turrets around the ship to stop incoming torpedos at a safe range.',
+      hdpts     : 1,
+      mass      : 5,
+      damage    : 1,
+      intercept : 0.75,
+      reload    : 1,
+      rate      : 2
     },
-    railGun: {
-      name  : 'Rail gun',
-      desc  : 'A military-grade rail gun turret, magnetically accelerating 100kg rounds at an appreciable fraction of the speed of light.',
-      hdpts : 1,
-      mass  : 15,
-      info  : {
-        damage : 10
-      }
+    railgun: {
+      name      : 'Rail gun',
+      desc      : 'A military-grade rail gun turret, magnetically accelerating 100kg rounds at an appreciable fraction of the speed of light.',
+      hdpts     : 1,
+      mass      : 15,
+      damage    : 10,
+      reload    : 1,
+      rate      : 1
     },
-    torpedoTube: {
-      name  : 'Torpedo tube',
-      desc  : 'Adds a self-guided torpedo launcher. torpedos sold separately.',
-      hdpts : 1,
-      mass  : 20,
-      info  : {
-        damage : 10,
-        hull   : 0.15
-      }
+    torpedo: {
+      name      : 'Torpedo tube',
+      desc      : 'Adds a self-guided torpedo launcher. torpedos sold separately.',
+      hdpts     : 1,
+      mass      : 20,
+      damage    : 10,
+      reload    : 4,
+      rate      : 1
+    },
+    ecm: {
+      name      : 'Electronic counter-measures',
+      desc      : 'Generates electromagnetic interference and false signals to confuse an enemy\'s targeting systems.',
+      hdpts     : 1,
+      mass      : 1,
+      intercept : 0.15,
+      dodge     : 0.45,
+      reload    : 1,
+      rate      : 2
     }
   }
 };
