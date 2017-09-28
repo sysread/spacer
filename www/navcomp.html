@@ -122,7 +122,7 @@ $(() => {
       if (plan.left > 0) {
         $('#nav-transit-progress').finish();
 
-        let count = Math.min(plan.left, Math.floor(plan.turns / 10));
+        let count = Math.min(plan.left, Math.ceil(plan.turns / 10));
 
         for (let i = 0; i < count; ++i) {
           game.player.ship.burn(plan.accel);
