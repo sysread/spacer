@@ -150,7 +150,7 @@ class Ship {
     else if (this.shipclass.drive === 'fusion')
       price += 100000 + (this.shipclass.drives * 5000);
 
-    return price;
+    return Math.ceil(price);
   }
 
   cargoValue() {

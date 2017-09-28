@@ -47,7 +47,7 @@ $(function() {
   $('#tradein').on('show.bs.modal', function(e) {
     let ship  = $('#tradein').data('ship');
     let price = $('#tradein').data('price');
-    let cost  = price - tradein;
+    let cost  = Math.ceil(price - tradein);
 
     $('#tradein-value').text(csn(tradein));
     $('#new-ship-price').text(csn(price));
@@ -87,8 +87,9 @@ $(function() {
 
     let ship = new Ship({shipclass: sc, fuel: info.tank});
     let price = ship.price();
-    price += Math.ceil(price * game.place().sales_tax);
+    price += price * game.place().sales_tax;
     price *= faction_adjustment;
+    price = Math.ceil(price);
 
     let name = $(`<h5 class="text-capitalize">${sc}</h5>`);
     let btn  = $(`<button type="button" class="btn btn-dark float-right" data-toggle="modal" data-target="#ship-detail">Info</button>`);
