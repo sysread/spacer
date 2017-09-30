@@ -1,0 +1,19 @@
+<script type="text/javascript">
+
+$(function() {
+  let root = $('#transit');
+  let data = $('#spacer').data();
+
+  if (data.state !== 'transit') {
+    open('summary');
+    return;
+  }
+
+  let transit = new TransitCard({plan: data.info});
+  $('#transit').empty().append(transit.root);
+  transit.begin();
+});
+
+</script>
+
+<div id="transit"></div>

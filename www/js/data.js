@@ -99,7 +99,7 @@ const data = {
       ship      : 'trader'
     },
     'CERES': {
-      full_name : 'Ceres',
+      full_name : 'Ceres Corporation',
       capital   : 'Ceres',
       sales_tax : 0.065,
       ship      : 'trader'

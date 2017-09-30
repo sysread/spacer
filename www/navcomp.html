@@ -60,12 +60,11 @@ $(() => {
     }
   }
 
-  $('#navcomp').append(nav);
+  $('#nav-targets').append(nav);
 
   $('#nav-dialog').on('show.bs.modal', function(e) {
     let best    = $(e.relatedTarget).data('selected');
     let plan    = best.transit;
-    let rate    = $(e.relatedTarget).data('burnRate');
     let target  = system.name(plan.dest);
     let type    = system.kind(plan.dest);
     let size    = game.place(plan.dest).size;
@@ -84,8 +83,7 @@ $(() => {
         plan = transit.transit;
         [days, hours] = plan.days_hours;
 
-        $('#nav-transit').data('plan', plan);
-        $('#nav-transit').data('burnRate', rate);
+        $('#navcomp').data('transit', plan);
 
         $('#nav-accel').text(plan.accel.toFixed(2));
         $('#nav-flip').text(csn(plan.hours/2));
@@ -107,46 +105,14 @@ $(() => {
     if (traits) notes.append(`<li>${traits}</li>`);
 
     $('#nav-destination').empty().append(`${target}`).append(notes);
-
-    $('#nav-transit-dest').text(target);
   });
 
-  $('#nav-transit').on('shown.bs.modal', () => {
-    $('#spacer-nav').data('in-transit', true);
-
-    let plan = $('#nav-transit').data('plan');
-    let rate = $('#nav-transit').data('burnRate');
-    let timer;
-
-    let interval = function() {
-      if (plan.left > 0) {
-        $('#nav-transit-progress').finish();
-
-        let count = Math.min(plan.left, Math.ceil(plan.turns / 10));
-
-        for (let i = 0; i < count; ++i) {
-          game.player.ship.burn(plan.accel);
-          plan.turn();
-        }
-
-        let d = plan.dist_left.toFixed(2);
-        let p = Math.round(plan.pct_complete);
-
-        $('#nav-transit-distance').text(`${d} AU`);
-        $('#nav-transit-progress').css('width', `${p}%`);
-
-        game.turn(count);
-        timer = window.setTimeout(interval, 200);
-      }
-      else {
-        $('#nav-transit').modal('hide');
-        $('#spacer-nav').data('in-transit', false);
-        game.transit(plan.dest);
-        open('summary');
-      }
-    };
-
-    timer = window.setTimeout(interval, 50);
+  $('#nav-complete').on('click', (e) => {
+    $('#nav-dialog').modal('hide');
+    const data = $('#navcomp').data('transit');
+    $('#spacer').data('info', data);
+    open('transit');
+    $('#spacer').data('state', 'transit');
   });
 
   $('#nav-system-map').on('click', (e)=>{open('plot')});
@@ -154,7 +120,7 @@ $(() => {
 
 </script>
 
-<div class="card p-3">
+<div id="navcomp" class="card">
   <h3 class="card-header">
     Navigation
     <button type="button" class="btn btn-dark float-right" id="nav-system-map">Map</button>
@@ -178,7 +144,7 @@ $(() => {
         ship has a maximum burn time of <span id="nav-ship-burn"></span> hours
         at maximum thrust.
       </p>
-      <div id="navcomp"></div>
+      <div id="nav-targets" class="p-3"></div>
     </div>
   </div>
 </div>
@@ -208,25 +174,8 @@ $(() => {
         </table>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-dark" data-dismiss="modal" id="nav-complete" data-toggle="modal" data-target="#nav-transit">Engage</button>
+        <button type="button" class="btn btn-dark" data-dismiss="modal" id="nav-complete">Engage</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal" id="nav-transit" data-backdrop="static">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">En route to <span class="text-capitalize" id="nav-transit-dest"></span></h5>
-      </div>
-      <div class="modal-body">
-        <div class="progress bg-dark">
-          <div id="nav-transit-progress" class="progress-bar bg-warning" style="height: 35px">
-            <span id="nav-transit-distance" class="badge badge-pill badge-dark float-left m-1 font-weight-normal" style="font-size:14px"></span>
-          </div>
-        </div>
       </div>
     </div>
   </div>

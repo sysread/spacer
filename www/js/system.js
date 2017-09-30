@@ -34,6 +34,10 @@ class System {
     return this.body(name).name;
   }
 
+  faction(name) {
+    return data.bodies[name].faction;
+  }
+
   type(name) {
     return this.system.bodies[name].type;
   }

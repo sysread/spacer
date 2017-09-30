@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html>
   <head>
-      <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">
-      <meta name="format-detection" content="telephone=no">
-      <meta name="msapplication-tap-highlight" content="no">
-      <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
 
-      <link rel="stylesheet" type="text/css" href="css/vendor/bootstrap.min.css">
-      <link rel="stylesheet" type="text/css" href="css/index.css">
+    <link rel="stylesheet" type="text/css" href="css/vendor/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="css/index.css">
 
-      <script type="text/javascript" src="cordova.js"></script>
-      <script type='application/javascript' src='js/vendor/fastclick.js'></script>
-      <script type="text/javascript" src="js/vendor/jquery.min.js"></script>
-      <script type="text/javascript" src="js/vendor/popper.min.js"></script>
-      <script type="text/javascript" src="js/vendor/bootstrap.min.js"></script>
-      <script type="text/javascript" src="js/vendor/solaris-model/dist/solaris-model.min.js"></script>
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type='application/javascript' src='js/vendor/fastclick.js'></script>
+    <script type="text/javascript" src="js/vendor/jquery.min.js"></script>
+    <script type="text/javascript" src="js/vendor/popper.min.js"></script>
+    <script type="text/javascript" src="js/vendor/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/vendor/solaris-model/dist/solaris-model.min.js"></script>
 
-      <title>Spacer</title>
-    </head>
-  <body>
+    <title>Spacer</title>
+  </head>
+  <body id="spacer">
     <!-- Header -->
     <nav class="spacer-header fixed-top navbar navbar-dark px-3 py-2">
       <span class="navbar-text text-capitalize" id="spacer-location"></span>
@@ -40,7 +40,7 @@
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <div class="collapse navbar-collapse" id="spacer-nav" data-in-transit="0">
+      <div class="collapse navbar-collapse" id="spacer-nav">
         <ul class="navbar-nav mr-auto">
           <li class="nav-item py-2"><a href="#" data-toggle="collapse" data-target="#spacer-nav" data-name="summary"  data-path="summary.html"     class="nav-link active">Summary</a></li>
           <li class="nav-item py-2"><a href="#" data-toggle="collapse" data-target="#spacer-nav" data-name="work"     data-path="work.html"        class="nav-link">Work</a></li>
@@ -71,6 +71,7 @@
     <script type="text/javascript" src="js/ui/summary.js"></script>
     <script type="text/javascript" src="js/ui/status.js"></script>
     <script type="text/javascript" src="js/ui/plot.js"></script>
+    <script type="text/javascript" src="js/ui/transit.js"></script>
 
     <script type="text/javascript" src="js/game.js"></script>
 
@@ -80,7 +81,7 @@
 
       function open(name) {
         let path = $(`#spacer-nav a[data-name='${name}']`).data('path') || name + '.html';
-        if ($('#spacer-nav').data('in-transit')) return;
+        if ($('#spacer').data('state') === 'transit') return;
         $('#spacer-nav a').removeClass('active');
         $(`#spacer-nav a[data-name="${name}"]`).addClass('active');
         $('#spacer-content').empty().load(path);

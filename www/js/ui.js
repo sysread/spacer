@@ -317,6 +317,11 @@ class Modal extends UI {
   show() {this.base.modal('show')}
   hide() {this.base.modal('hide')}
 
+  onShow(fn)   {this.root.on('show.bs.modal',   fn)}
+  onShown(fn)  {this.root.on('shown.bs.modal',  fn)}
+  onHide(fn)   {this.root.on('hide.bs.modal',   fn)}
+  onHidden(fn) {this.root.on('hidden.bs.modal', fn)}
+
   set_header(text, tag='h5') {
     if (this.header) this.header.remove();
     this.header = $(`<div class="modal-header"><${tag} class="modal-title">${text}</${tag}></div>`);
@@ -384,5 +389,21 @@ class InfoPopUp extends Modal {
   addCard(card) {
     card.root.removeClass('mb-3').addClass('border-0');
     this.body.append(card.root);
+  }
+}
+
+class ProgressBar extends UI {
+  constructor(opt) {
+    super(opt);
+    this.meter = $('<div class="progress-bar bg-warning" style="height: 35px">');
+    this.display = $('<span class="badge badge-pill badge-dark float-left m-1 font-weight-normal" style="font-size:14px">');
+    this.meter.append(this.display);
+    this.base.addClass('progress bg-dark').append(this.meter);
+  }
+
+  setProgress(pct, display) {
+    if (display === undefined) display = `${pct}%`;
+    this.meter.finish().css('width', `${pct}%`);
+    this.display.finish().text(display);
   }
 }
