@@ -153,10 +153,11 @@ class System {
       const a = Physics.deltav_for_distance(t * 0.5, S); // deltav to reach flip point
 
       yield new Transit({
-        dest  : target,
-        dist  : S * 2,
-        turns : i,
-        accel : Physics.G(a)
+        origin : origin,
+        dest   : target,
+        dist   : S * 2,
+        turns  : i,
+        accel  : Physics.G(a)
       });
     }
   }

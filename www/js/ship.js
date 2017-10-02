@@ -42,6 +42,16 @@ class Ship {
   get cargoLeft()  { return this.cargoSpace - this.cargoUsed }
   get holdIsFull() { return this.cargoLeft === 0 }
 
+  get hasContraband() {
+    for (let [item, amt] of this.cargo.entries()) {
+      if (amt > 0 && data.resources[item].contraband) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   thrustRatio(deltav, mass) {
     if (mass === undefined) mass = this.currentMass();
 

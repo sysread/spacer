@@ -1,10 +1,47 @@
 class UI {
   constructor(opt) {
     this.opt  = opt || {};
-    this.base = $('<div>');
+    this.base = $(this.opt.tag ? '<' + this.opt.tag + '>' : '<div>');
   }
 
-  get root() {return this.base}
+  get root() {
+    return this.base;
+  }
+
+  data(opt) {
+    this.base.data(opt);
+  }
+
+  add(thing) {
+    this.base.append(thing);
+    return thing;
+  }
+
+  detach() {
+    this.root.remove();
+  }
+}
+
+class Button extends UI {
+  constructor(opt) {
+    super(opt);
+    this.base = $('<button type="button" class="btn btn-dark">');
+  }
+
+  onClick(fn) {
+    this.root.on('click', fn);
+  }
+}
+
+class ButtonGroup extends UI {
+  constructor(opt) {
+    super(opt);
+    this.base = $('<div class="btn-group">');
+  }
+
+  addButton(btn) {
+    this.root.append(btn.root);
+  }
 }
 
 class Slider extends UI {
@@ -200,16 +237,11 @@ class Row extends UI {
 class Container extends UI {
   constructor(opt) {
     super(opt);
-    this.base = $('<div class="container">');
+    this.base = $('<div class="container-fluid">');
   }
 
   get root()      {return this.base}
   get container() {return this.base}
-
-  add(thing) {
-    this.base.append(thing);
-    return thing;
-  }
 }
 
 class Card extends UI {
@@ -223,12 +255,13 @@ class Card extends UI {
   get root() {return this.base}
   get card() {return this.base}
 
-  data(opt) {this.base.data(opt)}
-
   set_header(text, tag='h3') {
-    if (this.hdr) this.hdr.remove();
-    this.hdr = $(`<${tag} class="card-header">`).append(text);
-    this.body.before(this.hdr);
+    if (!this.hdr) {
+      this.hdr = $(`<${tag} class="card-header">`);
+      this.body.before(this.hdr);
+    }
+
+    this.hdr.empty().append(text);
     return this.hdr;
   }
 
@@ -250,9 +283,12 @@ class Card extends UI {
   }
 
   set_title(text, tag='h4') {
-    if (this.title) this.title.remove();
-    this.title = $(`<${tag} class="card-title">`).append(text);
-    this.body.prepend(this.title);
+    if (!this.title) {
+      this.title = $(`<${tag} class="card-title">`);
+      this.body.prepend(this.title);
+    }
+
+    this.title.empty().append(text);
     return this.title;
   }
 
@@ -289,7 +325,7 @@ class Card extends UI {
 
   add_button(text) {
     let btn = this.add_link(text);
-    btn.removeClass('card-link').addClass('btn btn-dark');
+    btn.removeClass('card-link').addClass('btn btn-dark m-1');
     return btn;
   }
 }
@@ -339,13 +375,18 @@ class Modal extends UI {
     console.log('no header has been set');
   }
 
-  add_footer_button(text) {
+  add_footer() {
     if (!this.footer) {
       this.footer = $('<div class="modal-footer">');
       this.body.after(this.footer);
     }
 
-    let btn = $(`<button type="button" class="btn btn-dark">${text}</button>`);
+    return this.footer;
+  }
+
+  add_footer_button(text) {
+    this.add_footer();
+    let btn = $('<button type="button" class="btn btn-dark">').append(text);
     this.footer.append(btn);
     return btn;
   }

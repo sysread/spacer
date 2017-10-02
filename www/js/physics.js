@@ -16,7 +16,6 @@ class Physics {
   static G(deltav) {
     if (deltav === undefined)
       return 9.80665;
-
     return deltav / 9.80665;
   }
 

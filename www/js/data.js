@@ -2,7 +2,6 @@
  * Masses in metric tonnes (t)
  * Thrust in kiloNewtons
  */
-
 const data = {
   start_date      : new Date(2242, 0, 1, 1),
   hours_per_turn  : 8,

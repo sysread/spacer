@@ -4,6 +4,7 @@ class Transit {
     this.left = this.turns;
   }
 
+  get origin()  { return this.opt.origin }                  // origin body name
   get dest()    { return this.opt.dest }                    // destination body name
   get dist()    { return this.opt.dist }                    // meters
   get turns()   { return this.opt.turns }                   // turns
@@ -23,5 +24,9 @@ class Transit {
     return [d.toFixed(0), h];
   }
 
-  turn() { if (!this.is_complete) --this.left }
+  turn() {
+    if (!this.is_complete) {
+      --this.left;
+    }
+  }
 }
