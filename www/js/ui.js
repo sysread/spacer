@@ -79,8 +79,7 @@ class Slider extends UI {
     this.group.append($('<span class="input-group-btn">').append(this.up));
     if (this.minmaxbtns) this.group.append($('<span class="input-group-btn">').append(this.upup));
 
-    this.value = this.initial;
-    this.update();
+    this.val = this.initial;
   }
 
   start_monitor() {

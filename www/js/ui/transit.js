@@ -28,7 +28,7 @@ class TransitCard extends Card {
   interval() {
     if (this.plan.left > 0) {
       this.burn();
-      this.timer = window.setTimeout(() => {this.interval()}, 200);
+      this.timer = window.setTimeout(() => {this.interval()}, 100);
     }
     else {
       this.end();
@@ -36,7 +36,7 @@ class TransitCard extends Card {
   }
 
   burn() {
-    let count = Math.min(this.plan.left, Math.ceil(this.plan.turns / 10));
+    let count = Math.min(this.plan.left, Math.ceil(this.plan.turns / 20));
     game.turn(count);
 
     for (let i = 0; i < count; ++i) {
@@ -45,11 +45,19 @@ class TransitCard extends Card {
       this.plan.turn();
     }
 
-    let d = this.plan.auRemaining().toFixed(2);
+    let d = Math.round(this.plan.auRemaining() * 1000) / 1000;
+
+    if (d < 1.0) {
+      d = csn(Math.round(this.plan.distanceRemaining() / 1000)) + ' km';
+    }
+    else {
+      d = d + ' AU';
+    }
+
     let p = Math.round(this.plan.pct_complete);
 
     this.set_title(p > 50 ? 'Deceleration burn' : 'Acceleration burn');
-    this.progress.setProgress(p, `${d} AU`);
+    this.progress.setProgress(p, d);
   }
 
   inspection() {

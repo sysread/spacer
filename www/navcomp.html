@@ -2,7 +2,7 @@
 
 $(() => {
   let ship     = game.player.ship;
-  let maxAccel = Physics.G() * game.player.maxAcceleration();
+  let maxAccel = Physics.G(game.player.maxAcceleration());
   let navcomp  = new NavComp(maxAccel, ship, game.place().name);
 
   $('#nav-player-home' ).text(data.bodies[game.player.home].name);
