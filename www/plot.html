@@ -2,8 +2,6 @@
 
 $(function() {
   $('#plot-back').on('click', (e)=>{open('navcomp')});
-  $('#plot').height( $('#plot').width() );
-
   let plot = new Plot;
   $('#plot').append(plot.root);
   plot.rePlot();
@@ -12,11 +10,9 @@ $(function() {
 </script>
 
 <div class="card">
-  <h3 class="card-header">
-    System map
+  <div id="plot" class="card-body p-0">
+  </div>
+  <div class="card-body">
     <button type="button" class="btn btn-dark float-right" id="plot-back">Back</button>
-  </h3>
-  <div class="card-body p-1">
-    <div class="card-text" id="plot"></div>
   </div>
 </div>

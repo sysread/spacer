@@ -39,7 +39,9 @@ class System {
   }
 
   type(name) {
-    return this.system.bodies[name].type;
+    const type = this.system.bodies[name].type;
+    if (type === 'dwarfPlanet') return 'dwarf';
+    return type;
   }
 
   central(name) {
@@ -52,7 +54,7 @@ class System {
     let body = this.body(name);
     let type = this.type(name);
 
-    if (type == 'dwarfPlanet') {
+    if (type == 'dwarf') {
       type = 'Dwarf';
     }
     else if (body.central && body.central.name != 'The Sun') {
@@ -69,14 +71,58 @@ class System {
     return this.system.bodies['earth'].mass / this.system.bodies[name].mass;
   }
 
+  closestBodyToPoint(point) {
+    let dist, closest;
+
+    for (let body of this.bodies()) {
+      let d = Physics.distance(point, this.position(body));
+      if (dist === undefined || d < dist) {
+        dist = d;
+        closest = body;
+      }
+    }
+
+    return [closest, dist];
+  }
+
+  addPoints(p1, p2) {
+    const [x0, y0, z0] = p1;
+    const [x1, y1, z1] = p2;
+    return [x1 + x0, y1 + y0, z1 + z0];
+  }
+
   position(name) {
-    return this.body(name).position;
+    const body = this.body(name);
+    if (body.type === 'moon') {
+      return this.addPoints(body.position, body.central.position);
+    }
+    else {
+      return body.position;
+    }
   }
 
   orbit(name) {
     let key = `${name}.orbit`;
-    if (!this.cache.hasOwnProperty(key))
-      this.cache[key] = this.body(name).getOrbitPath();
+
+    if (!this.cache.hasOwnProperty(key)) {
+      const body = this.body(name);
+
+      if (body.type === 'moon') {
+        const moon    = body.getOrbitPath();
+        const central = body.central.getOrbitPath();
+        let orbit = [];
+
+        for (let i = 0; i < moon.length; ++i) {
+          orbit.push(this.addPoints(moon[i], central[i]));
+        }
+
+        this.cache[key] = orbit;
+      }
+      else {
+        this.cache[key] = this.body(name).getOrbitPath();
+      }
+    }
+
     return this.cache[key];
   }
 
@@ -91,9 +137,9 @@ class System {
 
       for (let day = 1; day < end; ++day) {
         let next = orbit[day];
-        let dx = (point[0] - next[0]) / turns_per_day;
-        let dy = (point[1] - next[1]) / turns_per_day;
-        let dz = (point[2] - next[2]) / turns_per_day;
+        let dx = Math.ceil((point[0] - next[0]) / turns_per_day);
+        let dy = Math.ceil((point[1] - next[1]) / turns_per_day);
+        let dz = Math.ceil((point[2] - next[2]) / turns_per_day);
 
         for (var i = 1; i < turns_per_day; ++i) {
           path.push([
@@ -113,51 +159,32 @@ class System {
   }
 
   distance(origin, destination) {
-    let b1 = this.body(origin);
-    let b2 = this.body(destination);
-    if (b1.type === 'moon' && b1.central.name !== b2.name) b1 = b1.central;
-    if (b2.type === 'moon' && b2.central.name !== b1.name) b2 = b2.central;
-    return Physics.distance(b1.position, b2.position);
+    return Physics.distance(
+      this.position(origin),
+      this.position(destination)
+    );
   }
 
   *astrogator(origin, target) {
-    let b1 = this.body(origin);
     let b2 = this.body(target);
-    let p1;
-
-    // body to body in the same system
-    if (b1.central.name == b2.central.name) {
-      p1 = b1.position;
-    }
-    // planet to moon
-    else if (b1.name == b2.central.name) {
-      p1 = [0, 0, 0];
-    }
-    // moon to planet
-    else if (b1.central.name == b2.name) {
-      [b1, b2] = [b2, b1];
-      p1 = [0, 0, 0];
-    }
-    else {
-      if (b1.type == 'moon') b1 = b1.central;
-      if (b2.type == 'moon') b2 = b2.central;
-      p1 = b1.position;
-    }
+    let p1 = this.position(origin);
 
     let orbit = this.orbit_by_turns(b2.key);
-    const s_per_turn = (24 / data.hours_per_turn) * 3600;
+    const s_per_turn = data.hours_per_turn * 3600;
 
     for (var i = 1; i < orbit.length; ++i) {
-      const S = Physics.distance(p1, orbit[i]) * 0.5;    // distance to flip point
-      const t = i * s_per_turn;                          // seconds until target is at destination
-      const a = Physics.deltav_for_distance(t * 0.5, S); // deltav to reach flip point
+      const S = Physics.distance(p1, orbit[i]); // distance
+      const t = i * s_per_turn; // seconds until target is at destination
+      const a = Physics.deltav_for_distance(t * 0.5, S * 0.5); // deltav to reach flip point
 
       yield new Transit({
         origin : origin,
         dest   : target,
-        dist   : S * 2,
+        dist   : S,
         turns  : i,
-        accel  : Physics.G(a)
+        accel  : a,
+        start  : p1,
+        end    : orbit[i]
       });
     }
   }
@@ -174,23 +201,15 @@ class System {
 
     // Get coordinates and hypot for each body, scaled down
     for (let name of bodies) {
-      let body = this.body(name);
-
-      if (body.type === 'moon')
-        body = body.central;
-
-      let [x, y, z] = body.position;
+      let [x, y, z] = this.position(name);
       x = ceil(x / 1000);
       y = ceil(y / 1000);
-
       pos[name] = {x:x, y:y};
     }
 
     // Calculate max values for x and y
-    let max_x = Math.ceil(1.2 * Object.values(pos).reduce((acc, val) => {return max(acc, val.x)}, 0));
-    let min_x = Math.ceil(1.2 * Object.values(pos).reduce((acc, val) => {return min(acc, val.x)}, 0));
-    let max_y = Math.ceil(1.2 * Object.values(pos).reduce((acc, val) => {return max(acc, val.y)}, 0));
-    let min_y = Math.ceil(1.2 * Object.values(pos).reduce((acc, val) => {return min(acc, val.y)}, 0));
+    let max_x = Math.ceil(1.2 * Object.values(pos).reduce((acc, val) => {return max(acc, abs(val.x))}, 0));
+    let max_y = Math.ceil(1.2 * Object.values(pos).reduce((acc, val) => {return max(acc, abs(val.y))}, 0));
 
     // Calculate scaled coordinates
     let plot   = [['sun', 0, 0]];
@@ -201,24 +220,16 @@ class System {
       let pct_x = 0;
       let pct_y = 0;
 
-      if (p.x > 0)
-        pct_x = round(p.x / max_x * 100);
-      else if (p.x < 0)
-        pct_x = -round(p.x / min_x * 100);
-
-      if (p.y > 0)
-        pct_y = round(p.y / max_y * 100);
-      else if (p.y < 0)
-        pct_y = -round(p.y / min_y * 100);
+      if (p.x !== 0) pct_x = p.x / max_x * 100;
+      if (p.y !== 0) pct_y = p.y / max_y * 100;
 
       points[name] = [pct_x, pct_y];
       plot.push([name, pct_x, pct_y]);
     }
 
     return {
-      max_x  : plot.reduce((acc, val) => {return max(acc, abs(val[1]))}, 0),
-      max_y  : plot.reduce((acc, val) => {return max(acc, abs(val[2]))}, 0),
-      bodies : plot,
+      max_x  : max_x,
+      max_y  : max_y,
       points : points
     };
   }

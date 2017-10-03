@@ -45,7 +45,7 @@ class TransitCard extends Card {
       this.plan.turn();
     }
 
-    let d = this.plan.dist_left.toFixed(2);
+    let d = this.plan.auRemaining().toFixed(2);
     let p = Math.round(this.plan.pct_complete);
 
     this.set_title(p > 50 ? 'Deceleration burn' : 'Acceleration burn');

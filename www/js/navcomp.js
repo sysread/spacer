@@ -16,9 +16,9 @@ class NavComp {
 
         for (let transit of system.astrogator(this.orig, dest)) {
           if (transit.accel > this.maxdv) continue;
-          if (transit.turns > this.ship.maxBurnTime(transit.accel)) continue;
+          if (transit.turns > data.hours_per_turn * this.ship.maxBurnTime(transit.accel)) continue;
 
-          let burn = this.ship.burnRate(transit.accel, this.ship.currentMass());
+          let burn = data.hours_per_turn * this.ship.burnRate(transit.accel, this.ship.currentMass());
 
           this.data[dest].push({
             index   : this.data[dest].length,

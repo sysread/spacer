@@ -2,22 +2,19 @@ class Plot extends UI {
   constructor(opt) {
     super(opt);
     this.data = system.plot();
-    this.root.addClass('p-1 m-0')
-      .css({
-        'position' : 'absolute',
-        'left'     : '50%',
-        'top'      : '50%',
-        'height'   : '50%',
-        'width'    : '50%'
-      });
 
     this.root.on('click', '.plot-body-info', (e) => {
       e.stopPropagation();
       e.preventDefault();
       let body = $(e.target).data('body');
+
+      if (body === 'sun')
+        return false;
+
       let info = new InfoPopUp;
       info.addCard(new PlaceSummary({place: game.place(body)}));
       info.show();
+
       return false;
     });
 
@@ -32,9 +29,17 @@ class Plot extends UI {
    * Returns a fraction that scales down a pixel length more the larger it is.
    */
   static adjust(n) {
-    let i = (100 - Math.abs(n)) / 10;
-    let j = Math.log(i) * 2;
-    return j;
+    if (n === 0) return 1;
+
+    const inc = 0.25;
+    const abs = Math.abs(n);
+    let adj = 1;
+
+    for (let i = 100; (i > abs) && (((adj + inc) * abs) < 100); i -= 10) {
+      adj += inc;
+    }
+
+    return adj;
   }
 
   static bodyName(body) {
@@ -48,31 +53,37 @@ class Plot extends UI {
   }
 
   rePlot() {
-    this.root.height( this.root.width() );
-    this.root.empty();
+    $('.plot', this.root).remove();
+
+    this.root.width(this.root.width());
+    this.root.height(this.root.width());
+
+    const pos = this.root.position();
+    this.zero = Math.ceil(this.root.width() / 2);
+
     this.plot = {};
 
-    for (let body of Object.keys(this.points))
+    for (let body of Object.keys(this.points)) {
       this.addPoint(body);
+    }
 
-    this.root.parent().on('click', (e) => {
+    this.root.on('click', (e) => {
       $('a', this.root).removeClass('border border-danger');
       $('.plot-selected').remove();
     });
   }
 
   addPoint(body) {
-    let [x, y] = this.points[body];
-    let left   = Math.ceil(this.width  * x * Plot.adjust(x) / 100 / 2);
-    let top    = Math.ceil(this.height * y * Plot.adjust(y) / 100 / 2);
-    let key    = `p-${left}-${top}`;
+    const [x, y] = this.points[body];
+    const left   = this.zero + (this.zero *  x * Plot.adjust(x) / 100);
+    const top    = this.zero + (this.zero * -y * Plot.adjust(y) / 100);
+    const key    = `p-${Math.ceil(x)}-${Math.ceil(y)}`;
 
     if (this.plot[key] === undefined) {
       this.plot[key] = [body];
 
-      let item = $('<a class="plot-point" href="#" id="' + key + '">&bull;</a>')
-        .css({'top': top, 'left': left})
-        .addClass('plot-locus p1');
+      let item = $('<a class="plot plot-point p1" href="#">&bull;</a>');
+      item.attr('id', key);
 
       if (body === 'sun')
         item.addClass('text-warning font-weight-bold');
@@ -81,6 +92,7 @@ class Plot extends UI {
         item.addClass('text-success font-weight-bold');
 
       this.root.append(item);
+      item.css({'top': top, 'left': left})
     }
     else {
       this.plot[key].push(body);
@@ -101,7 +113,7 @@ class Plot extends UI {
     let point = this.plot[key];
 
     // Build list of bodies at this position
-    let badges = $('<ul class="plot-selected">');
+    let badges = $('<ul class="plot plot-selected">');
     for (let body of point) {
       let badge = $('<a href="#">')
         .addClass('plot-body-info badge badge-dark ml-1 p-2')

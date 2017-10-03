@@ -111,7 +111,7 @@ button.btn-secondary:disabled {
   font-weight: lighter;
 }
 
-.plot-locus {
+.plot-point {
   font-size: 1.7em;
   line-height: 0.6 !important;
   padding: 1px 2px;

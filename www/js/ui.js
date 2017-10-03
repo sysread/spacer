@@ -267,7 +267,7 @@ class Card extends UI {
 
   add_header_button(text) {
     if (this.hdr) {
-      let btn = $(`<button type="button" class="btn btn-dark btn-sm float-right">${text}</button>`);
+      let btn = $(`<button type="button" class="btn btn-dark btn-sm float-right ml-2">${text}</button>`);
       this.hdr.append(btn);
       return btn;
     }

@@ -1,8 +1,9 @@
 <script type="text/javascript">
 
 $(() => {
-  let ship    = game.player.ship;
-  let navcomp = new NavComp(game.player.maxAcceleration(), ship, game.place().name);
+  let ship     = game.player.ship;
+  let maxAccel = Physics.G() * game.player.maxAcceleration();
+  let navcomp  = new NavComp(maxAccel, ship, game.place().name);
 
   $('#nav-player-home' ).text(data.bodies[game.player.home].name);
   $('#nav-player-g'    ).text(data.bodies[game.player.home].gravity);
@@ -26,7 +27,7 @@ $(() => {
         let plan = best.transit;
         burn  = best.burn;
         turns = plan.turns;
-        acc   = plan.accel.toFixed(2);
+        acc   = Physics.G(plan.accel).toFixed(3);
         dist  = plan.au.toFixed(2) || '< 0.01';
         time  = csn(plan.hours);
 
@@ -85,11 +86,11 @@ $(() => {
 
         $('#navcomp').data('transit', plan);
 
-        $('#nav-accel').text(plan.accel.toFixed(2));
+        $('#nav-accel').text(Physics.G(plan.accel).toFixed(3));
         $('#nav-flip').text(csn(plan.hours/2));
         $('#nav-distance-au').text(plan.au.toFixed(1));
         $('#nav-distance-km').text(csn(plan.km.toFixed(0)));
-        $('#nav-deltav').text(plan.accel.toFixed(2));
+        $('#nav-deltav').text(Physics.G(plan.accel).toFixed(3));
         $('#nav-fuel').text((Math.round(transit.fuel * 100) / 100) + ' tonnes (est)');
         $('#nav-time').text(`${csn(days)} days, ${csn(hours)} hours (${plan.turns} turns)`);
       }

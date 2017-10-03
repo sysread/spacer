@@ -13,7 +13,7 @@ class PlaceSummary extends Card {
       this.add_def('Location', 'Docked');
     }
 
-    this.add_def('Environment', system.kind(this.place.name));
+    this.add_def('Environ', system.kind(this.place.name));
     this.add_def('Faction', data.factions[this.place.faction].full_name);
     this.add_def('Economy', this.place.size).addClass('text-capitalize');
     this.add_def('Details', this.traits || 'None').addClass('text-capitalize');

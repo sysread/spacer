@@ -34,9 +34,9 @@ class Physics {
    */
   static distance(p1, p2) {
     return Math.hypot(
-      p1[0] - p2[0],
-      p1[1] - p2[1],
-      p1[2] - p2[2]
+      p2[0] - p1[0],
+      p2[1] - p1[1],
+      p2[2] - p1[2]
     );
   }
 
@@ -69,6 +69,51 @@ class Physics {
    * Physics.deltav_for_distance(s, m) -> m/s/s
    */
   static deltav_for_distance(time, distance) {
-    return distance / Math.pow(time, 2) * 0.5;
+    //return distance / Math.pow(time, 2) * 0.5;
+    return (distance * 2) / (time * time);
+  }
+
+  /*
+   * Physics.velocity(s, m/s, m/s/s) -> m/s
+   */
+  static velocity(time, velocity=0, deltav=Physics.G()) {
+    return velocity + (deltav * time);
+  }
+
+  /*
+   * Physics.pointAtDistanceAlongLine([x,y,z], [x,y,z], m)
+   *
+   * Finds a point [x,y,z] at distance d2 along line p1, p2.
+   */
+  static pointAtDistanceAlongLine2(p1, p2, d2) {
+    const [x1, y1, z1] = p1;
+    const [x2, y2, z2] = p2;
+
+    let vx  = x2 - x1;
+    let vy  = y2 - y1;
+    let vz  = z2 - z1;
+    let mag = Math.hypot(vx, vy, vz);
+
+    vx /= mag;
+    vy /= mag;
+    vz /= mag;
+
+    const x = x1 + vx * (mag + d2);
+    const y = y1 + vy * (mag + d2);
+    const z = z1 + vz * (mag + d2);
+
+    return [x, y, z];
+  }
+
+  static pointAtDistanceAlongLine(p0, p1, d1) {
+    const [x0, y0, z0] = p0;
+    const [x1, y1, z1] = p1;
+    const d = Physics.distance(p0, p1);
+    const t = d1 / d;
+    return [
+      (((1 - t) * x0) + (t * x1)),
+      (((1 - t) * y0) + (t * y1)),
+      (((1 - t) * z0) + (t * z1))
+    ];
   }
 }
