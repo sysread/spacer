@@ -40,8 +40,7 @@ class TransitCard extends Card {
     game.turn(count);
 
     for (let i = 0; i < count; ++i) {
-      // temporarily disable for development
-      //game.player.ship.burn(this.plan.accel);
+      game.player.ship.burn(this.plan.accel);
       this.plan.turn();
     }
 
