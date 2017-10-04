@@ -86,7 +86,6 @@ class Transit extends Card {
         const adjust  = faction === game.player.faction ? 0.5 : 1.0;
         const freq    = (1 - (Math.max(0.01, au) / 0.25)) * patrol * scale * adjust;
         const roll    = Math.random();
-console.log(body, R(freq, 3), R(roll, 3));
 
         if (roll <= freq) {
           if (this.stoppedBy[body]) {
