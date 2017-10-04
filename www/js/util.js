@@ -1,24 +1,52 @@
+function resourceMap(dflt=0, entries) {
+  if (entries === undefined) {
+    entries = {};
+  }
+
+  return new Proxy(entries, {
+    get: (obj, prop, recvr) => {
+      if (!data.resources.hasOwnProperty(prop)) {
+        return;
+      }
+
+      if (!obj.hasOwnProperty(prop)) {
+        obj[prop] = dflt;
+      }
+
+      return obj[prop];
+    },
+
+    set: (obj, prop, val, recvr) => {
+      if (!data.resources.hasOwnProperty(prop)) {
+        return;
+      }
+
+      obj[prop] = val;
+      return true;
+    }
+  });
+}
+
 class DefaultMap {
-  constructor(dfltval) {
-    this.dfltval = dfltval;
-    this.data = {};
+  constructor(dflt) {
+    this.dflt = dflt;
+    this.data = resourceMap(dflt);
   }
 
   load(obj) {
-    this.dfltval = obj.dfltval;
-    this.data = obj.data;
+    this.dflt = obj.dflt;
+    this.data = resourceMap(obj.dflt, obj.data);
   }
 
-  save()        {return {dfltval: this.dfltval, data: this.data}}
-  has(key)      {return this.data.hasOwnProperty(key)}
-  get(key)      {return this.has(key) ? this.data[key] : this.dfltval}
+  save()        {return {dflt: this.dflt, data: this.data}}
+  has(key)      {return key in this.data}
+  get(key)      {return this.data[key]}
   set(key, val) {this.data[key] = val}
-  delete(key)   {delete this.data[key]}
-  clear()       {this.data = {}}
-  each(f)       {for (let key of Object.keys(this.data)) f(key, this.get(key))}
-  *keys()       {for (let key of Object.keys(this.data)) yield key}
-  *values()     {for (let key of this.keys()) yield this.get(key)}
-  *entries()    {for (let key of this.keys()) yield [key, this.get(key)]}
+  clear()       {this.data = resourceMap(this.dflt)}
+  each(f)       {for (let key of this.keys()) f(key, this.data[key])}
+  keys()        {return Object.keys(this.data)}
+  *values()     {for (let key of this.keys()) yield this.data[key]}
+  *entries()    {for (let key of this.keys()) yield [key, this.data[key]]}
 }
 
 class ResourceCounter extends DefaultMap {

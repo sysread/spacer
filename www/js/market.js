@@ -4,7 +4,7 @@ class Market {
     this.demandHistory  = new ResourceTracker(data.market_history);
     this.supplyHistory  = new ResourceTracker(data.market_history);
     this.buysThisTurn   = new ResourceCounter;
-    this.prices         = new DefaultMap(null);
+    this.prices         = resourceMap(null);
   }
 
   save() {
@@ -13,7 +13,7 @@ class Market {
     me.demandHistory  = this.demandHistory.save();
     me.supplyHistory  = this.supplyHistory.save();
     me.buysThisTurn   = this.buysThisTurn.save();
-    me.prices         = this.prices.save();
+    me.prices         = this.prices;
     return me;
   }
 
@@ -22,7 +22,7 @@ class Market {
     this.demandHistory.load(obj.supplyHistory);
     this.supplyHistory.load(obj.supplyHistory);
     this.buysThisTurn.load(obj.buysThisTurn);
-    this.prices.load(obj.prices);
+    this.prices = resourceMap(null, obj.prices);
   }
 
   craftTime(item) {
@@ -136,9 +136,11 @@ class Market {
   }
 
   price(resource) {
-    if (!this.prices.has(resource))
-      this.prices.set(resource, this.calculatePrice(resource));
-    return this.prices.get(resource);
+    if (!(resource in this.prices)) {
+      this.prices[resource] = this.calculatePrice(resource);
+    }
+
+    return this.prices[resource];
   }
 
   buyPrice(resource)  { return this.price(resource) }
@@ -196,6 +198,6 @@ class Market {
     });
 
     this.buysThisTurn.clear();
-    this.prices.clear();
+    this.prices = resourceMap(null);
   }
 }
