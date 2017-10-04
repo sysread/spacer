@@ -86,6 +86,7 @@ class Transit extends Card {
         const adjust  = faction === game.player.faction ? 0.5 : 1.0;
         const freq    = (1 - (Math.max(0.01, au) / 0.25)) * patrol * scale * adjust;
         const roll    = Math.random();
+console.log(body, R(freq, 3), R(roll, 3));
 
         if (roll <= freq) {
           if (this.stoppedBy[body]) {
@@ -179,5 +180,27 @@ class Inspection extends Interactive {
       return this.ok('You do not have enough money to corrupt this noble officer.')
         .then(ok => { return this.begin() });
     }
+  }
+
+  Flee() {
+    return this.ask("This isn't the an action movie. The captain of the patrol ship can read the ship's navigation and tracking data as well as you and will eventually overtake your ship. That is, unless you are planning on making a run for Proxima...", "Got it", "Run for Proxima")
+      .then(choice => {
+        if (choice.startsWith("Got it")) {
+          return this.begin();
+        }
+        else {
+          return this.ok("You angle away and gun the engines. In just a 5 short years, your navigation computer flips the ship on automatic and begins the deceleration burn. Your corpse and those of your crew arrive at Proxima Centauri after perhaps 10 years, relativistic effects notwithstanding.")
+            .then(ok => {
+              if (this.timer) window.clearTimeout(this.timer);
+              $('#nav-transit').modal('hide');
+              $('#spacer').data({state: null, data: null});
+              window.localStorage.removeItem('game');
+              open('newgame');
+            });
+        }
+      });
+  }
+
+  Attack() {
   }
 }
