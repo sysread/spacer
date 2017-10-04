@@ -4,7 +4,7 @@
  */
 const data = {
   start_date      : new Date(2242, 0, 1, 1),
-  hours_per_turn  : 2,
+  hours_per_turn  : 4,
   initial_turns   : 600,
   market_history  : 45,
   base_unit_price : 100,
@@ -226,14 +226,14 @@ const data = {
       thrust    : 80,
       mass      : 10,
       desc      : 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
-      burn_rate : 0.001,
+      burn_rate : 0.002,
     },
     fusion: {
       name      : 'Fusion',
       thrust    : 800,
       mass      : 40,
       desc      : 'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
-      burn_rate : 0.025,
+      burn_rate : 0.05,
     }
   },
 
