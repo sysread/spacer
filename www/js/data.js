@@ -78,32 +78,37 @@ const data = {
       full_name : 'United Nations',
       capital   : 'Earth',
       sales_tax : 0.1135,
+      patrol    : 0.07,
       ship      : 'trader'
     },
     'MC': {
       full_name : 'Martian Commonwealth',
       capital   : 'Mars',
       sales_tax : 0.0925,
+      patrol    : 0.09,
       ship      : 'barsoom'
-    },
-    'TRANSA': {
-      full_name : 'Trans-Neptunian Authority',
-      capital   : 'Pluto',
-      sales_tax : 0.025,
-      ship      : 'neptune'
-    },
-    'UTC': {
-      full_name : 'United Trade Collective',
-      capital   : 'Ganymede',
-      sales_tax : 0.0822,
-      ship      : 'trader'
     },
     'CC': {
       full_name : 'Ceres Corporation',
       capital   : 'Ceres',
       sales_tax : 0.065,
+      patrol    : 0.05,
       ship      : 'trader'
-    }
+    },
+    'UTC': {
+      full_name : 'United Trade Collective',
+      capital   : 'Ganymede',
+      sales_tax : 0.0822,
+      patrol    : 0.05,
+      ship      : 'trader'
+    },
+    'TRANSA': {
+      full_name : 'Trans-Neptunian Authority',
+      capital   : 'Pluto',
+      sales_tax : 0.025,
+      patrol    : 0.02,
+      ship      : 'neptune'
+    },
   },
 
   bodies: {
@@ -324,5 +329,22 @@ const data = {
 /*
  * Descriptions
  */
-data.shipclass.neptune.desc = 'Designed and built in TRANSA\'s own shipyards, the Neptune class cargo hauler has the longest range of any vessel while retaining low mass and reasonable cargo space. A favorite of traders and smugglers on the Long Haul alike, it has the armor and hard points to defend itself in the unguarded outer oribts.';
-data.shipclass.barsoom.desc = 'The Barsoomian class frigate adopts the latest advances in Martian technology resulting in a frigate class ship with more range, speed, and enough firepower to act as its own escort.';
+data.bodies.mercury.desc   = "Too close to the sun to permit domed habitations, Mercury's single city, Quicksilver, lies deep underground, providing it with a modicum of protection against the intense solar radiation bathing the surface.|Known for its rich mineral deposits and hard-nosed populace, the knowledge gained during the process of excavating and settling Mercury was a major factor in the success of later colonies. Although nominally a member of the UN, Mercury is widely known to be effectively run by the unions, who work to ensure that Mercury is not unfairly exploited by Earth. <i>Nobody</i> messes with the local 127.";
+data.bodies.earth.desc     = "Under the unified governance of the UN, Earth has been at peace for decades. As the sole habital body in the system, Earth remains the largest population, economy, and military force in the system.";
+data.bodies.moon.desc      = "A natural target for the first extension of humanity into space, the Moon's domed cities and vast, subterranean passages hold the second largest population in the system as well as some of its best shipyards.|With its lower gravity, excellent amenities, and close proximity to Earth, Luna hosts the official embassies of both the Martian Commonwealth and TRANSA.";
+data.bodies.mars.desc      = "Rising from the ashes of the Earth fleet's systemic bombardment during the war for independence, the Martian capitol of Barsoom is home to the most widely respected universities and scientific institutions in the system.|The memories of those scars still fresh, Mars continues to sink a sizable proportion of its resources into its fleet and planetary defenses. Although smaller than the UN fleet, the Martian navy's vessels are newer and have a small but not inconsiderable tech advantage on Earth's aging ships.";
+data.bodies.phobos.desc    = "More akin to a captured asteroid than a moon, Phobos was hollowed out, its spin increased, and made home to the largest research facility in the solar system.";
+data.bodies.deimos.desc    = "Home to the Martian Commonwealth Navy, Deimos Command Station is well defended and hosts the primary Martian naval shipyard and officer's academy. With its much increased spin gravity, Deimos provides a sometimes uncomfortable but useful resource for training Martians under high gravity... not that they'd ever need that, since we are all friends now.";
+data.bodies.ceres.desc     = "Large enough to be given a comfortable spin gravity of 0.75G, the hollowed out planetoid Ceres is a major shipping and commercial hub between the inner and outer planets.";
+data.bodies.europa.desc    = "One of the two Jovian moons claimed by Mars during the war, Europa is the source of much mineral wealth to the Commonwealth and is patrolled by the Martian fleet.";
+data.bodies.callisto.desc  = "Callisto's vast domed farms produce tons of food that are shipped across the system, supporting many of the outer colonies that cannot produce enough food to be self sufficient. It also hosts the regional Martian command orbital and dock yards.";
+data.bodies.ganymede.desc  = "The official headquarters of the UTC, Ganymede also hosts excellent agricultural facilities and shipyards, making it a commercial hub of the outer system.";
+data.bodies.enceladus.desc = "The supply station orbiting Enceladus boasts the best views in the system and is the nexus for the harvesting and shipping of water from Saturn's rings.";
+data.bodies.rhea.desc      = "The Rhea Orbital Lab is the primary research and development platform of the UTC and maintains a small population serving the needs of the research community there.";
+data.bodies.titan.desc     = "With an actual atmosphere, albeit a poisonous one, Titan is home to TRANSA's largest and most prosperous settlement. Nestled in close proximity to two UTC orbitals around Saturn, Titan has become something  of a trade hub between the two factions.";
+data.bodies.triton.desc    = "In retrograde orbit of Neptune, the Triton orbital hosts the meager Plutonian Naval Command and acts as their primary supply station.";
+data.bodies.titania.desc   = "Rich in heavy organic compounds, Titania is the primary source of raw materials and shipping for TRANSA. With nearly a third of Earth's gravity and supported by a growing commercial mining industry, it is also one of the few TRANSA properties with a growing population.";
+data.bodies.pluto.desc     = "The furthest outpost of humanity, Pluto is home to the TRANSA high command. It's deeply excavated chambers support a surprisingly robust population, many descended from the original scientific mission team stationed on the dwarf planet at the outset of the Martian rebellion.";
+
+data.shipclass.neptune.desc = "Designed and built in TRANSA's own shipyards, the Neptune class cargo hauler has the longest range of any vessel while retaining low mass and reasonable cargo space. A favorite of traders and smugglers on the Long Haul alike, it has the armor and hard points to defend itself in the unguarded outer oribts.";
+data.shipclass.barsoom.desc = "The Barsoomian class frigate adopts the latest advances in Martian technology resulting in a frigate class ship with more range, speed, and enough firepower to act as its own escort.";

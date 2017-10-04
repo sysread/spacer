@@ -64,6 +64,7 @@ class TripPlanner extends Modal {
     this.dist = $('<span>');
     this.flip = $('<span>');
     this.dv   = $('<span>');
+    this.maxv = $('<span>');
     this.fu   = $('<span>');
     this.tm   = $('<span>');
 
@@ -82,6 +83,7 @@ class TripPlanner extends Modal {
         this.flip.text(csn(Math.ceil(plan.km / 2)) + ' km');
         this.dist.text(`${Math.round(plan.au * 100) / 100} AU (${csn(Math.round(plan.km))} km)`);
         this.dv.text(g + ' G');
+        this.maxv.text(csn(R(plan.maxVelocity / 1000)) + ' km/s');
         this.fu.text((Math.round(route.fuel * 100) / 100) + ' tonnes (est)');
         this.tm.text(`${csn(days)} days, ${csn(hours)} hours`);
 
@@ -110,7 +112,8 @@ class TripPlanner extends Modal {
 
     this.add_row('Flip point', this.flip);
     this.add_row('Distance', this.dist);
-    this.add_row('Delta-V', this.dv);
+    this.add_row('Acceleration', this.dv);
+    this.add_row('Max velocity (rel. destination)', this.maxv);
     this.add_row('Fuel', this.fu);
     this.add_row('Time', this.tm);
     this.add(this.slider.root);

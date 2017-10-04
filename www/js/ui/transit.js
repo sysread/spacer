@@ -11,6 +11,7 @@ class Transit extends Card {
     this.add(this.events.root);
 
     this.timer = null;
+    this.stoppedBy = {};
   }
 
   get plan() {
@@ -25,10 +26,31 @@ class Transit extends Card {
     this.begin();
   }
 
+  updateProgress() {
+    const p = R(this.plan.pct_complete);
+    const d = R(this.plan.auRemaining(), 2);
+    const v = csn(R(this.plan.velocity / 1000));
+
+    let progress = (d < 1.0)
+      ? csn(R(this.plan.distanceRemaining())) + ' km'
+      : d + ' AU';
+
+    this.set_title((p > 50 ? 'Decelerating' : 'Accelerating') + ': ' + v + ' km/s');
+    this.progress.setProgress(p, progress);
+  }
+
   interval() {
     if (this.plan.left > 0) {
-      this.burn();
-      this.timer = window.setTimeout(() => {this.interval()}, 50);
+      const body = this.encounter();
+
+      if (body) {
+        const dist = R(Physics.AU(Physics.distance(this.plan.coords, system.position(body))), 3);
+        this.inspection({place: body, dist: dist});
+      }
+      else {
+        this.burn();
+        this.timer = window.setTimeout(() => {this.interval()}, 50);
+      }
     }
     else {
       this.end();
@@ -36,37 +58,52 @@ class Transit extends Card {
   }
 
   burn() {
-    let count = Math.min(this.plan.left, Math.ceil(this.plan.turns / 10));
+    const count = Math.min(this.plan.left, 24 / data.hours_per_turn);
     game.turn(count);
-
-    this.encounter();
 
     for (let i = 0; i < count; ++i) {
       game.player.ship.burn(this.plan.accel);
       this.plan.turn();
     }
 
-    let d = Math.round(this.plan.auRemaining() * 1000) / 1000;
-
-    if (d < 1.0) {
-      d = csn(Math.round(this.plan.distanceRemaining() / 1000)) + ' km';
-    }
-    else {
-      d = d + ' AU';
-    }
-
-    let p = Math.round(this.plan.pct_complete);
-
-    this.set_title(p > 50 ? 'Deceleration burn' : 'Acceleration burn');
-    this.progress.setProgress(p, d);
+    this.updateProgress();
   }
 
   encounter() {
-    console.log(system.ranges(this.plan.coords));
+    if (this.plan.velocity >= 750000) {
+      return;
+    }
+
+    const ranges = system.ranges(this.plan.coords);
+
+    for (const body of Object.keys(ranges)) {
+      const au = Physics.AU(ranges[body]);
+
+      if (au < 0.25) {
+        const faction = data.bodies[body].faction;
+        const patrol  = data.factions[faction].patrol;
+        const scale   = data.scales[data.bodies[body].size];
+        const adjust  = faction === game.player.faction ? 0.5 : 1.0;
+        const freq    = (1 - (Math.max(0.01, au) / 0.25)) * patrol * scale * adjust;
+        const roll    = Math.random();
+
+        if (roll <= freq) {
+          if (this.stoppedBy[body]) {
+            continue;
+          }
+          else {
+            this.stoppedBy[body] = true;
+            return body;
+          }
+        }
+      }
+    }
+
+    return;
   }
 
-  inspection() {
-    const inspection = new Inspection;
+  inspection(opt) {
+    const inspection = new Inspection(opt);
     this.add(inspection.root.addClass('mt-3'));
 
     return inspection.begin().then(() => {
@@ -84,12 +121,17 @@ class Transit extends Card {
 }
 
 class Inspection extends Interactive {
+  get place()   {return this.opt.place}
+  get dist()    {return this.opt.dist}
+  get name()    {return system.name(this.place)}
+  get faction() {return data.bodies[this.place].faction}
+
   begin() {
     this.set_title('Police Inspection');
 
     const msg =
-        'Your ship has been hailed by police for a routine inspection. '
-      + 'You are required by law to cease acceleration and peacefully submit to boarding and inspection.';
+        `You have been hailed by a ${this.faction} patrol ship operating ${this.dist} AU out of ${this.name}. `
+      + 'The captain requests that you cease acceleration and peacefully submit to inspection.';
 
     return this.ask(msg, 'Submit', 'Bribe', 'Flee', 'Attack')
       .then(choice => { return this[choice]() });

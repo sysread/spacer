@@ -18,5 +18,6 @@ class PlaceSummary extends Card {
     this.add_def('Economy', this.place.size).addClass('text-capitalize');
     this.add_def('Details', this.traits || 'None').addClass('text-capitalize');
     this.add_def('Special', this.conds  || 'None').addClass('text-capitalize');
+    this.add_def('About',   $('<i>').append(data.bodies[this.place.name].desc.split('|').map(t => {return `<p>${t}</p>`}).join('')));
   }
 }

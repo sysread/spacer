@@ -6,6 +6,7 @@ $(function() {
 
   $('#home').change((e) => {
     let home = $('#home').val();
+    $('#home-info').html( data.bodies[home].desc.split('|').map(t => {return `<p>${t}</p>`}).join('') );
     $('#home-info').html($('#' + home).html());
     $('#home-grav').text(data.bodies[home].gravity);
     $('#home-deltav').text(R(data.bodies[home].gravity * data.grav_deltav_factor, 3));
@@ -115,155 +116,6 @@ $(function() {
   </div>
 </div>
 
-<div hidden id="mercury">
-  <p>
-    Too close to the sun to permit domed habitations, Mercury's single city,
-    Quicksilver, lies deep underground, providing it with a modicum of
-    protection against the intense solar radiation bathing the surface.
-  </p>
-  <p>
-    Known for its rich mineral deposits and hard-nosed populace, the knowledge
-    gained during the process of excavating and settling Mercury was a major
-    factor in the success of later colonies. Although nominally a member of the
-    UN, Mercury is widely known to be effectively run by the unions, who work
-    to ensure that Mercury is not unfairly exploited by Earth. <i>Nobody</i>
-    messes with the local 127.
-  </p>
-</div>
-
-<div hidden id="earth">
-  <p>
-    Under the unified governance of the UN, Earth has been at peace for
-    decades. As the sole habital body in the system, Earth remains the largest
-    population, economy, and military force in the system.
-  </p>
-</div>
-
-<div hidden id="moon">
-  <p>
-    A natural target for the first extension of humanity into space, the Moon's
-    domed cities and vast, subterranean passages hold the second largest
-    population in the system as well as some of its best shipyards.
-  </p>
-  <p>
-    With its lower gravity, excellent amenities, and close proximity to Earth,
-    Luna hosts the official embassies of both the Martian Commonwealth and
-    TRANSA.
-  </p>
-</div>
-
-<div hidden id="mars">
-  <p>
-    Rising from the ashes of the Earth fleet's systemic bombardment during the
-    war for independence, the Martian capitol of Barsoom is home to the most
-    widely respected universities and scientific institutions in the system.
-  </p>
-  <p>
-    The memories of those scars still fresh, Mars continues to sink a sizable
-    proportion of its resources into its fleet and planetary defenses. Although
-    smaller than the UN fleet, the Martian navy's vessels are newer and have a
-    small but not inconsiderable tech advantage on Earth's aging ships.
-  </p>
-</div>
-
-<div hidden id="phobos">
-  <p>
-    More akin to a captured asteroid than a moon, Phobos was hollowed out, its
-    spin increased, and made home to the largest research facility in the solar
-    system.
-  </p>
-</div>
-
-<div hidden id="deimos">
-  <p>
-    Home to the Martian Commonwealth Navy, Deimos Command Station is well
-    defended and hosts the primary Martian naval shipyard and officer's
-    academy. With its much increased spin gravity, Deimos provides a sometimes
-    uncomfortable but useful resource for training Martians under high
-    gravity... not that they'd ever need that, since we are all friends now.
-  </p>
-</div>
-
-<div hidden id="ceres">
-  <p>
-    Large enough to be given a comfortable spin gravity of 0.75G, the hollowed
-    out planetoid Ceres is a major shipping and commercial hub between the
-    inner and outer planets.
-  </p>
-</div>
-
-<div hidden id="europa">
-  <p>
-    One of the two Jovian moons claimed by Mars during the war, Europa is the
-    source of much mineral wealth to the Commonwealth and is patrolled by the
-    Martian fleet.
-  </p>
-</div>
-
-<div hidden id="callisto">
-  <p>
-    Callisto's vast domed farms produce tons of food that are shipped across
-    the system, supporting many of the outer colonies that cannot produce
-    enough food to be self sufficient. It also hosts the regional Martian
-    command orbital and dock yards.
-  </p>
-</div>
-
-<div hidden id="ganymede">
-  <p>
-    The official headquarters of the UTC, Ganymede also hosts excellent
-    agricultural facilities and shipyards, making it a commercial hub of the
-    outer system.
-  </p>
-</div>
-
-<div hidden id="enceladus">
-  <p>
-    The supply station orbiting Enceladus boasts the best views in the system
-    and is the nexus for the harvesting and shipping of water from Saturn's
-    rings.
-  </p>
-</div>
-
-<div hidden id="rhea">
-  <p>
-    The Rhea Orbital Lab is the primary research and development platform of
-    the UTC and maintains a small population serving the needs of the research
-    community there.
-  </p>
-</div>
-
-<div hidden id="titan">
-  <p>
-    With an actual atmosphere, albeit a poisonous one, Titan is home to
-    TRANSA's largest and most prosperous settlement. Nestled in close proximity
-    to two UTC orbitals around Saturn, Titan has become something  of a trade
-    hub between the two factions.
-  </p>
-</div>
-
-<div hidden id="triton">
-  <p>
-    In retrograde orbit of Neptune, the Triton orbital hosts the meager
-    Plutonian Naval Command and acts as their primary supply station.
-  </p>
-</div>
-
-<div hidden id="titania">
-  <p>
-    Rich in heavy organic compounds, Titania is the primary source of raw
-    materials and shipping for TRANSA. With nearly a third of Earth's gravity
-    and supported by a growing commercial mining industry, it is also one of
-    the few TRANSA properties with a growing population.
-  </p>
-</div>
-
-<div hidden id="pluto">
-  <p>
-    The furthest outpost of humanity, Pluto 
-  </p>
-</div>
-
 <div hidden id="UN">
   <p>
     After the outbreak of hostilities with Mars more than 80 years ago and the
@@ -307,8 +159,13 @@ $(function() {
     When Mars broke from Earth, deliveries to the furthest installations in the
     outer system ceased in the face of privateering and the realities of a war
     economy. Those who survived the food riots shortly found themselves under
-    the magnetic boot of a coalition of gangs collectively calling themselves
-    the Trans-Neptunian Authority.
+    the unforgiving magnetic boot of the corporate security forces originally
+    contracted to protect and police the scientific mission stationed on Pluto.
+  </p>
+  <p>
+    Collectively calling themselves the Trans-Neptunian Authority, they quickly
+    restored order and set to work building a strict, tightly controlled,
+    society with the ultimate goal of achieving self-sufficiency.
   </p>
   <p>
     With resources stretched and hungry mouths to feed, TRANSA offers the
