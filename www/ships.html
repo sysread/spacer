@@ -21,8 +21,8 @@ $(function() {
     $('#ship-detail .modal-body').empty();
     $('#ship-detail .modal-body')
       .append(row('Price', csn(price)))
-      .append(row(`Range (${deltav.toFixed(2)} G max)`,`${maxg_range.toFixed(2)} AU / ${csn(burn_time)} hr`))
-      .append(row(`Range (${nominal_dv.toFixed(2)} G cruise)`, `${nominal_range.toFixed(2)} AU / ${csn(nominal_burn_time)} hr`))
+      .append(row(`Range (${Physics.G(deltav).toFixed(2)} G max)`,`${maxg_range.toFixed(2)} AU / ${csn(burn_time)} hr`))
+      .append(row(`Range (${Physics.G(nominal_dv).toFixed(2)} G cruise)`, `${nominal_range.toFixed(2)} AU / ${csn(nominal_burn_time)} hr`))
       .append(row('Drive', `${ship.shipclass.drives} ${ship.drive.name}`))
       .append(row('Maximum thrust', `${csn(ship.thrust)} kN`))
       .append(row('Fuel tanks', ship.shipclass.tank))

@@ -8,7 +8,7 @@ $(function() {
     let home = $('#home').val();
     $('#home-info').html($('#' + home).html());
     $('#home-grav').text(data.bodies[home].gravity);
-    $('#home-deltav').text(data.bodies[home].gravity * 2);
+    $('#home-deltav').text(R(data.bodies[home].gravity * data.grav_deltav_factor, 3));
 
     let faction = data.bodies[home].faction;
     $('#faction').val(data.factions[faction].full_name);
@@ -178,15 +178,17 @@ $(function() {
   <p>
     Home to the Martian Commonwealth Navy, Deimos Command Station is well
     defended and hosts the primary Martian naval shipyard and officer's
-    academy.
+    academy. With its much increased spin gravity, Deimos provides a sometimes
+    uncomfortable but useful resource for training Martians under high
+    gravity... not that they'd ever need that, since we are all friends now.
   </p>
 </div>
 
 <div hidden id="ceres">
   <p>
-    Large enough to be given a spin gravity of nearly 0.5G, the hollowed out
-    planetoid Ceres is a major shipping and commercial hub between the inner
-    and outer planets.
+    Large enough to be given a comfortable spin gravity of 0.75G, the hollowed
+    out planetoid Ceres is a major shipping and commercial hub between the
+    inner and outer planets.
   </p>
 </div>
 
@@ -209,7 +211,7 @@ $(function() {
 
 <div hidden id="ganymede">
   <p>
-    The official headquarters of the SCS, Ganymede also hosts excellent
+    The official headquarters of the UTC, Ganymede also hosts excellent
     agricultural facilities and shipyards, making it a commercial hub of the
     outer system.
   </p>
@@ -226,7 +228,7 @@ $(function() {
 <div hidden id="rhea">
   <p>
     The Rhea Orbital Lab is the primary research and development platform of
-    the SCS and maintains a small population serving the needs of the research
+    the UTC and maintains a small population serving the needs of the research
     community there.
   </p>
 </div>
@@ -235,7 +237,7 @@ $(function() {
   <p>
     With an actual atmosphere, albeit a poisonous one, Titan is home to
     TRANSA's largest and most prosperous settlement. Nestled in close proximity
-    to two SCS orbitals around Saturn, Titan has become something  of a trade
+    to two UTC orbitals around Saturn, Titan has become something  of a trade
     hub between the two factions.
   </p>
 </div>
@@ -331,14 +333,14 @@ $(function() {
   </p>
 </div>
 
-<div hidden id="SCS">
+<div hidden id="UTC">
   <p>
     Faced with the same economic constraints and pressures as the outer planets
     during the war but with much closer and more powerful corporate interests
-    at hand, the Saturnian moons controlling interests joined to form the Solar
-    Commercial Syndicate. Funded by some of the richest corporations on Earth,
-    the SCS has become a force unto itself, patrolling the outer planets' trade
-    routes with its corporate fleet.
+    at hand, the Saturnian moons controlling interests joined to form the
+    United Trade Collective. Funded by some of the richest corporations on
+    Earth, the UTC has become a force unto itself, patrolling the outer
+    planets' trade routes with its corporate fleet.
   </p>
   <p>
     Life in the domes of Saturn is difficult, and the harvesting of ice and ore

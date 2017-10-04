@@ -24,6 +24,17 @@ class Game {
 
   get here() {return this.place(this.locus)}
 
+  test() {
+    for (let sc of Object.keys(data.shipclass)) {
+      let ship = new Ship({shipclass: sc, fuel: data.shipclass[sc].tank});
+
+      let dv0 = ship.currentAcceleration();
+      let dv1 = Math.min(0.5, dv0 * 0.6);
+
+      console.log(sc, [dv0, dv1].map(n => {return R(Physics.G(n), 3)}));
+    }
+  }
+
   net_production() {
     Object.keys(this.places).forEach((place) => {
       let prod = this.places[place].production;

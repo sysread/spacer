@@ -69,8 +69,7 @@ class Physics {
    * Physics.deltav_for_distance(s, m) -> m/s/s
    */
   static deltav_for_distance(time, distance) {
-    //return distance / Math.pow(time, 2) * 0.5;
-    return (distance * 2) / (time * time);
+    return (distance * 2) / Math.pow(time, 2);
   }
 
   /*

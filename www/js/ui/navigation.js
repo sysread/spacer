@@ -2,13 +2,13 @@ class Navigation extends Card {
   constructor(opt) {
     super(opt);
     this.dests = {};
-    this.navcomp = new NavComp(Physics.G(game.player.maxAcceleration()), game.player.ship, game.place().name);
+    this.navcomp = new NavComp(game.player.maxAcceleration(), game.player.ship, game.place().name);
 
     this.set_header('Navigation');
     this.add_header_button('Map').on('click', (e)=>{open('plot')});
     this.add_text('Your navigational computer automatically calculates the optimal trajectory from your current location to the other settlements in the system.');
-    this.add_text(`Being born on ${data.bodies[game.player.home].name}, your body is adapted to ${data.bodies[game.player.home].gravity}G, allowing you to endure a sustained burn at ${game.player.maxAcceleration().toFixed(2)}G.`);
-    this.add_text(`Your ship is capable of ${game.player.shipAcceleration().toFixed(2)}Gs of acceleration with her current load out (${csn(Math.round(game.player.ship.currentMass()))} metric tonnes). With ${Math.round(game.player.ship.fuel * 100) / 100} tonnes of fuel, your ship has a maximum burn time of ${game.player.ship.maxBurnTime() * data.hours_per_turn} hours at maximum thrust.`);
+    this.add_text(`Being born on ${data.bodies[game.player.home].name}, your body is adapted to ${data.bodies[game.player.home].gravity}G, allowing you to endure a sustained burn of ${R(Physics.G(game.player.maxAcceleration()), 3)}G.`);
+    this.add_text(`Your ship is capable of ${R(Physics.G(game.player.shipAcceleration()), 3)}Gs of acceleration with her current load out (${csn(R(game.player.ship.currentMass()))} metric tonnes). With ${R(game.player.ship.fuel, 3)} tonnes of fuel, your ship has a maximum burn time of ${game.player.ship.maxBurnTime() * data.hours_per_turn} hours at maximum thrust.`);
 
     for (const body of system.bodies()) {
       if (body === game.locus)
@@ -68,11 +68,10 @@ class TripPlanner extends Modal {
     this.tm   = $('<span>');
 
     this.slider = new Slider({
-      min        : 0,
-      max        : this.routes.length - 1,
-      //step       : 24 / data.hours_per_turn,
-      initial    : this.fastest.index,
-      callback   : n => {
+      min      : 0,
+      max      : this.routes.length - 1,
+      initial  : this.fastest.index,
+      callback : n => {
         const route = this.routes[n];
         const plan = route.transit;
         const [days, hours] = plan.days_hours;
@@ -80,7 +79,7 @@ class TripPlanner extends Modal {
         let g = Math.round(Physics.G(plan.accel) * 1000) / 1000;
         if (g === 0) g = '< 0.001';
 
-        this.flip.text('Your ship will flip for deceleration burn after ' + csn(Math.ceil(plan.km / 2)) + ' km');
+        this.flip.text(csn(Math.ceil(plan.km / 2)) + ' km');
         this.dist.text(`${Math.round(plan.au * 100) / 100} AU (${csn(Math.round(plan.km))} km)`);
         this.dv.text(g + ' G');
         this.fu.text((Math.round(route.fuel * 100) / 100) + ' tonnes (est)');
@@ -91,6 +90,12 @@ class TripPlanner extends Modal {
     });
 
     this.set_header(system.name(this.place.name));
+
+    this.add_header_button('Info').on('click', e => {
+      let info = new InfoPopUp;
+      info.addCard(new PlaceSummary({place: this.place}));
+      info.show();
+    });
 
     this.add_footer_button('Engage').on('click', e => {
       $('#spacer').data('info', this.selectedRoute.transit);
@@ -103,7 +108,7 @@ class TripPlanner extends Modal {
       .addClass('btn-secondary')
       .on('click', e => {this.hide()});
 
-    this.add_text(this.flip);
+    this.add_row('Flip point', this.flip);
     this.add_row('Distance', this.dist);
     this.add_row('Delta-V', this.dv);
     this.add_row('Fuel', this.fu);

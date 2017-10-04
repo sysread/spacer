@@ -1,3 +1,15 @@
+/*
+ * Rounds `n` to `places` decimal places.
+ */
+function R(n, places) {
+  if (places === undefined) {
+    return Math.round(n);
+  }
+
+  const factor = Math.pow(10, places);
+  return Math.round(n * factor) / factor;
+}
+
 function resourceMap(dflt=0, entries) {
   if (entries === undefined) {
     entries = {};

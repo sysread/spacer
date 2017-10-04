@@ -14,6 +14,7 @@ const data = {
   fabricators     : 40,
   fab_health      : 20,
   base_pay        : 80, // credits/day
+  grav_deltav_factor : 2.5, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
 
   scales: {
     tiny   : 0.6,
@@ -91,8 +92,8 @@ const data = {
       sales_tax : 0.025,
       ship      : 'neptune'
     },
-    'SCS': {
-      full_name : 'Solar Commercial Syndicate',
+    'UTC': {
+      full_name : 'United Trade Collective',
       capital   : 'Ganymede',
       sales_tax : 0.0822,
       ship      : 'trader'
@@ -139,21 +140,21 @@ const data = {
       size     : 'small',
       traits   : ['subterranean', 'rocky', 'water poor'],
       faction  : 'MC',
-      gravity  : 0.35
+      gravity  : 0.7
     },
     deimos: {
       name     : 'Deimos Command',
       size     : 'tiny',
       traits   : ['subterranean', 'rocky', 'water poor'],
       faction  : 'MC',
-      gravity  : 0.35
+      gravity  : 1.05
     },
     ceres: {
       name     : 'Ceres',
       size     : 'large',
       traits   : ['subterranean', 'rocky', 'asteroids'],
       faction  : 'CC',
-      gravity  : 0.5
+      gravity  : 0.75
     },
     europa: {
       name     : 'Europa',
@@ -173,22 +174,22 @@ const data = {
       name     : 'Ganymede',
       size     : 'large',
       traits   : ['domed', 'subterranean', 'orbital', 'rocky', 'mineral poor', 'agricultural'],
-      faction  : 'SCS',
+      faction  : 'UTC',
       gravity  : 0.146
     },
     enceladus: {
       name     : 'Enceladus Depot',
       size     : 'small',
       traits   : ['orbital', 'icy', 'water rich', 'mineral poor', 'hydrocarbon rich'],
-      faction  : 'SCS',
-      gravity  : 0.35
+      faction  : 'UTC',
+      gravity  : 0.7
     },
     rhea: {
       name     : 'Rhea Orbital Lab',
       size     : 'small',
       traits   : ['orbital', 'icy', 'water rich', 'mineral poor'],
-      faction  : 'SCS',
-      gravity  : 0.35
+      faction  : 'UTC',
+      gravity  : 0.7
     },
     titan: {
       name     : 'Titan',
@@ -202,7 +203,7 @@ const data = {
       size     : 'small',
       traits   : ['orbital', 'icy', 'water rich', 'mineral poor'],
       faction  : 'TRANSA',
-      gravity  : 0.35
+      gravity  : 0.7
     },
     titania: {
       name     : 'Titania Outpost',
@@ -223,14 +224,14 @@ const data = {
   drives: {
     ion: {
       name      : 'Ion',
-      thrust    : 80,
+      thrust    : 1200,
       mass      : 10,
       desc      : 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
       burn_rate : 0.002,
     },
     fusion: {
       name      : 'Fusion',
-      thrust    : 800,
+      thrust    : 5000,
       mass      : 40,
       desc      : 'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
       burn_rate : 0.05,
@@ -245,7 +246,7 @@ const data = {
     schooner    : {hull: 8,  armor: 4,  cargo: 10,  hardpoints: 2,  mass: 450,   tank: 6,   drives: 4,   drive: 'ion',    restricted: false},
 
     /* Merchant */
-    trader      : {hull: 4,  armor: 1,  cargo: 25,  hardpoints: 2,  mass: 2500,  tank: 35,  drives: 30,  drive: 'ion',    restricted: false},
+    trader      : {hull: 4,  armor: 1,  cargo: 25,  hardpoints: 2,  mass: 2500,  tank: 30,  drives: 30,  drive: 'ion',    restricted: false},
     merchantman : {hull: 7,  armor: 2,  cargo: 30,  hardpoints: 3,  mass: 4000,  tank: 60,  drives: 50,  drive: 'ion',    restricted: false},
     freighter   : {hull: 10, armor: 3,  cargo: 50,  hardpoints: 3,  mass: 6800,  tank: 110, drives: 80,  drive: 'ion',    restricted: false},
     hauler      : {hull: 20, armor: 5,  cargo: 100, hardpoints: 5,  mass: 10000, tank: 150, drives: 100, drive: 'ion',    restricted: false},
@@ -253,13 +254,13 @@ const data = {
     /* Military */
     transport   : {hull: 40, armor: 10, cargo: 50,  hardpoints: 6,  mass: 8000,  tank: 180, drives: 220, drive: 'ion',    restricted: true},
     corvette    : {hull: 25, armor: 5,  cargo: 10,  hardpoints: 4,  mass: 550,   tank: 25,  drives: 2,   drive: 'fusion', restricted: true},
-    frigate     : {hull: 30, armor: 5,  cargo: 30,  hardpoints: 6,  mass: 800,   tank: 40,  drives: 4,   drive: 'fusion', restricted: true},
+    frigate     : {hull: 30, armor: 5,  cargo: 30,  hardpoints: 6,  mass: 800,   tank: 30,  drives: 4,   drive: 'fusion', restricted: true},
     destroyer   : {hull: 45, armor: 12, cargo: 12,  hardpoints: 8,  mass: 1100,  tank: 40,  drives: 8,   drive: 'fusion', restricted: true},
     cruiser     : {hull: 60, armor: 15, cargo: 15,  hardpoints: 10, mass: 1850,  tank: 100, drives: 16,  drive: 'fusion', restricted: true},
     battleship  : {hull: 85, armor: 25, cargo: 20,  hardpoints: 16, mass: 2300,  tank: 140, drives: 20,  drive: 'fusion', restricted: true},
 
     /* Faction ships */
-    neptune     : {hull: 10, armor: 4,  cargo: 40,  hardpoints: 3,  mass: 3200,  tank: 40,  drives: 20,  drive: 'ion',    restricted: true, faction: 'TRANSA'},
+    neptune     : {hull: 10, armor: 4,  cargo: 40,  hardpoints: 3,  mass: 3200,  tank: 40,  drives: 30,  drive: 'ion',    restricted: true, faction: 'TRANSA'},
     barsoom     : {hull: 35, armor: 6,  cargo: 30,  hardpoints: 4,  mass: 600,   tank: 30,  drives: 4,   drive: 'fusion', restricted: true, faction: 'MC'}
   },
 

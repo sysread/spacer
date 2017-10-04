@@ -71,6 +71,16 @@ class System {
     return this.system.bodies['earth'].mass / this.system.bodies[name].mass;
   }
 
+  ranges(point) {
+    let ranges = {};
+
+    for (const body of this.bodies()) {
+      ranges[body] = Physics.distance(point, this.position(body));
+    }
+
+    return ranges;
+  }
+
   closestBodyToPoint(point) {
     let dist, closest;
 
@@ -128,6 +138,7 @@ class System {
 
   orbit_by_turns(name) {
     let key = `${name}.orbit.byturns`;
+
     if (!this.cache.hasOwnProperty(key)) {
       let orbit = this.orbit(name);
       let point = orbit[0];
@@ -163,30 +174,6 @@ class System {
       this.position(origin),
       this.position(destination)
     );
-  }
-
-  *astrogator(origin, target) {
-    let b2 = this.body(target);
-    let p1 = this.position(origin);
-
-    let orbit = this.orbit_by_turns(b2.key);
-    const s_per_turn = data.hours_per_turn * 3600;
-
-    for (var i = 1; i < orbit.length; ++i) {
-      const S = Physics.distance(p1, orbit[i]); // distance
-      const t = i * s_per_turn; // seconds until target is at destination
-      const a = Physics.deltav_for_distance(t * 0.5, S * 0.5); // deltav to reach flip point
-
-      yield new Transit({
-        origin : origin,
-        dest   : target,
-        dist   : S,
-        turns  : i,
-        accel  : a,
-        start  : p1,
-        end    : orbit[i]
-      });
-    }
   }
 
   plot() {

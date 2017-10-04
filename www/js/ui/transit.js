@@ -1,4 +1,4 @@
-class TransitCard extends Card {
+class Transit extends Card {
   constructor(opt) {
     super(opt);
 
@@ -28,7 +28,7 @@ class TransitCard extends Card {
   interval() {
     if (this.plan.left > 0) {
       this.burn();
-      this.timer = window.setTimeout(() => {this.interval()}, 100);
+      this.timer = window.setTimeout(() => {this.interval()}, 50);
     }
     else {
       this.end();
@@ -36,8 +36,10 @@ class TransitCard extends Card {
   }
 
   burn() {
-    let count = Math.min(this.plan.left, Math.ceil(this.plan.turns / 20));
+    let count = Math.min(this.plan.left, Math.ceil(this.plan.turns / 10));
     game.turn(count);
+
+    this.encounter();
 
     for (let i = 0; i < count; ++i) {
       game.player.ship.burn(this.plan.accel);
@@ -57,6 +59,10 @@ class TransitCard extends Card {
 
     this.set_title(p > 50 ? 'Deceleration burn' : 'Acceleration burn');
     this.progress.setProgress(p, d);
+  }
+
+  encounter() {
+    console.log(system.ranges(this.plan.coords));
   }
 
   inspection() {
@@ -95,7 +101,7 @@ class Inspection extends Interactive {
     for (const [item, amt] of game.player.ship.cargo.entries()) {
       if (amt > 0 && data.resources[item].contraband) {
         fine += amt * 100 * data.resources[item].contraband;
-        game.player.ship.cargo.delete(item);
+        game.player.ship.cargo.set(item, 0);
       }
     }
 
