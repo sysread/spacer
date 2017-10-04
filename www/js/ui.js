@@ -79,7 +79,8 @@ class Slider extends UI {
     this.group.append($('<span class="input-group-btn">').append(this.up));
     if (this.minmaxbtns) this.group.append($('<span class="input-group-btn">').append(this.upup));
 
-    this.val = this.initial;
+    this.value = this.initial;
+    this.update();
   }
 
   start_monitor() {
@@ -138,14 +139,20 @@ class ResourceExchange extends UI {
     this.cargo     = opt.cargo;
     this.table     = $('<table class="table table-sm">');
 
-    this.store.each((item, amt) => {this.resources.inc(item, amt)});
-    this.cargo.each((item, amt) => {this.resources.inc(item, amt)});
+    for (let [item, amt] of this.store.entries()) {
+      this.resources.inc(item, amt);
+    }
 
-    this.resources.each((item, amt) => {
-      if (amt === 0) return;
+    for (let [item, amt] of this.cargo.entries()) {
+      this.resources.inc(item, amt);
+    }
 
-      let store = $('<button type="button" class="btn btn-dark">').append(this.store.get(item)).css('width', '50px');
-      let cargo = $('<button type="button" class="btn btn-dark">').append(this.cargo.get(item)).css('width', '50px');
+    for (let [item, amt] of this.resources.entries()) {
+      if (amt === 0)
+        continue;
+
+      let store = $('<button type="button" class="btn btn-dark">').text(this.store.get(item)).css('width', '50px');
+      let cargo = $('<button type="button" class="btn btn-dark">').text(this.cargo.get(item)).css('width', '50px');
 
       let slider = new Slider({
         step     : 1,
@@ -191,7 +198,7 @@ class ResourceExchange extends UI {
         .append($('<tr>')
           .append(`<td class="text-capitalize exchange-item">${item}</td>`)
           .append($('<td>').append(slider.group)));
-    });
+    }
   }
 
   get root()      { return this.table }

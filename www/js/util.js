@@ -15,7 +15,7 @@ class DefaultMap {
   set(key, val) {this.data[key] = val}
   delete(key)   {delete this.data[key]}
   clear()       {this.data = {}}
-  each(f)       {for (let key of Object.keys(this.data)) f(key, this.data[key])}
+  each(f)       {for (let key of Object.keys(this.data)) f(key, this.get(key))}
   *keys()       {for (let key of Object.keys(this.data)) yield key}
   *values()     {for (let key of this.keys()) yield this.get(key)}
   *entries()    {for (let key of this.keys()) yield [key, this.get(key)]}
@@ -38,7 +38,7 @@ class ResourceCounter extends DefaultMap {
     this.min = obj.min;
   }
 
-  inc(key, amount) {
+  inc(key, amount=1) {
     let n = this.get(key) + amount;
     this.set(key, n);
 

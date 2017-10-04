@@ -121,11 +121,12 @@ class Place extends Market {
     let collected = new ResourceCounter;
 
     for (let i = 1; i <= turns; ++i) {
-      this.resources.each((item, amt) => {
+      for (let [item, amt] of this.resources.entries()) {
         let tics = data.resources[item].mine.tics;
-        if ((i >= tics) && (i % tics === 0) && this.mine(item))
+        if ((i >= tics) && (i % tics === 0) && this.mine(item)) {
           collected.inc(item, 1);
-      });
+        }
+      };
     }
 
     return collected;
@@ -307,7 +308,7 @@ class Place extends Market {
       if (this.is_over_supplied(resource))
         return;
 
-      this.sell(resource, amt);
+      this.sell(resource, Math.floor(amt));
     }
   }
 

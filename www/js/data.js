@@ -4,7 +4,7 @@
  */
 const data = {
   start_date      : new Date(2242, 0, 1, 1),
-  hours_per_turn  : 1,
+  hours_per_turn  : 2,
   initial_turns   : 600,
   market_history  : 45,
   base_unit_price : 100,
@@ -259,7 +259,7 @@ const data = {
     battleship  : {hull: 85, armor: 25, cargo: 20,  hardpoints: 16, mass: 2300,  tank: 140, drives: 20,  drive: 'fusion', restricted: true},
 
     /* Faction ships */
-    neptune     : {hull: 10, armor: 4,  cargo: 45,  hardpoints: 3,  mass: 3200,  tank: 60,  drives: 30,  drive: 'ion',    restricted: true, faction: 'TRANSA'},
+    neptune     : {hull: 10, armor: 4,  cargo: 40,  hardpoints: 3,  mass: 3200,  tank: 40,  drives: 20,  drive: 'ion',    restricted: true, faction: 'TRANSA'},
     barsoom     : {hull: 35, armor: 6,  cargo: 30,  hardpoints: 4,  mass: 600,   tank: 30,  drives: 4,   drive: 'fusion', restricted: true, faction: 'MC'}
   },
 

@@ -23,7 +23,7 @@ $(function() {
 
   $('#collect-dialog').on('shown.bs.modal', () => {
     let days    = daySlider.val;
-    let turns   = days * 24 / data.hours_per_turn;
+    let turns   = Math.ceil(days * 24 / data.hours_per_turn);
     let harvest = game.place().harvest(turns);
     let pay     = days * payRate;
 
