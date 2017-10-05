@@ -86,7 +86,7 @@ const data = {
       full_name : 'Martian Commonwealth',
       capital   : 'Mars',
       sales_tax : 0.0925,
-      patrol    : 0.99,
+      patrol    : 0.09,
       ship      : 'barsoom'
     },
     'CC': {

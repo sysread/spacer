@@ -88,11 +88,11 @@ class Transit extends Card {
         const roll    = Math.random();
 
         if (roll <= freq) {
-          if (this.stoppedBy[body]) {
+          if (this.stoppedBy[faction]) {
             continue;
           }
           else {
-            this.stoppedBy[body] = true;
+            this.stoppedBy[faction] = true;
             return body;
           }
         }
