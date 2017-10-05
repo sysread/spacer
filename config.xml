@@ -25,6 +25,7 @@
     <preference name="StatusBarOverlaysWebView" value="true" />
     <preference name="StatusBarBackgroundColor" value="#000000" />
     <preference name="StatusBarStyle" value="blackopaque" />
+    <engine name="android" spec="~6.2.3" />
     <engine name="browser" spec="^4.1.0" />
     <engine name="ios" spec="^4.4.0" />
     <plugin name="cordova-plugin-browsersync" spec="^0.1.6" />
