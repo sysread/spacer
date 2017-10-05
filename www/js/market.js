@@ -198,6 +198,9 @@ class Market {
     });
 
     this.buysThisTurn.clear();
-    this.prices = resourceMap(null);
+
+    if (game.turns % (game.update_prices * 24 / data.hours_per_turn) === 0) {
+      this.prices = resourceMap(null);
+    }
   }
 }

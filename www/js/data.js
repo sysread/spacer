@@ -7,6 +7,7 @@ const data = {
   hours_per_turn  : 4,
   initial_turns   : 600,
   market_history  : 45,
+  update_prices   : 10, // days between price updates
   base_unit_price : 100,
   scarcity_markup : 0.3,
   necessity       : {water: true, food: true, medicine: true, fuel: true},
