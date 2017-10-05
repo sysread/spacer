@@ -6,13 +6,27 @@ class Plot extends UI {
     this.root.on('click', '.plot-body-info', (e) => {
       e.stopPropagation();
       e.preventDefault();
-      let body = $(e.target).data('body');
+      const body = $(e.target).data('body');
 
       if (body === 'sun')
         return false;
 
-      let info = new InfoPopUp;
+      const info = new InfoPopUp;
       info.addCard(new PlaceSummary({place: game.place(body)}));
+
+      info.add_footer_button('Plot course').on('click', e => {
+        const navComp = new NavComp;
+
+        const modal = new TripPlanner({
+          'place'   : game.place(body),
+          'routes'  : navComp.transits[body],
+          'fastest' : navComp.fastest(body)
+        });
+
+        info.hide();
+        modal.show();
+      });
+
       info.show();
 
       return false;
@@ -43,8 +57,8 @@ class Plot extends UI {
   }
 
   static bodyName(body) {
-    let name    = system.name(body);
-    let central = system.central(body);
+    const central = system.central(body);
+    let name = system.name(body);
 
     if (central && central !== 'sun')
       name += ` (${system.name(central)})`;

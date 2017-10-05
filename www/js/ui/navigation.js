@@ -2,7 +2,7 @@ class Navigation extends Card {
   constructor(opt) {
     super(opt);
     this.dests = {};
-    this.navcomp = new NavComp(game.player.maxAcceleration(), game.player.ship, game.place().name);
+    this.navcomp = new NavComp;
 
     this.set_header('Navigation');
     this.add_header_button('Map').on('click', (e)=>{open('plot')});

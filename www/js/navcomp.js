@@ -1,8 +1,8 @@
 class NavComp {
-  constructor(max_acc, ship, origin) {
-    this.max  = max_acc;
-    this.ship = ship;
-    this.orig = origin;
+  constructor() {
+    this.max  = game.player.maxAcceleration();
+    this.ship = game.player.ship;
+    this.orig = game.place().name;
   }
 
   get maxdv() { return Math.min(this.max, this.ship.currentAcceleration()) }
