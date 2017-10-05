@@ -1,7 +1,7 @@
 <script type="text/javascript">
 
 $(function() {
-  let summary = new PlaceSummary({place: game.place()});
+  let summary = new PlaceSummary({place: game.place(), showDescription: true});
   $('#summary').append(summary.root);
 });
 

@@ -7,6 +7,10 @@ class PlaceSummary extends Card {
 
     this.set_header(this.place.title).addClass('text-capitalize');
 
+    if (this.showDescription) {
+      this.add_text( $('<i>').append(data.bodies[this.place.name].desc.split('|').map(t => {return `<p>${t}</p>`}).join('')) );
+    }
+
     if (this.place.name !== game.locus) {
       this.add_def('Distance', Math.round(Physics.AU(system.distance(game.locus, this.place.name)) * 100) / 100 + ' AU');
     } else {
@@ -18,6 +22,9 @@ class PlaceSummary extends Card {
     this.add_def('Economy', this.place.size).addClass('text-capitalize');
     this.add_def('Details', this.traits || 'None').addClass('text-capitalize');
     this.add_def('Special', this.conds  || 'None').addClass('text-capitalize');
-    this.add_def('About',   $('<i>').append(data.bodies[this.place.name].desc.split('|').map(t => {return `<p>${t}</p>`}).join('')));
+  }
+
+  get showDescription() {
+    return this.opt.showDescription;
   }
 }
