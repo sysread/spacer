@@ -109,8 +109,10 @@ class Game {
 
     for (let name of bodies) {
       let place = new Place(name);
-      for (let item of (Object.keys(data.resources)))
-        place.store.inc(item, Math.ceil(place.scale * 10));
+
+      for (let item of (Object.keys(data.resources))) {
+        place.store.inc(item, Math.ceil(place.scale * data.initial_stock));
+      }
 
       this.places[name]  = place;
       this.markets[name] = [];

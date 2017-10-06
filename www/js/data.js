@@ -4,8 +4,9 @@
  */
 const data = {
   start_date       : new Date(2242, 0, 1, 1),
-  hours_per_turn   : 4,
-  initial_turns    : 600,
+  hours_per_turn   : 6,
+  initial_turns    : 400,
+  initial_stock    : 10,
   market_history   : 45,
   update_prices    : 10, // days between price updates
   base_unit_price  : 100,
