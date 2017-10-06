@@ -69,7 +69,7 @@ class System {
 
   gravity(name) {
     // Artificial gravity (spun up, orbital)
-    if (data.bodies[name].hasOwnProperty('gravity')) {
+    if (data.bodies.hasOwnProperty(name) && data.bodies[name].hasOwnProperty('gravity')) {
       return data.bodies[name].gravity;
     }
 
