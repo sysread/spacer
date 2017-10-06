@@ -39,22 +39,21 @@ $(function() {
   };
 
   $('#exchange-dialog').on('show.bs.modal', function(e) {
-    let item     = $(e.relatedTarget).data('resource');
-    let tax_rate = place.sales_tax;
-    let price    = place.price(item);
-    let tax      = Math.ceil(price * tax_rate);
-    let avail    = place.currentSupply(item);
-    let cargo    = game.player.ship.cargo.get(item);
+    const item     = $(e.relatedTarget).data('resource');
+    const price    = place.price(item);
+    const buy      = place.buyPrice(item);
+    const sell     = place.sellPrice(item);
+    const avail    = place.currentSupply(item);
+    const cargo    = game.player.ship.cargo.get(item);
 
     $('#exchange-resource').text(item);
-    $('#exchange-tax-rate').text((Math.round(tax_rate * 10000) / 100) + '%');
-    $('#exchange-price').val(price);
-    $('#exchange-tax').val(tax);
+    $('#exchange-buy-price').val(buy);
+    $('#exchange-sell-price').val(sell);
     $('#exchange-docks').val(avail);
     $('#exchange-hold').val(cargo);
     $('#exchange-credits').val(game.player.money);
 
-    let max = cargo + Math.min(avail, Math.floor(game.player.money / place.buyPrice(item)), game.player.ship.cargoLeft);
+    const max = cargo + Math.min(avail, Math.floor(game.player.money / buy), game.player.ship.cargoLeft);
 
     slider = new Slider({
       step       : 1,
@@ -63,13 +62,16 @@ $(function() {
       initial    : cargo,
       minmaxbtns : true,
       callback   : (amount) => {
-        let diff = amount - game.player.ship.cargo.get(item);
+        const diff = amount - game.player.ship.cargo.get(item);
         $('#exchange-docks').val(avail - diff);
         $('#exchange-hold').val(amount);
-        if (diff > 0)
-          $('#exchange-credits').val(game.player.money - (diff * (price + tax)));
-        else
-          $('#exchange-credits').val(game.player.money - (diff * price));
+
+        if (diff > 0) {
+          $('#exchange-credits').val(game.player.money - (diff * buy));
+        }
+        else {
+          $('#exchange-credits').val(game.player.money - (diff * sell));
+        }
       }
     });
 
@@ -156,8 +158,8 @@ $(function() {
       <div class="modal-body">
         <table class="table">
           <tbody>
-            <tr><th scope="row">Price</th><td><input class="form-control" readonly type="number" id="exchange-price"></td></tr>
-            <tr><th scope="row">Sales tax <span id="exchange-tax-rate" class="badge badge-pill"></span></th><td><input class="form-control" readonly type="number" id="exchange-tax"></td></tr>
+            <tr><th scope="row">Buy</th><td><input class="form-control" readonly type="number" id="exchange-buy-price"></td></tr>
+            <tr><th scope="row">Sell</th><td><input class="form-control" readonly type="number" id="exchange-sell-price"></td></tr>
             <tr><th scope="row">Market</th><td><input class="form-control" readonly type="number" id="exchange-docks"></td></tr>
             <tr><th scope="row">Hold</th><td><input class="form-control" readonly type="number" id="exchange-hold"></td></tr>
             <tr><th scope="row">Credits</th><td><input class="form-control" readonly type="number" id="exchange-credits"></td></tr>

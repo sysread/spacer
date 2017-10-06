@@ -3,18 +3,19 @@
  * Thrust in kiloNewtons
  */
 const data = {
-  start_date      : new Date(2242, 0, 1, 1),
-  hours_per_turn  : 4,
-  initial_turns   : 600,
-  market_history  : 45,
-  update_prices   : 10, // days between price updates
-  base_unit_price : 100,
-  scarcity_markup : 0.3,
-  necessity       : {water: true, food: true, medicine: true, fuel: true},
-  craft_fee       : 0.05,
-  fabricators     : 40,
-  fab_health      : 20,
-  base_pay        : 80, // credits/day
+  start_date       : new Date(2242, 0, 1, 1),
+  hours_per_turn   : 4,
+  initial_turns    : 600,
+  market_history   : 45,
+  update_prices    : 10, // days between price updates
+  base_unit_price  : 100,
+  buy_price_markup : 0.23,
+  scarcity_markup  : 0.3,
+  necessity        : {water: true, food: true, medicine: true, fuel: true},
+  craft_fee        : 0.05,
+  fabricators      : 40,
+  fab_health       : 20,
+  base_pay         : 80, // credits/day
   grav_deltav_factor : 2.5, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
 
   scales: {

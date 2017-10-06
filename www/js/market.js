@@ -143,8 +143,14 @@ class Market {
     return this.prices[resource];
   }
 
-  buyPrice(resource)  { return this.price(resource) }
-  sellPrice(resource) { return this.price(resource) }
+  sellPrice(resource) {
+    return this.price(resource);
+  }
+
+  buyPrice(resource)  {
+    const price = this.price(resource);
+    return price + (price * data.buy_price_markup);
+  }
 
   buy(resource, amount) {
     let available = this.currentSupply(resource);
