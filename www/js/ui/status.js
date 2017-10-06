@@ -1,16 +1,20 @@
 class PlayerStatus extends UI {
   constructor(opt) {
     super(opt);
-    this.person = new PersonStatus({person: game.player});
-    this.ship = new ShipStatus({ship: game.player.ship});
-    this.base.append(this.person.root).append(this.ship.root);
+    this.person = new PersonStatus;
+    this.standing = new FactionStatus;
+    this.ship = new ShipStatus;
+    this.base
+      .append(this.person.root)
+      .append(this.standing.root)
+      .append(this.ship.root);
   }
 }
 
 class PersonStatus extends Card {
   constructor(opt) {
     super(opt);
-    this.person = opt.person || game.player;
+    this.person = game.player;
     this.set_header('Captain');
     this.add_header_button('New game').on('click', ()=>{open('newgame')});
     this.add_def('Money',     csn(this.person.money) + 'c');
@@ -20,10 +24,23 @@ class PersonStatus extends Card {
   }
 }
 
+class FactionStatus extends Card {
+  constructor(opt) {
+    super(opt);
+    this.set_header('Faction standing');
+
+    for (let faction of Object.keys(data.factions)) {
+      const label    = game.player.getStandingLabel(faction);
+      const standing = game.player.getStanding(faction);
+      this.add_def(faction, `${label} [${standing}]`);
+    }
+  }
+}
+
 class ShipStatus extends Card {
   constructor(opt) {
     super(opt);
-    this.ship = opt.ship || game.player.ship;
+    this.ship = game.player.ship;
     this.set_header('Ship');
     this.add_def('Class',      `<span class="text-capitalize">${this.ship.opt.shipclass}</span>`);
     this.add_def('Cargo',      `${this.ship.cargoUsed}/${this.ship.cargoSpace}`);

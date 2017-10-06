@@ -17,6 +17,7 @@ const data = {
   fab_health       : 20,
   base_pay         : 80, // credits/day
   grav_deltav_factor : 2.5, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
+  initial_ship     : 'trader',
 
   scales: {
     tiny   : 0.6,
@@ -259,16 +260,16 @@ const data = {
     hauler      : {hull: 20, armor: 5,  cargo: 100, hardpoints: 5,  mass: 10000, tank: 150, drives: 100, drive: 'ion',    restricted: false},
 
     /* Military */
-    transport   : {hull: 40, armor: 10, cargo: 50,  hardpoints: 6,  mass: 8000,  tank: 180, drives: 220, drive: 'ion',    restricted: true},
-    corvette    : {hull: 25, armor: 5,  cargo: 10,  hardpoints: 4,  mass: 550,   tank: 25,  drives: 2,   drive: 'fusion', restricted: true},
-    frigate     : {hull: 30, armor: 5,  cargo: 30,  hardpoints: 6,  mass: 800,   tank: 30,  drives: 4,   drive: 'fusion', restricted: true},
-    destroyer   : {hull: 45, armor: 12, cargo: 12,  hardpoints: 8,  mass: 1100,  tank: 40,  drives: 8,   drive: 'fusion', restricted: true},
-    cruiser     : {hull: 60, armor: 15, cargo: 15,  hardpoints: 10, mass: 1850,  tank: 100, drives: 16,  drive: 'fusion', restricted: true},
-    battleship  : {hull: 85, armor: 25, cargo: 20,  hardpoints: 16, mass: 2300,  tank: 140, drives: 20,  drive: 'fusion', restricted: true},
+    corvette    : {hull: 25, armor: 5,  cargo: 10,  hardpoints: 4,  mass: 550,   tank: 25,  drives: 2,   drive: 'fusion', restricted: 'Respected'},
+    frigate     : {hull: 30, armor: 5,  cargo: 20,  hardpoints: 6,  mass: 800,   tank: 30,  drives: 4,   drive: 'fusion', restricted: 'Respected'},
+    destroyer   : {hull: 45, armor: 12, cargo: 12,  hardpoints: 8,  mass: 1100,  tank: 40,  drives: 8,   drive: 'fusion', restricted: 'Admired'},
+    cruiser     : {hull: 60, armor: 15, cargo: 15,  hardpoints: 10, mass: 1850,  tank: 100, drives: 16,  drive: 'fusion', restricted: 'Admired'},
+    battleship  : {hull: 85, armor: 25, cargo: 20,  hardpoints: 16, mass: 2300,  tank: 140, drives: 20,  drive: 'fusion', restricted: 'Admired'},
+    transport   : {hull: 40, armor: 10, cargo: 50,  hardpoints: 6,  mass: 8000,  tank: 180, drives: 220, drive: 'ion',    restricted: 'Admired'},
 
     /* Faction ships */
-    neptune     : {hull: 10, armor: 4,  cargo: 40,  hardpoints: 3,  mass: 3200,  tank: 40,  drives: 30,  drive: 'ion',    restricted: true, faction: 'TRANSA'},
-    barsoom     : {hull: 35, armor: 6,  cargo: 30,  hardpoints: 4,  mass: 600,   tank: 30,  drives: 4,   drive: 'fusion', restricted: true, faction: 'MC'}
+    neptune     : {hull: 10, armor: 4,  cargo: 40,  hardpoints: 3,  mass: 3200,  tank: 40,  drives: 30,  drive: 'ion',    restricted: 'Admired', faction: 'TRANSA'},
+    barsoom     : {hull: 35, armor: 6,  cargo: 30,  hardpoints: 4,  mass: 600,   tank: 30,  drives: 4,   drive: 'fusion', restricted: 'Admired', faction: 'MC'}
   },
 
   /*

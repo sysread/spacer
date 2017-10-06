@@ -25,7 +25,7 @@ $(function() {
 
     let place   = $('#home').val();
     let faction = data.bodies[place].faction;
-    let ship    = data.factions[faction].ship;
+    let ship    = data.initial_ship;
 
     let me = new Person({
       name    : $('#name').val(),

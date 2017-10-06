@@ -1,21 +1,22 @@
 <script type="text/javascript">
 
 $(function() {
-  let tradein = game.player.ship.price(true);
-  let list = $('#ships');
+  const player  = game.player;
+  const tradein = player.ship.price(true);
+  const list    = $('#ships');
 
   $('#ship-detail').on('show.bs.modal', function(e) {
-    let ship  = $(e.relatedTarget).data('ship');
-    let price = $(e.relatedTarget).data('price');
-    let sc    = ship.opt.shipclass;
+    const ship  = $(e.relatedTarget).data('ship');
+    const price = $(e.relatedTarget).data('price');
+    const sc    = ship.opt.shipclass;
 
-    let deltav = Math.round(ship.currentAcceleration() * 100) / 100;
-    let burn_time = ship.maxBurnTime(deltav, true) * data.hours_per_turn;
-    let maxg_range = Physics.AU(Physics.range(burn_time * 3600, 0, deltav));
+    const deltav = Math.round(ship.currentAcceleration() * 100) / 100;
+    const burn_time = ship.maxBurnTime(deltav, true) * data.hours_per_turn;
+    const maxg_range = Physics.AU(Physics.range(burn_time * 3600, 0, deltav));
 
-    let nominal_dv = Math.round(Math.min(0.5, deltav * 0.6) * 100) / 100;
-    let nominal_burn_time = ship.maxBurnTime(nominal_dv, true) * data.hours_per_turn;
-    let nominal_range = Physics.AU(Physics.range(nominal_burn_time * 3600, 0, 1));
+    const nominal_dv = Math.round(Math.min(0.5, deltav * 0.6) * 100) / 100;
+    const nominal_burn_time = ship.maxBurnTime(nominal_dv, true) * data.hours_per_turn;
+    const nominal_range = Physics.AU(Physics.range(nominal_burn_time * 3600, 0, 1));
 
     $('#ship-detail .modal-title').text(sc);
     $('#ship-detail .modal-body').empty();
@@ -34,7 +35,7 @@ $(function() {
       .append(row('Armor', ship.shipclass.armor))
       .append(row('Hard points', ship.shipclass.hardpoints));
 
-    if (sc === game.player.ship.opt.shipclass || game.player.money < price - tradein) {
+    if (sc === player.ship.opt.shipclass || player.money < price - tradein) {
       $('#btn-tradein').prop('disabled', true).addClass('disabled');
       $('#tradein').data({});
     }
@@ -45,13 +46,13 @@ $(function() {
   });
 
   $('#tradein').on('show.bs.modal', function(e) {
-    let ship  = $('#tradein').data('ship');
-    let price = $('#tradein').data('price');
-    let cost  = Math.ceil(price - tradein);
+    const ship  = $('#tradein').data('ship');
+    const price = $('#tradein').data('price');
+    const cost  = Math.ceil(price - tradein);
 
     $('#tradein-value').text(csn(tradein));
     $('#new-ship-price').text(csn(price));
-    $('#your-ship').text(game.player.ship.opt.shipclass);
+    $('#your-ship').text(player.ship.opt.shipclass);
     $('#new-ship').text(ship.opt.shipclass);
 
     if (cost < 0)
@@ -63,36 +64,38 @@ $(function() {
   });
 
   $('#tradein-complete').on('click', (e) => {
-    let ship  = $('#tradein').data('ship');
-    let price = $('#tradein').data('price');
-    game.player.money += tradein;
-    game.player.money -= price;
-    game.player.ship = ship;
+    const ship  = $('#tradein').data('ship');
+    const price = $('#tradein').data('price');
+    player.credit(tradin);
+    player.debit(price);
+    player.ship = ship;
     game.turn();
     game.save_game();
   });
 
-  for (let sc of Object.keys(data.shipclass)) {
-    let info = data.shipclass[sc];
-    let faction_adjustment = 1.0;
-
-    if (info.restricted && game.player.faction !== game.place().faction)
-      return;
+  for (const sc of Object.keys(data.shipclass)) {
+    const info = data.shipclass[sc];
 
     if (info.hasOwnProperty('faction')) {
-      if (info.faction !== game.place().faction) return;
-      if (info.faction !== game.player.faction) return;
-      faction_adjustment = 0.8;
+      if (game.place().faction != info.faction) {
+        continue;
+      }
     }
 
-    let ship = new Ship({shipclass: sc, fuel: info.tank});
+    if (info.restricted) {
+      if (!player.hasStanding(game.place().faction, info.restricted)) {
+        continue;
+      }
+    }
+
+    const ship = new Ship({shipclass: sc, fuel: info.tank});
+
     let price = ship.price();
     price += price * game.place().sales_tax;
-    price *= faction_adjustment;
     price = Math.ceil(price);
 
-    let name = $(`<h5 class="text-capitalize">${sc}</h5>`);
-    let btn  = $(`<button type="button" class="btn btn-dark float-right" data-toggle="modal" data-target="#ship-detail">Info</button>`);
+    const name = $(`<h5 class="text-capitalize">${sc}</h5>`);
+    const btn  = $(`<button type="button" class="btn btn-dark float-right" data-toggle="modal" data-target="#ship-detail">Info</button>`);
     btn.data({ship: ship, price: price});
 
     list.append(row(name.append(btn), `${csn(price)}`));
