@@ -5,13 +5,15 @@ $(function() {
     $('#home').append(`<option value="${body}">${system.name(body)}</option>`);
 
   $('#home').change((e) => {
-    let home = $('#home').val();
+    const home    = $('#home').val();
+    const gravity = R(system.gravity(home), 3);
+
     $('#home-info').html( data.bodies[home].desc.split('|').map(t => {return `<p>${t}</p>`}).join('') );
     $('#home-info').html($('#' + home).html());
-    $('#home-grav').text(data.bodies[home].gravity);
-    $('#home-deltav').text(R(data.bodies[home].gravity * data.grav_deltav_factor, 3));
+    $('#home-grav').text(gravity);
+    $('#home-deltav').text(R(gravity * data.grav_deltav_factor, 3));
 
-    let faction = data.bodies[home].faction;
+    const faction = data.bodies[home].faction;
     $('#faction').val(data.factions[faction].full_name);
     $('#faction-info').html( data.factions[faction].desc.split('|').map(t => {return `<p>${t}</p>`}).join('') );
   });
@@ -23,11 +25,11 @@ $(function() {
     $('#spacer-nav').data('in-transit', true);
     $('#starting-game-progress').css('width', '0%');
 
-    let place   = $('#home').val();
-    let faction = data.bodies[place].faction;
-    let ship    = data.initial_ship;
+    const place   = $('#home').val();
+    const faction = data.bodies[place].faction;
+    const ship    = data.initial_ship;
 
-    let me = new Person({
+    const me = new Person({
       name    : $('#name').val(),
       home    : place,
       faction : faction,
@@ -41,15 +43,15 @@ $(function() {
     me.ship.fuel = data.shipclass[ship].tank;
     game.new_game(me, place);
 
-    let turns = data.initial_turns;
-    let step  = Math.ceil(turns/10);
+    const turns = data.initial_turns;
+    const step  = Math.ceil(turns/10);
     let done  = 0;
     let timer;
 
-    let interval = function() {
+    const interval = function() {
       if (done < turns) {
-        let count = Math.min(turns - done, step);
-        let pct = Math.ceil((done / turns) * 100);
+        const count = Math.min(turns - done, step);
+        const pct = Math.ceil((done / turns) * 100);
         done += count;
         game.turn(count);
         $('#starting-game-progress').text(`${pct}%`).css('width', `${pct}%`);

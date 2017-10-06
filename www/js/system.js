@@ -68,7 +68,16 @@ class System {
   }
 
   gravity(name) {
-    return this.system.bodies['earth'].mass / this.system.bodies[name].mass;
+    // Artificial gravity (spun up, orbital)
+    if (data.bodies[name].hasOwnProperty('gravity')) {
+      return data.bodies[name].gravity;
+    }
+
+    const grav   = 6.67e-11;
+    const body   = this.body(name);
+    const mass   = body.mass;
+    const radius = body.radius;
+    return Physics.G((grav * mass) / Math.pow(radius, 2));
   }
 
   ranges(point) {

@@ -50,7 +50,7 @@ class Person {
   }
 
   maxAcceleration() {
-    return Physics.G() * data.bodies[this.home].gravity * data.grav_deltav_factor;
+    return Physics.G() * system.gravity(this.home) * data.grav_deltav_factor;
   }
 
   shipAcceleration() {
