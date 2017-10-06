@@ -2,8 +2,10 @@ body {
   padding-bottom: 70px;
   background-color: rgb(0, 0, 0);
   background-image: url('../img/bg.jpg');
-  color: #bbb;
-  font-size: 0.9rem;
+  background-attachment: fixed;
+  color: #ddd;
+  font-size: 1.0rem;
+  line-height: 1.5;
 }
 
 .bg-black {
@@ -21,7 +23,7 @@ body {
 
 .card {
   border: 1px solid rgb(139,0,0);
-  background-color: rgba(0,0,0,.75);
+  background-color: rgb(0,0,0);
 }
 
 .card-header {
@@ -136,5 +138,5 @@ button.btn-secondary:disabled {
 }
 
 .mute, .text-muted {
-  color: #bba !important;
+  color: #ccc !important;
 }
