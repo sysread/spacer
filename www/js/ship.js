@@ -26,7 +26,6 @@ class Ship {
    * Shipclass properties or those derived from them
    */
   get shipclass()    { return data.shipclass[this.opt.shipclass] }
-  get cargoSpace()   { return this.shipclass.cargo }
   get tank()         { return this.shipclass.tank }
   get drive()        { return data.drives[this.shipclass.drive] }
   get drives()       { return this.shipclass.drives }
@@ -34,6 +33,43 @@ class Ship {
   get mass()         { return this.shipclass.mass + this.driveMass }
   get thrust()       { return this.shipclass.drives * this.drive.thrust }
   get acceleration() { return Physics.deltav(this.thrust, this.mass) }
+  get hardPoints()   {return this.shipclass.hardpoints}
+
+  get cargoSpace() {
+    let space = this.shipclass.cargo;
+
+    for (let addon of this.addons) {
+      if (data.shipAddOns[addon].hasOwnProperty('cargo')) {
+        space += data.shipAddOns[addon].cargo;
+      }
+    }
+
+    return Math.max(0, space);
+  }
+
+  get hull() {
+    let hull = this.shipclass.hull;
+
+    for (let addon of this.addons) {
+      if (data.shipAddOns[addon].hasOwnProperty('hull')) {
+        hull += data.shipAddOns[addon].hull;
+      }
+    }
+
+    return Math.max(1, hull);
+  }
+
+  get armor() {
+    let armor = this.shipclass.armor;
+
+    for (let addon of this.addons) {
+      if (data.shipAddOns[addon].hasOwnProperty('armor')) {
+        armor += data.shipAddOns[addon].armor;
+      }
+    }
+
+    return Math.max(0, armor);
+  }
 
   /*
    * Properties of the ship itself
@@ -80,10 +116,7 @@ class Ship {
   }
 
   addOnMass() {
-    let m = 0;
-    for (let addon of this.addons)
-      m += data.shipAddOns[addon].mass;
-    return m;
+    return this.addons.reduce((a, b) => {return a + data.shipAddOns[b].mass}, 0);
   }
 
   nominalMass(full_tank=false) {
@@ -175,11 +208,41 @@ class Ship {
     return place.sellPrice('fuel') * Math.floor(this.fuel / data.resources.fuel.mass);
   }
 
+  addOnValue() {
+    let price = 0;
+    for (let addon of this.addons) {
+      price += data.shipAddOns[addon].price;
+    }
+    return price;
+  }
+
   price(tradein) {
     let cargo = this.cargoValue();
     let fuel  = this.fuelValue();
-    let ship  = this.shipValue();
+    let ship  = this.shipValue() + this.addOnValue();
     if (tradein) ship = Math.ceil(ship * 0.7);
     return ship + cargo + fuel;
+  }
+
+  availableHardPoints() {
+    return this.hardpoints - this.addons.length;
+  }
+
+  installAddOn(addon) {
+    this.addons.push(addon);
+  }
+
+  hasAddOn(addon) {
+    for (let a of this.addons) {
+      if (a === addon) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  removeAddOn(addon) {
+    this.addons = this.addons.filter(x => {return x !== addon});
   }
 }

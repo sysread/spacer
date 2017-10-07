@@ -44,7 +44,8 @@ $(function() {
   });
 
   $('#fuel-mass').text(data.resources.fuel.mass);
-  $('#trade-in').on('click', (e) => {open('ships')});
+  $('#trade-in').on('click', e => {open('ships')});
+  $('#addons').on('click', e => {open('addons')});
 
   refresh();
 });
@@ -77,6 +78,7 @@ $(function() {
     <div class="row p-1">
       <button type="button" class="btn btn-dark m-1" data-toggle="modal" data-target="#refuel" id="refuel-cargo-btn">Transfer fuel</button>
       <button type="button" class="btn btn-dark m-1" id="trade-in">Ships</button>
+      <button type="button" class="btn btn-dark m-1" id="addons">Upgrades</button>
     </div>
   </div>
 </div>

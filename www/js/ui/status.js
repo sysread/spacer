@@ -44,15 +44,28 @@ class ShipStatus extends Card {
     this.set_header('Ship');
     this.add_def('Class',      `<span class="text-capitalize">${this.ship.opt.shipclass}</span>`);
     this.add_def('Cargo',      `${this.ship.cargoUsed}/${this.ship.cargoSpace}`);
-    this.add_def('Hull',       this.ship.shipclass.hull);
-    this.add_def('Armor',      this.ship.shipclass.armor);
-    this.add_def('Hardpoints', this.ship.shipclass.hardpoints);
+    this.add_def('Hull',       this.ship.hull);
+    this.add_def('Armor',      this.ship.armor);
+    this.add_def('Hardpoints', this.ship.hardpoints);
     this.add_def('Mass',       csn(Math.floor(this.ship.currentMass())) + ' tonnes');
     this.add_def('Thrust',     csn(this.ship.thrust) + ' kN');
     this.add_def('Fuel',       `${Math.round(this.ship.fuel * 100) / 100}/${this.ship.tank}`);
     this.add_def('Max burn',   `${csn(this.ship.maxBurnTime() * data.hours_per_turn)} hours at maximum thrust`);
     this.add_def('Drives',     this.ship.shipclass.drives);
     this.add_def('Drive type', `<span class="text-capitalize">${this.ship.shipclass.drive}</span>`);
+
+    if (this.ship.addons.length > 0) {
+      let addons = $('<ul>');
+
+      for (let addon of this.ship.addons) {
+        addons.append( $('<li>').append( data.shipAddOns[addon].name ) );
+      }
+
+      this.add_def('Upgrades', addons);
+    }
+    else {
+      this.add_def('Upgrades', 'None');
+    }
 
     if (this.ship.cargo.sum() > 0) {
       let cargo = $('<ul>');

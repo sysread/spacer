@@ -6,9 +6,9 @@ const data = {
   start_date       : new Date(2242, 0, 1, 1),
   hours_per_turn   : 6,
   initial_turns    : 400,
-  initial_stock    : 10,
+  initial_stock    : 5,
   market_history   : 45,
-  update_prices    : 10, // days between price updates
+  update_prices    : 5, // days between price updates
   base_unit_price  : 100,
   buy_price_markup : 0.23,
   scarcity_markup  : 0.3,
@@ -16,7 +16,7 @@ const data = {
   craft_fee        : 0.05,
   fabricators      : 40,
   fab_health       : 20,
-  base_pay         : 80, // credits/day
+  base_pay         : 20, // credits/day
   grav_deltav_factor : 3, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
   initial_ship     : 'trader',
 
@@ -253,50 +253,54 @@ const data = {
    */
   shipAddOns: {
     cargoPod: {
-      name      : 'External cargo pod',
-      desc      : 'Welds an additional cargo hold onto the outer hull, increasing total cargo space but reducing armor.',
-      hdpts     : 1,
-      mass      : 10,
-      cargo     : 20,
-      armor     : -2
+      name       : 'External cargo pod',
+      desc       : 'Welds an additional cargo hold onto the outer hull, increasing total cargo space but reducing armor.',
+      mass       : 10,
+      cargo      : 20,
+      armor      : -1,
+      price      : 10000,
     },
     pds: {
-      name      : 'Point defense system',
-      desc      : 'Mounts a computer-controlled network of small, magnetically propelled, point defense turrets around the ship to stop incoming torpedos at a safe range.',
-      hdpts     : 1,
-      mass      : 5,
-      damage    : 1,
-      intercept : 0.75,
-      reload    : 1,
-      rate      : 2
+      name       : 'Point defense system',
+      desc       : 'Mounts a computer-controlled network of small, magnetically propelled, point defense turrets around the ship to stop incoming torpedos at a safe range.',
+      mass       : 5,
+      damage     : 1,
+      intercept  : 0.65,
+      reload     : 1,
+      rate       : 2,
+      price      : 30000,
+      restricted : 'Friendly',
     },
     railgun: {
-      name      : 'Rail gun',
-      desc      : 'A military-grade rail gun turret, magnetically accelerating 100kg rounds at an appreciable fraction of the speed of light.',
-      hdpts     : 1,
-      mass      : 15,
-      damage    : 10,
-      reload    : 1,
-      rate      : 1
+      name       : 'Rail gun',
+      desc       : 'A military-grade rail gun turret, magnetically accelerating 100kg rounds at an appreciable fraction of the speed of light.',
+      mass       : 15,
+      damage     : 10,
+      reload     : 1,
+      rate       : 1,
+      price      : 80000,
+      restricted : 'Respected',
     },
     torpedo: {
-      name      : 'Torpedo tube',
-      desc      : 'Adds a self-guided torpedo launcher. torpedos sold separately.',
-      hdpts     : 1,
-      mass      : 20,
-      damage    : 10,
-      reload    : 4,
-      rate      : 1
+      name       : 'Torpedo tube',
+      desc       : 'Adds a self-guided torpedo launcher. torpedos sold separately.',
+      mass       : 20,
+      damage     : 10,
+      reload     : 2,
+      rate       : 1,
+      price      : 120000,
+      restricted : 'Admired',
     },
     ecm: {
-      name      : 'Electronic counter-measures',
-      desc      : 'Generates electromagnetic interference and false signals to confuse an enemy\'s targeting systems.',
-      hdpts     : 1,
-      mass      : 1,
-      intercept : 0.15,
-      dodge     : 0.45,
-      reload    : 1,
-      rate      : 2
+      name       : 'Electronic counter-measures',
+      desc       : 'Generates electromagnetic interference and false signals to confuse an enemy\'s targeting systems.',
+      mass       : 1,
+      intercept  : 0.15,
+      dodge      : 0.45,
+      reload     : 1,
+      rate       : 2,
+      price      : 90000,
+      restricted : 'Admired',
     }
   }
 };

@@ -52,19 +52,15 @@ class Slider extends UI {
     this.slider.attr('min',  this.min);
     this.slider.attr('max',  this.max);
     this.slider.attr('step', this.step);
+    this.slider.on('input', (e) => { this.val = this.slider.val() });
 
     this.amount = $('<input type="number" class="form-control" readonly>');
     this.amount.attr('min', this.min);
     this.amount.attr('max', this.max);
 
-    this.monitor = null;
-    this.slider.mousedown((e) => {if (e.button == 0) this.start_monitor()});
-    this.slider.mouseup((e) => {this.stop_monitor()});
-    this.slider.change((e) => {this.val = this.slider.val(); this.stop_monitor();});
-
-    this.dn    = $('<button type="button" class="btn btn-dark">&#9664;</button>');
+    this.dn    = $('<button type="button" class="btn btn-dark">&#9668;</button>');
     this.up    = $('<button type="button" class="btn btn-dark">&#9658;</button>');
-    this.dndn  = $('<button type="button" class="btn btn-dark">&#9664;&#9664;</button>');
+    this.dndn  = $('<button type="button" class="btn btn-dark">&#9668;&#9668;</button>');
     this.upup  = $('<button type="button" class="btn btn-dark">&#9658;&#9658;</button>');
 
     this.dn.click((e) => {this.val -= this.step});
@@ -81,16 +77,6 @@ class Slider extends UI {
 
     this.value = this.initial;
     this.update();
-  }
-
-  start_monitor() {
-    this.stop_monitor();
-    this.monitor = window.setInterval(() => {this.val = this.slider.val()}, this.interval);
-  }
-
-  stop_monitor() {
-    window.clearInterval(this.monitor);
-    this.monitor = null;
   }
 
   get root()       { return this.group }
@@ -424,6 +410,15 @@ class Ok extends Modal {
   }
 
   get ok() {return this.modal}
+}
+
+class Ask extends Modal {
+  constructor(msg, choices, cb, opt) {
+    super(opt);
+    if (msg) this.add_text(msg);
+    for (let choice of choices) this.add_footer_button(choice).attr('data-dismiss', 'modal');
+    this.root.on('click', 'button', e => { cb( $(e.target).text() ) });
+  }
 }
 
 class InfoPopUp extends Modal {
