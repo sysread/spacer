@@ -1,4 +1,4 @@
-class Plot extends UI {
+class Plot extends Component {
   constructor(opt) {
     super(opt);
     this.data = system.plot();

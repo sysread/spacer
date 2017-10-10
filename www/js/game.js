@@ -1,3 +1,16 @@
+function open(name) {
+  if ($('#spacer').data('state') === 'transit') {
+    return;
+  }
+
+  const path = $(`#spacer-nav a[data-name='${name}']`).data('path') || name + '.html';
+
+  $('#spacer-nav a').removeClass('active');
+  $(`#spacer-nav a[data-name="${name}"]`).addClass('active');
+  $('#spacer-content').empty().load(path);
+  $('#spacer-nav').collapse('hide');
+}
+
 class Game {
   constructor() {
     this.date    = new Date(data.start_date);
@@ -14,7 +27,8 @@ class Game {
       if (saved) {
         this.load(JSON.parse(saved));
         this.refresh();
-        open('summary');
+        //open('summary');
+        open('ships2');
       }
       else {
         open('newgame');
@@ -27,11 +41,17 @@ class Game {
   test() {
     for (let sc of Object.keys(data.shipclass)) {
       let ship = new Ship({shipclass: sc, fuel: data.shipclass[sc].tank});
+      console.log(sc);
 
-      let dv0 = ship.currentAcceleration();
-      let dv1 = Math.min(0.5, dv0 * 0.6);
+      let dv0 = R(ship.currentAcceleration(), 3);
+      let bn0 = R(ship.maxBurnTime(dv0, true) * data.hours_per_turn, 3);
+      let au0 = R(Physics.AU(Physics.range(bn0 * 3600, 0, dv0)), 3);
+      console.log('max', {'deltav': R(Physics.G(dv0), 3), 'hours': bn0, 'dist': au0});
 
-      console.log(sc, [dv0, dv1].map(n => {return R(Physics.G(n), 3)}));
+      let dv1 = R(Math.min(Physics.G() * 0.5, dv0 * 0.6), 3);
+      let bn1 = R(ship.maxBurnTime(dv1, true) * data.hours_per_turn, 3);
+      let au1 = R(Physics.AU(Physics.range(bn1 * 3600, 0, dv1)), 3);
+      console.log('nom', {'deltav': R(Physics.G(dv1), 3), 'hours': bn1, 'dist': au1});
     }
   }
 
@@ -238,5 +258,37 @@ class Game {
     }
 
     return this.cache.system_need[resource];
+  }
+}
+
+class Npc {
+  constructor(opt) {
+    this.label     = opt.label;
+    this.faction   = opt.faction;
+    this.shipClass = data.shipclass[opt.shipClass];
+
+    this.ship = new Ship({
+      shipclass: opt.shipClass,
+      fuel: (opt.fuel || getRandomInt(Math.ceil(this.shipClass.tank / 4), this.shipClass.tank + 1)),
+    });
+
+    if (opt.cargo) {
+      for (let item of Object.keys(opt.cargo)) {
+        this.ship.loadCargo(item, opt.cargo[item] || 0);
+      }
+    }
+    else {
+      this.addRandomCargo();
+    }
+  }
+
+  addRandomCargo() {
+    const numItems  = getRandomInt(0, this.shipClass.cargo + 1);
+    const resources = Object.keys(data.resources);
+
+    for (let i = 0; i < numItems; ++i) {
+      const resource = resources[getRandomInt(0, resources.length)];
+      this.ship.loadCargo(resource, 1);
+    }
   }
 }

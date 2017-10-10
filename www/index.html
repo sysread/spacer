@@ -9,18 +9,19 @@
     <link rel="stylesheet" type="text/css" href="css/vendor/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="css/index.css">
 
-    <script type="text/javascript" src="cordova.js"></script>
-    <script type='application/javascript' src='js/vendor/fastclick.js'></script>
-    <script type="text/javascript" src="js/vendor/jquery.min.js"></script>
-    <script type="text/javascript" src="js/vendor/popper.min.js"></script>
-    <script type="text/javascript" src="js/vendor/bootstrap.min.js"></script>
-    <script type="text/javascript" src="js/vendor/solaris-model/dist/solaris-model.min.js"></script>
+    <script src="cordova.js"></script>
+    <script src='js/vendor/fastclick.js'></script>
+    <script src="js/vendor/jquery.min.js"></script>
+    <script src="js/vendor/popper.min.js"></script>
+    <script src="js/vendor/bootstrap.min.js"></script>
+    <script src="js/vendor/solaris-model/dist/solaris-model.min.js"></script>
+    <script src="js/vendor/moon.js"></script>
 
     <title>Spacer</title>
   </head>
   <body id="spacer">
     <!-- Header -->
-    <nav class="spacer-header fixed-top navbar navbar-dark px-3 py-2">
+    <nav class="spacer-header fixed-top navbar navbar-dark">
       <span class="navbar-text text-capitalize" id="spacer-location"></span>
       <span class="navbar-text" id="spacer-credits"></span>
       <span class="navbar-text" id="spacer-cargo"></span>
@@ -30,7 +31,6 @@
 
     <!-- Content window -->
     <div id="spacer-content" class="container-fluid pt-3 pb-1 mt-5"></div>
-    <div id="messages" class="container-fluid pt-3"></div>
 
     <!-- Navigation -->
     <nav id="spacer-navbar" data-toggle="collapse" data-target="#spacer-nav" class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
@@ -42,93 +42,47 @@
 
       <div class="collapse navbar-collapse" id="spacer-nav">
         <ul class="navbar-nav mr-auto">
-          <li class="nav-item py-2"><a href="#" data-name="summary"  data-path="summary.html"     class="nav-link active">Summary</a></li>
-          <li class="nav-item py-2"><a href="#" data-name="work"     data-path="work.html"        class="nav-link">Work</a></li>
-          <li class="nav-item py-2"><a href="#" data-name="docks"    data-path="commerce.html"    class="nav-link">Commerce</a></li>
-          <li class="nav-item py-2"><a href="#" data-name="fabs"     data-path="fabricators.html" class="nav-link">Fabricators</a></li>
-          <li class="nav-item py-2"><a href="#" data-name="shipyard" data-path="shipyard.html"    class="nav-link">Shipyard</a></li>
-          <li class="nav-item py-2"><a href="#" data-name="nav2"     data-path="navigation.html"  class="nav-link">Navigation</a></li>
-          <li class="nav-item py-2"><a href="#" data-name="status"   data-path="status.html"      class="nav-link">Status</a></li>
+          <li class="nav-item"><a href="#" data-name="summary"  data-path="summary.html"     class="nav-link active">Summary</a></li>
+          <li class="nav-item"><a href="#" data-name="work"     data-path="work.html"        class="nav-link">Work</a></li>
+          <li class="nav-item"><a href="#" data-name="docks"    data-path="commerce.html"    class="nav-link">Commerce</a></li>
+          <li class="nav-item"><a href="#" data-name="fabs"     data-path="fabricators.html" class="nav-link">Fabricators</a></li>
+          <li class="nav-item"><a href="#" data-name="shipyard" data-path="shipyard.html"    class="nav-link">Shipyard</a></li>
+          <li class="nav-item"><a href="#" data-name="nav"      data-path="navigation.html"  class="nav-link">Navigation</a></li>
+          <li class="nav-item"><a href="#" data-name="status"   data-path="status.html"      class="nav-link">Status</a></li>
         </ul>
       </div>
     </nav>
 
     <!-- Libs -->
-    <script type="text/javascript" src="js/physics.js"></script>
-    <script type="text/javascript" src="js/data.js"></script>
-    <script type="text/javascript" src="js/util.js"></script>
-    <script type="text/javascript" src="js/system.js"></script>
-    <script type="text/javascript" src="js/agent/actor.js"></script>
-    <script type="text/javascript" src="js/agent/crafter.js"></script>
-    <script type="text/javascript" src="js/market.js"></script>
-    <script type="text/javascript" src="js/place.js"></script>
-    <script type="text/javascript" src="js/ship.js"></script>
-    <script type="text/javascript" src="js/person.js"></script>
-    <script type="text/javascript" src="js/navcomp.js"></script>
+    <script src="js/components.js"></script>
 
-    <script type="text/javascript" src="js/ui.js"></script>
-    <script type="text/javascript" src="js/workflow.js"></script>
-    <script type="text/javascript" src="js/ui/summary.js"></script>
-    <script type="text/javascript" src="js/ui/status.js"></script>
-    <script type="text/javascript" src="js/ui/plot.js"></script>
-    <script type="text/javascript" src="js/ui/transit.js"></script>
-    <script type="text/javascript" src="js/ui/navigation.js"></script>
-    <script type="text/javascript" src="js/ui/shipyard.js"></script>
+    <script src="js/physics.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/system.js"></script>
+    <script src="js/agent/actor.js"></script>
+    <script src="js/agent/crafter.js"></script>
+    <script src="js/market.js"></script>
+    <script src="js/place.js"></script>
+    <script src="js/ship.js"></script>
+    <script src="js/person.js"></script>
+    <script src="js/navcomp.js"></script>
 
-    <script type="text/javascript" src="js/game.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/workflow.js"></script>
+    <script src="js/ui/summary.js"></script>
+    <script src="js/ui/status.js"></script>
+    <script src="js/ui/plot.js"></script>
+    <script src="js/ui/transit.js"></script>
+    <script src="js/ui/navigation.js"></script>
+    <script src="js/ui/shipyard.js"></script>
+    <script src="js/ui/combat.js"></script>
+
+    <script src="js/game.js"></script>
 
     <!-- Main -->
     <script type="text/javascript">
       const game = new Game;
-
-      function open(name) {
-        let path = $(`#spacer-nav a[data-name='${name}']`).data('path') || name + '.html';
-        if ($('#spacer').data('state') === 'transit') return;
-        $('#spacer-nav a').removeClass('active');
-        $(`#spacer-nav a[data-name="${name}"]`).addClass('active');
-        $('#spacer-content').empty().load(path);
-        $('#spacer-nav').collapse('hide');
-      }
-
-      function clear_messages() {
-        $('#messages .alert').fadeOut(function() {$(this).remove()});
-      }
-
-      function message(msg, type='info', clear_previous=false) {
-        if (clear_previous) clear_messages();
-        $('#messages').append(`<div class="alert alert-dismissable alert-${type} show fade">${msg}<button class="close" data-dismiss="alert">&times;</button></div>`);
-      }
-
-      function uniq(items, sep=' ') {
-        if (!(items instanceof Array))
-          items = `${items}`.split(sep).filter((s) => {return s != ''});
-        let set = new Set(items);
-        let arr = [];
-        set.forEach((val) => {arr.push(val)});
-        return arr.join(sep);
-      }
-
-      function csn(num) {
-        let [integer, decimal] = `${num}`.split('.', 2);
-        let three = new RegExp(/(\d{3})$/);
-        let parts = [];
-
-        while (three.test(integer))
-          integer = integer.replace(three, (match) => {parts.unshift(match); return ''});
-
-        if (integer)
-          parts.unshift(integer);
-
-        integer = parts.join(',');
-
-        return decimal ? `${integer}.${decimal}` : integer;
-      }
-
-      function row(dt, dd) {
-        return $('<div class="row py-2">')
-          .append( $('<div class="col-sm b">').append(dt) )
-          .append( $('<div class="col-sm mute">').append(dd) );
-      }
 
       $(function() {
         $('#spacer-navbar').on('click', 'a', function(e) {
@@ -136,7 +90,6 @@
           e.stopPropagation();
 
           if ($(e.target).hasClass('nav-link')) {
-            $('#messages').empty();
             $('#spacer-nav a').removeClass('active');
             $(e.target).addClass('active');
             open($(e.target).data('name'));
@@ -144,7 +97,7 @@
         });
 
         $(window).on('click', (e) => {
-          if ($('#spacer-nav').hasClass('show')) {
+          if (!$('#spacer-nav').hasClass('collapsed')) {
             $('#spacer-nav').collapse('hide');
           }
         });
@@ -155,8 +108,9 @@
       document.addEventListener("deviceready", onDeviceReady, false);
 
       function onDeviceReady() {
-        if (StatusBar.isVisible)
+        if (StatusBar.isVisible) {
           StatusBar.hide();
+        }
       }
     </script>
   </body>

@@ -7,7 +7,7 @@ class Transit extends Card {
     this.progress = new ProgressBar;
     this.add(this.progress.root);
 
-    this.events = new UI;
+    this.events = new Component;
     this.add(this.events.root);
 
     this.timer = null;
@@ -121,6 +121,16 @@ class Transit extends Card {
 }
 
 class Inspection extends Interactive {
+  constructor(opt) {
+    super(opt);
+
+    this.npc = new Npc({
+      label     : 'Police Patrol',
+      faction   : opt.faction,
+      shipClass : oneOf['corvette', 'frigate', 'destroyer'],
+    });
+  }
+
   get place()   {return this.opt.place}
   get dist()    {return this.opt.dist}
   get name()    {return system.name(this.place)}
@@ -129,9 +139,8 @@ class Inspection extends Interactive {
   begin() {
     this.set_title('Police Inspection');
 
-    const msg =
-        `You have been hailed by a ${this.faction} patrol ship operating ${this.dist} AU out of ${this.name}. `
-      + 'The captain requests that you cease acceleration and peacefully submit to inspection.';
+    const msg = `You have been hailed by a ${this.faction} patrol ship operating ${this.dist} AU out of ${this.name}. `
+              + 'The captain requests that you cease acceleration and peacefully submit to inspection.';
 
     return this.ask(msg, 'Submit', 'Bribe', 'Flee', 'Attack')
       .then(choice => { return this[choice]() });
@@ -144,6 +153,7 @@ class Inspection extends Interactive {
       if (amt > 0 && data.resources[item].contraband) {
         fine += amt * 100 * data.resources[item].contraband;
         game.player.ship.cargo.set(item, 0);
+        game.player.decStanding(this.faction, data.resources[item].contraband);
       }
     }
 
@@ -153,6 +163,10 @@ class Inspection extends Interactive {
         .then(ok => { this.detach() });
     }
     else {
+      if (!game.player.hasStanding('Friendly')) {
+        game.player.inStanding(1);
+      }
+
       return this.ok('No contraband was found. The police apologize for the inconvenience and send you on your way.')
         .then(ok => { this.detach() });
     }
@@ -201,5 +215,16 @@ class Inspection extends Interactive {
   }
 
   Attack() {
+    const combat = new Combat({
+      npc : this.npc,
+    });
   }
 }
+
+
+
+
+
+
+
+

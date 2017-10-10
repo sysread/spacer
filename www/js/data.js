@@ -205,43 +205,45 @@ const data = {
   drives: {
     ion: {
       name      : 'Ion',
-      thrust    : 1200,
+      thrust    : 800,
       mass      : 10,
       desc      : 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
-      burn_rate : 0.002,
+      burn_rate : 0.065,
+      hull      : 1,
     },
     fusion: {
       name      : 'Fusion',
-      thrust    : 5000,
+      thrust    : 9200,
       mass      : 40,
       desc      : 'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
-      burn_rate : 0.05,
+      burn_rate : 0.62,
+      hull      : 5,
     }
   },
 
   shipclass: {
     /* Civilian */
     shuttle     : {hull: 2,  armor: 0,  cargo: 2,  hardpoints: 0,  mass: 200,   tank: 2,   drives: 1,   drive: 'ion',    restricted: false},
-    schooner    : {hull: 4,  armor: 1,  cargo: 8,  hardpoints: 1,  mass: 450,   tank: 6,   drives: 4,   drive: 'ion',    restricted: false},
-    surveyor    : {hull: 6,  armor: 2,  cargo: 10, hardpoints: 2,  mass: 600,   tank: 8,   drives: 4,   drive: 'ion',    restricted: false},
+    schooner    : {hull: 4,  armor: 1,  cargo: 8,  hardpoints: 1,  mass: 450,   tank: 6,   drives: 2,   drive: 'ion',    restricted: false},
+    surveyor    : {hull: 6,  armor: 2,  cargo: 10, hardpoints: 2,  mass: 600,   tank: 15,  drives: 4,   drive: 'ion',    restricted: false},
 
     /* Merchant */
-    trader      : {hull: 4,  armor: 2,  cargo: 25, hardpoints: 2,  mass: 2500,  tank: 30,  drives: 30,  drive: 'ion',    restricted: false},
-    merchantman : {hull: 7,  armor: 2,  cargo: 30, hardpoints: 3,  mass: 4000,  tank: 60,  drives: 50,  drive: 'ion',    restricted: false},
-    freighter   : {hull: 10, armor: 3,  cargo: 50, hardpoints: 3,  mass: 6800,  tank: 110, drives: 80,  drive: 'ion',    restricted: false},
-    hauler      : {hull: 20, armor: 4,  cargo: 80, hardpoints: 5,  mass: 10000, tank: 150, drives: 100, drive: 'ion',    restricted: false},
+    trader      : {hull: 4,  armor: 2,  cargo: 25, hardpoints: 2,  mass: 1200,  tank: 30,  drives: 10,  drive: 'ion',    restricted: false},
+    merchantman : {hull: 7,  armor: 2,  cargo: 30, hardpoints: 3,  mass: 1500,  tank: 45,  drives: 15,  drive: 'ion',    restricted: false},
+    freighter   : {hull: 10, armor: 3,  cargo: 50, hardpoints: 3,  mass: 2300,  tank: 85,  drives: 30,  drive: 'ion',    restricted: false},
+    hauler      : {hull: 20, armor: 4,  cargo: 80, hardpoints: 5,  mass: 2700,  tank: 110, drives: 40,  drive: 'ion',    restricted: false},
 
     /* Military */
-    corvette    : {hull: 25, armor: 5,  cargo: 10, hardpoints: 4,  mass: 550,   tank: 25,  drives: 2,   drive: 'fusion', restricted: 'Respected'},
-    frigate     : {hull: 30, armor: 10, cargo: 20, hardpoints: 6,  mass: 800,   tank: 30,  drives: 4,   drive: 'fusion', restricted: 'Respected'},
-    destroyer   : {hull: 45, armor: 12, cargo: 12, hardpoints: 8,  mass: 1100,  tank: 40,  drives: 8,   drive: 'fusion', restricted: 'Admired'},
-    cruiser     : {hull: 60, armor: 15, cargo: 15, hardpoints: 10, mass: 1850,  tank: 100, drives: 16,  drive: 'fusion', restricted: 'Admired'},
-    battleship  : {hull: 85, armor: 25, cargo: 20, hardpoints: 16, mass: 2300,  tank: 140, drives: 20,  drive: 'fusion', restricted: 'Admired'},
-    transport   : {hull: 40, armor: 10, cargo: 50, hardpoints: 6,  mass: 9000,  tank: 180, drives: 220, drive: 'ion',    restricted: 'Admired'},
+    corvette    : {hull: 25, armor: 5,  cargo: 10, hardpoints: 4,  mass: 550,   tank: 15,  drives: 1,   drive: 'fusion', restricted: 'Respected'},
+    frigate     : {hull: 30, armor: 10, cargo: 20, hardpoints: 6,  mass: 800,   tank: 40,  drives: 2,   drive: 'fusion', restricted: 'Respected'},
+    destroyer   : {hull: 45, armor: 12, cargo: 12, hardpoints: 8,  mass: 1100,  tank: 60,  drives: 4,   drive: 'fusion', restricted: 'Admired'},
+    cruiser     : {hull: 60, armor: 15, cargo: 15, hardpoints: 10, mass: 1850,  tank: 100, drives: 8,   drive: 'fusion', restricted: 'Admired'},
+    battleship  : {hull: 85, armor: 25, cargo: 20, hardpoints: 16, mass: 2300,  tank: 140, drives: 10,  drive: 'fusion', restricted: 'Admired'},
+    transport   : {hull: 40, armor: 10, cargo: 50, hardpoints: 6,  mass: 3500,  tank: 180, drives: 10,  drive: 'fusion', restricted: 'Admired'},
 
     /* Faction ships */
-    neptune     : {hull: 10, armor: 4,  cargo: 40, hardpoints: 3,  mass: 3200,  tank: 40,  drives: 30,  drive: 'ion',    restricted: 'Admired', faction: 'TRANSA'},
-    barsoom     : {hull: 35, armor: 6,  cargo: 30, hardpoints: 4,  mass: 600,   tank: 30,  drives: 4,   drive: 'fusion', restricted: 'Admired', faction: 'MC'}
+    neptune     : {hull: 10, armor: 4,  cargo: 40, hardpoints: 3,  mass: 1600,  tank: 60,  drives: 20,  drive: 'ion',    restricted: 'Admired', faction: 'TRANSA'},
+    barsoom     : {hull: 35, armor: 6,  cargo: 30, hardpoints: 4,  mass: 700,   tank: 45,  drives: 3,   drive: 'fusion', restricted: 'Admired', faction: 'MC'}
   },
 
   /*
@@ -260,17 +262,6 @@ const data = {
       armor      : -1,
       price      : 10000,
     },
-    pds: {
-      name       : 'Point defense system',
-      desc       : 'Mounts a computer-controlled network of small, magnetically propelled, point defense turrets around the ship to stop incoming torpedos at a safe range.',
-      mass       : 5,
-      damage     : 1,
-      intercept  : 0.65,
-      reload     : 1,
-      rate       : 2,
-      price      : 30000,
-      restricted : 'Friendly',
-    },
     railgun: {
       name       : 'Rail gun',
       desc       : 'A military-grade rail gun turret, magnetically accelerating 100kg rounds at an appreciable fraction of the speed of light.',
@@ -282,8 +273,8 @@ const data = {
       restricted : 'Respected',
     },
     torpedo: {
-      name       : 'Torpedo tube',
-      desc       : 'Adds a self-guided torpedo launcher. torpedos sold separately.',
+      name       : 'Torpedo',
+      desc       : 'Adds a self-guided torpedo launcher tube. Torpedos sold separately.',
       mass       : 20,
       damage     : 10,
       reload     : 2,
@@ -291,9 +282,20 @@ const data = {
       price      : 120000,
       restricted : 'Admired',
     },
+    pds: {
+      name       : 'PDS',
+      desc       : 'Mounts a computer-controlled network of small, magnetically propelled, point defense turrets around the ship to stop incoming torpedos at a safe range.',
+      mass       : 5,
+      damage     : 1,
+      intercept  : 0.65,
+      reload     : 1,
+      rate       : 2,
+      price      : 30000,
+      restricted : 'Friendly',
+    },
     ecm: {
-      name       : 'Electronic counter-measures',
-      desc       : 'Generates electromagnetic interference and false signals to confuse an enemy\'s targeting systems.',
+      name       : 'ECM',
+      desc       : "Electronic counter-measures generates randomized, electromagnetic interference and false signals to confuse an enemy's targeting systems.",
       mass       : 1,
       intercept  : 0.15,
       dodge      : 0.45,

@@ -1,31 +1,51 @@
-class UI {
+function csn(num) {
+  let [integer, decimal] = `${num}`.split('.', 2);
+  let three = new RegExp(/(\d{3})$/);
+  let parts = [];
+
+  while (three.test(integer))
+    integer = integer.replace(three, (match) => {parts.unshift(match); return ''});
+
+  if (integer)
+    parts.unshift(integer);
+
+  integer = parts.join(',');
+
+  return decimal ? `${integer}.${decimal}` : integer;
+}
+
+class Component {
   constructor(opt) {
     this.opt  = opt || {};
-    this.base = $(this.opt.tag ? '<' + this.opt.tag + '>' : '<div>');
-  }
-
-  get root() {
-    return this.base;
+    this.root = $('<' + (this.opt.tag || 'div') + '>');
   }
 
   data(opt) {
-    this.base.data(opt);
+    this.root.data(opt);
   }
 
   add(thing) {
-    this.base.append(thing);
+    this.root.append(thing);
     return thing;
   }
 
   detach() {
     this.root.remove();
   }
+
+  attach(to) {
+    if (to instanceof Component) {
+      to.add(this.root);
+    } else {
+      to.append(this.root);
+    }
+  }
 }
 
-class Button extends UI {
+class Button extends Component {
   constructor(opt) {
-    super(opt);
-    this.base = $('<button type="button" class="btn btn-dark">');
+    super($.extend(opt || {}, {tag: 'button'}));
+    this.root.attr('type', 'button').addClass('btn btn-dark');
   }
 
   onClick(fn) {
@@ -33,10 +53,10 @@ class Button extends UI {
   }
 }
 
-class ButtonGroup extends UI {
+class ButtonGroup extends Component {
   constructor(opt) {
     super(opt);
-    this.base = $('<div class="btn-group">');
+    this.root.addClass('btn-group').attr('role', 'group');
   }
 
   addButton(btn) {
@@ -44,7 +64,7 @@ class ButtonGroup extends UI {
   }
 }
 
-class Slider extends UI {
+class Slider extends Component {
   constructor(opt) {
     super(opt);
 
@@ -68,18 +88,17 @@ class Slider extends UI {
     this.dndn.click((e) => {this.val = this.min});
     this.upup.click((e) => {this.val = this.max});
 
-    this.group = $('<div class="input-group">');
-    if (this.minmaxbtns) this.group.append($('<span class="input-group-btn">').append(this.dndn));
-    this.group.append($('<span class="input-group-btn">').append(this.dn));
-    this.group.append(this.slider);
-    this.group.append($('<span class="input-group-btn">').append(this.up));
-    if (this.minmaxbtns) this.group.append($('<span class="input-group-btn">').append(this.upup));
+    this.root = $('<div class="input-group">');
+    if (this.minmaxbtns) this.root.append($('<span class="input-group-btn">').append(this.dndn));
+    this.root.append($('<span class="input-group-btn">').append(this.dn));
+    this.root.append(this.slider);
+    this.root.append($('<span class="input-group-btn">').append(this.up));
+    if (this.minmaxbtns) this.root.append($('<span class="input-group-btn">').append(this.upup));
 
     this.value = this.initial;
     this.update();
   }
 
-  get root()       { return this.group }
   get min()        { return this.opt.min  || 0 }
   get max()        { return this.opt.max  || 0 }
   get step()       { return this.opt.step || 1 }
@@ -116,14 +135,14 @@ class Slider extends UI {
   }
 }
 
-class ResourceExchange extends UI {
+class ResourceExchange extends Component {
   constructor(opt) {
     super(opt);
 
     this.resources = new ResourceCounter;
     this.store     = opt.store;
     this.cargo     = opt.cargo;
-    this.table     = $('<table class="table table-sm">');
+    this.root      = $('<table class="table table-sm">');
 
     for (let [item, amt] of this.store.entries()) {
       this.resources.inc(item, amt);
@@ -177,32 +196,28 @@ class ResourceExchange extends UI {
         }
       });
 
-      slider.group.prepend($('<span class="input-group-btn">').append(store));
-      slider.group.append($('<span class="input-group-btn">').append(cargo));
+      slider.root.prepend($('<span class="input-group-btn">').append(store));
+      slider.root.append($('<span class="input-group-btn">').append(cargo));
 
-      this.table
+      this.root
         .append($('<tr>')
           .append(`<td class="text-capitalize exchange-item">${item}</td>`)
-          .append($('<td>').append(slider.group)));
+          .append($('<td>').append(slider.root)));
     }
   }
 
-  get root()      { return this.table }
   get max_cargo() { return this.opt.max_cargo }
   get max_store() { return this.opt.max_store }
   get approve()   { return this.opt.approve   }
   get callback()  { return this.opt.callback  }
 }
 
-class Row extends UI {
+class Row extends Component {
   constructor(breaks, opt) {
     super(opt);
-    this.base = $('<div class="row py-2">');
+    this.root.addClass('row py-2');
     this.breaks = breaks;
   }
-
-  get root() {return this.base}
-  get row()  {return this.base}
 
   colwidth(size) {
     let parts = ['col'];
@@ -213,11 +228,11 @@ class Row extends UI {
 
   col(body, size) {
     let col = $(`<div class="${this.colwidth(size)}">`).append(body);
-    this.base.append(col);
+    this.root.append(col);
     return col;
   }
 
-  term(body, size=3) {
+  term(body, size) {
     return this.col(body, size).addClass('font-weight-bold');
   }
 
@@ -226,26 +241,19 @@ class Row extends UI {
   }
 }
 
-class Container extends UI {
+class Container extends Component {
   constructor(opt) {
     super(opt);
-    this.base = $('<div class="container-fluid">');
+    this.root.addClass('container-fluid');
   }
-
-  get root()      {return this.base}
-  get container() {return this.base}
 }
 
-class Card extends UI {
+class Card extends Component {
   constructor(opt) {
     super(opt);
-    this.base = $('<div class="card mb-3">');
     this.body = $('<div class="card-body bg-black">');
-    this.base.append(this.body);
+    this.root.addClass('card mb-3').append(this.body);
   }
-
-  get root() {return this.base}
-  get card() {return this.base}
 
   set_header(text, tag='h3') {
     if (!this.hdr) {
@@ -298,16 +306,16 @@ class Card extends UI {
     let row = new Row;
     row.term(label);
     row.def(text);
-    this.body.append(row.row);
-    return row.row;
+    this.body.append(row.root);
+    return row.root;
   }
 
   add_def(label, text) {
     let row = new Row('sm');
     row.term(label);
     row.def(text);
-    this.body.append(row.row);
-    return row.row;
+    this.body.append(row.root);
+    return row.root;
   }
 
   add_link(text) {
@@ -322,28 +330,26 @@ class Card extends UI {
   }
 }
 
-class Modal extends UI {
+class Modal extends Component {
   constructor(opt) {
     super(opt);
-    this.base    = $('<div class="modal">');
+    this.root    = $('<div class="modal">');
     this.dialog  = $('<div class="modal-dialog" role="document">');
     this.content = $('<div class="modal-content">');
     this.body    = $('<div class="modal-body">');
 
-    this.base.append(this.dialog);
+    this.root.append(this.dialog);
     this.dialog.append(this.content);
     this.content.append(this.body);
 
     if (!this.cancellable)
-      this.base.attr('data-backdrop', 'static');
+      this.root.attr('data-backdrop', 'static');
   }
 
-  get root()        {return this.base}
-  get modal()       {return this.base}
   get cancellable() {return this.opt.cancellable}
 
-  show() {this.base.modal('show')}
-  hide() {this.base.modal('hide')}
+  show() {this.root.modal('show')}
+  hide() {this.root.modal('hide')}
 
   onShow(fn)   {this.root.on('show.bs.modal',   fn)}
   onShown(fn)  {this.root.on('shown.bs.modal',  fn)}
@@ -397,7 +403,7 @@ class Modal extends UI {
     let row = new Row('sm');
     row.term(label);
     row.def(text);
-    this.body.append(row.row);
+    this.body.append(row.root);
     return row;
   }
 }
@@ -408,8 +414,6 @@ class Ok extends Modal {
     if (msg) this.add_text(msg);
     this.add_footer_button('Ok').attr('data-dismiss', 'modal');
   }
-
-  get ok() {return this.modal}
 }
 
 class Ask extends Modal {
@@ -434,13 +438,13 @@ class InfoPopUp extends Modal {
   }
 }
 
-class ProgressBar extends UI {
+class ProgressBar extends Component {
   constructor(opt) {
     super(opt);
     this.meter = $('<div class="progress-bar bg-warning" style="height: 35px">');
     this.display = $('<span class="badge badge-pill badge-dark float-left m-1 font-weight-normal" style="font-size:14px">');
     this.meter.append(this.display);
-    this.base.addClass('progress bg-dark').append(this.meter);
+    this.root.addClass('progress bg-dark').append(this.meter);
   }
 
   setProgress(pct, display) {

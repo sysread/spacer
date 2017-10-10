@@ -1,4 +1,4 @@
-class PlayerStatus extends UI {
+class PlayerStatus extends Component {
   constructor(opt) {
     super(opt);
     this.person = new PersonStatus;
@@ -46,7 +46,7 @@ class ShipStatus extends Card {
     this.add_def('Cargo',      `${this.ship.cargoUsed}/${this.ship.cargoSpace}`);
     this.add_def('Hull',       this.ship.hull);
     this.add_def('Armor',      this.ship.armor);
-    this.add_def('Hardpoints', this.ship.hardpoints);
+    this.add_def('Hardpoints', this.ship.hardPoints);
     this.add_def('Mass',       csn(Math.floor(this.ship.currentMass())) + ' tonnes');
     this.add_def('Thrust',     csn(this.ship.thrust) + ' kN');
     this.add_def('Fuel',       `${Math.round(this.ship.fuel * 100) / 100}/${this.ship.tank}`);

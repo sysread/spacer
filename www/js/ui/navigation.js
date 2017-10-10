@@ -32,7 +32,7 @@ class Navigation extends Card {
   }
 }
 
-class NavRow extends UI {
+class NavRow extends Component {
   constructor(body, opt) {
     super(opt);
 
@@ -48,7 +48,7 @@ class NavRow extends UI {
       btn.add(`<span class="badge badge-pill float-right">${system.kind(body)}</span>`);
     }
 
-    this.base = $('<div class="row">')
+    this.root = $('<div class="row">')
       .append( $('<div class="col col-sm-6 py-2">').append(btn.root) )
       .append(
         $('<div class="row col-12 col-sm-6 py-2">')

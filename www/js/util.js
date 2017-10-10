@@ -1,3 +1,12 @@
+function uniq(items, sep=' ') {
+  if (!(items instanceof Array))
+    items = `${items}`.split(sep).filter((s) => {return s != ''});
+  let set = new Set(items);
+  let arr = [];
+  set.forEach((val) => {arr.push(val)});
+  return arr.join(sep);
+}
+
 /*
  * Rounds `n` to `places` decimal places.
  */
@@ -8,6 +17,24 @@ function R(n, places) {
 
   const factor = Math.pow(10, places);
   return Math.round(n * factor) / factor;
+}
+
+/*
+ * Returns a random integer no lower than min and lower than max.
+ * 
+ * Direct copy pasta from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+ */
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+/*
+ * Returns a random element from an array.
+ */
+function oneOf(options) {
+  return options[getRandomInt(0, options.length)];
 }
 
 function resourceMap(dflt=0, entries) {

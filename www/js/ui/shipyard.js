@@ -40,7 +40,7 @@ class ShipUpgrades extends Container {
           const ok = new Ok('You do not have enough money for this.');
           ok.show();
         }
-        else if (game.player.ship.availableHardPoints() === 0) {
+        else if (game.player.ship.availableHardPoints() <= 0) {
           const ok = new Ok('Your ship does not have enough free hard points.');
           ok.show();
         }

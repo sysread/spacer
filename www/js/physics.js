@@ -84,26 +84,6 @@ class Physics {
    *
    * Finds a point [x,y,z] at distance d2 along line p1, p2.
    */
-  static pointAtDistanceAlongLine2(p1, p2, d2) {
-    const [x1, y1, z1] = p1;
-    const [x2, y2, z2] = p2;
-
-    let vx  = x2 - x1;
-    let vy  = y2 - y1;
-    let vz  = z2 - z1;
-    let mag = Math.hypot(vx, vy, vz);
-
-    vx /= mag;
-    vy /= mag;
-    vz /= mag;
-
-    const x = x1 + vx * (mag + d2);
-    const y = y1 + vy * (mag + d2);
-    const z = z1 + vz * (mag + d2);
-
-    return [x, y, z];
-  }
-
   static pointAtDistanceAlongLine(p0, p1, d1) {
     const [x0, y0, z0] = p0;
     const [x1, y1, z1] = p1;

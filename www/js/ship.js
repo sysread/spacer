@@ -4,6 +4,11 @@ class Ship {
     this.fuel   = opt.fuel || data.shipclass[opt.shipclass].tank;
     this.addons = new Array;
     this.cargo  = new ResourceCounter;
+    this.damage = {
+      hull   : 0,
+      armor  : 0,
+      drives : 0,
+    };
   }
 
   save() {
@@ -11,7 +16,8 @@ class Ship {
       opt    : this.opt,
       fuel   : this.fuel,
       addons : this.addons,
-      cargo  : this.cargo.save()
+      cargo  : this.cargo.save(),
+      damage : this.damage,
     };
   }
 
@@ -20,6 +26,7 @@ class Ship {
     this.fuel   = info.fuel;
     this.addons = info.addons;
     this.cargo.load(info.cargo);
+    this.damage = info.damage;
   }
 
   /*
@@ -33,7 +40,7 @@ class Ship {
   get mass()         { return this.shipclass.mass + this.driveMass }
   get thrust()       { return this.shipclass.drives * this.drive.thrust }
   get acceleration() { return Physics.deltav(this.thrust, this.mass) }
-  get hardPoints()   {return this.shipclass.hardpoints}
+  get hardPoints()   { return this.shipclass.hardpoints }
 
   get cargoSpace() {
     let space = this.shipclass.cargo;
@@ -225,7 +232,7 @@ class Ship {
   }
 
   availableHardPoints() {
-    return this.hardpoints - this.addons.length;
+    return this.hardPoints - this.addons.length;
   }
 
   installAddOn(addon) {

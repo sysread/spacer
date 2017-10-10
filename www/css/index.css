@@ -4,7 +4,6 @@ body {
   background-image: url('../img/bg.jpg');
   background-attachment: fixed;
   color: #ddd;
-  font-size: 1.0rem;
   line-height: 1.5;
 }
 
@@ -28,6 +27,10 @@ body {
 
 .card-header {
   border-bottom: 1px solid rgb(139,0,0);
+}
+
+.card-header button {
+  float: right;
 }
 
 .modal-content {
@@ -72,35 +75,33 @@ table.table-bordered td, table.table-bordered th {
   border-top: 1px solid rgb(139,0,0);
 }
 
-button.btn-dark {
+.btn-dark {
   background-color: #202020;
   border-bottom: 1px solid rgb(139,0,0);
-  /*border-right: 1px solid rgb(139,0,0);*/
 }
 
-button.btn-dark:hover:not(.disabled), button.btn-dark:hover:not(:disabled) {
+.btn-dark:hover:not(.disabled), button.btn-dark:hover:not(:disabled) {
   background-color: #303030;
   border-bottom: 1px solid rgb(200,0,0);
-  /*border-right: 1px solid rgb(200,0,0);*/
 }
 
-button.btn-dark.disabled, button.btn-dark:disabled {
+.btn-dark.disabled, button.btn-dark:disabled {
   background-color: #101010;
 }
 
-button.btn-secondary {
+.btn-secondary {
   background-color: #202020;
   border: 1px solid #202020;
   border-bottom: 1px solid rgb(0,0,0);
 }
 
-button.btn-secondary:hover {
+.btn-secondary:hover {
   background-color: #303030;
   border: 1px solid #202020;
   border-bottom: 1px solid rgb(10,10,10);
 }
 
-button.btn-secondary:disabled {
+.btn-secondary:disabled {
   background-color: #202020;
   color: #888;
 }
@@ -121,8 +122,8 @@ button.btn-secondary:disabled {
   position: absolute;
 }
 
-.plot-locus:hover {
-  text-decoration: none;
+.plot-point:hover {
+  text-decoration: none !important;
   color: white;
 }
 
