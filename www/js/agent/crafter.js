@@ -1,93 +1,99 @@
-class Crafter extends Actor {
-  *crafts() {
-    let place = game.place(this.place);
-    let items = data.resources;
+define(function(require, exports, module) {
+  const data  = require('data');
+  const Game  = require('game');
+  const Actor = require('agent/actor');
 
-    CRAFT: for (let item of place.resourcesNeeded()) {
-      let recipe = items[item].recipe;
+  return class extends Actor {
+    *crafts() {
+      let place = Game.game.place(this.place);
+      let items = data.resources;
 
-      if (recipe === undefined)
-        continue;
+      CRAFT: for (let item of place.resourcesNeeded()) {
+        let recipe = items[item].recipe;
 
-      if (this.is_over_supplied(item))
-        continue;
+        if (recipe === undefined)
+          continue;
 
-      let profit = place.sellPrice(item);
-      let cost   = 0;
-      let need   = {};
+        if (this.is_over_supplied(item))
+          continue;
 
-      for (let mat of Object.keys(recipe.materials)) {
-        need[mat] = recipe.materials[mat];
+        let profit = place.sellPrice(item);
+        let cost   = 0;
+        let need   = {};
 
-        if (place.currentSupply(mat) < need[mat])
-          continue CRAFT;
+        for (let mat of Object.keys(recipe.materials)) {
+          need[mat] = recipe.materials[mat];
 
-        cost += place.buyPrice(mat);
+          if (place.currentSupply(mat) < need[mat])
+            continue CRAFT;
 
-        if (cost >= profit)
-          continue CRAFT;
-      }
+          cost += place.buyPrice(mat);
 
-      profit -= cost;
+          if (cost >= profit)
+            continue CRAFT;
+        }
 
-      if (item === 'fuel')
-        profit *= 2;
+        profit -= cost;
 
-      // Just say no
-      if (this.contra_rand(item))
-        continue;
+        if (item === 'fuel')
+          profit *= 2;
 
-      yield {
-        item   : item,
-        turns  : recipe.tics,
-        mats   : recipe.materials,
-        need   : need,
-        profit : profit
-      };
-    }
-  }
+        // Just say no
+        if (this.contra_rand(item))
+          continue;
 
-  plan() {
-    let best;
-
-    for (let craft of this.crafts()) {
-      if (best === undefined || best.profit < craft.profit) {
-        best = craft;
+        yield {
+          item   : item,
+          turns  : recipe.tics,
+          mats   : recipe.materials,
+          need   : need,
+          profit : profit
+        };
       }
     }
 
-    if (best) {
-      for (let item of Object.keys(best.need)) {
-        if (best.need[item] > 0) {
-          game.place(this.place).buy(item, best.need[item]);
+    plan() {
+      let best;
+
+      for (let craft of this.crafts()) {
+        if (best === undefined || best.profit < craft.profit) {
+          best = craft;
         }
       }
 
-      let tics = game.place(this.place).fabricate(best.item);
-      for (let i = 0; i < tics; ++i) this.enqueue('wait');
-      this.enqueue('sell', best);
-    }
-    else {
-      this.enqueue('consume');
-    }
-  }
+      if (best) {
+        for (let item of Object.keys(best.need)) {
+          if (best.need[item] > 0) {
+            Game.game.place(this.place).buy(item, best.need[item]);
+          }
+        }
 
-  sell(info) {
-    if (!this.busted(info.item, 1))
-      game.place(this.place).sell(info.item, 1);
-  }
-
-  consume() {
-    for (let item of 'water food medicine electronics'.split(' ')) {
-      let price  = game.place(this.place).price(item);
-      let supply = game.place(this.place).currentSupply(item);
-
-      if (supply === 0) continue;
-
-      if (this.is_over_supplied(item)) {
-        let amount = Math.ceil(supply / 5);
-        game.place(this.place).buy(item, amount);
+        let tics = Game.game.place(this.place).fabricate(best.item);
+        for (let i = 0; i < tics; ++i) this.enqueue('wait');
+        this.enqueue('sell', best);
+      }
+      else {
+        this.enqueue('consume');
       }
     }
-  }
-}
+
+    sell(info) {
+      if (!this.busted(info.item, 1))
+        Game.game.place(this.place).sell(info.item, 1);
+    }
+
+    consume() {
+      for (let item of 'water food medicine electronics'.split(' ')) {
+        let price  = Game.game.place(this.place).price(item);
+        let supply = Game.game.place(this.place).currentSupply(item);
+
+        if (supply === 0) continue;
+
+        if (this.is_over_supplied(item)) {
+          let amount = Math.ceil(supply / 5);
+          Game.game.place(this.place).buy(item, amount);
+        }
+      }
+    }
+  };
+});

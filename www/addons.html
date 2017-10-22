@@ -1,7 +1,7 @@
 <script type="text/javascript">
 
-$(function() {
-  let addons = new ShipUpgrades;
+require(['ui/shipyard'], function(ShipYard) {
+  let addons = new ShipYard.Upgrades;
   $('#addons').append(addons.root);
 });
 

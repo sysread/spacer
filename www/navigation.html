@@ -1,7 +1,7 @@
 <script type="text/javascript">
 
-$(function() {
-  let ui = new Navigation;
+require(['ui/navigation'], function(Navigation) {
+  let ui = new Navigation.Navigation;
   $('#navigation').append(ui.root);
 });
 

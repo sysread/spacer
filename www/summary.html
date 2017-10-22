@@ -1,7 +1,7 @@
 <script type="text/javascript">
 
-$(function() {
-  let summary = new PlaceSummary({place: game.place(), showDescription: true});
+require(['game', 'ui/summary'], function(Game, Summary) {
+  let summary = new Summary.Place({place: Game.game.place(), showDescription: true});
   $('#summary').append(summary.root);
 });
 

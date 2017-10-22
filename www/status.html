@@ -1,7 +1,7 @@
 <script type="text/javascript">
 
-$(function() {
-  let playerStatus = new PlayerStatus({player: game.player});
+require(['game', 'ui/status'], function(Game, Status) {
+  let playerStatus = new Status.Player({player: Game.game.player});
   $('#status').append(playerStatus.root);
 });
 

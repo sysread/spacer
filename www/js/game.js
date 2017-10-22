@@ -1,294 +1,272 @@
-function open(name) {
-  if ($('#spacer').data('state') === 'transit') {
-    return;
-  }
+define(function(require, exports, module) {
+  const data   = require('data');
+  const util   = require('util');
+  const Person = require('person');
+  const Ship   = require('ship');
+  const Place  = require('place');
+  const system = require('system');
 
-  const path = $(`#spacer-nav a[data-name='${name}']`).data('path') || name + '.html';
-
-  $('#spacer-nav a').removeClass('active');
-  $(`#spacer-nav a[data-name="${name}"]`).addClass('active');
-  $('#spacer-content').empty().load(path);
-  $('#spacer-nav').collapse('hide');
-}
-
-class Game {
-  constructor() {
-    this.date    = new Date(data.start_date);
-    this.turns   = 0;
-    this.locus   = null;
-    this.player  = new Person;
-    this.places  = {};
-    this.markets = {}; // hourly market reports for light speed market data
-    this.cache   = {};
-
-    $(() => {
-      let saved = window.localStorage.getItem('game');
-
-      if (saved) {
-        this.load(JSON.parse(saved));
-        this.refresh();
-        //open('summary');
-        open('ships2');
-      }
-      else {
-        open('newgame');
-      }
-    });
-  }
-
-  get here() {return this.place(this.locus)}
-
-  test() {
-    for (let sc of Object.keys(data.shipclass)) {
-      let ship = new Ship({shipclass: sc, fuel: data.shipclass[sc].tank});
-      console.log(sc);
-
-      let dv0 = R(ship.currentAcceleration(), 3);
-      let bn0 = R(ship.maxBurnTime(dv0, true) * data.hours_per_turn, 3);
-      let au0 = R(Physics.AU(Physics.range(bn0 * 3600, 0, dv0)), 3);
-      console.log('max', {'deltav': R(Physics.G(dv0), 3), 'hours': bn0, 'dist': au0});
-
-      let dv1 = R(Math.min(Physics.G() * 0.5, dv0 * 0.6), 3);
-      let bn1 = R(ship.maxBurnTime(dv1, true) * data.hours_per_turn, 3);
-      let au1 = R(Physics.AU(Physics.range(bn1 * 3600, 0, dv1)), 3);
-      console.log('nom', {'deltav': R(Physics.G(dv1), 3), 'hours': bn1, 'dist': au1});
+  exports.open = function(name) {
+    if ($('#spacer').data('state') === 'transit') {
+      return;
     }
-  }
 
-  net_production() {
-    Object.keys(this.places).forEach((place) => {
-      let prod = this.places[place].production;
-      let cons = this.places[place].consumption;
+    const path = $(`#spacer-nav a[data-name='${name}']`).data('path') || name + '.html';
 
-      console.log(place);
+    $('#spacer-nav a').removeClass('active');
+    $(`#spacer-nav a[data-name="${name}"]`).addClass('active');
+    $('#spacer-content').empty().load(path);
+    $('#spacer-nav').collapse('hide');
+  };
 
-      Object.keys(data.resources).forEach((item) => {
-        console.log('  -', item, prod.get(item) - cons.get(item));
+  const Game = class {
+    constructor() {
+      this.date    = new Date(data.start_date);
+      this.turns   = 0;
+      this.locus   = null;
+      this.player  = new Person;
+      this.places  = {};
+      this.markets = {}; // hourly market reports for light speed market data
+      this.cache   = {};
+
+      $(() => {
+        let saved = window.localStorage.getItem('game');
+
+        if (saved) {
+          this.load(JSON.parse(saved));
+          this.refresh();
+          exports.open('summary');
+        }
+        else {
+          exports.open('newgame');
+        }
       });
-    });
-  }
-
-  net_stores() {
-    Object.keys(this.markets).forEach((name) => {
-      let report = this.markets[name][0];
-      console.log(name);
-      console.log('  -fabricators: ', this.place(name).fabricator, '/', this.place(name).max_fabs);
-
-      Object.keys(report).forEach((item) => {
-        if (report[item].stock > 0)
-          console.log(`  -${item}: ${report[item].stock} @ ${report[item].buy}`);
-      });
-    });
-  }
-
-  save() {
-    let me = {};
-    me.turns   = this.turns;
-    me.locus   = this.locus;
-    me.player  = this.player.save();
-    me.places  = {};
-    me.markets = {};
-
-    Object.keys(data.bodies).forEach((name) => {
-      me.places[name]  = this.places[name].save();
-      me.markets[name] = this.markets[name].slice(0, this.markets[name].length);
-    });
-
-    return me;
-  }
-
-  load(obj) {
-    this.turns  = obj.turns;
-    this.locus  = obj.locus;
-
-    this.date = new Date(data.start_date);
-    this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
-
-    this.player.load(obj.player);
-
-    Object.keys(obj.places).forEach((name) => {
-      this.places[name] = new Place;
-      this.places[name].load(obj.places[name]);
-      this.markets[name] = obj.markets[name];
-    });
-
-    system.set_date(this.strdate());
-  }
-
-  new_game(player, place) {
-    window.localStorage.removeItem('game');
-
-    this.player  = player;
-    this.locus   = place;
-    this.date    = new Date(data.start_date);
-    this.turns   = 0;
-    this.places  = {};
-    this.markets = {};
-
-    let bodies = system.bodies();
-
-    for (let name of bodies) {
-      let place = new Place(name);
-
-      for (let item of (Object.keys(data.resources))) {
-        place.store.inc(item, Math.ceil(place.scale * data.initial_stock));
-      }
-
-      this.places[name]  = place;
-      this.markets[name] = [];
     }
-  }
 
-  save_game() {
-    window.localStorage.setItem('game', JSON.stringify(this.save()));
-  }
+    get here() {return this.place(this.locus)}
 
-  place(name) { return this.places[name || this.locus] }
+    test() {
+      for (let sc of Object.keys(data.shipclass)) {
+        let ship = new Ship({shipclass: sc, fuel: data.shipclass[sc].tank});
+        console.log(sc);
 
-  transit(dest) {
-    this.locus = dest;
-    this.save_game();
-    this.refresh();
-  }
+        let dv0 = R(ship.currentAcceleration(), 3);
+        let bn0 = R(ship.maxBurnTime(dv0, true) * data.hours_per_turn, 3);
+        let au0 = R(Physics.AU(Physics.range(bn0 * 3600, 0, dv0)), 3);
+        console.log('max', {'deltav': R(Physics.G(dv0), 3), 'hours': bn0, 'dist': au0});
 
-  strdate() {
-    let y = this.date.getFullYear();
-    let m = this.date.getMonth() + 1;
-    let d = this.date.getDate();
-    return [y, m < 10 ? `0${m}` : m, d < 10 ? `0${d}` : d].join('-');
-  }
+        let dv1 = R(Math.min(Physics.G() * 0.5, dv0 * 0.6), 3);
+        let bn1 = R(ship.maxBurnTime(dv1, true) * data.hours_per_turn, 3);
+        let au1 = R(Physics.AU(Physics.range(bn1 * 3600, 0, dv1)), 3);
+        console.log('nom', {'deltav': R(Physics.G(dv1), 3), 'hours': bn1, 'dist': au1});
+      }
+    }
 
-  refresh() {
-    $('#spacer-location').text(this.locus);
-    $('#spacer-credits').text(`${csn(this.player.money)}c`);
-    $('#spacer-cargo').text(`${this.player.ship.cargoUsed}/${this.player.ship.cargoSpace} cu`);
-    $('#spacer-fuel').text(`${Math.floor(this.player.ship.fuel)}/${this.player.ship.tank} fuel`);
-    $('#spacer-turn').text(`${this.strdate()}`);
-  }
+    net_production() {
+      Object.keys(this.places).forEach((place) => {
+        let prod = this.places[place].production;
+        let cons = this.places[place].consumption;
 
-  light_hours(meters) {
-    return Math.ceil(Physics.C(meters) / 3600);
-  }
+        console.log(place);
 
-  light_turns(meters) {
-    return Math.ceil(this.light_hours(meters) / data.hours_per_turn);
-  }
+        Object.keys(data.resources).forEach((item) => {
+          console.log('  -', item, prod.get(item) - cons.get(item));
+        });
+      });
+    }
 
-  turn(n=1) {
-    for (let i = 0; i < n; ++i) {
-      ++this.turns;
-      this.date.setHours(this.date.getHours() + data.hours_per_turn);
+    net_stores() {
+      Object.keys(this.markets).forEach((name) => {
+        let report = this.markets[name][0];
+        console.log(name);
+        console.log('  -fabricators: ', this.place(name).fabricator, '/', this.place(name).max_fabs);
+
+        Object.keys(report).forEach((item) => {
+          if (report[item].stock > 0)
+            console.log(`  -${item}: ${report[item].stock} @ ${report[item].buy}`);
+        });
+      });
+    }
+
+    save() {
+      let me = {};
+      me.turns   = this.turns;
+      me.locus   = this.locus;
+      me.player  = this.player.save();
+      me.places  = {};
+      me.markets = {};
+
+      Object.keys(data.bodies).forEach((name) => {
+        me.places[name]  = this.places[name].save();
+        me.markets[name] = this.markets[name].slice(0, this.markets[name].length);
+      });
+
+      return me;
+    }
+
+    load(obj) {
+      this.turns  = obj.turns;
+      this.locus  = obj.locus;
+
+      this.date = new Date(data.start_date);
+      this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
+
+      this.player.load(obj.player);
+
+      Object.keys(obj.places).forEach((name) => {
+        this.places[name] = new Place;
+        this.places[name].load(obj.places[name]);
+        this.markets[name] = obj.markets[name];
+      });
+
       system.set_date(this.strdate());
+    }
 
-      system.bodies().forEach((name) => {
-        this.place(name).turn();
-        this.markets[name].unshift(this.place(name).report());
-      });
+    new_game(player, place) {
+      window.localStorage.removeItem('game');
 
+      this.player  = player;
+      this.locus   = place;
+      this.date    = new Date(data.start_date);
+      this.turns   = 0;
+      this.places  = {};
+      this.markets = {};
+
+      let bodies = system.bodies();
+
+      for (let name of bodies) {
+        let place = new Place(name);
+
+        for (let item of (Object.keys(data.resources))) {
+          place.store.inc(item, Math.ceil(place.scale * data.initial_stock));
+        }
+
+        this.places[name]  = place;
+        this.markets[name] = [];
+      }
+    }
+
+    save_game() {
+      window.localStorage.setItem('game', JSON.stringify(this.save()));
+    }
+
+    place(name) { return this.places[name || this.locus] }
+
+    transit(dest) {
+      this.locus = dest;
+      this.save_game();
       this.refresh();
     }
 
-    for (let name of system.bodies()) {
-      while (this.markets[name].length > 50)
-        this.markets[name].pop();
-    };
-
-    this.cache.system_need = {};
-
-    this.save_game();
-  }
-
-  market(there, here) {
-    here = here || this.locus;
-    let data;
-    let age;
-    let turns;
-
-    if (there === here) {
-      data  = this.place(here).report();
-      age   = 0;
-      turns = this.turns;
-    }
-    else {
-      let distance = system.distance(here, there);
-      let idx = this.light_turns(distance);
-
-      if (this.markets[there].length <= idx)
-        return null;
-
-      data  = this.markets[there][idx];
-      age   = this.light_hours(distance);
-      turns = this.turns - idx;
+    strdate() {
+      let y = this.date.getFullYear();
+      let m = this.date.getMonth() + 1;
+      let d = this.date.getDate();
+      return [y, m < 10 ? `0${m}` : m, d < 10 ? `0${d}` : d].join('-');
     }
 
-    return {
-      data: data,
-      age:  age,
-      turn: turns
+    refresh() {
+      $('#spacer-location').text(this.locus);
+      $('#spacer-credits').text(`${util.csn(this.player.money)}c`);
+      $('#spacer-cargo').text(`${this.player.ship.cargoUsed}/${this.player.ship.cargoSpace} cu`);
+      $('#spacer-fuel').text(`${Math.floor(this.player.ship.fuel)}/${this.player.ship.tank} fuel`);
+      $('#spacer-turn').text(`${this.strdate()}`);
     }
-  }
 
-  *reports(here) {
-    here = here || this.locus;
-    for (let body of Object.keys(this.markets)) {
-      let report = this.market(body, here);
-      if (report === null) return;
-      yield [body, this.market(body, here)];
+    light_hours(meters) {
+      return Math.ceil(Physics.C(meters) / 3600);
     }
-  }
 
-  system_need(resource) {
-    if (!this.cache.hasOwnProperty('system_need'))
+    light_turns(meters) {
+      return Math.ceil(this.light_hours(meters) / data.hours_per_turn);
+    }
+
+    turn(n=1) {
+      for (let i = 0; i < n; ++i) {
+        ++this.turns;
+        this.date.setHours(this.date.getHours() + data.hours_per_turn);
+        system.set_date(this.strdate());
+
+        system.bodies().forEach((name) => {
+          this.place(name).turn();
+          this.markets[name].unshift(this.place(name).report());
+        });
+
+        this.refresh();
+      }
+
+      for (let name of system.bodies()) {
+        while (this.markets[name].length > 50)
+          this.markets[name].pop();
+      };
+
       this.cache.system_need = {};
 
-    if (!this.cache.system_need.hasOwnProperty(resource)) {
-      let demand  = 1;
-      let supply  = 1;
-      let reports = 1;
+      this.save_game();
+    }
 
+    market(there, here) {
+      here = here || this.locus;
+      let data;
+      let age;
+      let turns;
+
+      if (there === here) {
+        data  = this.place(here).report();
+        age   = 0;
+        turns = this.turns;
+      }
+      else {
+        let distance = system.distance(here, there);
+        let idx = this.light_turns(distance);
+
+        if (this.markets[there].length <= idx)
+          return null;
+
+        data  = this.markets[there][idx];
+        age   = this.light_hours(distance);
+        turns = this.turns - idx;
+      }
+
+      return {
+        data: data,
+        age:  age,
+        turn: turns
+      }
+    }
+
+    *reports(here) {
+      here = here || this.locus;
       for (let body of Object.keys(this.markets)) {
-        if (this.markets[body].length > 1) {
-          demand += this.markets[body][0][resource].demand;
-          supply += this.markets[body][0][resource].supply;
-          ++reports;
+        let report = this.market(body, here);
+        if (report === null) return;
+        yield [body, this.market(body, here)];
+      }
+    }
+
+    system_need(resource) {
+      if (!this.cache.hasOwnProperty('system_need'))
+        this.cache.system_need = {};
+
+      if (!this.cache.system_need.hasOwnProperty(resource)) {
+        let demand  = 1;
+        let supply  = 1;
+        let reports = 1;
+
+        for (let body of Object.keys(this.markets)) {
+          if (this.markets[body].length > 1) {
+            demand += this.markets[body][0][resource].demand;
+            supply += this.markets[body][0][resource].supply;
+            ++reports;
+          }
         }
+
+        this.cache.system_need[resource] = demand / supply;
       }
 
-      this.cache.system_need[resource] = demand / supply;
+      return this.cache.system_need[resource];
     }
+  };
 
-    return this.cache.system_need[resource];
-  }
-}
-
-class Npc {
-  constructor(opt) {
-    this.label     = opt.label;
-    this.faction   = opt.faction;
-    this.shipClass = data.shipclass[opt.shipClass];
-
-    this.ship = new Ship({
-      shipclass: opt.shipClass,
-      fuel: (opt.fuel || getRandomInt(Math.ceil(this.shipClass.tank / 4), this.shipClass.tank + 1)),
-    });
-
-    if (opt.cargo) {
-      for (let item of Object.keys(opt.cargo)) {
-        this.ship.loadCargo(item, opt.cargo[item] || 0);
-      }
-    }
-    else {
-      this.addRandomCargo();
-    }
-  }
-
-  addRandomCargo() {
-    const numItems  = getRandomInt(0, this.shipClass.cargo + 1);
-    const resources = Object.keys(data.resources);
-
-    for (let i = 0; i < numItems; ++i) {
-      const resource = resources[getRandomInt(0, resources.length)];
-      this.ship.loadCargo(resource, 1);
-    }
-  }
-}
+  exports.game = new Game;
+});

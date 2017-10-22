@@ -1,74 +1,79 @@
 <script type="text/javascript">
 
-$(function() {
-  for (let body in data.bodies)
-    $('#home').append(`<option value="${body}">${system.name(body)}</option>`);
+require(['data', 'game', 'person', 'ship', 'system', 'util'],
+  function(data, Game, Person, Ship, system, util) {
+    const R = util.R;
 
-  $('#home').change((e) => {
-    const home    = $('#home').val();
-    const gravity = R(system.gravity(home), 3);
+    for (let body in data.bodies) {
+      $('#home').append(`<option value="${body}">${system.name(body)}</option>`);
+    }
 
-    $('#home-info').html( data.bodies[home].desc.split('|').map(t => {return `<p>${t}</p>`}).join('') );
-    $('#home-info').html($('#' + home).html());
-    $('#home-grav').text(gravity);
-    $('#home-deltav').text(R(gravity * data.grav_deltav_factor, 3));
+    $('#home').change((e) => {
+      const home    = $('#home').val();
+      const gravity = R(system.gravity(home), 3);
 
-    const faction = data.bodies[home].faction;
-    $('#faction').val(data.factions[faction].full_name);
-    $('#faction-info').html( data.factions[faction].desc.split('|').map(t => {return `<p>${t}</p>`}).join('') );
-  });
+      $('#home-info').html( data.bodies[home].desc.split('|').map(t => {return `<p>${t}</p>`}).join('') );
+      $('#home-info').html($('#' + home).html());
+      $('#home-grav').text(gravity);
+      $('#home-deltav').text(R(gravity * data.grav_deltav_factor, 3));
 
-  $('#home').val('mars');
-  $('#home').change();
-
-  $('#starting-game').on('shown.bs.modal', (e) => {
-    $('#spacer-nav').data('in-transit', true);
-    $('#starting-game-progress').css('width', '0%');
-
-    const place   = $('#home').val();
-    const faction = data.bodies[place].faction;
-    const ship    = data.initial_ship;
-
-    const me = new Person({
-      name    : $('#name').val(),
-      home    : place,
-      faction : faction,
-      money   : 1000,
-      ship    : new Ship({
-        shipclass : ship,
-        fuel      : data.shipclass[ship].tank
-      })
+      const faction = data.bodies[home].faction;
+      $('#faction').val(data.factions[faction].full_name);
+      $('#faction-info').html( data.factions[faction].desc.split('|').map(t => {return `<p>${t}</p>`}).join('') );
     });
 
-    me.ship.fuel = data.shipclass[ship].tank;
-    game.new_game(me, place);
+    $('#home').val('mars');
+    $('#home').change();
 
-    const turns = data.initial_turns;
-    const step  = Math.ceil(turns/10);
-    let done  = 0;
-    let timer;
+    $('#starting-game').on('shown.bs.modal', (e) => {
+      $('#spacer-nav').data('in-transit', true);
+      $('#starting-game-progress').css('width', '0%');
 
-    const interval = function() {
-      if (done < turns) {
-        const count = Math.min(turns - done, step);
-        const pct = Math.ceil((done / turns) * 100);
-        done += count;
-        game.turn(count);
-        $('#starting-game-progress').text(`${pct}%`).css('width', `${pct}%`);
-        timer = window.setTimeout(interval, 200);
-      }
-      else {
-        $('#starting-game-progress').css('width', '100%').text('Done!');
-        game.refresh();
-        $('#starting-game').modal('hide');
-        $('#spacer-nav').data('in-transit', false);
-        window.setTimeout(() => {open('summary')}, 100);
-      }
-    };
+      const place   = $('#home').val();
+      const faction = data.bodies[place].faction;
+      const ship    = data.initial_ship;
 
-    timer = window.setTimeout(interval, 50);
-  });
-});
+      const me = new Person({
+        name    : $('#name').val(),
+        home    : place,
+        faction : faction,
+        money   : 1000,
+        ship    : new Ship({
+          shipclass : ship,
+          fuel      : data.shipclass[ship].tank
+        })
+      });
+
+      me.ship.fuel = data.shipclass[ship].tank;
+      Game.game.new_game(me, place);
+
+      const turns = data.initial_turns;
+      const step  = Math.ceil(turns/10);
+      let done  = 0;
+      let timer;
+
+      const interval = function() {
+        if (done < turns) {
+          const count = Math.min(turns - done, step);
+          const pct = Math.ceil((done / turns) * 100);
+          done += count;
+          Game.game.turn(count);
+          $('#starting-game-progress').text(`${pct}%`).css('width', `${pct}%`);
+          timer = window.setTimeout(interval, 200);
+        }
+        else {
+          $('#starting-game-progress').css('width', '100%').text('Done!');
+          Game.game.refresh();
+          $('#starting-game').modal('hide');
+          $('#spacer-nav').data('in-transit', false);
+          window.setTimeout(() => {Game.open('summary')}, 100);
+        }
+      };
+
+      timer = window.setTimeout(interval, 50);
+    });
+  }
+);
 
 </script>
 

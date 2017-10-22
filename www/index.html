@@ -14,8 +14,6 @@
     <script src="js/vendor/jquery.min.js"></script>
     <script src="js/vendor/popper.min.js"></script>
     <script src="js/vendor/bootstrap.min.js"></script>
-    <script src="js/vendor/solaris-model/dist/solaris-model.min.js"></script>
-    <script src="js/vendor/moon.js"></script>
 
     <title>Spacer</title>
   </head>
@@ -54,64 +52,6 @@
     </nav>
 
     <!-- Libs -->
-    <script src="js/components.js"></script>
-
-    <script src="js/physics.js"></script>
-    <script src="js/data.js"></script>
-    <script src="js/util.js"></script>
-    <script src="js/system.js"></script>
-    <script src="js/agent/actor.js"></script>
-    <script src="js/agent/crafter.js"></script>
-    <script src="js/market.js"></script>
-    <script src="js/place.js"></script>
-    <script src="js/ship.js"></script>
-    <script src="js/person.js"></script>
-    <script src="js/navcomp.js"></script>
-
-    <script src="js/ui.js"></script>
-    <script src="js/workflow.js"></script>
-    <script src="js/ui/summary.js"></script>
-    <script src="js/ui/status.js"></script>
-    <script src="js/ui/plot.js"></script>
-    <script src="js/ui/transit.js"></script>
-    <script src="js/ui/navigation.js"></script>
-    <script src="js/ui/shipyard.js"></script>
-    <script src="js/ui/combat.js"></script>
-
-    <script src="js/game.js"></script>
-
-    <!-- Main -->
-    <script type="text/javascript">
-      const game = new Game;
-
-      $(function() {
-        $('#spacer-navbar').on('click', 'a', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-
-          if ($(e.target).hasClass('nav-link')) {
-            $('#spacer-nav a').removeClass('active');
-            $(e.target).addClass('active');
-            open($(e.target).data('name'));
-          }
-        });
-
-        $(window).on('click', (e) => {
-          if (!$('#spacer-nav').hasClass('collapsed')) {
-            $('#spacer-nav').collapse('hide');
-          }
-        });
-
-        FastClick.attach(document.body);
-      });
-
-      document.addEventListener("deviceready", onDeviceReady, false);
-
-      function onDeviceReady() {
-        if (StatusBar.isVisible) {
-          StatusBar.hide();
-        }
-      }
-    </script>
+    <script data-main="js/loader" src="js/vendor/require.js"></script>
   </body>
 </html>
