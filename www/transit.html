@@ -1,15 +1,15 @@
 <script type="text/javascript">
 
-$(function() {
+require(['game', 'ui/transit'], function(Game, Transit) {
   let root = $('#transit');
   let data = $('#spacer').data();
 
   if (data.state !== 'transit') {
-    open('summary');
+    Game.game.open('summary');
     return;
   }
 
-  let transit = new Transit({plan: data.info});
+  let transit = new Transit.Transit({plan: data.info});
   $('#transit').empty().append(transit.root);
   transit.begin();
 });

@@ -82,7 +82,7 @@ define(function(require, exports, module) {
       const body   = this.body(name);
       const mass   = body.mass;
       const radius = body.radius;
-      return Physics.G((grav * mass) / Math.pow(radius, 2));
+      return (grav * mass) / Math.pow(radius, 2) / Physics.G;
     }
 
     ranges(point) {

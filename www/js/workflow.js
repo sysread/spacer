@@ -26,5 +26,5 @@ define(function(require, exports, module) {
     ok(msg) {
       return this.ask(msg, 'Ok');
     }
-  }
+  };
 });

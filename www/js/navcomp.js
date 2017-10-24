@@ -76,7 +76,7 @@ define(function(require, exports, module) {
       for (var i = 1; i < orbit.length; ++i) {
         const S = Physics.distance(p1, orbit[i]); // distance
         const t = i * s_per_turn; // seconds until target is at destination
-        const a = Physics.deltav_for_distance(t * 0.5, S * 0.5); // deltav to reach flip point
+        const a = Physics.requiredDeltaV(t * 0.5, S * 0.5); // deltav to reach flip point
 
         yield new TransitPlan({
           origin : origin,

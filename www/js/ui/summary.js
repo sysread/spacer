@@ -21,7 +21,7 @@ define(function(require, exports, module) {
         }
 
         if (this.place.name !== Game.game.locus) {
-          this.add_def('Distance', Math.round(Physics.AU(system.distance(Game.game.locus, this.place.name)) * 100) / 100 + ' AU');
+          this.add_def('Distance', Math.round(system.distance(Game.game.locus, this.place.name) / Physics.AU * 100) / 100 + ' AU');
         } else {
           this.add_def('Location', 'Docked');
         }

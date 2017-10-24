@@ -9,7 +9,7 @@ define(function(require, exports, module) {
       this.coords       = this.start;
       this.flipDistance = this.dist / 2;
       this.flipTime     = this.turns * data.hours_per_turn * 3600 * 0.5;
-      this.flipPoint    = Physics.pointAtDistanceAlongLine(this.start, this.end, this.flipDistance);
+      this.flipPoint    = Physics.segment(this.start, this.end, this.flipDistance);
       this.maxVelocity  = Physics.velocity(this.flipTime, 0, this.accel);
       this.velocity     = 0;
     }
@@ -25,7 +25,7 @@ define(function(require, exports, module) {
     get hours() { return this.turns * data.hours_per_turn } // hours
     get turnpct() { return 100 / this.turns }               // percent of trip per turn
     get km() { return this.dist / 1000 }                    // distance in kilometers
-    get au() { return Physics.AU(this.dist) }               // distance in AU
+    get au() { return this.dist / Physics.AU }              // distance in AU
 
     get is_complete()  { return this.left === 0 }
     get pct_complete() { return Math.ceil(100 - (this.left * this.turnpct)) }
@@ -47,14 +47,14 @@ define(function(require, exports, module) {
           const s = turn * secPerTurn;
           const d = Physics.range(s, 0, this.accel);
           this.velocity = Physics.velocity(s, 0, this.accel);
-          this.coords = Physics.pointAtDistanceAlongLine(this.start, this.end, d)
+          this.coords = Physics.segment(this.start, this.end, d)
             .map(n => {return Math.ceil(n)});
         }
         else {
           const s = ((this.turns / 2) - this.left) * secPerTurn;
           const d = Physics.range(s, this.maxVelocity, -this.accel);
           this.velocity = Physics.velocity(s, this.maxVelocity, -this.accel);
-          this.coords = Physics.pointAtDistanceAlongLine(this.start, this.end, this.flipDistance + d)
+          this.coords = Physics.segment(this.start, this.end, this.flipDistance + d)
             .map(n => {return Math.ceil(n)});
         }
       }
@@ -65,7 +65,7 @@ define(function(require, exports, module) {
     }
 
     auRemaining() {
-      return Physics.AU(this.distanceRemaining());
+      return this.distanceRemaining() / Physics.AU;
     }
   };
 });

@@ -56,7 +56,7 @@ define(function(require, exports, module) {
     }
 
     maxAcceleration() {
-      return Physics.G() * system.gravity(this.home) * data.grav_deltav_factor;
+      return Physics.G * system.gravity(this.home) * data.grav_deltav_factor;
     }
 
     shipAcceleration() {

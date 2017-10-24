@@ -19,8 +19,8 @@ define(function(require, exports, module) {
       this.set_header('Navigation');
       this.add_header_button('Map').on('click', (e)=>{Game.open('plot')});
       this.add_text('Your navigational computer automatically calculates the optimal trajectory from your current location to the other settlements in the system.');
-      this.add_text(`Being born on ${data.bodies[Game.game.player.home].name}, your body is adapted to ${data.bodies[Game.game.player.home].gravity}G, allowing you to endure a sustained burn of ${util.R(Physics.G(Game.game.player.maxAcceleration()), 3)}G.`);
-      this.add_text(`Your ship is capable of ${util.R(Physics.G(Game.game.player.shipAcceleration()), 3)}Gs of acceleration with her current load out (${util.csn(util.R(Game.game.player.ship.currentMass()))} metric tonnes). With ${util.R(Game.game.player.ship.fuel, 3)} tonnes of fuel, your ship has a maximum burn time of ${Game.game.player.ship.maxBurnTime() * data.hours_per_turn} hours at maximum thrust.`);
+      this.add_text(`Being born on ${data.bodies[Game.game.player.home].name}, your body is adapted to ${data.bodies[Game.game.player.home].gravity}G, allowing you to endure a sustained burn of ${util.R(Game.game.player.maxAcceleration() / Physics.G, 3)}G.`);
+      this.add_text(`Your ship is capable of ${util.R(Game.game.player.shipAcceleration() / Physics.G, 3)}Gs of acceleration with her current load out (${util.csn(util.R(Game.game.player.ship.currentMass()))} metric tonnes). With ${util.R(Game.game.player.ship.fuel, 3)} tonnes of fuel, your ship has a maximum burn time of ${Game.game.player.ship.maxBurnTime() * data.hours_per_turn} hours at maximum thrust.`);
 
       for (const body of system.bodies()) {
         if (body === Game.game.locus)
@@ -48,7 +48,7 @@ define(function(require, exports, module) {
     constructor(body, opt) {
       super(opt);
 
-      let au = Math.round(Physics.AU(system.distance(Game.game.locus, body) * 100)) / 100;
+      let au = Math.round(system.distance(Game.game.locus, body) / Physics.AU * 100) / 100;
       if (au < 0.01) au = '< 0.01';
 
       let btn = new UI.Button;
@@ -89,7 +89,7 @@ define(function(require, exports, module) {
           const plan = route.transit;
           const [days, hours] = plan.days_hours;
 
-          let g = Math.round(Physics.G(plan.accel) * 1000) / 1000;
+          let g = Math.round(plan.accel / Physics.G * 1000) / 1000;
           if (g === 0) g = '< 0.001';
 
           this.flip.text(util.csn(Math.ceil(plan.km / 2)) + ' km');

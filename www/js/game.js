@@ -52,13 +52,13 @@ define(function(require, exports, module) {
 
         let dv0 = R(ship.currentAcceleration(), 3);
         let bn0 = R(ship.maxBurnTime(dv0, true) * data.hours_per_turn, 3);
-        let au0 = R(Physics.AU(Physics.range(bn0 * 3600, 0, dv0)), 3);
-        console.log('max', {'deltav': R(Physics.G(dv0), 3), 'hours': bn0, 'dist': au0});
+        let au0 = R((Physics.range(bn0 * 3600, 0, dv0) / Physics.AU), 3);
+        console.log('max', {'deltav': R(dv0 / Physics.G, 3), 'hours': bn0, 'dist': au0});
 
-        let dv1 = R(Math.min(Physics.G() * 0.5, dv0 * 0.6), 3);
+        let dv1 = R(Math.min(Physics.G * 0.5, dv0 * 0.6), 3);
         let bn1 = R(ship.maxBurnTime(dv1, true) * data.hours_per_turn, 3);
-        let au1 = R(Physics.AU(Physics.range(bn1 * 3600, 0, dv1)), 3);
-        console.log('nom', {'deltav': R(Physics.G(dv1), 3), 'hours': bn1, 'dist': au1});
+        let au1 = R((Physics.range(bn1 * 3600, 0, dv1) / Physics.AU), 3);
+        console.log('nom', {'deltav': R(dv1 / Physics.G, 3), 'hours': bn1, 'dist': au1});
       }
     }
 
@@ -174,7 +174,7 @@ define(function(require, exports, module) {
     }
 
     light_hours(meters) {
-      return Math.ceil(Physics.C(meters) / 3600);
+      return Math.ceil(meters / Physics.C / 3600);
     }
 
     light_turns(meters) {

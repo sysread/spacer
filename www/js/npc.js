@@ -1,6 +1,6 @@
 define(function(require, exports, module) {
   const data = require('data');
-  cosnt Ship = require('ship');
+  const Ship = require('ship');
 
   return class {
     constructor(opt) {

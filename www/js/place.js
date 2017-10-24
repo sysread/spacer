@@ -199,7 +199,7 @@ define(function(require, exports, module) {
 
       // Distance bonus
       let stock = place.currentSupply(resource);
-      let distance = Physics.AU(system.distance(this.name, origin));
+      let distance = system.distance(this.name, origin) / Physics.AU;
       let rating = stock / distance;
 
       // Shared faction bonus
@@ -243,7 +243,7 @@ define(function(require, exports, module) {
           let place = Game.game.place(body);
           let want  = this.deliveryAmount(body, resource);
           let amt   = want;
-          let dist  = Physics.AU(system.distance(this.name, place.name));
+          let dist  = system.distance(this.name, place.name) / Physics.AU;
           let turns = Math.ceil((24 / data.hours_per_turn) * 8 * dist);
           let fuel  = Math.ceil(dist / 8);
           let avail = place.currentSupply('fuel');
