@@ -1,6 +1,6 @@
 <script type="text/javascript">
 
-$(function() {
+require(['ui/plot'], function(Plot) {
   $('#plot-back').on('click', (e)=>{open('navigation')});
   let plot = new Plot;
   $('#plot').append(plot.root);
