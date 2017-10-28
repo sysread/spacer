@@ -1,9 +1,15 @@
 <script type="text/javascript">
 
-require(['game', 'ui/summary'], function(Game, Summary) {
-  let summary = new Summary.Place({place: Game.game.place(), showDescription: true});
-  $('#summary').append(summary.root);
-});
+require(
+  ['game', 'vendor/vue', 'component/summary'],
+  function(Game, Vue) {
+    const app = new Vue({
+      el: '#summary',
+      data: {place: Game.game.place()},
+      template: '<PlaceSummary :place="place" />',
+    });
+  }
+);
 
 </script>
 
