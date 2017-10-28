@@ -40,7 +40,7 @@ define(function(require, exports, module) {
       this.home     = obj.home;
       this.faction  = obj.faction;
       this.money    = obj.money;
-      this.standing = obj.standing;
+      this.standing = obj.standing || {};
       this.ship.load(obj.ship);
     }
 

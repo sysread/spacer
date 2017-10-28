@@ -5,11 +5,10 @@ define(function(require, exports, module) {
   const Game    = require('game');
   const Physics = require('physics');
   const Vue     = require('vendor/vue');
-
   require('component/card');
   require('component/row');
 
-  Vue.component('PlaceSummary', {
+  Vue.component('place-summary', {
     props: ['place'],
     computed: {
       desc     : function() {return data.bodies[this.place.name].desc.split('|')},
@@ -22,7 +21,7 @@ define(function(require, exports, module) {
     },
     template: `
 <card :title="place.title">
-  <card-text v-for="line of desc"><i>{{line}}</i></card-text>
+  <card-text v-for="(line, idx) of desc" :key="idx"><i>{{line}}</i></card-text>
   <def caps=true v-if="!isThere" term="Distance" :def="distance" />
   <def caps=true v-else term="Location" def="Docked" />
   <def caps=true term="Environ" :def="kind" />

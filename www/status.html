@@ -1,9 +1,14 @@
 <script type="text/javascript">
 
-require(['game', 'ui/status'], function(Game, Status) {
-  let playerStatus = new Status.Player({player: Game.game.player});
-  $('#status').append(playerStatus.root);
-});
+require(
+  ['game', 'vendor/vue', 'component/status'],
+  function(Game, Vue) {
+    const app = new Vue({
+      el: '#status',
+      template: '<player-status />',
+    });
+  }
+);
 
 </script>
 

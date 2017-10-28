@@ -16,7 +16,7 @@ define(function(require, exports, module) {
         return parts.length > 1 ? parts.join('-') : '';
       }
     },
-    template: '<div :class="colClass" class="py-2"><slot /></div>',
+    template: '<div :class="colClass" class="py-1"><slot /></div>',
   });
 
   Vue.component('term', {template: '<cell brkpt="sm" size=3><b><slot /></b></cell>'});
@@ -26,8 +26,8 @@ define(function(require, exports, module) {
     props: ['term', 'def', 'caps'],
     template: `
 <row>
-  <term :class="{'text-capitalize': caps}">{{term}}</term>
-  <defn :class="{'text-capitalize': caps}">{{def}}</defn>
+  <term :class="{'text-capitalize': caps}">{{term}}<slot name="term" /></term>
+  <defn :class="{'text-capitalize': caps}">{{def}}<slot name="def" /></defn>
 </row>
     `,
   });
