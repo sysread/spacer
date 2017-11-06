@@ -1,7 +1,10 @@
 <script type="text/javascript">
 
-require(['ui/work'], function(Work) {
-  $('#work').append(new Work.Intro().root);
+require(['vendor/vue', 'component/work'], function(Vue, _) {
+  const app = new Vue({
+    el: '#work',
+    template: '<work />',
+  });
 });
 
 </script>

@@ -57,7 +57,7 @@ define(function(require, exports, module) {
     constructor(opt) {
       super(opt);
 
-      this.slider = $('<input type="range" class="form-control form-control-sm">');
+      this.slider = $('<input type="range" class="form-control form-control bg-black">');
       this.slider.attr('min',  this.min);
       this.slider.attr('max',  this.max);
       this.slider.attr('step', this.step);

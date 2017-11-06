@@ -2,7 +2,6 @@ define(function(require, exports, module) {
   const data = require('data');
   const util = require('util');
   const Game = require('game');
-  const UI   = require('ui');
   const Vue  = require('vendor/vue');
 
   require('component/card');
