@@ -4,6 +4,7 @@ Like a cross between TradeWars, Elite, The Expanse, and Firefly.
 # Testing
 
 ## Chrome
+    cordova platform add browser --usegit
     cordova run browser -- --live-reload
 
 ## iOS

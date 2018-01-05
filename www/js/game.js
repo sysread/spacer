@@ -35,8 +35,7 @@ define(function(require, exports, module) {
         if (saved) {
           this.load(JSON.parse(saved));
           this.refresh();
-          //exports.open('summary');
-          exports.open('work');
+          exports.open('summary');
         }
         else {
           exports.open('newgame');

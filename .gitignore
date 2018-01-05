@@ -3,3 +3,5 @@ platforms/*
 !platforms/README
 plugins/*
 !plugins/README
+platform
+run

@@ -10,13 +10,20 @@
     "author": "Jeff Ober",
     "license": "Apache-2.0",
     "dependencies": {
-        "cordova-android": "~6.2.3",
-        "cordova-browser": "^4.1.0",
+        "browser-sync": "^2.21.0",
+        "cheerio": "^0.19.0",
+        "cordova-android": "^6.2.3",
+        "cordova-browser": "^5.0.2",
         "cordova-ios": "^4.4.0",
         "cordova-plugin-browsersync": "^0.1.6",
-        "cordova-plugin-statusbar": "^2.2.3",
-        "cordova-plugin-whitelist": "^1.3.2",
-        "glob": "^7.1.2"
+        "cordova-plugin-statusbar": "^2.4.0",
+        "cordova-plugin-whitelist": "^1.3.3",
+        "csp-parse": "0.0.2",
+        "elementtree": "^0.1.7",
+        "glob": "^5.0.15",
+        "npm": "^2.15.12",
+        "plist": "^1.2.0",
+        "q": "^1.5.1"
     },
     "cordova": {
         "plugins": {
@@ -26,8 +33,8 @@
         },
         "platforms": [
             "android",
-            "browser",
-            "ios"
+            "ios",
+            "browser"
         ]
     }
 }
