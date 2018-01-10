@@ -21,7 +21,6 @@ define(function(require, exports, module) {
     },
     template: `
 <card :title="mini ? null : place.title">
-  <card-text v-if="!mini" v-for="(line, idx) of desc" :key="idx"><i>{{line}}</i></card-text>
   <def caps=true v-if="!isThere" term="Distance" :def="distance" />
   <def caps=true v-else term="Location" def="Docked" />
   <def caps=true term="Environ" :def="kind" />
@@ -29,6 +28,7 @@ define(function(require, exports, module) {
   <def caps=true term="Economy" :def="place.size" />
   <def caps=true term="Details" :def="traits" />
   <def caps=true term="Special" :def="conds" />
+  <card-text v-if="!mini" v-for="(line, idx) of desc" :key="idx"><i>{{line}}</i></card-text>
 </card>
     `,
   });

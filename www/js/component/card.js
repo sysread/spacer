@@ -12,12 +12,12 @@ define(function(require, exports, module) {
 
   Vue.component('card', {
     name: 'card',
-    props: ['title', 'subtitle'],
+    props: ['title', 'subtitle', 'nopad'],
     template: `
 
 <div class="card">
   <slot name="header" />
-  <div class="card-body">
+  <div class="card-body" :class="{'p-0':nopad}">
     <h4 v-if="title" class="card-title">{{title}}</h4>
     <h6 v-if="subtitle" class="card-subtitle mb-2 text-muted">{{subtitle}}</h6>
     <slot />

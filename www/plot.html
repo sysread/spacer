@@ -1,18 +1,16 @@
 <script type="text/javascript">
 
-require(['ui/plot'], function(Plot) {
-  $('#plot-back').on('click', (e)=>{open('navigation')});
-  let plot = new Plot;
-  $('#plot').append(plot.root);
-  plot.rePlot();
-});
+require(
+  ['game', 'vendor/vue', 'component/plot'],
+  function(Game, Vue) {
+    const app = new Vue({
+      el: '#plot',
+      data: {},
+      template: '<plot />',
+    });
+  }
+);
 
 </script>
 
-<div class="card">
-  <div id="plot" class="card-body p-0">
-  </div>
-  <div class="card-body">
-    <button type="button" class="btn btn-dark float-right" id="plot-back">Close</button>
-  </div>
-</div>
+<div id="plot" />

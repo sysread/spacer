@@ -2,7 +2,7 @@ define(function(require, exports, module) {
   const Vue = require('vendor/vue');
 
   Vue.component('modal', {
-    props: ['title', 'close', 'xclose'],
+    props: ['title', 'close', 'xclose', 'nopad'],
     directives: {
       'modal': {
         inserted: function(el, binding, vnode) {
@@ -22,7 +22,7 @@ define(function(require, exports, module) {
         <slot name="header" />
         <button v-if="xclose" type="button" class="close text-light" data-dismiss="modal">&times;</button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" :class="{'p-0':nopad}">
         <slot />
       </div>
       <div class="modal-footer">
