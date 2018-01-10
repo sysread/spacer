@@ -19,7 +19,7 @@ define(function(require, exports, module) {
         if (body === 'sun')
           return false;
 
-        const info = new UI.InfoPopUp;
+        /*const info = new UI.InfoPopUp;
         info.addCard(new Summary.Place({place: Game.game.place(body)}));
 
         info.add_footer_button('Plot course').on('click', e => {
@@ -35,7 +35,7 @@ define(function(require, exports, module) {
           modal.show();
         });
 
-        info.show();
+        info.show();*/
 
         return false;
       });

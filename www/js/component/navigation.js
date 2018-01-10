@@ -16,8 +16,6 @@ define(function(require, exports, module) {
     data: function() {
       return {
         opened:  null,
-        info:    false,
-        route:   null,
         navComp: new NavComp,
       };
     },
@@ -32,33 +30,14 @@ define(function(require, exports, module) {
       shipBurnTime:      function(){ return Game.game.player.ship.maxBurnTime() * data.hours_per_turn },
       systemBodies:      function(){ return system.bodies() },
       playerLocus:       function(){ return Game.game.locus },
-
-      /* Trip planner */
-      tripPlace:       function(){ return Game.game.place(this.opened) },
-      tripDestination: function(){ return system.name(this.opened) },
-      tripFastest:     function(){ return this.navComp.fastest(this.opened) },
-      tripRoutes:      function(){ return this.navComp.transits[this.opened] },
-      tripRoute:       function(){ return this.tripRoutes[this.route] },
-      tripPlan:        function(){ return this.tripRoute.transit },
-      tripDistance:    function(){ return `${Math.round(this.tripPlan.au * 100) / 100} AU (${util.csn(Math.round(this.tripPlan.km))} km)`},
-      tripFlipPoint:   function(){ return `${Math.round((this.tripPlan.au / 2) * 100) / 100} AU (${util.csn(Math.round(this.tripPlan.km / 2))} km)`},
-      tripMaxVelocity: function(){ return util.csn(util.R(this.tripPlan.maxVelocity / 1000)) + ' km/s' },
-      tripFuel:        function(){ return (Math.round(this.tripRoute.fuel * 100) / 100) + ' tonnes (est)' },
-      tripTime:        function(){ return `${util.csn(this.tripPlan.days_hours[0])} days, ${util.csn(this.tripPlan.days_hours[1])} hours` },
-      tripDeltaV:      function(){
-        const g = Math.round(this.tripPlan.accel / Physics.G * 1000) / 1000;
-        return g === 0 ? '< 0.001 G' : g + ' G';
-      },
     },
     methods: {
-      hasRoute: function(place) {
-        return this.navComp.transits[place].length > 0;
-      },
       openPlot: function() {
         Game.open('plot');
       },
-      beginTransit: function() {
-        $('#spacer').data('info', this.tripPlan);
+      beginTransit: function(body, selected) {
+        $('#spacer').data('info', this.navComp.transits[body][selected].transit);
+        this.opened = null;
         $('.modal-backdrop').remove(); // TODO make this less hacky
         Game.open('transit');
         $('#spacer').data('state', 'transit');
@@ -78,39 +57,17 @@ define(function(require, exports, module) {
   <nav-dest
     v-for="body of systemBodies"
     v-if="body !== playerLocus"
-    :disabled="hasRoute(body)"
     :key="body"
     :place="body"
-    :has_route="hasRoute(body)"
-    :opened.sync="opened"
-    @update:opened="route = tripFastest.index" />
+    :opened.sync="opened" />
 
-  <modal v-if="opened" :title="tripDestination" close="Cancel" @close="opened = null; info = false">
-    <button slot="header" @click="info = !info" type="button" class="btn btn-dark float-right">Info</button>
-    <button slot="footer" v-if="hasRoute(opened)" @click="beginTransit()" data-dismiss="modal" type="button" class="btn btn-secondary">Engage</button>
-
-    <place-summary v-if="info" mini=true :place="tripPlace" class="my-4" />
-
-    <div v-if="hasRoute(opened)">
-      <def term="Total"        :def="tripDistance" />
-      <def term="Flip point"   :def="tripFlipPoint" />
-      <def term="Acceleration" :def="tripDeltaV" />
-      <def term="Max velocity" :def="tripMaxVelocity" />
-      <def term="Fuel"         :def="tripFuel" />
-      <def term="Time"         :def="tripTime" />
-
-      <slider minmax=true step="1" min="0" :max="tripRoutes.length - 1" :value.sync="route" />
-    </div>
-    <div v-else>
-      Your ship, as loaded, cannot reach this destination in less than 1 year with available fuel.
-    </div>
-  </modal>
+  <nav-plan v-if="opened" @engage="beginTransit" @close="opened=null" :body="opened" :navcomp="navComp" />
 </card>
     `,
   });
 
   Vue.component('nav-dest', {
-    props: ['place', 'has_route'],
+    props: ['place'],
     computed: {
       name:    function(){ return system.short_name(this.place) },
       faction: function(){ return system.faction(this.place) },
@@ -128,7 +85,6 @@ define(function(require, exports, module) {
     <button @click="$emit('update:opened', place)" type="button" class="btn btn-dark btn-block text-left">
       {{name}}
       <span v-if="isMoon" class="badge badge-pill float-right">{{kind}}</span>
-      <span v-if="!has_route" class="badge badge-pill float-right">UNREACHABLE</span>
     </button>
   </div>
 
@@ -137,6 +93,58 @@ define(function(require, exports, module) {
     <div class="col-6 mute">{{faction}}</div>
   </div>
 </div>
+    `,
+  });
+
+  Vue.component('nav-plan', {
+    props: ['body', 'navcomp'],
+    data: function() {
+      const fastest = this.navcomp.fastest(this.body);
+      return {
+        routes:   this.navcomp.transits[this.body],
+        selected: fastest ? fastest.index : 0,
+        info:     false,
+      };
+    },
+    computed: {
+      hasRoute:    function(){ return this.routes.length > 0 },
+      place:       function(){ return Game.game.place(this.body) },
+      destination: function(){ return system.name(this.body) },
+      route:       function(){ if (this.hasRoute) return this.routes[this.selected] },
+      plan:        function(){ if (this.hasRoute) return this.route.transit },
+      distance:    function(){ if (this.hasRoute) return `${Math.round(this.plan.au * 100) / 100} AU (${util.csn(Math.round(this.plan.km))} km)`},
+      flipPoint:   function(){ if (this.hasRoute) return `${Math.round((this.plan.au / 2) * 100) / 100} AU (${util.csn(Math.round(this.plan.km / 2))} km)`},
+      maxVelocity: function(){ if (this.hasRoute) return util.csn(util.R(this.plan.maxVelocity / 1000)) + ' km/s' },
+      fuel:        function(){ if (this.hasRoute) return (Math.round(this.route.fuel * 100) / 100) + ' tonnes (est)' },
+      time:        function(){ if (this.hasRoute) return `${util.csn(this.plan.days_hours[0])} days, ${util.csn(this.plan.days_hours[1])} hours` },
+      deltaV:      function(){
+        if (this.hasRoute) {
+          const g = Math.round(this.plan.accel / Physics.G * 1000) / 1000;
+          return g === 0 ? '< 0.001 G' : g + ' G';
+        }
+      },
+    },
+    template: `
+<modal @close="$emit('close')" :title="destination" close="Cancel">
+  <button slot="header" @click="info = !info" type="button" class="btn btn-dark float-right">Info</button>
+  <button slot="footer" v-if="hasRoute" @click="$emit('engage', body, selected)" data-dismiss="modal" type="button" class="btn btn-dark">Engage</button>
+
+  <place-summary v-if="info" mini=true :place="place" class="my-4" />
+
+  <div v-if="hasRoute">
+    <def term="Total"        :def="distance" />
+    <def term="Flip point"   :def="flipPoint" />
+    <def term="Acceleration" :def="deltaV" />
+    <def term="Max velocity" :def="maxVelocity" />
+    <def term="Fuel"         :def="fuel" />
+    <def term="Time"         :def="time" />
+
+    <slider minmax=true step="1" min="0" :max="routes.length - 1" :value.sync="selected" />
+  </div>
+  <div v-else>
+    Your ship, as loaded, cannot reach this destination in less than 1 year with available fuel.
+  </div>
+</modal>
     `,
   });
 });
