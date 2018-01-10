@@ -4,7 +4,7 @@ define(function(require, exports, module) {
   const NavComp    = require('navcomp');
   const UI         = require('ui');
   const Navigation = require('ui/navigation');
-  const Summary    = require('ui/summary');
+  const Summary    = require('component/summary');
 
   const Plot = class extends UI.Component {
     constructor(opt) {

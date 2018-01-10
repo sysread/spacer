@@ -9,7 +9,7 @@ define(function(require, exports, module) {
   require('component/row');
 
   Vue.component('place-summary', {
-    props: ['place'],
+    props: ['place', 'mini'],
     computed: {
       desc     : function() {return data.bodies[this.place.name].desc.split('|')},
       isThere  : function() {return this.place.name === Game.game.locus},
@@ -20,8 +20,8 @@ define(function(require, exports, module) {
       conds    : function() {return util.uniq(this.place.conditions, ', ') ||'None'},
     },
     template: `
-<card :title="place.title">
-  <card-text v-for="(line, idx) of desc" :key="idx"><i>{{line}}</i></card-text>
+<card :title="mini ? null : place.title">
+  <card-text v-if="!mini" v-for="(line, idx) of desc" :key="idx"><i>{{line}}</i></card-text>
   <def caps=true v-if="!isThere" term="Distance" :def="distance" />
   <def caps=true v-else term="Location" def="Docked" />
   <def caps=true term="Environ" :def="kind" />

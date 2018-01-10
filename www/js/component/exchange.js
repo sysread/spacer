@@ -3,7 +3,6 @@ define(function(require, exports, module) {
   const util = require('util');
   const Game = require('game');
   const Vue  = require('vendor/vue');
-  require('component/row');
 
   Vue.component('slider', {
     props: ['value', 'min', 'max', 'step', 'minmax'],

@@ -57,7 +57,7 @@ define(function(require, exports, module) {
         const body = this.encounter();
 
         if (body) {
-          const dist = R(Physics.distance(this.plan.coords, system.position(body) / Physics.AU), 3);
+          const dist = util.R(Physics.distance(this.plan.coords, system.position(body)) / Physics.AU, 3);
           this.inspection({place: body, dist: dist});
         }
         else {
@@ -116,7 +116,7 @@ define(function(require, exports, module) {
     }
 
     inspection(opt) {
-      const inspection = new Inspection(opt);
+      const inspection = new Transit.Inspection(opt);
       this.add(inspection.root.addClass('mt-3'));
 
       return inspection.begin().then(() => {
@@ -129,7 +129,7 @@ define(function(require, exports, module) {
       $('#nav-transit').modal('hide');
       $('#spacer').data({state: null, data: null});
       Game.game.transit(this.plan.dest);
-      Game.game.open('summary');
+      Game.open('summary');
     }
   };
 
@@ -139,8 +139,8 @@ define(function(require, exports, module) {
 
       this.npc = new Npc({
         label     : 'Police Patrol',
-        faction   : opt.faction,
-        shipClass : oneOf['corvette', 'frigate', 'destroyer'],
+        faction   : this.faction,
+        shipClass : util.oneOf(['corvette', 'frigate', 'destroyer']),
       });
     }
 
@@ -221,7 +221,7 @@ define(function(require, exports, module) {
                 $('#nav-transit').modal('hide');
                 $('#spacer').data({state: null, data: null});
                 window.localStorage.removeItem('game');
-                Game.game.open('newgame');
+                Game.open('newgame');
               });
           }
         });

@@ -63,7 +63,7 @@ define(function(require, exports, module) {
     </card-footer>
   </card>
 
-  <modal v-if="modal === 'recruiter'" @close="modal = null" title="Recruiter" close="Close">
+  <modal v-if="modal === 'recruiter'" @close="modal = null" title="Recruiter" close="Close" xclose=true>
     <p>The pay is {{payRate}} c/day. You get to keep anything you collect over the quota. How long are you available for?</p>
     <def term="Days" :def="days" />
     <def term="Pay" :def="pay" />

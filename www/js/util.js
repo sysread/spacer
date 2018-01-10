@@ -54,7 +54,7 @@ define(function(require, exports, module) {
    * Returns a random element from an array.
    */
   util.oneOf = function(options) {
-    return options[getRandomInt(0, options.length)];
+    return options[util.getRandomInt(0, options.length)];
   };
 
   util.resourceMap = function(dflt=0, entries) {

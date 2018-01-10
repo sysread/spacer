@@ -1,5 +1,6 @@
 define(function(require, exports, module) {
   const data = require('data');
+  const util = require('util');
   const Ship = require('ship');
 
   return class {
@@ -10,7 +11,7 @@ define(function(require, exports, module) {
 
       this.ship = new Ship({
         shipclass: opt.shipClass,
-        fuel: (opt.fuel || getRandomInt(Math.ceil(this.shipClass.tank / 4), this.shipClass.tank + 1)),
+        fuel: (opt.fuel || util.getRandomInt(Math.ceil(this.shipClass.tank / 4), this.shipClass.tank + 1)),
       });
 
       if (opt.cargo) {
@@ -24,11 +25,11 @@ define(function(require, exports, module) {
     }
 
     addRandomCargo() {
-      const numItems  = getRandomInt(0, this.shipClass.cargo + 1);
+      const numItems  = util.getRandomInt(0, this.shipClass.cargo + 1);
       const resources = Object.keys(data.resources);
 
       for (let i = 0; i < numItems; ++i) {
-        const resource = resources[getRandomInt(0, resources.length)];
+        const resource = resources[util.getRandomInt(0, resources.length)];
         this.ship.loadCargo(resource, 1);
       }
     }

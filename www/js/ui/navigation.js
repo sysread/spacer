@@ -6,7 +6,7 @@ define(function(require, exports, module) {
   const Game    = require('game');
   const NavComp = require('navcomp');
   const UI      = require('ui');
-  const Summary = require('ui/summary');
+  const Summary = require('component/summary');
 
   const Navigation = {};
 

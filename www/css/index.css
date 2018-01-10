@@ -111,7 +111,6 @@ table.table-bordered td, table.table-bordered th {
   background-color: #101010;
   color: rgb(200, 140, 50) !important;
   font-size: 12px;
-  font-weight: lighter;
 }
 
 .plot-point {

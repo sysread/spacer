@@ -2,7 +2,7 @@ define(function(require, exports, module) {
   const Vue = require('vendor/vue');
 
   Vue.component('modal', {
-    props: ['title', 'close'],
+    props: ['title', 'close', 'xclose'],
     directives: {
       'modal': {
         inserted: function(el, binding, vnode) {
@@ -14,12 +14,13 @@ define(function(require, exports, module) {
       }
     },
     template: `
-<div v-modal class="modal" tabindex="-1" :data-backdrop="close ? true : 'static'">
+<div v-modal class="modal" tabindex="-1" :data-backdrop="(xclose || close) ? true : 'static'">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div v-if="title || close" class="modal-header">
+      <div v-if="title || xclose" class="modal-header">
         <h5 v-if="title" class="modal-title">{{title}}</h5>
-        <button v-if="close" type="button" class="close text-light" data-dismiss="modal">&times;</button>
+        <slot name="header" />
+        <button v-if="xclose" type="button" class="close text-light" data-dismiss="modal">&times;</button>
       </div>
       <div class="modal-body">
         <slot />

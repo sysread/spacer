@@ -1,3 +1,4 @@
+<!--
 <script type="text/javascript">
 
 require(['ui/navigation'], function(Navigation) {
@@ -6,5 +7,21 @@ require(['ui/navigation'], function(Navigation) {
 });
 
 </script>
+-->
 
-<div id="navigation"></div>
+<script type="text/javascript">
+
+require(
+  ['game', 'vendor/vue', 'component/navigation'],
+  function(Game, Vue) {
+    const app = new Vue({
+      el: '#navigation',
+      data: {},
+      template: '<nav-list />',
+    });
+  }
+);
+
+</script>
+
+<div id="navigation" />
