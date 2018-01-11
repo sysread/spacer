@@ -113,6 +113,11 @@ table.table-bordered td, table.table-bordered th {
   font-size: 12px;
 }
 
+.plot-root {
+  background-color: #000;
+  border: 1px solid rgb(139,0,0);
+}
+
 .plot-point {
   font-size: 1.7em;
   line-height: 0.6 !important;
@@ -126,11 +131,12 @@ table.table-bordered td, table.table-bordered th {
   color: white;
 }
 
-.plot-selected {
+ul.plot-selected {
   position: absolute;
   list-style-type: none;
   margin: 0;
   padding: 0;
+  z-index: 100;
 }
 
 .b {

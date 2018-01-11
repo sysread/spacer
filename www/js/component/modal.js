@@ -2,7 +2,7 @@ define(function(require, exports, module) {
   const Vue = require('vendor/vue');
 
   Vue.component('modal', {
-    props: ['title', 'close', 'xclose', 'nopad'],
+    props: ['title', 'close', 'xclose', 'nopad', 'size'],
     directives: {
       'modal': {
         inserted: function(el, binding, vnode) {
@@ -15,7 +15,7 @@ define(function(require, exports, module) {
     },
     template: `
 <div v-modal class="modal" tabindex="-1" :data-backdrop="(xclose || close) ? true : 'static'">
-  <div class="modal-dialog">
+  <div class="modal-dialog" :class="{'modal-sm': size && size === 'sm', 'modal-lg': size && size === 'lg'}">
     <div class="modal-content">
       <div v-if="title || xclose" class="modal-header">
         <h5 v-if="title" class="modal-title">{{title}}</h5>

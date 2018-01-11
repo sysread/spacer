@@ -27,21 +27,12 @@ define(function(require, exports, module) {
     return adj;
   }
 
-  function bodyName(body) {
-    const central = system.central(body);
-    let name = system.name(body);
-
-    if (central && central !== 'sun')
-      name += ` (${system.name(central)})`;
-
-    return name;
-  }
-
   Vue.component('plot', {
     data: function() {
-      const points = system.plot().points;
-      const plot = {};
+      const points  = system.plot().points;
+      const plot    = {};
       const visible = [];
+      let selected  = null;
 
       for (const body of Object.keys(points)) {
         const [x, y] = points[body];
@@ -53,13 +44,17 @@ define(function(require, exports, module) {
         }
 
         plot[key].push(body);
+
+        if (body === Game.game.locus) {
+          selected = key;
+        }
       }
 
       return {
         plot:     plot,
         points:   points,
         visible:  visible,
-        selected: null,
+        selected: selected,
         modal:    null,
         plotted:  null,
         navComp:  new NavComp,
@@ -87,10 +82,19 @@ define(function(require, exports, module) {
     methods: {
       isSun:  function(body){ return body === 'sun' },
       isHere: function(body){ return body === Game.game.locus },
-      label:  function(body){ return bodyName(body) },
       place:  function(body){ return Game.game.place(body) },
 
-      key: function(body){
+      label: function(body) {
+        const central = system.central(body);
+        let name = system.name(body);
+
+        if (central && central !== 'sun')
+          name += ` (${system.name(central)})`;
+
+        return name;
+      },
+
+      key: function(body) {
         const [x, y] = this.points[body];
         return `p-${Math.ceil(x)}-${Math.ceil(y)}`;
       },
@@ -105,34 +109,35 @@ define(function(require, exports, module) {
       },
     },
     template: `
-<card v-plot class="plot-root" nopad=true>
-  <span v-for="body of visible">
-    <a class="plot-point"
-       @click="selected = key(body)"
-       :data-key="key(body)"
-       :data-x="points[body][0]" 
-       :data-y="points[body][1]"
-       :class="{'text-warning':isSun(body),'text-success':isHere(body),'font-weight-bold':isSun(body)||isHere(body)}">
-      &bull;
+<card v-plot class="plot-root p-0 m-0" nopad=true>
+  <div @click.self="selected=null" style="position:absolute; width:100%; height:100%; left: 0; top 0;">
+    <span v-for="body of visible">
+      <a href="#"
+         class="plot-point"
+         @click.prevent="selected=key(body)"
+         :data-key="key(body)"
+         :data-x="points[body][0]" 
+         :data-y="points[body][1]"
+         :class="{'text-warning':isSun(body),'text-success':isHere(body),'font-weight-bold':isSun(body)||isHere(body)}">
+        &bull;
 
-      <ul v-if="key(body) === selected" class="plot plot-selected">
-        <li v-for="body of plot[key(body)]">
-          <a class="plot-body-info badge badge-dark ml-1 p-2" href="#" @click="modal=body">
-            {{label(body)}}
-          </a>
-        </li>
-      </ul>
-    </a>
-  </span>
+        <ul v-if="key(body) === selected" class="plot plot-selected badge badge-dark">
+          <li v-for="body of plot[key(body)]">
+            <button type="button" class="btn btn-dark btn-block" @click="modal=isSun(body) ? null : body">{{label(body)}}</button>
+          </li>
+        </ul>
+      </a>
+    </span>
 
-  <modal v-if="modal" :title="label(modal)" nopad=true xclose=true close="Close" @close="modal=null">
-    <place-summary mini=true :place="place(modal)" class="m-0" />
-    <button slot="footer" type="button" class="btn btn-dark" @click="plotted=modal">
-      Plot course
-    </button>
-  </modal>
+    <modal v-if="modal" :title="label(modal)" nopad=true xclose=true close="Close" @close="modal=null">
+      <place-summary mini=true :place="place(modal)" class="m-0" />
+      <button slot="footer" type="button" class="btn btn-dark" @click="plotted=modal">
+        Plot course
+      </button>
+    </modal>
 
-  <nav-plan v-if="plotted" @engage="beginTransit" @close="plotted=null" :body="plotted" :navcomp="navComp" />
+    <nav-plan v-if="plotted" @engage="beginTransit" @close="plotted=null" :body="plotted" :navcomp="navComp" />
+  </div>
 </card>
     `,
   });
