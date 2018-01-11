@@ -1,10 +1,11 @@
 define(function(require, exports, module) {
-  const data   = require('data');
-  const util   = require('util');
-  const Person = require('person');
-  const Ship   = require('ship');
-  const Place  = require('place');
-  const system = require('system');
+  const Person  = require('person');
+  const Physics = require('physics');
+  const Place   = require('place');
+  const Ship    = require('ship');
+  const data    = require('data');
+  const system  = require('system');
+  const util    = require('util');
 
   exports.open = function(name) {
     if ($('#spacer').data('state') === 'transit') {
@@ -36,7 +37,7 @@ define(function(require, exports, module) {
           this.load(JSON.parse(saved));
           this.refresh();
           exports.open('summary');
-          //exports.open('plot');
+          //exports.open('commerce');
         }
         else {
           exports.open('newgame');
