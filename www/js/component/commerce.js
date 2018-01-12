@@ -55,6 +55,7 @@ define(function(require, exports, module) {
     `
   });
 
+
   Vue.component('market-trade', {
     props: ['item'],
     data: function() {
@@ -85,7 +86,7 @@ define(function(require, exports, module) {
         const hold   = Game.game.player.ship.cargo.get(this.item);
         const dock   = Game.game.place().currentSupply(this.item);
         const diff   = this.hold - hold;
-        this.dock    = dock + diff;
+        this.dock    = dock - diff;
         this.credits = cred - (diff * (diff > 0 ? this.buy : this.sell));
         this.cargo   = Game.game.player.ship.cargoUsed + diff;
       },
@@ -139,6 +140,7 @@ define(function(require, exports, module) {
     `,
   });
 
+
   Vue.component('market-report', {
     props: ['item'],
     data: function() {
@@ -165,6 +167,7 @@ define(function(require, exports, module) {
 </div>
     `
   });
+
 
   Vue.component('market-report-row', {
     props: ['item', 'body', 'relprices'],
