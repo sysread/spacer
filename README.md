@@ -5,6 +5,7 @@ Like a cross between TradeWars, Elite, The Expanse, and Firefly.
 
 ## Chrome
     cordova platform add browser --usegit
+    cordova plugin add cordova-plugin-browsersync
     cordova run browser -- --live-reload
 
 ## iOS
