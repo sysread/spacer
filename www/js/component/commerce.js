@@ -10,7 +10,7 @@ define(function(require, exports, module) {
   require('component/row');
   require('component/exchange');
 
-  Vue.component('exchange', {
+  Vue.component('market', {
     data: function() {
       return {
         trade: null,
@@ -50,12 +50,12 @@ define(function(require, exports, module) {
     </row>
   </div>
 
-  <exchange-trade v-if="trade" :item.sync="trade" />
+  <market-trade v-if="trade" :item.sync="trade" />
 </card>
     `
   });
 
-  Vue.component('exchange-trade', {
+  Vue.component('market-trade', {
     props: ['item'],
     data: function() {
       return {
@@ -133,13 +133,13 @@ define(function(require, exports, module) {
   </modal>
 
   <modal v-if="report" @close="report=false" close="Close" xclose=true :title="'System market report for ' + item">
-    <exchange-report :item="item" />
+    <market-report :item="item" />
   </modal>
 </div>
     `,
   });
 
-  Vue.component('exchange-report', {
+  Vue.component('market-report', {
     props: ['item'],
     data: function() {
       return {
@@ -161,12 +161,12 @@ define(function(require, exports, module) {
     <cell y=1 size="2" class="font-weight-bold text-right">Sell</cell>
   </row>
 
-  <exchange-report-row v-for="body in bodies" :key="body" :item="item" :body="body" :relprices="relprices" />
+  <market-report-row v-for="body in bodies" :key="body" :item="item" :body="body" :relprices="relprices" />
 </div>
     `
   });
 
-  Vue.component('exchange-report-row', {
+  Vue.component('market-report-row', {
     props: ['item', 'body', 'relprices'],
     computed: {
       kind:    function() { return system.kind(this.body) },
