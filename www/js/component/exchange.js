@@ -41,7 +41,7 @@ define(function(require, exports, module) {
       }
 
       return {
-        cargo:     Game.game.player.ship.cargo,
+        cargo: Game.game.player.ship.cargo,
         resources: resources,
       };
     },
@@ -65,7 +65,7 @@ define(function(require, exports, module) {
 <div>
   <def term="Cargo" :def="cargoUsed()" />
   <div v-for="item of resources.keys()">
-    <def>
+    <def v-if="resources.get(item) > 0">
       <span slot="term" class="text-capitalize">{{item}}</span>
       <slider slot="def" @update:value="amt => update(item, amt)" minmax=true :value="cargo.get(item)" min=0 :max="resources.get(item)">
         <button slot="pre"  type="button" class="btn btn-dark">{{store.get(item)}}</button>
