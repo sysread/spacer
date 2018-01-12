@@ -1,111 +1,15 @@
 <script type="text/javascript">
 
-require(['data', 'game', 'ui'],
-  function(data, Game, UI) {
-    let refresh = function() {
-      if (Game.game.player.ship.cargo.get('fuel') === 0 || Game.game.player.ship.tankIsFull())
-        $('#refuel-cargo-btn').prop('disabled', true).addClass('disabled');
-      else
-        $('#refuel-cargo-btn').prop('disabled', false).removeClass('disabled');
-    };
-
-    $('#refuel').on('show.bs.modal', (e) => {
-      let tank = Game.game.player.ship.fuel;
-      let need = Game.game.player.ship.refuelUnits();
-      let have = Game.game.player.ship.cargo.get('fuel');
-      let max  = Math.min(have, need);
-
-      let slider = new UI.Slider({
-        min        : 0,
-        max        : max,
-        step       : 1,
-        initial    : 0,
-        minmaxbtns : true,
-        callback   : (n) => {
-          $('#refuel-units').val(have - n);
-          $('#refuel-tonnes').val(Math.round(Math.min(Game.game.player.ship.tank, tank + (n * data.resources.fuel.mass)) * 10) / 10);
-        }
-      });
-
-      $('#refuel-slider').empty().append(slider.group);
-
-      $('#refuel-confirm').off('click').on('click', (e) => {
-        let units = slider.val;
-
-        if (units !== NaN && units > 0 && units <= max) {
-          Game.game.player.ship.refuel(units);
-          Game.game.player.ship.cargo.dec('fuel', units);
-          Game.game.turn();
-          Game.game.save_game();
-          Game.game.refresh();
-        }
-
-        refresh();
-      });
+require(
+  ['game', 'vendor/vue', 'component/shipyard'],
+  function(Game, Vue) {
+    const app = new Vue({
+      el: '#shipyard',
+      template: '<shipyard />',
     });
-
-    $('#fuel-mass').text(data.resources.fuel.mass);
-    $('#trade-in').on('click', e => {Game.open('ships')});
-    $('#addons').on('click', e => {Game.open('addons')});
-
-    refresh();
   }
 );
 
 </script>
 
-<div class="card">
-  <h3 class="card-header text-capitalize">Shipyard</h3>
-  <div class="card-body">
-    <div class="card-text">
-      <p class="mb-3">
-        The shipyard is like shipyards everywhere. There are piles of vaguely
-        forgotten things, robotic lifters trundling around, "gently used" ships
-        parked in distant berths, the occassional newly laid vessel standing
-        out for its lack of patches and hull corrosion.
-      </p>
-      <p class="mb-3">
-        And, of course, the yard manager who is only too happy to top off your
-        fuel tank, repair any damage your ship might have sustained, no
-        questions asked, heh, heh, and perform maintenance that cannot easily
-        be done while underway.
-      </p>
-      <p class="mb-3">
-        For a nominal fee, they will throw in an invisible corrosion protectant
-        coating, too. If you are looking for something new, they have a hauler
-        just came in, very good condition, barely a nick on her, pilot was a
-        nice older lady...
-      </p>
-    </div>
-    <div class="row p-1">
-      <button type="button" class="btn btn-dark m-1" data-toggle="modal" data-target="#refuel" id="refuel-cargo-btn">Transfer fuel</button>
-      <button type="button" class="btn btn-dark m-1" id="trade-in">Ships</button>
-      <button type="button" class="btn btn-dark m-1" id="addons">Upgrades</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal" id="refuel">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">Refuel your ship?</h5></div>
-      <div class="modal-body">
-        <p id="refuel-desc">
-          You may transfer fuel purchased in the market from your cargo hold to your ship's fuel tank here.
-          One cargo unit of fuel masses <span id="fuel-mass"></span> metric tonnes.
-        </p>
-        <div class="row">
-          <div class="col-3">Cargo (units)</div>
-          <div class="col-3"><input type="number" class="form-control" id="refuel-units" min="0" value="0" readonly></div>
-          <div class="col-3">Tank (tonnes)</div>
-          <div class="col-3"><input type="number" class="form-control" id="refuel-tonnes" min="0" value="0" readonly></div>
-        </div>
-        <div id="refuel-slider" class="row p-3"></div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-dark" id="refuel-confirm" data-dismiss="modal">Fill her up</button>
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="shipyard"></div>
