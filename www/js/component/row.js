@@ -39,11 +39,15 @@ define(function(require, exports, module) {
   Vue.component('defn', {template: '<cell brkpt="sm" size=9 class="text-muted"><slot /></cell>'});
 
   Vue.component('def', {
-    props: ['term', 'def', 'caps'],
+    props: ['term', 'def', 'caps', 'split', 'y'],
+    computed: {
+      termSize: function() { return this.split || 3 },
+      defnSize: function() { return 12 - this.termSize },
+    },
     template: `
 <row>
-  <term :class="{'text-capitalize': caps}">{{term}}<slot name="term" /></term>
-  <defn :class="{'text-capitalize': caps}">{{def}}<slot name="def" /></defn>
+  <cell brkpt="sm" :size="termSize" :y="y" class="font-weight-bold" :class="{'text-capitalize': caps}">{{term}}<slot name="term" /></cell>
+  <cell brkpt="sm" :size="defnSize" :y="y" class="text-muted" :class="{'text-capitalize': caps}">{{def}}<slot name="def" /></cell>
 </row>
     `,
   });

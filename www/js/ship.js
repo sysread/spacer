@@ -38,6 +38,7 @@ define(function(require, exports, module) {
     /*
      * Shipclass properties or those derived from them
      */
+    get type()         { return this.opt.shipclass }
     get shipclass()    { return data.shipclass[this.opt.shipclass] }
     get tank()         { return this.shipclass.tank }
     get drive()        { return data.drives[this.shipclass.drive] }

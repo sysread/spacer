@@ -1,12 +1,170 @@
 define(function(require, exports, module) {
-  const Game = require('game');
-  const Vue  = require('vendor/vue');
-  const data = require('data');
+  const Game    = require('game');
+  const Physics = require('physics');
+  const Ship    = require('ship');
+  const Vue     = require('vendor/vue');
+  const data    = require('data');
+  const util    = require('util');
 
   require('component/card');
   require('component/exchange');
   require('component/modal');
   require('component/row');
+
+
+  Vue.component('shipyard-ships', {
+    computed: {
+      ships: function() { return Object.keys(data.shipclass) },
+    },
+    template: `
+<card title="Ships">
+  <shipyard-ships-row v-for="ship in ships" :key="ship" :type="ship" />
+</card>
+    `,
+  });
+
+  Vue.component('shipyard-ships-row', {
+    props: ['type'],
+    data: function() { return { detail: false, buy: false } },
+    methods: {
+      csn: util.csn,
+      completeTradeIn: function() {
+        Game.game.player.credit(this.playerShipValue);
+        Game.game.player.debit(this.price);
+        Game.game.player.ship = this.ship;
+        Game.game.turn();
+        Game.game.save_game();
+      },
+    },
+    computed: {
+      // Pricing and availability
+      playerShipValue: function() { return Game.game.player.ship.price(true) },
+      tradeIn:         function() { return this.price - this.playerShipValue },
+      shipClass:       function() { return data.shipclass[this.type] },
+      isNonFaction:    function() { return this.shipClass.hasOwnProperty('faction') && Game.game.place().faction != this.shipClass.faction },
+      isRestricted:    function() { return this.shipClass.restricted && !Game.game.player.hasStanding(Game.game.place().faction, this.shipClass.restricted) },
+      isPlayerShip:    function() { return this.type === Game.game.player.ship.type },
+      isAvailable:     function() { return !this.isPlayerShip && !this.isNonFaction && !this.isRestricted },
+      ship:            function() { return new Ship({shipclass: this.type, fuel: this.shipClass.tank}) },
+
+      price: function() {
+        let price = this.ship.price();
+        price += price * Game.game.place().sales_tax;
+        price = Math.ceil(price);
+        return price;
+      },
+
+      // Physical properties
+      deltaV:           function() { return Math.round(this.ship.currentAcceleration() * 100) / 100 },
+      deltaVinG:        function() { return this.deltaV / Physics.G },
+      burnTime:         function() { return this.ship.maxBurnTime(this.deltaV, true) * data.hours_per_turn },
+      range:            function() { return Physics.range(this.burnTime * 3600, 0, this.deltaV) / Physics.AU },
+      nominalDeltaV:    function() { return Math.round(Math.min(0.5, this.deltaV * 0.6) * 100) / 100 },
+      nominalDeltaVinG: function() { return this.nominalDeltaV / Physics.G },
+      nominalBurnTime:  function() { return this.ship.maxBurnTime(this.nominalDeltaV, true) * data.hours_per_turn },
+      nominalRange:     function() { return Physics.range(this.nominalBurnTime * 3600, 0, 1)  / Physics.AU},
+    },
+    template: `
+<div v-if="!isNonFaction" class="container container-fluid">
+  <button @click="detail=!detail" type="button" class="btn btn-block text-capitalize my-3" :class="{'text-secondary': !isAvailable, 'btn-dark': detail, 'btn-secondary': !detail}">
+    {{type}}
+    <span class="badge badge-pill float-right">{{csn(price)}}</span>
+  </button>
+
+  <card v-if="detail">
+    <p v-if="isAvailable">
+      <button @click="buy=true" type="button" class="btn btn-dark">Purchase</button>
+    </p>
+
+    <p v-if="isRestricted" class="text-warning font-italic">
+      Your reputation with this faction precludes the sale of this ship to you.
+      That does not prevent you from salivating from the show room window, however.
+    </p>
+
+    <p v-if="isPlayerShip" class="text-warning font-italic">
+      You already own a ship of this class.
+    </p>
+
+    <p v-if="shipClass.desc" class="font-italic">
+      {{shipClass.desc}}
+    </p>
+
+    <def y=0 split="5" term="Price" :def="csn(price)" />
+
+    <def y=0 split="5" term="Trade in" :def="csn(tradeIn)" />
+
+    <def y=0 split="5">
+      <span slot="term">Range ({{deltaVinG.toFixed(2)}} G max)</span>
+      <span slot="def">{{range.toFixed(2)}} AU / {{csn(burnTime)}} hr</span>
+    </def>
+
+    <def y=0 split="5">
+      <span slot="term">Range ({{nominalDeltaVinG.toFixed(2)}} G max)</span>
+      <span slot="def">{{nominalRange.toFixed(2)}} AU / {{csn(nominalBurnTime)}} hr</span>
+    </def>
+
+    <def y=0 split="5">
+      <span slot="term">Drive</span>
+      <span slot="def">{{shipClass.drives}} {{ship.drive.name}}</span>
+    </def>
+
+    <def y=0 split="5">
+      <span slot="term">Maximum thrust</span>
+      <span slot="def">{{csn(ship.thrust)}} kN</span>
+    </def>
+
+    <def y=0 split="5">
+      <span slot="term">Fuel</span>
+      <span slot="def">{{shipClass.tank}} tonnes</span>
+    </def>
+
+    <def y=0 split="5">
+      <span slot="term">Hull</span>
+      <span slot="def">{{csn(shipClass.mass)}} tonnes</span>
+    </def>
+
+    <def y=0 split="5">
+      <span slot="term">Drive</span>
+      <span slot="def">{{csn(ship.driveMass)}} tonnes</span>
+    </def>
+
+    <def y=0 split="5">
+      <span slot="term">Total mass (fueled)</span>
+      <span slot="def">{{csn(ship.currentMass())}} tonnes</span>
+    </def>
+
+    <def y=0 split="5">
+      <span slot="term">Cargo</span>
+      <span slot="def">{{shipClass.cargo}}</span>
+    </def>
+
+    <def y=0 split="5">
+      <span slot="term">Hull</span>
+      <span slot="def">{{shipClass.hull}}</span>
+    </def>
+
+    <def y=0 split="5">
+      <span slot="term">Armor</span>
+      <span slot="def">{{shipClass.armor}}</span>
+    </def>
+
+    <def y=0 split="5">
+      <span slot="term">Hard points</span>
+      <span slot="def">{{shipClass.hardpoints}}</span>
+    </def>
+  </card>
+
+  <modal v-if="buy" title="Purchase" @close="buy=false" close="Cancel" xclose=true>
+    <p>You will pay {{csn(price)}} credits for a shiny, new {{type}}.</p>
+    <p>You will receive {{csn(playerShipValue)}} credits for trading in your ship.</p>
+    <p v-if="tradeIn < 0">You will make {{csn(-tradeIn)}} profit with this deal. </p>
+    <p v-else>You will pay {{csn(tradeIn)}} with this deal. </p>
+    <p>Do you wish to complete this exchange?</p>
+    <button @click="completeTradeIn" slot="footer" type="button" class="btn btn-dark" data-dismiss="modal">Trade in</button>
+  </modal>
+</div>
+    `,
+  });
 
 
   Vue.component('shipyard', {
