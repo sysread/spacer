@@ -43,8 +43,8 @@ define(function(require, exports, module) {
         <row y=0>
           <cell size=3 y=0>Buy</cell> <cell size=3 y=0 class="muted">{{csn(buy(item))}}</cell>
           <cell size=3 y=0>Sell</cell><cell size=3 y=0 class="muted">{{csn(sell(item))}}</cell>
-          <cell size=3 y=0>Dock</cell><cell size=3 y=0 class="muted">{{dock(item)}}</cell>
-          <cell size=3 y=0>Ship</cell><cell size=3 y=0 class="muted">{{hold(item)}}</cell>
+          <cell size=3 y=0>Dock</cell><cell size=3 y=0 class="muted" :class="{'font-weight-bold': dock(item) > 0, 'text-warning': dock(item) > 0}">{{dock(item)}}</cell>
+          <cell size=3 y=0>Ship</cell><cell size=3 y=0 class="muted" :class="{'font-weight-bold': hold(item) > 0, 'text-success': hold(item) > 0}">{{hold(item)}}</cell>
         </row>
       </cell>
     </row>
