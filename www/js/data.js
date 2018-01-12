@@ -19,7 +19,7 @@ define(function() {
     fab_health       : 20,
     base_pay         : 20, // credits/day
     grav_deltav_factor : 3, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
-    initial_ship     : 'trader',
+    initial_ship     : 'schooner',
 
     scales: {
       tiny   : 0.6,
