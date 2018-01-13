@@ -48,6 +48,8 @@ define(function(require, exports, module) {
     get thrust()       { return this.shipclass.drives * this.drive.thrust }
     get acceleration() { return Physics.deltav(this.thrust, this.mass) }
     get hardPoints()   { return this.shipclass.hardpoints }
+    get isRestricted() { return this.shipclass.restricted }
+    get faction()      { return this.shipclass.faction || null }
 
     get cargoSpace() {
       let space = this.shipclass.cargo;
@@ -86,7 +88,7 @@ define(function(require, exports, module) {
     }
 
     /*
-     * Properties of the ship itself
+     * Calculated properties of the ship itself
      */
     get cargoUsed()  { return this.cargo.sum() }
     get cargoLeft()  { return this.cargoSpace - this.cargoUsed }
@@ -101,6 +103,12 @@ define(function(require, exports, module) {
 
       return false;
     }
+
+    /*
+     * Methods
+     */
+    isPlayerShipType()  { return this.type === Game.game.player.ship.type }
+    playerHasStanding() { return !this.isRestricted || Game.game.player.hasStanding(Game.game.place().faction, this.isRestricted) }
 
     thrustRatio(deltav, mass) {
       if (mass === undefined) mass = this.currentMass();
