@@ -37,7 +37,7 @@ define(function(require, exports, module) {
           this.load(JSON.parse(saved));
           this.refresh();
           exports.open('summary');
-          //exports.open('ships');
+          //exports.open('addons');
         }
         else {
           exports.open('newgame');

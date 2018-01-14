@@ -1,9 +1,14 @@
 <script type="text/javascript">
 
-require(['ui/shipyard'], function(ShipYard) {
-  let addons = new ShipYard.Upgrades;
-  $('#addons').append(addons.root);
-});
+require(
+  ['game', 'vendor/vue', 'component/addons'],
+  function(Game, Vue) {
+    const app = new Vue({
+      el: '#addons',
+      template: '<addons />',
+    });
+  }
+);
 
 </script>
 

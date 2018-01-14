@@ -10,4 +10,7 @@ define(function(require, exports, module) {
     return util.R((value || 0).toString(), places);
   });
 
+  Vue.filter('unit', function (value, unit) {
+    return (value || 0).toString() + ' ' + unit;
+  });
 });

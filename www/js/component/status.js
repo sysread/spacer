@@ -74,7 +74,7 @@ define(function(require, exports, module) {
       thrust : function() {return util.csn(this.ship.thrust) + ' kN'},
       fuel   : function() {return `${Math.round(this.ship.fuel * 100) / 100}/${this.ship.tank}`},
       burn   : function() {return `${util.csn(this.ship.maxBurnTime() * data.hours_per_turn)} hours at maximum thrust`},
-      addons : function() {return ship.addons.map((a) => {return data.shipAddOns[a].name})},
+      addons : function() {return this.ship.addons.map((a) => {return data.shipAddOns[a].name})},
       cargo  : function() {
         const cargo = [];
         for (let [item, amt] of this.ship.cargo.entries()) {

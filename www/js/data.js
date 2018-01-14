@@ -273,8 +273,8 @@ define(function() {
         price      : 80000,
         restricted : 'Respected',
       },
-      torpedo: {
-        name       : 'Torpedo',
+      torpedoLauncher: {
+        name       : 'Torpedo launcher',
         desc       : 'Adds a self-guided torpedo launcher tube. Torpedos sold separately.',
         mass       : 20,
         damage     : 10,
