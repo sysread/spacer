@@ -1,6 +1,6 @@
 <script type="text/javascript">
 
-require(['game', 'ui/transit'], function(Game, Transit) {
+/* require(['game', 'ui/transit'], function(Game, Transit) {
   let root = $('#transit');
   let data = $('#spacer').data();
 
@@ -12,7 +12,25 @@ require(['game', 'ui/transit'], function(Game, Transit) {
   let transit = new Transit.Transit({plan: data.info});
   $('#transit').empty().append(transit.root);
   transit.begin();
-});
+}); */
+
+require(
+  ['game', 'vendor/vue', 'component/transit'],
+  function(Game, Vue) {
+    let data = $('#spacer').data();
+
+    if (data.state !== 'transit') {
+      Game.game.open('summary');
+      return;
+    }
+ 
+    const app = new Vue({
+      data: { plan: data.info },
+      el: '#transit',
+      template: '<transit :plan="plan" />',
+    });
+  }
+);
 
 </script>
 

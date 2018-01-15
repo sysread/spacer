@@ -132,12 +132,12 @@ define(function(require, exports, module) {
   <place-summary v-if="info" mini=true :place="place" class="my-4" />
 
   <div v-if="hasRoute">
-    <def term="Total"        :def="distance" />
-    <def term="Flip point"   :def="flipPoint" />
-    <def term="Acceleration" :def="deltaV" />
-    <def term="Max velocity" :def="maxVelocity" />
-    <def term="Fuel"         :def="fuel" />
-    <def term="Time"         :def="time" />
+    <def split="4" term="Total"        :def="distance" />
+    <def split="4" term="Flip point"   :def="flipPoint" />
+    <def split="4" term="Acceleration" :def="deltaV" />
+    <def split="4" term="Max velocity" :def="maxVelocity" />
+    <def split="4" term="Fuel"         :def="fuel" />
+    <def split="4" term="Time"         :def="time" />
 
     <slider minmax=true step="1" min="0" :max="routes.length - 1" :value.sync="selected" />
   </div>

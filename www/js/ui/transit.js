@@ -226,12 +226,6 @@ define(function(require, exports, module) {
           }
         });
     }
-
-    /*Attack() {
-      const combat = new Combat({
-        npc : this.npc,
-      });
-    }*/
   };
 
   return Transit;

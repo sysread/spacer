@@ -81,9 +81,25 @@ define(function(require, exports, module) {
     },
     methods: {
       returnToNav: function()     { Game.open('nav') },
+      place:       function(body) { return Game.game.place(body) },
       isSun:       function(body) { return body === 'sun' },
       isHere:      function(body) { return body === Game.game.locus },
-      place:       function(body) { return Game.game.place(body) },
+
+      isNear: function(body) {
+        if (this.isHere(body))
+          return true;
+
+        const key = this.key(body);
+
+        if (this.plot.hasOwnProperty(key)) {
+          for (const b of this.plot[key]) {
+            if (this.isHere(b))
+              return true;
+          }
+        }
+
+        return false;
+      },
 
       label: function(body) {
         const central = system.central(body);
@@ -123,7 +139,7 @@ define(function(require, exports, module) {
            :data-key="key(body)"
            :data-x="points[body][0]" 
            :data-y="points[body][1]"
-           :class="{'text-warning':isSun(body),'text-success':isHere(body),'font-weight-bold':isSun(body)||isHere(body)}">
+           :class="{'text-warning':isSun(body),'text-success':isNear(body),'font-weight-bold':isSun(body)||isNear(body)}">
           &bull;
 
           <ul v-if="key(body) === selected" class="plot plot-selected badge badge-dark">
