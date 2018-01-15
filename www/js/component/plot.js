@@ -80,9 +80,10 @@ define(function(require, exports, module) {
       }
     },
     methods: {
-      isSun:  function(body){ return body === 'sun' },
-      isHere: function(body){ return body === Game.game.locus },
-      place:  function(body){ return Game.game.place(body) },
+      returnToNav: function()     { Game.open('nav') },
+      isSun:       function(body) { return body === 'sun' },
+      isHere:      function(body) { return body === Game.game.locus },
+      place:       function(body) { return Game.game.place(body) },
 
       label: function(body) {
         const central = system.central(body);
@@ -109,34 +110,43 @@ define(function(require, exports, module) {
       },
     },
     template: `
-<card v-plot class="plot-root p-0 m-0" nopad=true>
-  <div @click.self="selected=null" style="position:absolute; width:100%; height:100%; left: 0; top 0;">
-    <span v-for="body of visible">
-      <a href="#"
-         class="plot-point"
-         @click.prevent="selected=key(body)"
-         :data-key="key(body)"
-         :data-x="points[body][0]" 
-         :data-y="points[body][1]"
-         :class="{'text-warning':isSun(body),'text-success':isHere(body),'font-weight-bold':isSun(body)||isHere(body)}">
-        &bull;
+<card>
+  <card-header slot="header">
+    <button type="button" class="btn btn-dark" @click="returnToNav">Back</button>
+  </card-header>
+  <div v-plot class="plot-root p-0 m-0">
+    <div @click.self="selected=null" style="position:absolute; width:100%; height:100%; left: 0; top 0;">
+      <span v-for="body of visible">
+        <a href="#"
+           class="plot-point"
+           @click.prevent="selected=key(body)"
+           :data-key="key(body)"
+           :data-x="points[body][0]" 
+           :data-y="points[body][1]"
+           :class="{'text-warning':isSun(body),'text-success':isHere(body),'font-weight-bold':isSun(body)||isHere(body)}">
+          &bull;
 
-        <ul v-if="key(body) === selected" class="plot plot-selected badge badge-dark">
-          <li v-for="body of plot[key(body)]">
-            <button type="button" class="btn btn-dark btn-block" @click="modal=isSun(body) ? null : body">{{label(body)}}</button>
-          </li>
-        </ul>
-      </a>
-    </span>
+          <ul v-if="key(body) === selected" class="plot plot-selected badge badge-dark">
+            <li v-for="body of plot[key(body)]">
+              <button type="button" class="btn btn-dark btn-block" @click="modal=isSun(body) ? null : body" :class="{'text-success': isHere(body)}">
+                <span v-if="isHere(body)">&#8982;</span>
+                <span :class="{'font-italic': isHere(body)}">{{label(body)}}</span>
+                <span v-if="isHere(body)">&#8982;</span>
+              </button>
+            </li>
+          </ul>
+        </a>
+      </span>
 
-    <modal v-if="modal" :title="label(modal)" nopad=true xclose=true close="Close" @close="modal=null">
-      <place-summary mini=true :place="place(modal)" class="m-0" />
-      <button slot="footer" type="button" class="btn btn-dark" @click="plotted=modal">
-        Plot course
-      </button>
-    </modal>
+      <modal v-if="modal" :title="label(modal)" nopad=true xclose=true close="Close" @close="modal=null">
+        <place-summary mini=true :place="place(modal)" class="m-0" />
+        <button v-if="!isHere(modal)" slot="footer" type="button" class="btn btn-dark" @click="plotted=modal">
+          Plot course
+        </button>
+      </modal>
 
-    <nav-plan v-if="plotted" @engage="beginTransit" @close="plotted=null" :body="plotted" :navcomp="navComp" />
+      <nav-plan v-if="plotted" @engage="beginTransit" @close="plotted=null" :body="plotted" :navcomp="navComp" />
+    </div>
   </div>
 </card>
     `,
