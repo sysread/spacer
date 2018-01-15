@@ -19,7 +19,7 @@ define(function() {
     fab_health       : 20,
     base_pay         : 20, // credits/day
     grav_deltav_factor : 3, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
-    initial_ship     : 'schooner',
+    initial_ship     : 'runner',
 
     scales: {
       tiny   : 0.6,
@@ -35,7 +35,7 @@ define(function() {
       minerals     : {mass: 50, mine: {tics: 3}},
       hydrocarbons : {mass: 8,  mine: {tics: 4}},
       food         : {mass: 30, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 1, minerals: 1, hydrocarbons: 2}}},
-      fuel         : {mass: 4,  recipe: {tics: 2, materials: {minerals: 1}}},
+      fuel         : {mass: 1,  recipe: {tics: 2, materials: {minerals: 1}}},
       metal        : {mass: 90, recipe: {tics: 2, materials: {ore: 4}}},
       ceramics     : {mass: 30, recipe: {tics: 3, materials: {minerals: 1, water: 1}}},
       medicine     : {mass: 10, recipe: {tics: 4, materials: {food: 1, hydrocarbons: 1}}},
@@ -209,7 +209,7 @@ define(function() {
         thrust    : 800,
         mass      : 10,
         desc      : 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
-        burn_rate : 0.065,
+        burn_rate : 0.323,
         hull      : 1,
       },
       fusion: {
@@ -217,7 +217,7 @@ define(function() {
         thrust    : 9200,
         mass      : 40,
         desc      : 'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
-        burn_rate : 0.62,
+        burn_rate : 1.817,
         hull      : 5,
       }
     },
@@ -227,6 +227,7 @@ define(function() {
       shuttle     : {hull: 2,  armor: 0,  cargo: 2,  hardpoints: 0,  mass: 200,   tank: 2,   drives: 1,   drive: 'ion',    restricted: false},
       schooner    : {hull: 4,  armor: 1,  cargo: 8,  hardpoints: 1,  mass: 450,   tank: 6,   drives: 2,   drive: 'ion',    restricted: false},
       surveyor    : {hull: 6,  armor: 2,  cargo: 10, hardpoints: 2,  mass: 600,   tank: 15,  drives: 4,   drive: 'ion',    restricted: false},
+      runner      : {hull: 4,  armor: 2,  cargo: 14, hardpoints: 2,  mass: 850,   tank: 10,  drives: 3,   drive: 'ion',    restricted: false},
 
       /* Merchant */
       trader      : {hull: 4,  armor: 2,  cargo: 25, hardpoints: 2,  mass: 1200,  tank: 30,  drives: 10,  drive: 'ion',    restricted: false},

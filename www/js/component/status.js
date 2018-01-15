@@ -72,7 +72,7 @@ define(function(require, exports, module) {
     computed: {
       mass   : function() {return util.csn(Math.floor(this.ship.currentMass())) + ' tonnes'},
       thrust : function() {return util.csn(this.ship.thrust) + ' kN'},
-      fuel   : function() {return `${Math.round(this.ship.fuel * 100) / 100}/${this.ship.tank}`},
+      tank   : function() {return util.R(this.ship.fuel, 2) + '/' + this.ship.tank},
       burn   : function() {return `${util.csn(this.ship.maxBurnTime() * data.hours_per_turn)} hours at maximum thrust`},
       addons : function() {return this.ship.addons.map((a) => {return data.shipAddOns[a].name})},
       cargo  : function() {
@@ -92,17 +92,17 @@ define(function(require, exports, module) {
   <card-header slot="header">
     <h3>Ship</h3>
   </card-header>
-  <def caps=true term="Class" :def="ship.opt.shipclass" />
-  <def caps=true term="Cargo"><span slot="def">{{ship.cargoUsed}}/{{ship.cargoSpace}}</span></def>
-  <def caps=true term="Hull" :def="ship.hull" />
-  <def caps=true term="Armor" :def="ship.armor" />
-  <def caps=true term="Hard points" :def="ship.hardPoints" />
+  <def term="Class" :def="ship.opt.shipclass" />
+  <def term="Cargo"><span slot="def">{{ship.cargoUsed}}/{{ship.cargoSpace}}</span></def>
+  <def term="Hull" :def="ship.hull" />
+  <def term="Armor" :def="ship.armor" />
+  <def term="Hard points" :def="ship.hardPoints" />
   <def term="Mass" :def="mass" />
   <def term="Thrust" :def="thrust" />
-  <def caps=true term="Fuel" :def="fuel" />
+  <def term="Fuel" :def="tank" />
   <def term="Range" :def="burn" />
-  <def caps=true term="Drives" :def="ship.shipclass.drives" />
-  <def caps=true term="Drive type" :def="ship.shipclass.drive" />
+  <def term="Drives" :def="ship.shipclass.drives" />
+  <def term="Drive type" :def="ship.shipclass.drive" />
 
   <def term="Upgrades">
     <ul slot="def" v-if="ship.addons.length > 0">

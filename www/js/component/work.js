@@ -73,10 +73,10 @@ define(function(require, exports, module) {
     </button>
   </modal>
 
-  <modal v-if="modal === 'collect'" title="Rewards">
+  <modal v-if="modal === 'collect'" title="Rewards" footer=true>
     <div v-if="quota">
       <p>In addition to {{pay}} c in wages, your crew collected extra resources over the quota which you are entitled to keep:</p>
-      <exchange :store="result" />
+      <exchange :store="result" style="font-size: 0.9em" />
     </div>
     <div v-else>
       <p>We appreciate you helping out. No luck on beating the quota, but you did earn an honest paycheck to the tune of {{pay}} c.</p>

@@ -24,10 +24,9 @@ define(function(require, exports, module) {
 
           for (let transit of this.astrogator(this.orig, dest)) {
             if (transit.accel > this.maxdv) continue;
-            if (transit.turns > data.hours_per_turn * this.ship.maxBurnTime(transit.accel)) continue;
+            if (transit.turns > this.ship.maxBurnTime(transit.accel)) continue;
 
-            let burn = data.hours_per_turn * this.ship.burnRate(transit.accel, this.ship.currentMass());
-            let fuel = transit.turns * burn;
+            let fuel = transit.turns * this.ship.burnRate(transit.accel, this.ship.currentMass());
 
             if (prev === undefined || prev >= fuel) {
               prev = fuel;
@@ -45,7 +44,6 @@ define(function(require, exports, module) {
               transit : transit,
               turns   : transit.turns,
               fuel    : fuel,
-              burn    : burn
             });
           }
         }

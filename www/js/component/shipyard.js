@@ -71,16 +71,14 @@ define(function(require, exports, module) {
       need:  function() { return Game.game.player.ship.refuelUnits() },
       have:  function() { return Game.game.player.ship.cargo.get('fuel') },
       max:   function() { return Math.min(this.have, this.need) },
-      mass:  function() { return data.resources.fuel.mass },
-      tank:  function() { return Math.min(Game.game.player.ship.tank, Math.floor(Game.game.player.ship.fuel) + (this.mass * this.change)) },
+      tank:  function() { return Math.min(Game.game.player.ship.tank, Game.game.player.ship.fuel + this.change) },
       cargo: function() { return Game.game.player.ship.cargo.get('fuel') - this.change },
     },
     methods: {
       fillHerUp: function() {
-        const units = this.change;
-        if (units !== NaN && units > 0 && units <= this.max) {
-          Game.game.player.ship.refuel(units);
-          Game.game.player.ship.cargo.dec('fuel', units);
+        if (this.change !== NaN && this.change > 0 && this.change <= this.max) {
+          Game.game.player.ship.refuel(this.change);
+          Game.game.player.ship.cargo.dec('fuel', this.change);
           Game.game.turn();
           Game.game.save_game();
           Game.game.refresh();
@@ -92,12 +90,11 @@ define(function(require, exports, module) {
 <modal title="Refuel your ship?" close="Nevermind" xclose=true @close="$emit('close')">
   <p>
     You may transfer fuel purchased in the market from your cargo hold to your ship's fuel tank here.
-    One cargo unit of fuel masses {{mass}}  metric tonnes.
   </p>
 
   <row>
-    <cell size=3>Cargo (units)</cell><cell size=3><input :value="Math.floor(cargo)" type="number" class="form-control" readonly /></cell>
-    <cell size=3>Tank (tonnes)</cell><cell size=3><input :value="Math.floor(tank)"  type="number" class="form-control" readonly /></cell>
+    <cell size=3>Cargo</cell><cell size=3><input :value="Math.floor(cargo)" type="number" class="form-control" readonly /></cell>
+    <cell size=3>Tank</cell><cell size=3><input :value="Math.floor(tank)" type="number" class="form-control" readonly /></cell>
   </row>
 
   <slider :value.sync="change" min=0 :max="max" step="1" minmax=true />

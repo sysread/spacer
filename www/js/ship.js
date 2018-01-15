@@ -175,16 +175,16 @@ define(function(require, exports, module) {
       return Math.floor(fuel / this.burnRate(accel, mass));
     }
 
-    refuelUnits() {return Math.ceil((this.tank - this.fuel) / data.resources.fuel.mass) }
-    tankIsFull()  {return this.fuel === this.tank}
+    refuelUnits() {return Math.ceil(this.tank - this.fuel)}
+    tankIsFull()  {return Math.floor(this.fuel) >= this.tank}
     tankIsEmpty() {return this.fuel === 0}
 
     refuel(units) {
-      this.fuel = Math.min(this.tank, this.fuel + (units * data.resources.fuel.mass));
+      this.fuel = Math.min(this.tank, this.fuel + units);
     }
 
     burn(deltav) {
-      this.fuel = Math.max(0, this.fuel - this.burnRate(deltav));
+      this.fuel = Math.max(0, this.fuel - this.burnRate(deltav, this.currentMass()));
       return this.fuel;
     }
 
@@ -227,7 +227,7 @@ define(function(require, exports, module) {
 
     fuelValue() {
       let place = Game.game.place();
-      return place.sellPrice('fuel') * Math.floor(this.fuel / data.resources.fuel.mass);
+      return place.sellPrice('fuel') * Math.floor(this.fuel);
     }
 
     addOnValue() {

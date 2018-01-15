@@ -32,9 +32,8 @@ define(function(require, exports, module) {
       playerLocus:       function(){ return Game.game.locus },
     },
     methods: {
-      openPlot: function() {
-        Game.open('plot');
-      },
+      isReachable: function(body) { return this.navComp.transits[body].length > 0 },
+      openPlot: function() { Game.open('plot') },
       beginTransit: function(body, selected) {
         $('#spacer').data('info', this.navComp.transits[body][selected].transit);
         this.opened = null;
@@ -59,7 +58,8 @@ define(function(require, exports, module) {
     v-if="body !== playerLocus"
     :key="body"
     :place="body"
-    :opened.sync="opened" />
+    :opened.sync="opened"
+    :disabled="!isReachable(body)" />
 
   <nav-plan v-if="opened" @engage="beginTransit" @close="opened=null" :body="opened" :navcomp="navComp" />
 </card>
@@ -67,7 +67,7 @@ define(function(require, exports, module) {
   });
 
   Vue.component('nav-dest', {
-    props: ['place'],
+    props: ['place', 'disabled'],
     computed: {
       name:    function(){ return system.short_name(this.place) },
       faction: function(){ return system.faction(this.place) },
@@ -82,7 +82,11 @@ define(function(require, exports, module) {
     template: `
 <div class="row">
   <div class="col col-sm-6 py-2">
-    <button @click="$emit('update:opened', place)" type="button" class="btn btn-dark btn-block text-left">
+    <button
+      @click="$emit('update:opened', place)"
+      type="button"
+      class="btn btn-dark btn-block text-left"
+      :class="{'btn-dark': !disabled, 'disabled': disabled}">
       {{name}}
       <span v-if="isMoon" class="badge badge-pill float-right">{{kind}}</span>
     </button>
@@ -115,7 +119,7 @@ define(function(require, exports, module) {
       distance:    function(){ if (this.hasRoute) return `${Math.round(this.plan.au * 100) / 100} AU (${util.csn(Math.round(this.plan.km))} km)`},
       flipPoint:   function(){ if (this.hasRoute) return `${Math.round((this.plan.au / 2) * 100) / 100} AU (${util.csn(Math.round(this.plan.km / 2))} km)`},
       maxVelocity: function(){ if (this.hasRoute) return util.csn(util.R(this.plan.maxVelocity / 1000)) + ' km/s' },
-      fuel:        function(){ if (this.hasRoute) return (Math.round(this.route.fuel * 100) / 100) + ' tonnes (est)' },
+      fuel:        function(){ if (this.hasRoute) return util.R(this.route.fuel, 2) + ' tonnes (est)' },
       time:        function(){ if (this.hasRoute) return `${util.csn(this.plan.days_hours[0])} days, ${util.csn(this.plan.days_hours[1])} hours` },
       deltaV:      function(){
         if (this.hasRoute) {
