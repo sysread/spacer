@@ -12,6 +12,10 @@ define(function(require, exports, module) {
       return;
     }
 
+    if (!window.localStorage.getItem('game')) {
+      name = 'newgame';
+    }
+
     const path = $(`#spacer-nav a[data-name='${name}']`).data('path') || name + '.html';
 
     $('#spacer-nav a').removeClass('active');
