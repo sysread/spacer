@@ -28,7 +28,10 @@ define(function(require, exports, module) {
   <def caps=true term="Economy" :def="place.size" />
   <def caps=true term="Details" :def="traits" />
   <def caps=true term="Special" :def="conds" />
-  <card-text v-if="!mini" v-for="(line, idx) of desc" :key="idx"><i>{{line}}</i></card-text>
+
+  <card v-if="!mini">
+    <card-text v-for="(line, idx) of desc" :key="idx" class="font-italic">{{line}}</card-text>
+  </card>
 </card>
     `,
   });

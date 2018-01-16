@@ -1,124 +1,16 @@
 <script type="text/javascript">
 
-require(['data', 'game', 'person', 'ship', 'system', 'util'],
-  function(data, Game, Person, Ship, system, util) {
-    const R = util.R;
-
-    for (let body in data.bodies) {
-      $('#home').append(`<option value="${body}">${system.name(body)}</option>`);
-    }
-
-    $('#home').change((e) => {
-      const home    = $('#home').val();
-      const gravity = R(system.gravity(home), 3);
-
-      $('#home-info').html( data.bodies[home].desc.split('|').map(t => {return `<p>${t}</p>`}).join('') );
-      $('#home-info').html($('#' + home).html());
-      $('#home-grav').text(gravity);
-      $('#home-deltav').text(R(gravity * data.grav_deltav_factor, 3));
-
-      const faction = data.bodies[home].faction;
-      $('#faction').val(data.factions[faction].full_name);
-      $('#faction-info').html( data.factions[faction].desc.split('|').map(t => {return `<p>${t}</p>`}).join('') );
-    });
-
-    $('#home').val('mars');
-    $('#home').change();
-
-    $('#starting-game').on('shown.bs.modal', (e) => {
-      $('#spacer-nav').data('in-transit', true);
-      $('#starting-game-progress').css('width', '0%');
-
-      const place   = $('#home').val();
-      const faction = data.bodies[place].faction;
-      const ship    = data.initial_ship;
-
-      const me = new Person({
-        name    : $('#name').val(),
-        home    : place,
-        faction : faction,
-        money   : 1000,
-        ship    : new Ship({
-          shipclass : ship,
-          fuel      : data.shipclass[ship].tank
-        })
-      });
-
-      me.ship.fuel = data.shipclass[ship].tank;
-      Game.game.new_game(me, place);
-
-      const turns = data.initial_turns;
-      const step  = Math.ceil(turns/10);
-      let done  = 0;
-      let timer;
-
-      const interval = function() {
-        if (done < turns) {
-          const count = Math.min(turns - done, step);
-          const pct = Math.ceil((done / turns) * 100);
-          done += count;
-          Game.game.turn(count);
-          $('#starting-game-progress').text(`${pct}%`).css('width', `${pct}%`);
-          timer = window.setTimeout(interval, 200);
-        }
-        else {
-          $('#starting-game-progress').css('width', '100%').text('Done!');
-          Game.game.refresh();
-          $('#starting-game').modal('hide');
-          $('#spacer-nav').data('in-transit', false);
-          window.setTimeout(() => {Game.open('summary')}, 100);
-        }
-      };
-
-      timer = window.setTimeout(interval, 50);
+require(
+  ['game', 'vendor/vue', 'component/newgame'],
+  function(Game, Vue) {
+    const app = new Vue({
+      el: '#newgame',
+      data: {},
+      template: '<new-game />',
     });
   }
 );
 
 </script>
 
-<div class="card p-3 mb-4">
-  <h3 class="card-header">
-    New Game
-    <span class="float-right">
-      <button id="start-game" type="button" class="btn btn-dark" data-toggle="modal" data-target="#starting-game">Start game</button>
-    </span>
-  </h3>
-  <div class="card-body">
-    <form>
-      <label for="name">Captain name</label>
-      <input class="form-control" type="text" name="name" id="name" value="Marco Solo">
-      <br>
-
-      <label for="home">Home</label>
-      <select class="form-control text-capitalize" name="home" id="home"></select>
-      <div class="form-text text-muted" id="home-info"></div>
-      <div class="form-text text-muted">
-        As a native growing up under <span id="home-grav"></span>G of
-        gravity, your physiology can tolerate a maximum sustained acceleration
-        of <span id="home-deltav"></span>G.
-      </div>
-      <br>
-
-      <label for="faction">Faction</label>
-      <input class="form-control" type="text" name="faction" id="faction" readonly>
-      <div class="form-text text-muted" id="faction-info"></div>
-      <br>
-    </form>
-  </div>
-</div>
-
-<div class="modal" id="starting-game" data-backdrop="static">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Starting game</h5>
-      </div>
-      <div class="modal-body">
-        <div class="progress bg-dark">
-          <div id="starting-game-progress" class="progress-bar bg-warning" style="height: 35px; width: 0%">0%</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="newgame" />
