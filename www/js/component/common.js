@@ -4,17 +4,25 @@ define(function(require, exports, module) {
 
   require('component/modal');
 
-  Vue.filter('csn', function (value) {
+  Vue.filter('csn', function(value) {
     return util.csn((value || 0).toString());
   });
 
-  Vue.filter('R', function (value, places) {
+  Vue.filter('R', function(value, places) {
     return util.R((value || 0).toString(), places);
   });
 
-  Vue.filter('unit', function (value, unit) {
+  Vue.filter('unit', function(value, unit) {
     return (value || 0).toString() + ' ' + unit;
   });
+
+  Vue.filter('caps', function(value) {
+    return value.toString().replace(/\b([a-z])/g, function(str) { return str.toUpperCase() });
+  });
+
+  Vue.component('caps', { template: '<span class="text-capitalize"><slot /></span>' });
+  Vue.component('lc',   { template: '<span class="text-lowercase"><slot /></span>'  });
+  Vue.component('uc',   { template: '<span class="text-uppercase"><slot /></span>'  });
 
   Vue.component('progress-bar', {
     props: ['percent', 'display'],
@@ -29,23 +37,39 @@ define(function(require, exports, module) {
     `,
   });
 
+  Vue.component('btn', {
+    props: ['disabled', 'muted', 'block', 'close'],
+    template: `
+<button
+    type="button"
+    :class="{'btn': true, 'btn-dark': true, 'btn-secondary': muted, 'disabled': disabled, 'btn-block': block}"
+    :data-dismiss="close ? 'modal' : ''"
+    @click="$emit('click')" >
+  <slot />
+</button>
+    `,
+  });
+
   Vue.component('ask', {
     props: ['choices'],
     data: function() { return { choice: null } },
     template: `
 <modal @close="$emit('pick', choice)" static=true>
   <p><slot/></p>
-  <button v-for="(msg, id) in choices" :key="choice" @click="choice=id" type="button" class="btn btn-dark btn-block" data-dismiss="modal">
+  <btn v-for="(msg, id) in choices" :key="choice" @click="choice=id" block=1 close=1>
     {{msg}}
-  </button>
+  </btn>
 </modal>
     `
   });
 
   Vue.component('ok', {
-    template: `
-<modal close="OK" @close="$emit('ok')">
-  <p><slot/></p>
-</modal>`,
+    template: `<modal close="OK" @close="$emit('ok')"><p><slot/></p></modal>`,
+  });
+
+  Vue.component('confirm', {
+    props: ['yes', 'no'],
+    methods: { trigger: function(choice) { this.$emit('confirm', choice === 'Y') } },
+    template: `<ask :choices="{Y: yes, N: no}" @pick="trigger"><slot /></ask>`,
   });
 });

@@ -36,8 +36,8 @@ define(function(require, exports, module) {
         if (saved) {
           this.load(JSON.parse(saved));
           this.refresh();
-          exports.open('summary');
-          //exports.open('addons');
+          //exports.open('summary');
+          exports.open('fabricators');
         }
         else {
           exports.open('newgame');

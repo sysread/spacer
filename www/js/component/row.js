@@ -45,7 +45,7 @@ define(function(require, exports, module) {
       defnSize: function() { return 12 - this.termSize },
     },
     template: `
-<row>
+<row :y="y">
   <cell brkpt="sm" :size="termSize" :y="y" class="font-weight-bold" :class="{'text-capitalize': caps}">{{term}}<slot name="term" /></cell>
   <cell brkpt="sm" :size="defnSize" :y="y" class="text-muted" :class="{'text-capitalize': caps}">{{def}}<slot name="def" /></cell>
 </row>

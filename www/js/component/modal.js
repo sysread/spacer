@@ -1,6 +1,8 @@
 define(function(require, exports, module) {
   const Vue = require('vendor/vue');
 
+  require('component/common');
+
   Vue.component('modal', {
     props: ['title', 'footer', 'close', 'xclose', 'static', 'nopad', 'size'],
     directives: {
@@ -27,7 +29,7 @@ define(function(require, exports, module) {
       </div>
       <div v-if="close||footer" class="modal-footer">
         <slot name="footer" />
-        <button v-if="close" type="button" class="btn btn-secondary" data-dismiss="modal">{{close}}</button>
+        <btn v-if="close" muted=1 close=1>{{close}}</btn>
       </div>
     </div>
   </div>

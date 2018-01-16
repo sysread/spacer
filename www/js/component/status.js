@@ -70,10 +70,10 @@ define(function(require, exports, module) {
   Vue.component('ship-status', {
     props: ['ship'],
     computed: {
-      mass   : function() {return util.csn(Math.floor(this.ship.currentMass())) + ' tonnes'},
-      thrust : function() {return util.csn(this.ship.thrust) + ' kN'},
+      mass   : function() {return util.csn(Math.floor(this.ship.currentMass()))},
+      thrust : function() {return util.csn(this.ship.thrust)},
       tank   : function() {return util.R(this.ship.fuel, 2) + '/' + this.ship.tank},
-      burn   : function() {return `${util.csn(this.ship.maxBurnTime() * data.hours_per_turn)} hours at maximum thrust`},
+      burn   : function() {return util.csn(this.ship.maxBurnTime() * data.hours_per_turn)},
       addons : function() {return this.ship.addons.map((a) => {return data.shipAddOns[a].name})},
       cargo  : function() {
         const cargo = [];
@@ -92,21 +92,20 @@ define(function(require, exports, module) {
   <card-header slot="header">
     <h3>Ship</h3>
   </card-header>
-  <def term="Class" :def="ship.opt.shipclass" />
+  <def term="Class" :def="ship.opt.shipclass|caps" />
   <def term="Cargo"><span slot="def">{{ship.cargoUsed}}/{{ship.cargoSpace}}</span></def>
   <def term="Hull" :def="ship.hull" />
   <def term="Armor" :def="ship.armor" />
   <def term="Hard points" :def="ship.hardPoints" />
-  <def term="Mass" :def="mass" />
-  <def term="Thrust" :def="thrust" />
-  <def term="Fuel" :def="tank" />
-  <def term="Range" :def="burn" />
-  <def term="Drives" :def="ship.shipclass.drives" />
-  <def term="Drive type" :def="ship.shipclass.drive" />
+  <def term="Mass" :def="mass|unit('tonnes')" />
+  <def term="Thrust" :def="thrust|unit('kN')" />
+  <def term="Fuel" :def="tank|unit('tonnes')" />
+  <def term="Range" :def="burn|unit('hours at maximum thrust')" />
+  <def term="Drive" :def="ship.shipclass.drives|unit(ship.shipclass.drive)" />
 
   <def term="Upgrades">
     <ul slot="def" v-if="ship.addons.length > 0">
-      <li v-for="addon of addons">{{addon}}</li>
+      <li v-for="addon of addons">{{addon|caps}}</li>
     </ul>
     <span slot="def" v-else>None</span>
   </def>
