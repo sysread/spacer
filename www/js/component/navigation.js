@@ -7,6 +7,7 @@ define(function(require, exports, module) {
   const Game    = require('game');
   const NavComp = require('navcomp');
 
+  require('component/common');
   require('component/card');
   require('component/modal');
   require('component/exchange');
@@ -45,8 +46,10 @@ define(function(require, exports, module) {
     template: `
 <card>
   <card-header slot="header">
-    <h3>Navigation</h3>
-    <button @click="openPlot()" type="button" class="btn btn-dark btn-sm float-right ml-2">Map</button>
+    <h3>
+      Navigation
+      <btn @click="openPlot()">Map</btn>
+    </h3>
   </card-header>
 
   <card-text>Your navigational computer automatically calculates the optimal trajectory from your current location to the other settlements in the system.</card-text>
