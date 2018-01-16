@@ -1,9 +1,8 @@
 define(function(require, exports, module) {
-  const Game    = require('game');
-  const Vue     = require('vendor/vue');
-  const data    = require('data');
-  const system  = require('system');
-  const util    = require('util');
+  const Game = require('game');
+  const Vue  = require('vendor/vue');
+  const data = require('data');
+  const util = require('util');
 
   require('component/modal');
   require('component/card');
@@ -170,11 +169,9 @@ define(function(require, exports, module) {
   Vue.component('market-report-row', {
     props: ['item', 'body', 'relprices'],
     computed: {
-      kind:    function() { return system.kind(this.body) },
       buy:     function() { return Game.game.place().buyPrice(this.item) },
       sell:    function() { return Game.game.place().sellPrice(this.item) },
       report:  function() { return Game.game.market(this.body) },
-      hasData: function() { return this.report !== null },
       info:    function() { if (this.hasData) return this.report.data[this.item] },
       isLocal: function() { return this.body === Game.game.locus },
     },
