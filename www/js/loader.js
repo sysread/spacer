@@ -29,4 +29,5 @@ requirejs(['game'], function(game) {
   }
 
   document.addEventListener("deviceready", onDeviceReady, false);
+  document.addEventListener("backbutton", function (e) {e.preventDefault()}, false);
 });
