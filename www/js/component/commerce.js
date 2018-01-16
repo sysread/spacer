@@ -180,7 +180,10 @@ define(function(require, exports, module) {
     },
     template: `
 <row y=0 :class="{'font-weight-bold': isLocal, 'bg-dark': isLocal}"">
-  <cell y=0 size=6>{{body|caps}}</cell>
+  <cell y=0 size=6>
+    <span class="badge badge-pill">age: {{report.age}}</span>
+    {{body|caps}}
+  </cell>
 
   <cell y=0 size=3 :class="{'text-success': info.buy < sell, 'text-right': 1}">
     <span v-if="relprices">{{sell - info.buy}}</span>
