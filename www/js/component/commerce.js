@@ -37,7 +37,7 @@ define(function(require, exports, module) {
   <div class="container container-fluid">
     <row v-for="item of resources" :key="item">
       <cell size=4 brkpt="sm" y=1>
-        <button @click="trade=item" type="button" class="btn btn-dark btn-block text-capitalize">{{item}}</button>
+        <btn @click="trade=item" block=1>{{item|caps}}</btn>
       </cell>
       <cell size=8 brkpt="sm" y=1>
         <row y=0>
@@ -130,7 +130,7 @@ define(function(require, exports, module) {
 
     <slider minmax=true :value.sync="hold" min=0 :max="max" step=1 @update:value="updateState" />
 
-    <button @click="complete()" slot="footer" type="button" class="btn btn-dark" data-dismiss="modal">Complete transaction</button>
+    <btn @click="complete" slot="footer" close=1>Complete transaction</btn>
   </modal>
 
   <modal v-if="report" @close="report=false" close="Close" xclose=true :title="'System market report for ' + item">
@@ -153,14 +153,12 @@ define(function(require, exports, module) {
     },
     template: `
 <div class="container container-fluid" style="font-size: 0.9em">
-  <button @click="relprices=!relprices" type="button" class="btn btn-dark">Toggle relative prices</button>
+  <btn block=1 @click="relprices=!relprices" class="my-3">Toggle relative prices</btn>
 
-  <row y=0>
-    <cell y=1 size="4" class="font-weight-bold">Market</cell>
-    <cell y=1 size="2" class="font-weight-bold text-right" title="Light speed time delay of market data in hours">Age</cell>
-    <cell y=1 size="2" class="font-weight-bold text-right">Stock</cell>
-    <cell y=1 size="2" class="font-weight-bold text-right">Buy</cell>
-    <cell y=1 size="2" class="font-weight-bold text-right">Sell</cell>
+  <row y=0 class="font-weight-bold">
+    <cell y=0 size=6>Market</cell>
+    <cell y=0 size=3 class="text-right">Buy</cell>
+    <cell y=0 size=3 class="text-right">Sell</cell>
   </row>
 
   <market-report-row v-for="body in bodies" :key="body" :item="item" :body="body" :relprices="relprices" />
@@ -178,24 +176,20 @@ define(function(require, exports, module) {
       report:  function() { return Game.game.market(this.body) },
       hasData: function() { return this.report !== null },
       info:    function() { if (this.hasData) return this.report.data[this.item] },
-    },
-    methods: {
-      csn: function(n) { return util.csn(n) },
+      isLocal: function() { return this.body === Game.game.locus },
     },
     template: `
-<row y=0>
-  <cell y=1 size="4" class="text-capitalize">{{body}}</cell>
-  <cell y=1 size="2" class="text-right">{{report.age}}</cell>
-  <cell y=1 size="2" class="text-right">{{csn(info.stock)}}</cell>
+<row y=0 :class="{'font-weight-bold': isLocal, 'bg-dark': isLocal}"">
+  <cell y=0 size=6>{{body|caps}}</cell>
 
-  <cell y=1 size="2" class="text-right" :class="{'text-success': info.buy < sell}">
+  <cell y=0 size=3 :class="{'text-success': info.buy < sell, 'text-right': 1}">
     <span v-if="relprices">{{sell - info.buy}}</span>
-    <span v-else>{{csn(info.buy)}}</span>
+    <span v-else>{{info.buy}}</span>
   </cell>
 
-  <cell y=1 size="2" class="text-right" :class="{'text-success': info.sell > buy}">
+  <cell y=0 size=3 :class="{'text-success': info.sell > buy, 'text-right': 1}">
     <span v-if="relprices">{{info.sell - buy}}</span>
-    <span v-else>{{csn(info.sell)}}</span>
+    <span v-else>{{info.sell}}</span>
   </cell>
 </row>
     `,
