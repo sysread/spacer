@@ -29,5 +29,12 @@ requirejs(['game'], function(game) {
   }
 
   document.addEventListener("deviceready", onDeviceReady, false);
-  document.addEventListener("backbutton", function (e) {e.preventDefault()}, false);
+
+  document.addEventListener("backbutton", function (e) {
+    if (confirm('Are you sure you want to quit?')) {
+      return navigator.app.exitApp();
+    }
+
+    e.preventDefault();
+  }, false);
 });
