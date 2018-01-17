@@ -4,10 +4,7 @@ define(function(require, exports, module) {
   Vue.component('row', {
     props: ['y'],
     computed: {
-      yClass: function() {
-        if (this.y) return 'py-' + this.y;
-        else return 'py-2';
-      },
+      yClass: function() { return this.y ? 'py-' + this.y : 'py-2' },
     },
     template: '<div class="row" :class="yClass"><slot /></div>',
   });
@@ -15,21 +12,13 @@ define(function(require, exports, module) {
   Vue.component('cell', {
     props: ['brkpt', 'size', 'y'],
     computed: {
-      colClass: function() {
+      classList: function() { return [this.colClass, this.yClass].join(' ') },
+      yClass:    function() { return this.y ? 'py-' + this.y : 'py-1' },
+      colClass:  function() {
         const parts = ['col'];
         if (this.brkpt) parts.push(this.brkpt);
         if (this.size)  parts.push(this.size);
         return parts.length > 1 ? parts.join('-') : '';
-      },
-      yClass: function() {
-        if (this.y) {
-          return 'py-' + this.y;
-        } else {
-          return 'py-1';
-        }
-      },
-      classList: function() {
-        return [this.colClass, this.yClass].join(' ');
       },
     },
     template: '<div :class="classList"><slot /></div>',
