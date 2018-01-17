@@ -155,7 +155,8 @@ define(function(require, exports, module) {
   <btn block=1 @click="relprices=!relprices" class="my-3">Toggle relative prices</btn>
 
   <row y=0 class="font-weight-bold">
-    <cell y=0 size=6>Market</cell>
+    <cell y=0 size=3>Market</cell>
+    <cell y=0 size=3 class="text-right">Age</cell>
     <cell y=0 size=3 class="text-right">Buy</cell>
     <cell y=0 size=3 class="text-right">Sell</cell>
   </row>
@@ -172,15 +173,14 @@ define(function(require, exports, module) {
       buy:     function() { return Game.game.place().buyPrice(this.item) },
       sell:    function() { return Game.game.place().sellPrice(this.item) },
       report:  function() { return Game.game.market(this.body) },
+      hasData: function() { return this.report.data.hasOwnProperty(this.item) },
       info:    function() { if (this.hasData) return this.report.data[this.item] },
       isLocal: function() { return this.body === Game.game.locus },
     },
     template: `
-<row y=0 :class="{'font-weight-bold': isLocal, 'bg-dark': isLocal}"">
-  <cell y=0 size=6>
-    <span class="badge badge-pill">age: {{report.age}}</span>
-    {{body|caps}}
-  </cell>
+<row y=0 :class="{'font-weight-bold': isLocal, 'bg-dark': isLocal}">
+  <cell y=0 size=3>{{body|caps}}</cell>
+  <cell y=0 size=3 class="text-right">{{report.age|unit('hrs')}}</cell>
 
   <cell y=0 size=3 :class="{'text-success': info.buy < sell, 'text-right': 1}">
     <span v-if="relprices">{{sell - info.buy}}</span>

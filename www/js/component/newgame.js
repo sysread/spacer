@@ -41,7 +41,7 @@ define(function(require, exports, module) {
         const me = new Person({
           name:    this.name,
           home:    this.home,
-          faction: this.faction,
+          faction: this.body.faction,
           ship:    new Ship({shipclass: ship}),
           money:   1000,
         });

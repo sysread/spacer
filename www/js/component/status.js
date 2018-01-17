@@ -4,6 +4,7 @@ define(function(require, exports, module) {
   const Game = require('game');
   const Vue  = require('vendor/vue');
 
+  require('component/common');
   require('component/card');
   require('component/row');
 
