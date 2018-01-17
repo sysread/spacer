@@ -14,11 +14,11 @@ define(function(require, exports, module) {
 
 
   Vue.component('ships', {
-    computed: {
-      ships: function() { return Object.keys(data.shipclass) },
-    },
+    computed: { ships: function() { return Object.keys(data.shipclass) } },
+    methods: { returnToShipyard: function() { Game.open('shipyard') } },
     template: `
 <card title="Ships">
+  <btn slot="header" @click="returnToShipyard">Back to shipyard</btn>
   <ship v-for="ship in ships" :key="ship" :type="ship" />
 </card>
     `,
