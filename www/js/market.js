@@ -102,26 +102,46 @@ define(function(require, exports, module) {
       return markup;
     }
 
+    randomAdjustment(orig) {
+      const r = Math.random();
+
+      if (orig > 1) {
+        const diff = orig - 1;
+        return orig - (r * diff);
+      }
+      else if (orig < 1) {
+        const diff = 1 - orig;
+        return orig + (r * diff);
+      }
+      else {
+        if (Math.ceil(r * 100) % 2 === 0) {
+          return orig + (r / 20);
+        } else {
+          return orig - (r / 20);
+        }
+      }
+    }
+
     adjustment(resource) {
-      const loc = this.local_need(resource);
-      const sys = Game.game.system_need(resource);
-      const adjust = (loc + loc + loc + sys) / 4;
-      const markup = this.scarcityMarkup(resource);;
+      const loc    = this.local_need(resource);
+      const sys    = Game.game.system_need(resource);
+      const markup = this.scarcityMarkup(resource);
+      const need   = (loc + sys) / 2;
+      const adjust =
+        (need > 1) ? (1 + (Math.log(need) / Math.log(30)))
+      : (need < 1) ? (Math.max(0.1, Math.sqrt(need)))
+      : 1;
 
-      if (adjust > 1) {
-        return 1 + markup + Math.log10(adjust);
-      }
-      else if (adjust < 1) {
-        return markup + Math.max(0.1, Math.sqrt(adjust));
-      }
-
-      return 1 + markup;
+      return this.randomAdjustment( need * (adjust + markup) );
     }
 
     calculatePrice(resource) {
-      let mine   = data.resources[resource].mine;
-      let recipe = data.resources[resource].recipe;
-      let value  = 0;
+      const mine      = data.resources[resource].mine;
+      const recipe    = data.resources[resource].recipe;
+      const craftTime = this.craftTime(resource);
+      const adjust    = this.adjustment(resource);
+
+      let value = 0;
 
       if (mine) {
         value = data.base_unit_price * mine.tics;
@@ -132,12 +152,11 @@ define(function(require, exports, module) {
         }
       }
 
-      let craftTime = this.craftTime(resource);
-
-      if (craftTime !== undefined)
+      if (craftTime !== undefined) {
         value += Math.ceil(Math.log(value * craftTime));
+      }
 
-      return Math.ceil(value * this.adjustment(resource));
+      return Math.ceil(value * adjust);
     }
 
     price(resource) {
@@ -210,8 +229,8 @@ define(function(require, exports, module) {
 
       this.buysThisTurn.clear();
 
-      if (Game.game.turns % (Game.game.update_prices * 24 / data.hours_per_turn) === 0) {
-        this.prices = resourceMap(null);
+      if (Game.game.turns % (data.update_prices * 24 / data.hours_per_turn) === 0) {
+        this.prices = util.resourceMap(null);
       }
     }
   }

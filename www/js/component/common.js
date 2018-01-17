@@ -29,8 +29,8 @@ define(function(require, exports, module) {
     template: `
 <div class="progress bg-dark">
   <div class="progress-bar bg-warning" :style="{height: '35px', width: (percent || 0) + '%'}">
-    <span class="badge badge-pill badge-dark float-left m-1 font-weight-normal" style="font-size:14px">
-      {{display || 0}}
+    <span v-if="display" class="badge badge-pill badge-dark float-left m-1 font-weight-normal" style="font-size:14px">
+      {{display}}
     </span>
   </div>
 </div>

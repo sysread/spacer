@@ -61,7 +61,7 @@ define(function(require, exports, module) {
     }
 
     buyPrice(resource) {
-      let price = this.price(resource);
+      const price = super.buyPrice(resource);
       return price + Math.ceil(price * this.sales_tax);
     }
 

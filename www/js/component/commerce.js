@@ -139,7 +139,6 @@ define(function(require, exports, module) {
     `,
   });
 
-
   Vue.component('market-report', {
     props: ['item'],
     data: function() { return { relprices: false } },
@@ -147,25 +146,33 @@ define(function(require, exports, module) {
       bodies: function() { return Object.keys(data.bodies) },
     },
     template: `
-<div class="container container-fluid" style="font-size: 0.9em">
-  <btn block=1 @click="relprices=!relprices" class="my-3">Toggle relative prices</btn>
+<div>
+  <btn block=1 @click="relprices=!relprices" class="my-3">
+    <span v-if="relprices">Show absolute prices</span>
+    <span v-else>Show relative prices</span>
+  </btn>
 
-  <p class="font-italic">
+  <p class="font-italic d-none d-sm-block">
     Market data age is reported in hours due to light speed lag.
   </p>
 
-  <row y=0 class="font-weight-bold">
-    <cell y=0 size=4>Market</cell>
-    <cell y=0 size=2 class="text-right">Age</cell>
-    <cell y=0 size=3 class="text-right">Buy</cell>
-    <cell y=0 size=3 class="text-right">Sell</cell>
-  </row>
-
-  <market-report-row v-for="body in bodies" :key="body" :item="item" :body="body" :relprices="relprices" />
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Market</th>
+        <th class="text-right">Buy</th>
+        <th class="text-right">Sell</th>
+        <th class="text-right d-none d-sm-table-cell">Stock</th>
+        <th class="text-right d-none d-sm-table-cell">Age</th>
+      </tr>
+    </thead>
+    <tbody>
+      <market-report-row v-for="body in bodies" :key="body" :item="item" :body="body" :relprices="relprices" />
+    </tbody>
+  </table>
 </div>
     `
   });
-
 
   Vue.component('market-report-row', {
     props: ['item', 'body', 'relprices'],
@@ -178,20 +185,23 @@ define(function(require, exports, module) {
       isLocal: function() { return this.body === Game.game.locus },
     },
     template: `
-<row y=0 :class="{'font-weight-bold': isLocal, 'bg-dark': isLocal}">
-  <cell y=0 size=4>{{body|caps}}</cell>
-  <cell y=0 size=2 class="text-right">{{report.age}}</cell>
-
-  <cell y=0 size=3 :class="{'text-success': info.buy < sell, 'text-right': 1}">
-    <span v-if="relprices">{{sell - info.buy}}</span>
+<tr :class="{'bg-dark': isLocal}">
+  <th scope="row">
+    {{body|caps}}
+    <span v-if="info.trend > 0" class="badge badge-pill float-right">&uarr; {{info.trend}}</span>
+    <span v-if="info.trend < 0" class="badge badge-pill float-right">&darr; {{info.trend}}</span>
+  </th>
+  <td class="text-right" :class="{'text-success': info.buy < sell}">
+    <span v-if="relprices">{{info.buy - sell}}</span>
     <span v-else>{{info.buy}}</span>
-  </cell>
-
-  <cell y=0 size=3 :class="{'text-success': info.sell > buy, 'text-right': 1}">
+  </td>
+  <td class="text-right" :class="{'text-success': info.sell > buy}">
     <span v-if="relprices">{{info.sell - buy}}</span>
     <span v-else>{{info.sell}}</span>
-  </cell>
-</row>
+  </td>
+  <td class="text-right d-none d-sm-table-cell">{{info.stock}}</td>
+  <td class="text-right d-none d-sm-table-cell">{{report.age}}</td>
+</tr>
     `,
   });
 });

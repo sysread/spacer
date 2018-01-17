@@ -61,19 +61,14 @@ body {
 
 #spacer-navbar {
   background-color: #000;
-  font-size: 1.1rem;
 }
 
-table.table td, table.table th {
-  border: 0px;
-}
-
-table.table-bordered {
-  border: 0px;
-}
-
-table.table-bordered td, table.table-bordered th {
+.table td, .table th {
   border-top: 1px solid rgb(139,0,0);
+}
+
+.table thead th {
+  border-bottom: 2px solid rgb(139,0,0);
 }
 
 .btn-dark {
