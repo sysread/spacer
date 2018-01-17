@@ -33,7 +33,6 @@ define(function(require, exports, module) {
       playerLocus:       function(){ return Game.game.locus },
     },
     methods: {
-      isReachable: function(body) { return this.navComp.transits[body].length > 0 },
       openPlot: function() { Game.open('plot') },
       beginTransit: function(body, selected) {
         $('#spacer').data('info', this.navComp.transits[body][selected].transit);
@@ -61,8 +60,7 @@ define(function(require, exports, module) {
     v-if="body !== playerLocus"
     :key="body"
     :place="body"
-    :opened.sync="opened"
-    :disabled="!isReachable(body)" />
+    :opened.sync="opened" />
 
   <nav-plan v-if="opened" @engage="beginTransit" @close="opened=null" :body="opened" :navcomp="navComp" />
 </card>

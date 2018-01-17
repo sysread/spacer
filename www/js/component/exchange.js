@@ -8,6 +8,7 @@ define(function(require, exports, module) {
 
   Vue.component('slider', {
     props: ['value', 'min', 'max', 'step', 'minmax'],
+    data: function() { return { timer: null } },
     methods: {
       inc:    function()   { this.$emit('update:value', Math.min(parseInt(`${this.max}`, 10), this.value + 1)) },
       dec:    function()   { this.$emit('update:value', Math.max(parseInt(`${this.min}`, 10), this.value - 1)) },
@@ -15,12 +16,25 @@ define(function(require, exports, module) {
       setMax: function()   { this.$emit('update:value', parseInt(`${this.max}`, 10)) },
       update: function(ev) { this.$emit('update:value', parseInt(`${ev.target.value}`, 10)) },
     },
+    directives: {
+      'monitor': {
+        inserted: function(el, binding, vnode) {
+          vnode.context.timer = window.setInterval(() => {
+            vnode.context.$emit('update:value', $(el).val());
+          }, 200);
+        },
+        unbind: function(el, binding, vnode) {
+          window.clearInterval(vnode.context.timer);
+          vnode.context.timer = null;
+        },
+      }
+    },
     template: `
 <div class="input-group">
   <slot name="pre" />
   <span  @click="setMin" v-if="minmax" class="input-group-btn"><btn>&#9668;&#9668;</btn></span>
   <span  @click="dec" class="input-group-btn"><btn>&#9668;</btn></span>
-  <input @change="update" class="form-control form-control bg-black h-100" :value="value || 0" :min="min" :max="max" :step="step || 1" type="range">
+  <input v-monitor @change="update" class="form-control form-control bg-black h-100" :value="value || 0" :min="min" :max="max" :step="step || 1" type="range">
   <span  @click="inc" class="input-group-btn"><btn>&#9658;</btn></span>
   <span  @click="setMax" v-if="minmax" class="input-group-btn"><btn>&#9658;&#9658;</btn></span>
   <slot name="post" />
