@@ -142,11 +142,7 @@ define(function(require, exports, module) {
 
   Vue.component('market-report', {
     props: ['item'],
-    data: function() {
-      return {
-        relprices: false,
-      };
-    },
+    data: function() { return { relprices: false } },
     computed: {
       bodies: function() { return Object.keys(data.bodies) },
     },
@@ -154,9 +150,13 @@ define(function(require, exports, module) {
 <div class="container container-fluid" style="font-size: 0.9em">
   <btn block=1 @click="relprices=!relprices" class="my-3">Toggle relative prices</btn>
 
+  <p class="font-italic">
+    Market data age is reported in hours due to light speed lag.
+  </p>
+
   <row y=0 class="font-weight-bold">
-    <cell y=0 size=3>Market</cell>
-    <cell y=0 size=3 class="text-right">Age</cell>
+    <cell y=0 size=4>Market</cell>
+    <cell y=0 size=2 class="text-right">Age</cell>
     <cell y=0 size=3 class="text-right">Buy</cell>
     <cell y=0 size=3 class="text-right">Sell</cell>
   </row>
@@ -179,8 +179,8 @@ define(function(require, exports, module) {
     },
     template: `
 <row y=0 :class="{'font-weight-bold': isLocal, 'bg-dark': isLocal}">
-  <cell y=0 size=3>{{body|caps}}</cell>
-  <cell y=0 size=3 class="text-right">{{report.age|unit('hrs')}}</cell>
+  <cell y=0 size=4>{{body|caps}}</cell>
+  <cell y=0 size=2 class="text-right">{{report.age}}</cell>
 
   <cell y=0 size=3 :class="{'text-success': info.buy < sell, 'text-right': 1}">
     <span v-if="relprices">{{sell - info.buy}}</span>
