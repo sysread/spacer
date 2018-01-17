@@ -4,7 +4,7 @@ define(function(require, exports, module) {
   Vue.component('row', {
     props: ['y'],
     computed: {
-      yClass: function() { return this.y ? 'py-' + this.y : 'py-2' },
+      yClass: function() { return this.y ? 'py-' + this.y : 'py-1' },
     },
     template: '<div class="row" :class="yClass"><slot /></div>',
   });
@@ -28,15 +28,15 @@ define(function(require, exports, module) {
   Vue.component('defn', {template: '<cell brkpt="sm" size=9 class="text-muted"><slot /></cell>'});
 
   Vue.component('def', {
-    props: ['term', 'def', 'caps', 'split', 'y'],
+    props: ['term', 'def', 'caps', 'split', 'y', 'brkpt'],
     computed: {
-      termSize: function() { return this.split || 3 },
+      termSize: function() { return this.split || 4 },
       defnSize: function() { return 12 - this.termSize },
     },
     template: `
 <row :y="y">
-  <cell brkpt="sm" :size="termSize" :y="y" class="font-weight-bold" :class="{'text-capitalize': caps}">{{term}}<slot name="term" /></cell>
-  <cell brkpt="sm" :size="defnSize" :y="y" class="text-muted" :class="{'text-capitalize': caps}">{{def}}<slot name="def" /></cell>
+  <cell :brkpt="brkpt" :size="termSize" :y="y" class="font-weight-bold" :class="{'text-capitalize': caps}">{{term}}<slot name="term" /></cell>
+  <cell :brkpt="brkpt" :size="defnSize" :y="y" class="text-muted" :class="{'text-capitalize': caps}">{{def}}<slot name="def" /></cell>
 </row>
     `,
   });

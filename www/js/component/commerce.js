@@ -123,8 +123,8 @@ define(function(require, exports, module) {
     </row>
 
     <row>
-      <cell size="3" class="font-weight-bold">Dock</cell><cell size="3">{{dock}}</cell>
-      <cell size="3" class="font-weight-bold">Hold</cell><cell size="3">{{hold}}</cell>
+      <cell size="3" class="font-weight-bold">Dock</cell><cell size="3" class="text-warning">{{dock}}</cell>
+      <cell size="3" class="font-weight-bold">Hold</cell><cell size="3" class="text-success">{{hold}}</cell>
     </row>
 
     <slider minmax=true :value.sync="hold" min=0 :max="max" step=1 @update:value="updateState" />

@@ -11,7 +11,7 @@ Like a cross between TradeWars, Elite, The Expanse, and Firefly.
 ## Android
     cordova platform add android
     cordova build android
-    adb install /path/to/generated/apk
+    adb install -r /path/to/generated/apk
 
 ## iOS
     cordova run ios

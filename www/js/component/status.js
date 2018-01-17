@@ -112,9 +112,9 @@ define(function(require, exports, module) {
   </def>
 
   <def term="Cargo">
-    <ul slot="def" v-if="cargo.length > 0">
-      <li v-for="item of cargo">{{item}}</li>
-    </ul>
+    <row slot="def" v-if="cargo.length > 0">
+      <cell size=12 v-for="item of cargo">{{item}}</cell>
+    </row>
     <span slot="def" v-else>None</span>
   </def>
 </card>

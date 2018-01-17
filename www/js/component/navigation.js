@@ -144,7 +144,11 @@ define(function(require, exports, module) {
     <def split="4" term="Fuel"         :def="fuel" />
     <def split="4" term="Time"         :def="time" />
 
-    <slider minmax=true step="1" min="0" :max="routes.length - 1" :value.sync="selected" />
+    <row y=1>
+      <cell size=12>
+        <slider minmax=true step="1" min="0" :max="routes.length - 1" :value.sync="selected" />
+      </cell>
+    </row>
   </div>
   <div v-else>
     Your ship, as loaded, cannot reach this destination in less than 1 year with available fuel.
