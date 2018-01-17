@@ -20,7 +20,8 @@ define(function(require, exports, module) {
       'monitor': {
         inserted: function(el, binding, vnode) {
           vnode.context.timer = window.setInterval(() => {
-            vnode.context.$emit('update:value', $(el).val());
+            const value = parseInt( $(el).val(), 10 );
+            vnode.context.$emit('update:value', value);
           }, 200);
         },
         unbind: function(el, binding, vnode) {
