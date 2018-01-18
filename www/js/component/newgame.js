@@ -48,7 +48,7 @@ define(function(require, exports, module) {
 
         Game.game.new_game(me, this.home);
 
-        const turns = data.initial_turns;
+        const turns = data.initial_days * 24 / data.hours_per_turn;
         const step  = Math.ceil(turns/10);
         let done  = 0;
         let timer;

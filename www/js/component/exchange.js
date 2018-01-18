@@ -9,19 +9,25 @@ define(function(require, exports, module) {
   Vue.component('slider', {
     props: ['value', 'min', 'max', 'step', 'minmax'],
     data: function() { return { timer: null } },
+    computed: {
+      minValue: function() { return parseInt(`${this.min}`, 10) },
+      maxValue: function() { return parseInt(`${this.max}`, 10) },
+    },
     methods: {
-      inc:    function()   { this.$emit('update:value', Math.min(parseInt(`${this.max}`, 10), this.value + 1)) },
-      dec:    function()   { this.$emit('update:value', Math.max(parseInt(`${this.min}`, 10), this.value - 1)) },
-      setMin: function()   { this.$emit('update:value', parseInt(`${this.min}`, 10)) },
-      setMax: function()   { this.$emit('update:value', parseInt(`${this.max}`, 10)) },
-      update: function(ev) { this.$emit('update:value', parseInt(`${ev.target.value}`, 10)) },
+      inc:    function()   { this.$emit('update:value', Math.min(this.maxValue, this.value + 1)) },
+      dec:    function()   { this.$emit('update:value', Math.max(this.minValue, this.value - 1)) },
+      setMin: function()   { this.$emit('update:value', this.minValue) },
+      setMax: function()   { this.$emit('update:value', this.maxValue) },
+      update: function(ev) { this.$emit('update:value', parseInt(ev.target.value, 10)) },
     },
     directives: {
       'monitor': {
         inserted: function(el, binding, vnode) {
           vnode.context.timer = window.setInterval(() => {
-            const value = parseInt( $(el).val(), 10 );
-            vnode.context.$emit('update:value', value);
+            const value = parseInt(el.value, 10);
+            if (value != vnode.context.value) {
+              vnode.context.$emit('update:value', value);
+            }
           }, 350);
         },
         unbind: function(el, binding, vnode) {
@@ -71,16 +77,17 @@ define(function(require, exports, module) {
         resources: resources,
       };
     },
-    methods: {
+    computed: {
       cargoSpace: function() {return Game.game.player.ship.shipclass.cargo},
       cargoUsed:  function() {return Game.game.player.ship.cargoUsed},
       cargoLeft:  function() {return Game.game.player.ship.cargoLeft},
-
+   },
+    methods: {
       update: function(item, amt) {
         const change = amt - this.cargo.get(item);
 
-        if (change > this.cargoLeft()) {
-          amt = this.cargo.get(item) + this.cargoLeft();
+        if (change > this.cargoLeft) {
+          amt = this.cargo.get(item) + this.cargoLeft;
         }
 
         this.store.set(item, this.resources.get(item) - amt);
@@ -90,7 +97,7 @@ define(function(require, exports, module) {
     },
     template: `
 <div>
-  <def brkpt="sm" term="Cargo"><span slot="def">{{cargoUsed()}} / {{cargoSpace()}}</span></def>
+  <def brkpt="sm" term="Cargo"><span slot="def">{{cargoUsed}} / {{cargoSpace}}</span></def>
   <def v-for="item of resources.keys()" :key="item" brkpt="sm" v-if="resources.get(item) > 0">
     <span slot="term" class="text-capitalize">{{item}}</span>
     <slider slot="def" @update:value="amt => update(item, amt)" minmax=true :value="cargo.get(item)" min=0 :max="resources.get(item)">

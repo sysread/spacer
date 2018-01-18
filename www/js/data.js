@@ -5,11 +5,11 @@ define(function() {
    */
   const data = {
     start_date       : new Date(2242, 0, 1, 1),
-    hours_per_turn   : 6,
-    initial_turns    : 400,
+    hours_per_turn   : 8,
+    initial_days     : 100,
     initial_stock    : 5,
-    market_history   : 45,
-    update_prices    : 5, // days between price updates
+    market_history   : 80,
+    update_prices    : 3, // days between price updates
     base_unit_price  : 50,
     buy_price_markup : 0,
     scarcity_markup  : 0.05,
@@ -31,15 +31,15 @@ define(function() {
 
     resources: {
       water        : {mass: 10, mine: {tics: 2}},
-      ore          : {mass: 60, mine: {tics: 3}},
-      minerals     : {mass: 50, mine: {tics: 3}},
-      hydrocarbons : {mass: 8,  mine: {tics: 4}},
-      food         : {mass: 30, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 1, minerals: 1, hydrocarbons: 2}}},
+      ore          : {mass: 50, mine: {tics: 3}},
+      minerals     : {mass: 10, mine: {tics: 3}},
+      hydrocarbons : {mass: 3,  mine: {tics: 4}},
+      food         : {mass: 10, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 2, minerals: 1, hydrocarbons: 2}}},
       fuel         : {mass: 1,  recipe: {tics: 2, materials: {minerals: 1}}},
-      metal        : {mass: 90, recipe: {tics: 2, materials: {ore: 4}}},
-      ceramics     : {mass: 30, recipe: {tics: 3, materials: {minerals: 1, water: 1}}},
-      medicine     : {mass: 10, recipe: {tics: 4, materials: {food: 1, hydrocarbons: 1}}},
-      machines     : {mass: 75, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}},
+      metal        : {mass: 80, recipe: {tics: 2, materials: {ore: 4}}},
+      ceramics     : {mass: 20, recipe: {tics: 3, materials: {minerals: 1, water: 1}}},
+      medicine     : {mass: 5, recipe: {tics: 4, materials: {food: 1, hydrocarbons: 1}}},
+      machines     : {mass: 60, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}},
       electronics  : {mass: 20, recipe: {tics: 5, materials: {ceramics: 2, minerals: 1}}},
       cybernetics  : {mass: 80, recipe: {tics: 6, materials: {metal: 1, ceramics: 1, machines: 1, electronics: 1}}}
     },
@@ -198,7 +198,7 @@ define(function() {
       pluto: {
         name     : 'Pluto',
         size     : 'small',
-        traits   : ['domed', 'subterranean', 'rocky', 'water rich'],
+        traits   : ['domed', 'subterranean', 'rocky', 'water rich', 'mineral rich'],
         faction  : 'TRANSA',
       }
     },

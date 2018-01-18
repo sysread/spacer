@@ -4,6 +4,7 @@ define(function(require, exports, module) {
   const Game = require('game');
   const Vue  = require('vendor/vue');
 
+  require('component/common');
   require('component/modal');
   require('component/card');
   require('component/row');
@@ -57,20 +58,16 @@ define(function(require, exports, module) {
       allowed to keep your take.
     </card-text>
     <card-footer slot="footer">
-      <button @click="modal = 'recruiter'" type="button" class="btn btn-dark">
-        Get a job
-      </button>
+      <btn @click="modal = 'recruiter'" block=1>Get a job</btn>
     </card-footer>
   </card>
 
   <modal v-if="modal === 'recruiter'" @close="modal = null" title="Recruiter" close="Close" xclose=true>
     <p>The pay is {{payRate}} c/day. You get to keep anything you collect over the quota. How long are you available for?</p>
     <def term="Days" :def="days" />
-    <def term="Pay" :def="pay" />
+    <def term="Pay"  :def="pay" />
     <slider :value.sync="days" minmax=true min=1 max=7 step=1 />
-    <button slot="footer" @click="harvest" :class="{disabled:inProgress}" :disabled="inProgress" type="button" class="btn btn-dark">
-      Get to work
-    </button>
+    <btn slot="footer" @click="harvest" :class="{disabled:inProgress}" :disabled="inProgress" block=1>Get to work</btn>
   </modal>
 
   <modal v-if="modal === 'collect'" title="Rewards" footer=true>

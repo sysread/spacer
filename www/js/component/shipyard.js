@@ -16,14 +16,14 @@ define(function(require, exports, module) {
   Vue.component('shipyard', {
     data: function() {
       return {
-        refuel: false,
+        refuel:   false,
+        transfer: false,
       };
     },
     methods: {
       open: function(page){ Game.open(page) },
     },
     template: `
-
 <div>
   <card title="Shipyard">
     <card-text>
@@ -48,24 +48,55 @@ define(function(require, exports, module) {
     </card-text>
 
     <row>
-      <button type="button" class="btn btn-dark btn-block m-1" @click="refuel=true">Transfer fuel</button>
+      <button type="button" class="btn btn-dark btn-block m-1" @click="refuel=true">Refuel</button>
+      <button type="button" class="btn btn-dark btn-block m-1" @click="transfer=true">Transfer fuel</button>
       <button type="button" class="btn btn-dark btn-block m-1" @click="open('ships')">Ships</button>
       <button type="button" class="btn btn-dark btn-block m-1" @click="open('addons')">Upgrades</button>
     </row>
   </card>
 
   <shipyard-refuel v-if="refuel" @close="refuel=false" />
+  <shipyard-transfer v-if="transfer" @close="transfer=false" />
 </div>
-
     `,
   });
 
-
   Vue.component('shipyard-refuel', {
+    data: function() { return { change: 0 } },
+    computed: {
+      need:  function() { return Game.game.player.ship.refuelUnits() },
+      max:   function() { return Math.min(this.need, Math.floor(Game.game.player.money / this.price)) },
+      price: function() { return Game.game.place().buyPrice('fuel') },
+    },
+    methods: {
+      fillHerUp: function() {
+        if (this.change !== NaN && this.change > 0 && this.change <= this.max) {
+          Game.game.player.debit(this.change * this.price);
+          Game.game.player.ship.refuel(this.change);
+          Game.game.turn();
+          Game.game.save_game();
+          Game.game.refresh();
+        }
+      },
+    },
+    template: `
+<modal title="Refuel" close="Nevermind" xclose=true @close="$emit('close')">
+  <p>
+    A dock worker wearing worn, grey coveralls approaches gingerly. A patch on
+    his uniform identifies him as "Ray". He nods at your ship, "Fill 'er up?"
+  </p>
+  <def term="Price/tonne" :def="price|csn" />
+  <def term="Fuel" :def="change" />
+  <def term="Total" :def="(price * change)|csn" />
+  <slider class="my-3" :value.sync="change" min=0 :max="max" step="1" minmax=true />
+  <btn slot="footer" @click="fillHerUp" close=1>Purchase fuel</btn>
+</modal>
+    `,
+  });
+
+  Vue.component('shipyard-transfer', {
     data: function() {
-      return {
-        change: 0,
-      };
+      return { change: 0 };
     },
     computed: {
       need:  function() { return Game.game.player.ship.refuelUnits() },
@@ -86,24 +117,13 @@ define(function(require, exports, module) {
       },
     },
     template: `
-
-<modal title="Refuel your ship?" close="Nevermind" xclose=true @close="$emit('close')">
-  <p>
-    You may transfer fuel purchased in the market from your cargo hold to your ship's fuel tank here.
-  </p>
-
-  <row>
-    <cell size=3>Cargo</cell><cell size=3><input :value="Math.floor(cargo)" type="number" class="form-control" readonly /></cell>
-    <cell size=3>Tank</cell><cell size=3><input :value="Math.floor(tank)" type="number" class="form-control" readonly /></cell>
-  </row>
-
-  <slider :value.sync="change" min=0 :max="max" step="1" minmax=true />
-
-  <button slot="footer" @click="fillHerUp" type="button" class="btn btn-dark" data-dismiss="modal">
-    Fill her up
-  </button>
+<modal title="Transfer fuel to tank" close="Nevermind" xclose=true @close="$emit('close')">
+  <p>You may transfer fuel purchased in the market from your cargo hold to your ship's fuel tank here.</p>
+  <def term="Cargo" :def="Math.floor(cargo)" />
+  <def term="Tank" :def="Math.floor(tank)" />
+  <slider class="my-3" :value.sync="change" min=0 :max="max" step="1" minmax=true />
+  <btn slot="footer" @click="fillHerUp" close=1>Transfer fuel</btn>
 </modal>
-
     `,
   });
 });
