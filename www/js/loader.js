@@ -1,8 +1,12 @@
+let _game;
+
 requirejs.config({
   baseUrl: 'js',
 });
 
 requirejs(['game'], function(game) {
+  _game = game;
+
   function onDeviceReady() {
     if (StatusBar.isVisible) {
       StatusBar.hide();

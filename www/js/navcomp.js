@@ -18,38 +18,46 @@ define(function(require, exports, module) {
       if (this.data === undefined) {
         this.data = {};
 
-        for (let dest of system.bodies()) {
-          this.data[dest] = [];
-          let prev;
-
-          for (let transit of this.astrogator(this.orig, dest)) {
-            if (transit.accel > this.maxdv) continue;
-            if (transit.turns > this.ship.maxBurnTime(transit.accel)) continue;
-
-            let fuel = transit.turns * this.ship.burnRate(transit.accel, this.ship.currentMass());
-
-            if (prev === undefined || prev >= fuel) {
-              prev = fuel;
-            }
-            else {
-              continue;
-            }
-
-            if (this.ship.fuel < fuel) {
-              continue;
-            }
-
-            this.data[dest].push({
-              index   : this.data[dest].length,
-              transit : transit,
-              turns   : transit.turns,
-              fuel    : fuel,
-            });
+        for (const dest of system.bodies()) {
+          if (!this.data.hasOwnProperty(dest)) {
+            this.data[dest] = this.getTransitsTo(dest);
           }
         }
       }
 
       return this.data;
+    }
+
+    getTransitsTo(dest) {
+      const transits = [];
+      let prev;
+
+      for (let transit of this.astrogator(this.orig, dest)) {
+        if (transit.accel > this.maxdv) continue;
+        if (transit.turns > this.ship.maxBurnTime(transit.accel)) continue;
+
+        let fuel = transit.turns * this.ship.burnRate(transit.accel, this.ship.currentMass());
+
+        if (prev === undefined || prev >= fuel) {
+          prev = fuel;
+        }
+        else {
+          continue;
+        }
+
+        if (this.ship.fuel < fuel) {
+          continue;
+        }
+
+        transits.push({
+          index   : transits.length,
+          transit : transit,
+          turns   : transit.turns,
+          fuel    : fuel,
+        });
+      }
+
+      return transits;
     }
 
     search(destination, approve) {
@@ -72,8 +80,8 @@ define(function(require, exports, module) {
       const s_per_turn = data.hours_per_turn * 3600;
 
       for (var i = 1; i < orbit.length; ++i) {
-        const S = Physics.distance(p1, orbit[i]); // distance
-        const t = i * s_per_turn; // seconds until target is at destination
+        const S = Physics.distance(p1, orbit[i]);           // distance
+        const t = i * s_per_turn;                           // seconds until target is at destination
         const a = Physics.requiredDeltaV(t * 0.5, S * 0.5); // deltav to reach flip point
 
         yield new TransitPlan({

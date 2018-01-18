@@ -19,6 +19,7 @@ define(function() {
     base_pay         : 15, // credits/day
     grav_deltav_factor : 3, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
     initial_ship     : 'runner',
+    jurisdiction     : 0.5, // au from body
 
     scales: {
       tiny   : 0.6,
@@ -33,7 +34,7 @@ define(function() {
       ore          : {mass: 25, mine: {tics: 3}},
       minerals     : {mass: 10, mine: {tics: 3}},
       hydrocarbons : {mass: 2,  mine: {tics: 4}},
-      food         : {mass: 5, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 1, minerals: 1, hydrocarbons: 1}}},
+      food         : {mass: 5, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 1, hydrocarbons: 1}}},
       fuel         : {mass: 1,  recipe: {tics: 2, materials: {minerals: 1}}},
       metal        : {mass: 40, recipe: {tics: 2, materials: {ore: 4}}},
       ceramics     : {mass: 10, recipe: {tics: 3, materials: {minerals: 1, water: 1}}},

@@ -10,8 +10,9 @@ define(function(require, exports, module) {
     }
 
     set_date(date) {
-      if (new Date(date + ' 01:00:00').getDate() !== this.system.time.getDate())
+      if (new Date(date + ' 01:00:00').getDate() !== this.system.time.getDate()) {
         this.cache = {};
+      }
 
       this.system.setTime(date);
     }
@@ -115,36 +116,31 @@ define(function(require, exports, module) {
       return [x1 + x0, y1 + y0, z1 + z0];
     }
 
-    position(name) {
+    position(name, date) {
+      date = date || this.system.time;
       const body = this.body(name);
+      const pos  = body.getPositionAtTime(date);
+
       if (body.type === 'moon') {
-        return this.addPoints(body.position, body.central.position);
-      }
-      else {
-        return body.position;
+        return this.addPoints(pos, body.central.getPositionAtTime(date));
+      } else {
+        return pos;
       }
     }
 
     orbit(name) {
-      let key = `${name}.orbit`;
+      const key = `${name}.orbit`;
 
       if (!this.cache.hasOwnProperty(key)) {
-        const body = this.body(name);
+        const date  = new Date(this.system.time);
+        const orbit = [];
 
-        if (body.type === 'moon') {
-          const moon    = body.getOrbitPath();
-          const central = body.central.getOrbitPath();
-          let orbit = [];
-
-          for (let i = 0; i < moon.length; ++i) {
-            orbit.push(this.addPoints(moon[i], central[i]));
-          }
-
-          this.cache[key] = orbit;
+        for (let day = 0; day < 365; ++day) {
+          date.setDate(date.getDate() + 1);
+          orbit.push(this.position(name, date));
         }
-        else {
-          this.cache[key] = this.body(name).getOrbitPath();
-        }
+
+        this.cache[key] = orbit;
       }
 
       return this.cache[key];
@@ -162,11 +158,11 @@ define(function(require, exports, module) {
 
         for (let day = 1; day < end; ++day) {
           let next = orbit[day];
-          let dx = Math.ceil((point[0] - next[0]) / turns_per_day);
-          let dy = Math.ceil((point[1] - next[1]) / turns_per_day);
-          let dz = Math.ceil((point[2] - next[2]) / turns_per_day);
+          let dx = Math.ceil((next[0] - point[0]) / turns_per_day);
+          let dy = Math.ceil((next[1] - point[1]) / turns_per_day);
+          let dz = Math.ceil((next[2] - point[2]) / turns_per_day);
 
-          for (var i = 1; i < turns_per_day; ++i) {
+          for (var i = 1; i <= turns_per_day; ++i) {
             path.push([
               point[0] + (i * dx),
               point[1] + (i * dy),

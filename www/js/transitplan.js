@@ -43,19 +43,19 @@ define(function(require, exports, module) {
         const secPerTurn = data.hours_per_turn * 3600;
         const turn = this.turns - this.left;
 
+        // Accelerating
         if (turn < (this.turns / 2)) {
           const s = turn * secPerTurn;
           const d = Physics.range(s, 0, this.accel);
           this.velocity = Physics.velocity(s, 0, this.accel);
-          this.coords = Physics.segment(this.start, this.end, d)
-            .map(n => {return Math.ceil(n)});
+          this.coords   = Physics.segment(this.start, this.end, d).map(Math.ceil);
         }
+        // Decelerating
         else {
           const s = ((this.turns / 2) - this.left) * secPerTurn;
           const d = Physics.range(s, this.maxVelocity, -this.accel);
           this.velocity = Physics.velocity(s, this.maxVelocity, -this.accel);
-          this.coords = Physics.segment(this.start, this.end, this.flipDistance + d)
-            .map(n => {return Math.ceil(n)});
+          this.coords   = Physics.segment(this.start, this.end, this.flipDistance + d).map(Math.ceil);
         }
       }
     }

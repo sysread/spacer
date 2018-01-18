@@ -128,7 +128,6 @@ define(function(require, exports, module) {
     template: `
 <card>
   <btn slot="header" @click="returnToNav">Return to navigation</btn>
-  </card-header>
   <div v-plot class="plot-root p-0 m-0">
     <div @click.self="selected=null" style="position:absolute; width:100%; height:100%; left: 0; top 0;">
       <span v-for="body of visible">

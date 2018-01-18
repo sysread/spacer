@@ -9,6 +9,137 @@ define(function(require, exports, module) {
 
   require('component/common');
   require('component/card');
+  require('component/plot');
+
+  Vue.component('transit', {
+    props: ['plan'],
+    data: function() {
+      return {
+        timer:      this.schedule(),
+        stoppedBy:  {},
+        inspection: null,
+      };
+    },
+    computed: {
+      destination: function() { return system.name(this.plan.dest) },
+      progress:    function() { return util.R(this.plan.pct_complete) },
+      velocity:    function() { return this.plan.velocity },
+      distance:    function() { return util.R(this.plan.auRemaining(), 2) },
+      status:      function() { return this.progress > 50 ? 'Decelerating' : 'Accelerating' },
+      display:     function() { return this.progress + '%' },
+      hoursLeft:   function() { return this.plan.left * data.hours_per_turn },
+      kmLeft:      function() { return this.plan.distanceRemaining() },
+      batch:       function() { return Math.ceil(this.plan.turns / 30) },
+    },
+    methods: {
+      schedule: function() {
+        this.inspection = null;
+        return window.setTimeout(() => { this.turn() }, 350);
+      },
+
+      turn: function() {
+        if (this.plan.left > 0) {
+          if (false && this.inspectionChance()) {
+            return;
+          }
+          else {
+            const count = Math.min(this.plan.left, this.batch);
+            Game.game.turn(count);
+
+            for (let i = 0; i < count; ++i) {
+              Game.game.player.ship.burn(this.plan.accel);
+              this.plan.turn();
+            }
+
+            this.timer = this.schedule();
+          }
+        }
+        else {
+          window.clearTimeout(this.timer);
+          this.timer = null;
+          $('#spacer').data({state: null, data: null});
+          Game.game.transit(this.plan.dest);
+          Game.open('summary');
+        }
+      },
+
+      nearby: function() {
+        const ranges = system.ranges(this.plan.coords);
+        const bodies = {};
+
+        for (const body of Object.keys(ranges)) {
+          const au = ranges[body] / Physics.AU;
+
+          if (au <= data.jurisdiction) {
+            bodies[body] = au;
+          }
+        }
+
+        return bodies;
+      },
+
+      inspectionChance: function() {
+        if (this.plan.velocity >= 750000)
+          return;
+
+        const ranges = this.nearby();
+
+        for (const body of Object.keys(ranges)) {
+          const au = ranges[body];
+
+          const faction = data.bodies[body].faction;
+          const patrol  = data.factions[faction].patrol;
+          const scale   = data.scales[data.bodies[body].size];
+          const adjust  = faction === Game.game.player.faction ? 0.5 : 1.0;
+          const freq    = (1 - (Math.max(0.01, au) / 0.25)) * patrol * scale * adjust;
+          const roll    = Math.random();
+
+          if (roll <= freq) {
+            if (this.stoppedBy[faction]) {
+              continue;
+            }
+            else {
+              const dist = util.R(Physics.distance(this.plan.coords, system.position(body)) / Physics.AU, 3);
+              this.stoppedBy[faction] = true;
+              this.inspection = {
+                body:     body,
+                faction:  data.bodies[body].faction,
+                distance: dist,
+              };
+
+              return true;
+            }
+          }
+        }
+
+        return false;
+      },
+    },
+    template: `
+<div class="container container-fluid">
+  <card :title="'Transit to ' + destination" :subtitle="status">
+    <progress-bar :percent="progress" :display="display" />
+
+    <div class="container container-fluid py-3">
+      <def split=5 term="Current velocity"   :def="velocity|R(1)|csn|unit('km/s')" />
+      <def split=5 term="Time remaining"     :def="hoursLeft|csn|unit('hours')" />
+      <def split=5 term="Distance remaining">
+        <span slot="def" v-if="distance">{{distance|unit('AU')}}</span>
+        <span slot="def" v-else>{{kmLeft|R(0)|csn|unit('km')}}</span>
+      </def>
+
+      <def split=5 term="Nearby bodies">
+        <div slot="def" v-for="(distance, body) of this.nearby()" :key="body">
+          {{distance|R(2)|unit('AU')}} to {{body|caps}}
+        </div>
+      </def>
+    </div>
+
+    <transit-inspection v-if="inspection" @done="schedule" :body="inspection.body" :faction="inspection.faction" :distance="inspection.distance" />
+  </card>
+</div>
+    `,
+  });
 
   Vue.component('transit-inspection', {
     props: ['faction', 'body', 'distance'],
@@ -123,102 +254,6 @@ define(function(require, exports, module) {
     In just a 5 short years, your navigation computer flips the ship on automatic and begins the deceleration burn.
     Your corpse and those of your crew arrive at Proxima Centauri after perhaps 10 years, relativistic effects notwithstanding.
   </ok>
-</card>
-    `,
-  });
-
-  Vue.component('transit', {
-    props: ['plan'],
-    data: function() {
-      return {
-        timer:      this.schedule(),
-        stoppedBy:  {},
-        inspection: null,
-      };
-    },
-    computed: {
-      destination: function() { return system.name(this.plan.dest) },
-      progress:    function() { return util.R(this.plan.pct_complete) },
-      velocity:    function() { return util.csn(util.R(this.plan.velocity / 1000)) },
-      distance:    function() { return util.R(this.plan.auRemaining(), 2) },
-      status:      function() { return (this.progress > 50 ? 'Decelerating' : 'Accelerating') + ': ' + this.velocity + ' km/s' },
-      display:     function() { return (this.distance < 0.25) ? util.csn(util.R(this.plan.distanceRemaining())) + ' km' : this.distance + ' AU' },
-    },
-    methods: {
-      schedule: function() {
-        this.inspection = null;
-        return window.setTimeout(() => { this.turn() }, 100);
-      },
-
-      turn: function() {
-        if (this.plan.left > 0) {
-          if (this.inspectionChance()) {
-            return;
-          }
-          else {
-            const count = Math.min(this.plan.left, 48 / data.hours_per_turn);
-            Game.game.turn(count);
-
-            for (let i = 0; i < count; ++i) {
-              Game.game.player.ship.burn(this.plan.accel);
-              this.plan.turn();
-            }
-
-            this.timer = this.schedule();
-          }
-        }
-        else {
-          window.clearTimeout(this.timer);
-          this.timer = null;
-          $('#spacer').data({state: null, data: null});
-          Game.game.transit(this.plan.dest);
-          Game.open('summary');
-        }
-      },
-
-      inspectionChance: function() {
-        if (this.plan.velocity >= 750000)
-          return;
-
-        const ranges = system.ranges(this.plan.coords);
-
-        for (const body of Object.keys(ranges)) {
-          const au = ranges[body] / Physics.AU;
-
-          if (au < 0.25) {
-            const faction = data.bodies[body].faction;
-            const patrol  = data.factions[faction].patrol;
-            const scale   = data.scales[data.bodies[body].size];
-            const adjust  = faction === Game.game.player.faction ? 0.5 : 1.0;
-            const freq    = (1 - (Math.max(0.01, au) / 0.25)) * patrol * scale * adjust;
-            const roll    = Math.random();
-
-            if (roll <= freq) {
-              if (this.stoppedBy[faction]) {
-                continue;
-              }
-              else {
-                const dist = util.R(Physics.distance(this.plan.coords, system.position(body)) / Physics.AU, 3);
-                this.stoppedBy[faction] = true;
-                this.inspection = {
-                  body:     body,
-                  faction:  data.bodies[body].faction,
-                  distance: dist,
-                };
-
-                return true;
-              }
-            }
-          }
-        }
-
-        return false;
-      },
-    },
-    template: `
-<card :title="'Transit to ' + destination" :subtitle="status">
-  <progress-bar :percent="progress" :display="display" />
-  <transit-inspection v-if="inspection" @done="schedule" :body="inspection.body" :faction="inspection.faction" :distance="inspection.distance" />
 </card>
     `,
   });
