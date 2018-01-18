@@ -53,7 +53,7 @@ define(function(require, exports, module) {
       Sometimes you may find yourself stuck somewhere for a while or you just
       need to make a few extra bucks to put you ahead. In those situations, you
       can find work on one of the numerous work crews hiring short term laborers
-      to help mine water ice, minerals, ore, or even to hep with the work. The
+      to help mine water ice, minerals, ore, or even to help with the work. The
       pay isn't great, but if you work hard and end up over quota, you are often
       allowed to keep your take.
     </card-text>

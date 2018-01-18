@@ -360,7 +360,7 @@ define(function(require, exports, module) {
       });
 
       // Restore fabricators
-      if (this.fabricator < (this.max_fabs * 0.7)) {
+      if (this.fabricator <= (this.max_fabs * 0.5)) {
         let each  = data.fab_health;
         let want  = Math.floor((this.max_fabs - this.fabricator) / each);
         let avail = Math.min(want, this.currentSupply('cybernetics'));

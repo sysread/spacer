@@ -66,7 +66,7 @@ define(function(require, exports, module) {
     computed: {
       need:  function() { return Game.game.player.ship.refuelUnits() },
       max:   function() { return Math.min(this.need, Math.floor(Game.game.player.money / this.price)) },
-      price: function() { return Game.game.place().buyPrice('fuel') },
+      price: function() { return Math.ceil(Game.game.place().buyPrice('fuel') * 1.035) },
     },
     methods: {
       fillHerUp: function() {

@@ -36,7 +36,7 @@ define(function(require, exports, module) {
         }
 
         if (fine > 0) {
-          fine = Math.max(0, Game.game.player.money - fine);
+          fine = Math.min(fine, Game.game.player.money);
         }
 
         return fine;
@@ -83,8 +83,9 @@ define(function(require, exports, module) {
     template: `
 <card title="Police inspection" :subtitle="faction">
   <card-text>
-    You have been hailed by a {{faction}} patrol ship operating {{distance}} AU out of {{body}}.
-    The captain orders you to cease acceleration and peacefully submit to an inspection.
+    You have been hailed by a {{faction}} patrol ship operating {{distance}} AU
+    out of {{body|caps}}. The captain orders you to cease acceleration and
+    peacefully submit to an inspection.
   </card-text>
 
   <button type="button" class="btn btn-dark btn-block" @click="submit">Submit</button>

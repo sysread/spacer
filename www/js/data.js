@@ -6,18 +6,17 @@ define(function() {
   const data = {
     start_date       : new Date(2242, 0, 1, 1),
     hours_per_turn   : 8,
-    initial_days     : 100,
+    initial_days     : 300,
     initial_stock    : 5,
     market_history   : 80,
-    update_prices    : 3, // days between price updates
-    base_unit_price  : 50,
-    buy_price_markup : 0,
+    update_prices    : 5, // days between price updates
+    base_unit_price  : 20,
     scarcity_markup  : 0.05,
     necessity        : {water: true, food: true, medicine: true, fuel: true},
     craft_fee        : 0.05,
     fabricators      : 40,
-    fab_health       : 20,
-    base_pay         : 20, // credits/day
+    fab_health       : 30,
+    base_pay         : 15, // credits/day
     grav_deltav_factor : 3, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
     initial_ship     : 'runner',
 
@@ -30,26 +29,28 @@ define(function() {
     },
 
     resources: {
-      water        : {mass: 10, mine: {tics: 2}},
-      ore          : {mass: 50, mine: {tics: 3}},
+      water        : {mass: 5, mine: {tics: 2}},
+      ore          : {mass: 25, mine: {tics: 3}},
       minerals     : {mass: 10, mine: {tics: 3}},
-      hydrocarbons : {mass: 3,  mine: {tics: 4}},
-      food         : {mass: 10, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 2, minerals: 1, hydrocarbons: 2}}},
+      hydrocarbons : {mass: 2,  mine: {tics: 4}},
+      food         : {mass: 5, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 1, minerals: 1, hydrocarbons: 1}}},
       fuel         : {mass: 1,  recipe: {tics: 2, materials: {minerals: 1}}},
-      metal        : {mass: 80, recipe: {tics: 2, materials: {ore: 4}}},
-      ceramics     : {mass: 20, recipe: {tics: 3, materials: {minerals: 1, water: 1}}},
-      medicine     : {mass: 5, recipe: {tics: 4, materials: {food: 1, hydrocarbons: 1}}},
-      machines     : {mass: 60, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}},
-      electronics  : {mass: 20, recipe: {tics: 5, materials: {ceramics: 2, minerals: 1}}},
-      cybernetics  : {mass: 80, recipe: {tics: 6, materials: {metal: 1, ceramics: 1, machines: 1, electronics: 1}}}
+      metal        : {mass: 40, recipe: {tics: 2, materials: {ore: 4}}},
+      ceramics     : {mass: 10, recipe: {tics: 3, materials: {minerals: 1, water: 1}}},
+      medicine     : {mass: 2, recipe: {tics: 4, materials: {food: 1, hydrocarbons: 1}}},
+      machines     : {mass: 30, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}},
+      electronics  : {mass: 10, recipe: {tics: 5, materials: {ceramics: 2, metal: 1}}},
+      cybernetics  : {mass: 40, recipe: {tics: 6, materials: {machines: 1, electronics: 1}}},
+      weapons      : {mass: 10, recipe: {tics: 4, materials: {metal: 1, ceramics: 1}}, contraband: 3},
+      narcotics    : {mass: 2, recipe: {tics: 2, materials: {medicine: 2}}, contraband: 5},
     },
 
     market: {
-      agents      : 2,
+      agents      : 3,
       fabricators : 2,
-      minability  : 0.25,
+      minability  : 0.30,
       produces    : {},
-      consumes    : {water: 1, food: 1}
+      consumes    : {water: 2, food: 1, medicine: 0.5, narcotics: 0.1, weapons: 0.2}
     },
 
     traits: {
@@ -57,16 +58,16 @@ define(function() {
       'mineral poor'     : {produces: {ore:   -0.5, minerals: -0.25}, consumes: {}},
       'water rich'       : {produces: {water:  0.5}, consumes: {}},
       'water poor'       : {produces: {water: -0.5}, consumes: {}},
-      'hydrocarbon rich' : {produces: {hydrocarbons: 0.5, minerals: 0.2}, consumes: {}},
-      'hydrocarbon poor' : {produces: {hydrocarbons: -0.5, minerals: -0.2}, consumes: {}},
+      'hydrocarbon rich' : {produces: {hydrocarbons: 0.5, minerals: 0.35}, consumes: {}},
+      'hydrocarbon poor' : {produces: {hydrocarbons: -0.5, minerals: -0.35}, consumes: {}},
 
-      'asteroids'        : {produces: {ore:   1.0, minerals: 0.75}, consumes: {}},
+      'asteroids'        : {produces: {ore:   1.0, minerals: 1.0}, consumes: {}},
       'rocky'            : {produces: {ore:   0.6, minerals: 0.5} , consumes: {}},
       'icy'              : {produces: {water: 0.8, minerals: 0.35, hydrocarbons: 0.2}, consumes: {}},
 
-      'agricultural'     : {produces: {food: 0.3, hydrocarbons: 0.1}, consumes: {machines: 0.2, fuel: 0.025, water: 0.2, hydrocarbons: 0.4}},
-      'habitable'        : {produces: {food: 0.7, hydrocarbons: 0.3}, consumes: {}},
-      'domed'            : {produces: {food: 0.1, hydrocarbons: 0.05}, consumes: {fuel: 0.2, electronics: 0.05, machines: 0.05, water: 0.1, hydrocarbons: 0.2}},
+      'agricultural'     : {produces: {food: 0.3, hydrocarbons: 0.2}, consumes: {machines: 0.2, fuel: 0.025, water: 0.2, hydrocarbons: 0.4}},
+      'habitable'        : {produces: {food: 0.7, hydrocarbons: 0.5}, consumes: {}},
+      'domed'            : {produces: {food: 0.1, hydrocarbons: 0.15}, consumes: {fuel: 0.2, electronics: 0.05, machines: 0.05, water: 0.1, hydrocarbons: 0.2}},
       'subterranean'     : {produces: {}, consumes: {fuel: 0.1, electronics: 0.05, machines: 0.05}},
       'orbital'          : {produces: {}, consumes: {fuel: 0.3, electronics: 0.1, machines: 0.1}}
     },
@@ -206,10 +207,10 @@ define(function() {
     drives: {
       ion: {
         name      : 'Ion',
-        thrust    : 800,
+        thrust    : 1050,
         mass      : 10,
         desc      : 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
-        burn_rate : 0.278,
+        burn_rate : 0.258,
         hull      : 1,
       },
       fusion: {

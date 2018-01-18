@@ -172,8 +172,7 @@ define(function(require, exports, module) {
     }
 
     buyPrice(resource)  {
-      const price = this.price(resource);
-      return price + (price * data.buy_price_markup);
+      return this.price(resource);
     }
 
     buy(resource, amount) {
