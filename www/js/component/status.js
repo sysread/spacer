@@ -78,11 +78,9 @@ define(function(require, exports, module) {
       addons : function() {return this.ship.addons.map((a) => {return data.shipAddOns[a].name})},
       cargo  : function() {
         const cargo = [];
-        for (let [item, amt] of this.ship.cargo.entries()) {
-          if (amt > 0) {
-            let mass = util.csn(data.resources[item].mass * amt);
-            cargo.push(`${mass} tonnes of ${item} (${amt} cu)`);
-          }
+        for (const [item, amt] of this.ship.cargo.entries()) {
+          if (amt === 0) continue;
+          cargo.push({name: item, amount: amt, mass: data.resources[item].mass * amt});
         }
 
         return cargo;
@@ -94,7 +92,16 @@ define(function(require, exports, module) {
     <h3>Ship</h3>
   </card-header>
   <def term="Class" :def="ship.opt.shipclass|caps" />
-  <def term="Cargo"><span slot="def">{{ship.cargoUsed}}/{{ship.cargoSpace}}</span></def>
+
+  <def term="Cargo">
+    <div slot="def">
+      {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
+      <div v-if="ship.cargoUsed" v-for="item in cargo" :key="item.name">
+        {{item.amount|csn|unit('cu')}} of {{item.name}} ({{item.mass|csn|unit('tonnes')}})
+      </div>
+    </div>
+  </def>
+
   <def term="Hull" :def="ship.hull" />
   <def term="Armor" :def="ship.armor" />
   <def term="Hard points" :def="ship.hardPoints" />
@@ -108,13 +115,6 @@ define(function(require, exports, module) {
     <ul slot="def" v-if="ship.addons.length > 0">
       <li v-for="addon of addons">{{addon|caps}}</li>
     </ul>
-    <span slot="def" v-else>None</span>
-  </def>
-
-  <def term="Cargo">
-    <row slot="def" v-if="cargo.length > 0">
-      <cell size=12 v-for="item of cargo" :key="item">{{item}}</cell>
-    </row>
     <span slot="def" v-else>None</span>
   </def>
 </card>
