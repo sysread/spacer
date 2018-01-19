@@ -4,33 +4,22 @@ define(function(require, exports, module) {
 
   require('component/modal');
 
-  Vue.filter('csn', function(value) {
-    return util.csn((value || 0).toString());
-  });
-
-  Vue.filter('R', function(value, places) {
-    return util.R((value || 0).toString(), places);
-  });
-
-  Vue.filter('unit', function(value, unit) {
-    return (value || 0).toString() + ' ' + unit;
-  });
-
-  Vue.filter('caps', function(value) {
-    return value.toString().replace(/\b([a-z])/g, function(str) { return str.toUpperCase() });
-  });
+  Vue.filter('csn',  function(value) { return util.csn((value || 0).toString()) });
+  Vue.filter('R',    function(value, places) { return util.R((value || 0).toString(), places) });
+  Vue.filter('unit', function(value, unit) { return (value || 0).toString() + ' ' + unit });
+  Vue.filter('caps', function(value) { return value.toString().replace(/\b([a-z])/g, function(str) { return str.toUpperCase() }) });
 
   Vue.component('caps', { template: '<span class="text-capitalize"><slot /></span>' });
   Vue.component('lc',   { template: '<span class="text-lowercase"><slot /></span>'  });
   Vue.component('uc',   { template: '<span class="text-uppercase"><slot /></span>'  });
 
   Vue.component('progress-bar', {
-    props: ['percent', 'display'],
+    props: ['percent'],
     template: `
 <div class="progress bg-dark">
   <div class="progress-bar bg-warning" :style="{height: '35px', width: (percent || 0) + '%'}">
-    <span v-if="display" class="badge badge-pill badge-dark float-left m-1 font-weight-normal" style="font-size:14px">
-      {{display}}
+    <span class="badge badge-pill badge-dark float-left m-1 font-weight-normal" style="font-size:14px">
+      <slot />
     </span>
   </div>
 </div>

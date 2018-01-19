@@ -118,31 +118,28 @@ define(function(require, exports, module) {
     template: `
 <div class="p-0 m-0">
   <card :title="'Transit to ' + destination" :subtitle="status">
-    <div class="container container-fluid py-3">
-      <def split=5 term="Progress"           :def="progress + '%'" />
-      <def split=5 term="Current velocity"   :def="velocity|R(1)|csn|unit('km/s')" />
-      <def split=5 term="Time remaining"     :def="hoursLeft|csn|unit('hours')" />
-      <def split=5 term="Distance remaining">
-        <span slot="def" v-if="distance">{{distance|unit('AU')}}</span>
-        <span slot="def" v-else>{{kmLeft|R(0)|csn|unit('km')}}</span>
-      </def>
+    <progress-bar :percent="progress">
+      <span v-if="distance">{{distance|unit('AU')}}</span>
+      <span v-else>{{kmLeft|R(0)|csn|unit('km')}}</span>
+      ({{hoursLeft|csn|unit('hrs')}})
+    </progress-bar>
 
-      <def split=5 term="Nearby bodies">
-        <div slot="def" v-for="(distance, body) of this.nearby()" :key="body">
-          {{distance|R(2)|unit('AU')}} to {{body|caps}}
-        </div>
-      </def>
-    </div>
+    <transit-plot v-show="!inspection" :velocity="velocity" :coords="plan.coords" :dest="plan.dest" :orig="plan.origin" />
 
-    <transit-plot :coords="plan.coords" :dest="plan.dest" :orig="plan.origin" />
-    <transit-inspection v-if="inspection" @done="schedule" :body="inspection.body" :faction="inspection.faction" :distance="inspection.distance" />
+    <transit-inspection
+        v-if="inspection"
+        @done="schedule"
+        :body="inspection.body"
+        :faction="inspection.faction"
+        :distance="inspection.distance"
+        class="my-3" />
   </card>
 </div>
     `,
   });
 
   Vue.component('transit-plot', {
-    props: ['coords', 'dest', 'orig'],
+    props: ['coords', 'dest', 'orig', 'velocity'],
     directives: {
       'square': {
         inserted: function(el, binding, vnode) {
@@ -166,9 +163,11 @@ define(function(require, exports, module) {
       },
     },
     methods: {
-      origPoint: function()  { return system.position(this.orig) },
-      destPoint: function()  { return system.position(this.dest) },
-      zero:      function()  { return this.$el ? Math.floor(this.$el.clientWidth / 2) : 0 },
+      distance:  function() { return Physics.distance(this.coords, this.destPoint()) / Physics.AU },
+      origPoint: function() { return system.position(this.orig) },
+      destPoint: function() { return system.position(this.dest) },
+      zero:      function() { return this.$el ? Math.floor(this.$el.clientWidth / 2) : 0 },
+
       position:  function(p) {
         const [x, y, z] = p;
         const zero = this.zero();
@@ -179,18 +178,43 @@ define(function(require, exports, module) {
           'top':  Math.ceil(zero + (zero * yPct)) + 'px',
         };
       },
+
+      adjustPoint: function(n) {
+        if (n === 0) return 1;
+
+        const inc = 0.25;
+        const abs = Math.abs(n * 100);
+        let adj = 1;
+
+        for (let i = 100; (i > abs) && (((adj + inc) * abs) < 100); i -= 10) {
+          adj += inc;
+        }
+
+        return adj / 100;
+      },
     },
     template: `
-<div v-square class="plot-root p-0 m-0" style="position:relative">
-  <span class="plot-point text-warning" :style="position(sun)">&bull;</span>
-  <span class="plot-point text-success" :style="position(coords)">&#9650;</span>
-
-  <span class="plot-point text-info" :style="position(origPoint())">
-    &bull; <span class="badge badge-pill">{{orig|caps}}</span>
+<div v-square class="plot-root p-0 m-5" style="position:relative">
+  <span v-show="zero()" class="plot-point text-warning" :style="position(sun)">
+    &bull;
   </span>
 
-  <span class="plot-point text-danger" :style="position(destPoint())">
-    &#8982; <span class="badge badge-pill">{{dest|caps}}</span>
+  <span v-show="zero()" class="plot-point text-info" :style="position(origPoint())">
+    &bull;
+    <span class="badge badge-pill m-1">{{orig|caps}}</span>
+  </span>
+
+  <span v-show="zero()" class="plot-point text-danger" :style="position(destPoint())">
+    &#8982;
+    <span class="badge badge-pill m-1">
+      {{dest|caps}}
+      {{distance()|R(2)|unit('AU')}}
+    </span>
+  </span>
+
+  <span v-show="zero()" class="plot-point text-success" :style="position(coords)">
+    &#9650;
+    <span class="badge badge-pill m-1">{{velocity|R(1)|csn|unit('km/s')}}</span>
   </span>
 </div>
     `,
