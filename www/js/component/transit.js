@@ -39,7 +39,7 @@ define(function(require, exports, module) {
 
       turn: function() {
         if (this.plan.left > 0) {
-          if (false && this.inspectionChance()) {
+          if (this.inspectionChance()) {
             return;
           }
           else {
@@ -116,11 +116,10 @@ define(function(require, exports, module) {
       },
     },
     template: `
-<div class="container container-fluid">
+<div class="p-0 m-0">
   <card :title="'Transit to ' + destination" :subtitle="status">
-    <progress-bar :percent="progress" :display="display" />
-
     <div class="container container-fluid py-3">
+      <def split=5 term="Progress"           :def="progress + '%'" />
       <def split=5 term="Current velocity"   :def="velocity|R(1)|csn|unit('km/s')" />
       <def split=5 term="Time remaining"     :def="hoursLeft|csn|unit('hours')" />
       <def split=5 term="Distance remaining">
@@ -135,8 +134,64 @@ define(function(require, exports, module) {
       </def>
     </div>
 
+    <transit-plot :coords="plan.coords" :dest="plan.dest" :orig="plan.origin" />
     <transit-inspection v-if="inspection" @done="schedule" :body="inspection.body" :faction="inspection.faction" :distance="inspection.distance" />
   </card>
+</div>
+    `,
+  });
+
+  Vue.component('transit-plot', {
+    props: ['coords', 'dest', 'orig'],
+    directives: {
+      'square': {
+        inserted: function(el, binding, vnode) {
+          el.setAttribute('style', `position:relative;height:${el.clientWidth}px`);
+        },
+      },
+    },
+    computed: {
+      sun:  function() { return [0, 0, 0] },
+      maxX: function() {
+        return Math.ceil(
+          [this.origPoint()[0], this.destPoint()[0], this.coords[0]]
+            .reduce((acc, x) => {return Math.max(acc, Math.abs(x))}, 0)
+        );
+      },
+      maxY: function() {
+        return Math.ceil(
+          [this.origPoint()[1], this.destPoint()[1], this.coords[1]]
+            .reduce((acc, y) => {return Math.max(acc, Math.abs(y))}, 0)
+        );
+      },
+    },
+    methods: {
+      origPoint: function()  { return system.position(this.orig) },
+      destPoint: function()  { return system.position(this.dest) },
+      zero:      function()  { return this.$el ? Math.floor(this.$el.clientWidth / 2) : 0 },
+      position:  function(p) {
+        const [x, y, z] = p;
+        const zero = this.zero();
+        const xPct = x / this.maxX * 0.8;
+        const yPct = y / this.maxY * 0.8;
+        return {
+          'left': Math.ceil(zero + (zero * xPct)) + 'px',
+          'top':  Math.ceil(zero + (zero * yPct)) + 'px',
+        };
+      },
+    },
+    template: `
+<div v-square class="plot-root p-0 m-0" style="position:relative">
+  <span class="plot-point text-warning" :style="position(sun)">&bull;</span>
+  <span class="plot-point text-success" :style="position(coords)">&#9650;</span>
+
+  <span class="plot-point text-info" :style="position(origPoint())">
+    &bull; <span class="badge badge-pill">{{orig|caps}}</span>
+  </span>
+
+  <span class="plot-point text-danger" :style="position(destPoint())">
+    &#8982; <span class="badge badge-pill">{{dest|caps}}</span>
+  </span>
 </div>
     `,
   });
