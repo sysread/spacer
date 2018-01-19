@@ -48,7 +48,8 @@ define(function(require, exports, module) {
       isPlayerShip:    function() { return this.ship.isPlayerShipType() },
       isNonFaction:    function() { return this.ship.faction && this.place.faction != this.ship.faction },
       isRestricted:    function() { return !this.ship.playerHasStanding() },
-      isAvailable:     function() { return !this.isPlayerShip && !this.isNonFaction && !this.isRestricted },
+      canAfford:       function() { return this.player.money >= this.tradeIn },
+      isAvailable:     function() { return !this.isPlayerShip && !this.isNonFaction && !this.isRestricted && this.canAfford },
 
       price: function() {
         let price = this.ship.price();
@@ -87,6 +88,10 @@ define(function(require, exports, module) {
 
     <p v-if="isPlayerShip" class="text-warning font-italic">
       You already own a ship of this class.
+    </p>
+
+    <p v-if="!canAfford" class="text-warning font-italic">
+      You cannot afford this ship.
     </p>
 
     <p v-if="shipClass.desc" class="font-italic">

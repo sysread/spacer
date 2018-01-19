@@ -73,7 +73,7 @@ define(function(require, exports, module) {
       }
 
       return {
-        cargo: Game.game.player.ship.cargo,
+        cargo:     Game.game.player.ship.cargo,
         resources: resources,
       };
     },
@@ -81,7 +81,7 @@ define(function(require, exports, module) {
       cargoSpace: function() {return Game.game.player.ship.shipclass.cargo},
       cargoUsed:  function() {return Game.game.player.ship.cargoUsed},
       cargoLeft:  function() {return Game.game.player.ship.cargoLeft},
-   },
+    },
     methods: {
       update: function(item, amt) {
         const change = amt - this.cargo.get(item);
