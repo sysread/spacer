@@ -134,7 +134,7 @@ define(function(require, exports, module) {
 
       for (let i = 1; i <= turns; ++i) {
         for (let [item, amt] of this.resources.entries()) {
-          if (data.sources[item].hasOwnProperty('mine')) {
+          if (data.resources[item].hasOwnProperty('mine')) {
             let tics = data.resources[item].mine.tics;
             if ((i >= tics) && (i % tics === 0) && this.mine(item)) {
               collected.inc(item, 1);
