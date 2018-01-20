@@ -126,7 +126,10 @@ define(function(require, exports, module) {
               // Player ended supply deficiency
               if (!Game.game.place().is_under_supplied(this.item)) {
                 Game.game.player.incStanding(Game.game.place().faction, 5);
-              } else {
+                alert('You ended the local supply shortage of ' + this.item + '! Your standing with this faction has increased.');
+              }
+              // Player helped address supply deficiency
+              else {
                 Game.game.player.incStanding(Game.game.place().faction, 1);
               }
             }

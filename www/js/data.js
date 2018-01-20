@@ -16,7 +16,7 @@ define(function() {
     craft_fee        : 0.05,
     fabricators      : 40,
     fab_health       : 30,
-    base_pay         : 15, // credits/day
+    base_pay         : 10, // credits/day
     grav_deltav_factor : 3, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
     initial_ship     : 'runner',
     jurisdiction     : 0.5, // au from body
@@ -50,7 +50,7 @@ define(function() {
     market: {
       agents      : 3,
       fabricators : 2,
-      minability  : 0.30,
+      minability  : 0.25,
       produces    : {},
       consumes    : {water: 2, food: 1, medicine: 0.5, narcotics: 0.1, weapons: 0.2}
     },
@@ -58,20 +58,20 @@ define(function() {
     traits: {
       'mineral rich'     : {produces: {ore:    0.5, minerals:  0.5}, consumes: {}},
       'mineral poor'     : {produces: {ore:   -0.5, minerals: -0.25}, consumes: {}},
-      'water rich'       : {produces: {water:  0.5}, consumes: {}},
+      'water rich'       : {produces: {water:  0.75}, consumes: {}},
       'water poor'       : {produces: {water: -0.5}, consumes: {}},
-      'hydrocarbon rich' : {produces: {hydrocarbons: 0.5, minerals: 0.35}, consumes: {}},
-      'hydrocarbon poor' : {produces: {hydrocarbons: -0.5, minerals: -0.35}, consumes: {}},
+      'hydrocarbon rich' : {produces: {hydrocarbons: 0.35, minerals: 0.2}, consumes: {}},
+      'hydrocarbon poor' : {produces: {hydrocarbons: -0.35, minerals: -0.2}, consumes: {}},
 
       'asteroids'        : {produces: {ore:   1.0, minerals: 1.0}, consumes: {}},
       'rocky'            : {produces: {ore:   0.6, minerals: 0.5} , consumes: {}},
       'icy'              : {produces: {water: 0.8, minerals: 0.35, hydrocarbons: 0.2}, consumes: {}},
 
-      'agricultural'     : {produces: {food: 0.3, hydrocarbons: 0.2}, consumes: {machines: 0.2, fuel: 0.025, water: 0.2, hydrocarbons: 0.4}},
+      'agricultural'     : {produces: {food: 0.5, hydrocarbons: 0.1}, consumes: {machines: 0.2, fuel: 0.1, water: 0.5, hydrocarbons: 0.5}},
       'habitable'        : {produces: {food: 0.7, hydrocarbons: 0.5}, consumes: {}},
       'domed'            : {produces: {food: 0.1, hydrocarbons: 0.15}, consumes: {fuel: 0.2, electronics: 0.05, machines: 0.05, water: 0.1, hydrocarbons: 0.2}},
-      'subterranean'     : {produces: {}, consumes: {fuel: 0.1, electronics: 0.05, machines: 0.05}},
-      'orbital'          : {produces: {}, consumes: {fuel: 0.3, electronics: 0.1, machines: 0.1}}
+      'subterranean'     : {produces: {}, consumes: {fuel: 0.1, electronics: 0.1, machines: 0.1}},
+      'orbital'          : {produces: {}, consumes: {fuel: 0.5, electronics: 0.2, machines: 0.2}}
     },
 
     conditions: {
@@ -81,36 +81,48 @@ define(function() {
       war     : {produces: {}, consumes: {}},
     },
 
+    // TODO: faction production/consumption should probably be implemented as a
+    // bonus/malus to weighting agent fabrication selection.
     factions: {
       'UN': {
         full_name : 'United Nations',
         capital   : 'Earth',
         sales_tax : 0.09,
         patrol    : 0.07,
+        produces  : {},
+        consumes  : {narcotics: 0.1, food: 0.25},
       },
       'MC': {
         full_name : 'Martian Commonwealth',
         capital   : 'Mars',
         sales_tax : 0.075,
         patrol    : 0.09,
+        produces  : {machines: 0.1, electronics: 0.1},
+        consumes  : {food: 0.1},
       },
       'CERES': {
         full_name : 'The Most Serene Republic of Ceres',
         capital   : 'Ceres',
         sales_tax : 0.045,
         patrol    : 0.05,
+        produces  : {},
+        consumes  : {},
       },
       'JFT': {
         full_name : 'Jovian Free Traders',
         capital   : 'Ganymede',
         sales_tax : 0.065,
         patrol    : 0.05,
+        produces  : {},
+        consumes  : {fuel: 0.5},
       },
       'TRANSA': {
         full_name : 'Trans-Neptunian Authority',
         capital   : 'Pluto',
         sales_tax : 0.0275,
         patrol    : 0.02,
+        produces  : {narcotics: 0.5},
+        consumes  : {weapons: 0.5},
       },
     },
 

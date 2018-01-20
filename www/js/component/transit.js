@@ -213,24 +213,13 @@ define(function(require, exports, module) {
           shipClass: util.oneOf(['corvette', 'frigate', 'destroyer'])
         }),
         choice: 'ready',
+        fine: 0,
       };
     },
     computed: {
       place: function() { return Game.game.place(this.body) },
       bribeAmount: function() { return Math.ceil(Game.game.player.ship.price() * 0.03) },
       canAffordBribe: function() { return this.bribeAmount <= Game.game.player.money },
-
-      fine: function() {
-        let fine = 0;
-
-        for (const [item, amt] of Game.game.player.ship.cargo.entries()) {
-          if (amt > 0 && data.resources[item].contraband) {
-            fine += amt * this.place.inspectionFine();
-          }
-        }
-
-        return Math.min(fine, Game.game.player.money);
-      },
     },
     methods: {
       setChoice(choice) {
@@ -238,9 +227,18 @@ define(function(require, exports, module) {
       },
 
       submit: function() {
-        const fine = this.fine;
+        let fine = 0;
+        for (const [item, amt] of Game.game.player.ship.cargo.entries()) {
+          if (data.resources[item].contraband) {
+            fine += amt * this.place.inspectionFine();
+          }
+        }
 
-        if (fine > 0) {
+        this.fine = Math.min(fine, Game.game.player.money);
+
+        if (this.fine > 0) {
+          Game.game.player.debit(this.fine);
+
           for (const [item, amt] of Game.game.player.ship.cargo.entries()) {
             if (amt > 0 && data.resources[item].contraband) {
               Game.game.player.ship.cargo.set(item, 0);
@@ -248,7 +246,6 @@ define(function(require, exports, module) {
             }
           }
 
-          Game.game.player.debit(fine);
           this.setChoice('submit-fined');
         }
         else {

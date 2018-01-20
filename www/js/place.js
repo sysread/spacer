@@ -99,13 +99,15 @@ define(function(require, exports, module) {
     get production() {
       let traits = this.traits.map((t)     => {return data.traits[t].produces});
       let conds  = this.conditions.map((c) => {return data.conditions[c].produces});
-      return this.mergeScale(data.market.produces, traits, conds);
+      let extra  = data.factions[this.faction].produces;
+      return this.mergeScale(data.market.produces, traits, conds, extra);
     }
 
     get consumption() {
       let traits = this.traits.map((t)     => {return data.traits[t].consumes});
       let conds  = this.conditions.map((c) => {return data.conditions[c].consumes});
-      return this.mergeScale(data.market.consumes, traits, conds);
+      let extra  = data.factions[this.faction].consumes;
+      return this.mergeScale(data.market.consumes, traits, conds, extra);
     }
 
     get payRate() {
@@ -132,9 +134,11 @@ define(function(require, exports, module) {
 
       for (let i = 1; i <= turns; ++i) {
         for (let [item, amt] of this.resources.entries()) {
-          let tics = data.resources[item].mine.tics;
-          if ((i >= tics) && (i % tics === 0) && this.mine(item)) {
-            collected.inc(item, 1);
+          if (data.sources[item].hasOwnProperty('mine')) {
+            let tics = data.resources[item].mine.tics;
+            if ((i >= tics) && (i % tics === 0) && this.mine(item)) {
+              collected.inc(item, 1);
+            }
           }
         }
       }
@@ -312,7 +316,11 @@ define(function(require, exports, module) {
       for (let [resource, amt] of this.production.entries()) {
         this.resources.set(resource, amt);
 
-        if (Game.game.turns % data.resources[resource].mine.tics !== 0)
+        const tics = data.resources[resource].hasOwnProperty('mine')
+          ? data.resources[resource].mine.tics    // naturally occurring
+          : data.resources[resource].recipe.tics; // manufactured
+
+        if (Game.game.turns % tics !== 0)
           return;
 
         if (this.is_over_supplied(resource))
