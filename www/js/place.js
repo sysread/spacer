@@ -26,6 +26,7 @@ define(function(require, exports, module) {
     get traits()    {return data.bodies[this.name].traits}
     get faction()   {return data.bodies[this.name].faction}
     get sales_tax() {return data.factions[this.faction].sales_tax}
+    get patrol()    {return data.factions[this.faction].patrol}
     get max_fabs()  {return Math.ceil(data.fabricators * this.scale)}
 
     save() {
@@ -376,6 +377,19 @@ define(function(require, exports, module) {
 
       this.deliverySchedule();
       this.deliveryProcess();
+    }
+
+    inspectionRate(distanceAU) {
+      const adjust = this.faction === Game.game.player.faction ? 0.5 : 1.0;
+      return (1 - (Math.max(0.01, (distanceAU || 0)) / 0.25)) * this.patrol * this.scale * adjust;
+    }
+
+    inspectionChance(distanceAU) {
+      return Math.random() <= this.inspectionRate(distanceAU);
+    }
+
+    inspectionFine() {
+      return Math.max(10, data.max_abs_standing - Game.game.player.getStanding(this.faction));
     }
   };
 });

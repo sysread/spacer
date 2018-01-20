@@ -20,6 +20,7 @@ define(function() {
     grav_deltav_factor : 3, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
     initial_ship     : 'runner',
     jurisdiction     : 0.5, // au from body
+    max_abs_standing : 100,
 
     scales: {
       tiny   : 0.6,
@@ -42,8 +43,8 @@ define(function() {
       machines     : {mass: 30, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}},
       electronics  : {mass: 10, recipe: {tics: 5, materials: {ceramics: 2, metal: 1}}},
       cybernetics  : {mass: 40, recipe: {tics: 6, materials: {machines: 1, electronics: 1}}},
-      weapons      : {mass: 10, recipe: {tics: 4, materials: {metal: 1, ceramics: 1}}, contraband: 3},
-      narcotics    : {mass: 2, recipe: {tics: 2, materials: {medicine: 2}}, contraband: 5},
+      narcotics    : {mass: 2, recipe: {tics: 2, materials: {medicine: 2}}, contraband: 3},
+      weapons      : {mass: 10, recipe: {tics: 4, materials: {metal: 1, ceramics: 1}}, contraband: 5},
     },
 
     market: {

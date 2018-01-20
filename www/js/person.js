@@ -109,11 +109,11 @@ define(function(require, exports, module) {
     }
 
     incStanding(faction, amt) {
-      this.standing[faction] = Math.min(100, this.getStanding(faction) + amt);
+      this.standing[faction] = Math.min(data.max_abs_standing, this.getStanding(faction) + amt);
     }
 
     decStanding(faction, amt) {
-      this.standing[faction] = Math.max(-100, this.getStanding(faction) - amt);
+      this.standing[faction] = Math.max(-data.max_abs_standing, this.getStanding(faction) - amt);
     }
   };
 });

@@ -87,14 +87,9 @@ define(function(require, exports, module) {
         for (const body of Object.keys(ranges)) {
           const au = ranges[body];
 
-          const faction = data.bodies[body].faction;
-          const patrol  = data.factions[faction].patrol;
-          const scale   = data.scales[data.bodies[body].size];
-          const adjust  = faction === Game.game.player.faction ? 0.5 : 1.0;
-          const freq    = (1 - (Math.max(0.01, au) / 0.25)) * patrol * scale * adjust;
-          const roll    = Math.random();
+          if (Game.game.place(body).inspectionChance()) {
+            const faction = data.bodies[body].faction;
 
-          if (roll <= freq) {
             if (this.stoppedBy[faction]) {
               continue;
             }
@@ -221,6 +216,7 @@ define(function(require, exports, module) {
       };
     },
     computed: {
+      place: function() { return Game.game.place(this.body) },
       bribeAmount: function() { return Math.ceil(Game.game.player.ship.price() * 0.03) },
       canAffordBribe: function() { return this.bribeAmount <= Game.game.player.money },
 
@@ -229,15 +225,11 @@ define(function(require, exports, module) {
 
         for (const [item, amt] of Game.game.player.ship.cargo.entries()) {
           if (amt > 0 && data.resources[item].contraband) {
-            fine += amt * 100 * data.resources[item].contraband;
+            fine += amt * this.place.inspectionFine();
           }
         }
 
-        if (fine > 0) {
-          fine = Math.min(fine, Game.game.player.money);
-        }
-
-        return fine;
+        return Math.min(fine, Game.game.player.money);
       },
     },
     methods: {
@@ -246,7 +238,9 @@ define(function(require, exports, module) {
       },
 
       submit: function() {
-        if (this.fine > 0) {
+        const fine = this.fine;
+
+        if (fine > 0) {
           for (const [item, amt] of Game.game.player.ship.cargo.entries()) {
             if (amt > 0 && data.resources[item].contraband) {
               Game.game.player.ship.cargo.set(item, 0);
@@ -254,7 +248,7 @@ define(function(require, exports, module) {
             }
           }
 
-          Game.game.player.debit(this.fine);
+          Game.game.player.debit(fine);
           this.setChoice('submit-fined');
         }
         else {

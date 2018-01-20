@@ -19,7 +19,6 @@ define(function(require, exports, module) {
       resources: function() { return Object.keys(data.resources) },
     },
     methods: {
-      csn:  function(n)    { return util.csn(n)                           },
       buy:  function(item) { return Game.game.place().buyPrice(item)      },
       sell: function(item) { return Game.game.place().sellPrice(item)     },
       dock: function(item) { return Game.game.place().currentSupply(item) },
@@ -40,8 +39,8 @@ define(function(require, exports, module) {
       </cell>
       <cell size=8 brkpt="sm" y=1>
         <row y=0>
-          <cell size=3 y=0>Buy</cell> <cell size=3 y=0 class="muted">{{csn(buy(item))}}</cell>
-          <cell size=3 y=0>Sell</cell><cell size=3 y=0 class="muted">{{csn(sell(item))}}</cell>
+          <cell size=3 y=0>Buy</cell> <cell size=3 y=0 class="muted">{{buy(item)|csn}}</cell>
+          <cell size=3 y=0>Sell</cell><cell size=3 y=0 class="muted">{{sell(item)|csn}}</cell>
           <cell size=3 y=0>Dock</cell><cell size=3 y=0 class="muted" :class="{'font-weight-bold': dock(item) > 0, 'text-warning': dock(item) > 0}">{{dock(item)}}</cell>
           <cell size=3 y=0>Ship</cell><cell size=3 y=0 class="muted" :class="{'font-weight-bold': hold(item) > 0, 'text-success': hold(item) > 0}">{{hold(item)}}</cell>
         </row>
@@ -64,12 +63,17 @@ define(function(require, exports, module) {
         dock:    Game.game.place().currentSupply(this.item),
         cargo:   Game.game.player.ship.cargoUsed,
         report:  false,
+        caught:  false,
       };
     },
     computed: {
-      buy:  function() { return Game.game.place().buyPrice(this.item)  },
-      sell: function() { return Game.game.place().sellPrice(this.item) },
-      max:  function() {
+      faction:    function() { return Game.game.place().faction },
+      buy:        function() { return Game.game.place().buyPrice(this.item)  },
+      sell:       function() { return Game.game.place().sellPrice(this.item) },
+      count:      function() { return this.hold - Game.game.player.ship.cargo.get(this.item) },
+      contraband: function() { return data.resources[this.item].contraband },
+
+      max: function() {
         const cred  = Game.game.player.money;
         const hold  = Game.game.player.ship.cargo.get(this.item);
         const dock  = Game.game.place().currentSupply(this.item);
@@ -78,9 +82,16 @@ define(function(require, exports, module) {
       },
     },
     methods: {
-      csn: function(n) { return util.csn(n) },
+      agentGender: function() {
+        return util.oneOf(['man', 'woman']);
+      },
 
-      updateState() {
+      fine: function() {
+        const base = Game.game.place().inspectionFine();
+        return Math.min(Game.game.player.money, base * Math.abs(this.count));
+      },
+
+      updateState: function() {
         const cred   = Game.game.player.money;
         const hold   = Game.game.player.ship.cargo.get(this.item);
         const dock   = Game.game.place().currentSupply(this.item);
@@ -90,20 +101,40 @@ define(function(require, exports, module) {
         this.cargo   = Game.game.player.ship.cargoUsed + diff;
       },
 
-      complete() {
-        const count = this.hold - Game.game.player.ship.cargo.get(this.item);
+      complete: function() {
+        if (this.contraband && Game.game.place().inspectionChance()) {
+          alert(
+              `As you complete your exchange, ${this.faction} agents in powered armor smash their way into the room.`
+            + `A ${this.agentGender()} with a corporal's stripes informs you that your cargo has been confiscated and you have been fined ${this.fine()} credits.`,
+            + `Your reputation with this faction has decreased by ${this.contraband}.`
+          );
+          Game.game.player.debit(this.fine());
+          Game.game.player.decStanding(this.faction, this.contraband);
+          Game.game.player.ship.cargo.set(this.item, 0);
+        }
+        else {
+          if (this.count > 0) {
+            Game.game.player.debit(Game.game.place().buy(this.item, this.count));
+            Game.game.player.ship.loadCargo(this.item, this.count);
+          }
+          else {
+            const underSupplied = Game.game.place().is_under_supplied(this.item);
+            Game.game.player.credit(Game.game.place().sell(this.item, -this.count));
+            Game.game.player.ship.unloadCargo(this.item, -this.count);
 
-        if (count > 0) {
-          Game.game.player.debit(Game.game.place().buy(this.item, count));
-          Game.game.player.ship.loadCargo(this.item, count);
-        } else {
-          Game.game.player.credit(Game.game.place().sell(this.item, -count));
-          Game.game.player.ship.unloadCargo(this.item, -count);
+            if (underSupplied) {
+              // Player ended supply deficiency
+              if (!Game.game.place().is_under_supplied(this.item)) {
+                Game.game.player.incStanding(Game.game.place().faction, 5);
+              } else {
+                Game.game.player.incStanding(Game.game.place().faction, 1);
+              }
+            }
+          }
         }
 
         Game.game.save_game();
         Game.game.refresh();
-
         this.$emit('update:item', null);
       },
     },
@@ -113,7 +144,7 @@ define(function(require, exports, module) {
     <button @click="report=true" slot="header" type="button" class="btn btn-dark">Report</button>
 
     <row>
-      <cell size="3" class="font-weight-bold">Credits</cell><cell size="3">{{csn(credits)}}</cell>
+      <cell size="3" class="font-weight-bold">Credits</cell><cell size="3">{{credits|csn}}</cell>
       <cell size="3" class="font-weight-bold">Cargo</cell><cell size="3">{{cargo}}</cell>
     </row>
 
@@ -129,7 +160,7 @@ define(function(require, exports, module) {
 
     <slider minmax=true :value.sync="hold" min=0 :max="max" step=1 @update:value="updateState" />
 
-    <btn @click="complete" slot="footer" close=1>Complete transaction</btn>
+    <btn slot="footer" @click="complete" close=1>Complete transaction</btn>
   </modal>
 
   <modal v-if="report" @close="report=false" close="Close" xclose=true :title="'System market report for ' + item">
