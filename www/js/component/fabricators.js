@@ -49,6 +49,9 @@ define(function(require, exports, module) {
         this.count = 1;
         this.done  = false;
       },
+      priceOf: function(item) {
+        return Game.game.place().price(item);
+      },
     },
     template: `
 <div class="my-2">
@@ -64,13 +67,13 @@ define(function(require, exports, module) {
     <def y=0 term="Cost" :def="(fee * count)|R(0)|csn|unit('credits')" />
     <def y=0 term="Time" :def="(hours * count)|csn|unit('hours')" />
     <def y=0 term="Materials">
-      <span slot="def" v-for="(amt, item) of materials">
-        {{(amt * count)|csn|unit(item)}}
-      </span>
+      <div slot="def" v-for="(amt, item) of materials">
+        {{(amt * count)|csn|unit(item)}} ({{priceOf(item)|csn}} cr)
+      </div>
     </def>
 
     <slider v-if="amount() > 1" class="my-3" :value.sync="count" min="1" :max="amount()" minmax=1 />
-    <btn block=1 @click="fabricate" class="my-3">Push the big red button</btn>
+    <btn v-if="amount()" block=1 @click="fabricate" class="my-3">Push the big red button</btn>
 
     <ok v-if="done" @ok="reset">{{count}} unit(s) of {{item}} have been placed in your ship's hold.</ok>
   </card>
