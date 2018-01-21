@@ -35,6 +35,9 @@ define(function(require, exports, module) {
 
         profit -= cost;
 
+        if (this.is_under_supplied(item))
+          profit *= 2;
+
         if (item === 'fuel')
           profit *= 2;
 

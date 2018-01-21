@@ -27,6 +27,11 @@ define(function(require, exports, module) {
       return Game.game.place(place).is_over_supplied(item);
     }
 
+    is_under_supplied(item, place) {
+      place = place || this.place;
+      return Game.game.place(place).is_under_supplied(item);
+    }
+
     /*
      * Randomly returns true or false, skewed toward true based on the specified
      * item's contraband index.
