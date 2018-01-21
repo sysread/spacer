@@ -132,7 +132,7 @@ define(function(require, exports, module) {
       : (need < 1) ? (Math.max(0.1, Math.sqrt(need)))
       : 1;
 
-      return this.randomAdjustment( need * (adjust + markup) );
+      return this.randomAdjustment( (need + adjust + markup) / 2 );
     }
 
     calculatePrice(resource) {

@@ -1,0 +1,100 @@
+<script type="text/javascript">
+
+var game;
+var place;
+var player;
+
+require(
+  [
+    'vendor/vue', 'data', 'util', 'game', 'physics', 'ship',
+    'component/common',
+    'component/card',
+    'component/row',
+  ],
+  function(Vue, data, util, Game, Physics, Ship) {
+    game   = Game.game;
+    place  = game.place();
+    player = game.player;
+
+    const app = new Vue({
+      el: '#test',
+      data: {
+        testDataSection: null,
+        testData:        null,
+        nominalDeltaV:   0.2,
+      },
+      computed: {
+      },
+      methods: {
+        logGame() { console.log(game) },
+        gameTurns(n) { game.turn(n) },
+
+        shipRange(ship, maxDeltaV) {
+          const dv = maxDeltaV ? (maxDeltaV * Physics.G) : ship.currentAcceleration();
+          const bn = ship.maxBurnTime(dv) * data.hours_per_turn;
+          const au = Physics.range(bn * 3600, 0, dv) / Physics.AU;
+          return {
+            mass:   util.R(ship.currentMass()),
+            deltav: util.R(dv / Physics.G, 2),
+            burn:   util.R(bn, 2),
+            dist:   util.R(au, 2),
+          };
+        },
+
+        shipMaxRanges() {
+          this.testDataSection = 'shipMaxRanges';
+          this.testData = {};
+
+          for (const sc of Object.keys(data.shipclass)) {
+            this.testData[sc] = {};
+            const ship = new Ship({shipclass: sc, fuel: data.shipclass[sc].tank});
+            this.testData[sc].nominal = this.shipRange(ship);
+            ship.loadCargo('ore', ship.cargoSpace);
+            this.testData[sc].loaded = this.shipRange(ship);
+          }
+        },
+
+        shipRanges() {
+          this.testDataSection = 'shipRanges';
+          this.testData = {};
+
+          for (const sc of Object.keys(data.shipclass)) {
+            this.testData[sc] = {};
+            const ship = new Ship({shipclass: sc, fuel: data.shipclass[sc].tank});
+            this.testData[sc].nominal = this.shipRange(ship, this.nominalDeltaV);
+            ship.loadCargo('ore', ship.cargoSpace);
+            this.testData[sc].loaded = this.shipRange(ship, this.nominalDeltaV);
+          }
+        },
+      },
+      template: `
+<card title="Testing">
+  <btn @click="logGame" block=1>console.log(game)</btn>
+  <btn @click="gameTurns(10)" block=1>10 turns</btn>
+  <btn @click="gameTurns(100)" block=1>100 turns</btn>
+  <btn @click="gameTurns(500)" block=1>500 turns</btn>
+  <btn @click="shipMaxRanges" block=1>Ship ranges at max delta-v</btn>
+  <btn @click="shipRanges" block=1>Ship ranges at {{nominalDeltaV}} G</btn>
+
+  <card v-if="testDataSection == 'shipMaxRanges'" title="Ship ranges (max G)" class="my-2">
+    <card v-for="(data, sc) of this.testData" :key="sc" :title="sc|caps" class="my-2">
+      <def y=0 split=2 term="Nominal" :def="data.nominal" />
+      <def y=0 split=2 term="Loaded" :def="data.loaded" />
+    </card>
+  </card>
+
+  <card v-if="testDataSection == 'shipRanges'" :title="'Ship ranges (' + nominalDeltaV + 'G)'" class="my-2">
+    <card v-for="(data, sc) of this.testData" :key="sc" :title="sc|caps" class="my-2">
+      <def y=0 split=2 term="Nominal" :def="data.nominal" />
+      <def y=0 split=2 term="Loaded" :def="data.loaded" />
+    </card>
+  </card>
+</card>
+      `,
+    });
+  }
+);
+
+</script>
+
+<div id="test"></div>

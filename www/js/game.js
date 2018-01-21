@@ -41,7 +41,7 @@ define(function(require, exports, module) {
           this.load(JSON.parse(saved));
           this.refresh();
           exports.open('summary');
-          //exports.open('navigation');
+          //exports.open('test');
         }
         else {
           exports.open('newgame');
@@ -50,23 +50,6 @@ define(function(require, exports, module) {
     }
 
     get here() {return this.place(this.locus)}
-
-    test() {
-      for (let sc of Object.keys(data.shipclass)) {
-        let ship = new Ship({shipclass: sc, fuel: data.shipclass[sc].tank});
-        console.log(sc);
-
-        let dv0 = R(ship.currentAcceleration(), 3);
-        let bn0 = R(ship.maxBurnTime(dv0, true) * data.hours_per_turn, 3);
-        let au0 = R((Physics.range(bn0 * 3600, 0, dv0) / Physics.AU), 3);
-        console.log('max', {'deltav': R(dv0 / Physics.G, 3), 'hours': bn0, 'dist': au0});
-
-        let dv1 = R(Math.min(Physics.G * 0.5, dv0 * 0.6), 3);
-        let bn1 = R(ship.maxBurnTime(dv1, true) * data.hours_per_turn, 3);
-        let au1 = R((Physics.range(bn1 * 3600, 0, dv1) / Physics.AU), 3);
-        console.log('nom', {'deltav': R(dv1 / Physics.G, 3), 'hours': bn1, 'dist': au1});
-      }
-    }
 
     net_production() {
       Object.keys(this.places).forEach((place) => {

@@ -241,9 +241,6 @@ define(function(require, exports, module) {
           .map((b) => {return [b, this.deliveryOriginDesirability(b, resource)]})
           .filter((b) => {return b[1] > 0});
 
-        if (possible.length === 0)
-          return;
-
         for (let [body, desirability] of possible) {
           let place = Game.game.place(body);
           let want  = this.deliveryAmount(body, resource);
@@ -274,6 +271,9 @@ define(function(require, exports, module) {
             place.incDemand('fuel', fuel);
             continue;
           }
+
+          if (amt < data.min_delivery_amt)
+            continue;
 
           place.store.dec('fuel', fuel);
           place.store.dec(resource, amt);

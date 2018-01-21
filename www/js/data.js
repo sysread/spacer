@@ -21,6 +21,7 @@ define(function() {
     initial_ship     : 'runner',
     jurisdiction     : 0.5, // au from body
     max_abs_standing : 100,
+    min_delivery_amt : 2,
 
     scales: {
       tiny   : 0.6,
@@ -35,36 +36,36 @@ define(function() {
       ore          : {mass: 25, mine: {tics: 3}},
       minerals     : {mass: 10, mine: {tics: 3}},
       hydrocarbons : {mass: 2,  mine: {tics: 4}},
-      food         : {mass: 5, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 1, hydrocarbons: 2}}},
-      fuel         : {mass: 1,  recipe: {tics: 2, materials: {ore: 1, minerals: 1}}},
+      food         : {mass: 5, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 1, hydrocarbons: 1}}},
+      fuel         : {mass: 1,  recipe: {tics: 2, materials: {minerals: 1}}},
       metal        : {mass: 40, recipe: {tics: 2, materials: {ore: 4}}},
-      ceramics     : {mass: 10, recipe: {tics: 3, materials: {minerals: 1, water: 1}}},
+      ceramics     : {mass: 10, recipe: {tics: 3, materials: {minerals: 2, water: 2}}},
       medicine     : {mass: 2, recipe: {tics: 4, materials: {food: 1, hydrocarbons: 1}}},
       machines     : {mass: 30, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}},
       electronics  : {mass: 10, recipe: {tics: 5, materials: {ceramics: 2, metal: 1}}},
-      cybernetics  : {mass: 40, recipe: {tics: 6, materials: {machines: 2, electronics: 2, ceramics: 1, metal: 1}}},
+      cybernetics  : {mass: 40, recipe: {tics: 6, materials: {machines: 2, electronics: 2}}},
       narcotics    : {mass: 2, recipe: {tics: 2, materials: {medicine: 2}}, contraband: 3},
       weapons      : {mass: 10, recipe: {tics: 4, materials: {metal: 1, ceramics: 1}}, contraband: 5},
     },
 
     market: {
-      agents      : 3,
+      agents      : 2,
       fabricators : 2,
-      minability  : 0.25,
+      minability  : 0.2,
       produces    : {},
       consumes    : {water: 2, food: 1, medicine: 0.5, narcotics: 0.1, weapons: 0.2}
     },
 
     traits: {
-      'mineral rich'     : {produces: {ore:    0.5, minerals:  0.5}, consumes: {}},
-      'mineral poor'     : {produces: {ore:   -0.5, minerals: -0.25}, consumes: {}},
-      'water rich'       : {produces: {water:  0.75}, consumes: {}},
+      'mineral rich'     : {produces: {ore: 0.5, minerals: 0.5}, consumes: {}},
+      'mineral poor'     : {produces: {ore: -0.5, minerals: -0.25}, consumes: {}},
+      'water rich'       : {produces: {water: 0.75}, consumes: {}},
       'water poor'       : {produces: {water: -0.5}, consumes: {}},
       'hydrocarbon rich' : {produces: {hydrocarbons: 0.35, minerals: 0.2}, consumes: {}},
       'hydrocarbon poor' : {produces: {hydrocarbons: -0.35, minerals: -0.2}, consumes: {}},
 
-      'asteroids'        : {produces: {ore:   2.0, minerals: 2.0}, consumes: {fuel: 1.0}},
-      'rocky'            : {produces: {ore:   0.6, minerals: 0.5} , consumes: {}},
+      'asteroids'        : {produces: {ore: 1.0, minerals: 1.0}, consumes: {fuel: 1.0}},
+      'rocky'            : {produces: {ore: 0.6, minerals: 0.5} , consumes: {}},
       'icy'              : {produces: {water: 0.8, minerals: 0.35, hydrocarbons: 0.2}, consumes: {}},
 
       'agricultural'     : {produces: {food: 0.5, hydrocarbons: 0.1}, consumes: {machines: 0.2, fuel: 0.1, water: 0.5, hydrocarbons: 0.5}},
