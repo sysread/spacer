@@ -219,14 +219,13 @@ define(function(require, exports, module) {
       info:    function() { if (this.hasData) return this.report.data[this.item] },
       isLocal: function() { return this.body === Game.game.locus },
       central: function() { return system.central(this.body) },
-      name:    function() { return system.name(this.body) },
     },
     methods: {
     },
     template: `
 <tr :class="{'bg-dark': isLocal}">
   <th scope="row">
-    {{name}}
+    {{body|caps}}
     <span v-if="central != 'sun'" class="badge badge-pill m-1">{{central|caps}}</span>
     <span v-if="info.trend > 0" class="badge badge-pill float-right">&uarr; {{info.trend}}</span>
     <span v-if="info.trend < 0" class="badge badge-pill float-right">&darr; {{info.trend}}</span>
