@@ -221,10 +221,10 @@ define(function() {
     drives: {
       ion: {
         name      : 'Ion',
-        thrust    : 1050,
+        thrust    : 1300,
         mass      : 10,
         desc      : 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
-        burn_rate : 0.258,
+        burn_rate : 0.188,
         hull      : 1,
       },
       fusion: {
@@ -232,7 +232,7 @@ define(function() {
         thrust    : 9200,
         mass      : 40,
         desc      : 'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
-        burn_rate : 1.317,
+        burn_rate : 1.117,
         hull      : 5,
       }
     },
