@@ -28,10 +28,10 @@ define(function(require, exports, module) {
     <button @click="newGame" type="button" class="btn btn-dark">New Game</button>
     <h3>Captain</h3>
   </card-header>
-  <def caps=true term="Money" :def="money|csn|unit('cr')" />
-  <def caps=true term="Home" :def="home" />
-  <def caps=true term="Faction" :def="faction" />
-  <def caps=true term="Acceleration endurance" :def="accel|R(2)|unit('G')" />
+  <def term="Money" :def="money|csn|unit('cr')" />
+  <def term="Home" :def="home|caps" />
+  <def term="Faction" :def="faction|caps" />
+  <def term="Thrust endurance" :def="accel|R(2)|unit('G')" />
 </card>
     `,
   });
