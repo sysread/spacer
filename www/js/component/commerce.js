@@ -1,8 +1,9 @@
 define(function(require, exports, module) {
-  const Game = require('game');
-  const Vue  = require('vendor/vue');
-  const data = require('data');
-  const util = require('util');
+  const Game   = require('game');
+  const Vue    = require('vendor/vue');
+  const data   = require('data');
+  const system = require('system');
+  const util   = require('util');
 
   require('component/modal');
   require('component/card');
@@ -217,11 +218,16 @@ define(function(require, exports, module) {
       hasData: function() { return this.report.data.hasOwnProperty(this.item) },
       info:    function() { if (this.hasData) return this.report.data[this.item] },
       isLocal: function() { return this.body === Game.game.locus },
+      central: function() { return system.central(this.body) },
+      name:    function() { return system.name(this.body) },
+    },
+    methods: {
     },
     template: `
 <tr :class="{'bg-dark': isLocal}">
   <th scope="row">
-    {{body|caps}}
+    {{name}}
+    <span v-if="central != 'sun'" class="badge badge-pill m-1">{{central|caps}}</span>
     <span v-if="info.trend > 0" class="badge badge-pill float-right">&uarr; {{info.trend}}</span>
     <span v-if="info.trend < 0" class="badge badge-pill float-right">&darr; {{info.trend}}</span>
   </th>
