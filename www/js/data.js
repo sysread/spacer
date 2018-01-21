@@ -42,7 +42,7 @@ define(function() {
       medicine     : {mass: 2, recipe: {tics: 4, materials: {food: 1, hydrocarbons: 1}}},
       machines     : {mass: 30, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}},
       electronics  : {mass: 10, recipe: {tics: 5, materials: {ceramics: 2, metal: 1}}},
-      cybernetics  : {mass: 40, recipe: {tics: 6, materials: {machines: 1, electronics: 1}}},
+      cybernetics  : {mass: 40, recipe: {tics: 6, materials: {machines: 2, electronics: 2, ceramics: 1, metal: 1}}},
       narcotics    : {mass: 2, recipe: {tics: 2, materials: {medicine: 2}}, contraband: 3},
       weapons      : {mass: 10, recipe: {tics: 4, materials: {metal: 1, ceramics: 1}}, contraband: 5},
     },
