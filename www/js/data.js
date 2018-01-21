@@ -193,27 +193,27 @@ define(function() {
       titan: {
         name     : 'Titan',
         size     : 'normal',
-        traits   : ['domed', 'icy', 'water rich', 'hydrocarbon rich'],
+        traits   : ['domed', 'icy', 'hydrocarbon rich'],
         faction  : 'TRANSA',
       },
       triton: {
         name     : 'Triton Command',
         size     : 'small',
-        traits   : ['orbital', 'icy', 'water rich', 'mineral poor'],
+        traits   : ['orbital', 'icy', 'mineral poor'],
         faction  : 'TRANSA',
         gravity  : 0.5,
       },
       titania: {
         name     : 'Titania Outpost',
         size     : 'small',
-        traits   : ['subterranean', 'icy', 'rocky', 'hydrocarbon rich'],
+        traits   : ['subterranean', 'icy', 'rocky'],
         faction  : 'TRANSA',
         gravity  : 0.235,
       },
       pluto: {
         name     : 'Pluto',
         size     : 'small',
-        traits   : ['domed', 'subterranean', 'rocky', 'water rich', 'mineral rich'],
+        traits   : ['domed', 'subterranean'],
         faction  : 'TRANSA',
       }
     },
