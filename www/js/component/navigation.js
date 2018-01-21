@@ -89,7 +89,10 @@ define(function(require, exports, module) {
       class="btn btn-dark btn-block text-left"
       :class="{'btn-dark': !disabled, 'disabled': disabled}">
       {{name}}
-      <span v-if="isMoon" class="badge badge-pill float-right">{{kind}}</span>
+      <span class="badge badge-pill float-right">
+        <span v-if="isMoon">{{kind}} |</span>
+        {{faction}}
+      </span>
     </button>
   </div>
 
