@@ -63,7 +63,7 @@ define(function() {
       'hydrocarbon rich' : {produces: {hydrocarbons: 0.35, minerals: 0.2}, consumes: {}},
       'hydrocarbon poor' : {produces: {hydrocarbons: -0.35, minerals: -0.2}, consumes: {}},
 
-      'asteroids'        : {produces: {ore:   1.0, minerals: 1.0}, consumes: {}},
+      'asteroids'        : {produces: {ore:   2.0, minerals: 2.0}, consumes: {fuel: 1.0}},
       'rocky'            : {produces: {ore:   0.6, minerals: 0.5} , consumes: {}},
       'icy'              : {produces: {water: 0.8, minerals: 0.35, hydrocarbons: 0.2}, consumes: {}},
 
@@ -161,7 +161,7 @@ define(function() {
       europa: {
         name     : 'Europa',
         size     : 'small',
-        traits   : ['subterranean', 'rocky'],
+        traits   : ['subterranean', 'rocky', 'mineral rich'],
         faction  : 'MC',
       },
       callisto: {
