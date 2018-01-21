@@ -87,7 +87,7 @@ define(function(require, exports, module) {
         for (const body of Object.keys(ranges)) {
           const au = ranges[body];
 
-          if (Game.game.place(body).inspectionChance()) {
+          if (Game.game.place(body).inspectionChance(au)) {
             const faction = data.bodies[body].faction;
 
             if (this.stoppedBy[faction]) {
@@ -187,17 +187,17 @@ define(function(require, exports, module) {
     <span class="badge badge-pill m-1">{{orig|caps}}</span>
   </span>
 
+  <span v-show="zero()" class="plot-point text-success" :style="position(coords)">
+    &#9650;
+    <span class="badge badge-pill m-1">{{(velocity/1000)|R(0)|csn|unit('km/s')}}</span>
+  </span>
+
   <span v-show="zero()" class="plot-point text-danger" :style="position(destPoint())">
     &#8982;
     <span class="badge badge-pill m-1">
       {{dest|caps}}
       {{distance()|R(2)|unit('AU')}}
     </span>
-  </span>
-
-  <span v-show="zero()" class="plot-point text-success" :style="position(coords)">
-    &#9650;
-    <span class="badge badge-pill m-1">{{velocity|R(1)|csn|unit('km/s')}}</span>
   </span>
 </div>
     `,
