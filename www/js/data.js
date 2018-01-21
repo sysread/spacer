@@ -87,7 +87,7 @@ define(function() {
       'UN': {
         full_name : 'United Nations',
         capital   : 'Earth',
-        sales_tax : 0.09,
+        sales_tax : 0.105,
         patrol    : 0.07,
         produces  : {},
         consumes  : {narcotics: 0.1, food: 0.25},
@@ -95,7 +95,7 @@ define(function() {
       'MC': {
         full_name : 'Martian Commonwealth',
         capital   : 'Mars',
-        sales_tax : 0.075,
+        sales_tax : 0.085,
         patrol    : 0.09,
         produces  : {machines: 0.1, electronics: 0.1},
         consumes  : {food: 0.1},
@@ -103,7 +103,7 @@ define(function() {
       'CERES': {
         full_name : 'The Most Serene Republic of Ceres',
         capital   : 'Ceres',
-        sales_tax : 0.045,
+        sales_tax : 0.04,
         patrol    : 0.05,
         produces  : {},
         consumes  : {},
@@ -119,7 +119,7 @@ define(function() {
       'TRANSA': {
         full_name : 'Trans-Neptunian Authority',
         capital   : 'Pluto',
-        sales_tax : 0.0275,
+        sales_tax : 0.0175,
         patrol    : 0.02,
         produces  : {narcotics: 0.5},
         consumes  : {weapons: 0.5},
