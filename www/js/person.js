@@ -115,5 +115,9 @@ define(function(require, exports, module) {
     decStanding(faction, amt) {
       this.standing[faction] = Math.max(-data.max_abs_standing, this.getStanding(faction) - amt);
     }
+
+    getStandingPriceAdjustment(faction) {
+      return this.standing[faction] / 1000;
+    }
   };
 });

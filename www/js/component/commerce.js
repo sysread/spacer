@@ -18,12 +18,13 @@ define(function(require, exports, module) {
     },
     computed: {
       resources: function() { return Object.keys(data.resources) },
+      adjust: function() { return Game.game.player.getStandingPriceAdjustment(Game.game.here.faction) },
     },
     methods: {
-      buy:  function(item) { return Game.game.place().buyPrice(item)      },
-      sell: function(item) { return Game.game.place().sellPrice(item)     },
       dock: function(item) { return Game.game.place().currentSupply(item) },
       hold: function(item) { return Game.game.player.ship.cargo.get(item) },
+      buy:  function(item) { return Math.ceil(Game.game.place().buyPrice(item)  * (1 - this.adjust)) },
+      sell: function(item) { return Math.ceil(Game.game.place().sellPrice(item) * (1 + this.adjust)) },
     },
     template: `
 <card title="Commerce">
@@ -123,7 +124,7 @@ define(function(require, exports, module) {
             Game.game.player.credit(Game.game.place().sell(this.item, -this.count));
             Game.game.player.ship.unloadCargo(this.item, -this.count);
 
-            if (underSupplied) {
+            if (underSupplied && !this.contraband) {
               // Player ended supply deficiency
               if (!Game.game.place().is_under_supplied(this.item)) {
                 Game.game.player.incStanding(Game.game.place().faction, 5);
