@@ -52,8 +52,8 @@ define(function(require, exports, module) {
     </card-text>
 
     <row>
-      <button :disabled="needsFuel" type="button" class="btn btn-dark btn-block m-1" @click="refuel=true">Refuel</button>
-      <button :disabled="needsFuel && hasFuel" type="button" class="btn btn-dark btn-block m-1" @click="transfer=true">Transfer fuel</button>
+      <button :disabled="!needsFuel" type="button" class="btn btn-dark btn-block m-1" @click="refuel=true">Refuel</button>
+      <button :disabled="!needsFuel || !hasFuel" type="button" class="btn btn-dark btn-block m-1" @click="transfer=true">Transfer fuel</button>
       <button type="button" class="btn btn-dark btn-block m-1" @click="open('ships')">Ships</button>
       <button type="button" class="btn btn-dark btn-block m-1" @click="open('addons')">Upgrades</button>
     </row>
