@@ -161,20 +161,6 @@ define(function(require, exports, module) {
           'top':  Math.ceil(zero + (zero * yPct)) + 'px',
         };
       },
-
-      adjustPoint: function(n) {
-        if (n === 0) return 1;
-
-        const inc = 0.25;
-        const abs = Math.abs(n * 100);
-        let adj = 1;
-
-        for (let i = 100; (i > abs) && (((adj + inc) * abs) < 100); i -= 10) {
-          adj += inc;
-        }
-
-        return adj / 100;
-      },
     },
     template: `
 <div v-square class="plot-root p-0 m-5" style="position:relative">
