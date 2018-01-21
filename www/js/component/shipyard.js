@@ -20,6 +20,10 @@ define(function(require, exports, module) {
         transfer: false,
       };
     },
+    computed: {
+      needsFuel: function() { return !Game.game.player.ship.tankIsFull() },
+      hasFuel:   function() { return Game.game.player.ship.cargo.get('fuel') > 0 },
+    },
     methods: {
       open: function(page){ Game.open(page) },
     },
@@ -48,8 +52,8 @@ define(function(require, exports, module) {
     </card-text>
 
     <row>
-      <button type="button" class="btn btn-dark btn-block m-1" @click="refuel=true">Refuel</button>
-      <button type="button" class="btn btn-dark btn-block m-1" @click="transfer=true">Transfer fuel</button>
+      <button v-if="needsFuel" type="button" class="btn btn-dark btn-block m-1" @click="refuel=true">Refuel</button>
+      <button v-if="needsFuel && hasFuel" type="button" class="btn btn-dark btn-block m-1" @click="transfer=true">Transfer fuel</button>
       <button type="button" class="btn btn-dark btn-block m-1" @click="open('ships')">Ships</button>
       <button type="button" class="btn btn-dark btn-block m-1" @click="open('addons')">Upgrades</button>
     </row>
