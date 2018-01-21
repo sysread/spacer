@@ -1,8 +1,9 @@
 define(function(require, exports, module) {
-  const data = require('data');
-  const util = require('util');
-  const Game = require('game');
-  const Vue  = require('vendor/vue');
+  const data    = require('data');
+  const util    = require('util');
+  const Game    = require('game');
+  const Physics = require('physics');
+  const Vue     = require('vendor/vue');
 
   require('component/common');
   require('component/card');
@@ -11,10 +12,10 @@ define(function(require, exports, module) {
   Vue.component('person-status', {
     props: ['person'],
     computed: {
-      money   : function() {return util.csn(this.person.money) + ' c'},
+      money   : function() {return util.csn(this.person.money)},
       home    : function() {return data.bodies[this.person.home].name},
       faction : function() {return data.factions[this.person.faction].full_name},
-      accel   : function() {return this.person.maxAcceleration().toFixed(2) + ' G'},
+      accel   : function() {return this.person.maxAcceleration() / Physics.G },
     },
     methods: {
       newGame: function() {
@@ -27,10 +28,10 @@ define(function(require, exports, module) {
     <button @click="newGame" type="button" class="btn btn-dark">New Game</button>
     <h3>Captain</h3>
   </card-header>
-  <def caps=true term="Money"     :def="money" />
-  <def caps=true term="Home"      :def="home" />
-  <def caps=true term="Faction"   :def="faction" />
-  <def caps=true term="Endurance" :def="accel" />
+  <def caps=true term="Money" :def="money|csn|unit('cr')" />
+  <def caps=true term="Home" :def="home" />
+  <def caps=true term="Faction" :def="faction" />
+  <def caps=true term="Acceleration endurance" :def="accel|R(2)|unit('G')" />
 </card>
     `,
   });
