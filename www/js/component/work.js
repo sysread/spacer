@@ -32,6 +32,12 @@ define(function(require, exports, module) {
         this.quota      = this.result.sum() > 0;
         Game.game.turn(this.turns);
         Game.game.player.credit(this.pay);
+
+        // Working increases standing no higher than "Respected"
+        if (!Game.game.player.hasStanding('Admired')) {
+          Game.game.player.incStanding(Game.game.here.faction, 1);
+        }
+
         Game.game.refresh();
         Game.game.save_game();
         this.modal = 'collect';
