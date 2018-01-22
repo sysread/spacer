@@ -101,8 +101,8 @@ define(function(require, exports, module) {
   <def v-for="item of resources.keys()" :key="item" brkpt="sm" v-if="resources.get(item) > 0">
     <span slot="term" class="text-capitalize">{{item}}</span>
     <slider slot="def" @update:value="amt => update(item, amt)" minmax=true :value="cargo.get(item)" min=0 :max="resources.get(item)">
-      <btn slot="pre">{{store.get(item)}}</btn>
-      <btn slot="post">{{cargo.get(item)}}</btn>
+      <span class="btn btn-dark" slot="pre">{{store.get(item)}}</span>
+      <span class="btn btn-dark" slot="post">{{cargo.get(item)}}</span>
     </slider>
   </def>
 </div>
