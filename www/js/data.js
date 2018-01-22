@@ -243,7 +243,6 @@ define(function() {
       /* Civilian */
       shuttle     : {hull: 2,  armor: 0,  cargo: 2,  hardpoints: 0,  mass: 200,   tank: 2,   drives: 1,   drive: 'ion',    restricted: false},
       schooner    : {hull: 4,  armor: 1,  cargo: 8,  hardpoints: 1,  mass: 450,   tank: 6,   drives: 2,   drive: 'ion',    restricted: false},
-      surveyor    : {hull: 6,  armor: 2,  cargo: 10, hardpoints: 2,  mass: 600,   tank: 15,  drives: 4,   drive: 'ion',    restricted: false},
       runner      : {hull: 4,  armor: 2,  cargo: 14, hardpoints: 2,  mass: 850,   tank: 10,  drives: 3,   drive: 'ion',    restricted: false},
 
       /* Merchant */
@@ -261,10 +260,11 @@ define(function() {
       transport   : {hull: 40, armor: 10, cargo: 50, hardpoints: 6,  mass: 3500,  tank: 180, drives: 10,  drive: 'fusion', restricted: 'Admired'},
 
       /* Faction ships */
-      container   : {hull: 10, armor: 3,  cargo: 60, hardpoints: 3,  mass: 2200,  tank: 85,  drives: 30,  drive: 'ion',    restricted: 'Admired', faction: 'JFT'},
-      neptune     : {hull: 10, armor: 4,  cargo: 40, hardpoints: 3,  mass: 1600,  tank: 60,  drives: 20,  drive: 'ion',    restricted: 'Admired', faction: 'TRANSA'},
-      barsoom     : {hull: 35, armor: 6,  cargo: 30, hardpoints: 4,  mass: 700,   tank: 45,  drives: 3,   drive: 'fusion', restricted: 'Admired', faction: 'MC'}
-      patrol      : {hull: 40, armor: 8,  cargo: 25, hardpoints: 4,  mass: 900,   tank: 50,  drives: 3,   drive: 'fusion', restricted: 'Admired', faction: 'UN'},
+      surveyor    : {hull: 6,  armor: 2,  cargo: 20, hardpoints: 2,  mass: 600,   tank: 20,  drives: 4,   drive: 'ion',    restricted: 'Respected', faction: 'CERES'},
+      container   : {hull: 10, armor: 3,  cargo: 60, hardpoints: 3,  mass: 2200,  tank: 85,  drives: 30,  drive: 'ion',    restricted: 'Respected', faction: 'JFT'},
+      neptune     : {hull: 10, armor: 4,  cargo: 40, hardpoints: 3,  mass: 1600,  tank: 60,  drives: 20,  drive: 'ion',    restricted: 'Respected', faction: 'TRANSA'},
+      barsoom     : {hull: 35, armor: 6,  cargo: 30, hardpoints: 4,  mass: 700,   tank: 45,  drives: 3,   drive: 'fusion', restricted: 'Admired',   faction: 'MC'}
+      patrol      : {hull: 40, armor: 8,  cargo: 25, hardpoints: 4,  mass: 900,   tank: 50,  drives: 3,   drive: 'fusion', restricted: 'Admired',   faction: 'UN'},
     },
 
     /*
@@ -352,6 +352,7 @@ define(function() {
   data.bodies.titania.desc      = "Rich in heavy organic compounds, Titania is the primary source of raw materials and shipping for TRANSA. When the war began, the process of spinning up Titania was nearly halfway complete. With nearly a quarter of Earth's gravity and supported by a growing commercial mining industry, it is also one of the few TRANSA properties with a growing population.";
   data.bodies.pluto.desc        = "The furthest outpost of humanity, Pluto is home to the TRANSA high command. It's deeply excavated chambers support a surprisingly robust population, many descended from the original scientific mission team stationed on the dwarf planet at the outset of the Martian rebellion.";
 
+  data.shipclass.surveyor.desc  = "Commissioned for the government of Ceres, the surveyor class vessel is designed for short cargo runs and asteroid prospecting.";
   data.shipclass.container.desc = "This container ship is a JFT design, optimized to carry larger loads at higher efficiency than a typical freighter.";
   data.shipclass.patrol.desc    = "The UN patrol destroyer can manuever better than the standard destroyer class and has longer legs, making it highly effective in its role as a long distance patrol vessel for the UN.";
   data.shipclass.barsoom.desc   = "The Barsoomian class frigate adopts the latest advances in Martian technology resulting in a frigate class ship with more range, speed, and enough firepower to act as its own escort.";
