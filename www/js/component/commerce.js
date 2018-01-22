@@ -55,7 +55,6 @@ define(function(require, exports, module) {
     `
   });
 
-
   Vue.component('market-trade', {
     props: ['item'],
     data: function() {
@@ -69,17 +68,20 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      faction:    function() { return Game.game.place().faction },
-      buy:        function() { return Game.game.place().buyPrice(this.item)  },
-      sell:       function() { return Game.game.place().sellPrice(this.item) },
-      count:      function() { return this.hold - Game.game.player.ship.cargo.get(this.item) },
+      place:      function() { return Game.game.here },
+      player:     function() { return Game.game.player },
+      faction:    function() { return this.place.faction },
+      adjust:     function() { return this.player.getStandingPriceAdjustment(this.faction) },
+      buy:        function() { return Math.ceil(this.place.buyPrice(this.item)  * (1 - this.adjust)) },
+      sell:       function() { return Math.ceil(this.place.sellPrice(this.item) * (1 + this.adjust)) },
+      count:      function() { return this.hold - this.player.ship.cargo.get(this.item) },
       contraband: function() { return data.resources[this.item].contraband },
 
       max: function() {
-        const cred  = Game.game.player.money;
-        const hold  = Game.game.player.ship.cargo.get(this.item);
-        const dock  = Game.game.place().currentSupply(this.item);
-        const cargo = Game.game.player.ship.cargoLeft;
+        const cred  = this.player.money;
+        const hold  = this.player.ship.cargo.get(this.item);
+        const dock  = this.place.currentSupply(this.item);
+        const cargo = this.player.ship.cargoLeft;
         return hold + Math.min(dock, Math.floor(cred / this.buy), cargo);
       },
     },
@@ -89,50 +91,50 @@ define(function(require, exports, module) {
       },
 
       fine: function() {
-        const base = Game.game.place().inspectionFine();
-        return Math.min(Game.game.player.money, base * Math.abs(this.count));
+        const base = this.place.inspectionFine();
+        return Math.min(this.player.money, base * Math.abs(this.count));
       },
 
       updateState: function() {
-        const cred   = Game.game.player.money;
-        const hold   = Game.game.player.ship.cargo.get(this.item);
-        const dock   = Game.game.place().currentSupply(this.item);
+        const cred   = this.player.money;
+        const hold   = this.player.ship.cargo.get(this.item);
+        const dock   = this.place.currentSupply(this.item);
         const diff   = this.hold - hold;
         this.dock    = dock - diff;
         this.credits = cred - (diff * (diff > 0 ? this.buy : this.sell));
-        this.cargo   = Game.game.player.ship.cargoUsed + diff;
+        this.cargo   = this.player.ship.cargoUsed + diff;
       },
 
       complete: function() {
-        if (this.contraband && Game.game.place().inspectionChance()) {
+        if (this.contraband && this.place.inspectionChance()) {
           alert(
               `As you complete your exchange, ${this.faction} agents in powered armor smash their way into the room.`
             + `A ${this.agentGender()} with a corporal's stripes informs you that your cargo has been confiscated and you have been fined ${this.fine()} credits.`,
             + `Your reputation with this faction has decreased by ${this.contraband}.`
           );
-          Game.game.player.debit(this.fine());
-          Game.game.player.decStanding(this.faction, this.contraband);
-          Game.game.player.ship.cargo.set(this.item, 0);
+          this.player.debit(this.fine());
+          this.player.decStanding(this.faction, this.contraband);
+          this.player.ship.cargo.set(this.item, 0);
         }
         else {
           if (this.count > 0) {
-            Game.game.player.debit(Game.game.place().buy(this.item, this.count));
-            Game.game.player.ship.loadCargo(this.item, this.count);
+            this.player.debit(Game.game.place().buy(this.item, this.count));
+            this.player.ship.loadCargo(this.item, this.count);
           }
           else {
-            const underSupplied = Game.game.place().is_under_supplied(this.item);
-            Game.game.player.credit(Game.game.place().sell(this.item, -this.count));
-            Game.game.player.ship.unloadCargo(this.item, -this.count);
+            const underSupplied = this.place.is_under_supplied(this.item);
+            this.player.credit(this.place.sell(this.item, -this.count));
+            this.player.ship.unloadCargo(this.item, -this.count);
 
             if (underSupplied && !this.contraband) {
               // Player ended supply deficiency
-              if (!Game.game.place().is_under_supplied(this.item)) {
-                Game.game.player.incStanding(Game.game.place().faction, 5);
+              if (!this.place.is_under_supplied(this.item)) {
+                this.player.incStanding(this.faction, 5);
                 alert('You ended the local supply shortage of ' + this.item + '! Your standing with this faction has increased.');
               }
               // Player helped address supply deficiency
               else {
-                Game.game.player.incStanding(Game.game.place().faction, 1);
+                this.player.incStanding(this.faction, 1);
               }
             }
           }
@@ -150,17 +152,17 @@ define(function(require, exports, module) {
 
     <row>
       <cell size="3" class="font-weight-bold">Credits</cell><cell size="3">{{credits|csn}}</cell>
-      <cell size="3" class="font-weight-bold">Cargo</cell><cell size="3">{{cargo}}</cell>
+      <cell size="3" class="font-weight-bold">Cargo</cell><cell size="3">{{cargo|csn}}</cell>
     </row>
 
     <row>
-      <cell size="3" class="font-weight-bold">Buy</cell><cell size="3">{{buy}}</cell>
-      <cell size="3" class="font-weight-bold">Sell</cell><cell size="3">{{sell}}</cell>
+      <cell size="3" class="font-weight-bold">Buy</cell><cell size="3">{{buy|csn}}</cell>
+      <cell size="3" class="font-weight-bold">Sell</cell><cell size="3">{{sell|csn}}</cell>
     </row>
 
     <row>
-      <cell size="3" class="font-weight-bold">Dock</cell><cell size="3" class="text-warning">{{dock}}</cell>
-      <cell size="3" class="font-weight-bold">Hold</cell><cell size="3" class="text-success">{{hold}}</cell>
+      <cell size="3" class="font-weight-bold">Dock</cell><cell size="3" class="text-warning">{{dock|csn}}</cell>
+      <cell size="3" class="font-weight-bold">Hold</cell><cell size="3" class="text-success">{{hold|csn}}</cell>
     </row>
 
     <slider minmax=true :value.sync="hold" min=0 :max="max" step=1 @update:value="updateState" />
