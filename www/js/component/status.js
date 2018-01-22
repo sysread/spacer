@@ -12,7 +12,7 @@ define(function(require, exports, module) {
   Vue.component('person-status', {
     props: ['person'],
     computed: {
-      money   : function() {return util.csn(this.person.money)},
+      money   : function() {return this.person.money},
       home    : function() {return data.bodies[this.person.home].name},
       faction : function() {return data.factions[this.person.faction].full_name},
       accel   : function() {return this.person.maxAcceleration() / Physics.G },

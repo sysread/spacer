@@ -28,6 +28,7 @@ define(function(require, exports, module) {
     get sales_tax() {return data.factions[this.faction].sales_tax}
     get patrol()    {return data.factions[this.faction].patrol}
     get max_fabs()  {return Math.ceil(data.fabricators * this.scale)}
+    get num_agents() {return Math.ceil(data.market.agents * this.scale)}
 
     save() {
       let me        = super.save();
@@ -294,7 +295,7 @@ define(function(require, exports, module) {
 
           this.deliveries.push(delivery);
 
-          if (this.deliveries.length >= 2)
+          if (this.deliveries.length >= this.num_agents)
             return;
 
           break;
