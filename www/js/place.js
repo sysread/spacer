@@ -387,13 +387,14 @@ define(function(require, exports, module) {
       this.deliveryProcess();
     }
 
-    inspectionRate(distanceAU) {
-      const adjust = this.faction === Game.game.player.faction ? 0.5 : 1.0;
-      return (1 - (Math.max(0.01, (distanceAU || 0)) / 0.25)) * this.patrol * this.scale * adjust;
+    inspectionRate(distance) {
+      const adjust = Game.game.player.hasStanding('Friendly') ? 0.5 : 1.0;
+      const rate = this.patrol * this.scale * adjust;
+      return distance ? rate * Math.pow(data.patrol_distance, 2) / Math.pow(distance, 2) : rate;
     }
 
-    inspectionChance(distanceAU) {
-      return Math.random() <= this.inspectionRate(distanceAU);
+    inspectionChance(distance) {
+      return Math.random() <= this.inspectionRate(distance);
     }
 
     inspectionFine() {

@@ -22,6 +22,7 @@ define(function() {
     jurisdiction     : 0.5, // au from body
     max_abs_standing : 100,
     min_delivery_amt : 2,
+    patrol_distance  : 5000000, // km from body
 
     scales: {
       tiny   : 0.6,
@@ -89,7 +90,7 @@ define(function() {
         full_name : 'United Nations',
         capital   : 'Earth',
         sales_tax : 0.105,
-        patrol    : 0.07,
+        patrol    : 0.15,
         produces  : {},
         consumes  : {narcotics: 0.1, food: 0.25},
       },
@@ -97,7 +98,7 @@ define(function() {
         full_name : 'Martian Commonwealth',
         capital   : 'Mars',
         sales_tax : 0.085,
-        patrol    : 0.09,
+        patrol    : 0.10,
         produces  : {machines: 0.1, electronics: 0.1},
         consumes  : {food: 0.1},
       },

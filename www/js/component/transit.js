@@ -43,7 +43,7 @@ define(function(require, exports, module) {
             return;
           }
           else {
-            const count = Math.min(this.plan.left, this.batch);
+            const count = Math.min(this.plan.left, 10);
             Game.game.turn(count);
 
             for (let i = 0; i < count; ++i) {
@@ -71,7 +71,7 @@ define(function(require, exports, module) {
           const au = ranges[body] / Physics.AU;
 
           if (au <= data.jurisdiction) {
-            bodies[body] = au;
+            bodies[body] = ranges[body];
           }
         }
 
@@ -85,9 +85,9 @@ define(function(require, exports, module) {
         const ranges = this.nearby();
 
         for (const body of Object.keys(ranges)) {
-          const au = ranges[body];
+          const km = Math.floor(ranges[body] / 1000);
 
-          if (Game.game.place(body).inspectionChance(au)) {
+          if (Game.game.place(body).inspectionChance(km)) {
             const faction = data.bodies[body].faction;
 
             if (this.stoppedBy[faction]) {
