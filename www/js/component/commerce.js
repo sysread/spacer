@@ -35,16 +35,16 @@ define(function(require, exports, module) {
   </card-text>
 
   <div class="container container-fluid">
-    <row v-for="item of resources" :key="item">
+    <row v-for="item of resources" :key="item" :class="{'text-muted':dock(item) == 0 && hold(item) == 0}">
       <cell size=4 brkpt="sm" y=1>
-        <btn @click="trade=item" block=1>{{item|caps}}</btn>
+        <btn @click="trade=item" block=1 :class="{'btn-secondary':dock(item) == 0 && hold(item) == 0}">{{item|caps}}</btn>
       </cell>
       <cell size=8 brkpt="sm" y=1>
         <row y=0>
-          <cell size=3 y=0>Buy</cell> <cell size=3 y=0 class="muted">{{buy(item)|csn}}</cell>
-          <cell size=3 y=0>Sell</cell><cell size=3 y=0 class="muted">{{sell(item)|csn}}</cell>
-          <cell size=3 y=0>Dock</cell><cell size=3 y=0 class="muted" :class="{'font-weight-bold': dock(item) > 0, 'text-warning': dock(item) > 0}">{{dock(item)}}</cell>
-          <cell size=3 y=0>Ship</cell><cell size=3 y=0 class="muted" :class="{'font-weight-bold': hold(item) > 0, 'text-success': hold(item) > 0}">{{hold(item)}}</cell>
+          <cell size=3 y=0>Buy</cell> <cell size=3 y=0>{{buy(item)|csn}}</cell>
+          <cell size=3 y=0>Sell</cell><cell size=3 y=0>{{sell(item)|csn}}</cell>
+          <cell size=3 y=0>Dock</cell><cell size=3 y=0 :class="{'font-weight-bold': dock(item) > 0, 'text-warning': dock(item) > 0, 'text-muted': dock(item) == 0}">{{dock(item) || '-'}}</cell>
+          <cell size=3 y=0>Ship</cell><cell size=3 y=0 :class="{'font-weight-bold': hold(item) > 0, 'text-success': hold(item) > 0, 'text-muted': hold(item) == 0}">{{hold(item) || '-'}}</cell>
         </row>
       </cell>
     </row>

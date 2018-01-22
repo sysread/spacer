@@ -116,6 +116,13 @@ define(function(require, exports, module) {
       return Math.round(rate);
     }
 
+    scarcityMarkup(resource) {
+      const isLocallyProduced = this.production.get(resource) !== 0;
+      const isMinable = data.resources[resource].mine;
+      const markup = super.scarcityMarkup(resource);
+      return !isLocallyProduced && isMinable ? (markup * 1.5) : markup;
+    }
+
     mine(resource) {
       let count = this.resources.get(resource);
 

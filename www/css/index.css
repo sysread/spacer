@@ -8,6 +8,10 @@ body {
   font-size: 0.9rem;
 }
 
+.text-muted, .mute {
+  color: #888 !important;
+}
+
 .bg-black {
   background-color: rgb(0,0,0) !important;
 }
@@ -97,7 +101,7 @@ body {
   border-bottom: 1px solid rgb(10,10,10);
 }
 
-.btn-secondary:disabled {
+.btn-secondary:disabled, .text-muted.btn-secondary {
   background-color: #202020;
   color: #888;
 }
@@ -137,10 +141,6 @@ ul.plot-selected {
 
 .b {
   font-weight: bold !important;
-}
-
-.mute, .text-muted {
-  color: #ccc !important;
 }
 
 /*
