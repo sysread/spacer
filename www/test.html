@@ -22,12 +22,19 @@ require(
         testDataSection: null,
         testData:        null,
         nominalDeltaV:   0.2,
+        explainPrice:    '',
       },
       computed: {
+        resources: function() { return Object.keys(data.resources) },
       },
       methods: {
-        logGame() { console.log(game) },
-        gameTurns(n) { game.turn(n) },
+        logGame()     { console.log(game) },
+        gameTurns(n)  { game.turn(n) },
+
+        basePrice()   { return place.calculatePrice(this.explainPrice) },
+        scarcity()    { return place.scarcityMarkup(this.explainPrice) },
+        adjustment()  { return place.adjustment(this.explainPrice) },
+        cachedPrice() { return place.prices[this.explainPrice] },
 
         shipRange(ship, maxDeltaV) {
           const dv = maxDeltaV ? (maxDeltaV * Physics.G) : ship.currentAcceleration();
@@ -76,6 +83,11 @@ require(
   <btn @click="shipMaxRanges" block=1>Ship ranges at max delta-v</btn>
   <btn @click="shipRanges" block=1>Ship ranges at {{nominalDeltaV}} G</btn>
 
+  <select v-model="explainPrice" class="form-control my-2">
+    <option value="">Explain price</option>
+    <option v-for="item in resources" :key="item" :value="item">{{item}}</option>
+  </select>
+
   <card v-if="testDataSection == 'shipMaxRanges'" title="Ship ranges (max G)" class="my-2">
     <card v-for="(data, sc) of this.testData" :key="sc" :title="sc|caps" class="my-2">
       <def y=0 split=2 term="Nominal" :def="data.nominal" />
@@ -88,6 +100,13 @@ require(
       <def y=0 split=2 term="Nominal" :def="data.nominal" />
       <def y=0 split=2 term="Loaded" :def="data.loaded" />
     </card>
+  </card>
+
+  <card v-if="explainPrice" :title="explainPrice|caps">
+    <def term="Scarcity markup" :def="scarcity()|R(4)" />
+    <def term="Compound adjustment" :def="adjustment()|R(4)" />
+    <def term="Base value" :def="basePrice()|csn" />
+    <def term="Cached price" :def="cachedPrice()|csn" />
   </card>
 </card>
       `,
