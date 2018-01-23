@@ -25,11 +25,17 @@ define(function(require, exports, module) {
       progress:    function() { return util.R(this.plan.pct_complete) },
       velocity:    function() { return this.plan.velocity },
       distance:    function() { return util.R(this.plan.auRemaining(), 2) },
-      status:      function() { return this.progress > 50 ? 'Decelerating' : 'Accelerating' },
       display:     function() { return this.progress + '%' },
       hoursLeft:   function() { return this.plan.left * data.hours_per_turn },
       kmLeft:      function() { return this.plan.distanceRemaining() },
       batch:       function() { return Math.ceil(this.plan.turns / 30) },
+
+      status: function() {
+        const a = this.progress > 50 ? 'Decelerating' : 'Accelerating'
+        const d = Math.floor(this.hoursLeft / 24);
+        const h = this.hoursLeft % 24;
+        return `${a} - ${d} days, ${h} hours remaining`; 
+      },
     },
     methods: {
       schedule: function() {
