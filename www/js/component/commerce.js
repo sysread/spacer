@@ -215,15 +215,24 @@ define(function(require, exports, module) {
   Vue.component('market-report-row', {
     props: ['item', 'body', 'relprices'],
     computed: {
-      buy:     function() { return Game.game.place().buyPrice(this.item) },
-      sell:    function() { return Game.game.place().sellPrice(this.item) },
+      player:  function() { return Game.game.player },
+
       report:  function() { return Game.game.market(this.body) },
       hasData: function() { return this.report.data.hasOwnProperty(this.item) },
       info:    function() { if (this.hasData) return this.report.data[this.item] },
+
+      remote:  function() { return Game.game.place(this.body) },
+      rAdjust: function() { return this.player.getStandingPriceAdjustment(this.remote.faction) },
+      rBuy:    function() { return Math.ceil(this.info.buy  * (1 - this.rAdjust)) },
+      rSell:   function() { return Math.ceil(this.info.sell * (1 + this.rAdjust)) },
+
+      local:   function() { return Game.game.here },
+      lAdjust: function() { return this.player.getStandingPriceAdjustment(this.local.faction) },
+      lBuy:    function() { return Math.ceil(this.local.buyPrice(this.item)  * (1 - this.lAdjust)) },
+      lSell:   function() { return Math.ceil(this.local.sellPrice(this.item) * (1 + this.lAdjust)) },
+
       isLocal: function() { return this.body === Game.game.locus },
       central: function() { return system.central(this.body) },
-    },
-    methods: {
     },
     template: `
 <tr :class="{'bg-dark': isLocal}">
@@ -233,13 +242,13 @@ define(function(require, exports, module) {
     <span v-if="info.trend > 0" class="badge badge-pill float-right">&uarr; {{info.trend}}</span>
     <span v-if="info.trend < 0" class="badge badge-pill float-right">&darr; {{info.trend}}</span>
   </th>
-  <td class="text-right" :class="{'text-success': info.buy < sell}">
-    <span v-if="relprices">{{info.buy - sell}}</span>
-    <span v-else>{{info.buy}}</span>
+  <td class="text-right" :class="{'text-success': rBuy < lSell}">
+    <span v-if="relprices">{{rBuy -  lSell}}</span>
+    <span v-else>{{rBuy|csn}}</span>
   </td>
-  <td class="text-right" :class="{'text-success': info.sell > buy}">
-    <span v-if="relprices">{{info.sell - buy}}</span>
-    <span v-else>{{info.sell}}</span>
+  <td class="text-right" :class="{'text-success': rSell > lBuy}">
+    <span v-if="relprices">{{rSell - lBuy}}</span>
+    <span v-else>{{rSell|csn}}</span>
   </td>
   <td class="text-right d-none d-sm-table-cell">{{info.stock}}</td>
   <td class="text-right d-none d-sm-table-cell">{{report.age}}</td>
