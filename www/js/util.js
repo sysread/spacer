@@ -3,19 +3,25 @@ define(function(require, exports, module) {
   const util = {};
 
   util.csn = function(num) {
+    const op = num < 0 ? '-' : '';
+
+    num = Math.abs(num);
+
+    const parts = [];
+    const three = new RegExp(/(\d{3})$/);
     let [integer, decimal] = `${num}`.split('.', 2);
-    let three = new RegExp(/(\d{3})$/);
-    let parts = [];
 
-    while (three.test(integer))
+    while (three.test(integer)) {
       integer = integer.replace(three, (match) => {parts.unshift(match); return ''});
+    }
 
-    if (integer)
+    if (integer) {
       parts.unshift(integer);
+    }
 
     integer = parts.join(',');
 
-    return decimal ? `${integer}.${decimal}` : integer;
+    return decimal ? `${op}${integer}.${decimal}` : `${op}${integer}`;
   };
 
   util.uniq = function(items, sep=' ') {
