@@ -40,11 +40,11 @@ define(function(require, exports, module) {
         <btn @click="trade=item" block=1 :class="{'btn-secondary':dock(item) == 0 && hold(item) == 0}">{{item|caps}}</btn>
       </cell>
       <cell size=8 brkpt="sm" y=1>
-        <row y=0>
+        <row y=0 :class="{'bg-dark': dock(item) > 0 || hold(item) > 0}">
           <cell size=3 y=0>Buy</cell> <cell size=3 y=0>{{buy(item)|csn}}</cell>
           <cell size=3 y=0>Sell</cell><cell size=3 y=0>{{sell(item)|csn}}</cell>
-          <cell size=3 y=0>Dock</cell><cell size=3 y=0 :class="{'font-weight-bold': dock(item) > 0, 'text-warning': dock(item) > 0, 'text-muted': dock(item) == 0}">{{dock(item) || '-'}}</cell>
-          <cell size=3 y=0>Ship</cell><cell size=3 y=0 :class="{'font-weight-bold': hold(item) > 0, 'text-success': hold(item) > 0, 'text-muted': hold(item) == 0}">{{hold(item) || '-'}}</cell>
+          <cell size=3 y=0>Dock</cell><cell size=3 y=0 :class="{'text-warning': dock(item) > 0}">{{dock(item)}}</cell>
+          <cell size=3 y=0>Ship</cell><cell size=3 y=0 :class="{'text-success': hold(item) > 0}">{{hold(item)}}</cell>
         </row>
       </cell>
     </row>
