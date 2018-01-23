@@ -11,7 +11,7 @@ define(function() {
     market_history   : 80,
     update_prices    : 5, // days between price updates
     base_unit_price  : 30,
-    scarcity_markup  : 0.05,
+    scarcity_markup  : 0.1,
     necessity        : {water: true, food: true, medicine: true, fuel: true},
     craft_fee        : 0.05,
     fabricators      : 40,

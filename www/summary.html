@@ -6,7 +6,11 @@ require(
     const app = new Vue({
       el: '#summary',
       data: {place: Game.game.place()},
-      template: '<place-summary :place="place" />',
+      template: `
+<card :title="place.title">
+  <place-summary :place="place" />
+</card>
+      `,
     });
   }
 );

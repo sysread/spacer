@@ -112,6 +112,7 @@ define(function(require, exports, module) {
         routes:   this.navcomp.transits[this.body],
         selected: fastest ? fastest.index : 0,
         info:     false,
+        market:   false,
       };
     },
     computed: {
@@ -134,27 +135,37 @@ define(function(require, exports, module) {
     },
     template: `
 <modal @close="$emit('close')" :title="destination" close="Cancel">
-  <button slot="header" @click="info = !info" type="button" class="btn btn-dark float-right">Info</button>
-  <button slot="footer" v-if="hasRoute" @click="$emit('engage', body, selected)" data-dismiss="modal" type="button" class="btn btn-dark">Engage</button>
+  <span slot="header">
+    <btn @click="info=false;market=!market" class="float-right; mx-1">Market</btn>
+    <btn @click="market=false;info=!info"   class="float-right; mx-1">Info</btn>
+    <btn @click="market=false;info=false"   class="float-right; mx-1">Route</btn>
+  </span>
 
-  <place-summary v-if="info" mini=true :place="place" class="my-4" />
+  <btn slot="footer" v-if="hasRoute" @click="$emit('engage', body, selected)" close=1>
+    Engage
+  </btn>
 
-  <div v-if="hasRoute">
-    <def split="4" term="Total"        :def="distance" />
-    <def split="4" term="Flip point"   :def="flipPoint" />
-    <def split="4" term="Acceleration" :def="deltaV" />
-    <def split="4" term="Max velocity" :def="maxVelocity" />
-    <def split="4" term="Fuel"         :def="fuel" />
-    <def split="4" term="Time"         :def="time" />
+  <place-summary v-if="info" mini=true :place="place" />
+  <market-summary v-if="market" :body="place.name" />
 
-    <row y=1>
-      <cell size=12>
-        <slider minmax=true step="1" min="0" :max="routes.length - 1" :value.sync="selected" />
-      </cell>
-    </row>
-  </div>
-  <div v-else>
-    Your ship, as loaded, cannot reach this destination in less than 1 year with available fuel.
+  <div v-if="!market && !info">
+    <div v-if="hasRoute">
+      <def split="4" term="Total"        :def="distance" />
+      <def split="4" term="Flip point"   :def="flipPoint" />
+      <def split="4" term="Acceleration" :def="deltaV" />
+      <def split="4" term="Max velocity" :def="maxVelocity" />
+      <def split="4" term="Fuel"         :def="fuel" />
+      <def split="4" term="Time"         :def="time" />
+
+      <row y=1>
+        <cell size=12>
+          <slider minmax=true step="1" min="0" :max="routes.length - 1" :value.sync="selected" />
+        </cell>
+      </row>
+    </div>
+    <p v-else class="text-warning font-italic">
+      Your ship, as loaded, cannot reach this destination in less than 1 year with available fuel.
+    </p>
   </div>
 </modal>
     `,

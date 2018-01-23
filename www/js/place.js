@@ -62,15 +62,24 @@ define(function(require, exports, module) {
       });
     }
 
-    buyPrice(resource) {
-      const price = super.buyPrice(resource);
-      return price + Math.ceil(price * this.sales_tax);
+    scarcityMarkup(resource) {
+      const isLocallyProduced = this.production.get(resource) !== 0;
+      const isMinable = data.resources[resource].mine;
+      const markup = super.scarcityMarkup(resource);
+      return isLocallyProduced && isMinable
+        ? Math.max(0, markup - 0.25)
+        : markup;
     }
 
     demand(resource) {
       let actual = super.demand(resource);
       let base = data.market.consumes[resource] || 0;
       return actual + (base * this.scale);
+    }
+
+    buyPrice(resource) {
+      const price = super.buyPrice(resource);
+      return price + Math.ceil(price * this.sales_tax);
     }
 
     mergeScale(resources, traits, conditions) {
@@ -115,13 +124,6 @@ define(function(require, exports, module) {
       let rate = data.base_pay * this.scale;
       rate -= rate * this.sales_tax;
       return Math.round(rate);
-    }
-
-    scarcityMarkup(resource) {
-      const isLocallyProduced = this.production.get(resource) !== 0;
-      const isMinable = data.resources[resource].mine;
-      const markup = super.scarcityMarkup(resource);
-      return !isLocallyProduced && isMinable ? (markup * 1.5) : markup;
     }
 
     mine(resource) {

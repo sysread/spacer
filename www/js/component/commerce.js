@@ -243,14 +243,14 @@ define(function(require, exports, module) {
     <span v-if="info.trend < 0" class="badge badge-pill float-right">&darr; {{info.trend}}</span>
   </th>
   <td class="text-right" :class="{'text-success': rBuy < lSell}">
-    <span v-if="relprices">{{rBuy -  lSell}}</span>
+    <span v-if="relprices">{{(rBuy -  lSell)|csn}}</span>
     <span v-else>{{rBuy|csn}}</span>
   </td>
   <td class="text-right" :class="{'text-success': rSell > lBuy}">
-    <span v-if="relprices">{{rSell - lBuy}}</span>
+    <span v-if="relprices">{{(rSell - lBuy)|csn}}</span>
     <span v-else>{{rSell|csn}}</span>
   </td>
-  <td class="text-right d-none d-sm-table-cell">{{info.stock}}</td>
+  <td class="text-right d-none d-sm-table-cell">{{info.stock|csn}}</td>
   <td class="text-right d-none d-sm-table-cell">{{report.age}}</td>
 </tr>
     `,
