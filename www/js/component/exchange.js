@@ -42,14 +42,14 @@ define(function(require, exports, module) {
   <span @click="setMin" v-if="minmax" class="input-group-btn"><btn class="font-weight-bold">&lt;&lt;</btn></span>
   <span @click="dec" class="input-group-btn"><btn class="font-weight-bold">&lt;</btn></span>
 
-    <input v-monitor
-      class="form-control bg-black"
-      @change="update"
-      :value="value || 0"
-      :min="min"
-      :max="max"
-      :step="step || 1"
-      type="range">
+  <input v-monitor
+    class="form-control bg-black"
+    @change="update"
+    :value="value || 0"
+    :min="min"
+    :max="max"
+    :step="step || 1"
+    type="range">
 
   <span @click="inc" class="input-group-btn"><btn class="font-weight-bold">&gt;</btn></span>
   <span @click="setMax" v-if="minmax" class="input-group-btn"><btn class="font-weight-bold">&gt;&gt;</btn></span>

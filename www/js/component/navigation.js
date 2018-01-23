@@ -135,11 +135,13 @@ define(function(require, exports, module) {
     },
     template: `
 <modal @close="$emit('close')" :title="destination" close="Cancel">
-  <span slot="header">
-    <btn @click="info=false;market=!market" class="float-right; mx-1">Market</btn>
-    <btn @click="market=false;info=!info"   class="float-right; mx-1">Info</btn>
-    <btn @click="market=false;info=false"   class="float-right; mx-1">Route</btn>
-  </span>
+  <div slot="header" class="float-right">
+    <div class="input-group">
+      <span class="input-group-btn"><btn @click="market=false;info=false">&#8982;</btn></span>
+      <span class="input-group-btn"><btn @click="market=false;info=!info">?</btn></span>
+      <span class="input-group-btn"><btn @click="info=false;market=!market">$</btn></span>
+    </div>
+  </div>
 
   <btn slot="footer" v-if="hasRoute" @click="$emit('engage', body, selected)" close=1>
     Engage
