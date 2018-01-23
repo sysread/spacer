@@ -285,8 +285,8 @@ define(function(require, exports, module) {
           if (amt < data.min_delivery_amt)
             continue;
 
-          place.store.dec('fuel', fuel);
-          place.store.dec(resource, amt);
+          place.buy('fuel', fuel);
+          place.buy(resource, amt);
 
           let delivery = {
             origin : place.name,
@@ -312,7 +312,7 @@ define(function(require, exports, module) {
         d.turns -= 1;
 
         if (d.turns === 0) {
-          this.store.inc(d.item, d.amount);
+          this.sell(d.item, d.amount);
         }
         else {
           incomplete.push(d);
