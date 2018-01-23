@@ -115,9 +115,9 @@ define(function(require, exports, module) {
       }
       else {
         if (Math.ceil(r * 100) % 2 === 0) {
-          return orig + (r / 20);
+          return orig + (r / 30);
         } else {
-          return orig - (r / 20);
+          return orig - (r / 30);
         }
       }
     }
@@ -126,7 +126,7 @@ define(function(require, exports, module) {
       const loc    = this.local_need(resource);
       const sys    = Game.game.system_need(resource);
       const markup = this.scarcityMarkup(resource);
-      const need   = (loc + sys) / 2;
+      const need   = (loc + loc + sys) / 3;
       const adjust =
         (need > 1) ? (1 + (Math.log(need) / Math.log(30)))
       : (need < 1) ? (Math.max(0.1, Math.sqrt(need)))

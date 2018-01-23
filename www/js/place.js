@@ -66,8 +66,8 @@ define(function(require, exports, module) {
       const isLocallyProduced = this.production.get(resource) !== 0;
       const isMinable = data.resources[resource].mine;
       const markup = super.scarcityMarkup(resource);
-      return isLocallyProduced && isMinable
-        ? Math.max(0, markup - 0.25)
+      return (isLocallyProduced && isMinable)
+        ? (markup - (3 * data.scarcity_markup))
         : markup;
     }
 
