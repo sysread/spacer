@@ -231,6 +231,9 @@ define(function(require, exports, module) {
       lBuy:    function() { return Math.ceil(this.local.buyPrice(this.item)  * (1 - this.lAdjust)) },
       lSell:   function() { return Math.ceil(this.local.sellPrice(this.item) * (1 + this.lAdjust)) },
 
+      relBuy:  function() { return this.rBuy - this.lSell },
+      relSell: function() { return this.rSell - this.lBuy },
+
       isLocal: function() { return this.body === Game.game.locus },
       central: function() { return system.central(this.body) },
     },
@@ -243,11 +246,11 @@ define(function(require, exports, module) {
     <span v-if="info.trend < 0" class="badge badge-pill float-right">&darr; {{info.trend}}</span>
   </th>
   <td class="text-right" :class="{'text-success': rBuy < lSell}">
-    <span v-if="relprices">{{(rBuy -  lSell)|csn}}</span>
+    <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{relBuy|csn}}</span>
     <span v-else>{{rBuy|csn}}</span>
   </td>
   <td class="text-right" :class="{'text-success': rSell > lBuy}">
-    <span v-if="relprices">{{(rSell - lBuy)|csn}}</span>
+    <span v-if="relprices"><span v-if="relSell > 0">+</span>{{relSell|csn}}</span>
     <span v-else>{{rSell|csn}}</span>
   </td>
   <td class="text-right d-none d-sm-table-cell">{{info.stock|csn}}</td>

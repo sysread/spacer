@@ -3,7 +3,7 @@ define(function(require, exports, module) {
   const util = {};
 
   util.csn = function(num) {
-    const op = num < 0 ? '-' : '';
+    const sign = num < 0 ? '-' : '';
 
     num = Math.abs(num);
 
@@ -21,7 +21,7 @@ define(function(require, exports, module) {
 
     integer = parts.join(',');
 
-    return decimal ? `${op}${integer}.${decimal}` : `${op}${integer}`;
+    return decimal ? `${sign}${integer}.${decimal}` : `${sign}${integer}`;
   };
 
   util.uniq = function(items, sep=' ') {

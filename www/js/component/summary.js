@@ -69,12 +69,14 @@ define(function(require, exports, module) {
       rAdjust:   function() { return this.player.getStandingPriceAdjustment(this.place.faction) },
     },
     methods: {
-      info:  function(item) { return this.report.data[item] },
-      stock: function(item) { return this.info(item).stock },
-      lBuy:  function(item) { return Math.ceil(this.here.buyPrice(item) * (1 - this.lAdjust)) },
-      lSell: function(item) { return Math.ceil(this.here.sellPrice(item) * (1 + this.lAdjust)) },
-      rBuy:  function(item) { return Math.ceil(this.info(item).buy * (1 - this.rAdjust)) },
-      rSell: function(item) { return Math.ceil(this.info(item).sell * (1 + this.rAdjust)) },
+      info:    function(item) { return this.report.data[item] },
+      stock:   function(item) { return this.info(item).stock },
+      lBuy:    function(item) { return Math.ceil(this.here.buyPrice(item) * (1 - this.lAdjust)) },
+      lSell:   function(item) { return Math.ceil(this.here.sellPrice(item) * (1 + this.lAdjust)) },
+      rBuy:    function(item) { return Math.ceil(this.info(item).buy * (1 - this.rAdjust)) },
+      rSell:   function(item) { return Math.ceil(this.info(item).sell * (1 + this.rAdjust)) },
+      relBuy:  function(item) { return this.rBuy(item) - this.lSell(item) },
+      relSell: function(item) { return this.rSell(item) - this.lBuy(item) },
     },
     template: `
 <div>
@@ -107,12 +109,12 @@ define(function(require, exports, module) {
         <td class="text-right">{{stock(item)|csn}}</td>
 
         <td class="text-right" :class="{'text-success': rBuy(item) < lSell(item)}">
-          <span v-if="relprices">{{(rBuy(item) - lSell(item))|csn}}</span>
+          <span v-if="relprices"><span v-if="relBuy(item) > 0">+</span>{{relBuy(item)|csn}}</span>
           <span v-else>{{rBuy(item)|csn}}</span>
         </td>
 
         <td class="text-right" :class="{'text-muted': stock(item) == 0, 'text-success': stock(item) > 0 && rSell(item) > lBuy(item)}">
-          <span v-if="relprices">{{(rSell(item) - lBuy(item))|csn}}</span>
+          <span v-if="relprices"><span v-if="relSell(item) > 0">+</span>{{relSell(item)|csn}}</span>
           <span v-else>{{rSell(item)|csn}}</span>
         </td>
       </tr>
