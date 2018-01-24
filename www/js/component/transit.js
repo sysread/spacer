@@ -119,7 +119,7 @@ define(function(require, exports, module) {
     template: `
 <div class="p-0 m-0">
   <card :title="'Transit to ' + destination" :subtitle="status">
-    <def term="Time remaining" :def="timeRemaining" />
+    <def term="Time" :def="timeRemaining" />
     <progress-bar :percent="progress">{{progress}}%</progress-bar>
     <transit-plot v-show="!inspection" :velocity="velocity" :coords="plan.coords" :dest="plan.dest" :orig="plan.origin" />
     <transit-inspection v-if="inspection" @done="schedule" :body="inspection.body" :faction="inspection.faction" :distance="inspection.distance" class="my-3" />
