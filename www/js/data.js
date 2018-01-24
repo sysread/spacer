@@ -17,7 +17,7 @@ define(function() {
     fabricators:        40,
     fab_health:         30,
     base_pay:           10, // credits/day
-    grav_deltav_factor: 3, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
+    grav_deltav_factor: 5, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
     initial_ship:       'runner',
     jurisdiction:       0.5, // au from body
     max_abs_standing:   100,
