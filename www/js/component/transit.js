@@ -29,12 +29,12 @@ define(function(require, exports, module) {
       hoursLeft:   function() { return this.plan.left * data.hours_per_turn },
       kmLeft:      function() { return this.plan.distanceRemaining() },
       batch:       function() { return Math.ceil(this.plan.turns / 30) },
+      status:      function() { return this.progress > 50 ? 'Decelerating' : 'Accelerating' },
 
-      status: function() {
-        const a = this.progress > 50 ? 'Decelerating' : 'Accelerating'
+      timeRemaining: function() {
         const d = Math.floor(this.hoursLeft / 24);
         const h = this.hoursLeft % 24;
-        return `${a} - ${d} days, ${h} hours remaining`; 
+        return `${d} days, ${h} hours`; 
       },
     },
     methods: {
@@ -119,6 +119,7 @@ define(function(require, exports, module) {
     template: `
 <div class="p-0 m-0">
   <card :title="'Transit to ' + destination" :subtitle="status">
+    <def term="Time remaining" :def="timeRemaining" />
     <progress-bar :percent="progress">{{progress}}%</progress-bar>
     <transit-plot v-show="!inspection" :velocity="velocity" :coords="plan.coords" :dest="plan.dest" :orig="plan.origin" />
     <transit-inspection v-if="inspection" @done="schedule" :body="inspection.body" :faction="inspection.faction" :distance="inspection.distance" class="my-3" />
@@ -126,6 +127,20 @@ define(function(require, exports, module) {
 </div>
     `,
   });
+
+  function adjustPoint(n) {
+    if (n === 0) return 1;
+
+    const inc = 0.25;
+    const abs = Math.abs(n);
+    let adj = 1;
+
+    for (let i = 100; (i > abs) && (((adj + inc) * abs) < 100); i -= 10) {
+      adj += inc;
+    }
+
+    return adj;
+  }
 
   Vue.component('transit-plot', {
     props: ['coords', 'dest', 'orig', 'velocity'],
@@ -136,9 +151,18 @@ define(function(require, exports, module) {
         },
       },
     },
+    data: function() {
+      const maxX = Math.ceil([this.origPoint()[0], this.destPoint()[0], this.coords[0]].reduce((acc, x) => {return Math.max(acc, Math.abs(x))}, 0));
+      const maxY = Math.ceil([this.origPoint()[1], this.destPoint()[1], this.coords[1]].reduce((acc, y) => {return Math.max(acc, Math.abs(y))}, 0));
+      return {
+        maxX:  maxX,
+        maxY:  maxY,
+        maxPt: Math.max(maxX, maxY),
+      };
+    },
     computed: {
       sun:  function() { return [0, 0, 0] },
-      maxX: function() {
+      /*maxX: function() {
         return Math.ceil(
           [this.origPoint()[0], this.destPoint()[0], this.coords[0]]
             .reduce((acc, x) => {return Math.max(acc, Math.abs(x))}, 0)
@@ -149,7 +173,7 @@ define(function(require, exports, module) {
           [this.origPoint()[1], this.destPoint()[1], this.coords[1]]
             .reduce((acc, y) => {return Math.max(acc, Math.abs(y))}, 0)
         );
-      },
+      },*/
     },
     methods: {
       distance:  function() { return Physics.distance(this.coords, this.destPoint()) / Physics.AU },
@@ -160,8 +184,8 @@ define(function(require, exports, module) {
       position:  function(p) {
         const [x, y, z] = p;
         const zero = this.zero();
-        const xPct = x / this.maxX * 0.8;
-        const yPct = y / this.maxY * 0.8;
+        const xPct = x / this.maxPt;
+        const yPct = y / this.maxPt;
         return {
           'left': Math.ceil(zero + (zero * xPct)) + 'px',
           'top':  Math.ceil(zero + (zero * yPct)) + 'px',
