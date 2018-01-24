@@ -53,9 +53,9 @@ define(function(require, exports, module) {
 
       price: function() {
         let price = this.ship.price();
+        price -= price * this.player.getStandingPriceAdjustment(this.place.faction);
         price += price * this.place.sales_tax;
-        price = Math.ceil(price);
-        return price;
+        return Math.ceil(price);
       },
 
       // Physical properties

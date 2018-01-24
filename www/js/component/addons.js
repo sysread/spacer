@@ -32,13 +32,19 @@ define(function(require, exports, module) {
       player:       function() { return Game.game.player },
       ship:         function() { return this.player.ship },
       info:         function() { return data.shipAddOns[this.type] },
-      price:        function() { return Math.ceil(this.info.price + (this.info.price * this.place.sales_tax)) },
       sellPrice:    function() { return Math.ceil(0.7 * this.price) },
       isRestricted: function() { return this.info.restricted && !this.player.hasStanding(this.place.faction, this.info.restricted) },
       canAfford:    function() { return this.player.money >= this.price },
       hasRoom:      function() { return this.ship.availableHardPoints() > 0 },
       isAvailable:  function() { return !this.isRestricted && this.canAfford && this.hasRoom },
       hasUpgrade:   function() { return this.ship.hasAddOn(this.type) },
+
+      price: function() {
+        let price = this.info.price;
+        price -= price * this.player.getStandingPriceAdjustment(this.place.faction);
+        price += price * this.place.sales_tax;
+        return Math.ceil(price);
+      },
     },
     methods: {
       buyAddOn: function() {
