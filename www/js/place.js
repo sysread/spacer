@@ -31,7 +31,7 @@ define(function(require, exports, module) {
     get num_agents() {return Math.ceil(data.market.agents * this.scale)}
 
     save() {
-      let me        = super.save();
+      const me      = super.save();
       me.name       = this.name;
       me.conditions = this.conditions;
       me.resources  = this.resources.save();
@@ -56,24 +56,65 @@ define(function(require, exports, module) {
       this.agents = [];
 
       obj.agents.forEach((info) => {
-        let agent = new Crafter;
+        const agent = new Crafter;
         agent.load(info);
         this.agents.push(agent);
       });
     }
 
+    isLocallyMined(resource) {
+      const isLocallyProduced = this.production.get(resource) > 0;
+      const isMinable = data.resources[resource].hasOwnProperty('mine');
+      return isLocallyProduced && isMinable ? true : false;
+    }
+
+    nearestSource(resource) {
+      const ranges = system.ranges(system.position(this.name));
+      let best;
+      let dist;
+
+      for (const body of Object.keys(ranges)) {
+        if (body === this.name) continue;
+        if (dist != undefined && ranges[body] >= dist) continue;
+
+        const place = Game.game.place(body);
+
+        if (place.isLocallyMined(resource) && !place.is_under_supplied(resource)) {
+          dist = ranges[body];
+          best = body;
+        }
+      }
+
+      return [best, dist];
+    }
+
+    distancePriceMalus(resource) {
+      if (!data.resources[resource].hasOwnProperty('mine'))
+        return 0;
+
+      if (this.isLocallyMined(resource)) // && !this.is_under_supplied(resource))
+        return 0;
+
+      const [best, dist] = this.nearestSource(resource);
+      return dist ? (dist / Physics.AU / 15) : 3;
+    }
+
+    // For non-local and manufactured goods in remote economies, there is a
+    // premium markup.
+    adjustment(resource) {
+      return super.adjustment(resource) + this.distancePriceMalus(resource);
+    }
+
     scarcityMarkup(resource) {
-      const isLocallyProduced = this.production.get(resource) !== 0;
-      const isMinable = data.resources[resource].mine;
       const markup = super.scarcityMarkup(resource);
-      return (isLocallyProduced && isMinable)
+      return (this.isLocallyMined(resource))
         ? (markup - (3 * data.scarcity_markup))
         : markup;
     }
 
     demand(resource) {
-      let actual = super.demand(resource);
-      let base = data.market.consumes[resource] || 0;
+      const actual = super.demand(resource);
+      const base = data.market.consumes[resource] || 0;
       return actual + (base * this.scale);
     }
 
@@ -83,23 +124,23 @@ define(function(require, exports, module) {
     }
 
     mergeScale(resources, traits, conditions) {
-      let amounts = new util.ResourceCounter(0);
+      const amounts = new util.ResourceCounter(0);
 
-      for (let resource of Object.keys(resources))
+      for (const resource of Object.keys(resources))
         amounts.inc(resource, resources[resource]);
 
       if (traits)
-        for (let trait of traits)
-          for (let resource of Object.keys(trait))
+        for (const trait of traits)
+          for (const resource of Object.keys(trait))
             amounts.inc(resource, trait[resource]);
 
       if (conditions)
-        for (let cond of conditions)
-          for (let resource of Object.keys(cond))
+        for (const cond of conditions)
+          for (const resource of Object.keys(cond))
             amounts.inc(resource, cond[resource]);
 
       amounts.each((resource, amount) => {
-        let scaled = amount * this.scale;
+        const scaled = amount * this.scale;
         amounts.set(resource, Math.max(0, scaled));
       });
 
@@ -348,7 +389,7 @@ define(function(require, exports, module) {
         this.incDemand('fuel', 5);
 
       // Start agents if needed
-      if (this.agents.length < data.market.agents * this.scale) {
+      if (this.agents.length < this.num_agents) {
         let money = data.market.agent_money * this.scale;
         this.agents.push(new Crafter({place: this.name, money: money}));
       }

@@ -26,15 +26,16 @@ require(
         explainPriceLoc: Game.game.locus,
       },
       computed: {
-        resources:   function() { return Object.keys(data.resources) },
-        bodies:      function() { return Object.keys(data.bodies) },
-        marketLoc:   function() { if (this.explainPriceLoc) return game.place(this.explainPriceLoc) },
-        basePrice:   function() { if (this.explainPrice) return this.marketLoc.calculatePrice(this.explainPrice) },
-        scarcity:    function() { if (this.explainPrice) return this.marketLoc.scarcityMarkup(this.explainPrice) },
-        adjustment:  function() { if (this.explainPrice) return this.marketLoc.adjustment(this.explainPrice) },
-        cachedPrice: function() { if (this.explainPrice) return this.marketLoc.prices[this.explainPrice] },
-        localNeed:   function() { if (this.explainPrice) return this.marketLoc.local_need(this.explainPrice) },
-        systemNeed:  function() { if (this.explainPrice) return game.system_need(this.explainPrice) },
+        resources:     function() { return Object.keys(data.resources) },
+        bodies:        function() { return Object.keys(data.bodies) },
+        marketLoc:     function() { if (this.explainPriceLoc) return game.place(this.explainPriceLoc) },
+        basePrice:     function() { if (this.explainPrice) return this.marketLoc.calculatePrice(this.explainPrice) },
+        scarcity:      function() { if (this.explainPrice) return this.marketLoc.scarcityMarkup(this.explainPrice) },
+        distanceMalus: function() { if (this.explainPrice) return this.marketLoc.distancePriceMalus(this.explainPrice) },
+        adjustment:    function() { if (this.explainPrice) return this.marketLoc.adjustment(this.explainPrice) },
+        cachedPrice:   function() { if (this.explainPrice) return this.marketLoc.prices[this.explainPrice] },
+        localNeed:     function() { if (this.explainPrice) return this.marketLoc.local_need(this.explainPrice) },
+        systemNeed:    function() { if (this.explainPrice) return game.system_need(this.explainPrice) },
       },
       methods: {
         logGame:   function()  { console.log(game) },
@@ -120,6 +121,7 @@ require(
       <tr><th>Local demand</th><td>{{localNeed|R(4)}}</td></tr>
       <tr><th>System demand</th><td>{{systemNeed|R(4)}}</td></tr>
       <tr><th>Scarcity</th><td>{{scarcity|R(4)}}</td></tr>
+      <tr><th>Distance malus</th><td>{{distanceMalus|R(4)}}</td></tr>
       <tr><th>Adjustment</th><td>{{adjustment|R(4)}}</td></tr>
       <tr><th>Base value</th><td>{{basePrice|csn}}</td></tr>
       <tr><th>Cached price</th><td>{{cachedPrice|csn}}</td></tr>

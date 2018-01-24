@@ -50,7 +50,7 @@ define(function() {
     },
 
     market: {
-      agents:      2,
+      agents:      3,
       fabricators: 2,
       minability:  0.2,
       produces:    {},
@@ -58,16 +58,20 @@ define(function() {
     },
 
     traits: {
-      'mineral rich':     {produces: {ore: 0.5, minerals: 0.5}, consumes: {}},
+      'mineral rich':     {produces: {ore: 0.75, minerals: 0.5}, consumes: {}},
       'mineral poor':     {produces: {ore: -0.5, minerals: -0.25}, consumes: {}},
+
       'water rich':       {produces: {water: 0.75}, consumes: {}},
       'water poor':       {produces: {water: -0.5}, consumes: {}},
+
       'hydrocarbon rich': {produces: {hydrocarbons: 0.35, minerals: 0.2}, consumes: {}},
       'hydrocarbon poor': {produces: {hydrocarbons: -0.35, minerals: -0.2}, consumes: {}},
 
-      'asteroids':        {produces: {ore: 1.0, minerals: 1.0}, consumes: {fuel: 1.0}},
-      'rocky':            {produces: {ore: 0.6, minerals: 0.5} , consumes: {}},
-      'icy':              {produces: {water: 0.8, minerals: 0.35, hydrocarbons: 0.2}, consumes: {}},
+      'rocky':            {produces: {ore: 1.0, minerals: 0.75} , consumes: {}},
+      'icy':              {produces: {water: 1.0, minerals: 0.5}, consumes: {}},
+
+      'asteroids':        {produces: {ore: 1.0, minerals: 0.75}, consumes: {fuel: 1.0}},
+      'ringed system':    {produces: {water: 1.0, minerals: 0.5, hydrocarbons: 0.25}, consumes: {fuel: 1.0}},
 
       'agricultural':     {produces: {food: 0.5, hydrocarbons: 0.1}, consumes: {machines: 0.2, fuel: 0.1, water: 0.5, hydrocarbons: 0.5}},
       'habitable':        {produces: {food: 0.7, hydrocarbons: 0.5}, consumes: {}},
@@ -215,7 +219,7 @@ define(function() {
       pluto: {
         name:    'Pluto',
         size:    'small',
-        traits:  ['domed', 'subterranean'],
+        traits:  ['domed', 'subterranean', 'rocky', 'icy'],
         faction: 'TRANSA',
       }
     },
