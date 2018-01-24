@@ -13,7 +13,6 @@ define(function(require, exports, module) {
   Vue.component('work', {
     data: function() {
       return {
-        payRate:    Game.game.place().payRate,
         days:       1,
         modal:      null,
         inProgress: false,
@@ -24,6 +23,12 @@ define(function(require, exports, module) {
     computed: {
       pay:   function() {return this.payRate * this.days},
       turns: function() {return Math.ceil(this.days * 24 / data.hours_per_turn)},
+
+      payRate: function() {
+        let daily = Game.game.here.payRate;
+        daily += daily * Game.game.player.getStandingPriceAdjustment(Game.game.here.faction);
+        return Math.ceil(daily);
+      },
     },
     methods: {
       harvest: function() {
