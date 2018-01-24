@@ -64,8 +64,8 @@ define(function(require, exports, module) {
   <card v-if="detail" class="my-3" :title="info.name">
     <card-text>{{info.desc}}</card-text>
     <card-text v-if="isRestricted" class="text-warning font-italic">Your reputation with this faction precludes the sale of this equipment to you. That does not prevent you from salivating from the show room window, however.</card-text>
-    <card-text v-if="!canAfford" class="text-warning font-italic">You do not have enough money for this upgrade. </card-text>
-    <card-text v-if="!hasRoom" class="text-warning font-italic">Your ship does not have enough free hard points for this upgrade.</card-text>
+    <card-text v-else-if="!canAfford" class="text-warning font-italic">You do not have enough money for this upgrade. </card-text>
+    <card-text v-else-if="!hasRoom" class="text-warning font-italic">Your ship does not have enough free hard points for this upgrade.</card-text>
 
     <card-text>
       <button v-if="isAvailable" @click="buy=true" type="button" class="btn btn-dark">Purchase</button>

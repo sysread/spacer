@@ -269,15 +269,17 @@ define(function() {
 
     /*
      * keys:
+     *    armor, mass, cargo, etc: bonus or malus to existing ship attributes
      *    reload    : combat turns between use
      *    rate      : rate of fire (uses per turn after reload)
      *    damage    : max damage against enemy vessel
      *    intercept : chance of intercepting and disabling a missile
+     *    dodge     : chance of dodging a projectile (or reducing its accuracy or range)
      */
     shipAddOns: {
       cargoPod: {
         name       : 'External cargo pod',
-        desc       : 'Welds an additional cargo hold onto the outer hull, increasing total cargo space but reducing armor.',
+        desc       : 'Welds additional cargo units onto the outer hull, increasing total cargo space but reducing the effectiveness of armor.',
         mass       : 10,
         cargo      : 20,
         armor      : -1,
@@ -290,7 +292,7 @@ define(function() {
         damage     : 10,
         reload     : 1,
         rate       : 1,
-        price      : 80000,
+        price      : 200000,
         restricted : 'Respected',
       },
       torpedoLauncher: {
@@ -311,7 +313,7 @@ define(function() {
         intercept  : 0.65,
         reload     : 1,
         rate       : 2,
-        price      : 30000,
+        price      : 35000,
         restricted : 'Friendly',
       },
       ecm: {
@@ -324,7 +326,16 @@ define(function() {
         rate       : 2,
         price      : 90000,
         restricted : 'Admired',
-      }
+      },
+      stealthPlating: {
+        name       : "Adaptive hull plating",
+        desc       : "This Martian technology, originally designed as part of an adaptive camouflage system for ground forces' power armor, alters the absorbtive range of the ships' outer hull to absorb EM radiation, making it effectively invisible except at very close range.",
+        mass       : 100,
+        dodge      : 0.75,
+        armor      : -1,
+        price      : 350000,
+        restricted : 'Admired',
+      },
     }
   };
 
