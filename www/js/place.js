@@ -92,11 +92,13 @@ define(function(require, exports, module) {
       if (!data.resources[resource].hasOwnProperty('mine'))
         return 0;
 
-      if (this.isLocallyMined(resource)) // && !this.is_under_supplied(resource))
+      if (this.isLocallyMined(resource))
         return 0;
 
       const [best, dist] = this.nearestSource(resource);
-      return dist ? (dist / Physics.AU / 15) : 3;
+      const malus = dist ? (dist / Physics.AU / 15) : 3;
+
+      return this.is_under_supplied(resource) ? malus : malus / 2;
     }
 
     // For non-local and manufactured goods in remote economies, there is a
