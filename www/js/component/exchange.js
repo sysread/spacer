@@ -78,7 +78,7 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      cargoSpace: function() {return Game.game.player.ship.shipclass.cargo},
+      cargoSpace: function() {return Game.game.player.ship.cargoSpace},
       cargoUsed:  function() {return Game.game.player.ship.cargoUsed},
       cargoLeft:  function() {return Game.game.player.ship.cargoLeft},
     },
