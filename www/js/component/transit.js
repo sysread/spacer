@@ -15,8 +15,8 @@ define(function(require, exports, module) {
     props: ['plan'],
     data: function() {
       return {
-        timer:      this.schedule(),
-        stoppedBy:  {},
+        timer: this.schedule(),
+        stoppedBy: {},
         inspection: null,
       };
     },
@@ -34,7 +34,7 @@ define(function(require, exports, module) {
       timeRemaining: function() {
         const d = Math.floor(this.hoursLeft / 24);
         const h = this.hoursLeft % 24;
-        return `${d} days, ${h} hours`; 
+        return `${d} days, ${h} hours`;
       },
     },
     methods: {
@@ -155,37 +155,20 @@ define(function(require, exports, module) {
       const maxX = Math.ceil([this.origPoint()[0], this.destPoint()[0], this.coords[0]].reduce((acc, x) => {return Math.max(acc, Math.abs(x))}, 0));
       const maxY = Math.ceil([this.origPoint()[1], this.destPoint()[1], this.coords[1]].reduce((acc, y) => {return Math.max(acc, Math.abs(y))}, 0));
       return {
-        maxX:  maxX,
-        maxY:  maxY,
-        maxPt: Math.max(maxX, maxY),
+        max: Math.max(maxX, maxY),
+        sun: [0, 0, 0],
       };
-    },
-    computed: {
-      sun:  function() { return [0, 0, 0] },
-      /*maxX: function() {
-        return Math.ceil(
-          [this.origPoint()[0], this.destPoint()[0], this.coords[0]]
-            .reduce((acc, x) => {return Math.max(acc, Math.abs(x))}, 0)
-        );
-      },
-      maxY: function() {
-        return Math.ceil(
-          [this.origPoint()[1], this.destPoint()[1], this.coords[1]]
-            .reduce((acc, y) => {return Math.max(acc, Math.abs(y))}, 0)
-        );
-      },*/
     },
     methods: {
       distance:  function() { return Physics.distance(this.coords, this.destPoint()) / Physics.AU },
       origPoint: function() { return system.position(this.orig) },
       destPoint: function() { return system.position(this.dest) },
       zero:      function() { return this.$el ? Math.floor(this.$el.clientWidth / 2) : 0 },
-
       position:  function(p) {
         const [x, y, z] = p;
         const zero = this.zero();
-        const xPct = x / this.maxPt;
-        const yPct = y / this.maxPt;
+        const xPct = x / this.max;
+        const yPct = y / this.max;
         return {
           'left': Math.ceil(zero + (zero * xPct)) + 'px',
           'top':  Math.ceil(zero + (zero * yPct)) + 'px',
@@ -300,6 +283,7 @@ define(function(require, exports, module) {
   <ok v-if="choice=='submit-fined'" @ok="done">
     Your contraband cargo was found and confiscated.
     You have been fined {{fine|csn}} credits.
+    Your reputation with {{faction}} has taken a serious hit.
   </ok>
   <ok v-if="choice=='submit-done'" @ok="done">
     No contraband was found.
