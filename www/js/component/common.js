@@ -13,6 +13,15 @@ define(function(require, exports, module) {
   Vue.component('lc',   { template: '<span class="text-lowercase"><slot /></span>'  });
   Vue.component('uc',   { template: '<span class="text-uppercase"><slot /></span>'  });
 
+  Vue.component('green', { template: '<span class="text-success"><slot /></span>' });
+  Vue.component('gold',  { template: '<span class="text-warning"><slot /></span>' });
+  Vue.component('red',   { template: '<span class="text-danger"><slot /></span>'  });
+
+  Vue.component('badge', {
+    props: ['right'],
+    template: '<span class="badge badge-pill" :class="{\'float-right\': right}"><slot /></span>',
+  });
+
   Vue.component('progress-bar', {
     props: ['percent'],
     template: `

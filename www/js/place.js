@@ -163,14 +163,57 @@ define(function(require, exports, module) {
       return this.mergeScale(data.market.consumes, traits, conds, extra);
     }
 
-    get payRate() {
-      let rate = data.base_pay * this.scale;
+    get availableWorkTasks() {
+      const work = [];
+
+      TASK:
+      for (const task of data.work) {
+        for (const req of task.avail) {
+          for (const trait of this.traits) {
+            if (req === trait) {
+              work.push(task);
+              continue TASK;
+            }
+          }
+        }
+      }
+
+      return work;
+    }
+
+    payRate(player, task) {
+      let rate = task.pay * this.scale;
+      rate += rate * player.getStandingPriceAdjustment(this.faction);
       rate -= rate * this.sales_tax;
-      return Math.round(rate);
+      return Math.ceil(rate);
+    }
+
+    work(player, task, days) {
+      const pay       = this.payRate(player, task) * days
+      const turns     = days * (24 / data.hours_per_turn);
+      const rewards   = task.rewards;
+      const collected = new util.ResourceCounter;
+
+      for (let turn = 0; turn < turns; ++turn) {
+        for (const item of rewards) {
+          if (data.resources[item].hasOwnProperty('mine')) {
+            const tics = data.resources[item].mine.tics;
+
+            if ((turn >= tics) && (turn % tics === 0) && this.mine(item)) {
+              collected.inc(item, 1);
+            }
+          }
+        }
+      }
+
+      return {
+        pay: pay,
+        items: collected,
+      };
     }
 
     mine(resource) {
-      let count = this.resources.get(resource);
+      const count = this.resources.get(resource);
 
       if (count > 0) {
         if (Math.random() <= data.market.minability) {
@@ -180,23 +223,6 @@ define(function(require, exports, module) {
       }
 
       return false;
-    }
-
-    harvest(turns=1) {
-      let collected = new util.ResourceCounter;
-
-      for (let i = 1; i <= turns; ++i) {
-        for (let [item, amt] of this.resources.entries()) {
-          if (data.resources[item].hasOwnProperty('mine')) {
-            let tics = data.resources[item].mine.tics;
-            if ((i >= tics) && (i % tics === 0) && this.mine(item)) {
-              collected.inc(item, 1);
-            }
-          }
-        }
-      }
-
-      return collected;
     }
 
     /*

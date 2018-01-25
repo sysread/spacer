@@ -41,7 +41,7 @@ define(function(require, exports, module) {
           this.load(JSON.parse(saved));
           this.refresh();
           exports.open('summary');
-          //exports.open('test');
+          //exports.open('work');
         }
         else {
           exports.open('newgame');
