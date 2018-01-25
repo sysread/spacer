@@ -96,12 +96,12 @@ define(function(require, exports, module) {
   </card-text>
 
   <card-text>
-    <btn v-for="t in tasks" :key="t.name" @click="setTask(t)" :muted="!hasTask(t)" block=1>
+    <btn v-for="t in tasks" :key="t.name" @click="setTask(t)" block=1>
       {{t.name}} <badge right=1>{{getPayRate(t)}}c</badge>
     </btn>
   </card-text>
 
-  <modal v-if="task" xclose="isReady" :title="task.name" footer=1 close="Close">
+  <modal v-if="task" @close="completeTask()" xclose="isReady" :title="task.name" footer=1 close="Close">
     <div v-if="isReady">
       <p><i>{{task.desc}}</i></p>
       <p>Working at a daily wage of <gold>{{payRate}}</gold> credits for <gold>{{days}}</gold> days will earn <gold>{{pay}}</gold> credits.</p>
@@ -118,8 +118,8 @@ define(function(require, exports, module) {
     </div>
 
     <btn slot="footer" v-if="isReady" @click="performWork">Get to work</btn>
-    <btn slot="footer" v-if="isFinished && hitQuota" @click="completeTask" close=1>Complete transfer</btn>
-    <btn slot="footer" v-if="isFinished && !hitQuota" @click="completeTask" close=1>Grumble, grumble...</btn>
+    <btn slot="footer" v-if="isFinished && hitQuota" close=1>Complete transfer</btn>
+    <btn slot="footer" v-if="isFinished && !hitQuota" close=1>Grumble, grumble...</btn>
   </modal>
 </card>
     `,
