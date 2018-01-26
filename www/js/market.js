@@ -68,16 +68,17 @@ define(function(require, exports, module) {
     }
 
     is_under_supplied(resource) {
-      return this.demand(resource) > Math.max(1, this.currentSupply(resource));
+      return this.demand(resource) > Math.max(1, this.currentSupply(resource))
+          || this.currentSupply(resource) < data.min_delivery_amt;
     }
 
     is_over_supplied(resource) {
-      if (this.currentSupply(resource) === 0)
+      if (this.currentSupply(resource) <= (data.min_delivery_amt * 2))
         return false;
 
       const loc = this.local_need(resource);
 
-      if (loc < 0.5)
+      if (loc < 0.6)
         return true;
 
       const sys = Game.game.system_need(resource);

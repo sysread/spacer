@@ -20,7 +20,7 @@ define(function() {
     initial_ship:       'runner',
     jurisdiction:       0.01, // au from body
     max_abs_standing:   100,
-    min_delivery_amt:   8,
+    min_delivery_amt:   4,
 
     scales: {
       tiny:   0.6,
@@ -37,7 +37,7 @@ define(function() {
       hydrocarbons: {mass: 2,  mine: {tics: 4}},
       food:         {mass: 5, mine: {tics: 5}, recipe: {tics: 3, materials: {water: 1, hydrocarbons: 1}}},
       fuel:         {mass: 1,  recipe: {tics: 2, materials: {minerals: 1}}},
-      metal:        {mass: 40, recipe: {tics: 2, materials: {ore: 4}}},
+      metal:        {mass: 40, recipe: {tics: 2, materials: {ore: 5}}},
       ceramics:     {mass: 10, recipe: {tics: 3, materials: {minerals: 2, water: 2}}},
       medicine:     {mass: 2, recipe: {tics: 4, materials: {food: 1, hydrocarbons: 1}}},
       machines:     {mass: 30, recipe: {tics: 4, materials: {metal: 3, ceramics: 1}}},
@@ -52,30 +52,30 @@ define(function() {
       fabricators: 2,
       minability:  0.2,
       produces:    {},
-      consumes:    {water: 2, food: 1, medicine: 0.5, narcotics: 0.1, weapons: 0.2}
+      consumes:    {water: 1.0, food: 0.65, medicine: 0.3, narcotics: 0.1, weapons: 0.2},
     },
 
     traits: {
-      'mineral rich':     {produces: {ore: 0.75, minerals: 0.5}, consumes: {}},
-      'mineral poor':     {produces: {ore: -0.5, minerals: -0.25}, consumes: {}},
+      'mineral rich':     {produces: {ore: 0.5, minerals: 0.5}, consumes: {}},
+      'mineral poor':     {produces: {ore: -0.5, minerals: -0.5}, consumes: {}},
 
-      'water rich':       {produces: {water: 0.75}, consumes: {}},
+      'water rich':       {produces: {water: 1.0}, consumes: {}},
       'water poor':       {produces: {water: -0.5}, consumes: {}},
 
       'hydrocarbon rich': {produces: {hydrocarbons: 0.35, minerals: 0.2}, consumes: {}},
       'hydrocarbon poor': {produces: {hydrocarbons: -0.35, minerals: -0.2}, consumes: {}},
 
-      'rocky':            {produces: {ore: 1.0, minerals: 0.75} , consumes: {}},
-      'icy':              {produces: {water: 1.0, minerals: 0.5, hydrocarbons: 0.1}, consumes: {}},
+      'rocky':            {produces: {ore: 0.7, minerals: 0.4} , consumes: {}},
+      'icy':              {produces: {water: 0.6, minerals: 0.25, hydrocarbons: 0.1}, consumes: {}},
 
-      'asteroids':        {produces: {ore: 1.0, minerals: 1.0}, consumes: {fuel: 1.0}},
-      'ringed system':    {produces: {water: 1.0, minerals: 0.5, hydrocarbons: 0.25}, consumes: {fuel: 1.0}},
+      'asteroids':        {produces: {ore: 0.8, minerals: 0.5}, consumes: {fuel: 1.0}},
+      'ringed system':    {produces: {water: 0.8, minerals: 0.25, hydrocarbons: 0.25}, consumes: {fuel: 1.0}},
 
-      'agricultural':     {produces: {food: 0.5, hydrocarbons: 0.1}, consumes: {machines: 0.2, fuel: 0.1, water: 0.5, hydrocarbons: 0.5}},
-      'habitable':        {produces: {food: 0.7, hydrocarbons: 0.5}, consumes: {}},
-      'domed':            {produces: {food: 0.1, hydrocarbons: 0.15}, consumes: {fuel: 0.2, electronics: 0.05, machines: 0.05, water: 0.1, hydrocarbons: 0.2}},
-      'subterranean':     {produces: {}, consumes: {fuel: 0.1, electronics: 0.1, machines: 0.1}},
-      'orbital':          {produces: {}, consumes: {fuel: 0.5, electronics: 0.2, machines: 0.2}}
+      'agricultural':     {produces: {food: 0.75, hydrocarbons: 0.25}, consumes: {machines: 0.2, fuel: 0.1, water: 0.5, hydrocarbons: 0.1}},
+      'habitable':        {produces: {food: 0.2, hydrocarbons: 0.35}, consumes: {}},
+      'domed':            {produces: {food: 0.1, hydrocarbons: 0.15}, consumes: {metal: 0.2, fuel: 0.2, electronics: 0.05, machines: 0.05, water: 0.1, hydrocarbons: 0.2}},
+      'subterranean':     {produces: {}, consumes: {metal: 0.2, fuel: 0.1, electronics: 0.1, machines: 0.1}},
+      'orbital':          {produces: {}, consumes: {metal: 0.35, fuel: 0.5, electronics: 0.2, machines: 0.2}}
     },
 
     conditions: {
@@ -211,7 +211,7 @@ define(function() {
       earth: {
         name:    'Earth',
         size:    'huge',
-        traits:  ['habitable', 'orbital', 'rocky', 'water rich'],
+        traits:  ['habitable', 'orbital', 'rocky', 'water rich', 'agricultural'],
         faction: 'UN',
       },
       moon: {
@@ -229,7 +229,7 @@ define(function() {
       ceres: {
         name:    'Ceres',
         size:    'large',
-        traits:  ['subterranean', 'rocky', 'asteroids'],
+        traits:  ['subterranean', 'rocky', 'asteroids', 'mineral rich'],
         faction: 'CERES',
         gravity: 0.35,
       },
@@ -274,21 +274,21 @@ define(function() {
       triton: {
         name:    'Triton Command',
         size:    'small',
-        traits:  ['orbital', 'icy', 'mineral poor'],
+        traits:  ['orbital', 'icy', 'water rich', 'mineral poor'],
         faction: 'TRANSA',
         gravity: 0.5,
       },
       titania: {
         name:    'Titania Outpost',
         size:    'small',
-        traits:  ['subterranean', 'ringed system', 'icy', 'rocky'],
+        traits:  ['subterranean', 'ringed system', 'icy', 'rocky', 'mineral rich'],
         faction: 'TRANSA',
         gravity: 0.235,
       },
       pluto: {
         name:    'Pluto',
         size:    'small',
-        traits:  ['subterranean', 'rocky', 'icy'],
+        traits:  ['subterranean', 'rocky', 'icy', 'mineral rich'],
         faction: 'TRANSA',
       }
     },

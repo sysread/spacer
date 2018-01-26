@@ -2,27 +2,9 @@ define(function(require, exports, module) {
   const Person  = require('person');
   const Physics = require('physics');
   const Place   = require('place');
-  const Ship    = require('ship');
   const data    = require('data');
   const system  = require('system');
   const util    = require('util');
-
-  exports.open = function(name) {
-    if ($('#spacer').data('state') === 'transit') {
-      return;
-    }
-
-    if (!window.localStorage.getItem('game')) {
-      name = 'newgame';
-    }
-
-    const path = $(`#spacer-nav a[data-name='${name}']`).data('path') || name + '.html';
-
-    $('#spacer-nav a').removeClass('active');
-    $(`#spacer-nav a[data-name="${name}"]`).addClass('active');
-    $('#spacer-content').empty().load(path);
-    $('#spacer-nav').collapse('hide');
-  };
 
   const Game = class {
     constructor() {
@@ -41,7 +23,7 @@ define(function(require, exports, module) {
           this.load(JSON.parse(saved));
           this.refresh();
           exports.open('summary');
-          //exports.open('work');
+          //exports.open('debug');
         }
         else {
           exports.open('newgame');
@@ -258,6 +240,23 @@ define(function(require, exports, module) {
 
       return this.cache.system_need[resource];
     }
+  };
+
+  exports.open = function(name) {
+    if ($('#spacer').data('state') === 'transit') {
+      return;
+    }
+
+    if (!window.localStorage.getItem('game')) {
+      name = 'newgame';
+    }
+
+    const path = $(`#spacer-nav a[data-name='${name}']`).data('path') || name + '.html';
+
+    $('#spacer-nav a').removeClass('active');
+    $(`#spacer-nav a[data-name="${name}"]`).addClass('active');
+    $('#spacer-content').empty().load(path);
+    $('#spacer-nav').collapse('hide');
   };
 
   exports.game = new Game;

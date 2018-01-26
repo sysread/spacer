@@ -79,7 +79,7 @@ define(function(require, exports, module) {
 
         const place = Game.game.place(body);
 
-        if (place.isLocallyMined(resource) && !place.is_under_supplied(resource)) {
+        if (!place.is_under_supplied(resource)) {
           dist = ranges[body];
           best = body;
         }
@@ -264,26 +264,28 @@ define(function(require, exports, module) {
     }
 
     deliveryOriginDesirability(origin, resource) {
-      let place = Game.game.place(origin);
+      const place = Game.game.place(origin);
 
-      if (place.local_need(resource) > 1)
-        return 0;
-
-      for (let delivery of this.deliveries) {
+      // Already have a delivery scheduled
+      for (const delivery of this.deliveries) {
         if (delivery.item === resource)
           return 0;
       }
 
+      // Origin does not have enough of resource
+      if (place.is_under_supplied(resource))
+        return 0;
+
       // Distance bonus
-      let stock = place.currentSupply(resource);
-      let distance = system.distance(this.name, origin) / Physics.AU;
+      const stock = place.currentSupply(resource);
+      const distance = system.distance(this.name, origin) / Physics.AU;
       let rating = stock / distance;
 
       // Shared faction bonus
-      if (data.bodies[origin].faction !== this.faction)
+      if (data.bodies[origin].faction === this.faction)
         rating *= 1.5;
 
-      // Supply bonus
+      // Remote supply bonus
       if (place.is_over_supplied(resource))
         rating *= 2;
 
@@ -291,9 +293,9 @@ define(function(require, exports, module) {
     }
 
     deliveryAmount(origin, resource) {
-      let remoteStock = Game.game.place(origin).currentSupply(resource);
-      let localSupply = this.currentSupply(resource) + this.supplyHistory.avg(resource);
-      let localDemand = this.demand(resource);
+      const remoteStock = Game.game.place(origin).currentSupply(resource);
+      const localSupply = this.currentSupply(resource) + this.supplyHistory.avg(resource);
+      const localDemand = this.demand(resource);
 
       for (let i = 1; i <= remoteStock; ++i) {
         // see Market.supply()
@@ -307,7 +309,12 @@ define(function(require, exports, module) {
     }
 
     deliverySchedule() {
-      for (let resource of this.resourcesNeeded()) {
+      const consumption = 8;
+
+      if (this.deliveries.length >= this.num_agents)
+        return;
+
+      for (const resource of this.resourcesNeeded()) {
         let possible = Object.keys(data.bodies)
           .filter((b) => {return b !== this.name})
           .map((b) => {return [b, this.deliveryOriginDesirability(b, resource)]})
@@ -318,8 +325,8 @@ define(function(require, exports, module) {
           let want  = this.deliveryAmount(body, resource);
           let amt   = want;
           let dist  = system.distance(this.name, place.name) / Physics.AU;
-          let turns = Math.ceil((24 / data.hours_per_turn) * 8 * dist);
-          let fuel  = Math.ceil(dist / 8);
+          let turns = Math.ceil((24 / data.hours_per_turn) * consumption * dist);
+          let fuel  = Math.ceil(dist / consumption);
           let avail = place.currentSupply('fuel');
 
           // If getting fuel delivered, adjust the delivery amount until there is
@@ -340,7 +347,8 @@ define(function(require, exports, module) {
 
           // Is there enough fuel available to make the delivery?
           if (avail < fuel) {
-            place.incDemand('fuel', fuel);
+            place.incDemand('fuel', fuel - avail);
+            place.incDemand(resource, amt);
             continue;
           }
 
@@ -375,7 +383,7 @@ define(function(require, exports, module) {
 
         if (d.turns === 0) {
           this.sell(d.item, d.amount);
-          //console.log(this.name, d);
+          console.log(`[${Game.game.turns}] delivery: ${this.name} received ${d.amount} units of ${d.item} from ${d.origin}`);
         }
         else {
           incomplete.push(d);

@@ -249,7 +249,7 @@ define(function(require, exports, module) {
     <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{relBuy|csn}}</span>
     <span v-else>{{rBuy|csn}}</span>
   </td>
-  <td class="text-right" :class="{'text-success': rSell > lBuy}">
+  <td class="text-right" :class="{'text-success': info.stock > 0 && rSell > lBuy}">
     <span v-if="relprices"><span v-if="relSell > 0">+</span>{{relSell|csn}}</span>
     <span v-else>{{rSell|csn}}</span>
   </td>

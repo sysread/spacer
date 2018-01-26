@@ -25,11 +25,13 @@ define(function(require, exports, module) {
           need[mat] = recipe.materials[mat];
 
           // Market doesn't have enough to of the mat to craft this resource
-          if (place.currentSupply(mat) < need[mat])
+          if (place.currentSupply(mat) < need[mat]) {
+            place.incDemand(mat, need[mat]);
             continue CRAFT;
+          }
 
           // Protect market from overly aggressive agents emptying the stores
-          if (place.is_under_supplied(mat))
+          if (!data.necessity[item] && place.is_under_supplied(mat))
             continue CRAFT;
 
           cost += place.buyPrice(mat);
@@ -40,11 +42,20 @@ define(function(require, exports, module) {
 
         profit -= cost;
 
+        for (let mat of Object.keys(recipe.materials)) {
+          if (this.is_over_supplied(mat)) {
+            profit *= 1.25;
+          }
+          else if (this.is_under_supplied(mat)) {
+            profit *= 0.75;
+          }
+        }
+
         if (this.is_under_supplied(item))
           profit *= 2;
 
-        if (item === 'fuel')
-          profit *= 2;
+        if (data.necessity[item])
+          profit *= 3;
 
         // Just say no
         if (this.contra_rand(item))
@@ -82,24 +93,71 @@ define(function(require, exports, module) {
       }
       else {
         this.enqueue('consume');
+        this.enqueue('discard');
       }
     }
 
     sell(info) {
-      if (!this.busted(info.item, 1))
+      if (!this.busted(info.item, 1)) {
         Game.game.place(this.place).sell(info.item, 1);
+        console.debug(`[${Game.game.turns}] agent: ${this.place} manufactured 1 unit of ${info.item}`);
+      }
+    }
+
+    discard() {
+      if (Game.game.turns % (data.update_prices * 24 / data.hours_per_turn) !== 0) {
+        return;
+      }
+
+      const place = Game.game.place(this.place);
+      let demand;
+      let best;
+
+      for (const item of Object.keys(data.resources)) {
+        if (this.is_over_supplied(item)) {
+          const itemDemand = place.demand(item);
+          if (demand === undefined || demand > itemDemand) {
+            demand = itemDemand;
+            best = item;
+          }
+        }
+      }
+
+      if (best && place.currentSupply(best) > Math.floor(data.min_delivery_amt / 2)) {
+        const amount = Math.floor(place.currentSupply(best) / 2);
+        if (amount > 0) {
+          place.store.dec(best, amount);
+          console.debug(`[${Game.game.turns}] agent: ${this.place} discarded ${amount} units of ${best} due to oversupply`);
+        }
+      }
     }
 
     consume() {
-      for (let item of 'water food medicine electronics'.split(' ')) {
-        let price  = Game.game.place(this.place).price(item);
-        let supply = Game.game.place(this.place).currentSupply(item);
+      if (Game.game.turns % (data.update_prices * 24 / data.hours_per_turn) !== 0) {
+        return;
+      }
 
-        if (supply === 0) continue;
+      const place = Game.game.place(this.place);
+      let supply;
+      let best;
 
-        if (this.is_over_supplied(item)) {
-          let amount = Math.ceil(supply / 5);
-          Game.game.place(this.place).buy(item, amount);
+      //for (const item of Object.keys(data.resources)) {
+      for (const item of 'electronics cybernetics narcotics weapons'.split(' ')) {
+        if (!this.is_under_supplied(item)) {
+          const itemSupply = place.supply(item);
+          if (supply === undefined || supply > itemSupply) {
+            supply = itemSupply;
+            best = item;
+          }
+        }
+      }
+
+      if (best && place.currentSupply(best) > Math.floor(data.min_delivery_amt / 2)) {
+        const amount = Math.floor(place.currentSupply(best) / 5);
+
+        if (amount > 0) {
+          place.buy(best, amount);
+          console.debug(`[${Game.game.turns}] agent: ${this.place} consumed ${amount} units of ${best} as a luxury`);
         }
       }
     }
