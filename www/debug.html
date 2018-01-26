@@ -29,17 +29,20 @@ require(
         resources:     function() { return Object.keys(data.resources) },
         bodies:        function() { return Object.keys(data.bodies) },
         marketLoc:     function() { if (this.explainPriceLoc) return game.place(this.explainPriceLoc) },
+        supply:        function() { if (this.explainPrice) return this.marketLoc.supply(this.explainPrice) },
+        demand:        function() { if (this.explainPrice) return this.marketLoc.demand(this.explainPrice) },
         basePrice:     function() { if (this.explainPrice) return this.marketLoc.calculatePrice(this.explainPrice) },
         scarcity:      function() { if (this.explainPrice) return this.marketLoc.scarcityMarkup(this.explainPrice) },
         distanceMalus: function() { if (this.explainPrice) return this.marketLoc.distancePriceMalus(this.explainPrice) },
         adjustment:    function() { if (this.explainPrice) return this.marketLoc.adjustment(this.explainPrice) },
+        nearestSource: function() { if (this.explainPrice) return this.marketLoc.nearestSource(this.explainPrice) },
         cachedPrice:   function() { if (this.explainPrice) return this.marketLoc.prices[this.explainPrice] },
         localNeed:     function() { if (this.explainPrice) return this.marketLoc.local_need(this.explainPrice) },
         systemNeed:    function() { if (this.explainPrice) return game.system_need(this.explainPrice) },
       },
       methods: {
         logGame:   function()  { console.log(game) },
-        gameTurns: function(n) { game.turn(n) },
+        gameTurns: function(n) { game.turn(n); console.log(n, 'turns complete'); },
 
         shipRange: function(ship, maxDeltaV) {
           const dv = maxDeltaV ? (maxDeltaV * Physics.G) : ship.currentAcceleration();
@@ -102,6 +105,27 @@ require(
     </select>
   </div>
 
+  <table class="table" v-if="explainPrice">
+    <tbody>
+      <tr><th>Supply</th><td>{{supply|R(4)}}</td></tr>
+      <tr><th>Demand</th><td>{{demand|R(4)}}</td></tr>
+      <tr><th>Local demand</th><td>{{localNeed|R(4)}}</td></tr>
+      <tr><th>System demand</th><td>{{systemNeed|R(4)}}</td></tr>
+      <tr><th>Scarcity</th><td>{{scarcity|R(4)}}</td></tr>
+
+      <tr>
+        <th>Nearest source</th>
+        <td v-if="nearestSource[0]">{{nearestSource[0]|caps}} ({{nearestSource[1]|AU|R(2)|unit('AU')}})</td>
+        <td v-else>None</td>
+      </tr>
+
+      <tr><th>Distance malus</th><td>{{distanceMalus|R(4)}}</td></tr>
+      <tr><th>Adjustment</th><td>{{adjustment|R(4)}}</td></tr>
+      <tr><th>Base value</th><td>{{basePrice|csn}}</td></tr>
+      <tr><th>Cached price</th><td>{{cachedPrice|csn}}</td></tr>
+    </tbody>
+  </table>
+
   <card v-if="testDataSection == 'shipMaxRanges'" title="Ship ranges (max G)" class="my-2">
     <card v-for="(data, sc) of this.testData" :key="sc" :title="sc|caps" class="my-2">
       <def y=0 split=2 term="Nominal" :def="data.nominal" />
@@ -115,18 +139,6 @@ require(
       <def y=0 split=2 term="Loaded" :def="data.loaded" />
     </card>
   </card>
-
-  <table class="table" v-if="explainPrice">
-    <tbody>
-      <tr><th>Local demand</th><td>{{localNeed|R(4)}}</td></tr>
-      <tr><th>System demand</th><td>{{systemNeed|R(4)}}</td></tr>
-      <tr><th>Scarcity</th><td>{{scarcity|R(4)}}</td></tr>
-      <tr><th>Distance malus</th><td>{{distanceMalus|R(4)}}</td></tr>
-      <tr><th>Adjustment</th><td>{{adjustment|R(4)}}</td></tr>
-      <tr><th>Base value</th><td>{{basePrice|csn}}</td></tr>
-      <tr><th>Cached price</th><td>{{cachedPrice|csn}}</td></tr>
-    </tbody>
-  </table>
 </card>
       `,
     });

@@ -103,6 +103,7 @@ define(function(require, exports, module) {
     }
 
     randomAdjustment(orig) {
+return orig;
       const r = Math.random();
 
       if (orig > 1) {
@@ -147,8 +148,9 @@ define(function(require, exports, module) {
         value = data.base_unit_price * mine.tics;
       }
       else if (recipe) {
-        for (let mat of Object.keys(recipe.materials)) {
-          value += recipe.materials[mat] * this.buyPrice(mat);
+        for (const mat of Object.keys(recipe.materials)) {
+          const price = this.buyPrice(mat);
+          value += recipe.materials[mat] * price;
         }
       }
 
@@ -161,7 +163,8 @@ define(function(require, exports, module) {
 
     price(resource) {
       if (!(resource in this.prices)) {
-        this.prices[resource] = this.calculatePrice(resource);
+        const price = this.calculatePrice(resource);
+        this.prices[resource] = price;
       }
 
       return this.prices[resource];

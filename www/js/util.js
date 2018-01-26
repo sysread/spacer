@@ -200,17 +200,9 @@ define(function(require, exports, module) {
     }
 
     avg(resource, length) {
-      let sum, count;
-
-      if (length === undefined) {
-        sum   = this.sum(resource);
-        count = this.length(resource);
-      }
-      else {
-        sum   = this.sum(resource, length);
-        count = Math.min(length, this.length(resource));
-      }
-
+      const sum = this.sum(resource, length);
+      let count = this.length(resource);
+      if (length !== undefined) count = Math.min(length, count);
       return (sum > 0) ? Math.ceil(sum / count) : 0;
     }
   };

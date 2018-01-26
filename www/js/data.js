@@ -6,7 +6,7 @@ define(function() {
   const data = {
     start_date:         new Date(2242, 0, 1, 1),
     hours_per_turn:     8,
-    initial_days:       300,
+    initial_days:       500,
     initial_stock:      5,
     market_history:     80,
     update_prices:      5, // days between price updates
@@ -16,13 +16,11 @@ define(function() {
     craft_fee:          0.05,
     fabricators:        40,
     fab_health:         30,
-    base_pay:           10, // credits/day
     grav_deltav_factor: 5, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
     initial_ship:       'runner',
-    jurisdiction:       0.5, // au from body
+    jurisdiction:       0.01, // au from body
     max_abs_standing:   100,
     min_delivery_amt:   2,
-    patrol_distance:    5000000, // km from body
 
     scales: {
       tiny:   0.6,
@@ -68,9 +66,9 @@ define(function() {
       'hydrocarbon poor': {produces: {hydrocarbons: -0.35, minerals: -0.2}, consumes: {}},
 
       'rocky':            {produces: {ore: 1.0, minerals: 0.75} , consumes: {}},
-      'icy':              {produces: {water: 1.0, minerals: 0.5}, consumes: {}},
+      'icy':              {produces: {water: 1.0, minerals: 0.5, hydrocarbons: 0.1}, consumes: {}},
 
-      'asteroids':        {produces: {ore: 1.0, minerals: 0.75}, consumes: {fuel: 1.0}},
+      'asteroids':        {produces: {ore: 1.0, minerals: 1.0}, consumes: {fuel: 1.0}},
       'ringed system':    {produces: {water: 1.0, minerals: 0.5, hydrocarbons: 0.25}, consumes: {fuel: 1.0}},
 
       'agricultural':     {produces: {food: 0.5, hydrocarbons: 0.1}, consumes: {machines: 0.2, fuel: 0.1, water: 0.5, hydrocarbons: 0.5}},

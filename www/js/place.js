@@ -107,13 +107,6 @@ define(function(require, exports, module) {
       return super.adjustment(resource) + this.distancePriceMalus(resource);
     }
 
-    scarcityMarkup(resource) {
-      const markup = super.scarcityMarkup(resource);
-      return (this.isLocallyMined(resource))
-        ? (markup - (3 * data.scarcity_markup))
-        : markup;
-    }
-
     demand(resource) {
       const actual = super.demand(resource);
       const base = data.market.consumes[resource] || 0;
@@ -469,7 +462,7 @@ define(function(require, exports, module) {
     inspectionRate(distance) {
       const adjust = Game.game.player.hasStanding('Friendly') ? 0.5 : 1.0;
       const rate = this.patrol * this.scale * adjust;
-      return distance ? rate * Math.pow(data.patrol_distance, 2) / Math.pow(distance, 2) : rate;
+      return distance ? rate * Math.pow(data.jurisdiction, 2) / Math.pow(distance, 2) : rate;
     }
 
     inspectionChance(distance) {

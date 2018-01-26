@@ -114,9 +114,12 @@ define(function(require, exports, module) {
     new_game(player, place) {
       window.localStorage.removeItem('game');
 
+      const date = new Date(data.start_date);
+      date.setDate(date.getDate() - data.initial_days);
+
       this.player  = player;
       this.locus   = place;
-      this.date    = new Date(data.start_date);
+      this.date    = date;
       this.turns   = 0;
       this.places  = {};
       this.markets = {};

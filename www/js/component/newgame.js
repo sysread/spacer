@@ -49,14 +49,14 @@ define(function(require, exports, module) {
         Game.game.new_game(me, this.home);
 
         const turns = data.initial_days * 24 / data.hours_per_turn;
-        const step  = Math.ceil(turns/10);
-        let done  = 0;
+        const step = Math.ceil(turns / 10);
+        let done = 0;
         let timer;
 
         const interval = () => {
           if (done < turns) {
             const count = Math.min(turns - done, step);
-            const pct = Math.ceil((done / turns) * 100);
+            const pct = Math.floor((done / turns) * 100);
             done += count;
             Game.game.turn(count);
             this.percent = pct;
