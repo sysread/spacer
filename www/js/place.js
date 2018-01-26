@@ -298,7 +298,7 @@ define(function(require, exports, module) {
       for (let i = 1; i <= remoteStock; ++i) {
         // see Market.supply()
         let supply = 1 + ((i + localSupply) / 2);
-        if (localDemand / supply < 1) {
+        if (localDemand / supply < 0.75) {
           return i;
         }
       }
@@ -375,6 +375,7 @@ define(function(require, exports, module) {
 
         if (d.turns === 0) {
           this.sell(d.item, d.amount);
+          //console.log(this.name, d);
         }
         else {
           incomplete.push(d);

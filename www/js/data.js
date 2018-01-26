@@ -20,7 +20,7 @@ define(function() {
     initial_ship:       'runner',
     jurisdiction:       0.01, // au from body
     max_abs_standing:   100,
-    min_delivery_amt:   2,
+    min_delivery_amt:   8,
 
     scales: {
       tiny:   0.6,

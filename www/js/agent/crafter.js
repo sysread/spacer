@@ -24,7 +24,12 @@ define(function(require, exports, module) {
         for (let mat of Object.keys(recipe.materials)) {
           need[mat] = recipe.materials[mat];
 
+          // Market doesn't have enough to of the mat to craft this resource
           if (place.currentSupply(mat) < need[mat])
+            continue CRAFT;
+
+          // Protect market from overly aggressive agents emptying the stores
+          if (place.is_under_supplied(mat))
             continue CRAFT;
 
           cost += place.buyPrice(mat);

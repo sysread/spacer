@@ -29,6 +29,7 @@ require(
         resources:     function() { return Object.keys(data.resources) },
         bodies:        function() { return Object.keys(data.bodies) },
         marketLoc:     function() { if (this.explainPriceLoc) return game.place(this.explainPriceLoc) },
+        stock:         function() { if (this.explainPrice) return this.marketLoc.currentSupply(this.explainPrice) },
         supply:        function() { if (this.explainPrice) return this.marketLoc.supply(this.explainPrice) },
         demand:        function() { if (this.explainPrice) return this.marketLoc.demand(this.explainPrice) },
         basePrice:     function() { if (this.explainPrice) return this.marketLoc.calculatePrice(this.explainPrice) },
@@ -107,6 +108,7 @@ require(
 
   <table class="table" v-if="explainPrice">
     <tbody>
+      <tr><th>Stock</th><td>{{stock}}</td></tr>
       <tr><th>Supply</th><td>{{supply|R(4)}}</td></tr>
       <tr><th>Demand</th><td>{{demand|R(4)}}</td></tr>
       <tr><th>Local demand</th><td>{{localNeed|R(4)}}</td></tr>
