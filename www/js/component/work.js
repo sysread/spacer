@@ -56,28 +56,28 @@ define(function(require, exports, module) {
       },
 
       performWork: function() {
-        this.isReady = false;
+        if (this.isReady && !this.isFinished) {
+          this.isReady = false;
 
-        const reward = this.place.work(this.player, this.task, this.days);
-        this.player.credit(reward.pay);
-        this.hitQuota = reward.items.sum() > 0 ? true : false;
-        this.result = reward.items;
-        this.isFinished = true;
+          const reward = this.place.work(this.player, this.task, this.days);
+          this.player.credit(reward.pay);
+          this.hitQuota = reward.items.sum() > 0 ? true : false;
+          this.result = reward.items;
+          this.isFinished = true;
 
-        // Working increases standing no higher than "Respected"
-        if (!this.player.hasStanding('Admired')) {
-          this.player.incStanding(this.place.faction, 1);
+          // Working increases standing no higher than "Respected"
+          if (!this.player.hasStanding('Admired')) {
+            this.player.incStanding(this.place.faction, 1);
+          }
+
+          Game.game.turn(this.turns);
         }
-
-        Game.game.turn(this.turns);
-        Game.game.refresh();
-        Game.game.save_game();
       },
 
       completeTask: function() {
         this.clearTask();
-        Game.game.refresh();
         Game.game.save_game();
+        Game.game.refresh();
       },
     },
     template: `
