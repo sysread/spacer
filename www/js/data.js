@@ -195,7 +195,7 @@ define(function() {
         full_name: 'Trans-Neptunian Authority',
         capital:   'Pluto',
         sales_tax: 0.0175,
-        patrol:    0.02,
+        patrol:    0.0,
         produces:  {narcotics: 0.5},
         consumes:  {weapons: 0.5},
       },
