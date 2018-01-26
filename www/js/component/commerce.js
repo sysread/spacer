@@ -5,6 +5,7 @@ define(function(require, exports, module) {
   const system = require('system');
   const util   = require('util');
 
+  require('component/common');
   require('component/modal');
   require('component/card');
   require('component/row');
@@ -241,19 +242,19 @@ define(function(require, exports, module) {
 <tr :class="{'bg-dark': isLocal}">
   <th scope="row">
     {{body|caps}}
-    <span v-if="central != 'sun'" class="badge badge-pill m-1">{{central|caps}}</span>
-    <span v-if="info.trend > 0" class="badge badge-pill float-right">&uarr; {{info.trend}}</span>
-    <span v-if="info.trend < 0" class="badge badge-pill float-right">&darr; {{info.trend}}</span>
+    <badge v-if="central != 'sun'"    right=1>{{central|caps}}</badge>
+    <badge v-if="info.trend > 0"      right=1>&uarr;</badge>
+    <badge v-else-if="info.trend < 0" right=1>&darr;</badge>
   </th>
-  <td class="text-right" :class="{'text-success': rBuy < lSell}">
-    <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{relBuy|csn}}</span>
-    <span v-else>{{rBuy|csn}}</span>
+  <td class="text-right" :class="{'text-success': info.stock && relBuy > 0, 'text-muted': !info.stock}">
+    <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{relBuy}}</span>
+    <span v-else>{{rBuy}}</span>
   </td>
-  <td class="text-right" :class="{'text-success': info.stock > 0 && rSell > lBuy}">
-    <span v-if="relprices"><span v-if="relSell > 0">+</span>{{relSell|csn}}</span>
-    <span v-else>{{rSell|csn}}</span>
+  <td class="text-right" :class="{'text-success': relSell > 0}">
+    <span v-if="relprices"><span v-if="relSell > 0">+</span>{{relSell}}</span>
+    <span v-else>{{rSell}}</span>
   </td>
-  <td class="text-right d-none d-sm-table-cell">{{info.stock|csn}}</td>
+  <td class="text-right d-none d-sm-table-cell">{{info.stock}}</td>
   <td class="text-right d-none d-sm-table-cell">{{report.age}}</td>
 </tr>
     `,
