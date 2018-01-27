@@ -20,18 +20,26 @@ define(function(require, exports, module) {
       };
     },
     computed: {
+      place:     function() { return Game.game.here },
       player:    function() { return Game.game.player },
-      price:     function() { return Game.game.place().price(this.item) },
+      price:     function() { return this.place.price(this.item) },
       fee:       function() { return util.R(Math.max(1, util.R(data.craft_fee * this.price, 2))) },
-      turns:     function() { return Game.game.place().fabricationTime(this.item) },
+      turns:     function() { return this.place.fabricationTime(this.item) },
       hours:     function() { return data.hours_per_turn * this.turns },
       materials: function() { return data.resources[this.item].recipe.materials },
     },
     methods: {
-      amount:    function() { return Math.min(Math.floor(this.player.money / this.fee), this.player.canCraft(this.item)) },
+      amount: function() {
+        return Math.min(
+          Math.floor(this.player.money / this.fee),
+          this.player.canCraft(this.item),
+        );
+      },
+
       fabricate: function() {
         for (let i = 0; i < this.count; ++i) {
           this.player.debit(this.fee);
+          this.place.fabricate(this.item);
 
           for (const mat of Object.keys(this.materials))
             this.player.ship.unloadCargo(mat, this.materials[mat]);
@@ -44,13 +52,15 @@ define(function(require, exports, module) {
         Game.game.save_game();
         this.done = 1;
       },
+
       reset: function() {
         this.open  = false;
         this.count = 1;
         this.done  = false;
       },
+
       priceOf: function(item) {
-        return Game.game.place().price(item);
+        return this.place.price(item);
       },
     },
     template: `
@@ -83,8 +93,9 @@ define(function(require, exports, module) {
 
   Vue.component('fabricators', {
     computed: {
+      place:        function() { return Game.game.here },
       player:       function() { return Game.game.player },
-      availability: function() { return Game.game.place().fabricationAvailability() },
+      availability: function() { return this.place.fabricationAvailability() },
       resources:    function() { return Object.keys(data.resources).filter((k) => {return data.resources[k].hasOwnProperty('recipe')}) },
     },
     template: `
