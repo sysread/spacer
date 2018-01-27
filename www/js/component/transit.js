@@ -128,20 +128,6 @@ define(function(require, exports, module) {
     `,
   });
 
-  function adjustPoint(n) {
-    if (n === 0) return 1;
-
-    const inc = 0.25;
-    const abs = Math.abs(n);
-    let adj = 1;
-
-    for (let i = 100; (i > abs) && (((adj + inc) * abs) < 100); i -= 10) {
-      adj += inc;
-    }
-
-    return adj;
-  }
-
   Vue.component('transit-plot', {
     props: ['coords', 'dest', 'orig', 'velocity'],
     directives: {
