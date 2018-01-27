@@ -39,9 +39,18 @@ define(function() {
 
     /*
      * requiredDeltaV(s, m) -> m/s/s
+     *
+     * Acceleration distance formula:
+     *   d = vt + (at^2/2)
+     *   2d = 2vt + at^2;
+     *   2d - 2vt = at^2
+     *   (2d - 2vt) / t^2 = a
+     * 
+     * When v=0:
+     *   2d / t^2 = a
      */
-    static requiredDeltaV(t, d) {
-      return (d * 2) / Math.pow(t, 2);
+    static requiredDeltaV(t, d, v=0) {
+      return ((2 * d) - (2 * v * t)) / Math.pow(t, 2);
     }
 
     /*
