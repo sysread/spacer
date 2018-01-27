@@ -28,7 +28,7 @@ define(function(require, exports, module) {
     <button @click="newGame" type="button" class="btn btn-dark">New Game</button>
     <h3>Captain</h3>
   </card-header>
-  <def term="Money" :def="money|csn|unit('cr')" />
+  <def term="Money" :def="money|csn|unit('c')" />
   <def term="Home" :def="home|caps" />
   <def term="Faction" :def="faction|caps" />
   <def term="Thrust endurance" :def="accel|R(2)|unit('G')" />
