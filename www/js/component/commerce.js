@@ -44,12 +44,12 @@ define(function(require, exports, module) {
       <cell size=8 brkpt="sm" y=1>
         <table class="table table-sm">
           <tr>
-            <th scope="col">Buy</th><td>{{buy(item)|csn}}</td>
-            <th scope="col">Sell</th><td>{{sell(item)|csn}}</td>
+            <th scope="col" class="w-25">Buy</th><td class="w-25">{{buy(item)|csn}}</td>
+            <th scope="col" class="w-25">Sell</th><td class="w-25">{{sell(item)|csn}}</td>
           </tr>
           <tr>
-            <th scope="col">Dock</th><td :class="{'text-warning': dock(item) > 0}">{{dock(item)}}</td>
-            <th scope="col">Ship</th><td :class="{'text-success': hold(item) > 0}">{{hold(item)}}</td>
+            <th scope="col" class="w-25">Dock</th><td class="w-25" :class="{'text-warning': dock(item) > 0}">{{dock(item)}}</td>
+            <th scope="col" class="w-25">Ship</th><td class="w-25" :class="{'text-success': hold(item) > 0}">{{hold(item)}}</td>
           </tr>
         </table>
       </cell>
