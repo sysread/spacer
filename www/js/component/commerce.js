@@ -73,9 +73,8 @@ define(function(require, exports, module) {
       place:      function() { return Game.game.here },
       player:     function() { return Game.game.player },
       faction:    function() { return this.place.faction },
-      adjust:     function() { return this.player.getStandingPriceAdjustment(this.faction) },
-      buy:        function() { return Math.ceil(this.place.buyPrice(this.item)  * (1 - this.adjust)) },
-      sell:       function() { return Math.ceil(this.place.sellPrice(this.item) * (1 + this.adjust)) },
+      buy:        function() { return this.place.buyPrice(this.item, this.player) },
+      sell:       function() { return this.place.sellPrice(this.item, this.player) },
       count:      function() { return this.hold - this.player.ship.cargo.get(this.item) },
       contraband: function() { return data.resources[this.item].contraband },
 
@@ -109,14 +108,21 @@ define(function(require, exports, module) {
 
       complete: function() {
         if (this.contraband && this.place.inspectionChance()) {
+          this.player.debit(this.fine());
+          this.player.decStanding(this.faction, this.contraband);
+
+          if (this.count < 0) {
+            this.player.ship.cargo.set(this.item, 0);
+          }
+          else {
+            this.place.store.dec(this.item, this.count);
+          }
+
           alert(
               `As you complete your exchange, ${this.faction} agents in powered armor smash their way into the room.`
             + `A ${this.agentGender()} with a corporal's stripes informs you that your cargo has been confiscated and you have been fined ${this.fine()} credits.`,
             + `Your reputation with this faction has decreased by ${this.contraband}.`
           );
-          this.player.debit(this.fine());
-          this.player.decStanding(this.faction, this.contraband);
-          this.player.ship.cargo.set(this.item, 0);
         }
         else {
           if (this.count > 0) {
