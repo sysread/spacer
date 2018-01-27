@@ -63,6 +63,23 @@ define(function(require, exports, module) {
         }
       },
 
+      nearbyBodies: function() {
+        const ranges   = system.ranges([0, 0, 0]);
+        const min_dist = Math.max(ranges[this.plan.origin], ranges[this.plan.dest]);
+        const bodies   = {};
+
+        for (const body of Object.keys(ranges)) {
+          if (body == this.plan.origin) continue;
+          if (body == this.plan.dest) continue;
+          if (system.central(body) !== 'sun')  continue;
+          if (ranges[body] <= min_dist) {
+            bodies[body] = system.position(body);
+          }
+        }
+
+        return bodies;
+      },
+
       nearby: function() {
         const ranges = system.ranges(this.plan.coords);
         const bodies = {};
@@ -130,7 +147,7 @@ define(function(require, exports, module) {
       </tr>
     </table>
 
-    <transit-plot v-show="!inspection" :coords="plan.coords" :dest="plan.dest" :orig="plan.origin" />
+    <transit-plot v-show="!inspection" :coords="plan.coords" :dest="plan.dest" :orig="plan.origin" :extras="nearbyBodies()" />
     <transit-inspection v-if="inspection" @done="schedule" :body="inspection.body" :faction="inspection.faction" :distance="inspection.distance" class="my-3" />
   </card>
 </div>
@@ -138,7 +155,7 @@ define(function(require, exports, module) {
   });
 
   Vue.component('transit-plot', {
-    props: ['coords', 'dest', 'orig'],
+    props: ['coords', 'dest', 'orig', 'extras'],
     directives: {
       'square': {
         inserted: function(el, binding, vnode) {
@@ -176,6 +193,7 @@ define(function(require, exports, module) {
   <span v-show="zero()" class="plot-point text-info"    :style="position(origPoint())">&bull; <badge class="m-1">{{orig|caps}}</badge></span>
   <span v-show="zero()" class="plot-point text-success" :style="position(coords)">&#9652;</span>
   <span v-show="zero()" class="plot-point text-danger"  :style="position(destPoint())">&#8982; <badge class="m-1">{{dest|caps}}</badge></span>
+  <span v-show="zero()" v-for="(pt, body) in extras" class="plot-point" :style="position(pt)">&bull; <badge class="m-1">{{body|caps}}</badge></span>
 </div>
     `,
   });
