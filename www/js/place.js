@@ -113,9 +113,20 @@ define(function(require, exports, module) {
       return actual + (base * this.scale);
     }
 
-    buyPrice(resource) {
-      const price = super.buyPrice(resource);
-      return price + Math.ceil(price * this.sales_tax);
+    buyPrice(resource, player) {
+      let price = super.buyPrice(resource);
+      price *= 1 + this.sales_tax;
+      if (player) price *= 1 - player.getStandingPriceAdjustment(this.faction);
+      return Math.ceil(price);
+    }
+
+    sellPrice(resource, player) {
+      let price = super.sellPrice(resource);
+      if (player) {
+        price *= 1 + player.getStandingPriceAdjustment(this.faction);
+        price = Math.min(this.buyPrice(resource, player) * 0.9, price);
+      }
+      return Math.ceil(price);
     }
 
     mergeScale(resources, traits, conditions) {

@@ -18,14 +18,15 @@ define(function(require, exports, module) {
       };
     },
     computed: {
+      place:     function() { return Game.game.here },
+      player:    function() { return Game.game.player },
       resources: function() { return Object.keys(data.resources) },
-      adjust: function() { return Game.game.player.getStandingPriceAdjustment(Game.game.here.faction) },
     },
     methods: {
-      dock: function(item) { return Game.game.place().currentSupply(item) },
-      hold: function(item) { return Game.game.player.ship.cargo.get(item) },
-      buy:  function(item) { return Math.ceil(Game.game.place().buyPrice(item)  * (1 - this.adjust)) },
-      sell: function(item) { return Math.ceil(Game.game.place().sellPrice(item) * (1 + this.adjust)) },
+      dock: function(item) { return this.place.currentSupply(item) },
+      hold: function(item) { return this.player.ship.cargo.get(item) },
+      buy:  function(item) { return this.place.buyPrice(item, this.player) },
+      sell: function(item) { return this.place.sellPrice(item, this.player) },
     },
     template: `
 <card title="Commerce">
@@ -242,9 +243,9 @@ define(function(require, exports, module) {
 <tr :class="{'bg-dark': isLocal}">
   <th scope="row">
     {{body|caps}}
-    <badge v-if="central != 'sun'"    right=1>{{central|caps}}</badge>
-    <badge v-if="info.trend > 0"      right=1>&uarr;</badge>
-    <badge v-else-if="info.trend < 0" right=1>&darr;</badge>
+    <badge v-if="central != 'sun'" right=1 class="ml-1">{{central|caps}}</badge>
+    <gold v-if="info.trend > 0" right=1>&uarr;</gold>
+    <gold v-else-if="info.trend < 0" right=1>&darr;</gold>
   </th>
   <td class="text-right" :class="{'text-success': info.stock && relBuy > 0, 'text-muted': !info.stock}">
     <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{relBuy}}</span>
