@@ -63,14 +63,14 @@ define(function(require, exports, module) {
       deltaVinG:        function() { return this.deltaV / Physics.G },
       burnTime:         function() { return this.ship.maxBurnTime(this.deltaV, true) * data.hours_per_turn },
       range:            function() { return Physics.range(this.burnTime * 3600, 0, this.deltaV) / Physics.AU },
-      nominalDeltaV:    function() { return Math.round(Math.min(0.5, this.deltaV * 0.6) * 100) / 100 },
+      nominalDeltaV:    function() { return 0.5 },
       nominalDeltaVinG: function() { return this.nominalDeltaV / Physics.G },
       nominalBurnTime:  function() { return this.ship.maxBurnTime(this.nominalDeltaV, true) * data.hours_per_turn },
       nominalRange:     function() { return Physics.range(this.nominalBurnTime * 3600, 0, 1)  / Physics.AU},
       fuelMass:         function() { return this.shipClass.tank },
     },
     template: `
-<div v-if="!isNonFaction">
+<div>
   <button @click="detail=!detail" type="button" class="btn btn-block text-capitalize my-3" :class="{'text-secondary': !isAvailable, 'btn-dark': detail, 'btn-secondary': !detail}">
     {{type}}
     <span class="badge badge-pill float-right">{{price|csn}}</span>
@@ -81,27 +81,28 @@ define(function(require, exports, module) {
       <button @click="buy=true" type="button" class="btn btn-dark">Purchase</button>
     </p>
 
-    <p v-if="isRestricted" class="text-warning font-italic">
-      Your reputation with this faction precludes the sale of this ship to you.
-      That does not prevent you from salivating from the show room window, however.
-    </p>
-
-    <p v-if="isPlayerShip" class="text-warning font-italic">
-      You already own a ship of this class.
-    </p>
-
-    <p v-if="!canAfford" class="text-warning font-italic">
-      You cannot afford this ship.
-    </p>
+    <p class="text-warning font-italic">
+      <span v-if="isNonFaction">This ship is not available here.</span>
+      <span v-else-if="isRestricted">
+        Your reputation with this faction precludes the sale of this ship to you.
+        That does not prevent you from salivating from the show room window, however.
+      </span>
+      <span v-else-if="isPlayerShip">You already own a ship of this class.</span>
+      <span v-else-if="!canAfford">You cannot afford this ship.</span>
+    <p>
 
     <p v-if="shipClass.desc" class="font-italic">
       {{shipClass.desc}}
     </p>
 
-    <def y=0 split="5" term="Price" :def="price|csn" />
-    <def y=0 split="5" term="Trade in" :def="tradeIn|csn" />
+    <def y=1 brkpt="sm" term="Price">
+      <span slot="def">
+        {{price|csn|unit('c')}}
+        ({{tradeIn|csn|unit('c')}} after trade in)
+      </span>
+    </def>
 
-    <def y=0 split="5" term="Range">
+    <def y=1 brkpt="sm" term="Range">
       <dl slot="def">
         <dt class="font-italic">Max thrust</dt>
         <dd>{{range|R(2)|unit('AU')}} / {{burnTime|csn|unit('hr')}} at {{deltaVinG|R(2)|unit('G')}}</dd>
@@ -111,16 +112,14 @@ define(function(require, exports, module) {
       </dl>
     </def>
 
-    <def y=0 split="5" term="Drive" :def="shipClass.drives + ' ' + ship.drive.name" />
-    <def y=0 split="5" term="Maximum thrust" :def="ship.thrust|csn|unit('kN')" />
-    <def y=0 split="5" term="Fuel tank" :def="shipClass.tank|csn|unit('tonnes')" />
-    <def y=0 split="5" term="Hull mass" :def="shipClass.mass|csn|unit('tonnes')" />
-    <def y=0 split="5" term="Drive mass" :def="ship.driveMass|csn|unit('tonnes')" />
-    <def y=0 split="5" term="Total mass (fueled)" :def="ship.currentMass()|csn|unit('tonnes')" />
-    <def y=0 split="5" term="Cargo" :def="shipClass.cargo" />
-    <def y=0 split="5" term="Hull" :def="shipClass.hull" />
-    <def y=0 split="5" term="Armor" :def="shipClass.armor" />
-    <def y=0 split="5" term="Hard points" :def="shipClass.hardpoints" />
+    <def y=1 brkpt="sm" term="Cargo"       :def="shipClass.cargo" />
+    <def y=1 brkpt="sm" term="Fuel"        :def="shipClass.tank|csn|unit('tonnes')" />
+    <def y=1 brkpt="sm" term="Drive"       :def="shipClass.drives + ' ' + ship.drive.name" />
+    <def y=1 brkpt="sm" term="Thrust"      :def="ship.thrust|csn|unit('kN')" />
+    <def y=1 brkpt="sm" term="Mass"        :def="ship.currentMass()|csn|unit('tonnes (fueled)')" />
+    <def y=1 brkpt="sm" term="Hull"        :def="shipClass.hull" />
+    <def y=1 brkpt="sm" term="Armor"       :def="shipClass.armor" />
+    <def y=1 brkpt="sm" term="Hard points" :def="shipClass.hardpoints" />
   </card>
 
   <modal v-if="buy" title="Purchase" @close="buy=false" close="Cancel" xclose=true>
