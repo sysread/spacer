@@ -18,29 +18,23 @@ define(function(require, exports, module) {
         timer: this.schedule(),
         stoppedBy: {},
         inspection: null,
+        daysLeft: null,
+        velocity: null,
       };
     },
     computed: {
       destination: function() { return system.name(this.plan.dest) },
       progress:    function() { return util.R(this.plan.pct_complete) },
-      velocity:    function() { return this.plan.velocity },
-      distance:    function() { return util.R(this.plan.auRemaining(), 2) },
       display:     function() { return this.progress + '%' },
-      hoursLeft:   function() { return this.plan.left * data.hours_per_turn },
-      kmLeft:      function() { return this.plan.distanceRemaining() },
-      batch:       function() { return Math.ceil(this.plan.turns / 30) },
-      status:      function() { return this.progress > 50 ? 'Decelerating' : 'Accelerating' },
-
-      timeRemaining: function() {
-        const d = Math.floor(this.hoursLeft / 24);
-        const h = this.hoursLeft % 24;
-        return `${d} days, ${h} hours`;
-      },
+      batch:       function() { return Math.ceil(this.plan.turns / 200) },
     },
     methods: {
       schedule: function() {
         this.inspection = null;
-        return window.setTimeout(() => { this.turn() }, 350);
+        this.velocity = this.plan.velocity;
+        this.daysLeft = Math.floor(this.plan.left * data.hours_per_turn / 24);
+        this.distance = util.R(this.plan.auRemaining(), 2);
+        return window.setTimeout(() => { this.turn() }, 100);
       },
 
       turn: function() {
@@ -49,7 +43,7 @@ define(function(require, exports, module) {
             return;
           }
           else {
-            const count = Math.min(this.plan.left, 10);
+            const count = Math.min(this.plan.left, this.batch);
             Game.game.turn(count);
 
             for (let i = 0; i < count; ++i) {
@@ -118,10 +112,19 @@ define(function(require, exports, module) {
     },
     template: `
 <div class="p-0 m-0">
-  <card :title="'Transit to ' + destination" :subtitle="status">
-    <def term="Time" :def="timeRemaining" />
+  <card :title="'Transit to ' + destination">
+    <def term="Time" :def="daysLeft|R|unit('days')" class="py-1" />
+    <def term="Distance" :def="distance|unit('AU')" class="py-1" />
+    <def term="Speed" class="py-1">
+      <span slot="def">
+        {{(velocity/1000)|R|csn|unit('km/s')}}
+        <span v-if="progress < 50">(accelerating)</span>
+        <span v-else>(decelerating)</span>
+      </span>
+    </def>
+
     <progress-bar :percent="progress">{{progress}}%</progress-bar>
-    <transit-plot v-show="!inspection" :velocity="velocity" :coords="plan.coords" :dest="plan.dest" :orig="plan.origin" />
+    <transit-plot v-show="!inspection" :coords="plan.coords" :dest="plan.dest" :orig="plan.origin" />
     <transit-inspection v-if="inspection" @done="schedule" :body="inspection.body" :faction="inspection.faction" :distance="inspection.distance" class="my-3" />
   </card>
 </div>
@@ -129,7 +132,7 @@ define(function(require, exports, module) {
   });
 
   Vue.component('transit-plot', {
-    props: ['coords', 'dest', 'orig', 'velocity'],
+    props: ['coords', 'dest', 'orig'],
     directives: {
       'square': {
         inserted: function(el, binding, vnode) {
@@ -146,7 +149,6 @@ define(function(require, exports, module) {
       };
     },
     methods: {
-      distance:  function() { return Physics.distance(this.coords, this.destPoint()) / Physics.AU },
       origPoint: function() { return system.position(this.orig) },
       destPoint: function() { return system.position(this.dest) },
       zero:      function() { return this.$el ? Math.floor(this.$el.clientWidth / 2) : 0 },
@@ -163,27 +165,10 @@ define(function(require, exports, module) {
     },
     template: `
 <div v-square class="plot-root p-0 m-5" style="position:relative">
-  <span v-show="zero()" class="plot-point text-warning" :style="position(sun)">
-    &bull;
-  </span>
-
-  <span v-show="zero()" class="plot-point text-info" :style="position(origPoint())">
-    &bull;
-    <span class="badge badge-pill m-1">{{orig|caps}}</span>
-  </span>
-
-  <span v-show="zero()" class="plot-point text-success" :style="position(coords)">
-    &#9650;
-    <span class="badge badge-pill m-1">{{(velocity/1000)|R(0)|csn|unit('km/s')}}</span>
-  </span>
-
-  <span v-show="zero()" class="plot-point text-danger" :style="position(destPoint())">
-    &#8982;
-    <span class="badge badge-pill m-1">
-      {{dest|caps}}
-      {{distance()|R(2)|unit('AU')}}
-    </span>
-  </span>
+  <span v-show="zero()" class="plot-point text-warning" :style="position(sun)">&bull;</span>
+  <span v-show="zero()" class="plot-point text-info"    :style="position(origPoint())">&bull; <badge class="m-1">{{orig|caps}}</badge></span>
+  <span v-show="zero()" class="plot-point text-success" :style="position(coords)">&#9652;</span>
+  <span v-show="zero()" class="plot-point text-danger"  :style="position(destPoint())">&#8982; <badge class="m-1">{{dest|caps}}</badge></span>
 </div>
     `,
   });
