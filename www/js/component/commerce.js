@@ -42,12 +42,16 @@ define(function(require, exports, module) {
         <btn @click="trade=item" block=1 :class="{'btn-secondary':dock(item) == 0 && hold(item) == 0}">{{item|caps}}</btn>
       </cell>
       <cell size=8 brkpt="sm" y=1>
-        <row y=0 class="mx-1" :class="{'bg-dark': dock(item) > 0 || hold(item) > 0}">
-          <cell size=3 y=0>Buy</cell> <cell size=3 y=0>{{buy(item)|csn}}</cell>
-          <cell size=3 y=0>Sell</cell><cell size=3 y=0>{{sell(item)|csn}}</cell>
-          <cell size=3 y=0>Dock</cell><cell size=3 y=0 :class="{'text-warning': dock(item) > 0}">{{dock(item)}}</cell>
-          <cell size=3 y=0>Ship</cell><cell size=3 y=0 :class="{'text-success': hold(item) > 0}">{{hold(item)}}</cell>
-        </row>
+        <table class="table table-sm">
+          <tr>
+            <th scope="col">Buy</th><td>{{buy(item)|csn}}</td>
+            <th scope="col">Sell</th><td>{{sell(item)|csn}}</td>
+          </tr>
+          <tr>
+            <th scope="col">Dock</th><td :class="{'text-warning': dock(item) > 0}">{{dock(item)}}</td>
+            <th scope="col">Ship</th><td :class="{'text-success': hold(item) > 0}">{{hold(item)}}</td>
+          </tr>
+        </table>
       </cell>
     </row>
   </div>
