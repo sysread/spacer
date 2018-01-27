@@ -112,7 +112,12 @@ define(function(require, exports, module) {
         let place = new Place(name);
 
         for (let item of (Object.keys(data.resources))) {
-          place.store.inc(item, Math.ceil(place.scale * data.initial_stock));
+          if (data.resources[item].mine) {
+            place.store.inc(item, Math.ceil(place.scale * data.initial_stock));
+          }
+          else {
+            place.store.inc(item, Math.ceil(place.scale * data.initial_stock * 0.5));
+          }
         }
 
         this.places[name]  = place;

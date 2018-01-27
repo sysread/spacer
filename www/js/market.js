@@ -137,7 +137,35 @@ return orig;
       return this.randomAdjustment( (need + adjust + markup) / 2 );
     }
 
+    calculateBaseValue(resource) {
+      const mine      = data.resources[resource].mine;
+      const recipe    = data.resources[resource].recipe;
+      const craftTime = this.craftTime(resource);
+
+      let value = 0;
+
+      if (mine) {
+        value = data.base_unit_price * mine.tics;
+      }
+      else if (recipe) {
+        for (const mat of Object.keys(recipe.materials)) {
+          value += recipe.materials[mat] * this.calculateBaseValue(mat);
+        }
+      }
+
+      if (craftTime !== undefined) {
+        value += Math.ceil(Math.log(value * craftTime));
+      }
+
+      return value;
+    }
+
     calculatePrice(resource) {
+      const adjust = this.adjustment(resource);
+      return Math.ceil(this.calculateBaseValue(resource) * adjust);
+    }
+
+    /*calculatePrice(resource) {
       const mine      = data.resources[resource].mine;
       const recipe    = data.resources[resource].recipe;
       const craftTime = this.craftTime(resource);
@@ -160,7 +188,7 @@ return orig;
       }
 
       return Math.ceil(value * adjust);
-    }
+    }*/
 
     price(resource) {
       if (!(resource in this.prices)) {

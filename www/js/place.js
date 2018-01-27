@@ -338,6 +338,10 @@ define(function(require, exports, module) {
         for (let [body, desirability] of possible) {
           let place = Game.game.place(body);
           let want  = this.deliveryAmount(body, resource);
+
+          if (want < data.min_delivery_amt)
+            continue;
+
           let amt   = want;
           let dist  = system.distance(this.name, place.name) / Physics.AU;
           let turns = Math.ceil((24 / data.hours_per_turn) * consumption * dist);

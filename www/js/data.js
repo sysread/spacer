@@ -7,7 +7,7 @@ define(function() {
     start_date:         new Date(2242, 0, 1, 1),
     hours_per_turn:     8,
     initial_days:       500,
-    initial_stock:      5,
+    initial_stock:      10,
     market_history:     80,
     update_prices:      5, // days between price updates
     base_unit_price:    30,

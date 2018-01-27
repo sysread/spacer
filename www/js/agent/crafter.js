@@ -100,7 +100,7 @@ define(function(require, exports, module) {
     sell(info) {
       if (!this.busted(info.item, 1)) {
         Game.game.place(this.place).sell(info.item, 1);
-        console.debug(`[${Game.game.turns}] agent: ${this.place} manufactured 1 unit of ${info.item}`);
+        //console.debug(`[${Game.game.turns}] agent: ${this.place} manufactured 1 unit of ${info.item}`);
       }
     }
 
@@ -123,8 +123,8 @@ define(function(require, exports, module) {
         }
       }
 
-      if (best && place.currentSupply(best) > Math.floor(data.min_delivery_amt / 2)) {
-        const amount = Math.floor(place.currentSupply(best) / 2);
+      if (best && place.currentSupply(best) > data.min_delivery_amt * 3) {
+        const amount = Math.floor(place.currentSupply(best) * 0.2);
         if (amount > 0) {
           place.store.dec(best, amount);
           console.debug(`[${Game.game.turns}] agent: ${this.place} discarded ${amount} units of ${best} due to oversupply`);
