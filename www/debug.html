@@ -3,18 +3,20 @@
 var game;
 var place;
 var player;
+var system;
 
 require(
   [
-    'vendor/vue', 'data', 'util', 'game', 'physics', 'ship',
+    'vendor/vue', 'data', 'util', 'game', 'physics', 'ship', 'system',
     'component/common',
     'component/card',
     'component/row',
   ],
-  function(Vue, data, util, Game, Physics, Ship) {
+  function(Vue, data, util, Game, Physics, Ship, sys) {
     game   = Game.game;
     place  = game.place();
     player = game.player;
+    system = sys;
 
     const app = new Vue({
       el: '#test',

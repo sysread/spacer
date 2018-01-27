@@ -84,13 +84,34 @@ define(function(require, exports, module) {
 
       this.player.load(obj.player);
 
-      Object.keys(obj.places).forEach((name) => {
-        this.places[name] = new Place;
-        this.places[name].load(obj.places[name]);
-        this.markets[name] = obj.markets[name];
-      });
+      for (const name of system.bodies()) {
+        if (obj.places[name]) {
+          this.places[name] = new Place;
+          this.places[name].load(obj.places[name]);
+          this.markets[name] = obj.markets[name];
+        }
+        else {
+          this.new_place(name);
+        }
+      }
 
       system.set_date(this.strdate());
+    }
+
+    new_place(name) {
+      const place = new Place(name);
+
+      for (const item of (Object.keys(data.resources))) {
+        if (data.resources[item].mine) {
+          place.store.inc(item, Math.ceil(place.scale * data.initial_stock));
+        }
+        else {
+          place.store.inc(item, Math.ceil(place.scale * data.initial_stock * 0.5));
+        }
+      }
+
+      this.places[name]  = place;
+      this.markets[name] = [];
     }
 
     new_game(player, place) {
@@ -108,20 +129,8 @@ define(function(require, exports, module) {
 
       let bodies = system.bodies();
 
-      for (let name of bodies) {
-        let place = new Place(name);
-
-        for (let item of (Object.keys(data.resources))) {
-          if (data.resources[item].mine) {
-            place.store.inc(item, Math.ceil(place.scale * data.initial_stock));
-          }
-          else {
-            place.store.inc(item, Math.ceil(place.scale * data.initial_stock * 0.5));
-          }
-        }
-
-        this.places[name]  = place;
-        this.markets[name] = [];
+      for (const name of bodies) {
+        this.new_place(name);
       }
     }
 
