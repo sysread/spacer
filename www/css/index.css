@@ -71,8 +71,11 @@ body {
   background-color: #000;
 }
 
-.table.table-sm td, .table.table-sm th {
+.table.table-noborder td, .table.table-noborder th {
   border-top: 0px;
+}
+
+.table.table-mini td, .table.table-mini th {
   padding: 0.1rem;
 }
 

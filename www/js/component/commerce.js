@@ -42,7 +42,7 @@ define(function(require, exports, module) {
         <btn @click="trade=item" block=1 :class="{'btn-secondary':dock(item) == 0 && hold(item) == 0}">{{item|caps}}</btn>
       </cell>
       <cell size=8 brkpt="sm" y=1>
-        <table class="table table-sm">
+        <table class="table table-sm table-mini table-noborder">
           <tr>
             <th scope="col" class="w-25">Buy</th><td class="w-25">{{buy(item)|csn}}</td>
             <th scope="col" class="w-25">Sell</th><td class="w-25">{{sell(item)|csn}}</td>
@@ -206,7 +206,7 @@ define(function(require, exports, module) {
     Market data age is reported in hours due to light speed lag.
   </p>
 
-  <table class="table">
+  <table class="table table-sm">
     <thead>
       <tr>
         <th>Market</th>
@@ -258,12 +258,12 @@ define(function(require, exports, module) {
     <gold v-else-if="info.trend < 0" right=1>&darr;</gold>
   </th>
   <td class="text-right" :class="{'text-success': info.stock && relBuy > 0, 'text-muted': !info.stock}">
-    <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{relBuy}}</span>
-    <span v-else>{{rBuy}}</span>
+    <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{relBuy|csn}}</span>
+    <span v-else>{{rBuy|csn}}</span>
   </td>
   <td class="text-right" :class="{'text-success': relSell > 0}">
-    <span v-if="relprices"><span v-if="relSell > 0">+</span>{{relSell}}</span>
-    <span v-else>{{rSell}}</span>
+    <span v-if="relprices"><span v-if="relSell > 0">+</span>{{relSell|csn}}</span>
+    <span v-else>{{rSell|csn}}</span>
   </td>
   <td class="text-right d-none d-sm-table-cell">{{info.stock}}</td>
   <td class="text-right d-none d-sm-table-cell">{{report.age}}</td>
