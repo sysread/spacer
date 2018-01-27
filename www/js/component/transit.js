@@ -112,18 +112,24 @@ define(function(require, exports, module) {
     },
     template: `
 <div class="p-0 m-0">
-  <card :title="'Transit to ' + destination">
-    <def term="Time" :def="daysLeft|R|unit('days')" class="py-1" />
-    <def term="Distance" :def="distance|unit('AU')" class="py-1" />
-    <def term="Speed" class="py-1">
-      <span slot="def">
-        {{(velocity/1000)|R|csn|unit('km/s')}}
-        <span v-if="progress < 50">(accelerating)</span>
-        <span v-else>(decelerating)</span>
-      </span>
-    </def>
+  <card>
+    <progress-bar :percent="progress" class="my-3">{{progress}}%</progress-bar>
 
-    <progress-bar :percent="progress">{{progress}}%</progress-bar>
+    <table class="table table-sm my-2">
+      <tr>
+        <th scope="col">Time</th>
+        <td>{{daysLeft|R|unit('days')}}</td>
+        <th scope="col">Distance</th>
+        <td>{{distance|unit('AU')}}</td>
+      </tr>
+      <tr>
+        <th scope="col">Status</th>
+        <td>{{progress < 50 ? 'Accelerating' : 'Decelerating'}}</td>
+        <th scope="col">Speed</th>
+        <td>{{(velocity/1000)|R|csn|unit('km/s')}}</td>
+      </tr>
+    </table>
+
     <transit-plot v-show="!inspection" :coords="plan.coords" :dest="plan.dest" :orig="plan.origin" />
     <transit-inspection v-if="inspection" @done="schedule" :body="inspection.body" :faction="inspection.faction" :distance="inspection.distance" class="my-3" />
   </card>
@@ -136,7 +142,8 @@ define(function(require, exports, module) {
     directives: {
       'square': {
         inserted: function(el, binding, vnode) {
-          el.setAttribute('style', `position:relative;height:${el.clientWidth}px`);
+          const px = Math.ceil(el.clientWidth * 0.9);
+          el.setAttribute('style', `position:relative;height:${px}px;width:${px}px`);
         },
       },
     },
@@ -164,7 +171,7 @@ define(function(require, exports, module) {
       },
     },
     template: `
-<div v-square class="plot-root p-0 m-5" style="position:relative">
+<div v-square class="plot-root p-0 m-0" style="position:relative">
   <span v-show="zero()" class="plot-point text-warning" :style="position(sun)">&bull;</span>
   <span v-show="zero()" class="plot-point text-info"    :style="position(origPoint())">&bull; <badge class="m-1">{{orig|caps}}</badge></span>
   <span v-show="zero()" class="plot-point text-success" :style="position(coords)">&#9652;</span>
