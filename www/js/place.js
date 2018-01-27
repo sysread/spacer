@@ -284,11 +284,15 @@ define(function(require, exports, module) {
       }
 
       // Origin does not have enough of resource
+      const stock = place.currentSupply(resource);
+
+      if (stock < data.min_delivery_amt)
+        return 0;
+
       if (place.is_under_supplied(resource))
         return 0;
 
       // Distance bonus
-      const stock = place.currentSupply(resource);
       const distance = system.distance(this.name, origin) / Physics.AU;
       let rating = stock / distance;
 
