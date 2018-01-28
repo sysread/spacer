@@ -26,7 +26,7 @@ define(function(require, exports, module) {
       destination: function() { return system.name(this.plan.dest) },
       progress:    function() { return util.R(this.plan.pct_complete) },
       display:     function() { return this.progress + '%' },
-      batch:       function() { return Math.ceil(this.plan.turns / 200) },
+      batch:       function() { return Math.ceil(this.plan.turns / 100) },
     },
     methods: {
       schedule: function() {
