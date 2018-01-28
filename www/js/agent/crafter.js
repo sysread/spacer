@@ -123,12 +123,19 @@ define(function(require, exports, module) {
         }
       }
 
-      if (best && place.currentSupply(best)) {
-        // Discard 1/5 of supply
-        const amount = Math.floor(place.currentSupply(best) / 5);
+      const supply = place.currentSupply(best);
+
+      if (best && supply) {
+        let amount = 0;
+        const loc = place.localNeed(best);
+        const sys = place.systemNeed(best);
+        if (loc < 0.5) amount = supply * 0.5;
+        if (sys < 0.9 && loc < 0.75) amount = supply * 0.25;
+        amount = Math.floor(amount);
+
         if (amount > 0) {
           place.store.dec(best, amount);
-          console.debug(`[${Game.game.turns}] agent: ${this.place} discarded ${amount} units of ${best} due to oversupply`);
+          console.debug(`[${Game.game.turns}] agent: ${this.place} discarded ${amount}/${supply} units of ${best} due to oversupply`);
         }
       }
     }
