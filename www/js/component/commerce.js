@@ -38,10 +38,10 @@ define(function(require, exports, module) {
 
   <div class="container container-fluid">
     <row v-for="item of resources" :key="item" :class="{'text-muted':dock(item) == 0 && hold(item) == 0}">
-      <cell size=4 brkpt="sm" y=1 class="px-0 my-1">
+      <cell size=4 brkpt="sm" y=0 class="px-0 my-1">
         <btn @click="trade=item" block=1 :class="{'btn-secondary':dock(item) == 0 && hold(item) == 0}">{{item|caps}}</btn>
       </cell>
-      <cell size=8 brkpt="sm" y=1>
+      <cell size=8 brkpt="sm" y=0>
         <table class="table table-sm table-mini table-noborder">
           <tr>
             <th scope="col" class="w-25">Buy</th><td class="w-25">{{buy(item)|csn}}</td>

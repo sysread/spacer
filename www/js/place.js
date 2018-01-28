@@ -323,7 +323,7 @@ define(function(require, exports, module) {
     }
 
     deliverySchedule() {
-      const consumption = 8;
+      const consumption = 10;
 
       if (this.deliveries.length >= this.num_agents)
         return;
