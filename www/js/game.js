@@ -14,7 +14,6 @@ define(function(require, exports, module) {
       this.player  = new Person;
       this.places  = {};
       this.markets = {}; // hourly market reports for light speed market data
-      this.cache   = {};
 
       $(() => {
         let saved = window.localStorage.getItem('game');
@@ -188,39 +187,22 @@ define(function(require, exports, module) {
           this.markets[name].pop();
       };
 
-      this.cache.system_need = {};
-
       this.save_game();
     }
 
     market(there, here) {
       here = here || this.locus;
-      let data;
-      let age;
-      let turns;
+      const distance = system.distance(here, there);
+      const idx = this.light_turns(distance);
 
-      if (there === here) {
-        data  = this.place(here).report();
-        age   = 0;
-        turns = this.turns;
-      }
-      else {
-        let distance = system.distance(here, there);
-        let idx = this.light_turns(distance);
-
-        if (this.markets[there].length <= idx)
-          return null;
-
-        data  = this.markets[there][idx];
-        age   = this.light_hours(distance);
-        turns = this.turns - idx;
-      }
+      if (this.markets[there].length <= idx)
+        return null;
 
       return {
-        data: data,
-        age:  age,
-        turn: turns
-      }
+        data:  this.markets[there][idx],
+        age:   this.light_hours(distance),
+        turns: this.turns - idx,
+      };
     }
 
     *reports(here) {
@@ -232,27 +214,18 @@ define(function(require, exports, module) {
       }
     }
 
-    system_need(resource) {
-      if (!this.cache.hasOwnProperty('system_need'))
-        this.cache.system_need = {};
+    systemNeed(resource, here) {
+      let demand = 1;
+      let supply = 1;
 
-      if (!this.cache.system_need.hasOwnProperty(resource)) {
-        let demand  = 1;
-        let supply  = 1;
-        let reports = 1;
-
-        for (let body of Object.keys(this.markets)) {
-          if (this.markets[body].length > 1) {
-            demand += this.markets[body][0][resource].demand;
-            supply += this.markets[body][0][resource].supply;
-            ++reports;
-          }
-        }
-
-        this.cache.system_need[resource] = demand / supply;
+      for (const body of Object.keys(this.markets)) {
+        const market = this.market(body, here);
+        if (!market || !market.data) continue;
+        demand += market.data[resource].demand;
+        supply += market.data[resource].supply;
       }
 
-      return this.cache.system_need[resource];
+      return demand / supply;
     }
   };
 

@@ -7,12 +7,12 @@ var system;
 
 require(
   [
-    'vendor/vue', 'data', 'util', 'game', 'physics', 'ship', 'system',
+    'vendor/vue', 'data', 'util', 'game', 'physics', 'resource', 'ship', 'system',
     'component/common',
     'component/card',
     'component/row',
   ],
-  function(Vue, data, util, Game, Physics, Ship, sys) {
+  function(Vue, data, util, Game, Physics, Resource, Ship, sys) {
     game   = Game.game;
     place  = game.place();
     player = game.player;
@@ -28,11 +28,12 @@ require(
         explainPriceLoc: Game.game.locus,
       },
       computed: {
+        turns:         function() { return game.turns },
         resources:     function() { return Object.keys(data.resources) },
         bodies:        function() { return Object.keys(data.bodies) },
         marketLoc:     function() { if (this.explainPriceLoc) return game.place(this.explainPriceLoc) },
-        localNeed:     function() { if (this.explainPrice) return this.marketLoc.local_need(this.explainPrice) },
-        systemNeed:    function() { if (this.explainPrice) return game.system_need(this.explainPrice) },
+        localNeed:     function() { if (this.explainPrice) return this.marketLoc.localNeed(this.explainPrice) },
+        systemNeed:    function() { if (this.explainPrice) return game.systemNeed(this.explainPrice) },
         stock:         function() { if (this.explainPrice) return this.marketLoc.currentSupply(this.explainPrice) },
         supply:        function() { if (this.explainPrice) return this.marketLoc.supply(this.explainPrice) },
         demand:        function() { if (this.explainPrice) return this.marketLoc.demand(this.explainPrice) },
@@ -46,7 +47,7 @@ require(
         cachedPrice:   function() { if (this.explainPrice) return this.marketLoc.prices[this.explainPrice] },
         production:    function() { if (this.explainPrice) return this.marketLoc.production.get(this.explainPrice) },
         consumption:   function() { if (this.explainPrice) return this.marketLoc.consumption.get(this.explainPrice) },
-        baseValue:     function() { if (this.explainPrice) return this.marketLoc.calculateBaseValue(this.explainPrice) },
+        baseValue:     function() { if (this.explainPrice) return Resource.get(this.explainPrice).value },
       },
       methods: {
         gameTurns: function(turns) {
@@ -55,8 +56,9 @@ require(
 
           intvl = window.setInterval(() => {
             if (left > 0) {
-              left -= 10;
-              game.turn(10);
+              const batch = Math.min(5, left);
+              left -= batch;
+              game.turn(batch);
             }
             else {
               window.clearInterval(intvl);
@@ -130,18 +132,23 @@ require(
   <table class="table" v-if="explainPrice">
     <tbody>
       <tr>
+        <th>Price</th><td>{{basePrice|csn}} (cache:{{cachedPrice|csn}})</td>
+        <th>Base value</th><td>{{baseValue|csn}}</td>
+      </tr>
+
+      <tr>
         <th>Production</th><td>{{production|R(2)}}</td>
         <th>Consumption</th><td>{{consumption|R(2)}}</td>
       </tr>
 
       <tr>
-        <th>Supply</th><td>{{supply|R(4)}}</td>
-        <th>Demand</th><td>{{demand|R(4)}}</td>
+        <th>Supply</th><td>{{supply|R(2)}}</td>
+        <th>Demand</th><td>{{demand|R(2)}}</td>
       </tr>
 
       <tr>
-        <th>Local need</th><td>{{localNeed|R(4)}}</td>
-        <th>System need</th><td>{{systemNeed|R(4)}}</td>
+        <th>Local need</th><td>{{localNeed|R(2)}}</td>
+        <th>System need</th><td>{{systemNeed|R(2)}}</td>
       </tr>
 
       <tr>
@@ -150,25 +157,18 @@ require(
       </tr>
 
       <tr>
-        <th>Nearest source</th>
-        <td v-if="nearestSource[0]">{{nearestSource[0]|caps}} ({{nearestSource[1]|AU|R(2)|unit('AU')}})</td>
-        <td v-else>None</td>
-        <th>Distance malus</th><td>{{distanceMalus|R(4)}}</td>
-      </tr>
-
-      <tr>
-        <th>Scarcity</th><td>{{scarcity|R(4)}}</td>
-        <th>Adjustment</th><td>{{adjustment|R(4)}}</td>
-      </tr>
-
-      <tr>
         <th>Stock</th><td>{{stock}}</td>
-        <th>Base value</th><td>{{baseValue|csn}}</td>
+        <th>Nearest source</th>
+        <td v-if="nearestSource[0]">
+          {{nearestSource[0]|caps}}
+          ({{nearestSource[1]|AU|R(2)|unit('AU')}})
+          <span v-if="distanceMalus">(malus {{distanceMalus|R(2)}})</span>
+        </td>
       </tr>
 
       <tr>
-        <th>Price</th><td>{{basePrice|csn}}</td>
-        <th>Cached</th><td>{{cachedPrice|csn}}</td>
+        <th>Scarcity</th><td>{{scarcity|R(2)}}</td>
+        <th>Adjustment</th><td>{{adjustment|R(2)}}</td>
       </tr>
     </tbody>
   </table>

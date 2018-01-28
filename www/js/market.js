@@ -1,7 +1,8 @@
 define(function(require, exports, module) {
-  const data = require('data');
-  const util = require('util');
-  const Game = require('game');
+  const data     = require('data');
+  const util     = require('util');
+  const Game     = require('game');
+  const Resource = require('resource');
 
   return class {
     constructor() {
@@ -10,15 +11,17 @@ define(function(require, exports, module) {
       this.supplyHistory  = new util.ResourceTracker(data.market_history);
       this.buysThisTurn   = new util.ResourceCounter;
       this.prices         = util.resourceMap(null);
+      this.setNextPriceUpdateTurn();
     }
 
     save() {
       let me = {};
-      me.store          = this.store.save();
-      me.demandHistory  = this.demandHistory.save();
-      me.supplyHistory  = this.supplyHistory.save();
-      me.buysThisTurn   = this.buysThisTurn.save();
-      me.prices         = this.prices;
+      me.store           = this.store.save();
+      me.demandHistory   = this.demandHistory.save();
+      me.supplyHistory   = this.supplyHistory.save();
+      me.buysThisTurn    = this.buysThisTurn.save();
+      me.prices          = this.prices;
+      me.nextPriceUpdate = this.nextPriceUpdate;
       return me;
     }
 
@@ -28,6 +31,7 @@ define(function(require, exports, module) {
       this.supplyHistory.load(obj.supplyHistory);
       this.buysThisTurn.load(obj.buysThisTurn);
       this.prices = util.resourceMap(null, obj.prices);
+      this.nextPriceUpdate = obj.nextPriceUpdate || this.setNextPriceUpdateTurn();
     }
 
     craftTime(item) {
@@ -42,15 +46,6 @@ define(function(require, exports, module) {
 
     incDemand(resource, amount) {
       this.buysThisTurn.inc(resource, amount);
-
-      // Increment demand for all ingredients of this (if craftable)
-      let recipe = data.resources[resource].recipe;
-
-      if (recipe) {
-        for (let item of Object.keys(recipe.materials)) {
-          this.incDemand(item, recipe.materials[item]);
-        }
-      }
     }
 
     supply(resource) {
@@ -63,25 +58,28 @@ define(function(require, exports, module) {
       return 1 + this.demandHistory.avg(resource);
     }
 
-    local_need(resource) {
+    localNeed(resource) {
       return this.demand(resource) / this.supply(resource);
     }
 
+    systemNeed(resource) {
+      return 1;
+    }
+
     is_under_supplied(resource) {
-      return this.demand(resource) > Math.max(1, this.currentSupply(resource))
-          || this.currentSupply(resource) < data.min_delivery_amt;
+      return this.demand(resource) > Math.max(1, this.currentSupply(resource));
     }
 
     is_over_supplied(resource) {
-      if (this.currentSupply(resource) <= (data.min_delivery_amt * 2))
+      if (this.currentSupply(resource) <= data.min_delivery_amt * 3)
         return false;
 
-      const loc = this.local_need(resource);
+      const loc = this.localNeed(resource);
 
-      if (loc < 0.6)
+      if (loc < 0.5)
         return true;
 
-      const sys = Game.game.system_need(resource);
+      const sys = this.systemNeed(resource);
 
       if (sys < 0.9 && loc < 0.75)
         return true;
@@ -103,92 +101,23 @@ define(function(require, exports, module) {
       return markup;
     }
 
-    randomAdjustment(orig) {
-return orig;
-      const r = Math.random();
-
-      if (orig > 1) {
-        const diff = orig - 1;
-        return orig - (r * diff);
-      }
-      else if (orig < 1) {
-        const diff = 1 - orig;
-        return orig + (r * diff);
-      }
-      else {
-        if (Math.ceil(r * 100) % 2 === 0) {
-          return orig + (r / 30);
-        } else {
-          return orig - (r / 30);
-        }
-      }
-    }
-
     adjustment(resource) {
-      const loc    = this.local_need(resource);
-      const sys    = Game.game.system_need(resource);
+      const loc    = this.localNeed(resource);
+      const sys    = this.systemNeed(resource);
       const markup = this.scarcityMarkup(resource);
       const need   = (loc + loc + sys) / 3;
       const adjust =
-        (need > 1) ? (1 + (Math.log(need) / Math.log(30)))
-      : (need < 1) ? (Math.max(0.1, Math.sqrt(need)))
+        (need > 1) ? 1 + (Math.log(need) / Math.log(10))
+      : (need < 1) ? Math.max(0.1, Math.sqrt(need))
       : 1;
 
-      return this.randomAdjustment( (need + adjust + markup) / 2 );
-    }
-
-    calculateBaseValue(resource) {
-      const mine      = data.resources[resource].mine;
-      const recipe    = data.resources[resource].recipe;
-      const craftTime = this.craftTime(resource);
-
-      let value = 0;
-
-      if (mine) {
-        value = data.base_unit_price * mine.tics;
-      }
-      else if (recipe) {
-        for (const mat of Object.keys(recipe.materials)) {
-          value += recipe.materials[mat] * this.calculateBaseValue(mat);
-        }
-      }
-
-      if (craftTime !== undefined) {
-        value += Math.ceil(Math.log(value * craftTime));
-      }
-
-      return value;
+      return (need + adjust + markup) / 2;
     }
 
     calculatePrice(resource) {
       const adjust = this.adjustment(resource);
-      return Math.ceil(this.calculateBaseValue(resource) * adjust);
+      return Math.ceil(Resource.get(resource).value * adjust);
     }
-
-    /*calculatePrice(resource) {
-      const mine      = data.resources[resource].mine;
-      const recipe    = data.resources[resource].recipe;
-      const craftTime = this.craftTime(resource);
-      const adjust    = this.adjustment(resource);
-
-      let value = 0;
-
-      if (mine) {
-        value = data.base_unit_price * mine.tics;
-      }
-      else if (recipe) {
-        for (const mat of Object.keys(recipe.materials)) {
-          const price = this.buyPrice(mat);
-          value += recipe.materials[mat] * price;
-        }
-      }
-
-      if (craftTime !== undefined) {
-        value += Math.ceil(Math.log(value * craftTime));
-      }
-
-      return Math.ceil(value * adjust);
-    }*/
 
     price(resource) {
       if (!(resource in this.prices)) {
@@ -234,14 +163,13 @@ return orig;
     }
 
     report() {
-      let info = {};
+      const info = {};
       Object.keys(data.resources).forEach((resource) => {
-        let supply = (Math.round(this.supply(resource) * 100) / 100);
-        let demand = (Math.round(this.demand(resource) * 100) / 100);
+        const supply = (Math.round(this.supply(resource) * 100) / 100);
+        const demand = (Math.round(this.demand(resource) * 100) / 100);
 
         info[resource] = {
           stock  : this.currentSupply(resource),
-          price  : this.price(resource),
           buy    : this.buyPrice(resource),
           sell   : this.sellPrice(resource),
           supply : supply,
@@ -252,6 +180,13 @@ return orig;
       return info;
     }
 
+    setNextPriceUpdateTurn() {
+      const turnsPerDay = 24 / data.hours_per_turn;
+      const nextOffset  = util.getRandomInt(1, data.update_prices * turnsPerDay);
+      this.nextPriceUpdate = Game.game.turns + nextOffset;
+      return this.nextPriceUpdate;
+    }
+
     turn() {
       Object.keys(data.resources).forEach((k) => {
         this.supplyHistory.add(k, this.currentSupply(k));
@@ -260,8 +195,9 @@ return orig;
 
       this.buysThisTurn.clear();
 
-      if (Game.game.turns % (data.update_prices * 24 / data.hours_per_turn) === 0) {
+      if (Game.game.turns >= this.nextPriceUpdate) {
         this.prices = util.resourceMap(null);
+        this.setNextPriceUpdateTurn();
       }
     }
   }

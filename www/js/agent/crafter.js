@@ -123,8 +123,9 @@ define(function(require, exports, module) {
         }
       }
 
-      if (best && place.currentSupply(best) > data.min_delivery_amt * 3) {
-        const amount = Math.floor(place.currentSupply(best) * 0.2);
+      if (best && place.currentSupply(best)) {
+        // Discard 1/5 of supply
+        const amount = Math.floor(place.currentSupply(best) / 5);
         if (amount > 0) {
           place.store.dec(best, amount);
           console.debug(`[${Game.game.turns}] agent: ${this.place} discarded ${amount} units of ${best} due to oversupply`);

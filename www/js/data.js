@@ -8,8 +8,8 @@ define(function() {
     hours_per_turn:     8,
     initial_days:       500,
     initial_stock:      10,
-    market_history:     80,
-    update_prices:      5, // days between price updates
+    market_history:     30,
+    update_prices:      10, // days between price updates
     base_unit_price:    30,
     scarcity_markup:    0.1,
     necessity:          {water: true, food: true, medicine: true, fuel: true},

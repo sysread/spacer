@@ -26,7 +26,7 @@ define(function(require, exports, module) {
       dock: function(item) { return this.place.currentSupply(item) },
       hold: function(item) { return this.player.ship.cargo.get(item) },
       buy:  function(item) { return this.place.buyPrice(item, this.player) },
-      sell: function(item) { return this.place.sellPrice(item, this.player) },
+      sell: function(item) { return this.place.sellPrice(item) },
     },
     template: `
 <card title="Commerce">
@@ -193,6 +193,7 @@ define(function(require, exports, module) {
     props: ['item'],
     data: function() { return { relprices: false } },
     computed: {
+      here:   function() { return Game.game.locus },
       bodies: function() { return Object.keys(data.bodies) },
     },
     template: `
@@ -217,7 +218,7 @@ define(function(require, exports, module) {
       </tr>
     </thead>
     <tbody>
-      <market-report-row v-for="body in bodies" :key="body" :item="item" :body="body" :relprices="relprices" />
+      <market-report-row v-for="body in bodies" v-if="body !== here" :key="body" :item="item" :body="body" :relprices="relprices" />
     </tbody>
   </table>
 </div>
@@ -234,23 +235,20 @@ define(function(require, exports, module) {
       info:    function() { if (this.hasData) return this.report.data[this.item] },
 
       remote:  function() { return Game.game.place(this.body) },
-      rAdjust: function() { return this.player.getStandingPriceAdjustment(this.remote.faction) },
-      rBuy:    function() { return Math.ceil(this.info.buy  * (1 - this.rAdjust)) },
-      rSell:   function() { return Math.ceil(this.info.sell * (1 + this.rAdjust)) },
+      rBuy:    function() { return this.remote.applyStandingDiscount(this.info.buy) },
+      rSell:   function() { return this.info.sell },
 
       local:   function() { return Game.game.here },
-      lAdjust: function() { return this.player.getStandingPriceAdjustment(this.local.faction) },
-      lBuy:    function() { return Math.ceil(this.local.buyPrice(this.item)  * (1 - this.lAdjust)) },
-      lSell:   function() { return Math.ceil(this.local.sellPrice(this.item) * (1 + this.lAdjust)) },
+      lBuy:    function() { return this.local.buyPrice(this.item, this.player) },
+      lSell:   function() { return this.local.sellPrice(this.item) },
 
-      relBuy:  function() { return this.rBuy - this.lSell },
+      relBuy:  function() { return this.lSell - this.rBuy },
       relSell: function() { return this.rSell - this.lBuy },
 
-      isLocal: function() { return this.body === Game.game.locus },
       central: function() { return system.central(this.body) },
     },
     template: `
-<tr :class="{'bg-dark': isLocal}">
+<tr>
   <th scope="row">
     {{body|caps}}
     <badge v-if="central != 'sun'" right=1 class="ml-1">{{central|caps}}</badge>

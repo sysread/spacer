@@ -107,26 +107,25 @@ define(function(require, exports, module) {
       return super.adjustment(resource) + this.distancePriceMalus(resource);
     }
 
+    systemNeed(resource) {
+      return Game.game.systemNeed(resource, this.name);
+    }
+
     demand(resource) {
       const actual = super.demand(resource);
       const base = data.market.consumes[resource] || 0;
       return actual + (base * this.scale);
     }
 
+    applyStandingDiscount(price, player) {
+      if (player) return Math.ceil(price * (1 - player.getStandingPriceAdjustment(this.faction)));
+      return price;
+    }
+
     buyPrice(resource, player) {
       let price = super.buyPrice(resource);
       price *= 1 + this.sales_tax;
-      if (player) price *= 1 - player.getStandingPriceAdjustment(this.faction);
-      return Math.ceil(price);
-    }
-
-    sellPrice(resource, player) {
-      let price = super.sellPrice(resource);
-      if (player) {
-        price *= 1 + player.getStandingPriceAdjustment(this.faction);
-        price = Math.min(this.buyPrice(resource, player) * 0.9, price);
-      }
-      return Math.ceil(price);
+      return Math.ceil(this.applyStandingDiscount(price, player));
     }
 
     mergeScale(resources, traits, conditions) {
@@ -271,7 +270,7 @@ define(function(require, exports, module) {
     resourcesNeeded() {
       return Object.keys(data.resources)
         .filter((r) => {return this.is_under_supplied(r)})
-        .sort((a, b) => {return this.local_need(a) < this.local_need(b)});
+        .sort((a, b) => {return this.localNeed(a) < this.localNeed(b)});
     }
 
     deliveryOriginDesirability(origin, resource) {
@@ -367,7 +366,7 @@ define(function(require, exports, module) {
           // Is there enough fuel available to make the delivery?
           if (avail < fuel) {
             place.incDemand('fuel', fuel - avail);
-            place.incDemand(resource, amt);
+            //place.incDemand(resource, amt);
             continue;
           }
 
@@ -474,13 +473,13 @@ define(function(require, exports, module) {
         let want  = Math.floor((this.max_fabs - this.fabricator) / each);
         let avail = Math.min(want, this.currentSupply('cybernetics'));
 
+        if (avail < want)
+          this.incDemand('cybernetics', want - avail);
+
         if (avail > 0) {
           this.buy('cybernetics', avail);
           this.fabricator += avail * each;
         }
-
-        if (avail < want)
-          this.incDemand('cybernetics', want - avail);
       }
 
       this.deliverySchedule();
