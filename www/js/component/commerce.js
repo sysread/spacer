@@ -242,7 +242,7 @@ define(function(require, exports, module) {
       lBuy:    function() { return this.local.buyPrice(this.item, this.player) },
       lSell:   function() { return this.local.sellPrice(this.item) },
 
-      relBuy:  function() { return this.lSell - this.rBuy },
+      relBuy:  function() { return this.rBuy - this.lSell },
       relSell: function() { return this.rSell - this.lBuy },
 
       central: function() { return system.central(this.body) },
@@ -255,7 +255,7 @@ define(function(require, exports, module) {
     <gold v-if="info.trend > 0" right=1>&uarr;</gold>
     <gold v-else-if="info.trend < 0" right=1>&darr;</gold>
   </th>
-  <td class="text-right" :class="{'text-success': info.stock && relBuy > 0, 'text-muted': !info.stock}">
+  <td class="text-right" :class="{'text-success': info.stock && relBuy < 0, 'text-muted': !info.stock}">
     <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{relBuy|csn}}</span>
     <span v-else>{{rBuy|csn}}</span>
   </td>

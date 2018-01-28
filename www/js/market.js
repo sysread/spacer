@@ -106,12 +106,13 @@ define(function(require, exports, module) {
       const sys    = this.systemNeed(resource);
       const markup = this.scarcityMarkup(resource);
       const need   = (loc + loc + sys) / 3;
-      const adjust =
-        (need > 1) ? 1 + (Math.log(need) / Math.log(10))
+      /*const adjust =
+        (need > 1) ? 1 + Math.log(need)
       : (need < 1) ? Math.max(0.1, Math.sqrt(need))
       : 1;
 
-      return (need + adjust + markup) / 2;
+      return (need + adjust + markup) / 2;*/
+      return need + markup;
     }
 
     calculatePrice(resource) {

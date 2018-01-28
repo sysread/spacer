@@ -189,11 +189,11 @@ define(function(require, exports, module) {
     },
     template: `
 <div v-square class="plot-root p-0 m-0" style="position:relative">
-  <span v-show="zero()" class="plot-point text-warning" :style="position(sun)">&bull;</span>
-  <span v-show="zero()" class="plot-point text-info"    :style="position(origPoint())">&bull; <badge class="m-1">{{orig|caps}}</badge></span>
-  <span v-show="zero()" class="plot-point text-success" :style="position(coords)">&#9652;</span>
-  <span v-show="zero()" class="plot-point text-danger"  :style="position(destPoint())">&#8982; <badge class="m-1">{{dest|caps}}</badge></span>
   <span v-show="zero()" v-for="(pt, body) in extras" class="plot-point" :style="position(pt)">&bull; <badge class="m-1">{{body|caps}}</badge></span>
+  <span v-show="zero()" class="plot-point text-info"    :style="position(origPoint())">&bull; <badge class="m-1">{{orig|caps}}</badge></span>
+  <span v-show="zero()" class="plot-point text-danger"  :style="position(destPoint())">&#8982; <badge class="m-1">{{dest|caps}}</badge></span>
+  <span v-show="zero()" class="plot-point text-warning" :style="position(sun)">&bull;</span>
+  <span v-show="zero()" class="plot-point text-success" :style="position(coords)">&#9652;</span>
 </div>
     `,
   });
