@@ -1,5 +1,6 @@
 define(function(require, exports, module) {
   const data  = require('data');
+  const util  = require('util');
   const Game  = require('game');
   const Actor = require('agent/actor');
 
@@ -131,7 +132,7 @@ define(function(require, exports, module) {
         const sys = place.systemNeed(best);
         if (loc < 0.5) amount = supply * 0.5;
         if (sys < 0.9 && loc < 0.75) amount = supply * 0.25;
-        amount = Math.floor(amount);
+        amount = util.getRandomInt(0, Math.floor(amount));
 
         if (amount > 0) {
           place.store.dec(best, amount);

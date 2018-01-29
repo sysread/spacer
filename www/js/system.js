@@ -6,12 +6,21 @@ define(function(require, exports, module) {
   const System = class {
     constructor() {
       this.system = new SolarSystem;
-      this.cache  = {};
+      this.cache  = {}; // orbit cache
+      this.pos    = {}; // position cache
     }
 
     set_date(date) {
-      if (new Date(date + ' 01:00:00').getDate() !== this.system.time.getDate()) {
+      const dt = new Date(date + ' 00:00:00');
+      const ts = dt.valueOf();
+
+      if (dt.getDate() !== this.system.time.getDate()) {
         this.cache = {};
+
+        for (const key of Object.keys(this.pos)) {
+          if (key < ts)
+            delete this.pos[key];
+        }
       }
 
       this.system.setTime(date);
@@ -118,14 +127,23 @@ define(function(require, exports, module) {
 
     position(name, date) {
       date = date || this.system.time;
-      const body = this.body(name);
-      const pos  = body.getPositionAtTime(date);
+      const key = date.valueOf();
 
-      if (body.type === 'moon') {
-        return this.addPoints(pos, body.central.getPositionAtTime(date));
-      } else {
-        return pos;
+      if (!this.pos.hasOwnProperty(key))
+        this.pos[key] = {};
+
+      if (!this.pos[key].hasOwnProperty(name)) {
+        const body = this.body(name);
+        let pos = body.getPositionAtTime(date);
+
+        if (body.type === 'moon') {
+          pos = this.addPoints(pos, body.central.getPositionAtTime(date));
+        }
+
+        this.pos[key][name] = pos;
       }
+
+      return this.pos[key][name];
     }
 
     orbit(name) {

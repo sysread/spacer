@@ -63,11 +63,17 @@ define(function(require, exports, module) {
     }
 
     systemNeed(resource) {
-      return 1;
+      return Game.game.systemNeed(resource);
     }
 
     is_under_supplied(resource) {
-      return this.demand(resource) > Math.max(1, this.currentSupply(resource));
+      const loc = this.localNeed(resource);
+      if (loc > 1.5) return true;
+
+      const sys = this.systemNeed(resource);
+      if (sys > 1.1 && loc > 1.25) return true;
+
+      return false;
     }
 
     is_over_supplied(resource) {
@@ -75,14 +81,10 @@ define(function(require, exports, module) {
         return false;
 
       const loc = this.localNeed(resource);
-
-      if (loc < 0.5)
-        return true;
+      if (loc < 0.5) return true;
 
       const sys = this.systemNeed(resource);
-
-      if (sys < 0.9 && loc < 0.75)
-        return true;
+      if (sys < 0.9 && loc < 0.75) return true;
 
       return false;
     }
@@ -104,13 +106,25 @@ define(function(require, exports, module) {
     adjustment(resource) {
       const loc  = this.localNeed(resource);
       const sys  = this.systemNeed(resource);
-      const need = (loc + loc + sys) / 3;
-      return need + this.scarcityMarkup(resource);
+      const need = ((loc + loc + sys) / 3) + this.scarcityMarkup(resource)
+
+      if (need > 0) {
+        return 1 + Math.log(need) / Math.log(17);
+      }
+      else if (need < 0) {
+        return Math.max(0.1, Math.sqrt(need));
+      }
+      else {
+        return 1;
+      }
     }
 
     calculatePrice(resource) {
       const adjust = this.adjustment(resource);
-      return Math.ceil(Resource.get(resource).value * adjust);
+      const value  = Resource.get(resource).value;
+      const price  = Math.ceil(value * adjust);
+      const rand   = util.getRandomInt(0, Math.ceil(price * 0.15));
+      return util.getRandomInt(0, 1) > 0 ? price + rand : price - rand;
     }
 
     price(resource) {

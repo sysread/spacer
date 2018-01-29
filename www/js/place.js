@@ -96,7 +96,7 @@ define(function(require, exports, module) {
         return 0;
 
       const [best, dist] = this.nearestSource(resource);
-      const malus = dist ? (dist / Physics.AU / 15) : 3;
+      const malus = dist ? (dist / Physics.AU / 10) : 3;
 
       return this.is_under_supplied(resource) ? malus : malus / 2;
     }
@@ -105,10 +105,6 @@ define(function(require, exports, module) {
     // premium markup.
     adjustment(resource) {
       return super.adjustment(resource) + this.distancePriceMalus(resource);
-    }
-
-    systemNeed(resource) {
-      return Game.game.systemNeed(resource, this.name);
     }
 
     demand(resource) {

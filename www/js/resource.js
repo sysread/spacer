@@ -38,7 +38,7 @@ define(function(require, exports, module) {
       }
 
       if (this.isCraftable) {
-        value += Math.ceil(Math.log(value * this.craftTurns));
+        value += Math.ceil(Math.pow(Math.log(value * this.craftTurns), 2));
       }
 
       return value;

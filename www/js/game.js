@@ -14,6 +14,7 @@ define(function(require, exports, module) {
       this.player  = new Person;
       this.places  = {};
       this.markets = {}; // hourly market reports for light speed market data
+      this._systemNeed = {};
 
       $(() => {
         let saved = window.localStorage.getItem('game');
@@ -170,6 +171,8 @@ define(function(require, exports, module) {
 
     turn(n=1) {
       for (let i = 0; i < n; ++i) {
+        this._systemNeed = {};
+
         ++this.turns;
         this.date.setHours(this.date.getHours() + data.hours_per_turn);
         system.set_date(this.strdate());
@@ -214,18 +217,21 @@ define(function(require, exports, module) {
       }
     }
 
-    systemNeed(resource, here) {
-      let demand = 1;
-      let supply = 1;
+    systemNeed(resource) {
+      if (!this._systemNeed.hasOwnProperty(resource)) {
+        let demand = 1;
+        let supply = 1;
 
-      for (const body of Object.keys(this.markets)) {
-        const market = this.market(body, here);
-        if (!market || !market.data) continue;
-        demand += market.data[resource].demand;
-        supply += market.data[resource].supply;
+        for (const body of Object.keys(this.markets)) {
+          if (this.markets[body].length === 0) continue;
+          demand += this.markets[body][0][resource].demand;
+          supply += this.markets[body][0][resource].supply;
+        }
+
+        this._systemNeed[resource] = demand / supply;
       }
 
-      return demand / supply;
+      return this._systemNeed[resource];
     }
   };
 
