@@ -13,7 +13,6 @@ define(function(require, exports, module) {
       this.locus   = null;
       this.player  = new Person;
       this.places  = {};
-      this.markets = {}; // hourly market reports for light speed market data
       this._systemNeed = {};
 
       $(() => {
@@ -40,23 +39,23 @@ define(function(require, exports, module) {
 
         console.log(place);
 
-        Object.keys(data.resources).forEach((item) => {
+        for (const item of Object.keys(data.resources)) {
           console.log('  -', item, prod.get(item) - cons.get(item));
-        });
+        }
       });
     }
 
     net_stores() {
-      Object.keys(this.markets).forEach((name) => {
-        let report = this.markets[name][0];
+      for (const name of Object.keys(data.bodies)) {
+        const report = this.market(name);
         console.log(name);
         console.log('  -fabricators: ', this.place(name).fabricator, '/', this.place(name).max_fabs);
 
-        Object.keys(report).forEach((item) => {
+        for (const item of Object.keys(report.data)) {
           if (report[item].stock > 0)
-            console.log(`  -${item}: ${report[item].stock} @ ${report[item].buy}`);
-        });
-      });
+            console.log(`  -${item}: ${report.data[item].stock} @ ${report.data[item].buy}`);
+        }
+      }
     }
 
     save() {
@@ -65,30 +64,25 @@ define(function(require, exports, module) {
       me.locus   = this.locus;
       me.player  = this.player.save();
       me.places  = {};
-      me.markets = {};
 
-      Object.keys(data.bodies).forEach((name) => {
-        me.places[name]  = this.places[name].save();
-        me.markets[name] = this.markets[name].slice(0, this.markets[name].length);
-      });
+      for (const name of Object.keys(data.bodies))
+        me.places[name] = this.places[name].save();
 
       return me;
     }
 
     load(obj) {
-      this.turns  = obj.turns;
-      this.locus  = obj.locus;
-
-      this.date = new Date(data.start_date);
+      this.turns = obj.turns;
+      this.locus = obj.locus;
+      this.date  = new Date(data.start_date);
       this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
 
       this.player.load(obj.player);
 
-      for (const name of system.bodies()) {
+      for (const name of Object.keys(data.bodies)) {
         if (obj.places[name]) {
-          this.places[name] = new Place;
+          this.places[name] = new Place(name);
           this.places[name].load(obj.places[name]);
-          this.markets[name] = obj.markets[name];
         }
         else {
           this.new_place(name);
@@ -111,7 +105,6 @@ define(function(require, exports, module) {
       }
 
       this.places[name]  = place;
-      this.markets[name] = [];
     }
 
     new_game(player, place) {
@@ -125,7 +118,6 @@ define(function(require, exports, module) {
       this.date    = date;
       this.turns   = 0;
       this.places  = {};
-      this.markets = {};
 
       let bodies = system.bodies();
 
@@ -179,16 +171,10 @@ define(function(require, exports, module) {
 
         system.bodies().forEach((name) => {
           this.place(name).turn();
-          this.markets[name].unshift(this.place(name).report());
         });
 
         this.refresh();
       }
-
-      for (let name of system.bodies()) {
-        while (this.markets[name].length > 50)
-          this.markets[name].pop();
-      };
 
       this.save_game();
     }
@@ -196,25 +182,11 @@ define(function(require, exports, module) {
     market(there, here) {
       here = here || this.locus;
       const distance = system.distance(here, there);
-      const idx = this.light_turns(distance);
-
-      if (this.markets[there].length <= idx)
-        return null;
 
       return {
-        data:  this.markets[there][idx],
-        age:   this.light_hours(distance),
-        turns: this.turns - idx,
+        data: this.place(there).report,
+        age:  this.light_hours(system.distance(here, there)),
       };
-    }
-
-    *reports(here) {
-      here = here || this.locus;
-      for (let body of Object.keys(this.markets)) {
-        let report = this.market(body, here);
-        if (report === null) return;
-        yield [body, this.market(body, here)];
-      }
     }
 
     systemNeed(resource) {
@@ -222,10 +194,12 @@ define(function(require, exports, module) {
         let demand = 1;
         let supply = 1;
 
-        for (const body of Object.keys(this.markets)) {
-          if (this.markets[body].length === 0) continue;
-          demand += this.markets[body][0][resource].demand;
-          supply += this.markets[body][0][resource].supply;
+        for (const body of Object.keys(data.bodies)) {
+          const report = this.place(body).report;
+          if (report.hasOwnProperty(resource)) {
+            demand += report[resource].demand;
+            supply += report[resource].supply;
+          }
         }
 
         this._systemNeed[resource] = demand / supply;

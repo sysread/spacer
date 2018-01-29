@@ -46,7 +46,6 @@ define(function(require, exports, module) {
     }
 
     load(obj) {
-      super.load(obj);
       this.name = obj.name;
       this.conditions = obj.conditions;
       this.fabricator = obj.fabricator;
@@ -60,6 +59,8 @@ define(function(require, exports, module) {
         agent.load(info);
         this.agents.push(agent);
       });
+
+      super.load(obj);
     }
 
     isLocallyMined(resource) {
@@ -118,10 +119,12 @@ define(function(require, exports, module) {
       return price;
     }
 
+    calculateBuyPrice(resource, player) {
+      return Math.ceil(super.calculateBuyPrice(resource) * (1 + this.sales_tax));
+    }
+
     buyPrice(resource, player) {
-      let price = super.buyPrice(resource);
-      price *= 1 + this.sales_tax;
-      return Math.ceil(this.applyStandingDiscount(price, player));
+      return Math.ceil(this.applyStandingDiscount(super.buyPrice(resource), player));
     }
 
     mergeScale(resources, traits, conditions) {

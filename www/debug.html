@@ -44,7 +44,6 @@ require(
         distanceMalus: function() { if (this.explainPrice) return this.marketLoc.distancePriceMalus(this.explainPrice) },
         adjustment:    function() { if (this.explainPrice) return this.marketLoc.adjustment(this.explainPrice) },
         nearestSource: function() { if (this.explainPrice) return this.marketLoc.nearestSource(this.explainPrice) },
-        cachedPrice:   function() { if (this.explainPrice) return this.marketLoc.prices[this.explainPrice] },
         production:    function() { if (this.explainPrice) return this.marketLoc.production.get(this.explainPrice) },
         consumption:   function() { if (this.explainPrice) return this.marketLoc.consumption.get(this.explainPrice) },
         baseValue:     function() { if (this.explainPrice) return Resource.get(this.explainPrice).value },
@@ -132,7 +131,7 @@ require(
   <table class="table" v-if="explainPrice">
     <tbody>
       <tr>
-        <th>Price</th><td>{{basePrice|csn}} [{{cachedPrice|csn}}]</td>
+        <th>Price</th><td>{{basePrice|csn}}</td>
         <th>Base value</th><td>{{baseValue|csn}}</td>
       </tr>
 

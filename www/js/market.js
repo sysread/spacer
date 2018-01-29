@@ -10,18 +10,15 @@ define(function(require, exports, module) {
       this.demandHistory  = new util.ResourceTracker(data.market_history);
       this.supplyHistory  = new util.ResourceTracker(data.market_history);
       this.buysThisTurn   = new util.ResourceCounter;
-      this.prices         = util.resourceMap(null);
-      this.setNextPriceUpdateTurn();
+      this._report        = null;
     }
 
     save() {
       let me = {};
-      me.store           = this.store.save();
-      me.demandHistory   = this.demandHistory.save();
-      me.supplyHistory   = this.supplyHistory.save();
-      me.buysThisTurn    = this.buysThisTurn.save();
-      me.prices          = this.prices;
-      me.nextPriceUpdate = this.nextPriceUpdate;
+      me.store         = this.store.save();
+      me.demandHistory = this.demandHistory.save();
+      me.supplyHistory = this.supplyHistory.save();
+      me.buysThisTurn  = this.buysThisTurn.save();
       return me;
     }
 
@@ -30,8 +27,13 @@ define(function(require, exports, module) {
       this.demandHistory.load(obj.supplyHistory);
       this.supplyHistory.load(obj.supplyHistory);
       this.buysThisTurn.load(obj.buysThisTurn);
-      this.prices = util.resourceMap(null, obj.prices);
-      this.nextPriceUpdate = obj.nextPriceUpdate || this.setNextPriceUpdateTurn();
+    }
+
+    get report() {
+      if (this._report === null)
+        this.updateReport();
+
+      return this._report;
     }
 
     craftTime(item) {
@@ -127,21 +129,20 @@ define(function(require, exports, module) {
       return util.getRandomInt(0, 1) > 0 ? price + rand : price - rand;
     }
 
-    price(resource) {
-      if (!(resource in this.prices)) {
-        const price = this.calculatePrice(resource);
-        this.prices[resource] = price;
-      }
+    calculateSellPrice(resource) {
+      return this.calculatePrice(resource);
+    }
 
-      return this.prices[resource];
+    calculateBuyPrice(resource)  {
+      return this.calculatePrice(resource);
+    }
+
+    buyPrice(resource) {
+      return this.report[resource].buy;
     }
 
     sellPrice(resource) {
-      return this.price(resource);
-    }
-
-    buyPrice(resource)  {
-      return this.price(resource);
+      return this.report[resource].sell;
     }
 
     buy(resource, amount) {
@@ -170,43 +171,33 @@ define(function(require, exports, module) {
       return shortAvg - longAvg;
     }
 
-    report() {
-      const info = {};
-      Object.keys(data.resources).forEach((resource) => {
-        const supply = (Math.round(this.supply(resource) * 100) / 100);
-        const demand = (Math.round(this.demand(resource) * 100) / 100);
+    updateReport() {
+      this._report = {};
 
-        info[resource] = {
+      for (const resource of Object.keys(data.resources)) {
+        this._report[resource] = {
           stock  : this.currentSupply(resource),
-          buy    : this.buyPrice(resource),
-          sell   : this.sellPrice(resource),
-          supply : supply,
-          demand : demand,
-          trend  : this.trend(resource)
+          buy    : this.calculateBuyPrice(resource),
+          sell   : this.calculateSellPrice(resource),
+          supply : util.R(this.supply(resource), 2),
+          demand : util.R(this.demand(resource), 2),
+          trend  : this.trend(resource),
         };
-      });
-      return info;
-    }
-
-    setNextPriceUpdateTurn() {
-      const turnsPerDay = 24 / data.hours_per_turn;
-      const nextOffset  = util.getRandomInt(1, data.update_prices * turnsPerDay);
-      this.nextPriceUpdate = Game.game.turns + nextOffset;
-      return this.nextPriceUpdate;
+      }
     }
 
     turn() {
-      Object.keys(data.resources).forEach((k) => {
+      // Update historical records
+      for (const k of Object.keys(data.resources)) {
         this.supplyHistory.add(k, this.currentSupply(k));
         this.demandHistory.add(k, this.buysThisTurn.get(k));
-      });
-
-      this.buysThisTurn.clear();
-
-      if (Game.game.turns >= this.nextPriceUpdate) {
-        this.prices = util.resourceMap(null);
-        this.setNextPriceUpdateTurn();
       }
+
+      // Update market report with new historical data
+      this.updateReport();
+
+      // Clear this past turn's purchase history
+      this.buysThisTurn.clear();
     }
   }
 });

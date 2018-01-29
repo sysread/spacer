@@ -218,7 +218,7 @@ define(function(require, exports, module) {
       </tr>
     </thead>
     <tbody>
-      <market-report-row v-for="body in bodies" v-if="body !== here" :key="body" :item="item" :body="body" :relprices="relprices" />
+      <market-report-row v-for="body in bodies" :key="body" :item="item" :body="body" :relprices="relprices" />
     </tbody>
   </table>
 </div>
@@ -230,13 +230,16 @@ define(function(require, exports, module) {
     computed: {
       player:  function() { return Game.game.player },
 
+      isHere:  function() { return this.body === Game.game.locus },
       report:  function() { return Game.game.market(this.body) },
       hasData: function() { return this.report.data.hasOwnProperty(this.item) },
       info:    function() { if (this.hasData) return this.report.data[this.item] },
+      stock:   function() { if (this.hasData) return this.isHere ? Game.game.here.currentSupply(this.item) : this.info.stock },
+      age:     function() { if (this.hasData) return this.isHere ? 0 : this.report.age },
 
       remote:  function() { return Game.game.place(this.body) },
-      rBuy:    function() { return this.remote.applyStandingDiscount(this.info.buy) },
-      rSell:   function() { return this.info.sell },
+      rBuy:    function() { return this.remote.buyPrice(this.item, this.player) },
+      rSell:   function() { return this.remote.sellPrice(this.item) },
 
       local:   function() { return Game.game.here },
       lBuy:    function() { return this.local.buyPrice(this.item, this.player) },
@@ -248,7 +251,7 @@ define(function(require, exports, module) {
       central: function() { return system.central(this.body) },
     },
     template: `
-<tr>
+<tr :class="{'bg-dark': isHere}">
   <th scope="row">
     {{body|caps}}
     <badge v-if="central != 'sun'" right=1 class="ml-1">{{central|caps}}</badge>
@@ -263,8 +266,8 @@ define(function(require, exports, module) {
     <span v-if="relprices"><span v-if="relSell > 0">+</span>{{relSell|csn}}</span>
     <span v-else>{{rSell|csn}}</span>
   </td>
-  <td class="text-right d-none d-sm-table-cell">{{info.stock}}</td>
-  <td class="text-right d-none d-sm-table-cell">{{report.age}}</td>
+  <td class="text-right d-none d-sm-table-cell">{{stock}}</td>
+  <td class="text-right d-none d-sm-table-cell">{{age}}</td>
 </tr>
     `,
   });

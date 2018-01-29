@@ -6,7 +6,7 @@ define(function() {
   const data = {
     start_date:         new Date(2242, 0, 1, 1),
     hours_per_turn:     8,
-    initial_days:       500,
+    initial_days:       2 * 365,
     initial_stock:      10,
     market_history:     30,
     update_prices:      10, // days between price updates
