@@ -97,7 +97,6 @@ define(function(require, exports, module) {
       }
 
       system.set_date(this.strdate());
-      this.net_production();
     }
 
     new_place(name) {
