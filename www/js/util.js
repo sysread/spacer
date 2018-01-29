@@ -64,32 +64,15 @@ define(function(require, exports, module) {
   };
 
   util.resourceMap = function(dflt=0, entries) {
-    if (entries === undefined) {
-      entries = {};
+    entries = entries || {};
+
+    for (const item of Object.keys(data.resources)) {
+      if (!(item in entries)) {
+        entries[item] = dflt;
+      }
     }
 
-    return new Proxy(entries, {
-      get: (obj, prop, recvr) => {
-        if (!data.resources.hasOwnProperty(prop)) {
-          return;
-        }
-
-        if (!obj.hasOwnProperty(prop)) {
-          obj[prop] = dflt;
-        }
-
-        return obj[prop];
-      },
-
-      set: (obj, prop, val, recvr) => {
-        if (!data.resources.hasOwnProperty(prop)) {
-          return;
-        }
-
-        obj[prop] = val;
-        return true;
-      }
-    });
+    return entries;
   };
 
   util.DefaultMap = class {
@@ -185,24 +168,13 @@ define(function(require, exports, module) {
       }
     }
 
-    sum(resource, length) {
-      if (length === undefined) {
-        return this.summed.get(resource);
-      }
-      else {
-        let n = 0;
-
-        for (let i = 0; i < length && i < this.history[resource].length; ++i)
-          n += this.history[resource][i];
-
-        return n;
-      }
+    sum(resource) {
+      return this.summed.get(resource);
     }
 
-    avg(resource, length) {
-      const sum = this.sum(resource, length);
-      let count = this.length(resource);
-      if (length !== undefined) count = Math.min(length, count);
+    avg(resource) {
+      const sum   = this.sum(resource);
+      const count = this.length(resource);
       return (sum > 0) ? Math.ceil(sum / count) : 0;
     }
   };

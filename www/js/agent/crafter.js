@@ -6,7 +6,7 @@ define(function(require, exports, module) {
 
   return class extends Actor {
     *crafts() {
-      let place = Game.game.place(this.place);
+      let place = this.here;
       let items = data.resources;
 
       CRAFT: for (let item of place.resourcesNeeded()) {
@@ -84,11 +84,11 @@ define(function(require, exports, module) {
       if (best) {
         for (let item of Object.keys(best.need)) {
           if (best.need[item] > 0) {
-            Game.game.place(this.place).buy(item, best.need[item]);
+            this.here.buy(item, best.need[item]);
           }
         }
 
-        let tics = Game.game.place(this.place).fabricate(best.item);
+        let tics = this.here.fabricate(best.item);
         for (let i = 0; i < tics; ++i) this.enqueue('wait');
         this.enqueue('sell', best);
       }
@@ -99,10 +99,8 @@ define(function(require, exports, module) {
     }
 
     sell(info) {
-      if (!this.busted(info.item, 1)) {
-        Game.game.place(this.place).sell(info.item, 1);
-        //console.debug(`[${Game.game.turns}] agent: ${this.place} manufactured 1 unit of ${info.item}`);
-      }
+      this.here.sell(info.item, 1);
+      //console.debug(`[${Game.game.turns}] agent: ${this.place} manufactured 1 unit of ${info.item}`);
     }
 
     discard() {
@@ -110,7 +108,7 @@ define(function(require, exports, module) {
         return;
       }
 
-      const place = Game.game.place(this.place);
+      const place = this.here;
       let demand;
       let best;
 
@@ -127,12 +125,9 @@ define(function(require, exports, module) {
       const supply = place.currentSupply(best);
 
       if (best && supply) {
-        let amount = 0;
         const loc = place.localNeed(best);
         const sys = place.systemNeed(best);
-        if (loc < 0.5) amount = supply * 0.5;
-        if (sys < 0.9 && loc < 0.75) amount = supply * 0.25;
-        amount = util.getRandomInt(0, Math.floor(amount));
+        const amount = util.getRandomInt(supply * (1 - ((loc + sys) / 2)));
 
         if (amount > 0) {
           place.store.dec(best, amount);
@@ -146,7 +141,7 @@ define(function(require, exports, module) {
         return;
       }
 
-      const place = Game.game.place(this.place);
+      const place = this.here;
       let supply;
       let best;
 

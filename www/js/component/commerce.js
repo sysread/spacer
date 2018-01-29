@@ -255,8 +255,6 @@ define(function(require, exports, module) {
   <th scope="row">
     {{body|caps}}
     <badge v-if="central != 'sun'" right=1 class="ml-1">{{central|caps}}</badge>
-    <gold v-if="info.trend > 0" right=1>&uarr;</gold>
-    <gold v-else-if="info.trend < 0" right=1>&darr;</gold>
   </th>
   <td class="text-right" :class="{'text-success': info.stock && relBuy < 0, 'text-muted': !info.stock}">
     <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{relBuy|csn}}</span>

@@ -33,16 +33,23 @@ define(function(require, exports, module) {
     get here() {return this.place(this.locus)}
 
     net_production() {
-      Object.keys(this.places).forEach((place) => {
-        let prod = this.places[place].production;
-        let cons = this.places[place].consumption;
+      const net = util.resourceMap();
 
+      for (const place of Object.keys(this.places)) {
+        const prod = this.places[place].production;
+        const cons = this.places[place].consumption;
         console.log(place);
-
         for (const item of Object.keys(data.resources)) {
-          console.log('  -', item, prod.get(item) - cons.get(item));
+          console.log('  -', item, util.R(prod.get(item) - cons.get(item), 2));
+          net[item] += prod.get(item) / (data.resources[item].mine ? data.resources[item].mine.tics : 1);
+          net[item] -= cons.get(item);
         }
-      });
+      }
+
+      console.log('System-wide');
+      for (const item of Object.keys(data.resources)) {
+        console.log('  -', item, util.R(net[item], 2));
+      }
     }
 
     net_stores() {
@@ -90,6 +97,7 @@ define(function(require, exports, module) {
       }
 
       system.set_date(this.strdate());
+      this.net_production();
     }
 
     new_place(name) {
@@ -169,9 +177,8 @@ define(function(require, exports, module) {
         this.date.setHours(this.date.getHours() + data.hours_per_turn);
         system.set_date(this.strdate());
 
-        system.bodies().forEach((name) => {
-          this.place(name).turn();
-        });
+        for (const body of Object.keys(data.bodies))
+          this.place(body).turn();
 
         this.refresh();
       }

@@ -1,5 +1,6 @@
 define(function(require, exports, module) {
   const data = require('data');
+  const util = require('util');
   const Game = require('game');
 
   return class {
@@ -22,6 +23,10 @@ define(function(require, exports, module) {
       this.queue = obj.queue;
     }
 
+    get here() {
+      return Game.game.place(this.place);
+    }
+
     is_over_supplied(item, place) {
       place = place || this.place;
       return Game.game.place(place).is_over_supplied(item);
@@ -37,19 +42,8 @@ define(function(require, exports, module) {
      * item's contraband index.
      */
     contra_rand(item) {
-      let contraband = data.resources[item].contraband;
-      return contraband && (Math.random() * 10) <= contraband;
-    }
-
-    /*
-     * Decides whether the actor gets busted with a contraband item.
-     */
-    busted(item, amount) {
-      if (this.contra_rand(item)) {
-        return true
-      }
-
-      return false;
+      const contraband = data.resources[item].contraband;
+      return contraband > 0 && util.getRandomInt(0, 10) <= contraband;
     }
 
     has_pending() {

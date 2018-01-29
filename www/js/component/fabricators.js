@@ -22,7 +22,7 @@ define(function(require, exports, module) {
     computed: {
       place:     function() { return Game.game.here },
       player:    function() { return Game.game.player },
-      price:     function() { return this.place.price(this.item) },
+      price:     function() { return this.place.sellPrice(this.item) },
       fee:       function() { return util.R(Math.max(1, util.R(data.craft_fee * this.price, 2))) },
       turns:     function() { return this.place.fabricationTime(this.item) },
       hours:     function() { return data.hours_per_turn * this.turns },
@@ -60,7 +60,7 @@ define(function(require, exports, module) {
       },
 
       priceOf: function(item) {
-        return this.place.price(item);
+        return this.place.sellPrice(item);
       },
     },
     template: `
@@ -78,7 +78,7 @@ define(function(require, exports, module) {
     <def y=0 term="Time" :def="(hours * count)|csn|unit('hours')" />
     <def y=0 term="Materials">
       <div slot="def" v-for="(amt, item) of materials">
-        {{(amt * count)|csn|unit(item)}} ({{priceOf(item)|csn}} cr)
+        {{(amt * count)|csn|unit(item)}} ({{priceOf(item)|csn}} credits)
       </div>
     </def>
 

@@ -14,7 +14,6 @@ define(function(require, exports, module) {
       this.conditions = [];
       this.agents     = [];
       this.resources  = new util.ResourceCounter(0);
-      this.using      = new util.ResourceCounter(0)
       this.fabricator = data.fabricators;
       this.deliveries = [];
     }
@@ -35,12 +34,13 @@ define(function(require, exports, module) {
       me.name       = this.name;
       me.conditions = this.conditions;
       me.resources  = this.resources.save();
-      me.using      = this.using.save();
       me.fabricator = this.fabricator;
       me.deliveries = this.deliveries;
       me.agents     = [];
 
-      this.agents.forEach((agent) => {me.agents.push(agent.save())});
+      //this.agents.forEach((agent) => {me.agents.push(agent.save())});
+      for (const agent of this.agents)
+        me.agents.push(agent.save());
 
       return me;
     }
@@ -51,14 +51,19 @@ define(function(require, exports, module) {
       this.fabricator = obj.fabricator;
       this.deliveries = obj.deliveries;
       this.resources.load(obj.resources);
-      this.using.load(obj.using);
       this.agents = [];
 
-      obj.agents.forEach((info) => {
+      /*obj.agents.forEach((info) => {
         const agent = new Crafter;
         agent.load(info);
         this.agents.push(agent);
-      });
+      });*/
+
+      for (const info of obj.agents) {
+        const agent = new Crafter;
+        agent.load(info);
+        this.agents.push(agent);
+      }
 
       super.load(obj);
     }
@@ -365,7 +370,7 @@ define(function(require, exports, module) {
           // Is there enough fuel available to make the delivery?
           if (avail < fuel) {
             place.incDemand('fuel', fuel - avail);
-            //place.incDemand(resource, amt);
+            place.incDemand(resource, amt);
             continue;
           }
 
@@ -429,15 +434,9 @@ define(function(require, exports, module) {
     }
 
     turn() {
-      super.turn();
-
-      // Boost demand for economic drivers
-      if (this.currentSupply('fuel') < 5)
-        this.incDemand('fuel', 5);
-
       // Start agents if needed
       if (this.agents.length < this.num_agents) {
-        let money = data.market.agent_money * this.scale;
+        const money = data.market.agent_money * this.scale;
         this.agents.push(new Crafter({place: this.name, money: money}));
       }
 
@@ -446,31 +445,27 @@ define(function(require, exports, module) {
 
       // Agents
       this.agents.push(this.agents.shift()); // Shuffle order
-      this.agents.forEach((agent) => {agent.turn()});
+      //this.agents.forEach((agent) => {agent.turn()});
+      for (const agent of this.agents)
+        agent.turn();
 
       // Consume
       this.consumption.each((item, amt) => {
-        if (this.using.get(item) < amt) {
-          let want  = Math.ceil(amt);
-          let avail = Math.min(want, this.currentSupply(item));
+        const want  = Math.ceil(amt);
+        const avail = Math.min(want, this.currentSupply(item));
 
-          if (avail) {
-            this.buy(item, avail);
-            this.using.inc(item, avail);
-          }
+        if (avail)
+          this.buy(item, avail);
 
-          if (avail < want)
-            this.incDemand(item, want - avail);
-
-          this.using.dec(item, amt);
-        }
+        if (avail < want)
+          this.incDemand(item, want - avail);
       });
 
       // Restore fabricators
       if (this.fabricator <= (this.max_fabs * 0.5)) {
-        let each  = data.fab_health;
-        let want  = Math.floor((this.max_fabs - this.fabricator) / each);
-        let avail = Math.min(want, this.currentSupply('cybernetics'));
+        const each  = data.fab_health;
+        const want  = Math.floor((this.max_fabs - this.fabricator) / each);
+        const avail = Math.min(want, this.currentSupply('cybernetics'));
 
         if (avail < want)
           this.incDemand('cybernetics', want - avail);
@@ -481,8 +476,16 @@ define(function(require, exports, module) {
         }
       }
 
+      for (const item of (Object.keys(data.necessity))) {
+        if (this.currentSupply(item) === 0) {
+          this.incDemand(item, 10);
+        }
+      }
+
       this.deliverySchedule();
       this.deliveryProcess();
+
+      super.turn();
     }
 
     inspectionRate(distance) {

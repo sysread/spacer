@@ -83,12 +83,8 @@ define(function(require, exports, module) {
         return false;
 
       const loc = this.localNeed(resource);
-      if (loc < 0.5) return true;
-
       const sys = this.systemNeed(resource);
-      if (sys < 0.9 && loc < 0.75) return true;
-
-      return false;
+      return (loc + sys) / 2 > 0.5;
     }
 
     scarcityMarkup(resource) {
@@ -111,7 +107,7 @@ define(function(require, exports, module) {
       const need = ((loc + loc + sys) / 3) + this.scarcityMarkup(resource)
 
       if (need > 0) {
-        return 1 + Math.log(need) / Math.log(17);
+        return 1 + Math.log(1 + need) / Math.log(17);
       }
       else if (need < 0) {
         return Math.max(0.1, Math.sqrt(need));
@@ -146,29 +142,22 @@ define(function(require, exports, module) {
     }
 
     buy(resource, amount) {
-      let available = this.currentSupply(resource);
+      const available = this.currentSupply(resource);
 
       if (available < amount) {
         throw new Error(`buy: requested ${amount} but only ${available} available of ${resource}`);
       }
 
-      let price = amount * this.buyPrice(resource);
+      const price = Math.ceil(amount) * this.buyPrice(resource);
       this.store.dec(resource, amount);
       this.incDemand(resource, amount);
       return price;
     }
 
     sell(resource, amount) {
-      let price = amount * this.sellPrice(resource);
+      const price = amount * this.sellPrice(resource);
       this.store.inc(resource, amount);
       return price;
-    }
-
-    trend(resource, days=10) {
-      let turns = days * (24 / data.hours_per_turn);
-      let longAvg = this.demandHistory.avg(resource) + this.supplyHistory.avg(resource);
-      let shortAvg = this.demandHistory.avg(resource, turns) + this.supplyHistory.avg(resource, turns);
-      return shortAvg - longAvg;
     }
 
     updateReport() {
@@ -181,7 +170,6 @@ define(function(require, exports, module) {
           sell   : this.calculateSellPrice(resource),
           supply : util.R(this.supply(resource), 2),
           demand : util.R(this.demand(resource), 2),
-          trend  : this.trend(resource),
         };
       }
     }
