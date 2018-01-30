@@ -51,7 +51,7 @@ define(function() {
     },
 
     market: {
-      agents:      3,
+      agents:      5,
       fabricators: 2,
       minability:  0.2,
       produces:    {},

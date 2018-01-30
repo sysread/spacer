@@ -84,7 +84,7 @@ define(function(require, exports, module) {
 
       const loc = this.localNeed(resource);
       const sys = this.systemNeed(resource);
-      return (loc + sys) / 2 > 0.5;
+      return (loc + sys) / 2 < 0.5;
     }
 
     scarcityMarkup(resource) {

@@ -117,7 +117,7 @@ define(function(require, exports, module) {
     }
 
     getStandingPriceAdjustment(faction) {
-      return this.standing[faction] / 1000;
+      return this.getStanding(faction) / 1000;
     }
   };
 });

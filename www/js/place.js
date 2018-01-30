@@ -370,7 +370,7 @@ define(function(require, exports, module) {
           // Is there enough fuel available to make the delivery?
           if (avail < fuel) {
             place.incDemand('fuel', fuel - avail);
-            place.incDemand(resource, amt);
+            //place.incDemand(resource, amt);
             continue;
           }
 
@@ -453,12 +453,8 @@ define(function(require, exports, module) {
       this.consumption.each((item, amt) => {
         const want  = Math.ceil(amt);
         const avail = Math.min(want, this.currentSupply(item));
-
-        if (avail)
-          this.buy(item, avail);
-
-        if (avail < want)
-          this.incDemand(item, want - avail);
+        if (avail) this.buy(item, avail);
+        if (avail < want) this.incDemand(item, want - avail);
       });
 
       // Restore fabricators
