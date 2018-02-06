@@ -1,9 +1,9 @@
 define(function(require, exports, module) {
-  const Person = require('person');
   const data   = require('data');
   const model  = require('model');
   const system = require('system');
   const util   = require('util');
+  const Person = require('person');
 
   const Game = class {
     constructor() {
@@ -20,7 +20,7 @@ define(function(require, exports, module) {
       system.set_date(this.strdate());
 
       for (const body of Object.keys(data.bodies)) {
-        this.planets[body] = new model.Planet(body, init.planets[body]);
+        this.planets[body] = new model.Planet(body, init.planets ? init.planets[body] : undefined);
       }
 
       this.refresh();

@@ -3,8 +3,6 @@ define(function(require, exports, module) {
   const system    = require('system');
   const util      = require('util');
   const Physics   = require('physics');
-  const Game      = require('game');
-
   const resources = [];
 
   const Resource = class {
@@ -221,7 +219,8 @@ define(function(require, exports, module) {
       this.demand  = new History(data.market_history, init.demand);
       this.need    = new History(data.market_history, init.need);
       this.pending = new Store(init.pending);
-      this.queue   = [];
+      this.queue   = init.queue || [];
+      this.cycle   = init.cycle || {};
 
       this.produces = new Store;
       this.consumes = new Store;
@@ -236,6 +235,8 @@ define(function(require, exports, module) {
           this.produces.inc(item, this.scale(trait.produces.get(item)));
           this.consumes.inc(item, this.scale(trait.consumes.get(item)));
         }
+
+        this.cycle[item] = util.getRandomInt(3, 10);
       }
 
       this.clearMemos();
@@ -392,17 +393,30 @@ define(function(require, exports, module) {
     }
 
     price(item) {
-      const value  = resources[item].value;
-      const markup = data.necessity[item] ? 1 + data.scarcity_markup : 1;
-      const need   = this.getNeed(item);
-
-      if (need > 1) {
-        return Math.ceil(markup * Math.min(value * 3, value * (1 + (need / (need + 5)))));
-      } else if (need < 1) {
-        return Math.ceil(markup * Math.max(value / 4, value * need));
-      } else {
-        return Math.ceil(markup * value);
+      if (!this.hasOwnProperty('_price')) {
+        this._price = {};
       }
+
+      if (game.turns % (this.cycle[item] % 24 / data.hours_per_turn) === 0) {
+        delete this._price[item];
+      }
+
+      if (!this._price.hasOwnProperty(item)) {
+        const value  = resources[item].value;
+        const markup = data.necessity[item] ? 1 + data.scarcity_markup : 1;
+        const need   = this.getNeed(item);
+        let price;
+
+        if (need > 1) {
+          this._price[item] = Math.ceil(markup * Math.min(value * 3, value * (1 + (need / (need + 5)))));
+        } else if (need < 1) {
+          this._price[item] = Math.ceil(markup * Math.max(value / 4, value * need));
+        } else {
+          this._price[item] = Math.ceil(markup * value);
+        }
+      }
+
+      return this._price[item];
     }
 
     sellPrice(item) {
@@ -442,7 +456,7 @@ define(function(require, exports, module) {
 
       if (player) {
         player.ship.unloadCargo(item, amount);
-        player.credit(price * amount);
+        player.credit(price);
 
         if (hadShortage && !resources[item].contraband) {
           // Player ended a shortage. Increase their standing with our faction.
