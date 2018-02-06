@@ -1,9 +1,9 @@
 define(function(require, exports, module) {
-  const Game   = require('game');
   const Vue    = require('vendor/vue');
   const data   = require('data');
   const system = require('system');
   const util   = require('util');
+  const model  = require('model');
 
   require('component/common');
   require('component/modal');
@@ -18,15 +18,15 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      place:     function() { return Game.game.here },
-      player:    function() { return Game.game.player },
+      planet:    function() { return game.here },
+      player:    function() { return game.player },
       resources: function() { return Object.keys(data.resources) },
     },
     methods: {
-      dock: function(item) { return this.place.currentSupply(item) },
-      hold: function(item) { return this.player.ship.cargo.get(item) },
-      buy:  function(item) { return this.place.buyPrice(item, this.player) },
-      sell: function(item) { return this.place.sellPrice(item) },
+      dock: function(item) { return this.planet.getStock(item) },
+      hold: function(item) { return this.player.ship.cargo.count(item) },
+      buy:  function(item) { return this.planet.buyPrice(item, this.player) },
+      sell: function(item) { return this.planet.sellPrice(item) },
     },
     template: `
 <card title="Commerce">
@@ -65,27 +65,27 @@ define(function(require, exports, module) {
     props: ['item'],
     data: function() {
       return {
-        credits: Game.game.player.money,
-        hold:    Game.game.player.ship.cargo.get(this.item),
-        dock:    Game.game.place().currentSupply(this.item),
-        cargo:   Game.game.player.ship.cargoUsed,
+        credits: game.player.money,
+        hold:    game.player.ship.cargo.get(this.item),
+        dock:    game.here.getStock(this.item),
+        cargo:   game.player.ship.cargoUsed,
         report:  false,
         caught:  false,
       };
     },
     computed: {
-      place:      function() { return Game.game.here },
-      player:     function() { return Game.game.player },
-      faction:    function() { return this.place.faction },
-      buy:        function() { return this.place.buyPrice(this.item, this.player) },
-      sell:       function() { return this.place.sellPrice(this.item, this.player) },
+      planet:     function() { return game.here },
+      player:     function() { return game.player },
+      faction:    function() { return this.planet.faction },
+      buy:        function() { return this.planet.buyPrice(this.item, this.player) },
+      sell:       function() { return this.planet.sellPrice(this.item, this.player) },
       count:      function() { return this.hold - this.player.ship.cargo.get(this.item) },
       contraband: function() { return data.resources[this.item].contraband },
 
       max: function() {
         const cred  = this.player.money;
-        const hold  = this.player.ship.cargo.get(this.item);
-        const dock  = this.place.currentSupply(this.item);
+        const hold  = this.player.ship.cargo.count(this.item);
+        const dock  = this.planet.getStock(this.item);
         const cargo = this.player.ship.cargoLeft;
         return hold + Math.min(dock, Math.floor(cred / this.buy), cargo);
       },
@@ -96,14 +96,14 @@ define(function(require, exports, module) {
       },
 
       fine: function() {
-        const base = this.place.inspectionFine();
+        const base = this.planet.inspectionFine();
         return Math.min(this.player.money, base * Math.abs(this.count));
       },
 
       updateState: function() {
         const cred   = this.player.money;
         const hold   = this.player.ship.cargo.get(this.item);
-        const dock   = this.place.currentSupply(this.item);
+        const dock   = this.planet.getStock(this.item);
         const diff   = this.hold - hold;
         this.dock    = dock - diff;
         this.credits = cred - (diff * (diff > 0 ? this.buy : this.sell));
@@ -111,49 +111,36 @@ define(function(require, exports, module) {
       },
 
       complete: function() {
-        if (this.contraband && this.place.inspectionChance()) {
+        if (this.contraband && this.faction.inspectionChance()) {
           this.player.debit(this.fine());
-          this.player.decStanding(this.faction, this.contraband);
+          this.player.decStanding(this.faction.abbrev, this.contraband);
 
           if (this.count < 0) {
             this.player.ship.cargo.set(this.item, 0);
           }
           else {
-            this.place.store.dec(this.item, this.count);
+            this.planet.store.dec(this.item, this.count);
           }
 
           alert(
-              `As you complete your exchange, ${this.faction} agents in powered armor smash their way into the room.`
+              `As you complete your exchange, ${this.faction.abbrev} agents in powered armor smash their way into the room.`
             + `A ${this.agentGender()} with a corporal's stripes informs you that your cargo has been confiscated and you have been fined ${this.fine()} credits.`,
             + `Your reputation with this faction has decreased by ${this.contraband}.`
           );
         }
         else {
           if (this.count > 0) {
-            this.player.debit(Game.game.place().buy(this.item, this.count));
-            this.player.ship.loadCargo(this.item, this.count);
+            const [bought, price] = game.here.buy(this.item, this.count, this.player);
           }
           else {
-            const underSupplied = this.place.is_under_supplied(this.item);
-            this.player.credit(this.place.sell(this.item, -this.count));
-            this.player.ship.unloadCargo(this.item, -this.count);
-
-            if (underSupplied && !this.contraband) {
-              // Player ended supply deficiency
-              if (!this.place.is_under_supplied(this.item)) {
-                this.player.incStanding(this.faction, 5);
-                alert('You ended the local supply shortage of ' + this.item + '! Your standing with this faction has increased.');
-              }
-              // Player helped address supply deficiency
-              else {
-                this.player.incStanding(this.faction, 1);
-              }
-            }
+            const [bought, price, standing] = game.here.sell(this.item, -this.count, this.player);
+            if (standing > 1)
+              alert(`You ended the local supply shortage of ${this.item}! Your standing with this faction has increased.`);
           }
         }
 
-        Game.game.save_game();
-        Game.game.refresh();
+        game.save_game();
+        game.refresh();
         this.$emit('update:item', null);
       },
     },
@@ -183,17 +170,17 @@ define(function(require, exports, module) {
   </modal>
 
   <modal v-if="report" @close="report=false" close="Close" xclose=true :title="'System market report for ' + item">
-    <market-report :item="item" />
+    <resource-report :item="item" />
   </modal>
 </div>
     `,
   });
 
-  Vue.component('market-report', {
+  Vue.component('resource-report', {
     props: ['item'],
     data: function() { return { relprices: false } },
     computed: {
-      here:   function() { return Game.game.locus },
+      here:   function() { return game.locus },
       bodies: function() { return Object.keys(data.bodies) },
     },
     template: `
@@ -203,10 +190,6 @@ define(function(require, exports, module) {
     <span v-else>Show relative prices</span>
   </btn>
 
-  <p class="font-italic d-none d-sm-block">
-    Market data age is reported in hours due to light speed lag.
-  </p>
-
   <table class="table table-sm">
     <thead>
       <tr>
@@ -214,40 +197,30 @@ define(function(require, exports, module) {
         <th class="text-right">Buy</th>
         <th class="text-right">Sell</th>
         <th class="text-right d-none d-sm-table-cell">Stock</th>
-        <th class="text-right d-none d-sm-table-cell">Age</th>
       </tr>
     </thead>
     <tbody>
-      <market-report-row v-for="body in bodies" :key="body" :item="item" :body="body" :relprices="relprices" />
+      <resource-report-row v-for="body in bodies" :key="body" :item="item" :body="body" :relprices="relprices" />
     </tbody>
   </table>
 </div>
     `
   });
 
-  Vue.component('market-report-row', {
+  Vue.component('resource-report-row', {
     props: ['item', 'body', 'relprices'],
     computed: {
-      player:  function() { return Game.game.player },
-
-      isHere:  function() { return this.body === Game.game.locus },
-      report:  function() { return Game.game.market(this.body) },
-      hasData: function() { return this.report.data.hasOwnProperty(this.item) },
-      info:    function() { if (this.hasData) return this.report.data[this.item] },
-      stock:   function() { if (this.hasData) return this.isHere ? Game.game.here.currentSupply(this.item) : this.info.stock },
-      age:     function() { if (this.hasData) return this.isHere ? 0 : this.report.age },
-
-      remote:  function() { return Game.game.place(this.body) },
+      player:  function() { return game.player },
+      isHere:  function() { return this.body === game.locus },
+      remote:  function() { return game.planets[this.body] },
+      local:   function() { return game.here },
+      stock:   function() { return this.remote.getStock(this.item) },
       rBuy:    function() { return this.remote.buyPrice(this.item, this.player) },
       rSell:   function() { return this.remote.sellPrice(this.item) },
-
-      local:   function() { return Game.game.here },
       lBuy:    function() { return this.local.buyPrice(this.item, this.player) },
       lSell:   function() { return this.local.sellPrice(this.item) },
-
       relBuy:  function() { return this.rBuy - this.lSell },
       relSell: function() { return this.rSell - this.lBuy },
-
       central: function() { return system.central(this.body) },
     },
     template: `
@@ -256,7 +229,7 @@ define(function(require, exports, module) {
     {{body|caps}}
     <badge v-if="central != 'sun'" right=1 class="ml-1">{{central|caps}}</badge>
   </th>
-  <td class="text-right" :class="{'text-success': info.stock && relBuy < 0, 'text-muted': !info.stock}">
+  <td class="text-right" :class="{'text-success': stock && relBuy < 0, 'text-muted': !stock}">
     <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{relBuy|csn}}</span>
     <span v-else>{{rBuy|csn}}</span>
   </td>
@@ -265,7 +238,70 @@ define(function(require, exports, module) {
     <span v-else>{{rSell|csn}}</span>
   </td>
   <td class="text-right d-none d-sm-table-cell">{{stock}}</td>
-  <td class="text-right d-none d-sm-table-cell">{{age}}</td>
+</tr>
+    `,
+  });
+
+  Vue.component('market-report', {
+    props: ['body'],
+    data: function() { return { relprices: false } },
+    computed: {
+      planet:    function() { return game.planets[this.body] },
+      resources: function() { return Object.keys(model.resources) },
+    },
+    template: `
+<div>
+  <h3>Market report for {{planet.name}}</h3>
+
+  <btn block=1 @click="relprices=!relprices" class="my-3">
+    <span v-if="relprices">Show absolute prices</span>
+    <span v-else>Show relative prices</span>
+  </btn>
+
+  <table class="table table-sm">
+    <thead>
+      <tr>
+        <th>Resource</th>
+        <th class="text-right">Buy</th>
+        <th class="text-right">Sell</th>
+        <th class="text-right d-none d-sm-table-cell">Stock</th>
+      </tr>
+    </thead>
+    <tbody>
+      <market-report-row v-for="resource in resources" :key="resource.name" :resource="resource" :planet="planet" :relprices="relprices" />
+    </tbody>
+  </table>
+</div>
+    `
+  });
+
+  Vue.component('market-report-row', {
+    props: ['resource', 'planet', 'relprices'],
+    computed: {
+      player:  function() { return game.player },
+      local:   function() { return game.here },
+      stock:   function() { return this.planet.getStock(this.resource) },
+      rBuy:    function() { return this.planet.buyPrice(this.resource, this.player) },
+      rSell:   function() { return this.planet.sellPrice(this.resource) },
+      lBuy:    function() { return this.local.buyPrice(this.resource, this.player) },
+      lSell:   function() { return this.local.sellPrice(this.resource) },
+      relBuy:  function() { return this.rBuy - this.lSell },
+      relSell: function() { return this.rSell - this.lBuy },
+    },
+    template: `
+<tr>
+  <th scope="row">{{resource|caps}}</th>
+
+  <td class="text-right" :class="{'text-success': stock && relBuy < 0, 'text-muted': !stock}">
+    <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{relBuy|csn}}</span>
+    <span v-else>{{rBuy|csn}}</span>
+  </td>
+
+  <td class="text-right" :class="{'text-success': relSell > 0}">
+    <span v-if="relprices"><span v-if="relSell > 0">+</span>{{relSell|csn}}</span>
+    <span v-else>{{rSell|csn}}</span>
+  </td>
+  <td class="text-right d-none d-sm-table-cell">{{stock}}</td>
 </tr>
     `,
   });

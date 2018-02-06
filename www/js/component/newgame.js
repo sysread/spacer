@@ -42,14 +42,14 @@ define(function(require, exports, module) {
           name:    this.name,
           home:    this.home,
           faction: this.body.faction,
-          ship:    new Ship({shipclass: ship}),
+          ship:    new Ship({type: ship}),
           money:   1000,
         });
 
-        Game.game.new_game(me, this.home);
+        game.new_game(me, this.home);
 
         const turns = data.initial_days * 24 / data.hours_per_turn;
-        const step = Math.ceil(turns / 10);
+        const step = Math.ceil(turns / 25);
         let done = 0;
         let timer;
 
@@ -58,7 +58,7 @@ define(function(require, exports, module) {
             const count = Math.min(turns - done, step);
             const pct = Math.floor((done / turns) * 100);
             done += count;
-            Game.game.turn(count);
+            game.turn(count);
             this.percent = pct;
             this.display = pct + '%';
             timer = window.setTimeout(interval, 200);
@@ -66,9 +66,9 @@ define(function(require, exports, module) {
           else {
             this.percent = 100;
             this.display = '100% - Done!';
-            Game.game.refresh();
+            game.refresh();
             $('#spacer-nav').data('in-transit', false);
-            window.setTimeout(() => {Game.open('summary')}, 100);
+            window.setTimeout(() => {game.open('summary')}, 100);
           }
         };
 

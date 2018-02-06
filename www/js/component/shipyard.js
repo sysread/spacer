@@ -1,17 +1,13 @@
 define(function(require, exports, module) {
-  const Game    = require('game');
-  const Physics = require('physics');
-  const Ship    = require('ship');
-  const Vue     = require('vendor/vue');
-  const data    = require('data');
-  const util    = require('util');
+  const Vue  = require('vendor/vue');
+  const data = require('data');
+  const util = require('util');
 
   require('component/common');
   require('component/card');
   require('component/exchange');
   require('component/modal');
   require('component/row');
-
 
   Vue.component('shipyard', {
     data: function() {
@@ -20,13 +16,11 @@ define(function(require, exports, module) {
         transfer: false,
       };
     },
-    computed: {
-      affordFuel: function() { return Game.game.player.money >= Game.game.place().buyPrice('fuel') * 1.035 },
-      needsFuel:  function() { return !Game.game.player.ship.tankIsFull() },
-      hasFuel:    function() { return Game.game.player.ship.cargo.get('fuel') > 0 },
-    },
     methods: {
-      open: function(page){ Game.open(page) },
+      affordFuel: function() { return game.player.money >= game.here.buyPrice('fuel') * 1.035 },
+      needsFuel:  function() { return !game.player.ship.tankIsFull() },
+      hasFuel:    function() { return game.player.ship.cargo.count('fuel') > 0 },
+      open:       game.open,
     },
     template: `
 <div>
@@ -53,8 +47,8 @@ define(function(require, exports, module) {
     </card-text>
 
     <row>
-      <button :disabled="!needsFuel || !affordFuel" type="button" class="btn btn-dark btn-block m-1" @click="refuel=true">Refuel</button>
-      <button :disabled="!needsFuel || !hasFuel" type="button" class="btn btn-dark btn-block m-1" @click="transfer=true">Transfer fuel</button>
+      <button :disabled="!needsFuel() || !affordFuel()" type="button" class="btn btn-dark btn-block m-1" @click="refuel=true">Refuel</button>
+      <button :disabled="!needsFuel() || !hasFuel()" type="button" class="btn btn-dark btn-block m-1" @click="transfer=true">Transfer fuel</button>
       <button type="button" class="btn btn-dark btn-block m-1" @click="open('ships')">Ships</button>
       <button type="button" class="btn btn-dark btn-block m-1" @click="open('addons')">Upgrades</button>
     </row>
@@ -69,18 +63,18 @@ define(function(require, exports, module) {
   Vue.component('shipyard-refuel', {
     data: function() { return { change: 0 } },
     computed: {
-      need:  function() { return Game.game.player.ship.refuelUnits() },
-      max:   function() { return Math.min(this.need, Math.floor(Game.game.player.money / this.price)) },
-      price: function() { return Math.ceil(Game.game.place().buyPrice('fuel') * 1.035) },
+      need:  function() { return game.player.ship.refuelUnits() },
+      max:   function() { return Math.min(this.need, Math.floor(game.player.money / this.price)) },
+      price: function() { return Math.ceil(game.here.buyPrice('fuel') * 1.035) },
     },
     methods: {
       fillHerUp: function() {
         if (this.change !== NaN && this.change > 0 && this.change <= this.max) {
-          Game.game.player.debit(this.change * this.price);
-          Game.game.player.ship.refuel(this.change);
-          Game.game.turn();
-          Game.game.save_game();
-          Game.game.refresh();
+          game.player.debit(this.change * this.price);
+          game.player.ship.refuel(this.change);
+          game.turn();
+          game.save_game();
+          game.refresh();
         }
       },
     },
@@ -104,20 +98,20 @@ define(function(require, exports, module) {
       return { change: 0 };
     },
     computed: {
-      need:  function() { return Game.game.player.ship.refuelUnits() },
-      have:  function() { return Game.game.player.ship.cargo.get('fuel') },
+      need:  function() { return game.player.ship.refuelUnits() },
+      have:  function() { return game.player.ship.cargo.count('fuel') },
       max:   function() { return Math.min(this.have, this.need) },
-      tank:  function() { return Math.min(Game.game.player.ship.tank, Game.game.player.ship.fuel + this.change) },
-      cargo: function() { return Game.game.player.ship.cargo.get('fuel') - this.change },
+      tank:  function() { return Math.min(game.player.ship.tank, game.player.ship.fuel + this.change) },
+      cargo: function() { return game.player.ship.cargo.count('fuel') - this.change },
     },
     methods: {
       fillHerUp: function() {
         if (this.change !== NaN && this.change > 0 && this.change <= this.max) {
-          Game.game.player.ship.refuel(this.change);
-          Game.game.player.ship.cargo.dec('fuel', this.change);
-          Game.game.turn();
-          Game.game.save_game();
-          Game.game.refresh();
+          game.player.ship.refuel(this.change);
+          game.player.ship.cargo.dec('fuel', this.change);
+          game.turn();
+          game.save_game();
+          game.refresh();
         }
       },
     },

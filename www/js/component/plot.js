@@ -4,7 +4,6 @@ define(function(require, exports, module) {
   const util    = require('util');
   const system  = require('system');
   const Physics = require('physics');
-  const Game    = require('game');
   const NavComp = require('navcomp');
 
   require('component/card');
@@ -45,7 +44,7 @@ define(function(require, exports, module) {
 
         plot[key].push(body);
 
-        if (body === Game.game.locus) {
+        if (body === game.locus) {
           selected = key;
         }
       }
@@ -56,7 +55,6 @@ define(function(require, exports, module) {
         visible:  visible,
         selected: selected,
         modal:    null,
-        plotted:  null,
         navComp:  new NavComp,
       };
     },
@@ -80,10 +78,10 @@ define(function(require, exports, module) {
       }
     },
     methods: {
-      returnToNav: function()     { Game.open('nav') },
-      place:       function(body) { return Game.game.place(body) },
+      returnToNav: function()     { game.open('nav') },
+      planet:      function(body) { return game.planets[body] },
       isSun:       function(body) { return body === 'sun' },
-      isHere:      function(body) { return body === Game.game.locus },
+      isHere:      function(body) { return body === game.locus },
 
       isNear: function(body) {
         if (this.isHere(body))
@@ -119,9 +117,8 @@ define(function(require, exports, module) {
       beginTransit: function(body, selected) {
         $('#spacer').data('info', this.navComp.transits[body][selected].transit);
         this.modal = null;
-        this.plotted = null;
         $('.modal-backdrop').remove(); // TODO make this less hacky
-        Game.open('transit');
+        game.open('transit');
         $('#spacer').data('state', 'transit');
       },
     },
@@ -152,14 +149,7 @@ define(function(require, exports, module) {
         </a>
       </span>
 
-      <modal v-if="modal" :title="label(modal)" nopad=true xclose=true close="Close" @close="modal=null">
-        <place-summary mini=true :place="place(modal)" class="m-0" />
-        <button v-if="!isHere(modal)" slot="footer" type="button" class="btn btn-dark" @click="plotted=modal">
-          Plot course
-        </button>
-      </modal>
-
-      <nav-plan v-if="plotted" @engage="beginTransit" @close="plotted=null" :body="plotted" :navcomp="navComp" />
+      <nav-plan v-if="modal" @engage="beginTransit" @close="modal=null" :body="modal" :navcomp="navComp" />
     </div>
   </div>
 </card>

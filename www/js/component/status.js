@@ -1,7 +1,6 @@
 define(function(require, exports, module) {
   const data    = require('data');
   const util    = require('util');
-  const Game    = require('game');
   const Physics = require('physics');
   const Vue     = require('vendor/vue');
 
@@ -19,7 +18,7 @@ define(function(require, exports, module) {
     },
     methods: {
       newGame: function() {
-        Game.open('newgame');
+        game.open('newgame');
       }
     },
     template: `
@@ -43,15 +42,15 @@ define(function(require, exports, module) {
     },
     methods: {
       factionStanding: function(faction) {
-        const label    = Game.game.player.getStandingLabel(faction);
-        const standing = Game.game.player.getStanding(faction);
+        const label    = game.player.getStandingLabel(faction);
+        const standing = game.player.getStanding(faction);
         return `${label} <span class="badge badge-pill">${standing}</span>`;
       },
       standing: function(faction) {
-        return Game.game.player.getStanding(faction);
+        return game.player.getStanding(faction);
       },
       label: function(faction) {
-        return Game.game.player.getStandingLabel(faction);
+        return game.player.getStandingLabel(faction);
       },
     },
     template: `
@@ -79,7 +78,8 @@ define(function(require, exports, module) {
       addons : function() {return this.ship.addons.map((a) => {return data.shipAddOns[a].name})},
       cargo  : function() {
         const cargo = [];
-        for (const [item, amt] of this.ship.cargo.entries()) {
+        for (const item of this.ship.cargo.keys) {
+          const amt = this.ship.cargo.get(item);
           if (amt === 0) continue;
           cargo.push({name: item, amount: amt, mass: data.resources[item].mass * amt});
         }
@@ -92,25 +92,25 @@ define(function(require, exports, module) {
   <card-header slot="header">
     <h3>Ship</h3>
   </card-header>
-  <def term="Class" :def="ship.opt.shipclass|caps" />
+  <def term="Class" :def="ship.type|caps" />
 
   <def term="Cargo">
     <div slot="def">
       {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
       <div v-if="ship.cargoUsed" v-for="item in cargo" :key="item.name">
-        {{item.amount|csn|unit('cu')}} of {{item.name}} ({{item.mass|csn|unit('tonnes')}})
+        {{item.amount|csn}} units of {{item.name}} ({{item.mass|csn}} tonnes)
       </div>
     </div>
   </def>
 
   <def term="Hull" :def="ship.hull" />
   <def term="Armor" :def="ship.armor" />
-  <def term="Hard points" :def="ship.hardPoints" />
+  <def term="Hard points" :def="ship.hardpoints" />
   <def term="Mass" :def="mass|unit('tonnes')" />
   <def term="Thrust" :def="thrust|unit('kN')" />
   <def term="Fuel" :def="tank|unit('tonnes')" />
   <def term="Range" :def="burn|unit('hours at maximum thrust')" />
-  <def term="Drive" :def="ship.shipclass.drives|unit(ship.shipclass.drive)" />
+  <def term="Drive" :def="ship.drives|unit(ship.drive.name)" />
 
   <def term="Upgrades">
     <ul slot="def" v-if="ship.addons.length > 0">
@@ -125,7 +125,7 @@ define(function(require, exports, module) {
   Vue.component('player-status', {
     computed: {
       person: function() {
-        return Game.game.player;
+        return game.player;
       }
     },
     template: `

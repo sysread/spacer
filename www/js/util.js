@@ -2,6 +2,12 @@ define(function(require, exports, module) {
   const data = require('data');
   const util = {};
 
+  util.shuffle = function(arr) {
+    return arr.sort((a, b) => {
+      return Math.random() > Math.random() ? 1 : -1;
+    });
+  };
+ 
   util.csn = function(num) {
     const sign = num < 0 ? '-' : '';
 

@@ -1,0 +1,109 @@
+<script type="text/javascript">
+
+var data;
+var model;
+var system;
+
+require(
+  [
+    'vendor/vue', 'data', 'util', 'system', 'model',
+    'component/common',
+    'component/card',
+    'component/row',
+  ],
+  function(Vue, data, util, sys, model) {
+    window.data = data;
+    window.model = model;
+    system = sys;
+
+    const app = new Vue({
+      el: '#test',
+      data: {
+        item: 'water',
+      },
+      computed: {
+        turns:     function() { return game.turns },
+        resources: function() { return Object.keys(data.resources) },
+        bodies:    function() { return Object.keys(game.planets) },
+        places:    function() { return Object.values(game.planets) },
+      },
+      methods: {
+        value: function() { if (this.item) return Resource.get(this.item).value },
+
+        gameTurns: function(turns) {
+          let left = turns;
+          let intvl;
+
+          intvl = window.setInterval(() => {
+            if (left > 0) {
+              const batch = Math.min(3, left);
+              left -= batch;
+
+              for (let i = 0; i < batch; ++i) {
+                game.turn(batch);
+              }
+            }
+            else {
+              window.clearInterval(intvl);
+              intvl = null;
+              console.log(turns, 'turns complete');
+            }
+
+            this.$forceUpdate();
+          }, 200);
+        },
+      },
+      template: `
+<card title="Testing">
+  <btn @click="gameTurns(1)">1 turns</btn>
+  <btn @click="gameTurns(3)">3 turns</btn>
+  <btn @click="gameTurns(9)">9 turns</btn>
+  <btn @click="gameTurns(30)">30 turns</btn>
+  <btn @click="gameTurns(90)">90 turns</btn>
+
+  <div class="my-3 input-group">
+    <h4 class="mx-1">Resource</h4>
+
+    <select v-model="item" class="form-control mx-1">
+      <option value="">Resource</option>
+      <option v-for="item in resources" :key="item" :value="item">{{item|caps}}</option>
+    </select>
+  </div>
+
+  <table v-if="item" class="table table-sm mini">
+    <thead>
+      <tr>
+        <th>Loc</th>
+        <th class="text-right">Price</th>
+        <th class="text-right">Stock</th>
+        <th class="text-right">Demand</th>
+        <th class="text-right">Supply</th>
+        <th class="text-right">Need</th>
+        <th class="text-right">Net</th>
+        <th class="text-right">Avg</th>
+      </tr>
+    </thead>
+    <tbody>
+      <template v-for="place in places">
+      <tr :class="{'bg-dark': place.isNetExporter(item)}">
+        <td>{{place.name|caps}}</td>
+        <td class="text-right">{{place.buyPrice(item)}}</td>
+        <td class="text-right">{{place.getStock(item)}}</td>
+        <td class="text-right">{{place.getDemand(item)|R(2)}}</td>
+        <td class="text-right">{{place.getSupply(item)|R(2)}}</td>
+        <td class="text-right" :class="{'text-success': place.hasSurplus(item), 'text-danger': place.hasShortage(item)}">{{place.getNeed(item)|R(2)}}</td>
+        <td class="text-right">{{place.netProduction(item)|R(2)}}</td>
+        <td class="text-right">{{place.avgProduction(item)|R(2)}}</td>
+      </tr>
+      </template>
+    </tbody>
+  </table>
+</card>
+      `,
+    });
+  }
+);
+
+</script>
+
+<div id="test"></div>

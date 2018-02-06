@@ -1,5 +1,4 @@
 define(function(require, exports, module) {
-  const Game = require('game');
   const Vue  = require('vendor/vue');
   const data = require('data');
   const util = require('util');
@@ -20,11 +19,11 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      place:     function() { return Game.game.here },
-      player:    function() { return Game.game.player },
-      price:     function() { return this.place.sellPrice(this.item) },
+      planet:    function() { return game.here },
+      player:    function() { return game.player },
+      price:     function() { return this.planet.sellPrice(this.item) },
       fee:       function() { return util.R(Math.max(1, util.R(data.craft_fee * this.price, 2))) },
-      turns:     function() { return this.place.fabricationTime(this.item) },
+      turns:     function() { return this.planet.fabricationTime(this.item) },
       hours:     function() { return data.hours_per_turn * this.turns },
       materials: function() { return data.resources[this.item].recipe.materials },
     },
@@ -39,17 +38,17 @@ define(function(require, exports, module) {
       fabricate: function() {
         for (let i = 0; i < this.count; ++i) {
           this.player.debit(this.fee);
-          this.place.fabricate(this.item);
+          this.planet.fabricate(this.item);
 
           for (const mat of Object.keys(this.materials))
             this.player.ship.unloadCargo(mat, this.materials[mat]);
 
-          Game.game.turn(this.turns);
+          game.turn(this.turns);
           this.player.ship.loadCargo(this.item, 1);
-          Game.game.refresh();
+          game.refresh();
         }
 
-        Game.game.save_game();
+        game.save_game();
         this.done = 1;
       },
 
@@ -60,7 +59,7 @@ define(function(require, exports, module) {
       },
 
       priceOf: function(item) {
-        return this.place.sellPrice(item);
+        return this.planet.sellPrice(item);
       },
     },
     template: `
@@ -93,9 +92,9 @@ define(function(require, exports, module) {
 
   Vue.component('fabricators', {
     computed: {
-      place:        function() { return Game.game.here },
-      player:       function() { return Game.game.player },
-      availability: function() { return this.place.fabricationAvailability() },
+      planet:       function() { return game.here },
+      player:       function() { return game.player },
+      availability: function() { return this.planet.fabricationAvailability() },
       resources:    function() { return Object.keys(data.resources).filter((k) => {return data.resources[k].hasOwnProperty('recipe')}) },
     },
     template: `

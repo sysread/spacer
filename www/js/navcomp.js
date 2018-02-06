@@ -1,15 +1,14 @@
 define(function(require, exports, module) {
   const data        = require('data');
   const system      = require('system');
-  const Game        = require('game');
   const Physics     = require('physics');
   const TransitPlan = require('transitplan');
 
   const NavComp = class {
     constructor() {
-      this.max  = Game.game.player.maxAcceleration();
-      this.ship = Game.game.player.ship;
-      this.orig = Game.game.place().name;
+      this.max  = game.player.maxAcceleration();
+      this.ship = game.player.ship;
+      this.orig = game.here.body;
     }
 
     get maxdv() { return Math.min(this.max, this.ship.currentAcceleration()) }

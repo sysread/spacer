@@ -1,8 +1,8 @@
 define(function(require, exports, module) {
-  const data = require('data');
-  const util = require('util');
-  const Game = require('game');
-  const Vue  = require('vendor/vue');
+  const data  = require('data');
+  const model = require('model');
+  const util  = require('util');
+  const Vue   = require('vendor/vue');
 
   require('component/common');
 
@@ -62,25 +62,25 @@ define(function(require, exports, module) {
   Vue.component('exchange', {
     props: ['store'],
     data: function() {
-      const resources = new util.ResourceCounter;
+      const resources = new model.Store;
 
-      for (const [item, amt] of Game.game.player.ship.cargo.entries()) {
-        resources.inc(item, amt);
+      for (const item of game.player.ship.cargo.keys) {
+        resources.inc(item, game.player.ship.cargo.count(item));
       }
 
-      for (const [item, amt] of this.store.entries()) {
-        resources.inc(item, amt);
+      for (const item of this.store.keys) {
+        resources.inc(item, this.store.count(item));
       }
 
       return {
-        cargo:     Game.game.player.ship.cargo,
+        cargo: game.player.ship.cargo,
         resources: resources,
       };
     },
     computed: {
-      cargoSpace: function() {return Game.game.player.ship.cargoSpace},
-      cargoUsed:  function() {return Game.game.player.ship.cargoUsed},
-      cargoLeft:  function() {return Game.game.player.ship.cargoLeft},
+      cargoSpace: function() {return game.player.ship.cargoSpace},
+      cargoUsed:  function() {return game.player.ship.cargoUsed},
+      cargoLeft:  function() {return game.player.ship.cargoLeft},
     },
     methods: {
       update: function(item, amt) {
@@ -92,17 +92,17 @@ define(function(require, exports, module) {
 
         this.store.set(item, this.resources.get(item) - amt);
         this.cargo.set(item, amt);
-        Game.game.refresh();
+        game.refresh();
       },
     },
     template: `
 <div>
   <def brkpt="sm" term="Cargo"><span slot="def">{{cargoUsed}} / {{cargoSpace}}</span></def>
-  <def v-for="item of resources.keys()" :key="item" brkpt="sm" v-if="resources.get(item) > 0">
+  <def v-for="item of resources.keys" :key="item" brkpt="sm" v-if="resources.count(item) > 0">
     <span slot="term" class="text-capitalize">{{item}}</span>
     <slider slot="def" @update:value="amt => update(item, amt)" minmax=true :value="cargo.get(item)" min=0 :max="resources.get(item)">
-      <span class="btn btn-dark" slot="pre">{{store.get(item)}}</span>
-      <span class="btn btn-dark" slot="post">{{cargo.get(item)}}</span>
+      <span class="btn btn-dark" slot="pre">{{store.count(item)}}</span>
+      <span class="btn btn-dark" slot="post">{{cargo.count(item)}}</span>
     </slider>
   </def>
 </div>

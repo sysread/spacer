@@ -2,60 +2,36 @@ define(function(require, exports, module) {
   const data    = require('data');
   const util    = require('util');
   const Physics = require('physics');
-  const Game    = require('game');
+  const model   = require('model');
 
   return class {
-    constructor(opt) {
-      this.opt    = opt || {};
-      this.fuel   = opt.fuel || data.shipclass[opt.shipclass].tank;
-      this.addons = new Array;
-      this.cargo  = new util.ResourceCounter;
-      this.damage = {
-        hull   : 0,
-        armor  : 0,
-        drives : 0,
-      };
-    }
+    constructor(init) {
+      init = init || {'type': 'shuttle'};
 
-    save() {
-      return {
-        opt    : this.opt,
-        fuel   : this.fuel,
-        addons : this.addons,
-        cargo  : this.cargo.save(),
-        damage : this.damage,
-      };
-    }
+      this.type         = init.type;
+      this.shipclass    = data.shipclass[this.type];
+      this.hardpoints   = this.shipclass.hardpoints;
+      this.drive        = data.drives[this.shipclass.drive];
+      this.drives       = this.shipclass.drives;
+      this.driveMass    = this.drives * this.drive.mass;
+      this.mass         = this.shipclass.mass + this.driveMass;
+      this.tank         = this.shipclass.tank;
+      this.restricted   = this.shipclass.restricted;
+      this.faction      = this.shipclass.faction;
+      this.thrust       = this.drives * this.drive.thrust;
+      this.acceleration = Physics.deltav(this.thrust, this.mass);
 
-    load(info) {
-      this.opt    = info.opt;
-      this.fuel   = info.fuel;
-      this.addons = info.addons;
-      this.cargo.load(info.cargo);
-      this.damage = info.damage;
+      this.addons = init.addons || [];
+      this.damage = init.damage || {hull: 0, armor: 0, drives: 0};
+      this.fuel   = init.fuel   || this.tank;
+      this.cargo  = new model.Store(init.cargo);
     }
-
-    /*
-     * Shipclass properties or those derived from them
-     */
-    get type()         { return this.opt.shipclass }
-    get shipclass()    { return data.shipclass[this.opt.shipclass] }
-    get tank()         { return this.shipclass.tank }
-    get drive()        { return data.drives[this.shipclass.drive] }
-    get drives()       { return this.shipclass.drives }
-    get driveMass()    { return this.drives * this.drive.mass }
-    get mass()         { return this.shipclass.mass + this.driveMass }
-    get thrust()       { return this.shipclass.drives * this.drive.thrust }
-    get acceleration() { return Physics.deltav(this.thrust, this.mass) }
-    get hardPoints()   { return this.shipclass.hardpoints }
-    get isRestricted() { return this.shipclass.restricted }
-    get faction()      { return this.shipclass.faction || null }
 
     get cargoSpace() {
       let space = this.shipclass.cargo;
 
-      for (let addon of this.addons) {
-        if (data.shipAddOns[addon].hasOwnProperty('cargo')) {
+      for (const addon of this.addons) {
+        if (data.shipAddOns[addon].cargo) {
           space += data.shipAddOns[addon].cargo;
         }
       }
@@ -107,8 +83,8 @@ define(function(require, exports, module) {
     /*
      * Methods
      */
-    isPlayerShipType()  { return this.type === Game.game.player.ship.type }
-    playerHasStanding() { return !this.isRestricted || Game.game.player.hasStanding(Game.game.place().faction, this.isRestricted) }
+    isPlayerShipType()  { return this.type === game.player.ship.type }
+    playerHasStanding() { return !this.restricted || game.player.hasStanding(game.here.faction.abbrev, this.restricted) }
 
     thrustRatio(deltav, mass) {
       if (mass === undefined) mass = this.currentMass();
@@ -132,9 +108,12 @@ define(function(require, exports, module) {
     }
 
     cargoMass() {
-      let m = 0;
-      this.cargo.each((item, amt) => {m += data.resources[item].mass * amt});
-      return m;
+      let mass = 0;
+      for (const item of this.cargo.keys) {
+        mass += data.resources[item].mass * this.cargo.get(item);
+      }
+
+      return mass;
     }
 
     addOnMass() {
@@ -219,23 +198,22 @@ define(function(require, exports, module) {
     }
 
     cargoValue() {
-      let place = Game.game.place();
       let price = 0;
-      this.cargo.each((item, amt) => {price += place.sellPrice(item) * amt});
+      for (const item of this.cargo.keys) {
+        price += this.cargo.count(item) * game.here.sellPrice(item);
+      }
+
       return price;
     }
 
     fuelValue() {
-      let place = Game.game.place();
-      return place.sellPrice('fuel') * Math.floor(this.fuel);
+      return game.here.sellPrice('fuel') * Math.floor(this.fuel);
     }
 
     addOnValue() {
-      let price = 0;
-      for (let addon of this.addons) {
-        price += data.shipAddOns[addon].price;
-      }
-      return price;
+      return this.addons.reduce((a, b) => {
+        return a + data.shipAddOns.price;
+      }, 0);
     }
 
     price(tradein) {
@@ -247,7 +225,7 @@ define(function(require, exports, module) {
     }
 
     availableHardPoints() {
-      return this.hardPoints - this.addons.length;
+      return this.hardpoints - this.addons.length;
     }
 
     installAddOn(addon) {

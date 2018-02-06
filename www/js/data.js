@@ -10,20 +10,19 @@ define(function() {
     start_date:         new Date(2242, 0, 1, 1),
     hours_per_turn:     hoursPerTurn,
     initial_days:       2 * 365,
-    initial_stock:      10,
+    initial_stock:      20,
     market_history:     10 * turnsPerDay,
     update_prices:      10, // days between price updates
     base_unit_price:    30,
-    scarcity_markup:    0.1,
+    scarcity_markup:    0.25,
     necessity:          {water: true, food: true, medicine: true, fuel: true},
     craft_fee:          0.05,
-    fabricators:        40,
-    fab_health:         30,
+    fabricators:        10, // number of fabricators, each equates to 1 unit of cybernetics
+    fab_health:         30, // number of tics each fabricator can handle before needing to be replaced. be sure to make this higher than the total tics needed to craft a cybernetics unit.
     grav_deltav_factor: 5, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
     initial_ship:       'runner',
     jurisdiction:       0.01, // au from body
     max_abs_standing:   100,
-    min_delivery_amt:   4,
 
     scales: {
       tiny:   0.6,
@@ -34,58 +33,51 @@ define(function() {
     },
 
     resources: {
-      water:        {mass: 5, mine: {tics: 1}},
+      water:        {mass: 5,  mine: {tics: 1}},
       ore:          {mass: 25, mine: {tics: 2}},
       minerals:     {mass: 10, mine: {tics: 2}},
       hydrocarbons: {mass: 2,  mine: {tics: 2}},
-      food:         {mass: 5, mine: {tics: 4}, recipe: {tics: 3, materials: {water: 1, hydrocarbons: 1}}},
+      food:         {mass: 5,  mine: {tics: 2}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 1}}},
       fuel:         {mass: 1,  recipe: {tics: 2, materials: {ore: 1}}},
-      metal:        {mass: 40, recipe: {tics: 2, materials: {ore: 2, minerals: 1}}},
-      ceramics:     {mass: 10, recipe: {tics: 3, materials: {ore: 1, minerals: 1}}},
-      medicine:     {mass: 2, recipe: {tics: 4, materials: {food: 1, hydrocarbons: 1}}},
-      machines:     {mass: 30, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}},
-      electronics:  {mass: 10, recipe: {tics: 5, materials: {ceramics: 2, metal: 1}}},
-      cybernetics:  {mass: 40, recipe: {tics: 6, materials: {machines: 2, electronics: 2}}},
-      narcotics:    {mass: 2, recipe: {tics: 2, materials: {medicine: 2}}, contraband: 5},
+      metal:        {mass: 40, recipe: {tics: 2, materials: {ore: 2}}},
+      ceramics:     {mass: 10, recipe: {tics: 2, materials: {minerals: 2}}},
+      medicine:     {mass: 2,  recipe: {tics: 3, materials: {food: 1, hydrocarbons: 1}}},
+      machines:     {mass: 30, recipe: {tics: 3, materials: {metal: 2}}},
+      electronics:  {mass: 10, recipe: {tics: 3, materials: {ceramics: 2}}},
+      cybernetics:  {mass: 40, recipe: {tics: 4, materials: {machines: 1, electronics: 1}}},
+      narcotics:    {mass: 2,  recipe: {tics: 2, materials: {medicine: 2}}, contraband: 5},
       weapons:      {mass: 10, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}, contraband: 7},
     },
 
     market: {
-      agents:      5,
-      fabricators: 2,
-      minability:  0.2,
+      agents:      4,
+      fabricators: 10,
+      minability:  0.1,
       produces:    {},
-      consumes:    {water: 0.5, food: 0.65, medicine: 0.3, narcotics: 0.1, weapons: 0.2},
+      consumes:    {water: 2, food: 1.5, medicine: 1, narcotics: 0.3, weapons: 0.6},
     },
 
     traits: {
-      'mineral rich':     {produces: {ore: 2.0, minerals: 1.0}, consumes: {}},
-      'mineral poor':     {produces: {ore: -1.0, minerals: -0.5}, consumes: {}},
+      'mineral rich':     {produces: {ore: 4, minerals: 2}, consumes: {}},
+      'mineral poor':     {produces: {ore: -4, minerals: -2}, consumes: {}},
 
-      'water rich':       {produces: {water: 2.0}, consumes: {}},
-      'water poor':       {produces: {water: -1.0}, consumes: {}},
+      'water rich':       {produces: {water: 1}, consumes: {}},
+      'water poor':       {produces: {water: -1}, consumes: {}},
 
-      'hydrocarbon rich': {produces: {hydrocarbons: 1.0, minerals: 0.2}, consumes: {}},
-      'hydrocarbon poor': {produces: {hydrocarbons: -0.5, minerals: -0.2}, consumes: {}},
+      'hydrocarbon rich': {produces: {hydrocarbons: 1}, consumes: {}},
+      'hydrocarbon poor': {produces: {hydrocarbons: -1}, consumes: {}},
 
-      'rocky':            {produces: {ore: 4.0, minerals: 1.0} , consumes: {}},
-      'icy':              {produces: {water: 3.0, minerals: 0.5, hydrocarbons: 0.5}, consumes: {}},
+      'rocky':            {produces: {ore: 5, minerals: 2} , consumes: {}},
+      'icy':              {produces: {water: 3, minerals: 1, hydrocarbons: 1}, consumes: {}},
 
-      'asteroids':        {produces: {ore: 8.0, minerals: 2.5}, consumes: {fuel: 0.5}},
-      'ringed system':    {produces: {water: 7.0, minerals: 1.5, hydrocarbons: 1.0}, consumes: {fuel: 0.5}},
+      'asteroids':        {produces: {ore: 10, minerals: 7}, consumes: {fuel: 1.5, electronics: 0.3, machines: 1, cybernetics: 0.3}},
+      'ringed system':    {produces: {water: 6, minerals: 2, hydrocarbons: 1}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
 
-      'agricultural':     {produces: {food: 3.0, hydrocarbons: 2}, consumes: {machines: 0.2, fuel: 0.1, water: 0.5, hydrocarbons: 0.5}},
-      'habitable':        {produces: {food: 5.0, hydrocarbons: 3.0}, consumes: {}},
-      'domed':            {produces: {food: 2.0, hydrocarbons: 1.0}, consumes: {metal: 0.2, fuel: 0.2, electronics: 0.05, machines: 0.05, water: 0.25, hydrocarbons: 0.25}},
-      'subterranean':     {produces: {food: 0.3, hydrocarbons: 0.2}, consumes: {metal: 0.2, fuel: 0.1, electronics: 0.1, machines: 0.1, water: 0.1, hydrocarbons: 0.1}},
-      'orbital':          {produces: {food: 0.2, hydrocarbons: 0.1}, consumes: {metal: 0.35, fuel: 0.5, electronics: 0.2, machines: 0.2, water: 0.05, hydrocarbons: 0.05}}
-    },
-
-    conditions: {
-      drought: {produces: {}, consumes: {}},
-      famine:  {produces: {}, consumes: {}},
-      plague:  {produces: {}, consumes: {}},
-      war:     {produces: {}, consumes: {}},
+      'agricultural':     {produces: {food: 8, hydrocarbons: 0.5}, consumes: {machines: 0.5, fuel: 0.5, water: 2, hydrocarbons: 4}},
+      'habitable':        {produces: {food: 6, hydrocarbons: 3}, consumes: {food: 4, narcotics: 0.25, weapons: 0.5}},
+      'domed':            {produces: {food: 1, hydrocarbons: 1}, consumes: {metal: 0.6, fuel: 0.6, electronics: 0.5, machines: 0.5, water: 0.75, hydrocarbons: 0.75, weapons: 0.5}},
+      'subterranean':     {produces: {food: 0.75, hydrocarbons: 0.5}, consumes: {metal: 0.6, fuel: 0.3, electronics: 0.5, machines: 0.5, water: 0.3, hydrocarbons: 1, weapons: 0.35}},
+      'orbital':          {produces: {food: 0.5, hydrocarbons: 0.25}, consumes: {metal: 1, fuel: 1.5, electronics: 0.75, machines: 0.75, water: 0.15, hydrocarbons: 0.5, weapons: 0.2}}
     },
 
     // TODO: risk of injury
@@ -167,23 +159,23 @@ define(function() {
         capital:   'Earth',
         sales_tax: 0.105,
         patrol:    0.15,
-        produces:  {},
-        consumes:  {narcotics: 0.1, food: 0.25},
+        produces:  {electronics: 0.3, cybernetics: 0.1, medicine: 0.5},
+        consumes:  {},
       },
       'MC': {
         full_name: 'Martian Commonwealth',
         capital:   'Mars',
         sales_tax: 0.085,
         patrol:    0.10,
-        produces:  {machines: 0.1, electronics: 0.1},
-        consumes:  {food: 0.1},
+        produces:  {machines: 0.2, electronics: 0.2, weapons: 0.2, metal: 0.2},
+        consumes:  {},
       },
       'CERES': {
         full_name: 'The Most Serene Republic of Ceres',
         capital:   'Ceres',
         sales_tax: 0.04,
         patrol:    0.05,
-        produces:  {},
+        produces:  {fuel: 0.3, machines: 0.2},
         consumes:  {},
       },
       'JFT': {
@@ -191,16 +183,16 @@ define(function() {
         capital:   'Ganymede',
         sales_tax: 0.065,
         patrol:    0.05,
-        produces:  {},
-        consumes:  {fuel: 0.5},
+        produces:  {fuel: 0.5, food: 0.25, metal: 0.1, ceramics: 0.1},
+        consumes:  {},
       },
       'TRANSA': {
         full_name: 'Trans-Neptunian Authority',
         capital:   'Pluto',
         sales_tax: 0.0175,
         patrol:    0.0,
-        produces:  {narcotics: 0.5},
-        consumes:  {weapons: 0.5},
+        produces:  {fuel: 0.5, narcotics: 0.5, weapons: 0.5},
+        consumes:  {},
       },
     },
 

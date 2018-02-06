@@ -1,5 +1,4 @@
 define(function(require, exports, module) {
-  const Game    = require('game');
   const Npc     = require('npc');
   const Physics = require('physics');
   const Vue     = require('vendor/vue');
@@ -44,10 +43,10 @@ define(function(require, exports, module) {
           }
           else {
             const count = Math.min(this.plan.left, this.batch);
-            Game.game.turn(count);
+            game.turn(count);
 
             for (let i = 0; i < count; ++i) {
-              Game.game.player.ship.burn(this.plan.accel);
+              game.player.ship.burn(this.plan.accel);
               this.plan.turn();
             }
 
@@ -58,8 +57,8 @@ define(function(require, exports, module) {
           window.clearTimeout(this.timer);
           this.timer = null;
           $('#spacer').data({state: null, data: null});
-          Game.game.transit(this.plan.dest);
-          Game.open('summary');
+          game.transit(this.plan.dest);
+          game.open('summary');
         }
       },
 
@@ -104,7 +103,7 @@ define(function(require, exports, module) {
         for (const body of Object.keys(ranges)) {
           const km = Math.floor(ranges[body] / 1000);
 
-          if (Game.game.place(body).inspectionChance(km)) {
+          if (game.planets[body].faction.inspectionChance(km)) {
             const faction = data.bodies[body].faction;
 
             if (this.stoppedBy[faction]) {
@@ -212,9 +211,9 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      place: function() { return Game.game.place(this.body) },
-      bribeAmount: function() { return Math.ceil(Game.game.player.ship.price() * 0.03) },
-      canAffordBribe: function() { return this.bribeAmount <= Game.game.player.money },
+      planet: function() { return game.planets[this.body] },
+      bribeAmount: function() { return Math.ceil(game.player.ship.price() * 0.03) },
+      canAffordBribe: function() { return this.bribeAmount <= game.player.money },
     },
     methods: {
       setChoice(choice) {
@@ -223,21 +222,21 @@ define(function(require, exports, module) {
 
       submit: function() {
         let fine = 0;
-        for (const [item, amt] of Game.game.player.ship.cargo.entries()) {
+        for (const [item, amt] of game.player.ship.cargo.entries()) {
           if (data.resources[item].contraband) {
-            fine += amt * this.place.inspectionFine();
+            fine += amt * this.planet.faction.inspectionFine();
           }
         }
 
-        this.fine = Math.min(fine, Game.game.player.money);
+        this.fine = Math.min(fine, game.player.money);
 
         if (this.fine > 0) {
-          Game.game.player.debit(this.fine);
+          game.player.debit(this.fine);
 
-          for (const [item, amt] of Game.game.player.ship.cargo.entries()) {
+          for (const [item, amt] of game.player.ship.cargo.entries()) {
             if (amt > 0 && data.resources[item].contraband) {
-              Game.game.player.ship.cargo.set(item, 0);
-              Game.game.player.decStanding(this.faction, data.resources[item].contraband);
+              game.player.ship.cargo.set(item, 0);
+              game.player.decStanding(this.faction, data.resources[item].contraband);
             }
           }
 
@@ -249,14 +248,14 @@ define(function(require, exports, module) {
       },
 
       bribe: function() {
-        Game.game.player.debit(this.bribeAmount);
+        game.player.debit(this.bribeAmount);
         this.done();
       },
 
       flee: function() {
         $('#spacer').data({state: null, data: null});
         window.localStorage.removeItem('game');
-        Game.open('newgame');
+        game.open('newgame');
       },
 
       done: function() {

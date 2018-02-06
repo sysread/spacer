@@ -1,5 +1,4 @@
 define(function(require, exports, module) {
-  const Game    = require('game');
   const Physics = require('physics');
   const Ship    = require('ship');
   const Vue     = require('vendor/vue');
@@ -12,7 +11,6 @@ define(function(require, exports, module) {
   require('component/modal');
   require('component/row');
 
-
   Vue.component('ships', {
     computed: { ships: function() { return Object.keys(data.shipclass) } },
     methods: { returnToShipyard: function() { Game.open('shipyard') } },
@@ -24,37 +22,36 @@ define(function(require, exports, module) {
     `,
   });
 
-
   Vue.component('ship', {
     props: ['type'],
     data: function() { return { detail: false, buy: false } },
     methods: {
       completeTradeIn: function() {
-        Game.game.player.credit(this.playerShipValue);
-        Game.game.player.debit(this.price);
-        Game.game.player.ship = this.ship;
-        Game.game.turn();
-        Game.game.save_game();
+        game.player.credit(this.playerShipValue);
+        game.player.debit(this.price);
+        game.player.ship = this.ship;
+        game.turn();
+        game.save_game();
       },
     },
     computed: {
       // Pricing and availability
-      place:           function() { return Game.game.place() },
-      player:          function() { return Game.game.player },
+      planet:          function() { return game.here },
+      player:          function() { return game.player },
       playerShipValue: function() { return this.player.ship.price(true) },
       tradeIn:         function() { return this.price - this.playerShipValue },
       shipClass:       function() { return data.shipclass[this.type] },
-      ship:            function() { return new Ship({shipclass: this.type, fuel: this.shipClass.tank}) },
+      ship:            function() { return new Ship({type: this.type}) },
       isPlayerShip:    function() { return this.ship.isPlayerShipType() },
-      isNonFaction:    function() { return this.ship.faction && this.place.faction != this.ship.faction },
+      isNonFaction:    function() { return this.ship.faction && this.planet.faction != this.ship.faction },
       isRestricted:    function() { return !this.ship.playerHasStanding() },
       canAfford:       function() { return this.player.money >= this.tradeIn },
       isAvailable:     function() { return !this.isPlayerShip && !this.isNonFaction && !this.isRestricted && this.canAfford },
 
       price: function() {
         let price = this.ship.price();
-        price -= price * this.player.getStandingPriceAdjustment(this.place.faction);
-        price += price * this.place.sales_tax;
+        price *= 1 + this.player.getStandingPriceAdjustment(this.planet.faction.abbr);
+        price *= 1 + this.planet.faction.sales_tax;
         return Math.ceil(price);
       },
 
@@ -98,7 +95,8 @@ define(function(require, exports, module) {
     <def y=1 brkpt="sm" term="Price">
       <span slot="def">
         {{price|csn|unit('c')}}
-        ({{tradeIn|csn|unit('c')}} after trade in)
+        <span v-if="tradeIn >= 0">({{tradeIn|csn|unit('c')}} after trade in)</span>
+        <span v-if="tradeIn < 0">({{-tradeIn|csn|unit('c')}} profit after trade in)</span>
       </span>
     </def>
 

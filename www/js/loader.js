@@ -1,6 +1,6 @@
 requirejs.config({baseUrl: 'js'});
 
-requirejs(['game'], function(game) {
+requirejs(['game'], function(Game) {
   function onDeviceReady() {
     if (StatusBar.isVisible) {
       StatusBar.hide();
@@ -24,6 +24,8 @@ requirejs(['game'], function(game) {
     });
 
     FastClick.attach(document.body);
+
+    window.game = new Game;
   }
 
   document.addEventListener("deviceready", onDeviceReady, false);

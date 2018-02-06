@@ -96,7 +96,7 @@ define(function(require, exports, module) {
     }
 
     ranges(point) {
-      let ranges = {};
+      const ranges = {};
 
       for (const body of this.bodies()) {
         ranges[body] = Physics.distance(point, this.position(body));
@@ -108,8 +108,8 @@ define(function(require, exports, module) {
     closestBodyToPoint(point) {
       let dist, closest;
 
-      for (let body of this.bodies()) {
-        let d = Physics.distance(point, this.position(body));
+      for (const body of this.bodies()) {
+        const d = Physics.distance(point, this.position(body));
         if (dist === undefined || d < dist) {
           dist = d;
           closest = body;

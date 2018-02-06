@@ -5,43 +5,23 @@ define(function(require, exports, module) {
   const Physics = require('physics');
 
   return class {
-    constructor(opt) {
-      opt = opt || {};
-      this.name     = opt.name;
-      this.home     = opt.home;
-      this.faction  = opt.faction;
-      this.money    = opt.money || 1000;
-      this.ship     = opt.ship  || new Ship({shipclass: 'shuttle'});
-      this.standing = {};
+    constructor(init) {
+      init = init || {};
+      this.name     = init.name;
+      this.home     = init.home;
+      this.faction  = init.faction;
+      this.money    = init.money || 1000;
+      this.ship     = new Ship(init.ship);
+      this.standing = init.standing || {};
 
       // Set default values for faction standing at neutral
       for (let faction of Object.keys(data.factions)) {
-        this.standing[faction] = 0;
+        this.standing[faction] = this.standing[faction] || 0;
       }
 
       // Initial value player's for own faction is "Friendly" with a small amount
       // extra as a margin of forgiveness.
-      this.standing[this.faction] = 15;
-    }
-
-    save() {
-      return {
-        name     : this.name,
-        home     : this.home,
-        faction  : this.faction,
-        money    : this.money,
-        ship     : this.ship.save(),
-        standing : this.standing,
-      };
-    }
-
-    load(obj) {
-      this.name     = obj.name;
-      this.home     = obj.home;
-      this.faction  = obj.faction;
-      this.money    = obj.money;
-      this.standing = obj.standing || {};
-      this.ship.load(obj.ship);
+      this.standing[this.faction] = this.standing[this.faction] || 15;
     }
 
     canCraft(item) {

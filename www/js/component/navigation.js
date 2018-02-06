@@ -4,7 +4,6 @@ define(function(require, exports, module) {
   const util    = require('util');
   const system  = require('system');
   const Physics = require('physics');
-  const Game    = require('game');
   const NavComp = require('navcomp');
 
   require('component/common');
@@ -12,6 +11,7 @@ define(function(require, exports, module) {
   require('component/modal');
   require('component/exchange');
   require('component/summary');
+  require('component/commerce');
 
   Vue.component('nav-list', {
     data: function() {
@@ -22,23 +22,22 @@ define(function(require, exports, module) {
     },
     computed: {
       /* Introductory text */
-      playerHome:        function(){ return data.bodies[Game.game.player.home].name },
-      playerHomeGravity: function(){ return data.bodies[Game.game.player.home].gravity },
-      playerDeltaV:      function(){ return util.R(Game.game.player.maxAcceleration() / Physics.G, 3) },
-      shipDeltaV:        function(){ return util.R(Game.game.player.shipAcceleration() / Physics.G, 3) },
-      shipMass:          function(){ return util.csn(util.R(Game.game.player.ship.currentMass())) },
-      shipFuelMass:      function(){ return util.R(Game.game.player.ship.fuel, 3) },
-      shipBurnTime:      function(){ return Game.game.player.ship.maxBurnTime() * data.hours_per_turn },
+      player:            function(){ return game.player },
+      playerDeltaV:      function(){ return util.R(game.player.maxAcceleration() / Physics.G, 3) },
+      shipDeltaV:        function(){ return util.R(game.player.shipAcceleration() / Physics.G, 3) },
+      shipMass:          function(){ return util.csn(util.R(game.player.ship.currentMass())) },
+      shipFuelMass:      function(){ return util.R(game.player.ship.fuel, 3) },
+      shipBurnTime:      function(){ return game.player.ship.maxBurnTime() * data.hours_per_turn },
       systemBodies:      function(){ return system.bodies() },
-      playerLocus:       function(){ return Game.game.locus },
+      playerLocus:       function(){ return game.locus },
     },
     methods: {
-      openPlot: function() { Game.open('plot') },
+      openPlot: function() { game.open('plot') },
       beginTransit: function(body, selected) {
         $('#spacer').data('info', this.navComp.transits[body][selected].transit);
         this.opened = null;
         $('.modal-backdrop').remove(); // TODO make this less hacky
-        Game.open('transit');
+        game.open('transit');
         $('#spacer').data('state', 'transit');
       },
     },
@@ -52,14 +51,14 @@ define(function(require, exports, module) {
   </card-header>
 
   <card-text>Your navigational computer automatically calculates the optimal trajectory from your current location to the other settlements in the system.</card-text>
-  <card-text>Being born on {{playerHome}}, your body is adapted to {{playerHomeGravity}}G, allowing you to endure a sustained burn of {{playerDeltaV}}G.</card-text>
+  <card-text>Being born on {{player.home.name}}, your body is adapted to {{player.home.gravity}}G, allowing you to endure a sustained burn of {{playerDeltaV}}G.</card-text>
   <card-text>Your ship is capable of {{shipDeltaV}}Gs of acceleration with her current load out ({{shipMass}} metric tonnes). With {{shipFuelMass}} tonnes of fuel, your ship has a maximum burn time of {{shipBurnTime}} hours at maximum thrust.</card-text>
 
   <nav-dest
     v-for="body of systemBodies"
     v-if="body !== playerLocus"
     :key="body"
-    :place="body"
+    :planet="body"
     :opened.sync="opened" />
 
   <nav-plan v-if="opened" @engage="beginTransit" @close="opened=null" :body="opened" :navcomp="navComp" />
@@ -68,15 +67,15 @@ define(function(require, exports, module) {
   });
 
   Vue.component('nav-dest', {
-    props: ['place', 'disabled'],
+    props: ['planet', 'disabled'],
     computed: {
-      name:    function(){ return system.short_name(this.place) },
-      faction: function(){ return system.faction(this.place) },
-      kind:    function(){ return system.kind(this.place) },
-      type:    function(){ return system.type(this.place) },
+      name:    function(){ return system.short_name(this.planet) },
+      faction: function(){ return system.faction(this.planet) },
+      kind:    function(){ return system.kind(this.planet) },
+      type:    function(){ return system.type(this.planet) },
       isMoon:  function(){ return this.type === 'moon' },
       dist:    function(){
-        let au = Math.round(system.distance(Game.game.locus, this.place) / Physics.AU * 100) / 100;
+        let au = Math.round(system.distance(game.locus, this.planet) / Physics.AU * 100) / 100;
         return (au < 0.01) ? '< 0.01' : au;
       },
     },
@@ -84,7 +83,7 @@ define(function(require, exports, module) {
 <div class="row">
   <div class="col col-sm-6 py-2">
     <button
-      @click="$emit('update:opened', place)"
+      @click="$emit('update:opened', planet)"
       type="button"
       class="btn btn-dark btn-block text-left"
       :class="{'btn-dark': !disabled, 'disabled': disabled}">
@@ -111,14 +110,15 @@ define(function(require, exports, module) {
       return {
         routes:   this.navcomp.transits[this.body],
         selected: fastest ? fastest.index : 0,
-        info:     false,
+        info:     this.body === game.locus,
         market:   false,
       };
     },
     computed: {
+      isRemote:    function(){ return this.body !== game.locus },
       hasRoute:    function(){ return this.routes.length > 0 },
-      place:       function(){ return Game.game.place(this.body) },
-      destination: function(){ return system.name(this.body) },
+      planet:      function(){ return game.planets[this.body] },
+      destination: function(){ return this.planet.name },
       route:       function(){ if (this.hasRoute) return this.routes[this.selected] },
       plan:        function(){ if (this.hasRoute) return this.route.transit },
       distance:    function(){ if (this.hasRoute) return `${Math.round(this.plan.au * 100) / 100} AU (${util.csn(Math.round(this.plan.km))} km)`},
@@ -137,7 +137,7 @@ define(function(require, exports, module) {
 <modal @close="$emit('close')" :title="destination" close="Cancel">
   <div slot="header" class="float-right">
     <div class="input-group">
-      <span class="input-group-btn"><btn @click="market=false;info=false">&#8982;</btn></span>
+      <span v-if="isRemote" class="input-group-btn"><btn @click="market=false;info=false">&#8982;</btn></span>
       <span class="input-group-btn"><btn @click="market=false;info=!info">?</btn></span>
       <span class="input-group-btn"><btn @click="info=false;market=!market">$</btn></span>
     </div>
@@ -147,8 +147,8 @@ define(function(require, exports, module) {
     Engage
   </btn>
 
-  <place-summary v-if="info" mini=true :place="place" />
-  <market-summary v-if="market" :body="place.name" />
+  <planet-summary v-if="info" mini=true :planet="planet" />
+  <market-report v-if="market" :body="body" />
 
   <div v-if="!market && !info">
     <div v-if="hasRoute">
