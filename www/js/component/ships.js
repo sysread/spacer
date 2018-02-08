@@ -13,7 +13,7 @@ define(function(require, exports, module) {
 
   Vue.component('ships', {
     computed: { ships: function() { return Object.keys(data.shipclass) } },
-    methods: { returnToShipyard: function() { Game.open('shipyard') } },
+    methods: { returnToShipyard: function() { game.open('shipyard') } },
     template: `
 <card title="Ships">
   <btn slot="header" @click="returnToShipyard">Back to shipyard</btn>
@@ -83,6 +83,7 @@ define(function(require, exports, module) {
       <span v-else-if="isRestricted">
         Your reputation with this faction precludes the sale of this ship to you.
         That does not prevent you from salivating from the show room window, however.
+        <span v-if="!canAfford">Not that you could afford it anyway.</span>
       </span>
       <span v-else-if="isPlayerShip">You already own a ship of this class.</span>
       <span v-else-if="!canAfford">You cannot afford this ship.</span>

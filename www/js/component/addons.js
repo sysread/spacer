@@ -13,7 +13,7 @@ define(function(require, exports, module) {
 
   Vue.component('addons', {
     computed: { addons: function() { return Object.keys(data.shipAddOns) } },
-    methods: { returnToShipyard: function() { Game.open('shipyard') } },
+    methods: { returnToShipyard: function() { game.open('shipyard') } },
     template: `
 <card title="Equipment and upgrades">
   <btn slot="header" @click="returnToShipyard">Back to shipyard</btn>
