@@ -131,11 +131,13 @@ body {
 }
 
 .plot-point {
-  font-size: 1.7em;
-  line-height: 0.6 !important;
-  padding: 1px 2px;
-  vertical-align: middle;
   position: absolute;
+  font-size: 10px;
+  line-height: 40px !important;
+}
+
+.plot-point.big {
+  font-size: 30px;
 }
 
 .plot-point:hover {

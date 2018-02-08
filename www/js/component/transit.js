@@ -23,9 +23,6 @@ define(function(require, exports, module) {
     },
     computed: {
       destination: function() { return system.name(this.plan.dest) },
-      progress:    function() { return util.R(this.plan.pct_complete) },
-      display:     function() { return this.progress + '%' },
-      batch:       function() { return Math.ceil(this.plan.turns / 100) },
     },
     methods: {
       schedule: function() {
@@ -33,7 +30,7 @@ define(function(require, exports, module) {
         this.velocity = this.plan.velocity;
         this.daysLeft = Math.floor(this.plan.left * data.hours_per_turn / 24);
         this.distance = util.R(this.plan.auRemaining(), 2);
-        return window.setTimeout(() => { this.turn() }, 100);
+        return window.setTimeout(() => { this.turn() }, 30);
       },
 
       turn: function() {
@@ -42,14 +39,9 @@ define(function(require, exports, module) {
             return;
           }
           else {
-            const count = Math.min(this.plan.left, this.batch);
-            game.turn(count);
-
-            for (let i = 0; i < count; ++i) {
-              game.player.ship.burn(this.plan.accel);
-              this.plan.turn();
-            }
-
+            game.turn(1, true);
+            game.player.ship.burn(this.plan.accel);
+            this.plan.turn();
             this.timer = this.schedule();
           }
         }
@@ -129,24 +121,22 @@ define(function(require, exports, module) {
     template: `
 <div class="p-0 m-0">
   <card>
-    <progress-bar :percent="progress" class="my-3">{{progress}}%</progress-bar>
-
     <table class="table table-sm my-2">
       <tr>
         <th scope="col">Time</th>
         <td>{{daysLeft|R|unit('days')}}</td>
         <th scope="col">Distance</th>
-        <td>{{distance|unit('AU')}}</td>
+        <td>{{distance|R(1)|unit('AU')}}</td>
       </tr>
       <tr>
         <th scope="col">Status</th>
-        <td>{{progress < 50 ? 'Accelerating' : 'Decelerating'}}</td>
+        <td>{{plan.pct_complete < 50 ? 'Accelerating' : 'Decelerating'}}</td>
         <th scope="col">Speed</th>
         <td>{{(velocity/1000)|R|csn|unit('km/s')}}</td>
       </tr>
     </table>
 
-    <transit-plot v-show="!inspection" :coords="plan.coords" :dest="plan.dest" :orig="plan.origin" :extras="nearbyBodies()" />
+    <transit-plot v-show="!inspection" :plan="plan" />
     <transit-inspection v-if="inspection" @done="schedule" :body="inspection.body" :faction="inspection.faction" :distance="inspection.distance" class="my-3" />
   </card>
 </div>
@@ -154,45 +144,83 @@ define(function(require, exports, module) {
   });
 
   Vue.component('transit-plot', {
-    props: ['coords', 'dest', 'orig', 'extras'],
+    props: ['plan'],
+    data: function() {
+      return {
+        flip:  this.plan.flipDistance,
+        max:   1.2 * this.plan.flipDistance,
+        midpt: Physics.segment(
+          game.planets[this.plan.origin].position,
+          game.planets[this.plan.dest].position,
+          this.plan.flipDistance,
+        ),
+      };
+    },
     directives: {
       'square': {
         inserted: function(el, binding, vnode) {
-          const px = Math.ceil(el.clientWidth * 0.9);
-          el.setAttribute('style', `position:relative;height:${px}px;width:${px}px`);
+          const len = Math.min(
+            el.clientWidth,
+            (window.innerHeight
+              - document.getElementById('spacer-status').offsetHeight
+              - document.getElementById('spacer-navbar').offsetHeight),
+          );
+
+          el.setAttribute('style', `position:relative;height:${len}px;width:${len}px`);
         },
       },
     },
-    data: function() {
-      const maxX = Math.ceil([this.origPoint()[0], this.destPoint()[0], this.coords[0]].reduce((acc, x) => {return Math.max(acc, Math.abs(x))}, 0));
-      const maxY = Math.ceil([this.origPoint()[1], this.destPoint()[1], this.coords[1]].reduce((acc, y) => {return Math.max(acc, Math.abs(y))}, 0));
-      return {
-        max: Math.max(maxX, maxY),
-        sun: [0, 0, 0],
-      };
+    computed: {
+      coords: function() { return this.plan.coords },
+      orig:   function() { return game.planets[this.plan.origin] },
+      dest:   function() { return game.planets[this.plan.dest] },
     },
     methods: {
-      origPoint: function() { return system.position(this.orig) },
-      destPoint: function() { return system.position(this.dest) },
-      zero:      function() { return this.$el ? Math.floor(this.$el.clientWidth / 2) : 0 },
-      position:  function(p) {
-        const [x, y, z] = p;
+      zero:   function()  { return this.$el ? Math.floor(this.$el.clientWidth / 2) : 0 },
+      center: function(p) { return [p[0] - this.midpt[0], p[1] - this.midpt[1]] },
+
+      extras: function() {
+        const extras = {};
+        const max = this.max;
+
+        for (const p of Object.values(game.planets)) {
+          if (p.central !== 'sun'          // moon
+           || this.orig.central === p.body // origin is planet's moon
+           || this.dest.central === p.body // destination is planet's moon
+           || p.body === this.orig.body    // planet is origin
+           || p.body === this.dest.body    // planet is destination
+           || Physics.distance(p.position, this.midpt) > max) // planet is outside view
+          {
+            continue;
+          }
+
+          extras[p.body] = p.position;
+        }
+
+        return extras;
+      },
+
+      adjust: function(n) {
         const zero = this.zero();
-        const xPct = x / this.max;
-        const yPct = y / this.max;
+        const pct  = n / this.max;
+        return zero + (zero * pct);
+      },
+
+      position: function(p) {
+        const [x, y] = this.center(p);
         return {
-          'left': Math.ceil(zero + (zero * xPct)) + 'px',
-          'top':  Math.ceil(zero + (zero * yPct)) + 'px',
+          'left': this.adjust(x) + 'px',
+          'top':  this.adjust(y) + 'px',
         };
       },
     },
     template: `
 <div v-square class="plot-root p-0 m-0" style="position:relative">
-  <span v-show="zero()" v-for="(pt, body) in extras" class="plot-point" :style="position(pt)">&bull; <badge class="m-1">{{body|caps}}</badge></span>
-  <span v-show="zero()" class="plot-point text-info"    :style="position(origPoint())">&bull; <badge class="m-1">{{orig|caps}}</badge></span>
-  <span v-show="zero()" class="plot-point text-danger"  :style="position(destPoint())">&#8982; <badge class="m-1">{{dest|caps}}</badge></span>
-  <span v-show="zero()" class="plot-point text-warning" :style="position(sun)">&bull;</span>
-  <span v-show="zero()" class="plot-point text-success" :style="position(coords)">&#9652;</span>
+  <span v-for="(pt, body) in extras()" class="plot-point text-center align-middle" :style="position(pt)">&bull; <badge class="m-1">{{body|caps}}</badge></span>
+  <span class="plot-point text-center text-info    align-middle big" :style="position(orig.position)">&bull; <badge class="m-1">{{orig.body|caps}}</badge></span>
+  <span class="plot-point text-center text-danger  align-middle big" :style="position(dest.position)">&#8982; <badge class="m-1">{{dest.body|caps}}</badge></span>
+  <span class="plot-point text-center text-warning align-middle big" :style="position([0,0,0])">&bull;</span>
+  <span class="plot-point text-center text-success align-middle big" :style="position(coords)">&#9652;</span>
 </div>
     `,
   });

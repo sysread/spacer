@@ -5,6 +5,9 @@ define(function(require, exports, module) {
   const util   = require('util');
   const Person = require('person');
 
+  const start_page = 'summary';
+  //const start_page = 'navigation';
+
   const Game = class {
     constructor() {
       const saved = window.localStorage.getItem('game');
@@ -26,8 +29,7 @@ define(function(require, exports, module) {
       this.refresh();
 
       if (this.turns > 0) {
-        this.open('summary');
-        //this.open('status');
+        this.open(start_page);
       }
       else {
         this.open('newgame');
@@ -87,7 +89,7 @@ define(function(require, exports, module) {
       $('#spacer-turn').text(`${this.strdate()}`);
     }
 
-    turn(n=1) {
+    turn(n=1, no_save=false) {
       for (let i = 0; i < n; ++i) {
         ++this.turns;
         this.date.setHours(this.date.getHours() + data.hours_per_turn);
@@ -100,7 +102,9 @@ define(function(require, exports, module) {
         this.refresh();
       }
 
-      this.save_game();
+      if (!no_save) {
+        this.save_game();
+      }
     }
   };
 
