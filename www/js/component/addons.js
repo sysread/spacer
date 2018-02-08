@@ -27,11 +27,11 @@ define(function(require, exports, module) {
     props: ['type'],
     data: function() { return { detail: false, buy: false, sell: false } },
     computed: {
-      planet:       function() { return game.here },
-      player:       function() { return game.player },
-      ship:         function() { return this.player.ship },
-      info:         function() { return data.shipAddOns[this.type] },
-      sellPrice:    function() { return Math.ceil(0.7 * this.price) },
+      planet:    function() { return game.here },
+      player:    function() { return game.player },
+      ship:      function() { return this.player.ship },
+      info:      function() { return data.shipAddOns[this.type] },
+      sellPrice: function() { return Math.ceil(0.7 * this.price) },
 
       price: function() {
         let price = this.info.price;
@@ -82,10 +82,17 @@ define(function(require, exports, module) {
   </button>
 
   <card v-if="detail" class="my-3" :title="info.name">
-    <card-text>{{info.desc}}</card-text>
-    <card-text v-if="isRestricted()" class="text-warning font-italic">Your reputation with this faction precludes the sale of this equipment to you. That does not prevent you from salivating from the show room window, however.</card-text>
-    <card-text v-else-if="!canAfford" class="text-warning font-italic">You do not have enough money for this upgrade. </card-text>
-    <card-text v-else-if="!hasRoom" class="text-warning font-italic">Your ship does not have enough free hard points for this upgrade.</card-text>
+    <card-text class="font-italic">{{info.desc}}</card-text>
+
+    <card-text class="text-warning font-italic">
+      <span v-if="isRestricted()">
+        Your reputation with this faction precludes the sale of this equipment to you.
+        That does not prevent you from salivating from the show room window, however.
+        <span v-if="!canAfford">Not that you could afford it anyway.</span>
+      </span>
+      <span v-else-if="!canAfford">You do not have enough money for this upgrade.</span>
+      <span v-else-if="!hasRoom">Your ship does not have enough free hard points for this upgrade.</span>
+    </card-text>
 
     <card-text>
       <button :disabled="!isAvailable()" @click="buy=true" type="button" class="btn btn-dark">Purchase</button>

@@ -24,6 +24,14 @@ define(function(require, exports, module) {
       this.standing[this.faction] = this.standing[this.faction] || 15;
     }
 
+    get localStanding() {
+      return this.getStanding(game.here.faction);
+    }
+
+    get localStandingLabel() {
+      return this.getStandingLabel(game.here.faction);
+    }
+
     canCraft(item) {
       let recipe = data.resources[item].recipe.materials;
       let counts = [];
@@ -54,6 +62,11 @@ define(function(require, exports, module) {
     getStanding(faction) {
       if (faction === undefined) {
         faction = this.faction;
+      }
+
+      // model.Faction instance
+      if (faction.hasOwnProperty('abbrev')) {
+        faction = faction.abbrev;
       }
 
       if (!this.standing.hasOwnProperty(faction)) {

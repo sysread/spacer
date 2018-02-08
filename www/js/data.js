@@ -346,12 +346,13 @@ define(function() {
      */
     shipAddOns: {
       cargoPod: {
-        name:  'External cargo pod',
-        desc:  'Welds additional cargo units onto the outer hull, increasing total cargo space but reducing the effectiveness of armor.',
-        mass:  10,
-        cargo: 20,
-        armor: -1,
-        price: 10000,
+        name:       'External cargo pod',
+        desc:       'Welds additional cargo units onto the outer hull, increasing total cargo space but reducing the effectiveness of armor.',
+        mass:       10,
+        cargo:      20,
+        armor:      -1,
+        stealth:    -0.2,
+        price:      10000,
       },
       railgun: {
         name:       'Rail gun',
@@ -386,10 +387,11 @@ define(function() {
       },
       ecm: {
         name:       'ECM',
-        desc:       "Electronic counter-measures generates randomized, electromagnetic interference and false signals to confuse an enemy's targeting systems.",
+        desc:       "Electronic counter-measures generate randomized, electromagnetic interference and false signals to confuse an enemy's targeting systems.",
         mass:       1,
         intercept:  0.15,
-        dodge:      0.45,
+        dodge:      0.25,
+        stealth:    0.15,
         reload:     1,
         rate:       2,
         price:      90000,
@@ -399,7 +401,8 @@ define(function() {
         name:       "Adaptive hull plating",
         desc:       "This Martian technology, originally designed as part of an adaptive camouflage system for ground forces' power armor, alters the absorbtive range of the ships' outer hull to absorb EM radiation, making it effectively invisible except at very close range.",
         mass:       100,
-        dodge:      0.75,
+        dodge:      0.45,
+        stealth:    0.65,
         armor:      -1,
         price:      350000,
         restricted: 'Admired',

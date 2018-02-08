@@ -43,14 +43,14 @@ define(function(require, exports, module) {
       shipClass:       function() { return data.shipclass[this.type] },
       ship:            function() { return new Ship({type: this.type}) },
       isPlayerShip:    function() { return this.ship.isPlayerShipType() },
-      isNonFaction:    function() { return this.ship.faction && this.planet.faction != this.ship.faction },
+      isNonFaction:    function() { return this.ship.faction && this.planet.faction.abbrev != this.ship.faction },
       isRestricted:    function() { return !this.ship.playerHasStanding() },
       canAfford:       function() { return this.player.money >= this.tradeIn },
       isAvailable:     function() { return !this.isPlayerShip && !this.isNonFaction && !this.isRestricted && this.canAfford },
 
       price: function() {
         let price = this.ship.price();
-        price *= 1 + this.player.getStandingPriceAdjustment(this.planet.faction.abbr);
+        price *= 1 + this.player.getStandingPriceAdjustment(this.planet.faction);
         price *= 1 + this.planet.faction.sales_tax;
         return Math.ceil(price);
       },
@@ -78,7 +78,9 @@ define(function(require, exports, module) {
       <button @click="buy=true" type="button" class="btn btn-dark">Purchase</button>
     </p>
 
-    <p class="text-warning font-italic">
+    <card-text v-if="shipClass.desc" class="font-italic">{{shipClass.desc}}</card-text>
+
+    <card-text class="text-warning font-italic">
       <span v-if="isNonFaction">This ship is not available here.</span>
       <span v-else-if="isRestricted">
         Your reputation with this faction precludes the sale of this ship to you.
@@ -87,11 +89,7 @@ define(function(require, exports, module) {
       </span>
       <span v-else-if="isPlayerShip">You already own a ship of this class.</span>
       <span v-else-if="!canAfford">You cannot afford this ship.</span>
-    <p>
-
-    <p v-if="shipClass.desc" class="font-italic">
-      {{shipClass.desc}}
-    </p>
+    <card-text>
 
     <def y=1 brkpt="sm" term="Price">
       <span slot="def">

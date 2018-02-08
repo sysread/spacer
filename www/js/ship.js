@@ -27,41 +27,10 @@ define(function(require, exports, module) {
       this.cargo  = new model.Store(init.cargo);
     }
 
-    get cargoSpace() {
-      let space = this.shipclass.cargo;
-
-      for (const addon of this.addons) {
-        if (data.shipAddOns[addon].cargo) {
-          space += data.shipAddOns[addon].cargo;
-        }
-      }
-
-      return Math.max(0, space);
-    }
-
-    get hull() {
-      let hull = this.shipclass.hull;
-
-      for (let addon of this.addons) {
-        if (data.shipAddOns[addon].hasOwnProperty('hull')) {
-          hull += data.shipAddOns[addon].hull;
-        }
-      }
-
-      return Math.max(1, hull);
-    }
-
-    get armor() {
-      let armor = this.shipclass.armor;
-
-      for (let addon of this.addons) {
-        if (data.shipAddOns[addon].hasOwnProperty('armor')) {
-          armor += data.shipAddOns[addon].armor;
-        }
-      }
-
-      return Math.max(0, armor);
-    }
+    get cargoSpace() { return Math.max(0,    this.attr('cargo')) }
+    get hull()       { return Math.max(1,    this.attr('hull')) }
+    get armor()      { return Math.max(0,    this.attr('armor')) }
+    get stealth()    { return Math.min(0.99, this.attr('stealth')) }
 
     /*
      * Calculated properties of the ship itself
@@ -84,7 +53,7 @@ define(function(require, exports, module) {
      * Methods
      */
     isPlayerShipType()  { return this.type === game.player.ship.type }
-    playerHasStanding() { return !this.restricted || game.player.hasStanding(game.here.faction.abbrev, this.restricted) }
+    playerHasStanding() { return !this.restricted || game.player.hasStanding(game.here.faction, this.restricted) }
 
     thrustRatio(deltav, mass) {
       if (mass === undefined) mass = this.currentMass();
@@ -233,17 +202,34 @@ define(function(require, exports, module) {
     }
 
     hasAddOn(addon) {
+      let count = 0;
       for (let a of this.addons) {
         if (a === addon) {
-          return true;
+          ++count;
         }
       }
 
-      return false;
+      return count;
     }
 
     removeAddOn(addon) {
       this.addons = this.addons.filter(x => {return x !== addon});
+    }
+
+    attr(name) {
+      let value = 0;
+
+      if (this.shipclass.hasOwnProperty(name)) {
+        value += this.shipclass[name];
+      }
+
+      for (const addon of this.addons) {
+        if (data.shipAddOns[addon].hasOwnProperty(name)) {
+          value += data.shipAddOns[addon][name];
+        }
+      }
+
+      return value;
     }
   };
 });

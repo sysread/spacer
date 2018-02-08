@@ -6,6 +6,7 @@ define(function(require, exports, module) {
 
   require('component/common');
   require('component/card');
+  require('component/modal');
   require('component/row');
 
   Vue.component('person-status', {
@@ -70,13 +71,19 @@ define(function(require, exports, module) {
 
   Vue.component('ship-status', {
     props: ['ship'],
+    data: function() {
+      return {
+        showAddOn: false,
+      };
+    },
     computed: {
-      mass   : function() {return util.csn(Math.floor(this.ship.currentMass()))},
-      thrust : function() {return util.csn(this.ship.thrust)},
-      tank   : function() {return util.R(this.ship.fuel, 2) + '/' + this.ship.tank},
-      burn   : function() {return util.csn(this.ship.maxBurnTime() * data.hours_per_turn)},
-      addons : function() {return this.ship.addons.map((a) => {return data.shipAddOns[a].name})},
-      cargo  : function() {
+      mass:      function() {return util.csn(Math.floor(this.ship.currentMass()))},
+      thrust:    function() {return util.csn(this.ship.thrust)},
+      tank:      function() {return util.R(this.ship.fuel, 2) + '/' + this.ship.tank},
+      burn:      function() {return util.csn(this.ship.maxBurnTime() * data.hours_per_turn)},
+      addons:    function() {return this.ship.addons},
+      addOnData: function() {return data.shipAddOns[this.showAddOn]},
+      cargo:     function() {
         const cargo = [];
         for (const item of this.ship.cargo.keys) {
           const amt = this.ship.cargo.get(item);
@@ -85,7 +92,19 @@ define(function(require, exports, module) {
         }
 
         return cargo;
-      }
+      },
+    },
+    methods: {
+      addOnName: function(addon) {
+        return data.shipAddOns[addon].name;
+      },
+
+      toggleAddOn: function(addon) {
+        if (this.showAddOn === addon)
+          this.showAddOn = false;
+        else
+          this.showAddOn = addon;
+      },
     },
     template: `
 <card>
@@ -111,11 +130,15 @@ define(function(require, exports, module) {
   <def term="Fuel" :def="tank|unit('tonnes')" />
   <def term="Range" :def="burn|unit('hours at maximum thrust')" />
   <def term="Drive" :def="ship.drives|unit(ship.drive.name)" />
+  <def term="Stealth" :def="(ship.stealth * 100) + '%'" />
 
   <def term="Upgrades">
-    <ul slot="def" v-if="ship.addons.length > 0">
-      <li v-for="addon of addons">{{addon|caps}}</li>
-    </ul>
+    <div slot="def" v-if="ship.addons.length > 0">
+      <btn v-for="addon of addons" :key="addon" block=1 @click="toggleAddOn(addon)">{{addOnName(addon)|caps}}</btn>
+      <modal v-if="showAddOn" @close="toggleAddOn(showAddOn)" close="Close" :title="addOnName(showAddOn)">
+        <def v-for="(value, key) of addOnData" :key="key" :term="key|caps" :def="value" />
+      </modal>
+    </div>
     <span slot="def" v-else>None</span>
   </def>
 </card>

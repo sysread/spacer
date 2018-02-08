@@ -54,8 +54,9 @@ define(function(require, exports, module) {
     get desc() { return data.factions[abbrev].desc }
 
     inspectionRate(distance) {
-      const adjust = game.player.hasStanding('Friendly') ? 0.5 : 1.0;
-      const rate = this.patrol * this.scale * adjust;
+      const adjust  = game.player.hasStanding('Friendly') ? 0.5 : 1.0;
+      const stealth = 1 - game.player.ship.stealth;
+      const rate    = this.patrol * this.scale * adjust * stealth;
       return distance ? rate * Math.pow(data.jurisdiction, 2) / Math.pow(distance, 2) : rate;
     }
 
