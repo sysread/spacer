@@ -15,6 +15,7 @@ define(function(require, exports, module) {
     data: function() {
       return {
         timer: this.schedule(),
+        paused: false,
         stoppedBy: {},
         inspection: null,
         daysLeft: null,
@@ -25,6 +26,16 @@ define(function(require, exports, module) {
       destination: function() { return system.name(this.plan.dest) },
     },
     methods: {
+      toggle: function() {
+        this.paused = !this.paused;
+
+        if (this.paused) {
+          window.clearTimeout(this.timer);
+        } else {
+          this.timer = this.schedule();
+        }
+      },
+
       schedule: function() {
         this.inspection = null;
         this.velocity = this.plan.velocity;
@@ -54,23 +65,6 @@ define(function(require, exports, module) {
         }
       },
 
-      nearbyBodies: function() {
-        const ranges   = system.ranges([0, 0, 0]);
-        const min_dist = Math.max(ranges[this.plan.origin], ranges[this.plan.dest]);
-        const bodies   = {};
-
-        for (const body of Object.keys(ranges)) {
-          if (body == this.plan.origin) continue;
-          if (body == this.plan.dest) continue;
-          if (system.central(body) !== 'sun')  continue;
-          if (ranges[body] <= min_dist) {
-            bodies[body] = system.position(body);
-          }
-        }
-
-        return bodies;
-      },
-
       nearby: function() {
         const ranges = system.ranges(this.plan.coords);
         const bodies = {};
@@ -95,7 +89,7 @@ define(function(require, exports, module) {
         for (const body of Object.keys(ranges)) {
           const km = Math.floor(ranges[body] / 1000);
 
-          if (game.planets[body].faction.inspectionChance(km)) {
+          if (game.planets[body].inspectionChance(km)) {
             const faction = data.bodies[body].faction;
 
             if (this.stoppedBy[faction]) {
@@ -121,6 +115,12 @@ define(function(require, exports, module) {
     template: `
 <div class="p-0 m-0">
   <card>
+    <card-header slot="header">
+      Transiting from {{plan.origin|caps}} to {{plan.dest|caps}}
+    </card-header>
+
+    <btn block=1 @click="toggle()">Toggle</btn>
+
     <table class="table table-sm my-2">
       <tr>
         <th scope="col">Time</th>
@@ -147,11 +147,10 @@ define(function(require, exports, module) {
     props: ['plan'],
     data: function() {
       return {
-        flip:  this.plan.flipDistance,
-        max:   1.2 * this.plan.flipDistance,
+        max: this.plan.dist * 0.55,
         midpt: Physics.segment(
-          game.planets[this.plan.origin].position,
-          game.planets[this.plan.dest].position,
+          this.plan.start,
+          this.plan.end,
           this.plan.flipDistance,
         ),
       };
@@ -176,20 +175,15 @@ define(function(require, exports, module) {
       dest:   function() { return game.planets[this.plan.dest] },
     },
     methods: {
-      zero:   function()  { return this.$el ? Math.floor(this.$el.clientWidth / 2) : 0 },
-      center: function(p) { return [p[0] - this.midpt[0], p[1] - this.midpt[1]] },
-
       extras: function() {
         const extras = {};
-        const max = this.max;
 
         for (const p of Object.values(game.planets)) {
           if (p.central !== 'sun'          // moon
            || this.orig.central === p.body // origin is planet's moon
            || this.dest.central === p.body // destination is planet's moon
            || p.body === this.orig.body    // planet is origin
-           || p.body === this.dest.body    // planet is destination
-           || Physics.distance(p.position, this.midpt) > max) // planet is outside view
+           || p.body === this.dest.body)   // planet is destination
           {
             continue;
           }
@@ -200,28 +194,47 @@ define(function(require, exports, module) {
         return extras;
       },
 
+      zero: function() {
+        return this.$el ? Math.floor(this.$el.clientWidth / 2) : 0;
+      },
+
+      isVisible: function(point) {
+        return Physics.distance(point, this.midpt) <= this.max;
+      },
+
+      center: function(p) {
+        return [p[0] - this.midpt[0], p[1] - this.midpt[1]];
+      },
+
       adjust: function(n) {
         const zero = this.zero();
         const pct  = n / this.max;
-        return zero + (zero * pct);
+        return Math.floor(zero + (zero * pct));
       },
 
       position: function(p) {
         const [x, y] = this.center(p);
-        return {
-          'left': this.adjust(x) + 'px',
-          'top':  this.adjust(y) + 'px',
-        };
+        return [this.adjust(x), this.adjust(y)];
       },
     },
     template: `
 <div v-square class="plot-root p-0 m-0" style="position:relative">
-  <span v-for="(pt, body) in extras()" class="plot-point text-center align-middle" :style="position(pt)">&bull; <badge class="m-1">{{body|caps}}</badge></span>
-  <span class="plot-point text-center text-info    align-middle big" :style="position(orig.position)">&bull; <badge class="m-1">{{orig.body|caps}}</badge></span>
-  <span class="plot-point text-center text-danger  align-middle big" :style="position(dest.position)">&#8982; <badge class="m-1">{{dest.body|caps}}</badge></span>
-  <span class="plot-point text-center text-warning align-middle big" :style="position([0,0,0])">&bull;</span>
-  <span class="plot-point text-center text-success align-middle big" :style="position(coords)">&#9652;</span>
+  <transit-point v-if="isVisible(pt)" v-for="(pt, body) in extras()" :key="body" :coord="position(pt)" :label="body" :sm=1>&bull;</transit-point>
+  <transit-point v-if="isVisible(orig.position)" class="text-info" :coord="position(orig.position)" :label="orig.body">&bull;</transit-point>
+  <transit-point v-if="isVisible(dest.position)" class="text-danger" :coord="position(dest.position)" :label="dest.body">&#8982;</transit-point>
+  <transit-point v-if="isVisible([0,0,0])" class="text-warning" :coord="position([0,0,0])">&bull;</transit-point>
+  <transit-point class="text-success" :coord="position(coords)">&#9652</transit-point>
 </div>
+    `,
+  });
+
+  Vue.component('transit-point', {
+    props: ['coord', 'label', 'sm'],
+    template: `
+<span class="plot-point" :class="{big: !sm}" :style="{left: coord[0] + 'px', top: coord[1] + 'px'}">
+  <slot />
+  <badge v-if="label" class="m-1">{{label|caps}}</badge>
+</span>
     `,
   });
 
@@ -250,9 +263,10 @@ define(function(require, exports, module) {
 
       submit: function() {
         let fine = 0;
-        for (const [item, amt] of game.player.ship.cargo.entries()) {
+        for (const item of game.player.ship.cargo.keys) {
+          const amt = game.player.ship.cargo.count(item);
           if (data.resources[item].contraband) {
-            fine += amt * this.planet.faction.inspectionFine();
+            fine += amt * this.planet.inspectionFine();
           }
         }
 
@@ -263,7 +277,7 @@ define(function(require, exports, module) {
 
           for (const [item, amt] of game.player.ship.cargo.entries()) {
             if (amt > 0 && data.resources[item].contraband) {
-              game.player.ship.cargo.set(item, 0);
+              game.player.ship.cargo.dec(item, amt);
               game.player.decStanding(this.faction, data.resources[item].contraband);
             }
           }

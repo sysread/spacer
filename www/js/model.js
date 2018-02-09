@@ -52,21 +52,6 @@ define(function(require, exports, module) {
     }
 
     get desc() { return data.factions[abbrev].desc }
-
-    inspectionRate(distance) {
-      const adjust  = game.player.hasStanding('Friendly') ? 0.5 : 1.0;
-      const stealth = 1 - game.player.ship.stealth;
-      const rate    = this.patrol * this.scale * adjust * stealth;
-      return distance ? rate * Math.pow(data.jurisdiction, 2) / Math.pow(distance, 2) : rate;
-    }
-
-    inspectionChance(distance) {
-      return Math.random() <= this.inspectionRate(distance);
-    }
-
-    inspectionFine() {
-      return Math.max(10, data.max_abs_standing - game.player.getStanding(this.faction));
-    }
   };
 
   const Trait = class {
@@ -253,6 +238,26 @@ define(function(require, exports, module) {
     get gravity()    { return system.gravity(this.body) }
     get position()   { return system.position(this.body) }
     distance(toBody) { return system.distance(this.body, toBody) }
+
+    /*
+     * Patrols and inspections
+     */
+    inspectionRate(distance) {
+      const standing = 1 - (game.player.getStanding(this.faction.abbrev) / data.max_abs_standing);
+      const rate = this.scale(this.faction.patrol * standing);
+      return distance ? rate * Math.pow(data.jurisdiction, 2) / Math.pow(distance, 2) : rate;
+    }
+
+    inspectionChance(distance) {
+      const stealth = 1 - game.player.ship.stealth;
+      const rate = this.inspectionRate(distance);
+      const rand = Math.random();
+      return rand <= (rate * stealth);
+    }
+
+    inspectionFine() {
+      return Math.max(10, data.max_abs_standing - game.player.getStanding(this.faction));
+    }
 
     /*
      * Fabrication

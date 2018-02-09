@@ -1,3 +1,4 @@
+var physics;
 define(function() {
   const Physics = class {
     static get C()  { return 299792458;    } // m/s
@@ -77,6 +78,7 @@ define(function() {
       ];
     }
   };
+physics = Physics;
 
   return Physics;
 });

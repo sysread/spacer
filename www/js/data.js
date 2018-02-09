@@ -21,7 +21,7 @@ define(function() {
     fab_health:         30, // number of tics each fabricator can handle before needing to be replaced. be sure to make this higher than the total tics needed to craft a cybernetics unit.
     grav_deltav_factor: 5, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
     initial_ship:       'runner',
-    jurisdiction:       0.01, // au from body
+    jurisdiction:       0.5, // au from body
     max_abs_standing:   100,
 
     scales: {

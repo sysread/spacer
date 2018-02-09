@@ -10,7 +10,7 @@ define(function(require, exports, module) {
       this.shipClass = data.shipclass[opt.shipClass];
 
       this.ship = new Ship({
-        shipclass: opt.shipClass,
+        type: opt.shipClass,
         fuel: (opt.fuel || util.getRandomInt(Math.ceil(this.shipClass.tank / 4), this.shipClass.tank + 1)),
       });
 

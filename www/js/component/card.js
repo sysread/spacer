@@ -16,7 +16,6 @@ define(function(require, exports, module) {
     name: 'card',
     props: ['title', 'subtitle', 'nopad'],
     template: `
-
 <div class="card">
   <slot name="header" />
   <div class="card-body" :class="{'p-0':nopad}">
