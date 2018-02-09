@@ -15,7 +15,6 @@ define(function(require, exports, module) {
     data: function() {
       return {
         timer: this.schedule(),
-        paused: false,
         stoppedBy: {},
         inspection: null,
         daysLeft: null,
@@ -26,16 +25,6 @@ define(function(require, exports, module) {
       destination: function() { return system.name(this.plan.dest) },
     },
     methods: {
-      toggle: function() {
-        this.paused = !this.paused;
-
-        if (this.paused) {
-          window.clearTimeout(this.timer);
-        } else {
-          this.timer = this.schedule();
-        }
-      },
-
       schedule: function() {
         this.inspection = null;
         this.velocity = this.plan.velocity;
@@ -118,12 +107,6 @@ define(function(require, exports, module) {
     <card-header slot="header">
       Transiting from {{plan.origin|caps}} to {{plan.dest|caps}}
     </card-header>
-
-    <btn block=1 @click="toggle()">
-      <span v-if="paused">Resume</span>
-      <span v-else>Pause</span>
-      transit
-    </btn>
 
     <table class="table table-sm my-2">
       <tr>
