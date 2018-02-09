@@ -119,7 +119,11 @@ define(function(require, exports, module) {
       Transiting from {{plan.origin|caps}} to {{plan.dest|caps}}
     </card-header>
 
-    <btn block=1 @click="toggle()">Toggle</btn>
+    <btn block=1 @click="toggle()">
+      <span v-if="paused">Resume</span>
+      <span v-else>Pause</span>
+      transit
+    </btn>
 
     <table class="table table-sm my-2">
       <tr>
@@ -147,12 +151,8 @@ define(function(require, exports, module) {
     props: ['plan'],
     data: function() {
       return {
-        max: this.plan.dist * 0.55,
-        midpt: Physics.segment(
-          this.plan.start,
-          this.plan.end,
-          this.plan.flipDistance,
-        ),
+        //midpt: Physics.segment(this.plan.start, this.plan.end, this.plan.flipDistance),
+        dist: this.plan.dist,
       };
     },
     directives: {
@@ -170,70 +170,105 @@ define(function(require, exports, module) {
       },
     },
     computed: {
+      radius: function() { return Physics.distance(this.plan.coords, [0, 0, 0]) },
       coords: function() { return this.plan.coords },
       orig:   function() { return game.planets[this.plan.origin] },
       dest:   function() { return game.planets[this.plan.dest] },
     },
     methods: {
       extras: function() {
+        // Blacklist primary bodies from appearing in this set
+        const skip = {};
+        skip[this.orig.body] = true; // origin
+        skip[this.dest.body] = true; // destination
+        if (this.orig.central !== 'sun') skip[this.orig.central] = true; // origin is the body's moon
+        if (this.dest.central !== 'sun') skip[this.dest.central] = true; // destination is the body's mooon
+
         const extras = {};
 
         for (const p of Object.values(game.planets)) {
-          if (p.central !== 'sun'          // moon
-           || this.orig.central === p.body // origin is planet's moon
-           || this.dest.central === p.body // destination is planet's moon
-           || p.body === this.orig.body    // planet is origin
-           || p.body === this.dest.body)   // planet is destination
-          {
+          if (skip[p.body] || skip[p.central]) {
             continue;
           }
 
-          extras[p.body] = p.position;
+          // For satellites, show the central planet
+          if (p.central !== 'sun') {
+            // ...but only one time
+            if (!extras.hasOwnProperty(p.central)) {
+              extras[p.central] = system.position(p.central);
+            }
+          }
+          // Otherwise, show the planet itself
+          else {
+            extras[p.body] = p.position;
+          }
         }
 
         return extras;
       },
 
-      zero: function() {
-        return this.$el ? Math.floor(this.$el.clientWidth / 2) : 0;
+      max: function() {
+        const sun  = [0, 0, 0];
+        const min  = Physics.AU * 2;
+        const ship = Physics.distance(this.coords, sun);
+        const to   = Physics.distance(this.plan.end, sun);
+
+        if (ship > to) {
+          return Math.max(min, to, ship * 1.8);
+        }
+        else {
+          return Math.max(min, Math.min(to, ship * 1.8));
+        }
       },
 
       isVisible: function(point) {
-        return Physics.distance(point, this.midpt) <= this.max;
+        const [x, y] = this.position(point).map(Math.abs);
+        const max = this.width() * 1.2;
+        if (x >= max || y >= max) return false;
+        return true;
       },
 
-      center: function(p) {
-        return [p[0] - this.midpt[0], p[1] - this.midpt[1]];
+      alpha: function(point) {
+        const scale = Math.min(5, Math.ceil(this.max() / Physics.AU / 5));
+        const au = Physics.distance(this.coords, point) / Physics.AU;
+        return util.R(Math.min(1, scale / Math.max(au, scale)), 2);
+      },
+
+      width: function() {
+        return this.$el ? this.$el.clientWidth : 0;
+      },
+
+      zero: function() {
+        return Math.ceil(this.width() / 2);
       },
 
       adjust: function(n) {
         const zero = this.zero();
-        const pct  = n / this.max;
+        const pct  = n / this.max();
         return Math.floor(zero + (zero * pct));
       },
 
       position: function(p) {
-        const [x, y] = this.center(p);
-        return [this.adjust(x), this.adjust(y)];
+        return [this.adjust(p[0]), this.adjust(p[1])];
       },
     },
     template: `
 <div v-square class="plot-root p-0 m-0" style="position:relative">
-  <transit-point v-if="isVisible(pt)" v-for="(pt, body) in extras()" :key="body" :coord="position(pt)" :label="body" :sm=1>&bull;</transit-point>
-  <transit-point v-if="isVisible(orig.position)" class="text-info" :coord="position(orig.position)" :label="orig.body">&bull;</transit-point>
-  <transit-point v-if="isVisible(dest.position)" class="text-danger" :coord="position(dest.position)" :label="dest.body">&#8982;</transit-point>
-  <transit-point v-if="isVisible([0,0,0])" class="text-warning" :coord="position([0,0,0])">&bull;</transit-point>
+  <transit-point v-show="isVisible(pt)" v-for="(pt, body) in extras()" :key="body" :alpha="alpha(pt)" :coord="position(pt)" :label="body" :sm=1>&bull;</transit-point>
+  <transit-point v-show="isVisible(orig.position)" class="text-info" :coord="position(orig.position)" :label="orig.body">&bull;</transit-point>
+  <transit-point v-show="isVisible(dest.position)" class="text-danger" :coord="position(dest.position)" :label="dest.body">&#8982;</transit-point>
+  <transit-point class="text-warning" :coord="position([0,0,0])">&bull;</transit-point>
   <transit-point class="text-success" :coord="position(coords)">&#9652</transit-point>
 </div>
     `,
   });
 
   Vue.component('transit-point', {
-    props: ['coord', 'label', 'sm'],
+    props: ['coord', 'label', 'sm', 'alpha'],
     template: `
 <span class="plot-point" :class="{big: !sm}" :style="{left: coord[0] + 'px', top: coord[1] + 'px'}">
   <slot />
-  <badge v-if="label" class="m-1">{{label|caps}}</badge>
+  <badge v-if="label" class="m-1" :style="{opacity: alpha}">{{label|caps}}</badge>
 </span>
     `,
   });
