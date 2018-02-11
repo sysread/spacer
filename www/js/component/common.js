@@ -7,9 +7,11 @@ define(function(require, exports, module) {
 
   Vue.filter('csn',  function(value) { return util.csn((value || 0).toString()) });
   Vue.filter('R',    function(value, places) { return util.R((value || 0).toString(), places) });
+  Vue.filter('pct',  function(value, places) { return util.pct((value || 0).toString(), places) });
   Vue.filter('unit', function(value, unit) { return (value || 0).toString() + ' ' + unit });
   Vue.filter('caps', function(value) { return value.toString().replace(/\b([a-z])/g, function(str) { return str.toUpperCase() }) });
   Vue.filter('AU',   function(value) { return value / Physics.AU });
+  Vue.filter('yn',   function(value) { return value ? 'yes' : 'no' }),
 
   Vue.component('caps', { template: '<span class="text-capitalize"><slot /></span>' });
   Vue.component('lc',   { template: '<span class="text-lowercase"><slot /></span>'  });
@@ -42,7 +44,8 @@ define(function(require, exports, module) {
     template: `
 <button
     type="button"
-    :class="{'btn': true, 'btn-dark': true, 'btn-secondary': muted, 'disabled': disabled, 'btn-block': block}"
+    class="btn btn-dark"
+    :class="{'btn-secondary': muted, 'disabled': disabled, 'btn-block': block}"
     :data-dismiss="close ? 'modal' : ''"
     @click="$emit('click')" >
   <slot />

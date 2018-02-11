@@ -309,9 +309,9 @@ define(function() {
 
     shipclass: {
       /* Civilian */
-      shuttle:  {hull: 2,  armor: 0,  cargo: 2,  hardpoints: 0,  mass: 200,   tank: 2,   drives: 1,   drive: 'ion',    restricted: false},
-      schooner: {hull: 4,  armor: 1,  cargo: 8,  hardpoints: 1,  mass: 450,   tank: 6,   drives: 2,   drive: 'ion',    restricted: false},
-      runner:   {hull: 4,  armor: 2,  cargo: 14, hardpoints: 2,  mass: 850,   tank: 10,  drives: 3,   drive: 'ion',    restricted: false},
+      shuttle:     {hull: 2,  armor: 0,  cargo: 2,  hardpoints: 0,  mass: 200,   tank: 2,   drives: 1,   drive: 'ion',    restricted: false},
+      schooner:    {hull: 4,  armor: 1,  cargo: 8,  hardpoints: 1,  mass: 450,   tank: 6,   drives: 2,   drive: 'ion',    restricted: false},
+      runner:      {hull: 4,  armor: 2,  cargo: 14, hardpoints: 2,  mass: 850,   tank: 10,  drives: 3,   drive: 'ion',    restricted: false},
 
       /* Merchant */
       trader:      {hull: 4,  armor: 2,  cargo: 25, hardpoints: 2,  mass: 1200,  tank: 30,  drives: 10,  drive: 'ion',    restricted: false},
@@ -320,33 +320,34 @@ define(function() {
       hauler:      {hull: 20, armor: 4,  cargo: 80, hardpoints: 5,  mass: 2700,  tank: 110, drives: 40,  drive: 'ion',    restricted: false},
 
       /* Military */
-      corvette:   {hull: 25, armor: 5,  cargo: 10, hardpoints: 4,  mass: 550,   tank: 15,  drives: 1,   drive: 'fusion', restricted: 'Respected'},
-      frigate:    {hull: 30, armor: 10, cargo: 20, hardpoints: 6,  mass: 800,   tank: 40,  drives: 2,   drive: 'fusion', restricted: 'Respected'},
-      destroyer:  {hull: 45, armor: 12, cargo: 12, hardpoints: 8,  mass: 1100,  tank: 60,  drives: 4,   drive: 'fusion', restricted: 'Admired'},
-      cruiser:    {hull: 60, armor: 15, cargo: 15, hardpoints: 10, mass: 1850,  tank: 100, drives: 8,   drive: 'fusion', restricted: 'Admired'},
-      battleship: {hull: 85, armor: 25, cargo: 20, hardpoints: 16, mass: 2300,  tank: 140, drives: 10,  drive: 'fusion', restricted: 'Admired'},
-      transport:  {hull: 40, armor: 10, cargo: 50, hardpoints: 6,  mass: 3500,  tank: 180, drives: 10,  drive: 'fusion', restricted: 'Admired'},
+      corvette:    {hull: 25, armor: 5,  cargo: 10, hardpoints: 4,  mass: 550,   tank: 15,  drives: 1,   drive: 'fusion', restricted: 'Respected'},
+      frigate:     {hull: 30, armor: 10, cargo: 20, hardpoints: 6,  mass: 800,   tank: 40,  drives: 2,   drive: 'fusion', restricted: 'Respected'},
+      destroyer:   {hull: 45, armor: 12, cargo: 12, hardpoints: 8,  mass: 1100,  tank: 60,  drives: 4,   drive: 'fusion', restricted: 'Admired'},
+      cruiser:     {hull: 60, armor: 15, cargo: 15, hardpoints: 10, mass: 1850,  tank: 100, drives: 8,   drive: 'fusion', restricted: 'Admired'},
+      battleship:  {hull: 85, armor: 25, cargo: 20, hardpoints: 16, mass: 2300,  tank: 140, drives: 10,  drive: 'fusion', restricted: 'Admired'},
+      transport:   {hull: 40, armor: 10, cargo: 50, hardpoints: 6,  mass: 3500,  tank: 180, drives: 10,  drive: 'fusion', restricted: 'Admired'},
 
       /* Faction ships */
-      surveyor:  {hull: 6,  armor: 2,  cargo: 20, hardpoints: 2,  mass: 600,   tank: 20,  drives: 4,   drive: 'ion',    restricted: 'Respected', faction: 'CERES'},
-      fortuna:   {hull: 10, armor: 3,  cargo: 60, hardpoints: 3,  mass: 2200,  tank: 85,  drives: 30,  drive: 'ion',    restricted: 'Respected', faction: 'JFT'},
-      neptune:   {hull: 10, armor: 4,  cargo: 40, hardpoints: 3,  mass: 1600,  tank: 60,  drives: 20,  drive: 'ion',    restricted: 'Respected', faction: 'TRANSA'},
-      barsoom:   {hull: 35, armor: 6,  cargo: 30, hardpoints: 4,  mass: 700,   tank: 45,  drives: 3,   drive: 'fusion', restricted: 'Admired',   faction: 'MC'},
-      patrol:    {hull: 40, armor: 8,  cargo: 25, hardpoints: 4,  mass: 900,   tank: 50,  drives: 3,   drive: 'fusion', restricted: 'Admired',   faction: 'UN'},
+      surveyor:    {hull: 6,  armor: 4,  cargo: 20, hardpoints: 2,  mass: 600,   tank: 20,  drives: 4,   drive: 'ion',    restricted: 'Respected', faction: 'CERES'},
+      fortuna:     {hull: 10, armor: 5,  cargo: 60, hardpoints: 3,  mass: 2200,  tank: 85,  drives: 30,  drive: 'ion',    restricted: 'Respected', faction: 'JFT'},
+      neptune:     {hull: 10, armor: 8,  cargo: 40, hardpoints: 3,  mass: 1600,  tank: 60,  drives: 20,  drive: 'ion',    restricted: 'Respected', faction: 'TRANSA'},
+      barsoom:     {hull: 35, armor: 10, cargo: 30, hardpoints: 4,  mass: 700,   tank: 45,  drives: 3,   drive: 'fusion', restricted: 'Admired',   faction: 'MC'},
+      interceptor: {hull: 40, armor: 8,  cargo: 25, hardpoints: 4,  mass: 900,   tank: 50,  drives: 3,   drive: 'fusion', restricted: 'Admired',   faction: 'UN'},
     },
 
     /*
      * keys:
      *    armor, mass, cargo, etc: bonus or malus to existing ship attributes
      *    reload    : combat turns between use
+     *    magazine  : number of uses per reload
      *    rate      : rate of fire (uses per turn after reload)
      *    damage    : max damage against enemy vessel
      *    intercept : chance of intercepting and disabling a missile
      *    dodge     : chance of dodging a projectile (or reducing its accuracy or range)
      */
-    shipAddOns: {
-      cargoPod: {
-        name:       'External cargo pod',
+    addons: {
+      cargo_pod: {
+        name:       'external cargo pod',
         desc:       'Welds additional cargo units onto the outer hull, increasing total cargo space but reducing the effectiveness of armor.',
         mass:       10,
         cargo:      20,
@@ -354,34 +355,73 @@ define(function() {
         stealth:    -0.2,
         price:      10000,
       },
-      railgun: {
-        name:       'Rail gun',
+      railgun_turret: {
+        name:       'rail gun turret',
         desc:       'A military-grade rail gun turret, magnetically accelerating 100kg rounds at an appreciable fraction of the speed of light.',
         mass:       15,
-        damage:     10,
+        damage:     2,
         reload:     1,
         rate:       1,
+        magazine:   4,
         price:      200000,
         restricted: 'Respected',
       },
-      torpedoLauncher: {
-        name:       'Torpedo launcher',
-        desc:       'Adds a self-guided torpedo launcher tube. Torpedos sold separately.',
-        mass:       20,
+      railgun_cannon: {
+        name:       'rail gun cannon',
+        desc:       "More powerful than it's smaller cousin, a rail gun cannon fires much larger projectiles made of a much denser material, resulting in more energy released on impact.",
+        mass:       30,
         damage:     10,
         reload:     2,
         rate:       1,
-        price:      120000,
+        magazine:   1,
+        price:      450000,
         restricted: 'Admired',
+      },
+      light_torpedo: {
+        name:          'light torpedo launcher',
+        desc:          'Adds a torpedo launcher tube suitable for low yield, self-guided payloads.',
+        mass:          20,
+        damage:        4,
+        reload:        2,
+        rate:          1,
+        magazine:      2,
+        interceptable: true,
+        price:         120000,
+        restricted:    'Friendly',
+      },
+      medium_torpedo: {
+        name:          'medium torpedo launcher',
+        desc:          'Adds a torpedo launcher tube suitable for moderate yield, self-guided payloads.',
+        mass:          40,
+        damage:        8,
+        reload:        2,
+        rate:          1,
+        magazine:      1,
+        interceptable: true,
+        price:         185000,
+        restricted:    'Admired',
+      },
+      heavy_torpedo: {
+        name:          'heavy torpedo launcher',
+        desc:          'Adds a torpedo launcher tube suitable for high yield, self-guided payloads.',
+        mass:          60,
+        damage:        16,
+        reload:        2,
+        rate:          1,
+        magazine:      1,
+        interceptable: true,
+        price:         250000,
+        restricted:    'Admired',
       },
       pds: {
         name:       'PDS',
         desc:       'Mounts a computer-controlled network of small, magnetically propelled, point defense turrets around the ship to stop incoming torpedos at a safe range.',
         mass:       5,
-        damage:     1,
+        damage:     0.1,
         intercept:  0.65,
         reload:     1,
-        rate:       2,
+        rate:       8,
+        magazine:   40,
         price:      35000,
         restricted: 'Friendly',
       },
@@ -392,16 +432,14 @@ define(function() {
         intercept:  0.15,
         dodge:      0.25,
         stealth:    0.15,
-        reload:     1,
-        rate:       2,
         price:      90000,
         restricted: 'Admired',
       },
       stealthPlating: {
-        name:       "Adaptive hull plating",
+        name:       "adaptive hull plating",
         desc:       "This Martian technology, originally designed as part of an adaptive camouflage system for ground forces' power armor, alters the absorbtive range of the ships' outer hull to absorb EM radiation, making it effectively invisible except at very close range.",
         mass:       100,
-        dodge:      0.45,
+        dodge:      0.15,
         stealth:    0.65,
         armor:      -1,
         price:      350000,
@@ -413,32 +451,32 @@ define(function() {
   /*
    * Descriptions
    */
-  data.factions.UN.desc         = "After the outbreak of hostilities with Mars more than 80 years ago and the treaties that followed, the UN assumed the role of the unified sovereign government over the Earth, Moon, and Mercury. Known for its glacial bureaucracy and stodgy leaders, Earth remains an economic powerhouse, largly as a result of remaining the sole inhabitable body in the system.| Despite the fragile treaty after the War of Martian Independence, the UN member nations continue to see Mars as selfish and ungrateful.";
-  data.factions.MC.desc         = "Nearly 50 years after its founding as a science outpost in the early 22nd century, Mars declared independence from an Earth that it increasingly viewed as a distant, intrusive micromanager. In the 84 years since its founding, Mars has grown into a military power rivaling Earth, with a thriving economy and highly educated populace. Since its independence, Mars has focused its significant resources toward the scientific and technological achievements necessary to realize its population's dream of a \"Green Mars\".|The Martian Commonwealth controls Mars and its moons as well as several of the Jovian moons, providing the infrastructure and resource to maintain and grow their subterranean and domed habitats, whose proximity to the radiant gas giant make them the bread basket of the outer planets.";
-  data.factions.TRANSA.desc     = "Those who live in the outer planets are exquisitely aware of the fragile existence they lead, completely dependent on shipments of food, water, medicine, and technology in order to survive.|When Mars broke from Earth, deliveries to the furthest installations in the outer system ceased in the face of privateering and the realities of a war economy. Those who survived the food riots shortly found themselves under the unforgiving magnetic boot of the corporate security forces originally contracted to protect and police the scientific mission stationed on Pluto.|Collectively calling themselves the Trans-Neptunian Authority, they quickly restored order and set to work building a strict, tightly controlled, society with the ultimate goal of achieving self-sufficiency.|With resources stretched and hungry mouths to feed, TRANSA offers the lowest tax rate in the system, promising a hefty margin to any traders willing to make the \"Long Haul\", as it is popularly known. Given the size of TRANSA's tiny fleet and the vast volume of space it patrols, the Long Haul can as be perilous as it is profitable.";
-  data.factions.CERES.desc      = "Holding a favorable position orbiting within the asteroid belt, the independent planetoid Ceres has long served as a trade hub between the inner and outer planets. Its location also serves to make it a launching point for mining operations within the asteroid belt.|A number of shipyards have grown up around Ceres, taking advantage of the central location and ease of access to materials to make Ceres the primary ship-bulding center in the system."
-  data.factions.JFT.desc        = "Faced with the same economic constraints and pressures as the outer planets during the war but with much closer and more powerful corporate interests at hand, the Saturnian moons controlling interests joined to form the United Trade Collective. Funded by some of the richest corporations on Earth, the JFT has become a force unto itself, patrolling the outer planets' trade routes with its corporate fleet.|Life in the domes of Saturn is difficult, and the harvesting of ice and ore in the outer system is dangerous work, but citizen employees can rest assured that the Board of Directors has their best interests at heart, or at least their compound interest at heart, as many are bound by contract or debt to their Syndicate.";
+  data.factions.UN.desc           = "After the outbreak of hostilities with Mars more than 80 years ago and the treaties that followed, the UN assumed the role of the unified sovereign government over the Earth, Moon, and Mercury. Known for its glacial bureaucracy and stodgy leaders, Earth remains an economic powerhouse, largly as a result of remaining the sole inhabitable body in the system.| Despite the fragile treaty after the War of Martian Independence, the UN member nations continue to see Mars as selfish and ungrateful.";
+  data.factions.MC.desc           = "Nearly 50 years after its founding as a science outpost in the early 22nd century, Mars declared independence from an Earth that it increasingly viewed as a distant, intrusive micromanager. In the 84 years since its founding, Mars has grown into a military power rivaling Earth, with a thriving economy and highly educated populace. Since its independence, Mars has focused its significant resources toward the scientific and technological achievements necessary to realize its population's dream of a \"Green Mars\".|The Martian Commonwealth controls Mars and its moons as well as several of the Jovian moons, providing the infrastructure and resource to maintain and grow their subterranean and domed habitats, whose proximity to the radiant gas giant make them the bread basket of the outer planets.";
+  data.factions.TRANSA.desc       = "Those who live in the outer planets are exquisitely aware of the fragile existence they lead, completely dependent on shipments of food, water, medicine, and technology in order to survive.|When Mars broke from Earth, deliveries to the furthest installations in the outer system ceased in the face of privateering and the realities of a war economy. Those who survived the food riots shortly found themselves under the unforgiving magnetic boot of the corporate security forces originally contracted to protect and police the scientific mission stationed on Pluto.|Collectively calling themselves the Trans-Neptunian Authority, they quickly restored order and set to work building a strict, tightly controlled, society with the ultimate goal of achieving self-sufficiency.|With resources stretched and hungry mouths to feed, TRANSA offers the lowest tax rate in the system, promising a hefty margin to any traders willing to make the \"Long Haul\", as it is popularly known. Given the size of TRANSA's tiny fleet and the vast volume of space it patrols, the Long Haul can as be perilous as it is profitable.";
+  data.factions.CERES.desc        = "Holding a favorable position orbiting within the asteroid belt, the independent planetoid Ceres has long served as a trade hub between the inner and outer planets. Its location also serves to make it a launching point for mining operations within the asteroid belt.|A number of shipyards have grown up around Ceres, taking advantage of the central location and ease of access to materials to make Ceres the primary ship-bulding center in the system."
+  data.factions.JFT.desc          = "Faced with the same economic constraints and pressures as the outer planets during the war but with much closer and more powerful corporate interests at hand, the Saturnian moons controlling interests joined to form the United Trade Collective. Funded by some of the richest corporations on Earth, the JFT has become a force unto itself, patrolling the outer planets' trade routes with its corporate fleet.|Life in the domes of Saturn is difficult, and the harvesting of ice and ore in the outer system is dangerous work, but citizen employees can rest assured that the Board of Directors has their best interests at heart, or at least their compound interest at heart, as many are bound by contract or debt to their Syndicate.";
 
-  data.bodies.mercury.desc      = "Too close to the sun to permit domed habitations, Mercury's single city, Quicksilver, lies deep underground, providing it with a modicum of protection against the intense solar radiation bathing the surface.|Known for its rich mineral deposits and hard-nosed populace, the knowledge gained during the process of excavating and settling Mercury was a major factor in the success of later colonies. Although nominally a member of the UN, Mercury is widely known to be effectively run by the unions, who work to ensure that Mercury is not unfairly exploited by Earth. Nobody messes with the local 127.";
-  data.bodies.earth.desc        = "Under the unified governance of the UN, Earth has been at peace for decades. As the sole habital body in the system, Earth remains the largest population, economy, and military force in the system.";
-  data.bodies.moon.desc         = "A natural target for the first extension of humanity into space, the Moon's domed cities and vast, subterranean passages hold the second largest population in the system as well as some of its best shipyards.|With its lower gravity, excellent amenities, and close proximity to Earth, Luna hosts the official embassies of both the Martian Commonwealth and TRANSA.";
-  data.bodies.mars.desc         = "Rising from the ashes of the Earth fleet's systematic bombardment during the war for independence, the Martian capitol of Barsoom is home to the most widely respected universities and scientific institutions in the system.|The memories of those scars still fresh, Mars continues to sink a sizable proportion of its resources into its fleet and planetary defenses. Although smaller than the UN fleet, the Martian navy's vessels are newer and have a small but not inconsiderable tech advantage on Earth's aging ships.";
-  data.bodies.ceres.desc        = "Large enough to be given a comfortable spin gravity of more than a third of Earth, the hollowed out planetoid Ceres is a major shipping and commercial hub between the inner and outer planets.";
-  data.bodies.europa.desc       = "One of the two Jovian moons claimed by Mars during the war, Europa is the source of much mineral wealth to the Commonwealth and is patrolled by the Martian fleet.";
-  data.bodies.callisto.desc     = "Callisto's vast domed farms produce tons of food that are shipped across the system, supporting many of the outer colonies that cannot produce enough food to be self sufficient. It also hosts the regional Martian command orbital and dock yards.";
-  data.bodies.ganymede.desc     = "The official headquarters of the JFT, Ganymede also hosts excellent agricultural facilities and shipyards, making it a commercial hub of the outer system.";
-  data.bodies.enceladus.desc    = "The supply station orbiting Enceladus boasts the best views in the system and is the nexus for the harvesting and shipping of water from Saturn's rings.";
-  data.bodies.rhea.desc         = "The Rhea Orbital Lab is the primary research and development platform of the JFT and maintains a small population serving the needs of the research community there.";
-  data.bodies.titan.desc        = "With an actual atmosphere, albeit a poisonous one, Titan is home to TRANSA's largest and most prosperous settlement. Nestled in close proximity to two JFT orbitals around Saturn, Titan has become something  of a trade hub between the two factions.";
-  data.bodies.triton.desc       = "In retrograde orbit of Neptune, the Triton orbital hosts the meager Plutonian Naval Command and acts as their primary supply station.";
-  data.bodies.titania.desc      = "Rich in heavy organic compounds, Titania is the primary source of raw materials and shipping for TRANSA. When the war began, the process of spinning up Titania was nearly halfway complete. With nearly a quarter of Earth's gravity and supported by a growing commercial mining industry, it is also one of the few TRANSA properties with a growing population.";
-  data.bodies.pluto.desc        = "The furthest outpost of humanity, Pluto is home to the TRANSA high command. It's deeply excavated chambers support a surprisingly robust population, many descended from the original scientific mission team stationed on the dwarf planet at the outset of the Martian rebellion.";
+  data.bodies.mercury.desc        = "Too close to the sun to permit domed habitations, Mercury's single city, Quicksilver, lies deep underground, providing it with a modicum of protection against the intense solar radiation bathing the surface.|Known for its rich mineral deposits and hard-nosed populace, the knowledge gained during the process of excavating and settling Mercury was a major factor in the success of later colonies. Although nominally a member of the UN, Mercury is widely known to be effectively run by the unions, who work to ensure that Mercury is not unfairly exploited by Earth. Nobody messes with the local 127.";
+  data.bodies.earth.desc          = "Under the unified governance of the UN, Earth has been at peace for decades. As the sole habital body in the system, Earth remains the largest population, economy, and military force in the system.";
+  data.bodies.moon.desc           = "A natural target for the first extension of humanity into space, the Moon's domed cities and vast, subterranean passages hold the second largest population in the system as well as some of its best shipyards.|With its lower gravity, excellent amenities, and close proximity to Earth, Luna hosts the official embassies of both the Martian Commonwealth and TRANSA.";
+  data.bodies.mars.desc           = "Rising from the ashes of the Earth fleet's systematic bombardment during the war for independence, the Martian capitol of Barsoom is home to the most widely respected universities and scientific institutions in the system.|The memories of those scars still fresh, Mars continues to sink a sizable proportion of its resources into its fleet and planetary defenses. Although smaller than the UN fleet, the Martian navy's vessels are newer and have a small but not inconsiderable tech advantage on Earth's aging ships.";
+  data.bodies.ceres.desc          = "Large enough to be given a comfortable spin gravity of more than a third of Earth, the hollowed out planetoid Ceres is a major shipping and commercial hub between the inner and outer planets.";
+  data.bodies.europa.desc         = "One of the two Jovian moons claimed by Mars during the war, Europa is the source of much mineral wealth to the Commonwealth and is patrolled by the Martian fleet.";
+  data.bodies.callisto.desc       = "Callisto's vast domed farms produce tons of food that are shipped across the system, supporting many of the outer colonies that cannot produce enough food to be self sufficient. It also hosts the regional Martian command orbital and dock yards.";
+  data.bodies.ganymede.desc       = "The official headquarters of the JFT, Ganymede also hosts excellent agricultural facilities and shipyards, making it a commercial hub of the outer system.";
+  data.bodies.enceladus.desc      = "The supply station orbiting Enceladus boasts the best views in the system and is the nexus for the harvesting and shipping of water from Saturn's rings.";
+  data.bodies.rhea.desc           = "The Rhea Orbital Lab is the primary research and development platform of the JFT and maintains a small population serving the needs of the research community there.";
+  data.bodies.titan.desc          = "With an actual atmosphere, albeit a poisonous one, Titan is home to TRANSA's largest and most prosperous settlement. Nestled in close proximity to two JFT orbitals around Saturn, Titan has become something  of a trade hub between the two factions.";
+  data.bodies.triton.desc         = "In retrograde orbit of Neptune, the Triton orbital hosts the meager Plutonian Naval Command and acts as their primary supply station.";
+  data.bodies.titania.desc        = "Rich in heavy organic compounds, Titania is the primary source of raw materials and shipping for TRANSA. When the war began, the process of spinning up Titania was nearly halfway complete. With nearly a quarter of Earth's gravity and supported by a growing commercial mining industry, it is also one of the few TRANSA properties with a growing population.";
+  data.bodies.pluto.desc          = "The furthest outpost of humanity, Pluto is home to the TRANSA high command. It's deeply excavated chambers support a surprisingly robust population, many descended from the original scientific mission team stationed on the dwarf planet at the outset of the Martian rebellion.";
 
-  data.shipclass.surveyor.desc  = "Commissioned for the government of Ceres, the surveyor class vessel is designed for short cargo runs and asteroid prospecting.";
-  data.shipclass.fortuna.desc   = "Named for the daughter of Jupiter, the Fortuna is a container ship optimized to carry larger loads at higher efficiency than a typical freighter.";
-  data.shipclass.patrol.desc    = "The UN patrol destroyer can manuever better than the standard destroyer class and has longer legs, making it highly effective in its role as a long distance patrol vessel for the UN.";
-  data.shipclass.barsoom.desc   = "The Barsoomian class frigate adopts the latest advances in Martian technology resulting in a frigate class ship with more range, speed, and enough firepower to act as its own escort.";
-  data.shipclass.neptune.desc   = "Designed and built in TRANSA's own shipyards, the Neptune class cargo hauler has the longest range of any vessel while retaining low mass and reasonable cargo space. A favorite of traders and smugglers on the Long Haul alike, it has the armor and hard points to defend itself in the unguarded outer oribts.";
+  data.shipclass.surveyor.desc    = "Commissioned for the government of Ceres, the surveyor class vessel is designed for short cargo runs and asteroid prospecting.";
+  data.shipclass.fortuna.desc     = "Named for the daughter of Jupiter, the Fortuna is a container ship optimized to carry larger loads at higher efficiency than a typical freighter.";
+  data.shipclass.interceptor.desc = "The UN \"Interceptor\" destroyer can manuever better than the standard destroyer class and has longer legs, making it highly effective in its role as a long distance patrol vessel for the UN.";
+  data.shipclass.barsoom.desc     = "The Barsoomian class frigate adopts the latest advances in Martian technology resulting in a frigate class ship with more range, speed, and enough firepower to act as its own escort.";
+  data.shipclass.neptune.desc     = "Designed and built in TRANSA's own shipyards, the Neptune class cargo hauler has the longest range of any vessel while retaining low mass and reasonable cargo space. A favorite of traders and smugglers on the Long Haul alike, it has the armor and hard points to defend itself in the unguarded outer oribts.";
 
   return data;
 });

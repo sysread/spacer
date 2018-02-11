@@ -261,7 +261,7 @@ define(function(require, exports, module) {
     data: function() {
       return {
         npc: new Npc({
-          label:     'Police Patrol',
+          name:     'Police Patrol',
           faction:   this.faction,
           shipClass: util.oneOf(['corvette', 'frigate', 'destroyer'])
         }),

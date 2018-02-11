@@ -89,7 +89,7 @@ define(function(require, exports, module) {
       </span>
       <span v-else-if="isPlayerShip">You already own a ship of this class.</span>
       <span v-else-if="!canAfford">You cannot afford this ship.</span>
-    <card-text>
+    </card-text>
 
     <def y=1 brkpt="sm" term="Price">
       <span slot="def">

@@ -82,7 +82,7 @@ define(function(require, exports, module) {
       tank:      function() {return util.R(this.ship.fuel, 2) + '/' + this.ship.tank},
       burn:      function() {return util.csn(this.ship.maxBurnTime() * data.hours_per_turn)},
       addons:    function() {return this.ship.addons},
-      addOnData: function() {return data.shipAddOns[this.showAddOn]},
+      addOnData: function() {return data.addons[this.showAddOn]},
       cargo:     function() {
         const cargo = [];
         for (const item of this.ship.cargo.keys) {
@@ -96,7 +96,7 @@ define(function(require, exports, module) {
     },
     methods: {
       addOnName: function(addon) {
-        return data.shipAddOns[addon].name;
+        return data.addons[addon].name;
       },
 
       toggleAddOn: function(addon) {

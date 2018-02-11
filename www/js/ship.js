@@ -27,10 +27,10 @@ define(function(require, exports, module) {
       this.cargo  = new model.Store(init.cargo);
     }
 
-    get cargoSpace() { return Math.max(0,    this.attr('cargo')) }
-    get hull()       { return Math.max(1,    this.attr('hull')) }
-    get armor()      { return Math.max(0,    this.attr('armor')) }
-    get stealth()    { return Math.min(0.99, this.attr('stealth')) }
+    get cargoSpace() { return Math.max(0, this.attr('cargo')) }
+    get stealth()    { return Math.min(0.8, this.attr('stealth')) }
+    get armor()      { return Math.max(0, this.attr('armor')) }
+    get hull()       { return Math.max(1, this.attr('hull')) }
 
     /*
      * Calculated properties of the ship itself
@@ -49,11 +49,38 @@ define(function(require, exports, module) {
       return false;
     }
 
+    get isDestroyed() {
+      return this.armor === 0
+          && this.hull  === 0;
+    }
+
     /*
      * Methods
      */
     isPlayerShipType()  { return this.type === game.player.ship.type }
     playerHasStanding() { return !this.restricted || game.player.hasStanding(game.here.faction, this.restricted) }
+
+    attr(name, nominal=false) {
+      let value = 0;
+
+      if (this.shipclass.hasOwnProperty(name)) {
+        value += this.shipclass[name];
+      }
+
+      for (const addon of this.addons) {
+        if (data.addons[addon].hasOwnProperty(name)) {
+          value += data.addons[addon][name];
+        }
+      }
+
+      if (!nominal) {
+        if (this.damage.hasOwnProperty(name)) {
+          value -= this.damage[name];
+        }
+      }
+
+      return value;
+    }
 
     thrustRatio(deltav, mass) {
       if (mass === undefined) mass = this.currentMass();
@@ -86,7 +113,7 @@ define(function(require, exports, module) {
     }
 
     addOnMass() {
-      return this.addons.reduce((a, b) => {return a + data.shipAddOns[b].mass}, 0);
+      return this.addons.reduce((a, b) => {return a + data.addons[b].mass}, 0);
     }
 
     nominalMass(full_tank=false) {
@@ -180,14 +207,17 @@ define(function(require, exports, module) {
     }
 
     addOnValue() {
-      return this.addons.reduce((a, b) => {
-        return a + data.shipAddOns.price;
-      }, 0);
+      let price = 0;
+      for (const addon of this.addons) {
+        price += data.addons[addon].price;
+      }
+
+      return price;
     }
 
     price(tradein) {
-      let cargo = this.cargoValue();
-      let fuel  = this.fuelValue();
+      const cargo = this.cargoValue();
+      const fuel  = this.fuelValue();
       let ship  = this.shipValue() + this.addOnValue();
       if (tradein) ship = Math.ceil(ship * 0.7);
       return ship + cargo + fuel;
@@ -216,20 +246,20 @@ define(function(require, exports, module) {
       this.addons = this.addons.filter(x => {return x !== addon});
     }
 
-    attr(name) {
-      let value = 0;
+    applyDamage(dmg) {
+      const armor = this.armor;
+      const hull  = this.hull;
 
-      if (this.shipclass.hasOwnProperty(name)) {
-        value += this.shipclass[name];
-      }
+      const armor_dmg = Math.min(this.armor, dmg);
+      this.damage.armor += armor_dmg;
+      dmg -= armor_dmg;
 
-      for (const addon of this.addons) {
-        if (data.shipAddOns[addon].hasOwnProperty(name)) {
-          value += data.shipAddOns[addon][name];
-        }
-      }
+      const hull_dmg = Math.min(this.hull, dmg);
+      this.damage.hull += hull_dmg;
+      dmg -= hull_dmg;
 
-      return value;
+      // Return true if the ship is destroyed
+      return this.isDestroyed;
     }
   };
 });

@@ -5,7 +5,7 @@ define(function(require, exports, module) {
 
   return class {
     constructor(opt) {
-      this.label     = opt.label;
+      this.name      = opt.name;
       this.faction   = opt.faction;
       this.shipClass = data.shipclass[opt.shipClass];
 

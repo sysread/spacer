@@ -30,6 +30,10 @@ define(function(require, exports, module) {
     return decimal ? `${sign}${integer}.${decimal}` : `${sign}${integer}`;
   };
 
+  util.pct = function(fraction, places) {
+    return util.R(fraction * 100, places) + '%';
+  };
+
   util.uniq = function(items, sep=' ') {
     if (!(items instanceof Array))
       items = `${items}`.split(sep).filter((s) => {return s != ''});
@@ -49,6 +53,13 @@ define(function(require, exports, module) {
 
     const factor = Math.pow(10, places);
     return Math.round(n * factor) / factor;
+  };
+
+  /*
+   * Returns a random float between min and max.
+   */
+  util.getRandomNum = function(min, max) {
+    return (Math.random() * (max - min)) + min;
   };
 
   /*
