@@ -41,6 +41,11 @@ define(function(require, exports, module) {
 
   const Faction = class {
     constructor(abbrev) {
+      // Faction instance rather than abbrev string
+      if (abbrev.hasOwnProperty('abbrev')) {
+        abbrev = abbrev.abbrev;
+      }
+
       this.abbrev    = abbrev;
       this.full_name = data.factions[abbrev].full_name;
       this.capital   = data.factions[abbrev].capital;
@@ -52,6 +57,7 @@ define(function(require, exports, module) {
     }
 
     get desc() { return data.factions[abbrev].desc }
+    toString() { return this.abbrev }
   };
 
   const Trait = class {

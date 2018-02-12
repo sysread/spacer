@@ -21,6 +21,7 @@ define(function() {
     fab_health:         30, // number of tics each fabricator can handle before needing to be replaced. be sure to make this higher than the total tics needed to craft a cybernetics unit.
     grav_deltav_factor: 5, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
     initial_ship:       'runner',
+    initial_money:      1000,
     jurisdiction:       0.5, // au from body
     max_abs_standing:   100,
 
@@ -320,8 +321,8 @@ define(function() {
       hauler:      {hull: 20, armor: 4,  cargo: 80, hardpoints: 5,  mass: 2700,  tank: 110, drives: 40,  drive: 'ion',    restricted: false},
 
       /* Military */
-      corvette:    {hull: 25, armor: 5,  cargo: 10, hardpoints: 4,  mass: 550,   tank: 15,  drives: 1,   drive: 'fusion', restricted: 'Respected'},
-      frigate:     {hull: 30, armor: 10, cargo: 20, hardpoints: 6,  mass: 800,   tank: 40,  drives: 2,   drive: 'fusion', restricted: 'Respected'},
+      corvette:    {hull: 25, armor: 5,  cargo: 10, hardpoints: 4,  mass: 550,   tank: 15,  drives: 1,   drive: 'fusion', restricted: 'Trusted'},
+      frigate:     {hull: 30, armor: 10, cargo: 20, hardpoints: 6,  mass: 800,   tank: 40,  drives: 2,   drive: 'fusion', restricted: 'Trusted'},
       destroyer:   {hull: 45, armor: 12, cargo: 12, hardpoints: 8,  mass: 1100,  tank: 60,  drives: 4,   drive: 'fusion', restricted: 'Admired'},
       cruiser:     {hull: 60, armor: 15, cargo: 15, hardpoints: 10, mass: 1850,  tank: 100, drives: 8,   drive: 'fusion', restricted: 'Admired'},
       battleship:  {hull: 85, armor: 25, cargo: 20, hardpoints: 16, mass: 2300,  tank: 140, drives: 10,  drive: 'fusion', restricted: 'Admired'},
@@ -364,7 +365,7 @@ define(function() {
         rate:       1,
         magazine:   4,
         price:      200000,
-        restricted: 'Respected',
+        restricted: 'Trusted',
       },
       railgun_cannon: {
         name:       'rail gun cannon',
@@ -399,7 +400,7 @@ define(function() {
         magazine:      1,
         interceptable: true,
         price:         185000,
-        restricted:    'Admired',
+        restricted:    'Trusted',
       },
       heavy_torpedo: {
         name:          'heavy torpedo launcher',

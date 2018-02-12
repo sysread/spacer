@@ -3,25 +3,32 @@ define(function(require, exports, module) {
   const system  = require('system');
   const Ship    = require('ship');
   const Physics = require('physics');
+  const model   = require('model');
 
   return class {
     constructor(init) {
       init = init || {};
       this.name     = init.name;
-      this.home     = init.home;
-      this.faction  = init.faction;
-      this.money    = init.money || 1000;
-      this.ship     = new Ship(init.ship);
+      this.ship     = new Ship(init.ship || data.initial_ship);
+      this.faction  = new model.Faction(init.faction || 'MC');
+      this.home     = init.home     || this.faction.capital;
+      this.money    = init.money    || data.initial_money;
       this.standing = init.standing || {};
 
       // Set default values for faction standing at neutral
-      for (let faction of Object.keys(data.factions)) {
-        this.standing[faction] = this.standing[faction] || 0;
+      for (const faction of Object.keys(data.factions)) {
+        if (init.standing && init.standing[faction]) {
+          this.standing[faction] = init.standing[faction];
+        }
+        else if (faction === this.faction.abbrev) {
+          // Initial value player's for own faction is "Friendly" with a small
+          // amount extra as a margin of forgiveness.
+          this.standing[faction] = 15;
+        }
+        else {
+          this.standing[faction] = 0;
+        }
       }
-
-      // Initial value player's for own faction is "Friendly" with a small amount
-      // extra as a margin of forgiveness.
-      this.standing[this.faction] = this.standing[this.faction] || 15;
     }
 
     get localStanding() {
@@ -70,7 +77,12 @@ define(function(require, exports, module) {
       }
 
       if (!this.standing.hasOwnProperty(faction)) {
-        this.standing[faction] = 0;
+        if (faction === this.faction.abbrev) {
+          this.standing[faction] = 15;
+        }
+        else {
+          this.standing[faction] = 0;
+        }
       }
 
       return this.standing[faction];
@@ -82,14 +94,16 @@ define(function(require, exports, module) {
 
     standingCutoff(standing) {
       switch (standing) {
-        case 'Criminal'  : return -50; break;
-        case 'Untrusted' : return -20; break;
-        case 'Dubious'   : return -10; break;
-        case 'Neutral'   : return  -9; break;
-        case 'Friendly'  : return  10; break;
-        case 'Respected' : return  20; break;
-        case 'Admired'   : return  50; break;
-        default          : return   0;
+        case 'Criminal'   : return -50; break;
+        case 'Untrusted'  : return -30; break;
+        case 'Suspicious' : return -20; break;
+        case 'Dubious'    : return -10; break;
+        case 'Neutral'    : return  -9; break;
+        case 'Friendly'   : return  10; break;
+        case 'Respected'  : return  20; break;
+        case 'Trusted'    : return  30; break;
+        case 'Admired'    : return  50; break;
+        default           : return   0;
       }
     }
 

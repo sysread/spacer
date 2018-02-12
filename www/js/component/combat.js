@@ -39,7 +39,7 @@ define(function(require, exports, module) {
 
   <row>
     <small class="col-12 text-center text-weight-light font-italic">
-      {{combat.player.faction}} vs. {{combat.opponent.faction}}
+      {{combat.player.faction.abbrev}} vs. {{combat.opponent.faction.abbrev}}
     </small>
   </row>
 

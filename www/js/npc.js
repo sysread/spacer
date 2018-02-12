@@ -1,12 +1,13 @@
 define(function(require, exports, module) {
-  const data = require('data');
-  const util = require('util');
-  const Ship = require('ship');
+  const data  = require('data');
+  const util  = require('util');
+  const Ship  = require('ship');
+  const model = require('model');
 
   return class {
     constructor(opt) {
       this.name      = opt.name;
-      this.faction   = opt.faction;
+      this.faction   = new model.Faction(opt.faction);
       this.shipClass = data.shipclass[opt.shipClass];
 
       this.ship = new Ship({

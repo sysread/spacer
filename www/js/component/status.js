@@ -14,7 +14,7 @@ define(function(require, exports, module) {
     computed: {
       money   : function() {return this.person.money},
       home    : function() {return data.bodies[this.person.home].name},
-      faction : function() {return data.factions[this.person.faction].full_name},
+      faction : function() {return this.person.faction.full_name},
       accel   : function() {return this.person.maxAcceleration() / Physics.G },
     },
     methods: {
