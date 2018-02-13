@@ -22,8 +22,11 @@ define(function(require, exports, module) {
   });
 
   Vue.component('card-link', {
-    props: ['href'],
-    template: '<a @click="$emit("click")" class="card-link" :href="href"><slot /></a>'
+    props: ['to'],
+    computed: {
+      href: function() { return this.to || '#' },
+    },
+    template: `<a @click="$emit('click')" class="card-link" :href="href"><slot /></a>`
   });
 
   Vue.component('card-img', {

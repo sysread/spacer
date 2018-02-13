@@ -1,19 +1,12 @@
 define(function(require, exports, module) {
-  const data  = require('data');
-  const util  = require('util');
-  const Ship  = require('ship');
-  const model = require('model');
+  const data   = require('data');
+  const util   = require('util');
+  const Ship   = require('ship');
+  const Person = require('Person');
 
-  return class {
+  return class extends Person {
     constructor(opt) {
-      this.name      = opt.name;
-      this.faction   = new model.Faction(opt.faction);
-      this.shipClass = data.shipclass[opt.shipClass];
-
-      this.ship = new Ship({
-        type: opt.shipClass,
-        fuel: (opt.fuel || util.getRandomInt(Math.ceil(this.shipClass.tank / 4), this.shipClass.tank + 1)),
-      });
+      super(opt);
 
       if (opt.cargo) {
         for (let item of Object.keys(opt.cargo)) {
@@ -26,11 +19,15 @@ define(function(require, exports, module) {
     }
 
     addRandomCargo() {
-      const numItems  = util.getRandomInt(0, this.shipClass.cargo + 1);
+      const numItems  = util.getRandomInt(0, this.ship.cargoSpace + 1);
       const resources = Object.keys(data.resources);
 
-      for (let i = 0; i < numItems; ++i) {
-        const resource = resources[util.getRandomInt(0, resources.length)];
+      while (this.ship.cargoUsed < numItems) {
+        const resource = util.oneOf(resources);
+
+        if (data.resources[resource].contraband && this.faction.abbrev !== 'TRANSA')
+          continue;
+
         this.ship.loadCargo(resource, 1);
       }
     }

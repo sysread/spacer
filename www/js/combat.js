@@ -59,11 +59,9 @@ define(function(require, exports, module) {
         throw new Error('action.use: action is not ready');
       }
 
-      let damage = 0;
+      let damage = undefined;
 
       for (let i = 0; i < this.rate; ++i) {
-        damage += util.getRandomNum(0, this.damage);
-
         if (this.isReloadable) {
           --this._magazine;
 
@@ -71,6 +69,14 @@ define(function(require, exports, module) {
             this._reload = this.reload;
             break;
           }
+        }
+
+        if (util.chance(0.75)) { // TODO: based on *something*
+          if (damage === undefined) {
+            damage = 0;
+          }
+
+          damage += util.getRandomNum(0, this.damage);
         }
       }
 
@@ -84,28 +90,16 @@ define(function(require, exports, module) {
   const Combatant = class {
     constructor(combatant) {
       this.combatant = combatant;
-      this.dodge     = 0.10;
-      this.intercept = 0;
+      this.dodge     = this.ship.dodge;
+      this.intercept = this.ship.intercept;
       this._actions  = [];
 
       for (const addon of this.ship.addons) {
         const info = data.addons[addon];
-
         if (info.damage) {
           this._actions.push(new Action(info));
         }
-
-        if (info.dodge) {
-          this.dodge += info.dodge;
-        }
-
-        if (info.intercept) {
-          this.intercept += info.intercept;
-        }
       }
-
-      this.dodge     = Math.min(this.dodge,     0.75);
-      this.intercept = Math.min(this.intercept, 0.75);
     }
 
     get name()        { return this.combatant.name }
@@ -123,26 +117,22 @@ define(function(require, exports, module) {
       }
     }
 
-    tryIntercept() {
-      return util.getRandomNum(0, 1) <= this.intercept;
-    }
-
-    tryDodge() {
-      return util.getRandomNum(0, 1) <= this.dodge;
-    }
+    tryIntercept() { return util.chance(this.intercept) }
+    tryDodge()     { return util.chance(this.dodge) }
   };
 
   const Combat = class {
     constructor(opt) {
       this.player     = new Combatant(game.player);
       this.opponent   = new Combatant(opt.opponent);
-      this.initiative = 'player'; //util.oneOf(['player', 'opponent']);
+      this.initiative = util.oneOf(['player', 'opponent']);
       this.round      = 1;
       this.log        = [];
+      this.result     = undefined;
+    }
 
-      if (!this.isPlayerTurn) {
-        this.opponentTurn();
-      }
+    get isOver() {
+      return this.player.isDestroyed || this.opponent.isDestroyed;
     }
 
     get currentRound() {
@@ -151,9 +141,9 @@ define(function(require, exports, module) {
 
     get isPlayerTurn() {
       if (this.initiative === 'player') {
-        return this.round + 2 % 2 !== 0;
+        return (this.round + 2) % 2 !== 0;
       } else {
-        return this.round + 2 % 2 === 0;
+        return (this.round + 2) % 2 === 0;
       }
     }
 
@@ -161,31 +151,15 @@ define(function(require, exports, module) {
       this.log.unshift(`[${this.currentRound}] ${msg}`);
     }
 
+    start() {
+      if (!this.isPlayerTurn) {
+        this.opponentAction();
+      }
+    }
+
     playerAction(action) {
       this.player.nextRound();
-
-      const effect = action.use();
-
-      if (effect.damage) {
-        if (effect.interceptable && this.opponent.tryIntercept()) {
-          this.addLogEntry(`Your ${action.name} attack was intercepted by your opponent's point defenses.`);
-        }
-        else if (this.opponent.tryDodge()) {
-          this.addLogEntry(`Your opponent was able to maneuver around your ${action.name} attack.`);
-        }
-        else {
-          this.addLogEntry(`Your ${action.name} hit your opponent, causing ${effect.damage} damage.`);
-          if (this.opponent.ship.applyDamage(effect.damage)) {
-            this.addLogEntry("Your opponent's ship has been destroyed.");
-          }
-        }
-      }
-      else {
-        this.addLogEntry(`You attacked with ${action.name} and missed.`);
-      }
-
-      ++this.round;
-
+      this.doAction(action, this.player, this.opponent);
       if (!this.opponent.isDestroyed) {
         this.opponentAction();
       }
@@ -193,6 +167,34 @@ define(function(require, exports, module) {
 
     opponentAction() {
       this.opponent.nextRound();
+      const action = util.oneOf(this.opponent.ready);
+      this.doAction(action, this.opponent, this.player);
+    }
+
+    doAction(action, from, to) {
+      const effect = action.use();
+
+      if (effect.damage === undefined) {
+        this.addLogEntry(`${from.name} attacked with ${action.name} and missed.`);
+      }
+      else {
+        if (effect.damage === 0) {
+          this.addLogEntry(`${from.name} attacked with ${action.name} but there was negligible damage.`);
+        }
+        if (effect.interceptable && from.tryIntercept()) {
+          this.addLogEntry(`${from.name} attacked with ${action.name} but ${to.name}'s point defenses were able to intercept.`);
+        }
+        else if (from.tryDodge()) {
+          this.addLogEntry(`${from.name} attacked with ${action.name} but ${to.name} was able to maneuver to avoid the attack.`);
+        }
+        else {
+          this.addLogEntry(`${from.name} attacked with ${action.name}, causing ${effect.damage} damage.`);
+          if (to.ship.applyDamage(effect.damage)) {
+            this.addLogEntry(`${to.name}'s ship has been destroyed!`);
+          }
+        }
+      }
+
       ++this.round;
     }
   };

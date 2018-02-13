@@ -315,25 +315,25 @@ define(function() {
       runner:      {hull: 4,  armor: 2,  cargo: 14, hardpoints: 2,  mass: 850,   tank: 10,  drives: 3,   drive: 'ion',    restricted: false},
 
       /* Merchant */
-      trader:      {hull: 4,  armor: 2,  cargo: 25, hardpoints: 2,  mass: 1200,  tank: 30,  drives: 10,  drive: 'ion',    restricted: false},
-      merchantman: {hull: 7,  armor: 2,  cargo: 30, hardpoints: 3,  mass: 1500,  tank: 45,  drives: 15,  drive: 'ion',    restricted: false},
-      freighter:   {hull: 10, armor: 3,  cargo: 50, hardpoints: 3,  mass: 2300,  tank: 85,  drives: 30,  drive: 'ion',    restricted: false},
-      hauler:      {hull: 20, armor: 4,  cargo: 80, hardpoints: 5,  mass: 2700,  tank: 110, drives: 40,  drive: 'ion',    restricted: false},
+      trader:      {hull: 4,  armor: 4,  cargo: 25, hardpoints: 2,  mass: 1200,  tank: 30,  drives: 10,  drive: 'ion',    restricted: false},
+      merchantman: {hull: 7,  armor: 4,  cargo: 30, hardpoints: 3,  mass: 1500,  tank: 45,  drives: 15,  drive: 'ion',    restricted: false},
+      freighter:   {hull: 10, armor: 6,  cargo: 50, hardpoints: 3,  mass: 2300,  tank: 85,  drives: 30,  drive: 'ion',    restricted: false},
+      hauler:      {hull: 20, armor: 8,  cargo: 80, hardpoints: 5,  mass: 2700,  tank: 110, drives: 40,  drive: 'ion',    restricted: false},
 
       /* Military */
-      corvette:    {hull: 25, armor: 5,  cargo: 10, hardpoints: 4,  mass: 550,   tank: 15,  drives: 1,   drive: 'fusion', restricted: 'Trusted'},
-      frigate:     {hull: 30, armor: 10, cargo: 20, hardpoints: 6,  mass: 800,   tank: 40,  drives: 2,   drive: 'fusion', restricted: 'Trusted'},
-      destroyer:   {hull: 45, armor: 12, cargo: 12, hardpoints: 8,  mass: 1100,  tank: 60,  drives: 4,   drive: 'fusion', restricted: 'Admired'},
-      cruiser:     {hull: 60, armor: 15, cargo: 15, hardpoints: 10, mass: 1850,  tank: 100, drives: 8,   drive: 'fusion', restricted: 'Admired'},
-      battleship:  {hull: 85, armor: 25, cargo: 20, hardpoints: 16, mass: 2300,  tank: 140, drives: 10,  drive: 'fusion', restricted: 'Admired'},
-      transport:   {hull: 40, armor: 10, cargo: 50, hardpoints: 6,  mass: 3500,  tank: 180, drives: 10,  drive: 'fusion', restricted: 'Admired'},
+      corvette:    {hull: 15, armor: 10, cargo: 10, hardpoints: 4,  mass: 550,   tank: 15,  drives: 1,   drive: 'fusion', restricted: 'Trusted'},
+      frigate:     {hull: 20, armor: 14, cargo: 20, hardpoints: 6,  mass: 800,   tank: 40,  drives: 2,   drive: 'fusion', restricted: 'Trusted'},
+      destroyer:   {hull: 30, armor: 18, cargo: 12, hardpoints: 8,  mass: 1100,  tank: 60,  drives: 4,   drive: 'fusion', restricted: 'Admired'},
+      cruiser:     {hull: 50, armor: 25, cargo: 15, hardpoints: 10, mass: 1850,  tank: 100, drives: 8,   drive: 'fusion', restricted: 'Admired'},
+      battleship:  {hull: 65, armor: 40, cargo: 20, hardpoints: 16, mass: 2300,  tank: 140, drives: 10,  drive: 'fusion', restricted: 'Admired'},
+      transport:   {hull: 40, armor: 20, cargo: 50, hardpoints: 6,  mass: 3500,  tank: 180, drives: 10,  drive: 'fusion', restricted: 'Admired'},
 
       /* Faction ships */
-      surveyor:    {hull: 6,  armor: 4,  cargo: 20, hardpoints: 2,  mass: 600,   tank: 20,  drives: 4,   drive: 'ion',    restricted: 'Respected', faction: 'CERES'},
-      fortuna:     {hull: 10, armor: 5,  cargo: 60, hardpoints: 3,  mass: 2200,  tank: 85,  drives: 30,  drive: 'ion',    restricted: 'Respected', faction: 'JFT'},
-      neptune:     {hull: 10, armor: 8,  cargo: 40, hardpoints: 3,  mass: 1600,  tank: 60,  drives: 20,  drive: 'ion',    restricted: 'Respected', faction: 'TRANSA'},
-      barsoom:     {hull: 35, armor: 10, cargo: 30, hardpoints: 4,  mass: 700,   tank: 45,  drives: 3,   drive: 'fusion', restricted: 'Admired',   faction: 'MC'},
-      interceptor: {hull: 40, armor: 8,  cargo: 25, hardpoints: 4,  mass: 900,   tank: 50,  drives: 3,   drive: 'fusion', restricted: 'Admired',   faction: 'UN'},
+      scout:       {hull: 8,  armor: 10, cargo: 20, hardpoints: 2,  mass: 600,   tank: 20,  drives: 4,   drive: 'ion',    restricted: 'Respected', faction: 'CERES'},
+      fortuna:     {hull: 20, armor: 8,  cargo: 60, hardpoints: 3,  mass: 2200,  tank: 85,  drives: 30,  drive: 'ion',    restricted: 'Respected', faction: 'JFT'},
+      neptune:     {hull: 14, armor: 10, cargo: 40, hardpoints: 3,  mass: 1600,  tank: 60,  drives: 20,  drive: 'ion',    restricted: 'Respected', faction: 'TRANSA'},
+      barsoom:     {hull: 20, armor: 20, cargo: 30, hardpoints: 4,  mass: 700,   tank: 45,  drives: 3,   drive: 'fusion', restricted: 'Admired',   faction: 'MC'},
+      interceptor: {hull: 25, armor: 8,  cargo: 25, hardpoints: 4,  mass: 900,   tank: 50,  drives: 3,   drive: 'fusion', restricted: 'Admired',   faction: 'UN'},
     },
 
     /*
@@ -360,7 +360,7 @@ define(function() {
         name:       'rail gun turret',
         desc:       'A military-grade rail gun turret, magnetically accelerating 100kg rounds at an appreciable fraction of the speed of light.',
         mass:       15,
-        damage:     2,
+        damage:     3,
         reload:     1,
         rate:       1,
         magazine:   4,
@@ -369,9 +369,9 @@ define(function() {
       },
       railgun_cannon: {
         name:       'rail gun cannon',
-        desc:       "More powerful than it's smaller cousin, a rail gun cannon fires much larger projectiles made of a much denser material, resulting in more energy released on impact.",
+        desc:       "More powerful than it's smaller cousin, a rail gun cannon fires heavier slugs of denser material, resulting in more energy released on impact.",
         mass:       30,
-        damage:     10,
+        damage:     12,
         reload:     2,
         rate:       1,
         magazine:   1,
@@ -382,7 +382,7 @@ define(function() {
         name:          'light torpedo launcher',
         desc:          'Adds a torpedo launcher tube suitable for low yield, self-guided payloads.',
         mass:          20,
-        damage:        4,
+        damage:        6,
         reload:        2,
         rate:          1,
         magazine:      2,
@@ -394,7 +394,7 @@ define(function() {
         name:          'medium torpedo launcher',
         desc:          'Adds a torpedo launcher tube suitable for moderate yield, self-guided payloads.',
         mass:          40,
-        damage:        8,
+        damage:        10,
         reload:        2,
         rate:          1,
         magazine:      1,
@@ -406,7 +406,7 @@ define(function() {
         name:          'heavy torpedo launcher',
         desc:          'Adds a torpedo launcher tube suitable for high yield, self-guided payloads.',
         mass:          60,
-        damage:        16,
+        damage:        18,
         reload:        2,
         rate:          1,
         magazine:      1,
@@ -421,7 +421,7 @@ define(function() {
         damage:     0.1,
         intercept:  0.65,
         reload:     1,
-        rate:       8,
+        rate:       5,
         magazine:   40,
         price:      35000,
         restricted: 'Friendly',
@@ -473,7 +473,7 @@ define(function() {
   data.bodies.titania.desc        = "Rich in heavy organic compounds, Titania is the primary source of raw materials and shipping for TRANSA. When the war began, the process of spinning up Titania was nearly halfway complete. With nearly a quarter of Earth's gravity and supported by a growing commercial mining industry, it is also one of the few TRANSA properties with a growing population.";
   data.bodies.pluto.desc          = "The furthest outpost of humanity, Pluto is home to the TRANSA high command. It's deeply excavated chambers support a surprisingly robust population, many descended from the original scientific mission team stationed on the dwarf planet at the outset of the Martian rebellion.";
 
-  data.shipclass.surveyor.desc    = "Commissioned for the government of Ceres, the surveyor class vessel is designed for short cargo runs and asteroid prospecting.";
+  data.shipclass.scout.desc       = "Commissioned for the government of Ceres, the scout class vessel is designed for short cargo runs and asteroid prospecting.";
   data.shipclass.fortuna.desc     = "Named for the daughter of Jupiter, the Fortuna is a container ship optimized to carry larger loads at higher efficiency than a typical freighter.";
   data.shipclass.interceptor.desc = "The UN \"Interceptor\" destroyer can manuever better than the standard destroyer class and has longer legs, making it highly effective in its role as a long distance patrol vessel for the UN.";
   data.shipclass.barsoom.desc     = "The Barsoomian class frigate adopts the latest advances in Martian technology resulting in a frigate class ship with more range, speed, and enough firepower to act as its own escort.";

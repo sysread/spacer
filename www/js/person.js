@@ -9,7 +9,7 @@ define(function(require, exports, module) {
     constructor(init) {
       init = init || {};
       this.name     = init.name;
-      this.ship     = new Ship(init.ship || data.initial_ship);
+      this.ship     = new Ship(init.ship || {type: data.initial_ship});
       this.faction  = new model.Faction(init.faction || 'MC');
       this.home     = init.home     || this.faction.capital;
       this.money    = init.money    || data.initial_money;

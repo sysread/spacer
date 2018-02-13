@@ -100,7 +100,7 @@ define(function(require, exports, module) {
     </btn>
   </card-text>
 
-  <modal v-if="task" @close="completeTask()" xclose="isReady" :title="task.name" footer=1 close="Close">
+  <modal v-if="task" @close="completeTask()" :xclose="isReady" :title="task.name" footer=1 close="Close">
     <div v-if="isReady">
       <p><i>{{task.desc}}</i></p>
       <p>Working at a daily wage of <gold>{{payRate}}</gold> credits for <gold>{{days}}</gold> days will earn <gold>{{pay}}</gold> credits.</p>

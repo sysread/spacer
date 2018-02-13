@@ -8,6 +8,10 @@ define(function(require, exports, module) {
     constructor(init) {
       init = init || {'type': 'shuttle'};
 
+      if (!data.shipclass.hasOwnProperty(init.type)) {
+        throw new Error(`Ship type not recognized: ${init.type}`);
+      }
+
       this.type         = init.type;
       this.shipclass    = data.shipclass[this.type];
       this.hardpoints   = this.shipclass.hardpoints;
@@ -27,10 +31,17 @@ define(function(require, exports, module) {
       this.cargo  = new model.Store(init.cargo);
     }
 
-    get cargoSpace() { return Math.max(0, this.attr('cargo')) }
-    get stealth()    { return Math.min(0.8, this.attr('stealth')) }
+    get hull()       { return Math.max(0, this.attr('hull')) }
     get armor()      { return Math.max(0, this.attr('armor')) }
-    get hull()       { return Math.max(1, this.attr('hull')) }
+    get stealth()    { return Math.min(0.5, this.attr('stealth')) }
+    get cargoSpace() { return Math.max(0, this.attr('cargo')) }
+    get intercept()  { return Math.min(0.35, this.attr('intercept')) }
+
+    get dodge() {
+      const ratio = this.thrust / this.mass;
+      const base  = ratio / 100;
+      return Math.min(0.4, base + this.attr('dodge'));
+    }
 
     /*
      * Calculated properties of the ship itself

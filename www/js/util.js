@@ -73,6 +73,10 @@ define(function(require, exports, module) {
     return Math.floor(Math.random() * (max - min)) + min;
   };
 
+  util.chance = function(pct) {
+    return util.getRandomNum(0, 1) <= pct;
+  };
+
   /*
    * Returns a random element from an array.
    */

@@ -1,5 +1,6 @@
 define(function(require, exports, module) {
   const Npc     = require('npc');
+  const Ship    = require('ship');
   const Physics = require('physics');
   const Vue     = require('vendor/vue');
   const data    = require('data');
@@ -259,11 +260,18 @@ define(function(require, exports, module) {
   Vue.component('transit-inspection', {
     props: ['faction', 'body', 'distance'],
     data: function() {
+      // TODO more (any) randomness in ship and loadout, customizations based
+      // on faction and scale of origin body
+      const ship = new Ship({
+        type: util.oneOf(['corvette', 'frigate', 'destroyer']),
+        addons: ['railgun_turret', 'light_torpedo', 'pds', 'ecm'],
+      });
+
       return {
         npc: new Npc({
-          name:     'Police Patrol',
-          faction:   this.faction,
-          shipClass: util.oneOf(['corvette', 'frigate', 'destroyer'])
+          name:    'Police Patrol',
+          faction: this.faction,
+          ship:    ship,
         }),
         choice: 'ready',
         fine: 0,

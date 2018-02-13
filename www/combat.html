@@ -6,7 +6,10 @@ require(
     const npc = new Npc({
       name:      'Test Opponent',
       faction:   'TRANSA',
-      shipClass: 'corvette',
+      ship: new Ship({
+        type:   'battleship',
+        addons: ['railgun_turret', 'railgun_cannon', 'pds', 'heavy_torpedo'],
+      }),
     });
 
     const app = new Vue({
