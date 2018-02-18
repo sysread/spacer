@@ -31,6 +31,8 @@ define(function(require, exports, module) {
       this.cargo  = new model.Store(init.cargo);
     }
 
+    get fullHull()   { return Math.max(0, this.attr('hull', true)) }
+    get fullArmor()  { return Math.max(0, this.attr('armor', true)) }
     get hull()       { return Math.max(0, this.attr('hull')) }
     get armor()      { return Math.max(0, this.attr('armor')) }
     get stealth()    { return Math.min(0.5, this.attr('stealth')) }
@@ -40,7 +42,8 @@ define(function(require, exports, module) {
     get dodge() {
       const ratio = this.thrust / this.mass;
       const base  = ratio / 100;
-      return Math.min(0.4, base + this.attr('dodge'));
+      const dodge = Math.min(0.7, base + this.attr('dodge'));
+      return dodge;
     }
 
     /*

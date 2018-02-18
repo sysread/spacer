@@ -59,9 +59,15 @@ define(function(require, exports, module) {
         throw new Error('action.use: action is not ready');
       }
 
-      let damage = undefined;
+      let damage = 0;
+      let hits   = 0;
 
       for (let i = 0; i < this.rate; ++i) {
+        if (util.chance(0.85)) { // TODO: based on *something*
+          damage += Math.max(0.1, util.getRandomNum(0, this.damage));
+          ++hits;
+        }
+
         if (this.isReloadable) {
           --this._magazine;
 
@@ -70,19 +76,11 @@ define(function(require, exports, module) {
             break;
           }
         }
-
-        if (util.chance(0.75)) { // TODO: based on *something*
-          if (damage === undefined) {
-            damage = 0;
-          }
-
-          damage += util.getRandomNum(0, this.damage);
-        }
       }
 
       return {
+        hits:   hits,
         damage: util.R(damage, 2),
-        interceptable: this.interceptable,
       };
     }
   };
@@ -107,6 +105,8 @@ define(function(require, exports, module) {
     get ship()        { return this.combatant.ship }
     get hull()        { return this.ship.hull }
     get armor()       { return this.ship.armor }
+    get fullHull()    { return this.ship.fullHull }
+    get fullArmor()   { return this.ship.fullArmor }
     get isDestroyed() { return this.ship.isDestroyed }
     get actions()     { return this._actions }
     get ready()       { return this.actions.filter(a => {return a.isReady}) }
@@ -136,7 +136,7 @@ define(function(require, exports, module) {
     }
 
     get currentRound() {
-      return 1 + Math.floor(this.round / 2);
+      return Math.ceil(this.round / 2);
     }
 
     get isPlayerTurn() {
@@ -147,8 +147,17 @@ define(function(require, exports, module) {
       }
     }
 
-    addLogEntry(msg) {
-      this.log.unshift(`[${this.currentRound}] ${msg}`);
+    addLogEntry(entry) {
+      const round = this.currentRound;
+      if (this.log.length === 0 || this.log[0].round !== round) {
+        this.log.unshift({
+          round:    round,
+          player:   undefined,
+          opponent: undefined,
+        });
+      }
+
+      this.log[0][this.isPlayerTurn ? 'player' : 'opponent'] = entry;
     }
 
     start() {
@@ -158,43 +167,35 @@ define(function(require, exports, module) {
     }
 
     playerAction(action) {
+      if (!this.isPlayerTurn) throw new Error("It is not the player's turn");
       this.player.nextRound();
       this.doAction(action, this.player, this.opponent);
-      if (!this.opponent.isDestroyed) {
-        this.opponentAction();
-      }
     }
 
     opponentAction() {
+      if (this.isPlayerTurn) throw new Error("It is not the opponents's turn");
       this.opponent.nextRound();
       const action = util.oneOf(this.opponent.ready);
       this.doAction(action, this.opponent, this.player);
     }
 
     doAction(action, from, to) {
-      const effect = action.use();
+      const result  = action.use();
+      result.type   = action.name;
+      result.source = from.name;
 
-      if (effect.damage === undefined) {
-        this.addLogEntry(`${from.name} attacked with ${action.name} and missed.`);
-      }
-      else {
-        if (effect.damage === 0) {
-          this.addLogEntry(`${from.name} attacked with ${action.name} but there was negligible damage.`);
-        }
-        if (effect.interceptable && from.tryIntercept()) {
-          this.addLogEntry(`${from.name} attacked with ${action.name} but ${to.name}'s point defenses were able to intercept.`);
-        }
-        else if (from.tryDodge()) {
-          this.addLogEntry(`${from.name} attacked with ${action.name} but ${to.name} was able to maneuver to avoid the attack.`);
-        }
-        else {
-          this.addLogEntry(`${from.name} attacked with ${action.name}, causing ${effect.damage} damage.`);
-          if (to.ship.applyDamage(effect.damage)) {
-            this.addLogEntry(`${to.name}'s ship has been destroyed!`);
-          }
-        }
-      }
+      result.effect =
+          !result.hits                              ? 'miss'
+        : action.interceptable && to.tryIntercept() ? 'intercepted'
+        : to.tryDodge()                             ? 'dodged'
+        : to.ship.applyDamage(result.damage)        ? 'destroyed'
+                                                    : 'hit';
 
+      result.pct = result.effect === 'hit'
+        ? result.damage / (to.fullHull + to.fullArmor) * 100
+        : 0;
+
+      this.addLogEntry(result);
       ++this.round;
     }
   };

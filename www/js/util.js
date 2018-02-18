@@ -51,6 +51,10 @@ define(function(require, exports, module) {
       return Math.round(n);
     }
 
+    if (n === undefined) {
+      n = 0;
+    }
+
     const factor = Math.pow(10, places);
     return Math.round(n * factor) / factor;
   };
@@ -74,7 +78,8 @@ define(function(require, exports, module) {
   };
 
   util.chance = function(pct) {
-    return util.getRandomNum(0, 1) <= pct;
+    const rand = util.getRandomNum(0, 1);
+    return rand <= pct;
   };
 
   /*
