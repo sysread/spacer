@@ -6,17 +6,19 @@ define(function(require, exports, module) {
 
   const Action = class {
     constructor(opt) {
-      this.name          = opt.name;
-      this.rate          = opt.rate;
-      this.reload        = opt.reload;
-      this.magazine      = opt.magazine;
-      this.damage        = opt.damage;
-      this.interceptable = opt.interceptable ? true : false;
-
+      this.opt       = opt;
+      this.count     = 1;
       this._round    = 0;
       this._reload   = 0;
       this._magazine = this.magazine;
     }
+
+    get name()          { return this.opt.name }
+    get rate()          { return this.count * this.opt.rate }
+    get magazine()      { return this.count * this.opt.magazine }
+    get reload()        { return this.opt.reload }
+    get damage()        { return this.opt.damage }
+    get interceptable() { return this.opt.interceptable ? true : false }
 
     get isReloadable() {
       return this.reload !== undefined;
@@ -44,6 +46,11 @@ define(function(require, exports, module) {
       return this._magazine;
     }
 
+    addUnit() {
+      this._magazine += this.magazine;
+      ++this.count;
+    }
+
     nextRound() {
       ++this._round;
 
@@ -54,7 +61,7 @@ define(function(require, exports, module) {
       }
     }
 
-    use() {
+    use(from, to) {
       if (!this.isReady) {
         throw new Error('action.use: action is not ready');
       }
@@ -78,9 +85,39 @@ define(function(require, exports, module) {
         }
       }
 
+      const effect = !hits                        ? 'miss'
+        : this.interceptable && to.tryIntercept() ? 'intercepted'
+        : to.tryDodge()                           ? 'dodged'
+        : to.ship.applyDamage(damage)             ? 'destroyed'
+                                                  : 'hit';
+
+      const pct = effect === 'hit'
+        ? damage / (to.fullHull + to.fullArmor) * 100
+        : 0;
+
       return {
+        type:   this.name,
+        source: from.name,
         hits:   hits,
         damage: util.R(damage, 2),
+        effect: effect,
+        pct:    pct,
+      };
+    }
+  };
+
+  const Flight = class extends Action {
+    constructor() {
+      super({name: 'Flee'});
+    }
+
+    use(from, to) {
+      const effect = from.tryFlight(to.rawDodge);
+
+      return {
+        type:   this.name,
+        source: from.name,
+        effect: effect ? 'flee' : 'chase',
       };
     }
   };
@@ -88,16 +125,23 @@ define(function(require, exports, module) {
   const Combatant = class {
     constructor(combatant) {
       this.combatant = combatant;
-      this.dodge     = this.ship.dodge;
-      this.intercept = this.ship.intercept;
-      this._actions  = [];
+      this.flight    = new Flight;
+      this._actions  = {};
 
       for (const addon of this.ship.addons) {
         const info = data.addons[addon];
+
         if (info.damage) {
-          this._actions.push(new Action(info));
+          if (this._actions.hasOwnProperty(addon)) {
+            this._actions[addon].addUnit();
+          }
+          else {
+            this._actions[addon] = new Action(info);
+          }
         }
       }
+
+      this._actions.flight = this.flight;
     }
 
     get name()        { return this.combatant.name }
@@ -107,18 +151,45 @@ define(function(require, exports, module) {
     get armor()       { return this.ship.armor }
     get fullHull()    { return this.ship.fullHull }
     get fullArmor()   { return this.ship.fullArmor }
+    get pctHull()     { return this.ship.hull  / this.ship.fullHull }
+    get pctArmor()    { return this.ship.armor / this.ship.fullArmor }
+    get rawDodge()    { return this.ship.rawDodge }
+    get dodge()       { return this.ship.dodge }
+    get intercept()   { return this.ship.intercept }
     get isDestroyed() { return this.ship.isDestroyed }
-    get actions()     { return this._actions }
+    get actions()     { return Object.values(this._actions) }
     get ready()       { return this.actions.filter(a => {return a.isReady}) }
+    get attacks()     { return this.ready.filter(a => {return a.damage > 0}) }
+
+    /*
+     * The chance of flight is inversely proportional to the percentage of
+     * armor and hull remaining.
+     */
+    get flightRisk() {
+      return (1 - this.pctHull) / 2;
+    }
 
     nextRound() {
-      for (const action of this._actions) {
+      for (const action of this.actions) {
         action.nextRound();
       }
     }
 
     tryIntercept() { return util.chance(this.intercept) }
     tryDodge()     { return util.chance(this.dodge) }
+
+    /*
+     * Compares this combatant's dodge, which takes into account power/mass
+     * ratio and defensive gear which enhances dodge, like ecm, against the raw
+     * dodge abilit of an opponent (which does not include gear, since ecm
+     * would not help the chaser).
+     *
+     * TODO adjust based on pilots' skill levels
+     */
+    tryFlight(opponentRawDodge) {
+      const chance = this.dodge / opponentRawDodge;
+      return util.chance(chance);
+    }
   };
 
   const Combat = class {
@@ -129,10 +200,31 @@ define(function(require, exports, module) {
       this.round      = 1;
       this.log        = [];
       this.result     = undefined;
+      this.escaped    = false;
     }
 
     get isOver() {
-      return this.player.isDestroyed || this.opponent.isDestroyed;
+      return this.escaped
+          || this.player.isDestroyed
+          || this.opponent.isDestroyed;
+    }
+
+    get salvage() {
+      if (!this.isOver || this.escaped || this.player.isDestroyed) {
+        return;
+      }
+
+      if (!this._salvage) {
+        // Randomize the remaining cargo amounts that survived the encounter
+        this._salvage = new model.Store;
+
+        for (const item of this.opponent.ship.cargo.keys()) {
+          const amount = util.getRandomInt(0, this.opponent.ship.cargo.count(item));
+          this._salvage.inc(item, amount);
+        }
+      }
+
+      return this._salvage;
     }
 
     get currentRound() {
@@ -175,32 +267,24 @@ define(function(require, exports, module) {
     opponentAction() {
       if (this.isPlayerTurn) throw new Error("It is not the opponents's turn");
       this.opponent.nextRound();
-      const action = util.oneOf(this.opponent.ready);
+
+      const action = util.chance(this.opponent.flightRisk)
+        ? this.opponent.flight
+        : util.oneOf(this.opponent.attacks);
+
       this.doAction(action, this.opponent, this.player);
     }
 
     doAction(action, from, to) {
-      const result  = action.use();
-      result.type   = action.name;
-      result.source = from.name;
-
-      result.effect =
-          !result.hits                              ? 'miss'
-        : action.interceptable && to.tryIntercept() ? 'intercepted'
-        : to.tryDodge()                             ? 'dodged'
-        : to.ship.applyDamage(result.damage)        ? 'destroyed'
-                                                    : 'hit';
-
-      result.pct = result.effect === 'hit'
-        ? result.damage / (to.fullHull + to.fullArmor) * 100
-        : 0;
-
+      const result = action.use(from, to);
+      if (result.effect === 'flee') this.escaped = from.name;
       this.addLogEntry(result);
       ++this.round;
     }
   };
 
   exports.Action    = Action;
+  exports.Flight    = Flight;
   exports.Combatant = Combatant;
   exports.Combat    = Combat;
 });

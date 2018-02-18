@@ -21,7 +21,6 @@ define(function(require, exports, module) {
 
       return {
         combat:       combat,
-        loot:         undefined,
         tick:         combat.currentRound,
         isPlayerTurn: combat.isPlayerTurn,
         salvage:      false,
@@ -31,6 +30,8 @@ define(function(require, exports, module) {
     computed: {
       logEntries: function() { return this.combat.log },
       isOver:     function() { return this.combat.isOver },
+      escaped:    function() { return this.combat.escaped },
+      loot:       function() { return this.combat.salvage },
       hasLoot:    function() { return this.loot && this.loot.sum() > 0 },
     },
 
@@ -48,7 +49,6 @@ define(function(require, exports, module) {
               window.localStorage.removeItem('game');
             }
             else {
-              this.loot = this.combat.opponent.ship.cargo;
               game.save_game();
             }
           }
@@ -99,22 +99,34 @@ define(function(require, exports, module) {
     <combat-action v-for="a of combat.player.actions" :key="a.name" :action="a" :disabled="!isPlayerTurn" @click="useAction(a)" />
   </div>
 
-  <div v-else-if="combat.player.isDestroyed" class="my-3">
-    {{combat.player.name}} has died of dysentery.
-    <btn @click="complete">New game</btn>
-  </div>
+  <p v-else class="p-3 m-3 border border-danger">
+    <div v-if="combat.player.isDestroyed" class="my-3 text-warning">
+      {{combat.player.name}} has died of dysentery.
+      <btn @click="complete">New game</btn>
+    </div>
 
-  <div v-else class="my-3">
-    You destroyed your opponent's ship.
-    <span v-if="hasLoot">
-      Amid the wreckage of the drifting hulk, some cargo containers appear to remain intact.
-      <btn @click="salvage=true" block=1>Salvage</btn>
-    </span>
+    <div v-else-if="combat.opponent.isDestroyed" class="my-3 text-success">
+      You destroyed your opponent's ship.
 
-    <modal v-if="hasLoot && salvage" @close="complete" title="Salvage" close="Leave" xclose=1>
-      <exchange :store="loot" class="small" />
-    </modal>
-  </div>
+      <span v-if="hasLoot">
+        Amid the wreckage of the drifting hulk, some cargo containers appear to remain intact.
+
+        <btn @click="salvage=true" block=1 class="mt-3">Salvage</btn>
+      </span>
+
+      <modal v-if="hasLoot && salvage" @close="complete" title="Salvage" close="Leave" xclose=1>
+        <exchange :store="loot" class="small" />
+      </modal>
+    </div>
+
+    <div v-else-if="escaped === combat.player.name" class="my-3 large font-italic text-center">
+      You have escaped your opponent.
+    </div>
+
+    <div v-else-if="escaped === combat.opponent.name" class="my-3 large font-italic text-center">
+      Your opponent has escaped.
+    </div>
+  </p>
 
   <combat-log :log="combat.log" :tick="tick" />
 </card>
@@ -125,15 +137,17 @@ define(function(require, exports, module) {
   Vue.component('combat-log', {
     props: ['log', 'tick'],
     template: `
-<div style="overflow-y:scroll;height:250px">
-  <div v-for="actions in log" :key="actions.round" class="p-2 row">
-    <div class="col-6">
+<div class="m-0 p-3" style="overflow-y: scroll; overflow-x: hidden; height: 250px;">
+  <div v-for="actions in log" :key="actions.round" class="row">
+    <div class="col-5">
       <transition name="fade">
         <combat-log-entry v-show="actions.player" who="You" :entry="actions.player" />
       </transition>
     </div>
 
-    <div class="col-6">
+    <div class="col-2 text-center p-0">{{actions.round}}</div>
+
+    <div class="col-5">
       <transition name="fade">
         <combat-log-entry v-show="actions.opponent" who="The enemy" :entry="actions.opponent" class="text-right" />
       </transition>
@@ -154,19 +168,27 @@ define(function(require, exports, module) {
       isHaymaker:     function() { return this.isHit && this.entry.pct >= 20 },
     },
     template: `
-<div class="font-italic small">
+<div class="font-italic small py-2 px-1 border-danger" style="border-top: 1px solid">
   <div v-if="entry" :class="{'text-warning': isHit && !isHaymaker, 'text-danger': isHaymaker || isDestroyed}">
-    {{who}} attacked with {{entry.type}}
-    <span      v-if="entry.effect === 'miss'">but missed.</span>
-    <span v-else-if="entry.effect === 'intercepted'">but point defenses intercepted the attack.</span>
-    <span v-else-if="entry.effect === 'dodged'">but the target manuevered to avoid the attack.</span>
-    <span v-else-if="entry.effect === 'destroyed'">and destroyed the target!</span>
-    <span v-else-if="entry.effect === 'hit'">
-      <span v-if="isHaymaker">and struck directly amidships, visibly staggering the vessel.</span>
-      <span v-else-if="isStrongHit">and scored a direct hit, causing significant damage.</span>
-      <span v-else-if="isGlancingBlow">and struck a glancing blow; damage was negligible.</span>
-      <span v-else>and hit the target.</span>
-    </span>
+    <div v-if="entry.effect === 'flee'" class="text-success">
+      {{who}} fled the battle!
+    </div>
+    <div v-else-if="entry.effect === 'chase'">
+      {{who}} attempted to flee battle unsuccesfully.
+    </div>
+    <div v-else>
+      {{who}} attacked with {{entry.type}}
+      <span      v-if="entry.effect === 'miss'">but missed.</span>
+      <span v-else-if="entry.effect === 'intercepted'">but point defenses intercepted the attack.</span>
+      <span v-else-if="entry.effect === 'dodged'">but the target manuevered to avoid the attack.</span>
+      <span v-else-if="entry.effect === 'destroyed'">and destroyed the target!</span>
+      <span v-else-if="entry.effect === 'hit'">
+        <span v-if="isHaymaker">and struck directly amidships, visibly staggering the vessel.</span>
+        <span v-else-if="isStrongHit">and scored a direct hit, causing significant damage.</span>
+        <span v-else-if="isGlancingBlow">and struck a glancing blow; damage was negligible.</span>
+        <span v-else>and hit the target.</span>
+      </span>
+    </div>
   </div>
 </div>
     `,
@@ -177,7 +199,7 @@ define(function(require, exports, module) {
     props: ['action', 'disabled'],
     template: `
 <card-btn @click="$emit('click')" :disabled="disabled || !action.isReady" class="btn-sm" block=1>
-  {{action.name|caps}}
+  {{action.name|caps}} [{{action.count}}]
 
   <badge right=1 v-if="action.isReloadable" class="mx-2">
     {{action.magazineRemaining}}/{{action.magazine}}
@@ -194,8 +216,8 @@ define(function(require, exports, module) {
   Vue.component('combatant', {
     props: ['combatant'],
     computed: {
-      hull:  function() {return util.R(this.combatant.hull  / this.combatant.fullHull  * 100, 1)},
-      armor: function() {return util.R(this.combatant.armor / this.combatant.fullArmor * 100, 1)},
+      hull:  function() {return util.R(this.combatant.pctHull  * 100, 1)},
+      armor: function() {return util.R(this.combatant.pctArmor * 100, 1)},
     },
     template: `
 <div class="col-5">
