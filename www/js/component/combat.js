@@ -114,7 +114,7 @@ define(function(require, exports, module) {
         <btn @click="salvage=true" block=1 class="mt-3">Salvage</btn>
       </span>
 
-      <modal v-if="hasLoot && salvage" @close="complete" title="Salvage" close="Leave" xclose=1>
+      <modal v-if="hasLoot && salvage" @close="complete" title="Salvage" close="Leave the hulk" xclose=1>
         <exchange :store="loot" class="small" />
       </modal>
     </div>
@@ -126,6 +126,8 @@ define(function(require, exports, module) {
     <div v-else-if="escaped === combat.opponent.name" class="my-3 large font-italic text-center">
       Your opponent has escaped.
     </div>
+
+    <btn @click="complete" block=1>Leave</btn>
   </div>
 
   <combat-log :log="combat.log" :tick="tick" />

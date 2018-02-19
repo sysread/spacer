@@ -52,9 +52,15 @@ require(
             this.$forceUpdate();
           }, 200);
         },
+
+        fixMe: function() {
+          game.player.ship.damage.hull = game.player.ship.damage.armor = 0;
+          game.save_game();
+        },
       },
       template: `
 <card title="Testing">
+  <btn @click="fixMe">Fix me</btn>
   <btn @click="gameTurns(1)">1 turns</btn>
   <btn @click="gameTurns(3)">3 turns</btn>
   <btn @click="gameTurns(9)">9 turns</btn>

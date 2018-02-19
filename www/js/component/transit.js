@@ -80,7 +80,7 @@ define(function(require, exports, module) {
         for (const body of Object.keys(ranges)) {
           const km = Math.floor(ranges[body] / 1000);
 
-          if (game.planets[body].inspectionChance(km)) {
+          if (true||game.planets[body].inspectionChance(km)) {
             const faction = data.bodies[body].faction;
 
             if (this.stoppedBy[faction]) {
