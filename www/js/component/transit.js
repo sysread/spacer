@@ -10,6 +10,7 @@ define(function(require, exports, module) {
   require('component/common');
   require('component/card');
   require('component/plot');
+  require('component/combat');
 
   Vue.component('transit', {
     props: ['plan'],
@@ -281,6 +282,18 @@ define(function(require, exports, module) {
       planet: function() { return game.planets[this.body] },
       bribeAmount: function() { return Math.ceil(game.player.ship.price() * 0.03) },
       canAffordBribe: function() { return this.bribeAmount <= game.player.money },
+
+      hasContraband: function() {
+        for (const item of Object.keys(data.resources)) {
+          if (data.resources[item].contraband) {
+            if (game.player.ship.cargo.get(item) > 0) {
+              return true;
+            }
+          }
+        }
+
+        return false;
+      },
     },
     methods: {
       setChoice(choice) {
@@ -332,16 +345,19 @@ define(function(require, exports, module) {
       },
    },
     template: `
-<card title="Police inspection" :subtitle="faction">
-  <card-text>
-    You have been hailed by a {{faction}} patrol ship operating {{distance}} AU
-    out of {{body|caps}}. The captain orders you to cease acceleration and
-    peacefully submit to an inspection.
-  </card-text>
+<card :title="'Police inspection: ' + faction">
+  <div v-if="choice=='ready'">
+    <card-text>
+      You have been hailed by a {{faction}} patrol ship operating {{distance}} AU
+      out of {{body|caps}}. The captain orders you to cease acceleration and
+      peacefully submit to an inspection.
+    </card-text>
 
-  <button type="button" class="btn btn-dark btn-block" @click="submit">Submit</button>
-  <button type="button" class="btn btn-dark btn-block" @click="setChoice('bribe')">Bribe</button>
-  <button type="button" class="btn btn-dark btn-block" @click="setChoice('flee')">Flee</button>
+    <button type="button" class="btn btn-dark btn-block" @click="submit">Submit</button>
+    <button type="button" class="btn btn-dark btn-block" @click="setChoice('bribe')">Bribe</button>
+    <button type="button" class="btn btn-dark btn-block" @click="setChoice('flee')">Flee</button>
+    <button type="button" class="btn btn-dark btn-block" @click="setChoice('attack-confirm')">Attack</button>
+  </div>
 
   <ok v-if="choice=='submit-fined'" @ok="done">
     Your contraband cargo was found and confiscated.
@@ -375,6 +391,13 @@ define(function(require, exports, module) {
     In just a 5 short years, your navigation computer flips the ship on automatic and begins the deceleration burn.
     Your corpse and those of your crew arrive at Proxima Centauri after perhaps 10 years, relativistic effects notwithstanding.
   </ok>
+
+  <ask v-if="choice=='attack-confirm'" @pick="setChoice" :choices="{'attack': 'Yes', 'ready': 'No'}">
+    Are you sure you wish to attack the police?
+    <span v-if="!hasContraband">You are not carrying any contraband.</span>
+  </ask>
+
+  <melee v-if="choice=='attack'" :opponent="npc" />
 </card>
     `,
   });
