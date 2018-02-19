@@ -2,7 +2,7 @@ define(function(require, exports, module) {
   const data   = require('data');
   const util   = require('util');
   const Ship   = require('ship');
-  const Person = require('Person');
+  const Person = require('person');
 
   return class extends Person {
     constructor(opt) {

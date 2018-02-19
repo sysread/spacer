@@ -397,7 +397,7 @@ define(function(require, exports, module) {
     <span v-if="!hasContraband">You are not carrying any contraband.</span>
   </ask>
 
-  <melee v-if="choice=='attack'" :opponent="npc" />
+  <melee v-if="choice=='attack'" :opponent="npc" @complete="done" />
 </card>
     `,
   });
