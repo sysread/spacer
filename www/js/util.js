@@ -78,7 +78,8 @@ define(function(require, exports, module) {
   };
 
   util.chance = function(pct) {
-    const rand = util.getRandomNum(0, 1);
+    if (pct === 0) return false;
+    const rand = util.getRandomNum(0, Math.ceil(pct));
     return rand <= pct;
   };
 

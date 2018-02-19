@@ -5,8 +5,8 @@ define(function(require, exports, module) {
   const util   = require('util');
   const Person = require('person');
 
-  //const start_page = 'summary';
-  const start_page = 'combat';
+  const start_page = 'summary';
+  //const start_page = 'combat';
 
   const Game = class {
     constructor() {

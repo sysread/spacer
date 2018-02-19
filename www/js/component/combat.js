@@ -99,7 +99,7 @@ define(function(require, exports, module) {
     <combat-action v-for="a of combat.player.actions" :key="a.name" :action="a" :disabled="!isPlayerTurn" @click="useAction(a)" />
   </div>
 
-  <p v-else class="p-3 m-3 border border-danger">
+  <div v-else class="p-3 m-3 border border-danger">
     <div v-if="combat.player.isDestroyed" class="my-3 text-warning">
       {{combat.player.name}} has died of dysentery.
       <btn @click="complete">New game</btn>
@@ -126,7 +126,7 @@ define(function(require, exports, module) {
     <div v-else-if="escaped === combat.opponent.name" class="my-3 large font-italic text-center">
       Your opponent has escaped.
     </div>
-  </p>
+  </div>
 
   <combat-log :log="combat.log" :tick="tick" />
 </card>

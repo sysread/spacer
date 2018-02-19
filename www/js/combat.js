@@ -10,7 +10,10 @@ define(function(require, exports, module) {
       this.count     = 1;
       this._round    = 0;
       this._reload   = 0;
-      this._magazine = this.magazine;
+
+      if (this.isReloadable) {
+        this._magazine = this.magazine;
+      }
     }
 
     get name()          { return this.opt.name }
@@ -112,7 +115,7 @@ define(function(require, exports, module) {
     }
 
     use(from, to) {
-      const effect = from.tryFlight(to.rawDodge);
+      const effect = from.tryFlight(to);
 
       return {
         type:   this.name,
@@ -186,8 +189,8 @@ define(function(require, exports, module) {
      *
      * TODO adjust based on pilots' skill levels
      */
-    tryFlight(opponentRawDodge) {
-      const chance = this.dodge / opponentRawDodge;
+    tryFlight(opponent) {
+      const chance = this.dodge / opponent.rawDodge / 5;
       return util.chance(chance);
     }
   };
@@ -218,7 +221,7 @@ define(function(require, exports, module) {
         // Randomize the remaining cargo amounts that survived the encounter
         this._salvage = new model.Store;
 
-        for (const item of this.opponent.ship.cargo.keys()) {
+        for (const item of this.opponent.ship.cargo.keys) {
           const amount = util.getRandomInt(0, this.opponent.ship.cargo.count(item));
           this._salvage.inc(item, amount);
         }
