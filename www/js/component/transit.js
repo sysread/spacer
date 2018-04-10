@@ -32,7 +32,7 @@ define(function(require, exports, module) {
         this.velocity = this.plan.velocity;
         this.daysLeft = Math.floor(this.plan.left * data.hours_per_turn / 24);
         this.distance = util.R(this.plan.auRemaining(), 2);
-        return window.setTimeout(() => { this.turn() }, 30);
+        return window.setTimeout(() => { this.turn() }, 75);
       },
 
       turn: function() {
