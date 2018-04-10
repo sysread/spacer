@@ -111,7 +111,7 @@ define(function(require, exports, module) {
       },
 
       complete: function() {
-        if (this.contraband && this.inspectionChance()) {
+        if (this.contraband && this.planet.inspectionChance(0)) {
           this.player.debit(this.fine());
           this.player.decStanding(this.faction.abbrev, this.contraband);
 
