@@ -21,12 +21,22 @@ define(function(require, exports, module) {
         inspection: null,
         daysLeft: null,
         velocity: null,
+        paused: false,
       };
     },
     computed: {
       destination: function() { return system.name(this.plan.dest) },
     },
     methods: {
+      pause: function() {
+        this.paused = true;
+      },
+
+      resume: function() {
+        this.paused = false;
+        this.timer = this.schedule();
+      },
+
       schedule: function() {
         this.inspection = null;
         this.velocity = this.plan.velocity;
@@ -44,7 +54,14 @@ define(function(require, exports, module) {
             game.turn(1, true);
             game.player.ship.burn(this.plan.accel);
             this.plan.turn();
-            this.timer = this.schedule();
+
+            if (this.paused) {
+              window.clearTimeout(this.timer);
+              this.timer = null;
+            }
+            else {
+              this.timer = this.schedule();
+            }
           }
         }
         else {
@@ -108,25 +125,44 @@ define(function(require, exports, module) {
   <card>
     <card-header slot="header">
       Transiting from {{plan.origin|caps}} to {{plan.dest|caps}}
+      <btn v-if="paused" @click="resume">Resume</btn>
+      <btn v-else @click="pause">Pause</btn>
     </card-header>
 
-    <table class="transit-detail table table-sm my-2">
-      <tr>
-        <th scope="col">Time</th>
-        <td>{{daysLeft|R|unit('days')}}</td>
-        <th scope="col">Distance</th>
-        <td>{{distance|R(1)|unit('AU')}}</td>
-      </tr>
-      <tr>
-        <th scope="col">Status</th>
-        <td>{{plan.pct_complete < 50 ? 'Accelerating' : 'Decelerating'}}</td>
-        <th scope="col">Speed</th>
-        <td>{{(velocity/1000)|R|csn|unit('km/s')}}</td>
-      </tr>
-    </table>
+    <row v-show="!inspection" class="p-0 m-0">
+      <cell size=4 brkpt="sm" y=0>
+        <table class="transit-detail table table-sm my-2">
+          <tr>
+            <th scope="col">Time</th>
+            <td>{{daysLeft|R|unit('days')}}</td>
+          </tr>
+          <tr>
+            <th scope="col">Distance</th>
+            <td>{{distance|R(1)|unit('AU')}}</td>
+          </tr>
+          <tr>
+            <th scope="col">Status</th>
+            <td>{{plan.pct_complete < 50 ? 'Accelerating' : 'Decelerating'}} at {{plan.accel|R(2)|unit('G')}}</td>
+          </tr>
+          <tr>
+            <th scope="col">Speed</th>
+            <td>{{(velocity/1000)|R|csn|unit('km/s')}}</td>
+          </tr>
+        </table>
+      </cell>
+      <cell size=8 brkpt="sm" y=0 class="p-0 m-0">
+        <transit-plot :plan="plan" />
+      </cell>
+    </row>
 
-    <transit-plot v-show="!inspection" :plan="plan" />
-    <transit-inspection v-if="inspection" @done="schedule" :body="inspection.body" :faction="inspection.faction" :distance="inspection.distance" class="my-3" />
+    <transit-inspection
+      v-if="inspection"
+      @done="schedule"
+      :body="inspection.body"
+      :faction="inspection.faction"
+      :distance="inspection.distance"
+      class="my-3"
+    />
   </card>
 </div>
     `,
@@ -145,20 +181,12 @@ define(function(require, exports, module) {
           const width    = el.clientWidth;
           const frameTop = Math.ceil(el.getBoundingClientRect().top + window.scrollY);
           const maxY     = window.innerHeight - frameTop - document.getElementById('spacer-navbar').offsetHeight;
-          const len      = Math.ceil(Math.min(width, maxY) * 0.8);
-
-          if (len < width) {
-            const side = Math.floor((width - len) / 2);
-            el.setAttribute('style', `left: ${side}px; position: relative; height: ${len}px; width: ${len}px`);
-          }
-          else {
-            el.setAttribute('style', `position: relative; height: ${len}px; width: ${len}px`);
-          }
+          const len      = Math.ceil(Math.min(width, maxY));
+          el.setAttribute('style', `position: relative; height: ${len}px; width: ${len}px`);
         },
       },
     },
     computed: {
-      radius: function() { return Physics.distance(this.plan.coords, [0, 0, 0]) },
       coords: function() { return this.plan.coords },
       orig:   function() { return game.planets[this.plan.origin] },
       dest:   function() { return game.planets[this.plan.dest] },
@@ -196,24 +224,13 @@ define(function(require, exports, module) {
       },
 
       max: function() {
-        const sun  = [0, 0, 0];
-        const min  = Physics.AU * 2;
-        const ship = Physics.distance(this.coords, sun);
-        const to   = Physics.distance(this.plan.end, sun);
-
-        if (ship > to) {
-          return Math.max(min, to, ship * 1.8);
-        }
-        else {
-          return Math.max(min, Math.min(to, ship * 1.8));
-        }
-      },
-
-      isVisible: function(point) {
-        const [x, y] = this.position(point).map(Math.abs);
-        const max = this.width() * 1.2;
-        if (x >= max || y >= max) return false;
-        return true;
+        const ship = Physics.distance(this.coords, [0, 0, 0]);
+        const orig = Physics.distance(this.orig.position, [0, 0, 0]);
+        const dest = Physics.distance(this.dest.position, [0, 0, 0]);
+        const max  = Math.min(ship + (2 * Physics.AU), Math.max(orig, dest));
+        const min  = Math.max(ship, Physics.AU * 1.5);
+        const x    = (min * util.R((Math.PI / 2), 2)) / max;
+        return Math.ceil(ship * (1 + Math.cos(x)));
       },
 
       alpha: function(point) {
@@ -239,24 +256,49 @@ define(function(require, exports, module) {
       position: function(p) {
         return [this.adjust(p[0]), this.adjust(p[1])];
       },
+
+      ticks: function() {
+        const numTicks = Math.floor(this.max() / Physics.AU);
+        const ticks = [];
+
+        for (let i = 1; i <= numTicks; ++i) {
+          ticks.push([i, this.position([0, Physics.AU *  i])]);
+          ticks.push([i, this.position([0, Physics.AU * -i])]);
+          ticks.push([i, this.position([Physics.AU *  i, 0])]);
+          ticks.push([i, this.position([Physics.AU * -i, 0])]);
+        }
+
+        return ticks;
+      },
     },
     template: `
 <div v-square class="plot-root p-0 m-0" style="position:relative">
-  <transit-point v-show="isVisible(pt)" v-for="(pt, body) in extras()" :key="body" :alpha="alpha(pt)" :coord="position(pt)" :label="body" :sm=1>&bull;</transit-point>
-  <transit-point v-show="isVisible(orig.position)" class="text-info" :coord="position(orig.position)" :label="orig.body">&bull;</transit-point>
-  <transit-point v-show="isVisible(dest.position)" class="text-danger" :coord="position(dest.position)" :label="dest.body">&#8982;</transit-point>
-  <transit-point class="text-warning" :coord="position([0,0,0])">&bull;</transit-point>
-  <transit-point class="text-success" :coord="position(coords)">&#9652</transit-point>
+  <transit-point v-for="(pt, body) in extras()" :key="body" :x="adjust(pt[0])" :y="adjust(pt[1])" :alpha="alpha(pt)" :label="body" sm=1 :max="width()">&bull;</transit-point>
+  <transit-point class="text-info" :x="adjust(orig.position[0])" :y="adjust(orig.position[1])" :label="orig.body" :max="width()">&bull;</transit-point>
+  <transit-point class="text-danger" :x="adjust(dest.position[0])" :y="adjust(dest.position[1])" :label="dest.body" :max="width()">&#8982;</transit-point>
+  <transit-point class="text-warning" :x="adjust(0)" :y="adjust(0)" :max="width()">&bull;</transit-point>
+  <transit-point class="text-success" :x="adjust(coords[0])" :y="adjust(coords[1])" :max="width()">&#9652</transit-point>
+
+  <transit-point v-for="(tick, idx) in ticks()" :key="idx" :x="tick[1][0]" :y="tick[1][1]" :max="width()" sm=1 style="font-size:0.5rem" class="text-secondary">.</transit-point>
 </div>
     `,
   });
 
   Vue.component('transit-point', {
-    props: ['coord', 'label', 'sm', 'alpha'],
+    props: ['x', 'y', 'label', 'sm', 'alpha', 'max'],
+    computed: {
+      isVisible: function() {
+        if (this.x <= 0) return false;
+        if (this.y <= 0) return false;
+        if (this.x >= this.max) return false;
+        if (this.y >= this.max) return false;
+        return true;
+      },
+    },
     template: `
-<span class="plot-point" :class="{big: !sm}" :style="{left: coord[0] + 'px', top: coord[1] + 'px'}">
+<span v-show="isVisible" class="plot-point" :class="{big: !sm}" :style="{left: x + 'px', top: y + 'px'}">
   <slot />
-  <badge v-if="label" class="m-1" :style="{opacity: alpha}">{{label|caps}}</badge>
+  <badge v-if="label" class="m-1" :style="{opacity: isVisible ? alpha : 0}">{{label|caps}}</badge>
 </span>
     `,
   });
