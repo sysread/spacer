@@ -132,7 +132,7 @@ body {
 
 .plot-point {
   position: absolute;
-  font-size: 10px;
+  font-size: 1.3rem;
   line-height: 40px !important;
 }
 

@@ -87,6 +87,9 @@ define(function(require, exports, module) {
         if (this.isHere(body))
           return true;
 
+        if (this.isSun(body))
+          return true;
+
         const key = this.key(body);
 
         if (this.plot.hasOwnProperty(key)) {

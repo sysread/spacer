@@ -110,7 +110,7 @@ define(function(require, exports, module) {
       Transiting from {{plan.origin|caps}} to {{plan.dest|caps}}
     </card-header>
 
-    <table class="table table-sm my-2">
+    <table class="transit-detail table table-sm my-2">
       <tr>
         <th scope="col">Time</th>
         <td>{{daysLeft|R|unit('days')}}</td>
@@ -136,21 +136,24 @@ define(function(require, exports, module) {
     props: ['plan'],
     data: function() {
       return {
-        //midpt: Physics.segment(this.plan.start, this.plan.end, this.plan.flipDistance),
         dist: this.plan.dist,
       };
     },
     directives: {
       'square': {
         inserted: function(el, binding, vnode) {
-          const len = Math.min(
-            el.clientWidth,
-            (window.innerHeight
-              - document.getElementById('spacer-status').offsetHeight
-              - document.getElementById('spacer-navbar').offsetHeight),
-          );
+          const width    = el.clientWidth;
+          const frameTop = Math.ceil(el.getBoundingClientRect().top + window.scrollY);
+          const maxY     = window.innerHeight - frameTop - document.getElementById('spacer-navbar').offsetHeight;
+          const len      = Math.ceil(Math.min(width, maxY) * 0.8);
 
-          el.setAttribute('style', `position:relative;height:${len}px;width:${len}px`);
+          if (len < width) {
+            const side = Math.floor((width - len) / 2);
+            el.setAttribute('style', `left: ${side}px; position: relative; height: ${len}px; width: ${len}px`);
+          }
+          else {
+            el.setAttribute('style', `position: relative; height: ${len}px; width: ${len}px`);
+          }
         },
       },
     },
