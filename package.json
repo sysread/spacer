@@ -10,10 +10,10 @@
     "author": "Jeff Ober",
     "license": "Apache-2.0",
     "dependencies": {
-        "cordova-android": "^7.0.0",
+        "cordova-android": "^7.1.0",
         "cordova-browser": "^5.0.3",
-        "cordova-plugin-livereload": "^1.2.2",
         "cordova-plugin-statusbar": "^2.4.1",
+        "npm": "^5.8.0",
         "sprintf-js": "^1.1.1",
         "statusbar": "^0.2.0"
     },
