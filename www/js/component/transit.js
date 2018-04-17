@@ -228,7 +228,7 @@ define(function(require, exports, module) {
         const orig = Physics.distance(this.orig.position, [0, 0, 0]);
         const dest = Physics.distance(this.dest.position, [0, 0, 0]);
         const max  = Math.min(ship + (2 * Physics.AU), Math.max(orig, dest));
-        const min  = Math.max(ship, Physics.AU * 1.5);
+        const min  = Math.max(ship, Physics.AU * 1.5, Math.min(orig, dest));
         const x    = (min * util.R((Math.PI / 2), 2)) / max;
         return Math.ceil(ship * (1 + Math.cos(x)));
       },
