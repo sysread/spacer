@@ -12,19 +12,47 @@ define(function(require, exports, module) {
   require('component/row');
 
   Vue.component('ships', {
-    computed: { ships: function() { return Object.keys(data.shipclass) } },
-    methods: { returnToShipyard: function() { game.open('shipyard') } },
+    data: function() {
+      return {
+        selected: null,
+      };
+    },
+    computed: {
+      ships: function() { return Object.keys(data.shipclass) },
+    },
+    methods: {
+      returnToShipyard: function() {
+        game.open('shipyard');
+      },
+
+      selectShip: function(ship) {
+        if (this.selected == ship) {
+          this.selected = null;
+        } else {
+          this.selected = ship;
+        }
+      },
+    },
     template: `
 <card title="Ships">
-  <btn slot="header" @click="returnToShipyard">Back to shipyard</btn>
-  <ship v-for="ship in ships" :key="ship" :type="ship" />
+  <btn slot="header" @click="returnToShipyard">Return to shipyard</btn>
+
+  <div v-for="ship in ships">
+    <ship v-if="!selected || selected == ship" :key="ship" :type="ship" :detail="ship == selected" @click="selectShip(ship)" />
+  </div>
+
 </card>
     `,
   });
 
   Vue.component('ship', {
-    props: ['type'],
-    data: function() { return { detail: false, buy: false } },
+    props: ['type', 'detail'],
+    data: function() {
+      return {
+        buy: false,
+        rangeForDeltaV: 0.5,
+      }
+    },
     methods: {
       completeTradeIn: function() {
         game.player.credit(this.playerShipValue);
@@ -32,6 +60,12 @@ define(function(require, exports, module) {
         game.player.ship = this.ship;
         game.turn();
         game.save_game();
+      },
+
+      maxRange: function() {
+        const dv = this.rangeForDeltaV * Physics.G;
+        const burnTime = this.ship.maxBurnTime(dv, true) * data.hours_per_turn;
+        return Physics.range(burnTime * 3600, 0, dv) / Physics.AU;
       },
     },
     computed: {
@@ -56,8 +90,8 @@ define(function(require, exports, module) {
       },
 
       // Physical properties
-      deltaV:           function() { return Math.round(this.ship.currentAcceleration() * 100) / 100 },
-      deltaVinG:        function() { return this.deltaV / Physics.G },
+      deltaV:           function() { return util.R(this.ship.currentAcceleration(), 2) },
+      deltaVinG:        function() { return util.R(this.deltaV / Physics.G, 2) },
       burnTime:         function() { return this.ship.maxBurnTime(this.deltaV, true) * data.hours_per_turn },
       range:            function() { return Physics.range(this.burnTime * 3600, 0, this.deltaV) / Physics.AU },
       nominalDeltaV:    function() { return 0.5 },
@@ -68,10 +102,10 @@ define(function(require, exports, module) {
     },
     template: `
 <div>
-  <button @click="detail=!detail" type="button" class="btn btn-block text-capitalize my-3" :class="{'text-secondary': !isAvailable, 'btn-dark': detail, 'btn-secondary': !detail}">
-    {{type}}
-    <span class="badge badge-pill float-right">{{price|csn}}</span>
-  </button>
+  <btn @click="$emit('click')" :block=1 :muted="!isAvailable" class="text-capitalize my-2">
+    <span v-if="detail">Return to the show room</span>
+    <span v-else>{{type}} <span class="badge badge-pill float-right">{{price|csn}}</span></span>
+  </btn>
 
   <card v-if="detail">
     <p v-if="isAvailable">
@@ -100,13 +134,13 @@ define(function(require, exports, module) {
     </def>
 
     <def y=1 brkpt="sm" term="Range">
-      <dl slot="def">
-        <dt class="font-italic">Max thrust</dt>
-        <dd>{{range|R(2)|unit('AU')}} / {{burnTime|csn|unit('hr')}} at {{deltaVinG|R(2)|unit('G')}}</dd>
-
-        <dt class="font-italic">Nominal</dt>
-        <dd>{{nominalRange|R(2)|unit('AU')}} / {{nominalBurnTime|csn|unit('hr')}} at {{nominalDeltaVinG|R(2)|unit('G')}}</dd>
-      </dl>
+      <div slot="def">
+        <row>
+          <def class="col-md-4" term="Accel." :def="rangeForDeltaV|R(1)|unit('G')" />
+          <def class="col-md-8" term="Range"  :def="maxRange()|R(2)|unit('AU')"    />
+        </row>
+        <slider :value.sync="rangeForDeltaV" min=0.1 :max="deltaVinG|R(1)" step=0.1 minmax=true />
+      </div>
     </def>
 
     <def y=1 brkpt="sm" term="Cargo"       :def="shipClass.cargo" />

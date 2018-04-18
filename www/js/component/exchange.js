@@ -10,21 +10,22 @@ define(function(require, exports, module) {
     props: ['value', 'min', 'max', 'step', 'minmax'],
     data: function() { return { timer: null } },
     computed: {
-      minValue: function() { return parseInt(`${this.min}`, 10) },
-      maxValue: function() { return parseInt(`${this.max}`, 10) },
+      minValue:  function() { return parseFloat(`${this.min}`) },
+      maxValue:  function() { return parseFloat(`${this.max}`) },
+      stepValue: function() { return parseFloat(`${this.step}`) },
     },
     methods: {
-      inc:    function()   { this.$emit('update:value', Math.min(this.maxValue, this.value + 1)) },
-      dec:    function()   { this.$emit('update:value', Math.max(this.minValue, this.value - 1)) },
+      inc:    function()   { this.$emit('update:value', Math.min(this.maxValue, this.value + this.stepValue)) },
+      dec:    function()   { this.$emit('update:value', Math.max(this.minValue, this.value - this.stepValue)) },
       setMin: function()   { this.$emit('update:value', this.minValue) },
       setMax: function()   { this.$emit('update:value', this.maxValue) },
-      update: function(ev) { this.$emit('update:value', parseInt(ev.target.value, 10)) },
+      update: function(ev) { this.$emit('update:value', parseFloat(ev.target.value)) },
     },
     directives: {
       'monitor': {
         inserted: function(el, binding, vnode) {
           vnode.context.timer = window.setInterval(() => {
-            const value = parseInt(el.value, 10);
+            const value = parseFloat(el.value);
             if (value != vnode.context.value) {
               vnode.context.$emit('update:value', value);
             }
@@ -48,7 +49,7 @@ define(function(require, exports, module) {
     :value="value || 0"
     :min="min"
     :max="max"
-    :step="step || 1"
+    :step="stepValue || 1"
     type="range">
 
   <span @click="inc" class="input-group-btn"><btn class="font-weight-bold">&gt;</btn></span>
