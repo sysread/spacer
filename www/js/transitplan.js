@@ -84,7 +84,7 @@ define(function(require, exports, module) {
     get prettyPath() {
       if (!this.pretty) {
         const clockwise = (Math.atan(this.start[1] / this.start[0]) - Math.atan(this.end[1] / this.end[0])) > 0;
-        const curve = new jsspline.BSpline({steps: 3});
+        const curve = new jsspline.BSpline({steps: 100});
         const flip = this.turns / 2;
 
         curve.addWayPoint({x: this.start[0], y: this.start[1], z: this.start[2]});
