@@ -289,6 +289,30 @@ define(function() {
       }
     },
 
+    ship: {
+      mass: {
+        value: 80,
+      },
+
+      tank: {
+        value: 150,
+      },
+
+      cargo: {
+        value: 65,
+      },
+
+      hull: {
+        value: 1000,
+        repair: 50,
+      },
+
+      armor: {
+        value: 8000,
+        repair: 200,
+      },
+    },
+
     drives: {
       ion: {
         name:      'Ion',
@@ -297,6 +321,7 @@ define(function() {
         desc:      'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
         burn_rate: 0.188,
         hull:      1,
+        value:     30,
       },
       fusion: {
         name:      'Fusion',
@@ -305,6 +330,7 @@ define(function() {
         desc:      'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
         burn_rate: 1.117,
         hull:      5,
+        value:     5000,
       }
     },
 

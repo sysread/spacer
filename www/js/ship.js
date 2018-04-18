@@ -26,7 +26,7 @@ define(function(require, exports, module) {
       this.acceleration = Physics.deltav(this.thrust, this.mass);
 
       this.addons = init.addons || [];
-      this.damage = init.damage || {hull: 0, armor: 0, drives: 0};
+      this.damage = init.damage || {hull: 0, armor: 0};
       this.fuel   = init.fuel   || this.tank;
       this.cargo  = new model.Store(init.cargo);
     }
@@ -199,19 +199,15 @@ define(function(require, exports, module) {
     }
 
     shipValue() {
-      let sc = this.shipclass;
+      const sc = this.shipclass;
 
       let price
-        = (sc.mass  * 80)
-        + (sc.hull  * 1000)
-        + (sc.armor * 8000)
-        + (sc.tank  * 150)
-        + (sc.cargo * 65);
-
-      if (this.shipclass.drive === 'ion')
-        price += 500 + (this.shipclass.drives * 30);
-      else if (this.shipclass.drive === 'fusion')
-        price += 100000 + (this.shipclass.drives * 5000);
+        = (sc.mass   * data.ship.mass.value)
+        + (sc.hull   * data.ship.hull.value)
+        + (sc.armor  * data.ship.armor.value)
+        + (sc.tank   * data.ship.tank.value)
+        + (sc.cargo  * data.ship.cargo.value)
+        + (sc.drives * data.drives[sc.drive].value);
 
       return Math.ceil(price);
     }
@@ -238,12 +234,28 @@ define(function(require, exports, module) {
       return price;
     }
 
+    damageValue() {
+      let price = 0;
+
+      if (this.hasDamage()) {
+        price -= this.damage.hull  * data.ship.hull.repair;
+        price -= this.damage.armor * data.ship.armor.repair;
+      }
+
+      return price;
+    }
+
     price(tradein) {
       const cargo = this.cargoValue();
       const fuel  = this.fuelValue();
-      let ship  = this.shipValue() + this.addOnValue();
-      if (tradein) ship = Math.ceil(ship * 0.7);
-      return ship + cargo + fuel;
+      const dmg   = this.damageValue();
+
+      let ship = this.shipValue() + this.addOnValue();
+
+      if (tradein)
+        ship = Math.ceil(ship * 0.7);
+
+      return ship + cargo + fuel + dmg;
     }
 
     availableHardPoints() {
@@ -267,6 +279,16 @@ define(function(require, exports, module) {
 
     removeAddOn(addon) {
       this.addons = this.addons.filter(x => {return x !== addon});
+    }
+
+    hasDamage() {
+      return this.damage.hull > 0
+          || this.damage.armor > 0;
+    }
+
+    repairDamage(hull=0, armor=0) {
+      this.damage.hull = Math.max(this.damage.hull - hull, 0);
+      this.damage.armor = Math.max(this.damage.armor - armor, 0);
     }
 
     applyDamage(dmg) {

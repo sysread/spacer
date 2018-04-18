@@ -41,13 +41,21 @@ define(function(require, exports, module) {
 
   Vue.component('btn', {
     props: ['disabled', 'muted', 'block', 'close'],
+    methods: {
+      activate: function() {
+        if (!this.disabled) {
+          this.$emit('click');
+        }
+      }
+    },
     template: `
 <button
     type="button"
     class="btn btn-dark"
     :class="{'btn-secondary': muted, 'disabled': disabled, 'btn-block': block}"
     :data-dismiss="close ? 'modal' : ''"
-    @click="$emit('click')" >
+    :disabled="disabled"
+    @click="activate()" >
   <slot />
 </button>
     `,

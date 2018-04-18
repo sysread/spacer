@@ -12,14 +12,14 @@ define(function(require, exports, module) {
   Vue.component('shipyard', {
     data: function() {
       return {
-        refuel:   false,
-        transfer: false,
+        modal: '',
       };
     },
     methods: {
       affordFuel: function() { return game.player.money >= game.here.buyPrice('fuel') * 1.035 },
       needsFuel:  function() { return !game.player.ship.tankIsFull() },
       hasFuel:    function() { return game.player.ship.cargo.count('fuel') > 0 },
+      hasDamage:  function() { return game.player.ship.hasDamage() },
       open:       game.open,
     },
     template: `
@@ -47,15 +47,17 @@ define(function(require, exports, module) {
     </card-text>
 
     <row>
-      <button :disabled="!needsFuel() || !affordFuel()" type="button" class="btn btn-dark btn-block m-1" @click="refuel=true">Refuel</button>
-      <button :disabled="!needsFuel() || !hasFuel()" type="button" class="btn btn-dark btn-block m-1" @click="transfer=true">Transfer fuel</button>
-      <button type="button" class="btn btn-dark btn-block m-1" @click="open('ships')">Ships</button>
-      <button type="button" class="btn btn-dark btn-block m-1" @click="open('addons')">Upgrades</button>
+      <btn :disabled="!needsFuel() || !affordFuel()" :block=1 class="m-1" @click="modal='refuel'">Refuel</btn>
+      <btn :disabled="!needsFuel() || !hasFuel()" :block=1 class="m-1" @click="modal='transfer'">Transfer fuel</btn>
+      <btn :disabled="!hasDamage()" :block=1 class="m-1" @click="modal='repair'">Repairs</btn>
+      <btn :block=1 class="m-1" @click="open('ships')">Ships</btn>
+      <btn :block=1 class="m-1" @click="open('addons')">Upgrades</btn>
     </row>
   </card>
 
-  <shipyard-refuel v-if="refuel" @close="refuel=false" />
-  <shipyard-transfer v-if="transfer" @close="transfer=false" />
+  <shipyard-refuel v-if="modal=='refuel'" @close="modal=''" />
+  <shipyard-transfer v-if="modal=='transfer'" @close="modal=''" />
+  <shipyard-repair v-if="modal=='repair'" @close="modal=''" />
 </div>
     `,
   });
@@ -73,8 +75,6 @@ define(function(require, exports, module) {
           game.player.debit(this.change * this.price);
           game.player.ship.refuel(this.change);
           game.turn();
-          game.save_game();
-          game.refresh();
         }
       },
     },
@@ -110,8 +110,6 @@ define(function(require, exports, module) {
           game.player.ship.refuel(this.change);
           game.player.ship.cargo.dec('fuel', this.change);
           game.turn();
-          game.save_game();
-          game.refresh();
         }
       },
     },
@@ -122,6 +120,72 @@ define(function(require, exports, module) {
   <def term="Tank" :def="Math.floor(tank)" />
   <slider class="my-3" :value.sync="change" min=0 :max="max" step="1" minmax=true />
   <btn slot="footer" @click="fillHerUp" close=1>Transfer fuel</btn>
+</modal>
+    `,
+  });
+
+  Vue.component('shipyard-repair', {
+    data: function() {
+      return {
+        repair_hull:  0,
+        repair_armor: 0,
+      };
+    },
+    computed: {
+      money:            function() { return game.player.money },
+      need_hull:        function() { return game.player.ship.damage.hull },
+      need_armor:       function() { return game.player.ship.damage.armor },
+      price_hull_each:  function() { return data.ship.hull.repair },
+      price_armor_each: function() { return data.ship.armor.repair },
+      price_hull:       function() { return this.price_hull_each * this.repair_hull },
+      price_armor:      function() { return this.price_armor_each * this.repair_armor },
+      price_total:      function() { return this.price_hull + this.price_armor },
+
+      max_hull: function() {
+        return Math.min(
+          (this.money - this.price_armor) / this.price_hull_each,
+          this.need_hull,
+        );
+      },
+
+      max_armor: function() {
+        return Math.min(
+          (this.money - this.price_hull) / this.price_armor_each,
+          this.need_armor,
+        );
+      },
+    },
+    methods: {
+      repair: function() {
+        if (this.price_total) {
+          game.player.debit(this.price_total);
+          game.player.ship.repairDamage(this.repair_hull, this.repair_armor);
+          game.turn();
+        }
+      },
+    },
+    template: `
+<modal title="Repair your ship" close="Nevermind" xclose=true @close="$emit('close')">
+  <p>
+    The shipyard is capable of repairing most structural damage to a ship.
+    You have {{money|csn|unit('c')}} available for repairs.
+  </p>
+
+  <def term="Total price" :def="price_total|csn|unit('c')" />
+
+  <def term="Hull" :def="price_hull|csn|unit('c')" />
+  <slider class="my-3" :value.sync="repair_hull"  min=0 :max="max_hull"  step=1 minmax=true>
+    <span class="btn btn-dark" slot="pre">{{need_hull - repair_hull}}</span>
+    <span class="btn btn-dark" slot="post">{{repair_hull}}</span>
+  </slider>
+
+  <def term="Armor" :def="price_armor|csn|unit('c')" />
+  <slider class="my-3" :value.sync="repair_armor" min=0 :max="max_armor" step=1 minmax=true>
+    <span class="btn btn-dark" slot="pre">{{need_armor - repair_armor}}</span>
+    <span class="btn btn-dark" slot="post">{{repair_armor}}</span>
+  </slider>
+
+  <btn slot="footer" @click="repair" close=1>Repair ship</btn>
 </modal>
     `,
   });
