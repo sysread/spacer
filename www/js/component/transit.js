@@ -16,12 +16,12 @@ define(function(require, exports, module) {
     props: ['plan'],
     data: function() {
       return {
-        timer: this.schedule(),
-        stoppedBy: {},
+        paused:     false,
+        timer:      this.schedule(),
+        stoppedBy:  {},
         inspection: null,
-        daysLeft: null,
-        velocity: null,
-        paused: false,
+        daysLeft:   null,
+        velocity:   0,
       };
     },
     computed: {
@@ -173,6 +173,7 @@ define(function(require, exports, module) {
     data: function() {
       return {
         dist: this.plan.dist,
+        pretty: this.plan.prettyPath,
       };
     },
     directives: {
@@ -190,6 +191,7 @@ define(function(require, exports, module) {
       coords: function() { return this.plan.coords },
       orig:   function() { return game.planets[this.plan.origin] },
       dest:   function() { return game.planets[this.plan.dest] },
+      turn:   function() { return this.plan.currentTurn },
     },
     methods: {
       extras: function() {
@@ -224,13 +226,10 @@ define(function(require, exports, module) {
       },
 
       max: function() {
-        const ship = Physics.distance(this.coords, [0, 0, 0]);
-        const orig = Physics.distance(this.orig.position, [0, 0, 0]);
-        const dest = Physics.distance(this.dest.position, [0, 0, 0]);
-        const max  = Math.min(ship + (2 * Physics.AU), Math.max(orig, dest));
-        const min  = Math.max(ship, Physics.AU * 1.5, Math.min(orig, dest));
-        const x    = (min * util.R((Math.PI / 2), 2)) / max;
-        return Math.ceil(ship * (1 + Math.cos(x)));
+        const ship = Physics.distance(this.coords, [0, 0, 0]) * 1.2;
+        const orig = Physics.distance(this.orig.position, [0, 0, 0]) * 1.2;
+        const dest = Physics.distance(this.dest.position, [0, 0, 0]) * 1.2;
+        return Math.max(Physics.AU * 1.5, ship, Math.min(orig, dest));
       },
 
       alpha: function(point) {
@@ -279,7 +278,18 @@ define(function(require, exports, module) {
   <transit-point class="text-warning" :x="adjust(0)" :y="adjust(0)" :max="width()">&bull;</transit-point>
   <transit-point class="text-success" :x="adjust(coords[0])" :y="adjust(coords[1])" :max="width()">&#9652</transit-point>
 
-  <transit-point v-for="(tick, idx) in ticks()" :key="idx" :x="tick[1][0]" :y="tick[1][1]" :max="width()" sm=1 style="font-size:0.5rem" class="text-secondary">.</transit-point>
+  <transit-point v-for="(tick, idx) in ticks()" :key="'tick-' + idx"
+      :x="tick[1][0]" :y="tick[1][1]" :max="width()" sm=1
+      style="font-size:0.5rem" class="text-secondary">
+    .
+  </transit-point>
+
+  <transit-point v-for="(p, idx) in pretty" :key="'path-' + idx"
+      :v-if="idx % 9 == 0"
+      :x="adjust(p.x)" :y="adjust(p.y)" :sm=1 :max="width()"
+      style="font-size:0.25rem" :class="idx < turn ? 'text-secondary' : 'text-success'" :idx="idx">
+    .
+  </transit-point>
 </div>
     `,
   });

@@ -1,5 +1,6 @@
 var physics;
-define(function() {
+
+define(function(require, exports, module) {
   const Physics = class {
     static get C()  { return 299792458;    } // m/s
     static get G()  { return 9.80665;      } // m/s/s
@@ -46,7 +47,7 @@ define(function() {
      *   2d = 2vt + at^2;
      *   2d - 2vt = at^2
      *   (2d - 2vt) / t^2 = a
-     * 
+     *
      * When v=0:
      *   2d / t^2 = a
      */
@@ -78,7 +79,7 @@ define(function() {
       ];
     }
   };
-physics = Physics;
 
+  physics = Physics;
   return Physics;
 });
