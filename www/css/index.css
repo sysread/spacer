@@ -125,6 +125,11 @@ body {
   font-size: 12px;
 }
 
+.plot-controls {
+  background-color: #000;
+  border: 1px solid rgb(139,0,0);
+}
+
 .plot-root {
   background-color: #000;
   border: 1px solid rgb(139,0,0);
@@ -134,10 +139,16 @@ body {
   position: absolute;
   font-size: 1.3rem;
   line-height: 40px !important;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .plot-point.big {
   font-size: 30px;
+}
+
+.plot-point.huge {
+  font-size: 60px;
 }
 
 .plot-point:hover {

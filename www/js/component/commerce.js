@@ -243,21 +243,13 @@ define(function(require, exports, module) {
   });
 
   Vue.component('market-report', {
-    props: ['body'],
-    data: function() { return { relprices: false } },
+    props: ['body', 'relprices'],
     computed: {
       planet:    function() { return game.planets[this.body] },
       resources: function() { return Object.keys(model.resources) },
     },
     template: `
 <div>
-  <h3>Market report for {{planet.name}}</h3>
-
-  <btn block=1 @click="relprices=!relprices" class="my-3">
-    <span v-if="relprices">Show absolute prices</span>
-    <span v-else>Show relative prices</span>
-  </btn>
-
   <table class="table table-sm">
     <thead>
       <tr>

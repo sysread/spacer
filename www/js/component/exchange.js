@@ -50,7 +50,7 @@ define(function(require, exports, module) {
     :min="min"
     :max="max"
     :step="stepValue || 1"
-    type="range">
+    type="range" />
 
   <span @click="inc" class="input-group-btn"><btn class="font-weight-bold">&gt;</btn></span>
   <span @click="setMax" v-if="minmax" class="input-group-btn"><btn class="font-weight-bold">&gt;&gt;</btn></span>

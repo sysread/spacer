@@ -13,7 +13,7 @@ define(function(require, exports, module) {
       return Math.hypot(
         p1[0] - p0[0],
         p1[1] - p0[1],
-        p1[2] - p0[2]
+        (p1[2] || 0) - (p0[2] || 0),
       );
     }
 

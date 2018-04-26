@@ -1,0 +1,16 @@
+<script type="text/javascript">
+
+require(
+  ['game', 'vendor/vue', 'component/map'],
+  function(Game, Vue) {
+    const app = new Vue({
+      el: '#navigation',
+      data: {},
+      template: '<plot controls=1 />',
+    });
+  }
+);
+
+</script>
+
+<div id="navigation" />

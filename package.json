@@ -1,29 +1,30 @@
 {
-    "name": "com.sysread.spacer",
-    "displayName": "Spacer",
-    "version": "1.0.0",
-    "description": "A thing named Spacer",
-    "main": "index.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "author": "Jeff Ober",
-    "license": "Apache-2.0",
-    "dependencies": {
-        "cordova-android": "^7.1.0",
-        "cordova-browser": "^5.0.3",
-        "cordova-plugin-statusbar": "^2.4.1",
-        "npm": "^5.8.0",
-        "sprintf-js": "^1.1.1",
-        "statusbar": "^0.2.0"
-    },
-    "cordova": {
-        "platforms": [
-            "browser",
-            "android"
-        ],
-        "plugins": {
-            "cordova-plugin-statusbar": {}
-        }
+  "name": "com.sysread.spacer",
+  "displayName": "Spacer",
+  "version": "1.0.0",
+  "description": "A thing named Spacer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jeff Ober",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "browser": "^0.2.6",
+    "cordova-android": "^7.1.0",
+    "cordova-browser": "^5.0.3",
+    "cordova-plugin-statusbar": "^2.4.2",
+    "npm": "^5.8.0",
+    "sprintf-js": "^1.1.1",
+    "statusbar": "^0.2.0"
+  },
+  "cordova": {
+    "platforms": [
+      "browser",
+      "android"
+    ],
+    "plugins": {
+      "cordova-plugin-statusbar": {}
     }
+  }
 }

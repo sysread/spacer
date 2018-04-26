@@ -24,7 +24,7 @@ define(function(require, exports, module) {
     get dest()   { return this.opt.dest }                   // destination body name
     get dist()   { return this.opt.dist }                   // meters
     get turns()  { return this.opt.turns }                  // turns
-    get accel()  { return this.opt.accel }                  // gravities
+    get accel()  { return this.opt.accel }                  // m/s/s
     get start()  { return this.opt.start }                  // start point (x, y, z)
     get end()    { return this.opt.end }                    // end point (x, y, z)
 
@@ -39,7 +39,7 @@ define(function(require, exports, module) {
     get days_hours() {
       let d = this.hours / 24;
       let h = this.hours % 24;
-      return [d.toFixed(0), h];
+      return [util.R(d), h];
     }
 
     get path() {
@@ -81,44 +81,72 @@ define(function(require, exports, module) {
       return path;
     }
 
+    get prettyPath2() {
+      if (!this.pretty2) {
+        const path = [];
+        this.pretty2 = path;
+      }
+
+      return this.pretty2;
+    }
+
     get prettyPath() {
       if (!this.pretty) {
-        const clockwise = (Math.atan(this.start[1] / this.start[0]) - Math.atan(this.end[1] / this.end[0])) > 0;
-        const curve = new jsspline.BSpline({steps: 100});
-        const flip = this.turns / 2;
+        const quad = this.end[1] >= 0 && this.end[0] >= 0 ? 1
+                   : this.end[1] >= 0 && this.end[0]  < 0 ? 2
+                   : this.end[1]  < 0 && this.end[0]  < 0 ? 3
+                                                          : 4;
 
-        curve.addWayPoint({x: this.start[0], y: this.start[1], z: this.start[2]});
+        const curve = new jsspline.Bezier({steps: 30});
+
+        curve.addWayPoint({
+          x: this.start[0],
+          y: this.start[1],
+          z: this.start[2],
+        });
+
+        let point;
 
         for (let i = 1; i < this.turns - 1; ++i) {
-          const [x, y, z] = this.path[i].position;
+          let [x, y, z]  = this.path[i].position;
+          const factor   = Math.sin((i / this.turns) * Math.PI) * 0.2;
+          const adjust_x = Math.abs(x) * factor;
+          const adjust_y = Math.abs(y) * factor;
 
-          const scale = clockwise
-            ? (i / this.turns)
-            : ((flip - i) / flip);
+          switch (quad) {
+            case 1: x += adjust_x; y -= adjust_y; break;
+            case 2: x += adjust_x; y += adjust_y; break;
+            case 3: x -= adjust_x; y += adjust_y; break;
+            case 4: x -= adjust_x; y -= adjust_y; break;
+            default: break;
+          }
 
-          let factor = Math.sin( scale * Math.PI ) * 0.2;
-
-          factor = clockwise
-            ? 1 - factor
-            : 1 + factor;
-
-          curve.addWayPoint({
-            x: x * factor,
-            y: y,
-            z: z,
-          });
+          point = {x: x, y: y, z: z};
+          curve.addWayPoint(point);
         }
 
-        curve.addWayPoint({x: this.end[0], y: this.end[1], z: this.end[2]});
+        // Smooth out final leg
+        if (point) {
+          let x = point.x;
+          let y = point.y;
+          let z = point.z;
+          let n = Math.min(9, Math.ceil(this.turns / 20));
 
-        const path = [];
-        const nodes = curve.nodes.length;
-        for (let i = 0; i < this.turns; ++i) {
-          const idx = Math.floor(i * (nodes / this.turns));
-          path.push(curve.nodes[idx]);
+          for (let i = 1; i <= n; ++i) {
+            x += ((this.end[0]) - x) / n;
+            y += ((this.end[1]) - y) / n;
+            z += ((this.end[2]) - z) / n;
+            curve.addWayPoint({x:x, y:y, z:z});
+          }
         }
 
-        this.pretty = path;
+        curve.addWayPoint({
+          x: this.end[0],
+          y: this.end[1],
+          z: this.end[2],
+        });
+
+        this.pretty = curve.nodes;
       }
 
       return this.pretty;
