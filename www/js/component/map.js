@@ -1,5 +1,6 @@
 define(function(require, exports, module) {
   const Vue     = require('vendor/vue');
+  const Hammer  = require('vendor/hammer.min');
   const Physics = require('physics');
   const System  = require('system');
   const NavComp = require('navcomp');
@@ -141,6 +142,18 @@ define(function(require, exports, module) {
         inserted: function(el, binding, vnode) {
           vnode.context.resize();
           vnode.context.autoScale();
+
+          const elt = document.getElementById('plot-root');
+          const mc = new Hammer(elt);
+
+          mc.on('pinch pan', function(ev) {
+            if (ev.type == 'pinch') {
+              vnode.context.scale *= ev.scale;
+            } else {
+              const scale = 1 + (ev.deltaY / vnode.context.width);
+              vnode.context.scale = Math.max(1, Math.min(35, vnode.context.scale * scale));
+            }
+          });
         }
       },
     },
@@ -355,7 +368,7 @@ define(function(require, exports, module) {
 
   <market-report v-if="show=='market'" :relprices="relprices" :body="dest" class="m-3 p-1 bg-black" />
 
-  <div v-if="show=='map'" v-resize class="plot-root p-0 m-0" :style="{'position': 'relative', 'width': width + 'px', 'height': width + 'px'}">
+  <div v-if="show=='map'" v-resize id="plot-root" class="plot-root p-0 m-0" :style="{'position': 'relative', 'width': width + 'px', 'height': width + 'px'}">
     <plot-transit-legend :dest="dest" :scale="scale" :transit="transit" :fuel="fuel" />
 
     <plot-point v-for="(pos, name) of bodies"
