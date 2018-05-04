@@ -127,6 +127,7 @@ define(function(require, exports, module) {
         origin:    game.locus,
         dest:      "",
         index:     0,
+        show_all:  false,
         max_fuel:  game.player.ship.fuel,
         fuel:      game.player.ship.fuel,
         show:      'map',
@@ -283,9 +284,9 @@ define(function(require, exports, module) {
         return r / Physics.AU;
       },
 
-      onFuelChange: function() {
+      onConstraintChange: function() {
         this.index = 0;
-        this.navcomp = new NavComp(this.fuel);
+        this.navcomp = new NavComp(this.fuel, this.show_all);
       },
 
       autoScale: function() {
@@ -334,6 +335,11 @@ define(function(require, exports, module) {
         <btn v-for="(name, idx) of dests" :key="name" v-if="name == dest" @click="setDest(dests[idx + 1])">
           {{name|caps}}
         </btn>
+
+        <btn v-if="dest" @click="show_all=!show_all;onConstraintChange()">
+          <span v-if="show_all">[all]</span>
+          <span v-else>[best]</span>
+        </btn>
       </div>
     </div>
   </card-header>
@@ -344,7 +350,7 @@ define(function(require, exports, module) {
     </def>
 
     <def v-if="dest" term="Fuel" split="3" class="p-0 m-0" y=1>
-      <slider slot="def" :value.sync="fuel" step=1 min=1 :max="max_fuel" @change="onFuelChange()" />
+      <slider slot="def" :value.sync="fuel" step=1 min=1 :max="max_fuel" @change="onConstraintChange()" />
     </def>
 
     <def term="Scale" split="3" class="p-0 m-0" y=1>

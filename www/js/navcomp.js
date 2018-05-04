@@ -16,8 +16,9 @@ define(function(require, exports, module) {
   }
 
   const NavComp = class {
-    constructor(fuel_target) {
+    constructor(fuel_target, show_all) {
       this.fuel_target = fuel_target || game.player.ship.fuel;
+      this.show_all = show_all || false;
       this.max  = game.player.maxAcceleration();
       this.ship = game.player.ship;
       this.orig = game.here.body;
@@ -107,7 +108,7 @@ define(function(require, exports, module) {
             // If this is the first route to arrive, it sets the base for max
             // fuel usage. After that, only include routes with better or equal
             // fuel usage to the previous.
-            if (prevFuelUsed === undefined || fuelUsed <= prevFuelUsed) {
+            if (prevFuelUsed === undefined || fuelUsed <= prevFuelUsed || this.show_all) {
               prevFuelUsed = fuelUsed;
               arrived = true;
             } 
