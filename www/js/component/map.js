@@ -120,18 +120,19 @@ define(function(require, exports, module) {
       window.addEventListener('resize', this.resize);
 
       return {
-        scale:     2,
-        width:     null,
-        dests:     System.bodies().filter(n => {return n != game.locus}),
-        navcomp:   new NavComp,
-        origin:    game.locus,
-        dest:      "",
-        index:     0,
-        show_all:  false,
-        max_fuel:  game.player.ship.fuel,
-        fuel:      game.player.ship.fuel,
-        show:      'map',
-        relprices: false,
+        scale:       2,
+        width:       null,
+        dests:       System.bodies().filter(n => {return n != game.locus}),
+        navcomp:     new NavComp,
+        origin:      game.locus,
+        dest:        "",
+        index:       0,
+        show_all:    false,
+        max_fuel:    game.player.ship.fuel,
+        fuel:        game.player.ship.fuel,
+        show:        'map',
+        relprices:   false,
+        show_config: false,
       };
     },
 
@@ -252,10 +253,9 @@ define(function(require, exports, module) {
     methods: {
       resize: function() {
         const frameTop  = Math.ceil(this.$el.getBoundingClientRect().top + window.scrollY);
-        const controls  = $('.plot-controls').outerHeight();
         const statusbar = $('#spacer-status').outerHeight();
         const nav       = $('#spacer-navbar').outerHeight();
-        const height    = window.innerHeight - frameTop - statusbar - controls - nav;
+        const height    = window.innerHeight - frameTop - statusbar - nav;
         const width     = $('.plot-root').parent().width();
         this.width = Math.ceil(Math.min(width, height));
       },
@@ -289,6 +289,15 @@ define(function(require, exports, module) {
         this.navcomp = new NavComp(this.fuel, this.show_all);
       },
 
+      nextRoute: function(inc=1) {
+        if (this.index + inc >= this.transits.length)
+          this.index = 0;
+        else if (this.index + inc <= 0)
+          this.index = 0;
+        else
+          this.index += inc;
+      },
+
       autoScale: function() {
         if (this.transit) {
           this.scale = Math.max(
@@ -318,45 +327,29 @@ define(function(require, exports, module) {
 <card nopad=1>
   <card-header slot="header">
     <div class="btn-toolbar">
-      <div class="btn-group mr-3 my-2">
-        <btn :disabled="!dest" @click="">Engage</btn>
-      </div>
-
       <div class="btn-group my-2 mr-3">
         <btn :disabled="!dest" @click="show='map'">&#8982;</btn>
         <btn :disabled="!dest" @click="show='info'">?</btn>
         <btn :disabled="!dest" @click="show='market';relprices=false">$</btn>
         <btn :disabled="!dest" @click="show='market';relprices=true">$&plusmn;</btn>
+        <btn @click="show_config=true">&#9881;</btn>
       </div>
 
       <div class="btn-group my-2">
-        <btn v-if="!this.dest" @click="setDest(dests[0])">Destination</btn>
+        <btn v-if="dest" @click="nextRoute(-3)">&lt;&lt;</btn>
+        <btn v-if="dest" @click="nextRoute(-1)">&lt;</btn>
+
+        <btn v-if="!dest" @click="setDest(dests[0])">Destination</btn>
 
         <btn v-for="(name, idx) of dests" :key="name" v-if="name == dest" @click="setDest(dests[idx + 1])">
           {{name|caps}}
         </btn>
 
-        <btn v-if="dest" @click="show_all=!show_all;onConstraintChange()">
-          <span v-if="show_all">[all]</span>
-          <span v-else>[best]</span>
-        </btn>
+        <btn v-if="dest" @click="nextRoute(1)">&gt;</btn>
+        <btn v-if="dest" @click="nextRoute(3)">&gt;&gt;</btn>
       </div>
     </div>
   </card-header>
-
-  <card-footer v-if="show=='map' && controls" slot="footer" class="plot-controls p-1">
-    <def v-if="dest" term="Time" split="3" class="p-0 m-0" y=1>
-      <slider slot="def" :value.sync="index" step=1 min=0 :max="transits.length - 1" />
-    </def>
-
-    <def v-if="dest" term="Fuel" split="3" class="p-0 m-0" y=1>
-      <slider slot="def" :value.sync="fuel" step=1 min=1 :max="max_fuel" @change="onConstraintChange()" />
-    </def>
-
-    <def term="Scale" split="3" class="p-0 m-0" y=1>
-      <slider slot="def" :value.sync="scale" step=0.25 min=1 max=35 />
-    </def>
-  </card-footer>
 
   <planet-summary v-if="show=='info'" mini=true :planet="planet" class="p-3" />
 
@@ -400,6 +393,33 @@ define(function(require, exports, module) {
       .
     </plot-point>
   </div>
+
+  <modal v-if="show_config" title="Navigation options" close="Close" xclose=true @close="show_config=false">
+    <def term="Scale" split=4 class="p-0 m-0">
+      <slider slot="def" :value.sync="scale" step=0.25 min=1 max=35>
+        <span class="btn btn-dark" slot="post">{{scale|unit('AU')}}</span>
+      </slider>
+    </def>
+
+    <def v-if="dest" term="Time" split=4 class="p-0 m-0">
+      <slider slot="def" :value.sync="index" step=1 min=0 :max="transits.length - 1">
+        <span class="btn btn-dark" slot="post">{{transit.hours|csn|unit('hours')}}</span>
+      </slider>
+    </def>
+
+    <def v-if="dest" term="Fuel" split=4 class="p-0 m-0">
+      <slider slot="def" :value.sync="fuel" step=1 min=1 :max="max_fuel" @change="onConstraintChange()">
+        <span class="btn btn-dark" slot="post">{{fuel|unit('tonnes')}}</span>
+      </slider>
+    </def>
+
+    <def v-if="dest" term="Routes" split=4 class="p-0 m-0">
+      <btn slot="def" @click="show_all=!show_all;onConstraintChange()">
+        <span v-if="show_all">All</span>
+        <span v-else>Best</span>
+      </btn>
+    </def>
+  </modal>
 </card>
     `,
   });

@@ -6,8 +6,6 @@ define(function(require, exports, module) {
   const Vector3  = require('vendor/math-ds').Vector3;
   const Steering = require('steering');
 
-  require('vendor/jsspline');
-
   const SPT = data.hours_per_turn * 3600;
 
   return class {
