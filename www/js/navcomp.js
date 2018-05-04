@@ -1,13 +1,23 @@
 define(function(require, exports, module) {
   const data        = require('data');
+  const util        = require('util');
   const system      = require('system');
   const Physics     = require('physics');
   const TransitPlan = require('transitplan');
-  const math_ds     = require('vendor/math-ds');
-  const Vector3     = math_ds.Vector3;
+  const Vector3     = require('vendor/math-ds').Vector3;
+  const Steering    = require('steering');
+  const SPT         = data.hours_per_turn * 3600;
+  const SPT2        = SPT * SPT;
+
+  function Vector(x=0, y=0, z=0) {
+    return x instanceof Array
+      ? (new Vector3).fromArray(x)
+      : new Vector3(x, y, z);
+  }
 
   const NavComp = class {
-    constructor() {
+    constructor(fuel_target) {
+      this.fuel_target = fuel_target || game.player.ship.fuel;
       this.max  = game.player.maxAcceleration();
       this.ship = game.player.ship;
       this.orig = game.here.body;
@@ -34,28 +44,13 @@ define(function(require, exports, module) {
       let prev;
 
       for (let transit of this.astrogator(this.orig, dest)) {
-        if (transit.accel > this.maxdv) continue;
-        if (transit.turns > this.ship.maxBurnTime(transit.accel)) continue;
-
-        let fuel = transit.turns * this.ship.burnRate(transit.accel, this.ship.currentMass());
-
-        if (prev === undefined || prev >= fuel) {
-          prev = fuel;
-        }
-        else {
-          continue;
+        if (prev === undefined || prev >= transit.fuel) {
+          prev = transit.fuel;
+        } else {
+          //continue;
         }
 
-        if (this.ship.fuel < fuel) {
-          continue;
-        }
-
-        transits.push({
-          index   : transits.length,
-          transit : transit,
-          turns   : transit.turns,
-          fuel    : fuel,
-        });
+        transits.push(transit);
       }
 
       return transits;
@@ -73,31 +68,89 @@ define(function(require, exports, module) {
       });
     }
 
-    *astrogator(origin, target) {
-      const orig = system.orbit_by_turns(origin);
-      const dest = system.orbit_by_turns(target);
-      const s_per_turn = data.hours_per_turn * 3600;
-      const v_init = (new Vector3).fromArray(orig[1]).sub((new Vector3).fromArray(orig[0]));
+    *astrogator(origin, destination) {
+      const orig     = system.orbit_by_turns(origin);
+      const dest     = system.orbit_by_turns(destination);
+      const startPos = Vector(orig[0]);
+      const vInit    = Vector(orig[1]).sub( Vector(orig[0]) ).divideScalar(SPT);
+      const bestAcc  = Math.min(game.player.maxAcceleration(), game.player.shipAcceleration());
+      const mass     = game.player.ship.currentMass();
+      const fuelrate = game.player.ship.fuelrate;
+      const thrust   = game.player.ship.thrust;
+      const fuel     = this.fuel_target;
 
-      for (var i = 1; i < dest.length; ++i) {
-        const S = Physics.distance(orig[0], dest[i]);       // distance
-        const t = i * s_per_turn;                           // seconds until target is at destination
-        const a = Physics.requiredDeltaV(t * 0.5, S * 0.5); // deltav to reach flip point
-        const v_final = (new Vector3).fromArray(dest[i - 1]).sub((new Vector3).fromArray(dest[i]));
-        const v_diff  = v_final.clone().sub(v_init);
+      let prevFuelUsed;
 
-        yield new TransitPlan({
-          origin:  origin,
-          dest:    target,
-          dist:    S,
-          turns:   i,
-          accel:   a,
-          start:   orig[0],
-          end:     dest[i],
-          v_init:  v_init.clone(),
-          v_final: v_final,
-          v_diff:  v_diff,
-        });
+      for (let turns = 1; turns < dest.length; ++turns) {
+        const fuelPerTurn   = Math.min(fuel / turns, fuelrate);
+        const burnRatio     = fuelPerTurn / fuelrate;
+        const thrustPerTurn = thrust * burnRatio;
+        const availAcc      = thrustPerTurn / mass;
+        const maxAccel      = Math.min(bestAcc, availAcc);
+        const targetPos     = Vector(dest[turns]);
+        const vFinal        = targetPos.clone().sub(Vector(dest[turns - 1])).divideScalar(SPT);
+        const target        = new Steering.Body(targetPos, vFinal.clone());
+        const agent         = new Steering.Body(startPos.clone(), vInit.clone()); // add target velocity
+        const steering      = new Steering.Steering(target, agent, maxAccel);
+        const path          = [];
+
+        let maxVel   = 0;
+        let maxAcc   = 0;
+        let fuelUsed = 0;
+        let arrived  = false;
+
+        for (let turn = 0; turn < turns; ++turn) {
+          const t = (turns - turn) * SPT;
+          const a = steering.getAcceleration(t);
+
+          if (!a) {
+            // If this is the first route to arrive, it sets the base for max
+            // fuel usage. After that, only include routes with better or equal
+            // fuel usage to the previous.
+            if (prevFuelUsed === undefined || fuelUsed <= prevFuelUsed) {
+              prevFuelUsed = fuelUsed;
+              arrived = true;
+            } 
+
+            break;
+          }
+
+          fuelUsed += a.length() / availAcc * fuelPerTurn * .99; // adjust for float rounding error
+
+          if (fuelUsed > fuel) {
+            break;
+          }
+
+          agent.update(SPT, a);
+
+          if (agent.velocity.length() > maxVel)
+            maxVel = agent.velocity.length();
+
+          if (a.length() > maxAcc)
+            maxAcc = a.length();
+
+          path.push({
+            position: agent.position.clone(),
+            velocity: agent.velocity.length(),
+            acceleration: a.length(),
+            fuel: fuelUsed,
+          });
+        }
+
+        if (arrived) {
+          yield new TransitPlan({
+            origin: origin,
+            dest:   destination,
+            turns:  turns,
+            fuel:   fuelUsed,
+            start:  orig[0],
+            end:    dest[turns],
+            dist:   agent.distance,
+            vel:    maxVel,
+            accel:  maxAcc,
+            path:   path,
+          });
+        }
       }
     }
   };

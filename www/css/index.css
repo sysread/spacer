@@ -168,6 +168,10 @@ ul.plot-selected {
   font-weight: bold !important;
 }
 
+.warn {
+  color: rgb(200, 140, 50) !important;
+}
+
 /*
  * http://www.cssportal.com/style-input-range/
  */

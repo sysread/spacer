@@ -25,6 +25,7 @@ requirejs(['game'], function(Game) {
 
     FastClick.attach(document.body);
 
+    console.log('starting game');
     window.game = new Game;
   }
 

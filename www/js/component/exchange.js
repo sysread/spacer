@@ -15,11 +15,15 @@ define(function(require, exports, module) {
       stepValue: function() { return parseFloat(`${this.step}`) },
     },
     methods: {
-      inc:    function()   { this.$emit('update:value', Math.min(this.maxValue, this.value + this.stepValue)) },
-      dec:    function()   { this.$emit('update:value', Math.max(this.minValue, this.value - this.stepValue)) },
-      setMin: function()   { this.$emit('update:value', this.minValue) },
-      setMax: function()   { this.$emit('update:value', this.maxValue) },
-      update: function(ev) { this.$emit('update:value', parseFloat(ev.target.value)) },
+      inc:    function()   { this.setValue(Math.min(this.maxValue, this.value + this.stepValue)) },
+      dec:    function()   { this.setValue(Math.max(this.minValue, this.value - this.stepValue)) },
+      setMin: function()   { this.setValue(this.minValue) },
+      setMax: function()   { this.setValue(this.maxValue) },
+      update: function(ev) { this.setValue(parseFloat(ev.target.value)) },
+      setValue: function(value) {
+        this.$emit('update:value', value);
+        this.$emit('change', value);
+      },
     },
     directives: {
       'monitor': {
@@ -27,7 +31,7 @@ define(function(require, exports, module) {
           vnode.context.timer = window.setInterval(() => {
             const value = parseFloat(el.value);
             if (value != vnode.context.value) {
-              vnode.context.$emit('update:value', value);
+              vnode.context.setValue(value);
             }
           }, 350);
         },

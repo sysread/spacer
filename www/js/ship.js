@@ -23,6 +23,7 @@ define(function(require, exports, module) {
       this.restricted   = this.shipclass.restricted;
       this.faction      = this.shipclass.faction;
       this.thrust       = this.drives * this.drive.thrust;
+      this.fuelrate     = this.drives * this.drive.burn_rate;
       this.acceleration = Physics.deltav(this.thrust, this.mass);
 
       this.addons = init.addons || [];
@@ -126,6 +127,22 @@ define(function(require, exports, module) {
       return burnRate * thrustRatio;
     }
 
+    maxBurnTime(accel, nominal=false) {
+      let fuel = this.fuel;
+      let mass = this.currentMass();
+
+      if (nominal) {
+        fuel = this.tank;
+        mass = this.nominalMass(true);
+        if (accel === undefined) accel = Physics.deltav(this.thrust, mass);
+      }
+      else {
+        if (accel === undefined) accel = this.currentAcceleration();
+      }
+
+      return Math.floor(fuel / this.burnRate(accel, mass));
+    }
+
     cargoMass() {
       let mass = 0;
       for (const item of this.cargo.keys) {
@@ -155,22 +172,6 @@ define(function(require, exports, module) {
 
     accelerationWithMass(mass) {
       return Physics.deltav(this.thrust, this.currentMass() + mass);
-    }
-
-    maxBurnTime(accel, nominal=false) {
-      let fuel = this.fuel;
-      let mass = this.currentMass();
-
-      if (nominal) {
-        fuel = this.tank;
-        mass = this.nominalMass(true);
-        if (accel === undefined) accel = Physics.deltav(this.thrust, mass);
-      }
-      else {
-        if (accel === undefined) accel = this.currentAcceleration();
-      }
-
-      return Math.floor(fuel / this.burnRate(accel, mass));
     }
 
     refuelUnits() {return Math.ceil(this.tank - this.fuel)}

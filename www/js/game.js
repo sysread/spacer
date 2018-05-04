@@ -15,15 +15,36 @@ define(function(require, exports, module) {
 
       this.locus   = init.locus || null;
       this.turns   = init.turns || 0;
-      this.player  = new Person(init.player);
       this.date    = new Date(data.start_date);
-      this.planets = {};
 
       this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
+      console.log('setting system date', this.date);
       system.set_date(this.strdate());
 
-      for (const body of Object.keys(data.bodies)) {
-        this.planets[body] = new model.Planet(body, init.planets ? init.planets[body] : undefined);
+      try {
+        this.player = new Person(init.player);
+
+        this.planets = {};
+        for (const body of Object.keys(data.bodies)) {
+          this.planets[body] = new model.Planet(body, init.planets ? init.planets[body] : undefined);
+        }
+      }
+      catch (e) {
+        console.warn('initialization error; clearing data. error was:', e);
+        window.localStorage.removeItem('game');
+
+        this.locus  = null;
+        this.turns  = 0;
+        this.player = new Person;
+
+        this.date = new Date(data.start_date);
+        console.log('resetting system date', this.date);
+        system.set_date(this.strdate());
+
+        this.planets = {};
+        for (const body of Object.keys(data.bodies)) {
+          this.planets[body] = new model.Planet(body, undefined);
+        }
       }
 
       this.refresh();

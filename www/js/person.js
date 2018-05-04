@@ -58,6 +58,10 @@ define(function(require, exports, module) {
       return this.ship.currentAcceleration();
     }
 
+    bestAcceleration() {
+      return Math.min(this.maxAcceleration(), this.shipAcceleration());
+    }
+
     credit(n) {
       this.money += n;
     }

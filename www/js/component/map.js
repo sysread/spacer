@@ -13,7 +13,7 @@ define(function(require, exports, module) {
 
 
   Vue.component('plot-transit-legend', {
-    props: ['scale', 'transit'],
+    props: ['scale', 'dest', 'transit', 'fuel'],
 
     computed: {
       transit_dist: function() { if (this.transit) return this.transit.au; },
@@ -22,10 +22,7 @@ define(function(require, exports, module) {
 
       transit_fuel: function() {
         if (this.transit) {
-          const mass = game.player.ship.currentMass();
-          const rate = game.player.ship.burnRate(this.transit.accel, mass);
-          const fuel = this.transit.turns * rate;
-          return fuel;
+          return this.transit.fuel;
         }
       },
 
@@ -49,7 +46,7 @@ define(function(require, exports, module) {
     },
 
     template: `
-<table v-if="transit" class="w-100 table table-sm" style="font-size:0.75rem">
+<table v-if="transit" class="w-100 table table-sm" style="font-size:0.75rem;font-family:mono">
   <tr>
     <th>Scale</th>
     <td>{{scale|R(2)|unit('AU')}}</td>
@@ -63,16 +60,20 @@ define(function(require, exports, module) {
     <td>{{transit_maxv|R(2)|unit('km/s')}}</td>
   </tr>
   <tr>
-    <th>Accel.</th>
+    <th>Max accel.</th>
     <td>{{transit_acc}}</td>
-    <th>Est. fuel</th>
-    <td>{{transit_fuel|R(2)|unit('tonnes')}}</td>
+    <th>Fuel</th>
+    <td>{{transit_fuel|R(2)}} tonnes (cap: {{fuel}})</td>
   </tr>
 </table>
-<table v-else class="w-50 table table-sm" style="font-size:0.75rem">
+<table v-else class="w-100 table table-sm" style="font-size:0.75rem;font-family:mono">
   <tr>
     <th>Scale</th>
     <td>{{scale|R(2)|unit('AU')}}</td>
+  </tr>
+  <tr v-if="dest">
+    <th>No routes</th>
+    <td>Transit &lt; 1 year | Fuel &lt; {{fuel}} tonnes</td>
   </tr>
 </table>
     `,
@@ -126,6 +127,8 @@ define(function(require, exports, module) {
         origin:    game.locus,
         dest:      "",
         index:     0,
+        max_fuel:  game.player.ship.fuel,
+        fuel:      game.player.ship.fuel,
         show:      'map',
         relprices: false,
       };
@@ -134,7 +137,8 @@ define(function(require, exports, module) {
     directives: {
       'resize': {
         inserted: function(el, binding, vnode) {
-          $( vnode.context.resize );
+          vnode.context.resize();
+          vnode.context.autoScale();
         }
       },
     },
@@ -148,7 +152,7 @@ define(function(require, exports, module) {
         return Math.ceil(this.width / 2);
       },
 
-      bodies: function() {
+      positions: function() {
         const bodies = {};
 
         for (let body of System.bodies()) {
@@ -159,9 +163,20 @@ define(function(require, exports, module) {
           }
 
           if (!bodies.hasOwnProperty(body)) {
-            const p = System.position(body);
-            bodies[body] = [this.adjustX(p[0]), this.adjustY(p[1])];
+            bodies[body] = System.position(body);
           }
+        }
+
+        return bodies;
+      },
+
+      bodies: function() {
+        const bodies = {};
+        const positions = this.positions;
+
+        for (const body of Object.keys(positions)) {
+          const p = positions[body];
+          bodies[body] = [this.adjustX(p[0]), this.adjustY(p[1])];
         }
 
         return bodies;
@@ -171,7 +186,7 @@ define(function(require, exports, module) {
         const t = this.transit;
 
         if (t) {
-          const p = System.position(t.transit.dest, this.target_date);
+          const p = System.position(t.dest, this.target_date);
           return [this.adjustX(p[0]), this.adjustY(p[1])];
         }
       },
@@ -184,13 +199,13 @@ define(function(require, exports, module) {
 
       transit: function() {
         if (this.plan) {
-          return this.plan.transit;
+          return this.plan;
         }
 
         if (this.dest) {
           const transits = this.transits;
           if (transits.length > 0) {
-            return transits[this.index].transit;
+            return transits[this.index];
           }
         }
 
@@ -199,22 +214,14 @@ define(function(require, exports, module) {
 
       path: function() {
         const transit = this.transit;
+
         if (transit) {
-          const path = transit.prettyPath;
-          const parts = [];
-
-          const scale = Math.max(
-            Math.ceil(path.length / 50),
-            Math.ceil(Math.log10(path.length)),
-          );
-
-          for (let i = 0; i < path.length; ++i) {
-            if (i % scale == 0) {
-              parts.push([this.adjustX(path[i].x), this.adjustY(path[i].y)]);
-            }
-          }
-
-          return parts;
+          return transit.path.map(p => {
+            return [
+              this.adjustX(p.position.x),
+              this.adjustY(p.position.y),
+            ];
+          });
         }
       },
 
@@ -276,19 +283,28 @@ define(function(require, exports, module) {
         return r / Physics.AU;
       },
 
-      onTimeChange: function() {
-        this.autoScale();
+      onFuelChange: function() {
+        this.index = 0;
+        this.navcomp = new NavComp(this.fuel);
       },
 
       autoScale: function() {
-        if (this.transit)
+        if (this.transit) {
           this.scale = Math.max(
             Physics.distance([0, 0, 0], this.transit.end),
             Physics.distance([0, 0, 0], this.transit.start),
             Physics.distance([0, 0, 0], System.position(game.locus)),
           ) / Physics.AU * 1.25;
-        else
+        }
+        else if (this.dest) {
+          this.scale = Math.max(
+            Physics.distance([0, 0, 0], System.position(this.dest)),
+            Physics.distance([0, 0, 0], System.position(game.locus)),
+          ) / Physics.AU * 1.25;
+        }
+        else {
           this.scale = 6;
+        }
       },
 
       beginTransit: function() {
@@ -324,7 +340,11 @@ define(function(require, exports, module) {
 
   <card-footer v-if="show=='map' && controls" slot="footer" class="plot-controls p-1">
     <def v-if="dest" term="Time" split="3" class="p-0 m-0" y=1>
-      <slider slot="def" :value.sync="index" step=1 min=0 :max="transits.length - 1" @change="onTimeChange()" />
+      <slider slot="def" :value.sync="index" step=1 min=0 :max="transits.length - 1" />
+    </def>
+
+    <def v-if="dest" term="Fuel" split="3" class="p-0 m-0" y=1>
+      <slider slot="def" :value.sync="fuel" step=1 min=1 :max="max_fuel" @change="onFuelChange()" />
     </def>
 
     <def term="Scale" split="3" class="p-0 m-0" y=1>
@@ -337,7 +357,7 @@ define(function(require, exports, module) {
   <market-report v-if="show=='market'" :relprices="relprices" :body="dest" class="m-3 p-1 bg-black" />
 
   <div v-if="show=='map'" v-resize class="plot-root p-0 m-0" :style="{'position': 'relative', 'width': width + 'px', 'height': width + 'px'}">
-    <plot-transit-legend :scale="scale" :transit="transit" />
+    <plot-transit-legend :dest="dest" :scale="scale" :transit="transit" :fuel="fuel" />
 
     <plot-point v-for="(pos, name) of bodies"
         :key="name"
