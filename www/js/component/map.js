@@ -121,19 +121,20 @@ define(function(require, exports, module) {
       window.addEventListener('resize', this.resize);
 
       return {
-        scale:       2,
-        width:       null,
-        dests:       System.bodies().filter(n => {return n != game.locus}),
-        navcomp:     new NavComp,
-        origin:      game.locus,
-        dest:        "",
-        index:       0,
-        show_all:    false,
-        max_fuel:    game.player.ship.fuel,
-        fuel:        game.player.ship.fuel,
-        show:        'map',
-        relprices:   false,
-        show_config: false,
+        scale:     2,
+        width:     null,
+        dests:     System.bodies().filter(n => {return n != game.locus}),
+        navcomp:   new NavComp,
+        origin:    game.locus,
+        dest:      "",
+        index:     0,
+        show_all:  false,
+        max_fuel:  game.player.ship.fuel,
+        fuel:      game.player.ship.fuel,
+        show:      'map',
+        relprices: false,
+        offsetX:   0,
+        offsetY:   0,
       };
     },
 
@@ -144,15 +145,57 @@ define(function(require, exports, module) {
           vnode.context.autoScale();
 
           const elt = document.getElementById('plot-root');
-          const mc = new Hammer(elt);
+          const mc  = new Hammer(elt);
 
-          mc.on('pinch pan', function(ev) {
-            if (ev.type == 'pinch') {
-              vnode.context.scale *= ev.scale;
-            } else {
-              const scale = 1 + (ev.deltaY / vnode.context.width);
-              vnode.context.scale = Math.max(1, Math.min(35, vnode.context.scale * scale));
+          /*
+           * Drag the map on pan events
+           */
+          mc.get('pan').set({
+            direction: Hammer.DIRECTION_UP | Hammer.DIRECTION_DOWN | Hammer.DIRECTION_LEFT | Hammer.DIRECTION_RIGHT,
+          });
+
+          let initX = vnode.context.offsetX;
+          let initY = vnode.context.offsetY;
+
+          mc.on('pan', ev => {
+            if (ev.isFirst) {
+              initX = vnode.context.offsetX;
+              initY = vnode.context.offsetY;
             }
+
+            vnode.context.offsetX = initX + ev.deltaX;
+            vnode.context.offsetY = initY + ev.deltaY;
+
+            if (ev.isFinal) {
+              initX = vnode.context.offsetX;
+              initY = vnode.context.offsetY;
+            }
+          });
+
+          /*
+           * Scale the map on pinch and wheel events
+           */
+          mc.get('pinch').set({ enable: true });
+
+          mc.on('pinch', ev => {
+            let amount = ev.scale;
+
+            if (amount > 1) {
+              amount = -(amount - 1);
+            } else {
+              amount = 1 - amount;
+            }
+
+            amount /= 10;
+
+            vnode.context.scale = util.R(Math.max(1, Math.min(35, vnode.context.scale + amount)), 2);
+          });
+
+          window.addEventListener('wheel', ev => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            let amount = -(ev.deltaY / 10);
+            vnode.context.scale = util.R(Math.max(1, Math.min(35, vnode.context.scale + amount)), 2);
           });
         }
       },
@@ -276,13 +319,13 @@ define(function(require, exports, module) {
       adjustX: function(n) {
         const zero = this.zero;
         const pct  = n / (this.scale * Physics.AU);
-        return Math.floor(zero + (zero * pct));
+        return this.offsetX + Math.floor(zero + (zero * pct));
       },
 
       adjustY: function(n) {
         const zero = this.zero;
         const pct  = n / (this.scale * Physics.AU);
-        return Math.floor(zero - (zero * pct));
+        return this.offsetY + Math.floor(zero - (zero * pct));
       },
 
       setDest: function(body) {
@@ -337,7 +380,7 @@ define(function(require, exports, module) {
     },
 
     template: `
-<card nopad=1>
+<card nopad=1 id="map-root">
   <card-header slot="header">
     <div class="btn-toolbar">
       <div class="btn-group my-2 mr-3">
@@ -345,21 +388,14 @@ define(function(require, exports, module) {
         <btn :disabled="!dest" @click="show='info'">?</btn>
         <btn :disabled="!dest" @click="show='market';relprices=false">$</btn>
         <btn :disabled="!dest" @click="show='market';relprices=true">$&plusmn;</btn>
-        <btn @click="show_config=true">&#9881;</btn>
       </div>
 
       <div class="btn-group my-2">
-        <btn v-if="dest" @click="nextRoute(-3)">&lt;&lt;</btn>
-        <btn v-if="dest" @click="nextRoute(-1)">&lt;</btn>
-
         <btn v-if="!dest" @click="setDest(dests[0])">Destination</btn>
 
         <btn v-for="(name, idx) of dests" :key="name" v-if="name == dest" @click="setDest(dests[idx + 1])">
           {{name|caps}}
         </btn>
-
-        <btn v-if="dest" @click="nextRoute(1)">&gt;</btn>
-        <btn v-if="dest" @click="nextRoute(3)">&gt;&gt;</btn>
       </div>
     </div>
   </card-header>
@@ -407,32 +443,22 @@ define(function(require, exports, module) {
     </plot-point>
   </div>
 
-  <modal v-if="show_config" title="Navigation options" close="Close" xclose=true @close="show_config=false">
-    <def term="Scale" split=4 class="p-0 m-0">
-      <slider slot="def" :value.sync="scale" step=0.25 min=1 max=35>
-        <span class="btn btn-dark" slot="post">{{scale|unit('AU')}}</span>
-      </slider>
+  <card-footer v-if="dest" slot="footer">
+    <def v-if="transit" term="Time" split=3 class="p-0 m-0">
+      <slider slot="def" :value.sync="index" step=1 min=0 :max="transits.length - 1" />
     </def>
 
-    <def v-if="dest" term="Time" split=4 class="p-0 m-0">
-      <slider slot="def" :value.sync="index" step=1 min=0 :max="transits.length - 1">
-        <span class="btn btn-dark" slot="post">{{transit.hours|csn|unit('hours')}}</span>
-      </slider>
+    <def v-if="dest" term="Fuel" split=3 class="p-0 m-0">
+      <slider slot="def" :value.sync="fuel" step=1 min=1 :max="max_fuel" @change="onConstraintChange()" />
     </def>
 
-    <def v-if="dest" term="Fuel" split=4 class="p-0 m-0">
-      <slider slot="def" :value.sync="fuel" step=1 min=1 :max="max_fuel" @change="onConstraintChange()">
-        <span class="btn btn-dark" slot="post">{{fuel|unit('tonnes')}}</span>
-      </slider>
-    </def>
-
-    <def v-if="dest" term="Routes" split=4 class="p-0 m-0">
+    <def v-if="dest" term="Routes" split=3 class="p-0 m-0">
       <btn slot="def" @click="show_all=!show_all;onConstraintChange()">
         <span v-if="show_all">All</span>
         <span v-else>Best</span>
       </btn>
     </def>
-  </modal>
+  </card-footer>
 </card>
     `,
   });

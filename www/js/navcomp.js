@@ -91,7 +91,7 @@ define(function(require, exports, module) {
         const targetPos     = Vector(dest[turns]);
         const vFinal        = targetPos.clone().sub(Vector(dest[turns - 1])).divideScalar(SPT);
         const target        = new Steering.Body(targetPos, vFinal.clone());
-        const agent         = new Steering.Body(startPos.clone(), vInit.clone()); // add target velocity
+        const agent         = new Steering.Body(startPos.clone(), vInit.clone());
         const steering      = new Steering.Steering(target, agent, maxAccel);
         const path          = [];
 
@@ -100,7 +100,7 @@ define(function(require, exports, module) {
         let fuelUsed = 0;
         let arrived  = false;
 
-        for (let turn = 0; turn < turns; ++turn) {
+        for (let turn = 0; turn <= turns; ++turn) {
           const t = (turns - turn) * SPT;
           const a = steering.getAcceleration(t);
 
@@ -108,10 +108,10 @@ define(function(require, exports, module) {
             // If this is the first route to arrive, it sets the base for max
             // fuel usage. After that, only include routes with better or equal
             // fuel usage to the previous.
-            if (prevFuelUsed === undefined || fuelUsed <= prevFuelUsed || this.show_all) {
+            if (prevFuelUsed === undefined || fuelUsed < prevFuelUsed || this.show_all) {
               prevFuelUsed = fuelUsed;
               arrived = true;
-            } 
+            }
 
             break;
           }
@@ -136,6 +136,15 @@ define(function(require, exports, module) {
             acceleration: a.length(),
             fuel: fuelUsed,
           });
+        }
+
+        if (!arrived) {
+          arrived = steering.getAcceleration() === null
+            && (prevFuelUsed === undefined || fuelUsed < prevFuelUsed || this.show_all);
+
+          if (arrived) {
+            prevFuelUsed = fuelUsed;
+          }
         }
 
         if (arrived) {

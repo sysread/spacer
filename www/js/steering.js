@@ -50,13 +50,14 @@ define(function(require, exports, module) {
       const desiredVelocity = this.target.position.clone().sub(this.agent.position);
       const distance = desiredVelocity.length();
 
-      if (distance < this.innerRadius) {
+      if (distance <= this.innerRadius) {
         return null;
       }
 
-      if (distance < this.outerRadius) {
-        desiredVelocity.add(this.target.velocity);
-        desiredVelocity.normalize().multiplyScalar(this.maxVelocity / distance / this.outerRadius);
+      desiredVelocity.add(this.target.velocity);
+
+      if (distance <= this.outerRadius) {
+        desiredVelocity.normalize().multiplyScalar(this.maxVelocity * distance / this.outerRadius);
       } else {
         desiredVelocity.normalize().multiplyScalar(this.maxVelocity);
       }
