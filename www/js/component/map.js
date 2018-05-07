@@ -103,7 +103,7 @@ define(function(require, exports, module) {
     },
 
     template: `
-<span v-if="isVisible" class="plot-point" :style="{left: pos[0] + 'px', top: pos[1] + 'px'}">
+<span @click="$emit('click')" v-if="isVisible" class="plot-point" :style="{left: pos[0] + 'px', top: pos[1] + 'px'}">
   <slot />
 
   <badge v-if="isVisible && showLabel" class="m-1">
@@ -191,10 +191,10 @@ define(function(require, exports, module) {
             vnode.context.scale = util.R(Math.max(1, Math.min(35, vnode.context.scale + amount)), 2);
           });
 
-          window.addEventListener('wheel', ev => {
+          elt.addEventListener('wheel', ev => {
             ev.preventDefault();
             ev.stopPropagation();
-            let amount = -(ev.deltaY / 10);
+            let amount = ev.deltaY / 10;
             vnode.context.scale = util.R(Math.max(1, Math.min(35, vnode.context.scale + amount)), 2);
           });
         }
@@ -328,11 +328,50 @@ define(function(require, exports, module) {
         return this.offsetY + Math.floor(zero - (zero * pct));
       },
 
-      setDest: function(body) {
+      setDest: function(body, autoScale) {
         window.setTimeout(() => {this.resize()}, 500);
-        this.dest = body || this.dests[0];
+
+        if (body) {
+          const satellites = System.body(body).satellites;
+
+          const dests = this.dests.filter(d => {
+            return satellites[d] || d == body;
+          });
+
+          if (this.dest && dests.length > 1) {
+            let done = false;
+
+            for (let i = 0; i < dests.length; ++i) {
+              if (this.dest == dests[i]) {
+                let idx = i + 1;
+
+                if (dests.length <= idx) {
+                  idx = 0;
+                }
+
+                this.dest = dests[idx];
+                done = true;
+                break;
+              }
+            }
+
+            if (!done) {
+              this.dest = dests[0];
+            }
+          }
+          else if (dests.length > 0) {
+            this.dest = dests[0];
+          }
+          else {
+            this.dest = "";
+          }
+        }
+
         this.index = 0;
-        this.autoScale();
+
+        if (autoScale) {
+          this.autoScale();
+        }
       },
 
       orbitalRadiusAU: function(body) {
@@ -391,9 +430,9 @@ define(function(require, exports, module) {
       </div>
 
       <div class="btn-group my-2">
-        <btn v-if="!dest" @click="setDest(dests[0])">Destination</btn>
+        <btn v-if="!dest" @click="setDest(dests[0], true)">Destination</btn>
 
-        <btn v-for="(name, idx) of dests" :key="name" v-if="name == dest" @click="setDest(dests[idx + 1])">
+        <btn v-for="(name, idx) of dests" :key="name" v-if="name == dest" @click="setDest(dests[idx + 1], true)">
           {{name|caps}}
         </btn>
       </div>
@@ -412,7 +451,8 @@ define(function(require, exports, module) {
         :style="{'font-size': (3.0 - scale / 35) + 'rem'}"
         :pos="pos"
         :max="width"
-        :label="name">
+        :label="name"
+        @click="setDest(name)">
       .
     </plot-point>
 
