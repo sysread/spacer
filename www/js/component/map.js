@@ -7,8 +7,8 @@ define(function(require, exports, module) {
   const data    = require('data');
   const util    = require('util');
 
-  const SCALE_DEFAULT_AU = 6;
-  const SCALE_MIN_AU     = 1;
+  const SCALE_DEFAULT_AU = 2;
+  const SCALE_MIN_AU     = 0.25;
   const SCALE_MAX_AU     = 35;
 
   require('component/common');
@@ -89,6 +89,10 @@ define(function(require, exports, module) {
     props: ['pos', 'label', 'max'],
 
     computed: {
+      zero: function() {
+        return this.max / 2;
+      },
+
       isVisible: function() {
         const [x, y, z] = this.pos;
         if (x <= 0) return false;
@@ -100,7 +104,8 @@ define(function(require, exports, module) {
 
       showLabel: function() {
         if (!this.label) return false;
-        const zero = this.max / 2;
+        return true;
+        const zero = this.zero;
         const r = Physics.distance(this.pos, [zero, zero]);
         return (r / this.max) > 0.1;
       },
@@ -151,7 +156,7 @@ define(function(require, exports, module) {
     },
 
     directives: {
-      'resizable': {
+      resizable: {
         inserted: function(el, binding, vnode) {
           const elt = document.getElementById('plot-root');
           const mc  = new Hammer(elt);
@@ -162,7 +167,6 @@ define(function(require, exports, module) {
           });
 
           mc.on('pan', ev => {
-            // Set initial position on first event
             if (ev.isFirst) {
               vnode.context.initX = vnode.context.offsetX;
               vnode.context.initY = vnode.context.offsetY;
@@ -199,13 +203,19 @@ define(function(require, exports, module) {
           elt.addEventListener('wheel', ev => {
             ev.preventDefault();
             ev.stopPropagation();
-            let amount = ev.deltaY / 10;
-            vnode.context.scale = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 2);
+            let amount = ev.deltaY / 20;
+            let scale  = vnode.context.scale;
+            vnode.context.scale   = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 2);
+            vnode.context.offsetX -= ((vnode.context.offsetX * vnode.context.scale) - (vnode.context.offsetX * scale)) /  vnode.context.scale;
+            vnode.context.offsetY -= ((vnode.context.offsetY * vnode.context.scale) - (vnode.context.offsetY * scale)) /  vnode.context.scale;
+            vnode.context.initX   = vnode.context.offsetX;
+            vnode.context.initY   = vnode.context.offsetY;
           });
 
           // Set initial scale
           vnode.context.resize();
           vnode.context.autoScale();
+          vnode.context.center();
         }
       },
     },
@@ -216,7 +226,8 @@ define(function(require, exports, module) {
       },
 
       zero: function() {
-        return Math.ceil(this.width / 2);
+        // subtract two for border width
+        return Math.ceil((this.width - 2) / 2);
       },
 
       positions: function() {
@@ -320,7 +331,9 @@ define(function(require, exports, module) {
         const frameTop  = Math.ceil(this.$el.getBoundingClientRect().top + window.scrollY);
         const statusbar = $('#spacer-status').outerHeight();
         const nav       = $('#spacer-navbar').outerHeight();
-        const height    = window.innerHeight - frameTop - statusbar - nav;
+        const controls  = $('#map-controls').outerHeight();
+        const slider    = $('#transit-time').outerHeight() || 0;
+        const height    = window.innerHeight - frameTop - statusbar - nav - controls - slider;
         const width     = $('.plot-root').parent().width();
         this.width = Math.ceil(Math.min(width, height));
       },
@@ -338,6 +351,7 @@ define(function(require, exports, module) {
         const pct  = n / (this.scale * Physics.AU);
         let y = Math.floor(zero - (zero * pct));
         if (offset) y += this.offsetY;
+        y -= 20; // .plot-point.line-height / 2
         return y;
       },
 
@@ -379,6 +393,9 @@ define(function(require, exports, module) {
             this.dest = "";
           }
         }
+        else {
+          this.dest = this.dests[0];
+        }
 
         this.index = 0;
 
@@ -407,42 +424,55 @@ define(function(require, exports, module) {
       },
 
       autoScale: function() {
+        let scale;
+        const here = Physics.distance([0, 0, 0], System.position(game.locus));
+
         if (this.transit) {
-          this.scale = Math.max(
+          scale = Math.max(
             Physics.distance([0, 0, 0], this.transit.end),
             Physics.distance([0, 0, 0], this.transit.start),
-            Physics.distance([0, 0, 0], System.position(game.locus)),
-          ) / Physics.AU * 1.25;
+            here,
+          );
         }
         else if (this.dest) {
-          this.scale = Math.max(
-            Physics.distance([0, 0, 0], System.position(this.dest)),
+          scale = Math.max(
             Physics.distance([0, 0, 0], System.position(game.locus)),
-          ) / Physics.AU * 1.25;
+            here,
+          );
         }
         else {
-          this.scale = SCALE_DEFAULT_AU;
+          scale = here;
         }
+
+        scale = scale / Physics.AU * 1.25;
+        this.scale = util.R(Math.min(Math.max(scale, SCALE_MIN_AU), SCALE_MAX_AU), 2);
       },
 
       resetScale: function() {
         this.autoScale();
         this.offsetX = 0;
         this.offsetY = 0;
+        this.initX   = this.offsetX;
+        this.initY   = this.offsetY;
       },
 
-      centerOnDest: function() {
-        if (this.dest) {
-          this.autoScale();
-          const z = this.zero;
-          const p = System.position(this.dest, this.target_date);
-          const [x, y] = [this.adjustX(p[0], false), this.adjustY(p[1], false)];
-          this.offsetX = z - x;
-          this.offsetY = z - y;
-        }
-        else {
-          this.resetScale();
-        }
+      center: function() {
+        this.autoScale();
+
+        const body = this.dest || this.origin;
+
+        const z = this.zero;
+        const p = body == this.dest
+          ? System.position(body, this.target_date)
+          : System.position(body);
+
+        const [x, y] = [this.adjustX(p[0], false), this.adjustY(p[1], false)];
+
+        this.offsetX = z - x;
+        this.offsetY = z - y;
+        this.initX   = this.offsetX;
+        this.initY   = this.offsetY;
+        this.autoScale();
       },
 
       beginTransit: function() {
@@ -452,27 +482,23 @@ define(function(require, exports, module) {
     },
 
     template: `
-<card nopad=1 id="map-root">
-  <card-header slot="header">
-    <div class="btn-toolbar">
-      <div class="btn-group my-2 mr-3">
-        <btn :disabled="!dest" @click="show='map'">&#8982;</btn>
-        <btn :disabled="!dest" @click="show='info'">?</btn>
-        <btn :disabled="!dest" @click="show='market';relprices=false">$</btn>
-        <btn :disabled="!dest" @click="show='market';relprices=true">$&plusmn;</btn>
-      </div>
-
-      <div class="btn-group my-2">
-        <btn @click="resetScale()" class="text-warning">&#9055;</btn>
-        <btn :disabled="!dest" @click="centerOnDest()" class="text-warning">&target;</btn>
-        <btn v-if="!dest" @click="setDest(dests[0], true)">Destination</btn>
-
-        <btn v-for="(name, idx) of dests" :key="name" v-if="name == dest" @click="setDest(dests[idx + 1], true)">
-          {{name|caps}}
-        </btn>
-      </div>
+<div id="map-root">
+  <div id="map-controls" class="btn-toolbar justify-content-between">
+    <div class="btn-group btn-group-sm">
+      <btn :disabled="!dest" @click="show='map'">&#8982;</btn>
+      <btn :disabled="!dest" @click="show='info'">?</btn>
+      <btn :disabled="!dest" @click="show='market';relprices=false">$</btn>
+      <btn :disabled="!dest" @click="show='market';relprices=true">$&plusmn;</btn>
     </div>
-  </card-header>
+
+    <div class="btn-group btn-group-sm">
+      <btn v-if="!dest" @click="setDest(dests[0], true)">Destination</btn>
+      <btn v-for="(name, idx) of dests" :key="name" v-if="name == dest" @click="setDest(dests[idx + 1], true)">{{name|caps}}</btn>
+      <btn :disabled="!dest" @click="show='fuel'">Fuel</btn>
+      <btn @click="resetScale()" class="text-warning">&#9055;</btn>
+      <btn @click="center()" class="text-warning">&target;</btn>
+    </div>
+  </div>
 
   <planet-summary v-if="show=='info'" mini=true :planet="planet" class="p-3" />
 
@@ -480,6 +506,12 @@ define(function(require, exports, module) {
 
   <div v-if="show=='map'" v-resizable id="plot-root" class="plot-root p-0 m-0" :style="{'position': 'relative', 'width': width + 'px', 'height': width + 'px'}">
     <plot-transit-legend :dest="dest" :scale="scale" :transit="transit" :fuel="fuel" />
+
+    <plot-point :pos="[adjustX(0), adjustY(0)]" :max="width"
+        :style="{'font-size': (3.0 - scale / SCALE_MAX_AU) + 'rem'}"
+        class="text-warning">
+      &bull;
+    </plot-point>
 
     <plot-point v-for="(pos, name) of bodies"
         :key="name"
@@ -489,12 +521,6 @@ define(function(require, exports, module) {
         :label="name"
         @click="setDest(name)">
       .
-    </plot-point>
-
-    <plot-point :pos="[adjustX(0), adjustY(0)]" :max="width"
-        :style="{'font-size': (5.0 - (3 * scale / SCALE_MAX_AU)) + 'rem'}"
-        class="text-warning">
-      &bull;
     </plot-point>
 
     <plot-point v-for="(p, idx) in path"
@@ -518,23 +544,25 @@ define(function(require, exports, module) {
     </plot-point>
   </div>
 
-  <card-footer v-if="dest" slot="footer">
-    <def v-if="transit" term="Time" split=3 class="p-0 m-0">
-      <slider slot="def" :value.sync="index" step=1 min=0 :max="transits.length - 1" />
-    </def>
+  <slider id="transit-time" class="my-1 w-100" v-if="dest" slot="def" :value.sync="index" step=1 min=0 :max="transits.length - 1" />
+
+  <modal v-if="show=='fuel'" @close="show='map'" title="Fuel usage" xclose=true close="Confirm">
+    <p>The navigation computer is capable of customizing routes based on optimal fuel usage.</p>
+
+    <p>It is currently configured to build trajectories requiring no more than {{fuel|R(2)}} tonnes of fuel.</p>
 
     <def v-if="dest" term="Fuel" split=3 class="p-0 m-0">
-      <slider slot="def" :value.sync="fuel" step=1 min=1 :max="max_fuel" @change="onConstraintChange()" />
-    </def>
-
-    <def v-if="dest" term="Routes" split=3 class="p-0 m-0">
       <btn slot="def" @click="show_all=!show_all;onConstraintChange()">
-        <span v-if="show_all">All</span>
-        <span v-else>Best</span>
+        <span v-if="show_all">All routes</span>
+        <span v-else>Fuel constrained</span>
       </btn>
     </def>
-  </card-footer>
-</card>
+
+    <def v-if="dest && !show_all" term="Fuel" split=3 class="p-0 m-0">
+      <slider slot="def" :value.sync="fuel" step=1 min=1 :max="max_fuel" @change="onConstraintChange()" />
+    </def>
+  </modal>
+</div>
     `,
   });
 });
