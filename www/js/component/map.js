@@ -7,6 +7,10 @@ define(function(require, exports, module) {
   const data    = require('data');
   const util    = require('util');
 
+  const SCALE_DEFAULT_AU = 6;
+  const SCALE_MIN_AU     = 1;
+  const SCALE_MAX_AU     = 35;
+
   require('component/common');
   require('component/exchange');
   require('component/summary');
@@ -120,83 +124,88 @@ define(function(require, exports, module) {
     data: function() {
       window.addEventListener('resize', this.resize);
 
+      const dests = System.bodies().filter(n => {return n != game.locus});
+
       return {
-        scale:     2,
-        width:     null,
-        dests:     System.bodies().filter(n => {return n != game.locus}),
-        navcomp:   new NavComp,
-        origin:    game.locus,
-        dest:      "",
-        index:     0,
-        show_all:  false,
-        max_fuel:  game.player.ship.fuel,
-        fuel:      game.player.ship.fuel,
-        show:      'map',
-        relprices: false,
-        offsetX:   0,
-        offsetY:   0,
+        scale:     SCALE_DEFAULT_AU,      // map scale
+        width:     null,                  // plot width in pixels
+        dests:     dests,                 // list of destination names
+        navcomp:   new NavComp,           // nav computer
+        origin:    game.locus,            // name of initial body for transit
+        dest:      "",                    // name of destination body for transit
+        index:     0,                     // zero-based index of selected transit in transit list (computed 'transits')
+        show_all:  false,                 // flag passed to NavComp to include all routes rather than skipping inefficient ones
+        max_fuel:  game.player.ship.fuel, // contrains fuel usage in NavComp calculations
+        fuel:      game.player.ship.fuel, // player-supplied constraint for fuel usage
+        show:      'map',                 // currently displayed view
+        relprices: false,                 // for market prices, display relative prices when true
+        offsetX:   0,                     // offset from zero-zero point when panning map
+        offsetY:   0,                     // offset from zero-zero point when panning map
+        initX:     0,                     // initial position when panning
+        initY:     0,                     // initial position when panning
+
+        SCALE_DEFAULT_AU: SCALE_DEFAULT_AU,
+        SCALE_MIN_AU: SCALE_MIN_AU,
+        SCALE_MAX_AU: SCALE_MAX_AU,
       };
     },
 
     directives: {
-      'resize': {
+      'resizable': {
         inserted: function(el, binding, vnode) {
-          vnode.context.resize();
-          vnode.context.autoScale();
-
           const elt = document.getElementById('plot-root');
           const mc  = new Hammer(elt);
 
-          /*
-           * Drag the map on pan events
-           */
+          // Drag the map on pan events
           mc.get('pan').set({
             direction: Hammer.DIRECTION_UP | Hammer.DIRECTION_DOWN | Hammer.DIRECTION_LEFT | Hammer.DIRECTION_RIGHT,
           });
 
-          let initX = vnode.context.offsetX;
-          let initY = vnode.context.offsetY;
-
           mc.on('pan', ev => {
+            // Set initial position on first event
             if (ev.isFirst) {
-              initX = vnode.context.offsetX;
-              initY = vnode.context.offsetY;
+              vnode.context.initX = vnode.context.offsetX;
+              vnode.context.initY = vnode.context.offsetY;
             }
 
-            vnode.context.offsetX = initX + ev.deltaX;
-            vnode.context.offsetY = initY + ev.deltaY;
+            // Update the node's offset values
+            vnode.context.offsetX = vnode.context.initX + ev.deltaX;
+            vnode.context.offsetY = vnode.context.initY + ev.deltaY;
 
+            // Reset initial positions on final event
             if (ev.isFinal) {
-              initX = vnode.context.offsetX;
-              initY = vnode.context.offsetY;
+              vnode.context.initX = vnode.context.offsetX;
+              vnode.context.initY = vnode.context.offsetY;
             }
           });
 
-          /*
-           * Scale the map on pinch and wheel events
-           */
+          // Scale the map on pinch and wheel events
           mc.get('pinch').set({ enable: true });
 
           mc.on('pinch', ev => {
             let amount = ev.scale;
 
-            if (amount > 1) {
-              amount = -(amount - 1);
-            } else {
-              amount = 1 - amount;
+            if (amount > 1) {         // movement out <--*-->
+              amount = -(amount - 1); // "spreads out" the map by zooming in to a smaller scale in AU
+            } else {                  // movement in -->*<--
+              amount = 1 - amount;    // zooms out by increasing the scale to a larger value in AU
             }
 
-            amount /= 10;
+            amount /= 10;             // reduce to a reasonable fractional value
 
-            vnode.context.scale = util.R(Math.max(1, Math.min(35, vnode.context.scale + amount)), 2);
+            vnode.context.scale = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 2);
           });
 
           elt.addEventListener('wheel', ev => {
             ev.preventDefault();
             ev.stopPropagation();
             let amount = ev.deltaY / 10;
-            vnode.context.scale = util.R(Math.max(1, Math.min(35, vnode.context.scale + amount)), 2);
+            vnode.context.scale = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 2);
           });
+
+          // Set initial scale
+          vnode.context.resize();
+          vnode.context.autoScale();
         }
       },
     },
@@ -316,16 +325,20 @@ define(function(require, exports, module) {
         this.width = Math.ceil(Math.min(width, height));
       },
 
-      adjustX: function(n) {
+      adjustX: function(n, offset=true) {
         const zero = this.zero;
         const pct  = n / (this.scale * Physics.AU);
-        return this.offsetX + Math.floor(zero + (zero * pct));
+        let x = Math.floor(zero + (zero * pct));
+        if (offset) x += this.offsetX;
+        return x;
       },
 
-      adjustY: function(n) {
+      adjustY: function(n, offset=true) {
         const zero = this.zero;
         const pct  = n / (this.scale * Physics.AU);
-        return this.offsetY + Math.floor(zero - (zero * pct));
+        let y = Math.floor(zero - (zero * pct));
+        if (offset) y += this.offsetY;
+        return y;
       },
 
       setDest: function(body, autoScale) {
@@ -408,7 +421,27 @@ define(function(require, exports, module) {
           ) / Physics.AU * 1.25;
         }
         else {
-          this.scale = 6;
+          this.scale = SCALE_DEFAULT_AU;
+        }
+      },
+
+      resetScale: function() {
+        this.autoScale();
+        this.offsetX = 0;
+        this.offsetY = 0;
+      },
+
+      centerOnDest: function() {
+        if (this.dest) {
+          this.autoScale();
+          const z = this.zero;
+          const p = System.position(this.dest, this.target_date);
+          const [x, y] = [this.adjustX(p[0], false), this.adjustY(p[1], false)];
+          this.offsetX = z - x;
+          this.offsetY = z - y;
+        }
+        else {
+          this.resetScale();
         }
       },
 
@@ -430,6 +463,8 @@ define(function(require, exports, module) {
       </div>
 
       <div class="btn-group my-2">
+        <btn @click="resetScale()" class="text-warning">&#9055;</btn>
+        <btn :disabled="!dest" @click="centerOnDest()" class="text-warning">&target;</btn>
         <btn v-if="!dest" @click="setDest(dests[0], true)">Destination</btn>
 
         <btn v-for="(name, idx) of dests" :key="name" v-if="name == dest" @click="setDest(dests[idx + 1], true)">
@@ -443,12 +478,12 @@ define(function(require, exports, module) {
 
   <market-report v-if="show=='market'" :relprices="relprices" :body="dest" class="m-3 p-1 bg-black" />
 
-  <div v-if="show=='map'" v-resize id="plot-root" class="plot-root p-0 m-0" :style="{'position': 'relative', 'width': width + 'px', 'height': width + 'px'}">
+  <div v-if="show=='map'" v-resizable id="plot-root" class="plot-root p-0 m-0" :style="{'position': 'relative', 'width': width + 'px', 'height': width + 'px'}">
     <plot-transit-legend :dest="dest" :scale="scale" :transit="transit" :fuel="fuel" />
 
     <plot-point v-for="(pos, name) of bodies"
         :key="name"
-        :style="{'font-size': (3.0 - scale / 35) + 'rem'}"
+        :style="{'font-size': (3.0 - scale / SCALE_MAX_AU) + 'rem'}"
         :pos="pos"
         :max="width"
         :label="name"
@@ -457,7 +492,7 @@ define(function(require, exports, module) {
     </plot-point>
 
     <plot-point :pos="[adjustX(0), adjustY(0)]" :max="width"
-        :style="{'font-size': (5.0 - (3 * scale / 35)) + 'rem'}"
+        :style="{'font-size': (5.0 - (3 * scale / SCALE_MAX_AU)) + 'rem'}"
         class="text-warning">
       &bull;
     </plot-point>
