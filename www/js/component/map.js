@@ -8,13 +8,28 @@ define(function(require, exports, module) {
   const util    = require('util');
 
   const SCALE_DEFAULT_AU = 2;
-  const SCALE_MIN_AU     = 0.25;
+  const SCALE_MIN_AU     = 0.75;
   const SCALE_MAX_AU     = 35;
 
   require('component/common');
   require('component/exchange');
   require('component/summary');
   require('component/commerce');
+
+
+  function scaleX(n, zero, scale, offset=0) {
+    const pct = n / (scale * Physics.AU);
+    return Math.floor(zero + (zero * pct)) + offset;
+  }
+
+  function scaleY(n, zero, scale, offset=0) {
+    const pct = n / (scale * Physics.AU);
+    return Math.floor(zero - (zero * pct)) + offset - 20; // .plot-point.line-height / 2
+  }
+
+  function scaleFont(n, scale) {
+    return util.R(n - scale / SCALE_MAX_AU, 2) + 'rem';
+  }
 
 
   Vue.component('plot-transit-legend', {
@@ -123,6 +138,42 @@ define(function(require, exports, module) {
   });
 
 
+  Vue.component('plot-planet', {
+    props: ['name', 'date', 'zero', 'scale', 'offsetX', 'offsetY', 'max', 'color'],
+
+    computed: {
+      truePosition() { return System.position(this.name, this.date) },
+      positionX()    { return scaleX(this.truePosition[0], this.zero, this.scale, this.offsetX) },
+      positionY()    { return scaleY(this.truePosition[1], this.zero, this.scale, this.offsetY) },
+      position()     { return [this.positionX, this.positionY] },
+      orbit()        { return Physics.distance([0, 0], this.truePosition) / Physics.AU },
+      hasMoons()     { return Object.keys(System.body(this.name).satellites).length > 0 },
+      size()         { return System.body(this.name).radius / System.body('earth').radius / this.scale },
+      fontSize()     { return scaleFont(this.size, this.scale) },
+
+      showLabel() {
+        if (System.central(this.name) !== 'sun') return false;
+        return this.scale / this.orbit < 6;
+      },
+    },
+
+    template: `
+<plot-point
+    :name="name"
+    :style="{'font-size': fontSize, 'color': color || '#ffffff'}"
+    :pos="position"
+    :max="max"
+    :label="showLabel ? name : ''"
+    @click="$emit('click')">
+
+  <span v-if="hasMoons">&#9864;</span>
+  <span v-else>&#9899;</span>
+
+</plot-point>
+    `,
+  });
+
+
   Vue.component('plot', {
     props: ['controls', 'plan'],
 
@@ -203,7 +254,7 @@ define(function(require, exports, module) {
           elt.addEventListener('wheel', ev => {
             ev.preventDefault();
             ev.stopPropagation();
-            let amount = ev.deltaY / 20;
+            let amount = Math.min(1, ev.deltaY / 20);
             let scale  = vnode.context.scale;
             vnode.context.scale   = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 2);
             vnode.context.offsetX -= ((vnode.context.offsetX * vnode.context.scale) - (vnode.context.offsetX * scale)) /  vnode.context.scale;
@@ -215,7 +266,6 @@ define(function(require, exports, module) {
           // Set initial scale
           vnode.context.resize();
           vnode.context.autoScale();
-          vnode.context.center();
         }
       },
     },
@@ -234,14 +284,14 @@ define(function(require, exports, module) {
         const bodies = {};
 
         for (let body of System.bodies()) {
-          const central = System.central(body);
-
-          if (central !== 'sun') {
-            body = central;
-          }
-
           if (!bodies.hasOwnProperty(body)) {
             bodies[body] = System.position(body);
+          }
+
+          const central = System.central(body);
+
+          if (central !== 'sun' && !bodies.hasOwnProperty(central)) {
+            bodies[central] = System.position(central);
           }
         }
 
@@ -355,7 +405,7 @@ define(function(require, exports, module) {
         return y;
       },
 
-      setDest: function(body, autoScale) {
+      setDest: function(body, resetScale) {
         window.setTimeout(() => {this.resize()}, 500);
 
         if (body) {
@@ -399,8 +449,8 @@ define(function(require, exports, module) {
 
         this.index = 0;
 
-        if (autoScale) {
-          this.autoScale();
+        if (resetScale) {
+          this.resetScale();
         }
       },
 
@@ -510,18 +560,19 @@ define(function(require, exports, module) {
     <plot-point :pos="[adjustX(0), adjustY(0)]" :max="width"
         :style="{'font-size': (3.0 - scale / SCALE_MAX_AU) + 'rem'}"
         class="text-warning">
-      &bull;
+      &#9899;
     </plot-point>
 
-    <plot-point v-for="(pos, name) of bodies"
-        :key="name"
-        :style="{'font-size': (3.0 - scale / SCALE_MAX_AU) + 'rem'}"
-        :pos="pos"
-        :max="width"
-        :label="name"
-        @click="setDest(name)">
-      .
-    </plot-point>
+    <plot-planet v-for="(pos, name) of bodies"
+      :key="name"
+      :name="name"
+      :zero="zero"
+      :scale="scale"
+      :offsetX="offsetX"
+      :offsetY="offsetY"
+      :max="width"
+      @click="setDest(name)"
+    />
 
     <plot-point v-for="(p, idx) in path"
         :key="'path-' + idx"
