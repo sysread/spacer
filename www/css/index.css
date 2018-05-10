@@ -138,9 +138,13 @@ body {
 .plot-point {
   position: absolute;
   font-size: 1.3rem;
-  line-height: 40px !important;
   text-align: center;
   vertical-align: middle;
+}
+
+.plot-point .dest {
+  border: 1px solid red;
+  border-radius: 50%;
 }
 
 .plot-point.big {

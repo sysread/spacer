@@ -1,6 +1,7 @@
 define(function(require, exports, module) {
   const Vue     = require('vendor/vue');
   const Hammer  = require('vendor/hammer.min');
+  const PIXI    = require('vendor/pixi');
   const Physics = require('physics');
   const System  = require('system');
   const NavComp = require('navcomp');
@@ -8,7 +9,7 @@ define(function(require, exports, module) {
   const util    = require('util');
 
   const SCALE_DEFAULT_AU = 2;
-  const SCALE_MIN_AU     = 0.75;
+  const SCALE_MIN_AU     = 0.05;
   const SCALE_MAX_AU     = 35;
 
   require('component/common');
@@ -28,7 +29,7 @@ define(function(require, exports, module) {
   }
 
   function scaleFont(n, scale) {
-    return util.R(n - scale / SCALE_MAX_AU, 2) + 'rem';
+    return util.R(n - scale / SCALE_MAX_AU / 10) + 'px';
   }
 
 
@@ -104,9 +105,9 @@ define(function(require, exports, module) {
     props: ['pos', 'label', 'max'],
 
     computed: {
-      zero: function() {
-        return this.max / 2;
-      },
+      zero: function() { return this.max / 2 },
+      left: function() { return util.R(this.pos[0]) },
+      top:  function() { return util.R(this.pos[1]) },
 
       isVisible: function() {
         const [x, y, z] = this.pos;
@@ -127,7 +128,7 @@ define(function(require, exports, module) {
     },
 
     template: `
-<span @click="$emit('click')" v-if="isVisible" class="plot-point" :style="{left: pos[0] + 'px', top: pos[1] + 'px'}">
+<span @click="$emit('click')" v-if="isVisible" class="plot-point" :style="{left: left + 'px', top: top + 'px'}">
   <slot />
 
   <badge v-if="isVisible && showLabel" class="m-1">
@@ -139,35 +140,52 @@ define(function(require, exports, module) {
 
 
   Vue.component('plot-planet', {
-    props: ['name', 'date', 'zero', 'scale', 'offsetX', 'offsetY', 'max', 'color'],
+    props: ['name', 'date', 'zero', 'scale', 'offsetX', 'offsetY', 'max', 'color', 'no_label', 'highlight'],
 
     computed: {
-      truePosition() { return System.position(this.name, this.date) },
-      positionX()    { return scaleX(this.truePosition[0], this.zero, this.scale, this.offsetX) },
+      truePosition() { return this.name == 'sun' ? [0, 0] : System.position(this.name, this.date) },
+      positionX()    { return scaleX(this.truePosition[0], this.zero, this.scale, this.offsetX) - (this.width / 2) },
       positionY()    { return scaleY(this.truePosition[1], this.zero, this.scale, this.offsetY) },
       position()     { return [this.positionX, this.positionY] },
-      orbit()        { return Physics.distance([0, 0], this.truePosition) / Physics.AU },
-      hasMoons()     { return Object.keys(System.body(this.name).satellites).length > 0 },
+      isMoon()       { return this.name !== 'sun' && System.central(this.name) !== 'sun' },
       size()         { return System.body(this.name).radius / System.body('earth').radius / this.scale },
-      fontSize()     { return scaleFont(this.size, this.scale) },
+      width()        { return util.R(Math.max(0.05, util.R(this.size - this.scale / SCALE_MAX_AU, 2))) }, // pixels
 
       showLabel() {
-        if (System.central(this.name) !== 'sun') return false;
-        return this.scale / this.orbit < 6;
+        if (this.no_label) return false;
+        if (this.isMoon)   return this.scale < 0.25;
+        const orbit = Physics.distance([0, 0, 0], this.truePosition) / Physics.AU;
+        return this.scale / 6 < orbit;
+      },
+
+      glyphColor() {
+        if (data.bodies.hasOwnProperty(this.name)) return this.color || '#ccc';
+        if (this.name === 'sun') return 'yellow';
+        return '#444';
+      },
+
+      shown() {
+        if (this.name === 'sun') return true;
+        if (this.isMoon) return this.showLabel;
+        const orbit = Physics.distance([0, 0, 0], this.truePosition) / Physics.AU;
+        return this.scale / 10 < orbit;
       },
     },
 
     template: `
 <plot-point
+    v-if="shown"
     :name="name"
-    :style="{'font-size': fontSize, 'color': color || '#ffffff'}"
+    :style="{'font-size': width + 'px', 'color': glyphColor}"
     :pos="position"
     :max="max"
     :label="showLabel ? name : ''"
     @click="$emit('click')">
 
-  <span v-if="hasMoons">&#9864;</span>
-  <span v-else>&#9899;</span>
+  <span :class="highlight">
+    <span v-if="isMoon">&#127768;</span>
+    <span v-else>&#9898;</span>
+  </span>
 
 </plot-point>
     `,
@@ -248,19 +266,17 @@ define(function(require, exports, module) {
 
             amount /= 10;             // reduce to a reasonable fractional value
 
-            vnode.context.scale = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 2);
+            const scale = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 2);
+            vnode.context.setScale(scale);
           });
 
           elt.addEventListener('wheel', ev => {
             ev.preventDefault();
             ev.stopPropagation();
-            let amount = Math.min(1, ev.deltaY / 20);
-            let scale  = vnode.context.scale;
-            vnode.context.scale   = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 2);
-            vnode.context.offsetX -= ((vnode.context.offsetX * vnode.context.scale) - (vnode.context.offsetX * scale)) /  vnode.context.scale;
-            vnode.context.offsetY -= ((vnode.context.offsetY * vnode.context.scale) - (vnode.context.offsetY * scale)) /  vnode.context.scale;
-            vnode.context.initX   = vnode.context.offsetX;
-            vnode.context.initY   = vnode.context.offsetY;
+            const inc    = vnode.context.scale / 10;
+            const amount = ev.deltaY > 0 ? inc : -inc;
+            const scale  = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 2);
+            vnode.context.setScale(scale);
           });
 
           // Set initial scale
@@ -284,14 +300,14 @@ define(function(require, exports, module) {
         const bodies = {};
 
         for (let body of System.bodies()) {
-          if (!bodies.hasOwnProperty(body)) {
-            bodies[body] = System.position(body);
-          }
-
           const central = System.central(body);
 
           if (central !== 'sun' && !bodies.hasOwnProperty(central)) {
             bodies[central] = System.position(central);
+          }
+
+          if (!bodies.hasOwnProperty(body)) {
+            bodies[body] = System.position(body);
           }
         }
 
@@ -473,6 +489,24 @@ define(function(require, exports, module) {
           this.index += inc;
       },
 
+      setScale: function(scale) {
+        const oldScale = this.scale;
+        const newScale = scale;
+        this.scale    = scale;
+        this.offsetX -= ((this.offsetX * newScale) - (this.offsetX * oldScale)) / newScale;
+        this.offsetY -= ((this.offsetY * newScale) - (this.offsetY * oldScale)) / newScale;
+        this.initX    = this.offsetX;
+        this.initY    = this.offsetY;
+      },
+
+      resetScale: function() {
+        this.autoScale();
+        this.offsetX = 0;
+        this.offsetY = 0;
+        this.initX   = this.offsetX;
+        this.initY   = this.offsetY;
+      },
+
       autoScale: function() {
         let scale;
         const here = Physics.distance([0, 0, 0], System.position(game.locus));
@@ -495,20 +529,10 @@ define(function(require, exports, module) {
         }
 
         scale = scale / Physics.AU * 1.25;
-        this.scale = util.R(Math.min(Math.max(scale, SCALE_MIN_AU), SCALE_MAX_AU), 2);
-      },
-
-      resetScale: function() {
-        this.autoScale();
-        this.offsetX = 0;
-        this.offsetY = 0;
-        this.initX   = this.offsetX;
-        this.initY   = this.offsetY;
+        this.setScale(util.R(Math.min(Math.max(scale, SCALE_MIN_AU), SCALE_MAX_AU), 2));
       },
 
       center: function() {
-        this.autoScale();
-
         const body = this.dest || this.origin;
 
         const z = this.zero;
@@ -522,7 +546,6 @@ define(function(require, exports, module) {
         this.offsetY = z - y;
         this.initX   = this.offsetX;
         this.initY   = this.offsetY;
-        this.autoScale();
       },
 
       beginTransit: function() {
@@ -557,11 +580,16 @@ define(function(require, exports, module) {
   <div v-if="show=='map'" v-resizable id="plot-root" class="plot-root p-0 m-0" :style="{'position': 'relative', 'width': width + 'px', 'height': width + 'px'}">
     <plot-transit-legend :dest="dest" :scale="scale" :transit="transit" :fuel="fuel" />
 
-    <plot-point :pos="[adjustX(0), adjustY(0)]" :max="width"
-        :style="{'font-size': (3.0 - scale / SCALE_MAX_AU) + 'rem'}"
-        class="text-warning">
-      &#9899;
-    </plot-point>
+    <plot-planet
+      name="sun"
+      :zero="zero"
+      :scale="scale"
+      :offsetX="offsetX"
+      :offsetY="offsetY"
+      :max="width"
+      color="yellow"
+      no_label=true
+    />
 
     <plot-planet v-for="(pos, name) of bodies"
       :key="name"
@@ -571,6 +599,7 @@ define(function(require, exports, module) {
       :offsetX="offsetX"
       :offsetY="offsetY"
       :max="width"
+      :highlight="name == dest ? 'dest' : ''"
       @click="setDest(name)"
     />
 
@@ -590,7 +619,7 @@ define(function(require, exports, module) {
         :pos="p"
         :max="width"
         style="font-size:0.25+'rem'"
-        class="text-muted">
+        class="text-danger">
       .
     </plot-point>
   </div>
