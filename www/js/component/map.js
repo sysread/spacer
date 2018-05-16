@@ -195,12 +195,7 @@ define(function(require, exports, module) {
     :label="showLabel ? name : ''"
     @click="$emit('click')">
 
-  <span>
-    <img class="plot-image" :src="'img/' + name + '.png'" :style="{'width': width + 'px'}" />
-
-    <!--<span v-if="isMoon">&#127768;</span>
-    <span v-else>&#9898;</span>-->
-  </span>
+  <img class="plot-image" :src="'img/' + name + '.png'" :style="{'width': width + 'px'}" />
 
 </plot-point>
     `,
@@ -291,7 +286,7 @@ define(function(require, exports, module) {
             ev.stopPropagation();
 
             const inc    = vnode.context.scale / 10;
-            const amount = ev.deltaY > 0 ? inc : -inc;
+            const amount = ((ev.deltaX + ev.deltaY) / 2) > 0 ? inc : -inc;
             const scale  = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 3);
 
             vnode.context.setScale(scale);
