@@ -1,7 +1,6 @@
 define(function(require, exports, module) {
   const Vue     = require('vendor/vue');
   const Hammer  = require('vendor/hammer.min');
-  const PIXI    = require('vendor/pixi');
   const Physics = require('physics');
   const System  = require('system');
   const NavComp = require('navcomp');
@@ -9,7 +8,7 @@ define(function(require, exports, module) {
   const util    = require('util');
 
   const SCALE_DEFAULT_AU = 2;
-  const SCALE_MIN_AU     = 0.05;
+  const SCALE_MIN_AU     = 0.001;
   const SCALE_MAX_AU     = 35;
 
   require('component/common');
@@ -17,6 +16,19 @@ define(function(require, exports, module) {
   require('component/summary');
   require('component/commerce');
 
+
+  function plotWidth() {
+    const elt = document.getElementById('map-root');
+    if (!elt) return 0;
+    const frameTop  = Math.ceil(elt.getBoundingClientRect().top + window.scrollY);
+    const statusbar = $('#spacer-status').outerHeight();
+    const nav       = $('#spacer-navbar').outerHeight();
+    const controls  = $('#map-controls').outerHeight();
+    const slider    = $('#transit-time').outerHeight() || 0;
+    const height    = window.innerHeight - frameTop - statusbar - nav - controls - slider;
+    const width     = $('.plot-root').parent().width();
+    return Math.ceil(Math.min(width, height));
+  }
 
   function scaleX(n, zero, scale, offset=0) {
     const pct = n / (scale * Physics.AU);
@@ -70,7 +82,7 @@ define(function(require, exports, module) {
 <table v-if="transit" class="w-100 table table-sm" style="font-size:0.75rem;font-family:mono">
   <tr>
     <th>Scale</th>
-    <td>{{scale|R(2)|unit('AU')}}</td>
+    <td>{{scale|R(4)|unit('AU')}}</td>
     <th>Time</th>
     <td>{{transit_time[0]}} days, {{transit_time[1]}} hours</td>
   </tr>
@@ -90,7 +102,7 @@ define(function(require, exports, module) {
 <table v-else class="w-100 table table-sm" style="font-size:0.75rem;font-family:mono">
   <tr>
     <th>Scale</th>
-    <td>{{scale|R(2)|unit('AU')}}</td>
+    <td>{{scale|R(4)|unit('AU')}}</td>
   </tr>
   <tr v-if="dest">
     <th>No routes</th>
@@ -149,7 +161,7 @@ define(function(require, exports, module) {
       position()     { return [this.positionX, this.positionY] },
       isMoon()       { return this.name !== 'sun' && System.central(this.name) !== 'sun' },
       size()         { return System.body(this.name).radius / System.body('earth').radius / this.scale },
-      width()        { return util.R(Math.max(0.05, util.R(this.size - this.scale / SCALE_MAX_AU, 2))) }, // pixels
+      width()        { return util.R(Math.max(SCALE_MIN_AU, util.R(this.size - this.scale / SCALE_MAX_AU, 3))) }, // pixels
 
       showLabel() {
         if (this.no_label) return false;
@@ -167,6 +179,7 @@ define(function(require, exports, module) {
       shown() {
         if (this.name === 'sun') return true;
         if (this.isMoon) return this.showLabel;
+        return true;
         const orbit = Physics.distance([0, 0, 0], this.truePosition) / Physics.AU;
         return this.scale / 10 < orbit;
       },
@@ -182,9 +195,11 @@ define(function(require, exports, module) {
     :label="showLabel ? name : ''"
     @click="$emit('click')">
 
-  <span :class="highlight">
-    <span v-if="isMoon">&#127768;</span>
-    <span v-else>&#9898;</span>
+  <span>
+    <img class="plot-image" :src="'img/' + name + '.png'" :style="{'width': width + 'px'}" />
+
+    <!--<span v-if="isMoon">&#127768;</span>
+    <span v-else>&#9898;</span>-->
   </span>
 
 </plot-point>
@@ -228,6 +243,7 @@ define(function(require, exports, module) {
       resizable: {
         inserted: function(el, binding, vnode) {
           const elt = document.getElementById('plot-root');
+          const ui  = document.getElementById('ui');
           const mc  = new Hammer(elt);
 
           // Drag the map on pan events
@@ -266,16 +282,18 @@ define(function(require, exports, module) {
 
             amount /= 10;             // reduce to a reasonable fractional value
 
-            const scale = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 2);
+            const scale = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 3);
             vnode.context.setScale(scale);
           });
 
           elt.addEventListener('wheel', ev => {
             ev.preventDefault();
             ev.stopPropagation();
+
             const inc    = vnode.context.scale / 10;
             const amount = ev.deltaY > 0 ? inc : -inc;
-            const scale  = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 2);
+            const scale  = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 3);
+
             vnode.context.setScale(scale);
           });
 
@@ -393,16 +411,7 @@ define(function(require, exports, module) {
     },
 
     methods: {
-      resize: function() {
-        const frameTop  = Math.ceil(this.$el.getBoundingClientRect().top + window.scrollY);
-        const statusbar = $('#spacer-status').outerHeight();
-        const nav       = $('#spacer-navbar').outerHeight();
-        const controls  = $('#map-controls').outerHeight();
-        const slider    = $('#transit-time').outerHeight() || 0;
-        const height    = window.innerHeight - frameTop - statusbar - nav - controls - slider;
-        const width     = $('.plot-root').parent().width();
-        this.width = Math.ceil(Math.min(width, height));
-      },
+      resize: function() { this.width = plotWidth() },
 
       adjustX: function(n, offset=true) {
         const zero = this.zero;
@@ -417,7 +426,6 @@ define(function(require, exports, module) {
         const pct  = n / (this.scale * Physics.AU);
         let y = Math.floor(zero - (zero * pct));
         if (offset) y += this.offsetY;
-        y -= 20; // .plot-point.line-height / 2
         return y;
       },
 
@@ -529,7 +537,7 @@ define(function(require, exports, module) {
         }
 
         scale = scale / Physics.AU * 1.25;
-        this.setScale(util.R(Math.min(Math.max(scale, SCALE_MIN_AU), SCALE_MAX_AU), 2));
+        this.setScale(util.R(Math.min(Math.max(scale, SCALE_MIN_AU), SCALE_MAX_AU), 3));
       },
 
       center: function() {
@@ -577,7 +585,7 @@ define(function(require, exports, module) {
 
   <market-report v-if="show=='market'" :relprices="relprices" :body="dest" class="m-3 p-1 bg-black" />
 
-  <div v-if="show=='map'" v-resizable id="plot-root" class="plot-root p-0 m-0" :style="{'position': 'relative', 'width': width + 'px', 'height': width + 'px'}">
+  <div v-show="show=='map'" v-resizable id="plot-root" class="plot-root p-0 m-0" :style="{'position': 'relative', 'width': width + 'px', 'height': width + 'px'}">
     <plot-transit-legend :dest="dest" :scale="scale" :transit="transit" :fuel="fuel" />
 
     <plot-planet

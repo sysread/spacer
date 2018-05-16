@@ -8,6 +8,15 @@ body {
   font-size: 0.9rem;
 }
 
+img.plot-image {
+  user-drag: none; 
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
 .mini {
   font-size: 0.85rem;
 }
