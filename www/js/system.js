@@ -3,6 +3,8 @@ define(function(require, exports, module) {
   const Physics = require('physics');
   const SolarSystem = require('vendor/solaris-model/dist/solaris-model.min');
 
+  require('vendor/jsspline');
+
   const System = class {
     constructor() {
       this.system = new SolarSystem;
@@ -151,9 +153,9 @@ define(function(require, exports, module) {
 
       if (!this.cache.hasOwnProperty(key)) {
         const date  = new Date(this.system.time);
-        const orbit = [];
+        const orbit = [this.position(name)];
 
-        for (let day = 0; day < 365; ++day) {
+        for (let day = 1; day < 365; ++day) {
           date.setDate(date.getDate() + 1);
           orbit.push(this.position(name, date));
         }
@@ -165,33 +167,19 @@ define(function(require, exports, module) {
     }
 
     orbit_by_turns(name) {
-      let key = `${name}.orbit.byturns`;
+      const key = `${name}.orbit.byturns`;
 
       if (!this.cache.hasOwnProperty(key)) {
-        let orbit = this.orbit(name);
-        let point = orbit[0];
-        let path  = [point];
-        let end   = orbit.length;
-        let turns_per_day = 24 / data.hours_per_turn;
+        const turns_per_day = 24 / data.hours_per_turn;
+        const orbit = this.orbit(name);
+        const end   = orbit.length;
+        const curve = new jsspline.Bezier({steps: (turns_per_day * 3) - 1});
 
-        for (let day = 1; day < end; ++day) {
-          let next = orbit[day];
-          let dx = Math.ceil((next[0] - point[0]) / turns_per_day);
-          let dy = Math.ceil((next[1] - point[1]) / turns_per_day);
-          let dz = Math.ceil((next[2] - point[2]) / turns_per_day);
-
-          for (var i = 1; i <= turns_per_day; ++i) {
-            path.push([
-              point[0] + (i * dx),
-              point[1] + (i * dy),
-              point[2] + (i * dz)
-            ]);
-          }
-
-          point = next;
+        for (const point of orbit) {
+          curve.addWayPoint({x: point[0], y: point[1], z: point[2]});
         }
 
-        this.cache[key] = path;
+        this.cache[key] = curve.nodes.map(p => [p.x, p.y, p.z]);
       }
 
       return this.cache[key];

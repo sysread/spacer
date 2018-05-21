@@ -42,7 +42,7 @@ define(function(require, exports, module) {
       this.agent       = agent;
       this.maxAccel    = maxAccel;
       this.outerRadius = this.target.position.distanceTo(this.agent.position) / 2;
-      this.innerRadius = this.target.velocity.length() * SPT * 3;
+      this.innerRadius = this.target.velocity.length() * SPT / 2;
       this.maxVelocity = Math.sqrt(2 * this.maxAccel * this.outerRadius) * 0.7; // safety margin to prevent overshooting target
     }
 
