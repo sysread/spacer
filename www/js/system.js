@@ -136,7 +136,7 @@ define(function(require, exports, module) {
         const body = this.body(name);
         let pos = body.getPositionAtTime(date);
 
-        if (body.type === 'moon') {
+        if (body.central.key !== 'sun') {
           pos = this.addPoints(pos, body.central.getPositionAtTime(date));
         }
 

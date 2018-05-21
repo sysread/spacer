@@ -8,7 +8,7 @@ define(function(require, exports, module) {
   const util    = require('util');
 
   const SCALE_DEFAULT_AU = 2;
-  const SCALE_MIN_AU     = 0.001;
+  const SCALE_MIN_AU     = 0.00001;
   const SCALE_MAX_AU     = 35;
 
   require('component/common');
@@ -20,24 +20,24 @@ define(function(require, exports, module) {
   function plotWidth() {
     const elt = document.getElementById('map-root');
     if (!elt) return 0;
-    const frameTop  = Math.ceil(elt.getBoundingClientRect().top + window.scrollY);
+    const frameTop  = elt.getBoundingClientRect().top + window.scrollY;
     const statusbar = $('#spacer-status').outerHeight();
     const nav       = $('#spacer-navbar').outerHeight();
     const controls  = $('#map-controls').outerHeight();
     const slider    = $('#transit-time').outerHeight() || 0;
     const height    = window.innerHeight - frameTop - statusbar - nav - controls - slider;
     const width     = $('.plot-root').parent().width();
-    return Math.ceil(Math.min(width, height));
+    return Math.min(width, height);
   }
 
   function scaleX(n, zero, scale, offset=0) {
     const pct = n / (scale * Physics.AU);
-    return Math.floor(zero + (zero * pct)) + offset;
+    return (zero + (zero * pct)) + offset;
   }
 
   function scaleY(n, zero, scale, offset=0) {
     const pct = n / (scale * Physics.AU);
-    return Math.floor(zero - (zero * pct)) + offset - 20; // .plot-point.line-height / 2
+    return (zero - (zero * pct)) + offset - 20;
   }
 
   function scaleFont(n, scale) {
@@ -79,7 +79,7 @@ define(function(require, exports, module) {
     },
 
     template: `
-<table v-if="transit" class="w-100 table table-sm" style="font-size:0.75rem;font-family:mono">
+<table v-if="transit" class="bg-black w-100 table table-sm" style="position:relative;z-index:10;font-size:0.75rem;font-family:mono">
   <tr>
     <th>Scale</th>
     <td>{{scale|R(4)|unit('AU')}}</td>
@@ -114,7 +114,7 @@ define(function(require, exports, module) {
 
 
   Vue.component('plot-point', {
-    props: ['pos', 'label', 'max'],
+    props: ['pos', 'label', 'max', 'min'],
 
     computed: {
       zero: function() { return this.max / 2 },
@@ -123,8 +123,8 @@ define(function(require, exports, module) {
 
       isVisible: function() {
         const [x, y, z] = this.pos;
-        if (x <= 0) return false;
-        if (y <= 0) return false;
+        if (x <= this.min || 0) return false;
+        if (y <= this.min || 0) return false;
         if (x >= this.max) return false;
         if (y >= this.max) return false;
         return true;
@@ -140,7 +140,7 @@ define(function(require, exports, module) {
     },
 
     template: `
-<span @click="$emit('click')" v-if="isVisible" class="plot-point" :style="{left: left + 'px', top: top + 'px'}">
+<span @click="$emit('click')" v-show="isVisible" class="plot-point" :style="{left: left + 'px', top: top + 'px', 'z-index': 0}">
   <slot />
 
   <badge v-if="isVisible && showLabel" class="m-1">
@@ -155,13 +155,36 @@ define(function(require, exports, module) {
     props: ['name', 'date', 'zero', 'scale', 'offsetX', 'offsetY', 'max', 'color', 'no_label', 'highlight'],
 
     computed: {
+      body()         { return System.body(this.name) },
+      radius()       { return this.body.radius },
       truePosition() { return this.name == 'sun' ? [0, 0] : System.position(this.name, this.date) },
-      positionX()    { return scaleX(this.truePosition[0], this.zero, this.scale, this.offsetX) - (this.width / 2) },
-      positionY()    { return scaleY(this.truePosition[1], this.zero, this.scale, this.offsetY) },
+      positionX()    { return scaleX(this.truePosition[0], this.zero, this.scale, this.offsetX) - this.width / 2},
+      positionY()    { return scaleY(this.truePosition[1], this.zero, this.scale, this.offsetY) - this.width / 2},
       position()     { return [this.positionX, this.positionY] },
       isMoon()       { return this.name !== 'sun' && System.central(this.name) !== 'sun' },
-      size()         { return System.body(this.name).radius / System.body('earth').radius / this.scale },
-      width()        { return util.R(Math.max(SCALE_MIN_AU, util.R(this.size - this.scale / SCALE_MAX_AU, 3))) }, // pixels
+      ppm(n)         { return this.scale * Physics.AU / this.max },
+
+      maxWidth() {
+        const satellites = Object.keys(this.body.satellites);
+        const central = this.truePosition;
+
+        let min;
+        for (const s of satellites) {
+          const d = Physics.distance(central, System.position(s));
+          if (min === undefined || d < min)
+            min = d;
+        }
+
+        if (min === undefined) {
+          return this.body.radius * 2 / this.ppm;
+        } else {
+          return Math.min(this.body.radius * 2 / this.ppm, min / this.ppm);
+        }
+      },
+
+      width() {
+        return util.R(Math.max(5, util.R(this.maxWidth)))
+      },
 
       showLabel() {
         if (this.no_label) return false;
@@ -170,18 +193,10 @@ define(function(require, exports, module) {
         return this.scale / 6 < orbit;
       },
 
-      glyphColor() {
-        if (data.bodies.hasOwnProperty(this.name)) return this.color || '#ccc';
-        if (this.name === 'sun') return 'yellow';
-        return '#444';
-      },
-
       shown() {
         if (this.name === 'sun') return true;
         if (this.isMoon) return this.showLabel;
         return true;
-        const orbit = Physics.distance([0, 0, 0], this.truePosition) / Physics.AU;
-        return this.scale / 10 < orbit;
       },
     },
 
@@ -189,9 +204,9 @@ define(function(require, exports, module) {
 <plot-point
     v-if="shown"
     :name="name"
-    :style="{'font-size': width + 'px', 'color': glyphColor}"
     :pos="position"
     :max="max"
+    :min="0 - width"
     :label="showLabel ? name : ''"
     @click="$emit('click')">
 
@@ -277,7 +292,7 @@ define(function(require, exports, module) {
 
             amount /= 10;             // reduce to a reasonable fractional value
 
-            const scale = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 3);
+            const scale = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 6);
             vnode.context.setScale(scale);
           });
 
@@ -287,7 +302,7 @@ define(function(require, exports, module) {
 
             const inc    = vnode.context.scale / 10;
             const amount = ((ev.deltaX + ev.deltaY) / 2) > 0 ? inc : -inc;
-            const scale  = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 3);
+            const scale  = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 6);
 
             vnode.context.setScale(scale);
           });
@@ -306,7 +321,7 @@ define(function(require, exports, module) {
 
       zero: function() {
         // subtract two for border width
-        return Math.ceil((this.width - 2) / 2);
+        return (this.width - 2) / 2;
       },
 
       positions: function() {
@@ -411,7 +426,7 @@ define(function(require, exports, module) {
       adjustX: function(n, offset=true) {
         const zero = this.zero;
         const pct  = n / (this.scale * Physics.AU);
-        let x = Math.floor(zero + (zero * pct));
+        let x = zero + (zero * pct);
         if (offset) x += this.offsetX;
         return x;
       },
@@ -419,7 +434,7 @@ define(function(require, exports, module) {
       adjustY: function(n, offset=true) {
         const zero = this.zero;
         const pct  = n / (this.scale * Physics.AU);
-        let y = Math.floor(zero - (zero * pct));
+        let y = zero - (zero * pct);
         if (offset) y += this.offsetY;
         return y;
       },
@@ -581,8 +596,6 @@ define(function(require, exports, module) {
   <market-report v-if="show=='market'" :relprices="relprices" :body="dest" class="m-3 p-1 bg-black" />
 
   <div v-show="show=='map'" v-resizable id="plot-root" class="plot-root p-0 m-0" :style="{'position': 'relative', 'width': width + 'px', 'height': width + 'px'}">
-    <plot-transit-legend :dest="dest" :scale="scale" :transit="transit" :fuel="fuel" />
-
     <plot-planet
       name="sun"
       :zero="zero"
@@ -625,6 +638,8 @@ define(function(require, exports, module) {
         class="text-danger">
       .
     </plot-point>
+
+    <plot-transit-legend :dest="dest" :scale="scale" :transit="transit" :fuel="fuel" />
   </div>
 
   <slider id="transit-time" class="my-1 w-100" v-if="dest" slot="def" :value.sync="index" step=1 min=0 :max="transits.length - 1" />

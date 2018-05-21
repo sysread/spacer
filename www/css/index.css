@@ -8,15 +8,6 @@ body {
   font-size: 0.9rem;
 }
 
-img.plot-image {
-  user-drag: none; 
-  user-select: none;
-  -moz-user-select: none;
-  -webkit-user-drag: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-}
-
 .mini {
   font-size: 0.85rem;
 }
@@ -142,6 +133,7 @@ img.plot-image {
 .plot-root {
   background-color: #000;
   border: 1px solid rgb(139,0,0);
+  overflow: hidden;
 }
 
 .plot-point {
@@ -167,6 +159,15 @@ img.plot-image {
 .plot-point:hover {
   text-decoration: none !important;
   color: white;
+}
+
+img.plot-image {
+  user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 ul.plot-selected {
