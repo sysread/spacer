@@ -418,7 +418,7 @@ define(function(require, exports, module) {
       adjustX: function(n, offset=true) { return scaleX(n, this.zero, this.scale, offset ? this.offsetX : 0) },
       adjustY: function(n, offset=true) { return scaleY(n, this.zero, this.scale, offset ? this.offsetY : 0) },
 
-      setDest: function(body, resetScale) {
+      setDest: function(body, target) {
         window.setTimeout(() => {this.resize()}, 500);
 
         if (body) {
@@ -462,8 +462,8 @@ define(function(require, exports, module) {
 
         this.index = 0;
 
-        if (resetScale) {
-          this.resetScale();
+        if (target) {
+          this.center();
         }
       },
 
@@ -627,7 +627,7 @@ define(function(require, exports, module) {
     <plot-transit-legend :dest="dest" :scale="scale" :transit="transit" :fuel="fuel" />
   </div>
 
-  <slider id="transit-time" class="my-1 w-100" v-if="dest" slot="def" :value.sync="index" step=1 min=0 :max="transits.length - 1" />
+  <slider @change="center" id="transit-time" class="my-1 w-100" v-if="dest" slot="def" :value.sync="index" step=1 min=0 :max="transits.length - 1" />
 
   <modal v-if="show=='fuel'" @close="show='map'" title="Fuel usage" xclose=true close="Confirm">
     <p>The navigation computer is capable of customizing routes based on optimal fuel usage.</p>
