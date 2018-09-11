@@ -49,6 +49,7 @@ define(function(require, exports, module) {
     props: ['scale', 'dest', 'transit', 'fuel'],
 
     computed: {
+      current_loc:  function() { return game.here.name },
       transit_dist: function() { if (this.transit) return this.transit.au; },
       transit_maxv: function() { if (this.transit) return this.transit.maxVelocity / 1000; },
       transit_time: function() { if (this.transit) return this.transit.days_hours; },
@@ -92,26 +93,32 @@ define(function(require, exports, module) {
   <tr>
     <th>Field of view</th>
     <td>{{fov}}</td>
-    <th>Time</th>
-    <td>{{transit_time[0]}} days, {{transit_time[1]}} hours</td>
+    <th>Current location</th>
+    <td>{{current_loc}}</td>
   </tr>
   <tr>
     <th>Dist.</th>
     <td>{{transit_dist|R(2)|unit('AU')}}</td>
-    <th>Max vel.</th>
-    <td>{{transit_maxv|R(2)|unit('km/s')}}</td>
+    <th>Time</th>
+    <td>{{transit_time[0]}} days, {{transit_time[1]}} hours</td>
   </tr>
   <tr>
+    <th>Max vel.</th>
+    <td>{{transit_maxv|R(2)|unit('km/s')}}</td>
     <th>Max accel.</th>
     <td>{{transit_acc}}</td>
+  </tr>
+  <tr>
     <th>Fuel</th>
-    <td>{{transit_fuel|R(2)}} tonnes (cap: {{fuel}})</td>
+    <td colspan="3">{{transit_fuel|R(2)}} tonnes (cap: {{fuel|R(2)}})</td>
   </tr>
 </table>
 <table v-else class="w-100 table table-sm" style="font-size:0.75rem;font-family:mono">
   <tr>
     <th>Field of view</th>
     <td>{{fov}}</td>
+    <th>Current location</th>
+    <td>{{current_loc}}</td>
   </tr>
   <tr v-if="dest">
     <th>No routes</th>
@@ -464,6 +471,7 @@ define(function(require, exports, module) {
 
         if (target) {
           this.center();
+          this.autoScale();
         }
       },
 
@@ -509,7 +517,7 @@ define(function(require, exports, module) {
         const here = Physics.distance([0, 0, 0], System.position(game.locus));
 
         if (this.transit) {
-          scale = Math.max(
+          scale = 1.25 * Math.max(
             Physics.distance([0, 0, 0], this.transit.end),
             Physics.distance([0, 0, 0], this.transit.start),
             here,
@@ -529,11 +537,24 @@ define(function(require, exports, module) {
         this.setScale(util.R(Math.min(Math.max(scale, SCALE_MIN_AU), SCALE_MAX_AU), 3));
       },
 
+      transitCenterPoint() {
+        return Physics.segment(
+          this.transit.start,
+          this.transit.end,
+          Physics.distance(this.transit.start, this.transit.end) / 2
+        );
+      },
+
       center: function() {
         const body = this.dest || this.origin;
-        const p = body == this.dest ? this.transit.end : System.position(body);
+
+        const p = this.transit
+          ? this.transitCenterPoint()
+          : System.position(body);
+
         const z = this.zero;
         const [x, y] = [this.adjustX(p[0], false), this.adjustY(p[1], false)];
+
         this.offsetX = z - x;
         this.offsetY = z - y;
         this.initX   = this.offsetX;
@@ -542,13 +563,14 @@ define(function(require, exports, module) {
 
       beginTransit: function() {
         $('#spacer').data('info', this.transit);
+        game.open('transit');
         $('#spacer').data('state', 'transit');
       },
     },
 
     template: `
 <div id="map-root">
-  <div id="map-controls" class="btn-toolbar justify-content-between">
+  <div id="map-controls" class="btn-toolbar justify-content-between" :style="{'width': width + 'px'}">
     <div class="btn-group btn-group-sm">
       <btn :disabled="!dest" @click="show='map'">&#8982;</btn>
       <btn :disabled="!dest" @click="show='info'">?</btn>
@@ -557,11 +579,15 @@ define(function(require, exports, module) {
     </div>
 
     <div class="btn-group btn-group-sm">
+      <btn :disabled="!transit" @click="beginTransit">Engage</btn>
+    </div>
+
+    <div class="btn-group btn-group-sm">
       <btn v-if="!dest" @click="setDest(dests[0], true)">Destination</btn>
       <btn v-for="(name, idx) of dests" :key="name" v-if="name == dest" @click="setDest(dests[idx + 1], true)">{{name|caps}}</btn>
       <btn :disabled="!dest" @click="show='fuel'">Fuel</btn>
-      <btn @click="resetScale()" class="text-warning">&#9055;</btn>
-      <btn @click="center()" class="text-warning font-weight-bold">&target;</btn>
+      <btn @click="resetScale()" class="text-warning" title="Reset map scale">&#9055;</btn>
+      <btn @click="center()" class="text-warning font-weight-bold" title="Center map">&target;</btn>
     </div>
   </div>
 
