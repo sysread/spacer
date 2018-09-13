@@ -15,7 +15,7 @@ define(function(require, exports, module) {
   require('component/exchange');
   require('component/summary');
   require('component/commerce');
-  require('vendor/jsspline');
+  //require('vendor/jsspline');
 
   function plotWidth() {
     const elt = document.getElementById('map-root');
@@ -122,7 +122,7 @@ define(function(require, exports, module) {
   </tr>
   <tr v-if="dest">
     <th>No routes</th>
-    <td>Transit &lt; 1 year | Fuel &lt; {{fuel}} tonnes</td>
+    <td colspan="3">Transit &lt; 1 year | Fuel &lt; {{fuel}} tonnes</td>
   </tr>
 </table>
     `,
@@ -228,7 +228,7 @@ define(function(require, exports, module) {
         dests:     dests,                 // list of destination names
         navcomp:   new NavComp,           // nav computer
         origin:    game.locus,            // name of initial body for transit
-        dest:      "",                    // name of destination body for transit
+        dest:      "mercury",                    // name of destination body for transit
         index:     0,                     // zero-based index of selected transit in transit list (computed 'transits')
         show_all:  false,                 // flag passed to NavComp to include all routes rather than skipping inefficient ones
         max_fuel:  game.player.ship.fuel, // contrains fuel usage in NavComp calculations
@@ -385,6 +385,7 @@ define(function(require, exports, module) {
         const transit = this.transit;
 
         if (transit) {
+console.log('fakes', transit.path.filter(p => {return p.fake}).length);
           return transit.path.map(p => {
             return [
               this.adjustX(p.position.x),

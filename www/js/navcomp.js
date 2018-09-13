@@ -82,7 +82,9 @@ define(function(require, exports, module) {
 
       let prevFuelUsed;
 
-      for (let turns = 1; turns < dest.length; ++turns) {
+      //for (let turns = 1; turns < dest.length; ++turns) {
+      for (let turns = 30; turns < 50; ++turns) {
+        const distance      = Physics.distance(orig[0], dest[turns]);
         const fuelPerTurn   = Math.min(fuel / turns, fuelrate);
         const burnRatio     = fuelPerTurn / fuelrate;
         const thrustPerTurn = thrust * burnRatio;
@@ -92,17 +94,17 @@ define(function(require, exports, module) {
         const vFinal        = targetPos.clone().sub(Vector(dest[turns - 1])).divideScalar(SPT);
         const target        = new Steering.Body(targetPos, vFinal);
         const agent         = new Steering.Body(startPos, vInit);
-        const steering      = new Steering.Steering(target, agent, maxAccel);
+        const steering      = new Steering.Steering(target, agent, maxAccel, SPT * turns);
         const path          = [];
+console.log(turns, steering.getPath(turns));
 
         let maxVel   = 0;
         let maxAcc   = 0;
         let fuelUsed = 0;
         let arrived  = false;
 
-        for (let turn = 0; turn < turns; ++turn) {
-          const t = (turns - turn) * SPT;
-          const a = steering.getAcceleration(t);
+        for (let turn = 0; turn <= turns; ++turn) {
+          const a = steering.getAcceleration((turns - turn) * SPT);
 
           if (!a) {
             // If this is the first route to arrive, it sets the base for max
@@ -111,6 +113,27 @@ define(function(require, exports, module) {
             if (prevFuelUsed === undefined || fuelUsed < prevFuelUsed || this.show_all) {
               prevFuelUsed = fuelUsed;
               arrived = true;
+
+              // Fill out any error margin from "close enough" arrival
+              for (turn; turn < turns; ++turn) {
+                agent.update(SPT);
+
+                path.push({
+                  position: agent.position.clone(),
+                  velocity: agent.velocity.length(),
+                  acceleration: 0,
+                  fuel: 0,
+                  fake: true,
+                });
+              }
+
+              path.push({
+                position: target.position.clone(),
+                velocity: target.velocity.length(),
+                acceleration: 0,
+                fuel: 0,
+                fake: true,
+              });
             }
 
             break;
