@@ -40,8 +40,8 @@ define(function(require, exports, module) {
         const turn = this.turns - this.left;
         --this.left;
 
-        this.velocity = this.path[turn].velocity;
-        this.coords = this.path[turn].position;
+        this.velocity = this.path[turn].velocity.length();
+        this.coords = this.path[turn].position.toArray();
       }
     }
 
