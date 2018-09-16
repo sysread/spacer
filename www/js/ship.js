@@ -12,26 +12,25 @@ define(function(require, exports, module) {
         throw new Error(`Ship type not recognized: ${init.type}`);
       }
 
-      this.type         = init.type;
-      this.shipclass    = data.shipclass[this.type];
-      this.hardpoints   = this.shipclass.hardpoints;
-      this.drive        = data.drives[this.shipclass.drive];
-      this.drives       = this.shipclass.drives;
-      this.driveMass    = this.drives * this.drive.mass;
-      this.mass         = this.shipclass.mass + this.driveMass;
-      this.tank         = this.shipclass.tank;
-      this.restricted   = this.shipclass.restricted;
-      this.faction      = this.shipclass.faction;
-      this.thrust       = this.drives * this.drive.thrust;
-      this.fuelrate     = this.drives * this.drive.burn_rate;
-      this.acceleration = Physics.deltav(this.thrust, this.mass);
-
+      this.type   = init.type;
       this.addons = init.addons || [];
       this.damage = init.damage || {hull: 0, armor: 0};
       this.fuel   = init.fuel   || this.tank;
       this.cargo  = new model.Store(init.cargo);
     }
 
+    get shipclass()      { return data.shipclass[this.type] }
+    get hardpoints()     { return this.shipclass.hardpoints }
+    get drive()          { return data.drives[this.shipclass.drive] }
+    get drives()         { return this.shipclass.drives }
+    get driveMass()      { return this.drives * this.drive.mass }
+    get mass()           { return this.shipclass.mass * this.driveMass }
+    get tank()           { return this.shipclass.tank }
+    get restricted()     { return this.shipclass.restricted }
+    get faction()        { return this.shipclass.faction }
+    get thrust()         { return this.drives * this.drive.thrust }
+    get fuelrate()       { return this.drives * this.drive.burn_rate }
+    get acceleration()   { return Physics.deltav(this.thrust, this.mass) }
     get fullHull()       { return Math.max(0,    this.attr('hull', true)) }
     get fullArmor()      { return Math.max(0,    this.attr('armor', true)) }
     get hull()           { return Math.max(0,    this.attr('hull')) }
