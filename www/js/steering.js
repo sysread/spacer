@@ -1,36 +1,17 @@
 define(function(require, exports, module) {
-  const data    = require('data');
-  const util    = require('util');
-  const System  = require('system');
-  const Physics = require('physics');
   const Vector3 = require('vendor/math-ds').Vector3;
-  const SPT     = data.hours_per_turn * 3600;
-  const km      = 1000;
-
-  const steering = require('steering');
+  const SPT     = require('data').hours_per_turn * 3600; // seconds per turn
+  const DT      = 100;                                   // frames per turn for euler integration
+  const TI      = SPT / DT;                              // seconds per frame
 
   const Body = class {
     constructor(position, velocity) {
       this.position = position.clone();
       this.velocity = velocity.clone();
-      this.distance = 0;
     }
 
-    update(t, acc) {
-      if (!acc) {
-        acc = new Vector3; // no change in motion
-      }
-
-      // ∆P = vt + at^2/2
-      const a = acc.clone();
-      const v = this.velocity.clone();
-      const d = v.multiplyScalar(t).add( a.multiplyScalar(t * t * 0.5) );
-
-      this.velocity.add(acc.clone().multiplyScalar(t)); // ∆v = at
-      this.position.add(d);
-
-      this.distance += d.length();
-    }
+    get pos() { return this.position.clone() }
+    get vel() { return this.velocity.clone() }
   };
 
   const Course = class {
@@ -46,41 +27,49 @@ define(function(require, exports, module) {
       this.accel    = this.calculateAcceleration();
     }
 
+    get acc() { return this.accel.clone() }
+
     calculateAcceleration() {
       const tflip = SPT * this.turns / 2;
 
-      const dv = this.agent.velocity.clone()
-        .sub(this.target.velocity.clone().multiplyScalar(2).divideScalar(tflip))
-        .multiplyScalar(2)
-        .divideScalar(tflip);
+      const dvf = this.target.vel
+        .multiplyScalar(2 / tflip);
 
-      return this.target.position.clone()
-        .sub(this.agent.position).clone()
+      const dvi = this.agent.vel
+        .sub(dvf)
+        .multiplyScalar( 2 / tflip );
+
+      return this.target.pos
+        .sub(this.agent.pos)
         .divideScalar(tflip * tflip)
-        .sub(dv);
+        .sub(dvi);
     }
 
     *path() {
-      const flip = Math.ceil(this.turns / 2);
-      const p    = this.agent.position.clone();
-      const v    = this.agent.velocity.clone();
-      const dt   = 100;
-      const ti   = SPT / dt;
-      const vax  = this.accel.clone().multiplyScalar(ti);
-      const dax  = this.accel.clone().multiplyScalar(ti * ti * 0.5);
+      const flip = Math.ceil(this.turns / 2);            // flip and decel turn
+      const p    = this.agent.pos;                       // initial position
+      const v    = this.agent.vel;                       // initial velocity
+      const vax  = this.acc.multiplyScalar(TI);          // change in velocity each TI
+      const dax  = this.acc.multiplyScalar(TI * TI / 2); // change in position each TI
 
       for (let turn = 0; turn < this.turns; ++turn) {
-        for (let i = 0; i < dt; ++i) {
+        // Split turn's updates into DT increments to prevent inaccuracies
+        // creeping into the final result.
+        for (let i = 0; i < DT; ++i) {
           if (turn >= flip) {
-            v.sub(vax);
+            v.sub(vax); // decelerate after flip
           } else {
-            v.add(vax);
+            v.add(vax); // accelerate before flip
           }
 
-          p.add( v.clone().multiplyScalar(ti).add(dax) );
+          // Update position
+          p.add( v.clone().multiplyScalar(TI).add(dax) );
         }
 
-        yield { p: p.clone(), v: v.clone() };
+        yield {
+          position: p.clone(),
+          velocity: v.clone(),
+        };
       }
     }
   };
