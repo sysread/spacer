@@ -80,10 +80,7 @@ define(function(require, exports, module) {
       const thrust   = game.player.ship.thrust;
       const fuel     = this.fuel_target;
 
-      let prevFuelUsed;
-
-      //for (let turns = 1; turns < dest.length; ++turns) {
-      for (let turns = 30; turns < 50; ++turns) {
+      for (let turns = 1; turns < dest.length; ++turns) {
         const distance      = Physics.distance(orig[0], dest[turns]);
         const fuelPerTurn   = Math.min(fuel / turns, fuelrate);
         const burnRatio     = fuelPerTurn / fuelrate;
@@ -94,87 +91,48 @@ define(function(require, exports, module) {
         const vFinal        = targetPos.clone().sub(Vector(dest[turns - 1])).divideScalar(SPT);
         const target        = new Steering.Body(targetPos, vFinal);
         const agent         = new Steering.Body(startPos, vInit);
-        const steering      = new Steering.Steering(target, agent, maxAccel, SPT * turns);
-        const path          = [];
-console.log(turns, steering.getPath(turns));
+        const steering      = new Steering.Course(target, agent, maxAccel, turns);
+        const a             = steering.accel.length();
 
-        let maxVel   = 0;
-        let maxAcc   = 0;
-        let fuelUsed = 0;
-        let arrived  = false;
+        if (a > maxAccel)
+          continue;
 
-        for (let turn = 0; turn <= turns; ++turn) {
-          const a = steering.getAcceleration((turns - turn) * SPT);
+        const fuelUsed = a / availAcc * fuelPerTurn * turns * 0.99; // `* 0.99` to work around rounding error
 
-          if (!a) {
-            // If this is the first route to arrive, it sets the base for max
-            // fuel usage. After that, only include routes with better or equal
-            // fuel usage to the previous.
-            if (prevFuelUsed === undefined || fuelUsed < prevFuelUsed || this.show_all) {
-              prevFuelUsed = fuelUsed;
-              arrived = true;
+        if (fuelUsed > fuel)
+          continue;
 
-              // Fill out any error margin from "close enough" arrival
-              for (turn; turn < turns; ++turn) {
-                agent.update(SPT);
+        let max_vel = 0;
+        let idx     = 0;
+        const path  = [];
 
-                path.push({
-                  position: agent.position.clone(),
-                  velocity: agent.velocity.length(),
-                  acceleration: 0,
-                  fuel: 0,
-                  fake: true,
-                });
-              }
-
-              path.push({
-                position: target.position.clone(),
-                velocity: target.velocity.length(),
-                acceleration: 0,
-                fuel: 0,
-                fake: true,
-              });
-            }
-
-            break;
+        for (let seg of steering.path()) {
+          if (seg.v.length() > max_vel) {
+            max_vel = seg.v.length();
           }
-
-          fuelUsed += a.length() / availAcc * fuelPerTurn * .99; // adjust for float rounding error
-
-          if (fuelUsed > fuel) {
-            break;
-          }
-
-          agent.update(SPT, a);
-
-          if (agent.velocity.length() > maxVel)
-            maxVel = agent.velocity.length();
-
-          if (a.length() > maxAcc)
-            maxAcc = a.length();
 
           path.push({
-            position: agent.position.clone(),
-            velocity: agent.velocity.length(),
-            acceleration: a.length(),
-            fuel: fuelUsed,
+            position:     seg.p,
+            velocity:     seg.v,
+            acceleration: a,
+            fuel:         (fuelUsed / turns) * (idx + 1),
           });
+
+          ++idx;
         }
 
-        if (arrived) {
-          yield new TransitPlan({
-            origin: origin,
-            dest:   destination,
-            turns:  turns,
-            fuel:   fuelUsed,
-            start:  orig[0],
-            end:    dest[turns],
-            dist:   agent.distance,
-            vel:    maxVel,
-            accel:  maxAcc,
-            path:   path,
-          });
-        }
+        yield new TransitPlan({
+          origin: origin,
+          dest:   destination,
+          turns:  turns,
+          fuel:   fuelUsed,
+          start:  orig[0],
+          end:    dest[turns],
+          dist:   distance,
+          vel:    max_vel,
+          accel:  a,
+          path:   path,
+        });
       }
     }
   };

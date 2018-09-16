@@ -33,83 +33,58 @@ define(function(require, exports, module) {
     }
   };
 
-  const Steering = class {
+  const Course = class {
     /*
      * target: kinematics data for target body
      * agent:  kinematics data for agent
      */
-    constructor(target, agent, maxAccel, timeToTarget) {
-      this.target       = target;
-      this.agent        = agent;
-      this.maxAccel     = maxAccel;
-      this.timeToTarget = timeToTarget;
-      this.distance     = this.target.position.distanceTo(this.agent.position);
-      this.outerRadius  = this.distance / 2;
-      this.innerRadius  = this.target.velocity.length() * SPT;
-      this.maxVelocity  = this.calculateMaxVelocity();
+    constructor(target, agent, maxAccel, turns) {
+      this.target   = target;
+      this.agent    = agent;
+      this.maxAccel = maxAccel;
+      this.turns    = turns;
+      this.accel    = this.calculateAcceleration();
     }
 
-    calculateMaxVelocity() {
-      const s = this.outerRadius;
-      const a = this.maxAccel;
-      const t = this.timeToTarget / 2;
-      const u = Math.abs((s / t) - (a * t * 0.5));
-      return u;
+    calculateAcceleration() {
+      const tflip = SPT * this.turns / 2;
+
+      const dv = this.agent.velocity.clone()
+        .sub(this.target.velocity.clone().multiplyScalar(2).divideScalar(tflip))
+        .multiplyScalar(2)
+        .divideScalar(tflip);
+
+      return this.target.position.clone()
+        .sub(this.agent.position).clone()
+        .divideScalar(tflip * tflip)
+        .sub(dv);
     }
 
-    getPath(turns) {
-      const target = this.target.clone();
-      const agent  = this.agent.clone();
-      const vf     = target.velocity.x;
-      const a      = this.maxAccel;
-      const t      = SPT;
-      const t2     = SPT * SPT;
-      const tflip  = turns / 2;
-      const flip   = this.distance / 2;
+    *path() {
+      const flip = Math.ceil(this.turns / 2);
+      const p    = this.agent.position.clone();
+      const v    = this.agent.velocity.clone();
+      const dt   = 100;
+      const ti   = SPT / dt;
+      const vax  = this.accel.clone().multiplyScalar(ti);
+      const dax  = this.accel.clone().multiplyScalar(ti * ti * 0.5);
 
-      let p = agent.position.x;
-      let v = agent.velocity.x;
+      for (let turn = 0; turn < this.turns; ++turn) {
+        for (let i = 0; i < dt; ++i) {
+          if (turn >= flip) {
+            v.sub(vax);
+          } else {
+            v.add(vax);
+          }
 
-      const path = [];
-      path.push({p: p, v: v, s: 0});
+          p.add( v.clone().multiplyScalar(ti).add(dax) );
+        }
 
-      // x = x0 + (v0 * t) + (0.5 * a * t * t);
-      for (let turn = 0; turn < tflip; ++turn) {
-        const s = (v * t) + (0.5 * a * t2);
-        v = Math.sqrt((v * v) + (2 * a * s));
-        p += s;
-        path.push({p: p, v: v, s: 0});
+        yield { p: p.clone(), v: v.clone() };
       }
-
-      console.log(path);
-    }
-
-    getAcceleration(timeToTarget) {
-      const velocity = this.target.position.clone().sub(this.agent.position);
-      const distance = velocity.length();
-
-      if (distance <= this.innerRadius) {
-        return null;
-      }
-
-      velocity.divideScalar(timeToTarget);
-
-      if (distance < this.outerRadius) {
-        velocity.setLength(this.maxVelocity * distance / this.outerRadius);
-      } else {
-        velocity.setLength(this.maxVelocity);
-      }
-
-      velocity.sub(this.agent.velocity);
-
-      if (velocity.length() > this.maxAccel) {
-        velocity.setLength(this.maxAccel);
-      }
-
-      return velocity;
     }
   };
 
-  exports.Body = Body;
-  exports.Steering = Steering;
+  exports.Body   = Body;
+  exports.Course = Course;
 });

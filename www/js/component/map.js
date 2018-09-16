@@ -385,7 +385,6 @@ define(function(require, exports, module) {
         const transit = this.transit;
 
         if (transit) {
-console.log('fakes', transit.path.filter(p => {return p.fake}).length);
           return transit.path.map(p => {
             return [
               this.adjustX(p.position.x),
