@@ -30,10 +30,6 @@ define(function(require, exports, module) {
 
 
   const Course = class {
-    /*
-     * target: kinematics data for target body
-     * agent:  kinematics data for agent
-     */
     constructor(target, agent, maxAccel, turns) {
       this.target   = target;
       this.agent    = agent;
@@ -44,34 +40,41 @@ define(function(require, exports, module) {
 
     get acc() { return this.accel.clone() }
 
+    // a = (2s / t^2) - (2v / t)
     calculateAcceleration() {
       const tflip = SPT * this.turns / 2;
 
+      // Calculate portion of target velocity to match by flip point
       const dvf = this.target.vel
         .multiplyScalar(2 / tflip);
 
+      // Calculate portion of total change in velocity to apply by flip point
       const dvi = this.agent.vel
         .sub(dvf)
-        .multiplyScalar( 2 / tflip );
+        .multiplyScalar(2 / tflip);
 
-      return this.target.pos
-        .sub(this.agent.pos)
-        .divideScalar(tflip * tflip)
-        .sub(dvi);
+      return this.target.pos         // change in position
+        .sub(this.agent.pos)         // (2s / 2) for flip point
+        .divideScalar(tflip * tflip) // t^2
+        .sub(dvi);                   // less the change in velocity
     }
 
     *path() {
-      const flip = Math.ceil(this.turns / 2);            // flip and decel turn
-      const p    = this.agent.pos;                       // initial position
-      const v    = this.agent.vel;                       // initial velocity
-      const vax  = this.acc.multiplyScalar(TI);          // change in velocity each TI
-      const dax  = this.acc.multiplyScalar(TI * TI / 2); // change in position each TI
+      const tflip = SPT * (this.turns / 2);               // seconds to flip point
+      const p     = this.agent.pos;                       // initial position
+      const v     = this.agent.vel;                       // initial velocity
+      const vax   = this.acc.multiplyScalar(TI);          // static portion of change in velocity each TI
+      const dax   = this.acc.multiplyScalar(TI * TI / 2); // static portion of change in position each TI
+
+      let t = 0;
 
       for (let turn = 0; turn < this.turns; ++turn) {
         // Split turn's updates into DT increments to prevent inaccuracies
         // creeping into the final result.
         for (let i = 0; i < DT; ++i) {
-          if (turn >= flip) {
+          t += TI;
+
+          if (t > tflip) {
             v.sub(vax); // decelerate after flip
           } else {
             v.add(vax); // accelerate before flip
@@ -117,15 +120,8 @@ define(function(require, exports, module) {
 
     getTransitsTo(dest) {
       const transits = [];
-      let prev;
 
       for (let transit of this.astrogator(this.orig, dest)) {
-        if (prev === undefined || prev >= transit.fuel) {
-          prev = transit.fuel;
-        } else {
-          //continue;
-        }
-
         transits.push(transit);
       }
 
@@ -155,6 +151,8 @@ define(function(require, exports, module) {
       const thrust   = game.player.ship.thrust;
       const fuel     = this.fuel_target;
 
+      let prevFuelUsed;
+
       for (let turns = 1; turns < dest.length; ++turns) {
         const distance      = Physics.distance(orig[0], dest[turns]);
         const fuelPerTurn   = Math.min(fuel / turns, fuelrate);
@@ -176,6 +174,12 @@ define(function(require, exports, module) {
 
         if (fuelUsed > fuel)
           continue;
+
+        if (prevFuelUsed === undefined || prevFuelUsed >= fuelUsed) {
+          prevFuelUsed = fuelUsed;
+        } else {
+          continue;
+        }
 
         let max_vel = 0;
         let idx = 0;

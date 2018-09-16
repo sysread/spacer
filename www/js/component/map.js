@@ -313,7 +313,9 @@ define(function(require, exports, module) {
 
     computed: {
       planet: function() {
-        if (this.dest) return game.planets[this.dest];
+        if (this.dest) {
+          return game.planets[this.dest];
+        }
       },
 
       zero: function() {
@@ -401,14 +403,20 @@ define(function(require, exports, module) {
           const min   = this.scale * Physics.AU / 30;
           const orbit = System.orbit_by_turns(transit.dest);
           const path  = [];
-          let mark    = -1;
+          let mark    = 0;
 
-          for (let i = 1; i < transit.turns; ++i) {
-            if (i == 1 || i == transit.turns - 1 || Physics.distance(path[mark], orbit[i]) > min) {
+          path.push(orbit[0]);
+
+          for (let i = 1; i < transit.turns - 1; ++i) {
+            // Distance from last visible plotted point is greater than minimum
+            // resolution.
+            if (Physics.distance(path[mark], orbit[i]) > min) {
               path.push(orbit[i]);
               ++mark;
             }
           }
+
+          path.push(orbit[transit.turns - 1]);
 
           return path.map(p => {
             return [

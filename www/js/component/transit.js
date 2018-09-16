@@ -172,7 +172,7 @@ define(function(require, exports, module) {
     props: ['plan'],
     data: function() {
       return {
-        dist: this.plan.dist,
+        dist:   this.plan.dist,
         pretty: this.plan.prettyPath,
       };
     },

@@ -1,11 +1,7 @@
 define(function(require, exports, module) {
-  const data     = require('data');
-  const util     = require('util');
-  const Physics  = require('physics');
-  const System   = require('system');
-  const Vector3  = require('vendor/math-ds').Vector3;
-
-  const SPT = data.hours_per_turn * 3600;
+  const data    = require('data');
+  const util    = require('util');
+  const Physics = require('physics');
 
   return class {
     constructor(opt) {
