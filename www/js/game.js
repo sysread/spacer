@@ -6,7 +6,7 @@ define(function(require, exports, module) {
   const Person = require('person');
 
   //const start_page = 'summary';
-  const start_page = 'navtest';
+  const start_page = 'navigation';
 
   const Game = class {
     constructor() {

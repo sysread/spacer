@@ -15,7 +15,6 @@ define(function(require, exports, module) {
   require('component/exchange');
   require('component/summary');
   require('component/commerce');
-  //require('vendor/jsspline');
 
   function plotWidth() {
     const elt = document.getElementById('map-root');
@@ -228,7 +227,7 @@ define(function(require, exports, module) {
         dests:     dests,                 // list of destination names
         navcomp:   new NavComp,           // nav computer
         origin:    game.locus,            // name of initial body for transit
-        dest:      "mercury",                    // name of destination body for transit
+        dest:      "",                    // name of destination body for transit
         index:     0,                     // zero-based index of selected transit in transit list (computed 'transits')
         show_all:  false,                 // flag passed to NavComp to include all routes rather than skipping inefficient ones
         max_fuel:  game.player.ship.fuel, // contrains fuel usage in NavComp calculations
@@ -239,6 +238,8 @@ define(function(require, exports, module) {
         offsetY:   0,                     // offset from zero-zero point when panning map
         initX:     0,                     // initial position when panning
         initY:     0,                     // initial position when panning
+
+        transit_cache: {},
 
         SCALE_DEFAULT_AU: SCALE_DEFAULT_AU,
         SCALE_MIN_AU: SCALE_MIN_AU,
@@ -364,7 +365,11 @@ define(function(require, exports, module) {
 
       transits: function() {
         if (this.dest) {
-          return this.navcomp.getTransitsTo(this.dest);
+          if (!this.transit_cache[this.dest]) {
+            this.transit_cache[this.dest] = this.navcomp.getTransitsTo(this.dest);
+          }
+
+          return this.transit_cache[this.dest];
         }
       },
 
@@ -578,7 +583,7 @@ define(function(require, exports, module) {
 
     template: `
 <div id="map-root">
-  <div id="map-controls" class="btn-toolbar justify-content-between" :style="{'width': width + 'px'}">
+  <div v-if="controls" id="map-controls" class="btn-toolbar justify-content-between" :style="{'width': width + 'px'}">
     <div class="btn-group btn-group-sm">
       <btn :disabled="!dest" @click="show='map'">&#8982;</btn>
       <btn :disabled="!dest" @click="show='info'">?</btn>
