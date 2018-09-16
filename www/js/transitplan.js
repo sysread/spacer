@@ -4,7 +4,6 @@ define(function(require, exports, module) {
   const Physics  = require('physics');
   const System   = require('system');
   const Vector3  = require('vendor/math-ds').Vector3;
-  const Steering = require('steering');
 
   const SPT = data.hours_per_turn * 3600;
 
