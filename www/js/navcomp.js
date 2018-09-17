@@ -4,18 +4,11 @@ define(function(require, exports, module) {
   const system      = require('system');
   const Physics     = require('physics');
   const TransitPlan = require('transitplan');
-  const Vector3     = require('vendor/math-ds').Vector3;
+  const vec         = require('vector').vec;
 
   const SPT = data.hours_per_turn * 3600; // seconds per turn
   const DT  = 100;                        // frames per turn for euler integration
   const TI  = SPT / DT;                   // seconds per frame
-
-
-  function Vector(x=0, y=0, z=0) {
-    return x instanceof Array
-      ? (new Vector3).fromArray(x)
-      : new Vector3(x, y, z);
-  }
 
 
   const Body = class {
@@ -46,16 +39,16 @@ define(function(require, exports, module) {
 
       // Calculate portion of target velocity to match by flip point
       const dvf = this.target.vel
-        .multiplyScalar(2 / tflip);
+        .mul_scalar(2 / tflip);
 
       // Calculate portion of total change in velocity to apply by flip point
       const dvi = this.agent.vel
         .sub(dvf)
-        .multiplyScalar(2 / tflip);
+        .mul_scalar(2 / tflip);
 
       return this.target.pos         // change in position
         .sub(this.agent.pos)         // (2s / 2) for flip point
-        .divideScalar(tflip * tflip) // t^2
+        .div_scalar(tflip * tflip) // t^2
         .sub(dvi);                   // less the change in velocity
     }
 
@@ -63,8 +56,8 @@ define(function(require, exports, module) {
       const tflip = SPT * (this.turns / 2);               // seconds to flip point
       const p     = this.agent.pos;                       // initial position
       const v     = this.agent.vel;                       // initial velocity
-      const vax   = this.acc.multiplyScalar(TI);          // static portion of change in velocity each TI
-      const dax   = this.acc.multiplyScalar(TI * TI / 2); // static portion of change in position each TI
+      const vax   = this.acc.mul_scalar(TI);          // static portion of change in velocity each TI
+      const dax   = this.acc.mul_scalar(TI * TI / 2); // static portion of change in position each TI
 
       let t = 0;
 
@@ -81,7 +74,7 @@ define(function(require, exports, module) {
           }
 
           // Update position
-          p.add( v.clone().multiplyScalar(TI).add(dax) );
+          p.add( v.clone().mul_scalar(TI).add(dax) );
         }
 
         yield {
@@ -143,8 +136,8 @@ define(function(require, exports, module) {
     *astrogator(origin, destination) {
       const orig     = system.orbit_by_turns(origin);
       const dest     = system.orbit_by_turns(destination);
-      const startPos = Vector(orig[0]);
-      const vInit    = Vector(orig[1]).sub( Vector(orig[0]) ).divideScalar(SPT);
+      const startPos = vec(orig[0]);
+      const vInit    = vec(orig[1]).sub( vec(orig[0]) ).div_scalar(SPT);
       const bestAcc  = Math.min(game.player.maxAcceleration(), game.player.shipAcceleration());
       const mass     = game.player.ship.currentMass();
       const fuelrate = game.player.ship.fuelrate;
@@ -159,12 +152,12 @@ define(function(require, exports, module) {
         const thrustPerTurn = thrust * fuelPerTurn / fuelrate;
         const availAcc      = thrustPerTurn / mass;
         const maxAccel      = Math.min(bestAcc, availAcc);
-        const targetPos     = Vector(dest[turns]);
-        const vFinal        = targetPos.clone().sub(Vector(dest[turns - 1])).divideScalar(SPT);
+        const targetPos     = vec(dest[turns]);
+        const vFinal        = targetPos.clone().sub(vec(dest[turns - 1])).div_scalar(SPT);
         const target        = new Body(targetPos, vFinal);
         const agent         = new Body(startPos, vInit);
         const course        = new Course(target, agent, maxAccel, turns);
-        const a             = course.accel.length();
+        const a             = course.accel.length;
 
         if (a > maxAccel)
           continue;
@@ -187,8 +180,8 @@ define(function(require, exports, module) {
         const path = [];
 
         for (let seg of course.path()) {
-          if (seg.velocity.length() > max_vel) {
-            max_vel = seg.velocity.length();
+          if (seg.velocity.length > max_vel) {
+            max_vel = seg.velocity.length;
           }
 
           seg.fuel = fuelUsedPerTurn * (idx + 1);

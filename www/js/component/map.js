@@ -378,7 +378,7 @@ define(function(require, exports, module) {
         const transit = this.transit;
 
         if (transit) {
-          return this.filterPath(transit.path.map(p => {return p.position.toArray()}))
+          return this.filterPath(transit.path.map(p => {return p.position.point}))
                      .map(p => {return [this.adjustX(p[0]), this.adjustY(p[1])]});
         }
       },
@@ -539,7 +539,7 @@ define(function(require, exports, module) {
         const transit = this.transit;
 
         if (transit) {
-          return transit.path[Math.ceil(transit.turns / 2)].position.toArray();
+          return transit.path[Math.ceil(transit.turns / 2)].position.point;
         }
       },
 
