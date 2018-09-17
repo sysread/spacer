@@ -53,9 +53,9 @@ define(function(require, exports, module) {
     }
 
     *path() {
-      const tflip = SPT * (this.turns / 2);               // seconds to flip point
-      const p     = this.agent.pos;                       // initial position
-      const v     = this.agent.vel;                       // initial velocity
+      const tflip = SPT * (this.turns / 2);           // seconds to flip point
+      const p     = this.agent.pos;                   // initial position
+      const v     = this.agent.vel;                   // initial velocity
       const vax   = this.acc.mul_scalar(TI);          // static portion of change in velocity each TI
       const dax   = this.acc.mul_scalar(TI * TI / 2); // static portion of change in position each TI
 

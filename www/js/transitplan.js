@@ -30,18 +30,22 @@ define(function(require, exports, module) {
     get pct_complete() { return Math.ceil(100 - (this.left * this.turnpct)) }
 
     get days_hours() {
-      let d = this.hours / 24;
-      let h = this.hours % 24;
+      const d = this.hours / 24;
+      const h = this.hours % 24;
       return [util.R(d), h];
+    }
+
+    get str_arrival() {
+      const [d, h] = this.days_hours;
+      return `${d} days, ${h} hours`;
     }
 
     turn() {
       if (!this.is_complete) {
         const turn = this.turns - this.left;
         --this.left;
-
-        this.velocity = this.path[turn].velocity.length();
-        this.coords = this.path[turn].position.toArray();
+        this.velocity = this.path[turn].velocity.length;
+        this.coords = this.path[turn].position.point;
       }
     }
 

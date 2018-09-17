@@ -235,7 +235,7 @@ define(function(require, exports, module) {
         max_fuel:  game.player.ship.fuel, // contrains fuel usage in NavComp calculations
         fuel:      game.player.ship.fuel, // player-supplied constraint for fuel usage
         show:      'map',                 // currently displayed view
-        legend:    false,                 // toggle visibility of legend
+        legend:    true,                  // toggle visibility of legend
         relprices: false,                 // for market prices, display relative prices when true
         offsetX:   0,                     // offset from zero-zero point when panning map
         offsetY:   0,                     // offset from zero-zero point when panning map
@@ -311,6 +311,7 @@ define(function(require, exports, module) {
           // Set initial scale
           vnode.context.resize();
           vnode.context.autoScale();
+          vnode.context.center();
         }
       },
     },
@@ -337,7 +338,21 @@ define(function(require, exports, module) {
       },
 
       bodies: function() {
-        return System.bodies();
+        const bodies = {};
+
+        for (let body of System.bodies()) {
+          const central = System.central(body);
+
+          if (central !== 'sun' && !bodies.hasOwnProperty(central)) {
+            bodies[central] = System.position(central);
+          }
+
+          if (!bodies.hasOwnProperty(body)) {
+            bodies[body] = System.position(body);
+          }
+        }
+
+        return Object.keys(bodies);
       },
 
       destination: function() {
@@ -364,11 +379,8 @@ define(function(require, exports, module) {
           return this.plan;
         }
 
-        if (this.dest) {
-          const transits = this.transits;
-          if (transits.length > 0) {
-            return transits[this.index];
-          }
+        if (this.dest && this.transits.length > 0) {
+          return this.transits[this.index];
         }
 
         return;
@@ -378,8 +390,15 @@ define(function(require, exports, module) {
         const transit = this.transit;
 
         if (transit) {
-          return this.filterPath(transit.path.map(p => {return p.position.point}))
-                     .map(p => {return [this.adjustX(p[0]), this.adjustY(p[1])]});
+          const path     = [];
+          const filtered = this.filterPath(transit.path.map(p => {return p.position.point}));
+          const points   = this.points(filtered);
+
+          for (const [turn, point] of points) {
+            path.push(point);
+          }
+
+          return path;
         }
       },
 
@@ -387,8 +406,19 @@ define(function(require, exports, module) {
         const transit = this.transit;
 
         if (transit) {
-          return this.filterPath(System.orbit_by_turns(transit.dest))
-                     .map(p => {return [this.adjustX(p[0]), this.adjustY(p[1])]});
+          const path     = [];
+          const filtered = this.filterPath(System.orbit_by_turns(transit.dest));
+          const points   = this.points(filtered);
+
+          for (const [turn, point] of points) {
+            if (turn > transit.turns) {
+              break;
+            }
+
+            path.push(point);
+          }
+
+          return path;
         }
       },
     },
@@ -398,25 +428,32 @@ define(function(require, exports, module) {
       adjustX: function(n, offset=true) { return scaleX(n, this.zero, this.scale, offset ? this.offsetX : 0) },
       adjustY: function(n, offset=true) { return scaleY(n, this.zero, this.scale, offset ? this.offsetY : 0) },
 
-      filterPath: function(path) {
-        const min   = this.scale * Physics.AU / 30;
-        const parts = [];
-        let mark    = 0;
+      point: function(pos) {
+        return [ this.adjustX(pos[0]), this.adjustY(pos[1]) ];
+      },
 
-        parts.push(path[0]);
+      points: function*(path) {
+        for (const [turn, point] of path) {
+          yield [ turn, this.point(point) ];
+        }
+      },
+
+      filterPath: function*(path) {
+        const min = this.scale * Physics.AU / 30;
+        let mark = path[0];
+
+        yield [0, path[0]];
 
         for (let i = 1; i < path.length - 1; ++i) {
           // Distance from last visible plotted point is greater than minimum
           // resolution.
-          if (Physics.distance(parts[mark], path[i]) > min) {
-            parts.push(path[i]);
-            ++mark;
+          if (Physics.distance(mark, path[i]) > min) {
+            yield [i, path[i]];
+            mark = path[i];
           }
         }
 
-        parts.push(path[path.length - 1]);
-
-        return parts;
+        yield [path.length - 1, path[path.length - 1]];
       },
 
       setDest: function(body, target) {
@@ -511,25 +548,12 @@ define(function(require, exports, module) {
       },
 
       autoScale: function() {
-        let scale;
         const here = Physics.distance([0, 0, 0], System.position(game.locus));
+        const transit = this.transit;
 
-        if (this.transit) {
-          scale = Math.max(
-            Physics.distance([0, 0, 0], this.transit.end),
-            Physics.distance([0, 0, 0], this.transit.start),
-            here,
-          );
-        }
-        else if (this.dest) {
-          scale = Math.max(
-            Physics.distance([0, 0, 0], System.position(game.locus)),
-            here,
-          );
-        }
-        else {
-          scale = here;
-        }
+        let scale = transit
+          ? 1.25 * Math.max(here, Physics.distance([0, 0, 0], transit.end))
+          : Math.max(here, Physics.AU);
 
         scale = scale / Physics.AU * 1.25;
         this.setScale(util.R(Math.min(Math.max(scale, SCALE_MIN_AU), SCALE_MAX_AU), 3));
@@ -544,10 +568,11 @@ define(function(require, exports, module) {
       },
 
       center: function() {
-        const body = this.focus || this.dest || this.origin;
+        const body    = this.focus || this.dest || this.origin;
+        const transit = this.transit;
 
-        const p = this.focus   ? this.focus
-                : this.transit ? this.transitCenterPoint()
+        const p = this.focus ? this.focus
+                : transit    ? transit.end
                 : System.position(body);
 
         const z = this.zero;
@@ -594,8 +619,14 @@ define(function(require, exports, module) {
 
   <market-report v-if="show=='market'" :relprices="relprices" :body="dest" class="m-3 p-1 bg-black" />
 
-  <div v-show="show=='map'" v-resizable id="plot-root" class="plot-root p-0 m-0" :style="{'position': 'relative', 'width': width + 'px', 'height': width + 'px'}">
+  <div v-resizable
+       v-show="show=='map'"
+       id="plot-root"
+       class="plot-root p-0 m-0"
+       :style="{'position': 'relative', 'width': width + 'px', 'height': width + 'px'}">
+
     <plot-planet
+      key="sun"
       name="sun"
       :zero="zero"
       :scale="scale"
@@ -636,6 +667,16 @@ define(function(require, exports, module) {
     </plot-point>
 
     <plot-point
+        v-if="transit"
+        key="dest"
+        :pos="point(transit.end)"
+        :max="width"
+        :label="dest + ' [ ' + transit.str_arrival + ' ]'"
+        class="text-success">
+      &target;
+    </plot-point>
+
+    <plot-point
         v-if="focus"
         label="Ship"
         key="focus"
@@ -648,7 +689,17 @@ define(function(require, exports, module) {
     <plot-transit-legend v-if="controls && legend" :dest="dest" :scale="scale" :transit="transit" :fuel="fuel" />
   </div>
 
-  <slider @change="center" id="transit-time" class="my-1 w-100" v-if="dest" slot="def" :value.sync="index" step=1 min=0 :max="transits.length - 1" />
+  <slider
+    v-if="dest"
+    @change="center"
+    id="transit-time"
+    class="my-1"
+    :style="{'width': width + 'px'}"
+    slot="def"
+    :value.sync="index"
+    step=1
+    min=0
+    :max="transits.length- 1" />
 
   <modal v-if="show=='fuel'" @close="show='map'" title="Fuel usage" xclose=true close="Confirm">
     <p>The navigation computer is capable of customizing routes based on optimal fuel usage.</p>
