@@ -170,17 +170,26 @@ define(function(require, exports, module) {
     props: ['name', 'pos', 'zero', 'scale', 'offsetX', 'offsetY', 'max', 'color', 'no_label'],
 
     computed: {
-      body()         { return System.body(this.name) },
-      radius()       { return this.body.radius },
-      diameter()     { return this.radius * 2 },
-      fov()          { return Physics.AU * this.scale },
-      ratio()        { return this.diameter / this.fov },
-      width()        { return Math.max(5, this.max * this.ratio) },
-      isMoon()       { return this.name !== 'sun' && System.central(this.name) !== 'sun' },
-      positionX()    { return scaleX(this.truePosition[0], this.zero, this.scale, this.offsetX) - this.width / 2},
-      positionY()    { return scaleY(this.truePosition[1], this.zero, this.scale, this.offsetY) - this.width / 2},
-      position()     { return [this.positionX, this.positionY] },
-      truePosition() { return this.pos || this.name == 'sun' ? [0, 0] : System.position(this.name); },
+      body()      { return System.body(this.name) },
+      radius()    { return this.body.radius },
+      diameter()  { return this.radius * 2 },
+      fov()       { return Physics.AU * this.scale },
+      ratio()     { return this.diameter / this.fov },
+      width()     { return Math.max(5, this.max * this.ratio) },
+      isMoon()    { return this.name !== 'sun' && System.central(this.name) !== 'sun' },
+      positionX() { return scaleX(this.truePosition[0], this.zero, this.scale, this.offsetX) - this.width / 2},
+      positionY() { return scaleY(this.truePosition[1], this.zero, this.scale, this.offsetY) - this.width / 2},
+      position()  { return [this.positionX, this.positionY] },
+
+      truePosition() {
+        if (this.pos) {
+          return this.pos;
+        } else if (this.name == 'sun') {
+          return [0, 0];
+        } else {
+          return System.position(this.name);
+        }
+      },
 
       showLabel() {
         if (this.no_label) return false;
@@ -323,47 +332,6 @@ define(function(require, exports, module) {
         }
       },
 
-      zero: function() {
-        // subtract two for border width
-        return (this.width - 2) / 2;
-      },
-
-      focusPoint: function() {
-        if (this.focus) {
-          return [
-            this.adjustX(this.focus[0]),
-            this.adjustY(this.focus[1]),
-          ];
-        }
-      },
-
-      bodies: function() {
-        const bodies = {};
-
-        for (let body of System.bodies()) {
-          const central = System.central(body);
-
-          if (central !== 'sun' && !bodies.hasOwnProperty(central)) {
-            bodies[central] = System.position(central);
-          }
-
-          if (!bodies.hasOwnProperty(body)) {
-            bodies[body] = System.position(body);
-          }
-        }
-
-        return Object.keys(bodies);
-      },
-
-      destination: function() {
-        const t = this.transit;
-
-        if (t) {
-          const p = System.position(t.dest, this.target_date);
-          return [this.adjustX(p[0]), this.adjustY(p[1])];
-        }
-      },
-
       transits: function() {
         if (this.dest) {
           if (!this.transit_cache[this.dest]) {
@@ -390,12 +358,20 @@ define(function(require, exports, module) {
         const transit = this.transit;
 
         if (transit) {
-          const path     = [];
-          const filtered = this.filterPath(transit.path.map(p => {return p.position.point}));
-          const points   = this.points(filtered);
+          const points = transit.path.map(p => {return this.point(p.position.point)});
+          const path   = [];
 
-          for (const [turn, point] of points) {
-            path.push(point);
+          let each = 3;
+          while (points.length / each > 100) {
+            each *= 2;
+          }
+
+          for (let i = 0; i < points.length; i += each) {
+            path.push( points[i] );
+          }
+
+          if (points.length % each != 0) {
+            path.push( points[ points.length - 1 ] );
           }
 
           return path;
@@ -425,11 +401,16 @@ define(function(require, exports, module) {
 
     methods: {
       resize:  function() { this.width = plotWidth() },
-      adjustX: function(n, offset=true) { return scaleX(n, this.zero, this.scale, offset ? this.offsetX : 0) },
-      adjustY: function(n, offset=true) { return scaleY(n, this.zero, this.scale, offset ? this.offsetY : 0) },
+      adjustX: function(n, offset=true) { return scaleX(n, this.zero(), this.scale, offset ? this.offsetX : 0) },
+      adjustY: function(n, offset=true) { return scaleY(n, this.zero(), this.scale, offset ? this.offsetY : 0) },
 
-      point: function(pos) {
-        return [ this.adjustX(pos[0]), this.adjustY(pos[1]) ];
+      zero: function() {
+        // subtract two for border width
+        return (this.width - 2) / 2;
+      },
+
+      point: function(pos, offset=true) {
+        return [ this.adjustX(pos[0], offset), this.adjustY(pos[1], offset) ];
       },
 
       points: function*(path) {
@@ -454,6 +435,24 @@ define(function(require, exports, module) {
         }
 
         yield [path.length - 1, path[path.length - 1]];
+      },
+
+      bodies: function() {
+        const bodies = {};
+
+        for (let body of System.bodies()) {
+          const central = System.central(body);
+
+          if (central !== 'sun' && !bodies.hasOwnProperty(central)) {
+            bodies[central] = System.position(central);
+          }
+
+          if (!bodies.hasOwnProperty(body)) {
+            bodies[body] = System.position(body);
+          }
+        }
+
+        return bodies;
       },
 
       setDest: function(body, target) {
@@ -555,7 +554,7 @@ define(function(require, exports, module) {
           ? 1.25 * Math.max(here, Physics.distance([0, 0, 0], transit.end))
           : Math.max(here, Physics.AU);
 
-        scale = scale / Physics.AU * 1.25;
+        scale = scale / Physics.AU;
         this.setScale(util.R(Math.min(Math.max(scale, SCALE_MIN_AU), SCALE_MAX_AU), 3));
       },
 
@@ -575,8 +574,8 @@ define(function(require, exports, module) {
                 : transit    ? transit.end
                 : System.position(body);
 
-        const z = this.zero;
-        const [x, y] = [this.adjustX(p[0], false), this.adjustY(p[1], false)];
+        const z = this.zero();
+        const [x, y] = this.point(p, false);
 
         this.offsetX = z - x;
         this.offsetY = z - y;
@@ -628,7 +627,7 @@ define(function(require, exports, module) {
     <plot-planet
       key="sun"
       name="sun"
-      :zero="zero"
+      :zero="zero()"
       :scale="scale"
       :offsetX="offsetX"
       :offsetY="offsetY"
@@ -636,10 +635,11 @@ define(function(require, exports, module) {
       color="yellow"
       no_label=true />
 
-    <plot-planet v-for="name of bodies"
+    <plot-planet v-for="(pos, name) of bodies()"
+      :pos="pos"
       :key="name"
       :name="name"
-      :zero="zero"
+      :zero="zero()"
       :scale="scale"
       :offsetX="offsetX"
       :offsetY="offsetY"
@@ -671,8 +671,7 @@ define(function(require, exports, module) {
         key="dest"
         :pos="point(transit.end)"
         :max="width"
-        :label="dest + ' [ ' + transit.str_arrival + ' ]'"
-        class="text-success">
+        class="text-warning">
       &target;
     </plot-point>
 
@@ -680,7 +679,7 @@ define(function(require, exports, module) {
         v-if="focus"
         label="Ship"
         key="focus"
-        :pos="focusPoint"
+        :pos="point(focus)"
         :max="width"
         class="text-success">
       &#9652
