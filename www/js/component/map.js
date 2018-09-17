@@ -167,7 +167,7 @@ define(function(require, exports, module) {
 
 
   Vue.component('plot-planet', {
-    props: ['name', 'pos', 'zero', 'scale', 'offsetX', 'offsetY', 'max', 'color', 'no_label'],
+    props: ['name', 'pos', 'zero', 'scale', 'offsetX', 'offsetY', 'max', 'color', 'no_label', 'yes_label'],
 
     computed: {
       body()      { return System.body(this.name) },
@@ -192,8 +192,9 @@ define(function(require, exports, module) {
       },
 
       showLabel() {
-        if (this.no_label) return false;
-        if (this.isMoon)   return this.scale < 0.25;
+        if (this.yes_label) return true;
+        if (this.no_label)  return false;
+        if (this.isMoon)    return this.scale < 0.25;
         const orbit = Physics.distance([0, 0, 0], this.truePosition) / Physics.AU;
         return this.scale / 6 < orbit;
       },
@@ -326,6 +327,12 @@ define(function(require, exports, module) {
     },
 
     computed: {
+      centerPoint: function() {
+        return this.focus
+            || this.transitCenterPoint()
+            || [0, 0, 0];
+      },
+
       planet: function() {
         if (this.dest) {
           return game.planets[this.dest];
@@ -361,9 +368,9 @@ define(function(require, exports, module) {
           const points = transit.path.map(p => {return this.point(p.position.point)});
           const path   = [];
 
-          let each = 3;
+          let each = 1;
           while (points.length / each > 100) {
-            each *= 2;
+            each += 3;
           }
 
           for (let i = 0; i < points.length; i += each) {
@@ -546,37 +553,37 @@ define(function(require, exports, module) {
         this.initY   = this.offsetY;
       },
 
-      autoScale: function() {
-        const here = Physics.distance([0, 0, 0], System.position(game.locus));
-        const transit = this.transit;
-
-        let scale = transit
-          ? 1.25 * Math.max(here, Physics.distance([0, 0, 0], transit.end))
-          : Math.max(here, Physics.AU);
-
-        scale = scale / Physics.AU;
-        this.setScale(util.R(Math.min(Math.max(scale, SCALE_MIN_AU), SCALE_MAX_AU), 3));
-      },
-
       transitCenterPoint() {
         const transit = this.transit;
 
         if (transit) {
           return transit.path[Math.ceil(transit.turns / 2)].position.point;
         }
+
+        return;
+      },
+
+      autoScale: function() {
+        const center = this.centerPoint;
+        const rels = [
+          Physics.AU,
+          Physics.distance(center, [0, 0, 0]),
+          Physics.distance(center, System.position(this.origin)),
+        ];
+
+        if (this.transit) {
+          for (const p of this.transit.path) {
+            rels.push( Physics.distance(center, p.position.point) );
+          }
+        }
+
+        const scale = Math.max(...rels) / Physics.AU * 1.2;
+        this.setScale(util.R(Math.min(Math.max(scale, SCALE_MIN_AU), SCALE_MAX_AU), 3));
       },
 
       center: function() {
-        const body    = this.focus || this.dest || this.origin;
-        const transit = this.transit;
-
-        const p = this.focus ? this.focus
-                : transit    ? transit.end
-                : System.position(body);
-
         const z = this.zero();
-        const [x, y] = this.point(p, false);
-
+        const [x, y] = this.point(this.centerPoint, false);
         this.offsetX = z - x;
         this.offsetY = z - y;
         this.initX   = this.offsetX;
@@ -644,6 +651,7 @@ define(function(require, exports, module) {
       :offsetX="offsetX"
       :offsetY="offsetY"
       :max="width"
+      :yes_label="name == origin || name == dest"
       @click="setDest(name)" />
 
     <plot-point v-for="(p, idx) in path"
