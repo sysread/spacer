@@ -12,11 +12,15 @@ define(function(require, exports, module) {
       this.pos    = {}; // position cache
     }
 
+    get_date() {
+      return this.system.time.getDate();
+    }
+
     set_date(date) {
       const dt = new Date(date + ' 00:00:00');
       const ts = dt.valueOf();
 
-      if (dt.getDate() !== this.system.time.getDate()) {
+      if (dt.getDate() !== this.get_date()) {
         this.cache = {};
 
         for (const key of Object.keys(this.pos)) {

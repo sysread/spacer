@@ -22,7 +22,7 @@ define(function(require, exports, module) {
     const frameTop  = elt.getBoundingClientRect().top + window.scrollY;
     const statusbar = $('#spacer-status').outerHeight();
     const nav       = $('#spacer-navbar').outerHeight();
-    const controls  = $('#map-controls').outerHeight();
+    const controls  = $('#map-controls').outerHeight() || 0;
     const slider    = $('#transit-time').outerHeight() || 0;
     const height    = window.innerHeight - frameTop - statusbar - nav - controls - slider;
     const width     = $('.plot-root').parent().width();
@@ -176,11 +176,11 @@ define(function(require, exports, module) {
       fov()          { return Physics.AU * this.scale },
       ratio()        { return this.diameter / this.fov },
       width()        { return Math.max(5, this.max * this.ratio) },
-      truePosition() { return this.pos ? this.pos : this.name == 'sun' ? [0, 0] : System.position(this.name) },
+      isMoon()       { return this.name !== 'sun' && System.central(this.name) !== 'sun' },
       positionX()    { return scaleX(this.truePosition[0], this.zero, this.scale, this.offsetX) - this.width / 2},
       positionY()    { return scaleY(this.truePosition[1], this.zero, this.scale, this.offsetY) - this.width / 2},
       position()     { return [this.positionX, this.positionY] },
-      isMoon()       { return this.name !== 'sun' && System.central(this.name) !== 'sun' },
+      truePosition() { return this.pos || this.name == 'sun' ? [0, 0] : System.position(this.name); },
 
       showLabel() {
         if (this.no_label) return false;
@@ -214,7 +214,7 @@ define(function(require, exports, module) {
 
 
   Vue.component('plot', {
-    props: ['controls', 'plan'],
+    props: ['controls', 'plan', 'focus'],
 
     data: function() {
       window.addEventListener('resize', this.resize);
@@ -227,12 +227,15 @@ define(function(require, exports, module) {
         dests:     dests,                 // list of destination names
         navcomp:   new NavComp,           // nav computer
         origin:    game.locus,            // name of initial body for transit
-        dest:      "",                    // name of destination body for transit
+        dest:      this.plan              // name of destination body for transit
+                     ? this.plan.dest
+                     : "",
         index:     0,                     // zero-based index of selected transit in transit list (computed 'transits')
         show_all:  false,                 // flag passed to NavComp to include all routes rather than skipping inefficient ones
         max_fuel:  game.player.ship.fuel, // contrains fuel usage in NavComp calculations
         fuel:      game.player.ship.fuel, // player-supplied constraint for fuel usage
         show:      'map',                 // currently displayed view
+        legend:    false,                 // toggle visibility of legend
         relprices: false,                 // for market prices, display relative prices when true
         offsetX:   0,                     // offset from zero-zero point when panning map
         offsetY:   0,                     // offset from zero-zero point when panning map
@@ -324,34 +327,17 @@ define(function(require, exports, module) {
         return (this.width - 2) / 2;
       },
 
-      positions: function() {
-        const bodies = {};
-
-        for (let body of System.bodies()) {
-          const central = System.central(body);
-
-          if (central !== 'sun' && !bodies.hasOwnProperty(central)) {
-            bodies[central] = System.position(central);
-          }
-
-          if (!bodies.hasOwnProperty(body)) {
-            bodies[body] = System.position(body);
-          }
+      focusPoint: function() {
+        if (this.focus) {
+          return [
+            this.adjustX(this.focus[0]),
+            this.adjustY(this.focus[1]),
+          ];
         }
-
-        return bodies;
       },
 
       bodies: function() {
-        const bodies = {};
-        const positions = this.positions;
-
-        for (const body of Object.keys(positions)) {
-          const p = positions[body];
-          bodies[body] = [this.adjustX(p[0]), this.adjustY(p[1])];
-        }
-
-        return bodies;
+        return System.bodies();
       },
 
       destination: function() {
@@ -392,12 +378,8 @@ define(function(require, exports, module) {
         const transit = this.transit;
 
         if (transit) {
-          return transit.path.map(p => {
-            return [
-              this.adjustX(p.position.x),
-              this.adjustY(p.position.y),
-            ];
-          });
+          return this.filterPath(transit.path.map(p => {return p.position.toArray()}))
+                     .map(p => {return [this.adjustX(p[0]), this.adjustY(p[1])]});
         }
       },
 
@@ -405,40 +387,43 @@ define(function(require, exports, module) {
         const transit = this.transit;
 
         if (transit) {
-          const min   = this.scale * Physics.AU / 30;
-          const orbit = System.orbit_by_turns(transit.dest);
-          const path  = [];
-          let mark    = 0;
-
-          path.push(orbit[0]);
-
-          for (let i = 1; i < transit.turns - 1; ++i) {
-            // Distance from last visible plotted point is greater than minimum
-            // resolution.
-            if (Physics.distance(path[mark], orbit[i]) > min) {
-              path.push(orbit[i]);
-              ++mark;
-            }
-          }
-
-          path.push(orbit[transit.turns - 1]);
-
-          return path.map(p => {
-            return [
-              this.adjustX(p[0]),
-              this.adjustY(p[1]),
-            ];
-          });
+          return this.filterPath(System.orbit_by_turns(transit.dest))
+                     .map(p => {return [this.adjustX(p[0]), this.adjustY(p[1])]});
         }
       },
     },
 
     methods: {
-      resize: function() { this.width = plotWidth() },
+      resize:  function() { this.width = plotWidth() },
       adjustX: function(n, offset=true) { return scaleX(n, this.zero, this.scale, offset ? this.offsetX : 0) },
       adjustY: function(n, offset=true) { return scaleY(n, this.zero, this.scale, offset ? this.offsetY : 0) },
 
+      filterPath: function(path) {
+        const min   = this.scale * Physics.AU / 30;
+        const parts = [];
+        let mark    = 0;
+
+        parts.push(path[0]);
+
+        for (let i = 1; i < path.length - 1; ++i) {
+          // Distance from last visible plotted point is greater than minimum
+          // resolution.
+          if (Physics.distance(parts[mark], path[i]) > min) {
+            parts.push(path[i]);
+            ++mark;
+          }
+        }
+
+        parts.push(path[path.length - 1]);
+
+        return parts;
+      },
+
       setDest: function(body, target) {
+        if (this.plan) {
+          return;
+        }
+
         window.setTimeout(() => {this.resize()}, 500);
 
         if (body) {
@@ -530,7 +515,7 @@ define(function(require, exports, module) {
         const here = Physics.distance([0, 0, 0], System.position(game.locus));
 
         if (this.transit) {
-          scale = 1.25 * Math.max(
+          scale = Math.max(
             Physics.distance([0, 0, 0], this.transit.end),
             Physics.distance([0, 0, 0], this.transit.start),
             here,
@@ -551,19 +536,19 @@ define(function(require, exports, module) {
       },
 
       transitCenterPoint() {
-        return Physics.segment(
-          this.transit.start,
-          this.transit.end,
-          Physics.distance(this.transit.start, this.transit.end) / 2
-        );
+        const transit = this.transit;
+
+        if (transit) {
+          return transit.path[Math.ceil(transit.turns / 2)].position.toArray();
+        }
       },
 
       center: function() {
-        const body = this.dest || this.origin;
+        const body = this.focus || this.dest || this.origin;
 
-        const p = this.transit
-          ? this.transitCenterPoint()
-          : System.position(body);
+        const p = this.focus   ? this.focus
+                : this.transit ? this.transitCenterPoint()
+                : System.position(body);
 
         const z = this.zero;
         const [x, y] = [this.adjustX(p[0], false), this.adjustY(p[1], false)];
@@ -599,6 +584,7 @@ define(function(require, exports, module) {
       <btn v-if="!dest" @click="setDest(dests[0], true)">Destination</btn>
       <btn v-for="(name, idx) of dests" :key="name" v-if="name == dest" @click="setDest(dests[idx + 1], true)">{{name|caps}}</btn>
       <btn :disabled="!dest" @click="show='fuel'">Fuel</btn>
+      <btn @click="legend=!legend" class="text-warning">&#9919;</btn>
       <btn @click="resetScale()" class="text-warning" title="Reset map scale">&#9055;</btn>
       <btn @click="center()" class="text-warning font-weight-bold" title="Center map">&target;</btn>
     </div>
@@ -617,11 +603,9 @@ define(function(require, exports, module) {
       :offsetY="offsetY"
       :max="width"
       color="yellow"
-      no_label=true
-    />
+      no_label=true />
 
-    <plot-planet v-for="(pos, name) of bodies"
-      v-if="name != dest"
+    <plot-planet v-for="name of bodies"
       :key="name"
       :name="name"
       :zero="zero"
@@ -629,16 +613,15 @@ define(function(require, exports, module) {
       :offsetX="offsetX"
       :offsetY="offsetY"
       :max="width"
-      @click="setDest(name)"
-    />
+      @click="setDest(name)" />
 
     <plot-point v-for="(p, idx) in path"
         :key="'path-' + idx"
         v-if="path"
         :pos="p"
         :max="width"
-        style="font-size:0.5+'rem'"
-        :class="this.plan ? 'text-muted' : 'text-success'">
+        :style="{'font-size': 0.75+'rem'}"
+        :class="plan ? 'text-muted' : 'text-success'">
       .
     </plot-point>
 
@@ -647,23 +630,22 @@ define(function(require, exports, module) {
         v-if="targetPath"
         :pos="p"
         :max="width"
-        style="font-size:0.25+'rem'"
+        :style="{'font-size': 0.75+'rem'}"
         class="text-danger">
       .
     </plot-point>
 
-    <plot-planet
-      v-if="transit"
-      :name="dest"
-      :zero="zero"
-      :scale="scale"
-      :offsetX="offsetX"
-      :offsetY="offsetY"
-      :max="width"
-      :pos="transit.end"
-    />
+    <plot-point
+        v-if="focus"
+        label="Ship"
+        key="focus"
+        :pos="focusPoint"
+        :max="width"
+        class="text-success">
+      &#9652
+    </plot-point>
 
-    <plot-transit-legend :dest="dest" :scale="scale" :transit="transit" :fuel="fuel" />
+    <plot-transit-legend v-if="controls && legend" :dest="dest" :scale="scale" :transit="transit" :fuel="fuel" />
   </div>
 
   <slider @change="center" id="transit-time" class="my-1 w-100" v-if="dest" slot="def" :value.sync="index" step=1 min=0 :max="transits.length - 1" />
@@ -680,11 +662,12 @@ define(function(require, exports, module) {
       </btn>
     </def>
 
-    <def v-if="dest && !show_all" term="Fuel" split=3 class="p-0 m-0">
+    <def v-if="!plan && dest && !show_all" term="Fuel" split=3 class="p-0 m-0">
       <slider slot="def" :value.sync="fuel" step=1 min=1 :max="max_fuel" @change="onConstraintChange()" />
     </def>
   </modal>
 </div>
     `,
   });
+
 });

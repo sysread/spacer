@@ -9,7 +9,6 @@ define(function(require, exports, module) {
 
   require('component/common');
   require('component/card');
-  require('component/plot');
   require('component/combat');
 
   Vue.component('transit', {
@@ -151,7 +150,7 @@ define(function(require, exports, module) {
         </table>
       </cell>
       <cell size=8 brkpt="sm" y=0 class="p-0 m-0">
-        <transit-plot :plan="plan" />
+        <plot :controls="false" :plan="plan" :focus="plan.coords" />
       </cell>
     </row>
 
@@ -165,151 +164,6 @@ define(function(require, exports, module) {
     />
   </card>
 </div>
-    `,
-  });
-
-  Vue.component('transit-plot', {
-    props: ['plan'],
-    data: function() {
-      return {
-        dist:   this.plan.dist,
-        pretty: this.plan.prettyPath,
-      };
-    },
-    directives: {
-      'square': {
-        inserted: function(el, binding, vnode) {
-          const width    = el.clientWidth;
-          const frameTop = Math.ceil(el.getBoundingClientRect().top + window.scrollY);
-          const maxY     = window.innerHeight - frameTop - document.getElementById('spacer-navbar').offsetHeight;
-          const len      = Math.ceil(Math.min(width, maxY));
-          el.setAttribute('style', `position: relative; height: ${len}px; width: ${len}px`);
-        },
-      },
-    },
-    computed: {
-      coords: function() { return this.plan.coords },
-      orig:   function() { return game.planets[this.plan.origin] },
-      dest:   function() { return game.planets[this.plan.dest] },
-      turn:   function() { return this.plan.currentTurn },
-    },
-    methods: {
-      extras: function() {
-        // Blacklist primary bodies from appearing in this set
-        const skip = {};
-        skip[this.orig.body] = true; // origin
-        skip[this.dest.body] = true; // destination
-        if (this.orig.central !== 'sun') skip[this.orig.central] = true; // origin is the body's moon
-        if (this.dest.central !== 'sun') skip[this.dest.central] = true; // destination is the body's mooon
-
-        const extras = {};
-
-        for (const p of Object.values(game.planets)) {
-          if (skip[p.body] || skip[p.central]) {
-            continue;
-          }
-
-          // For satellites, show the central planet
-          if (p.central !== 'sun') {
-            // ...but only one time
-            if (!extras.hasOwnProperty(p.central)) {
-              extras[p.central] = system.position(p.central);
-            }
-          }
-          // Otherwise, show the planet itself
-          else {
-            extras[p.body] = p.position;
-          }
-        }
-
-        return extras;
-      },
-
-      max: function() {
-        const ship = Physics.distance(this.coords, [0, 0, 0]) * 1.2;
-        const orig = Physics.distance(this.orig.position, [0, 0, 0]) * 1.2;
-        const dest = Physics.distance(this.dest.position, [0, 0, 0]) * 1.2;
-        return Math.max(Physics.AU * 1.5, ship, Math.min(orig, dest));
-      },
-
-      alpha: function(point) {
-        const scale = Math.min(5, Math.ceil(this.max() / Physics.AU / 5));
-        const au = Physics.distance(this.coords, point) / Physics.AU;
-        return util.R(Math.min(1, scale / Math.max(au, scale)), 2);
-      },
-
-      width: function() {
-        return this.$el ? this.$el.clientWidth : 0;
-      },
-
-      zero: function() {
-        return Math.ceil(this.width() / 2);
-      },
-
-      adjust: function(n) {
-        const zero = this.zero();
-        const pct  = n / this.max();
-        return Math.floor(zero + (zero * pct));
-      },
-
-      position: function(p) {
-        return [this.adjust(p[0]), this.adjust(p[1])];
-      },
-
-      ticks: function() {
-        const numTicks = Math.floor(this.max() / Physics.AU);
-        const ticks = [];
-
-        for (let i = 1; i <= numTicks; ++i) {
-          ticks.push([i, this.position([0, Physics.AU *  i])]);
-          ticks.push([i, this.position([0, Physics.AU * -i])]);
-          ticks.push([i, this.position([Physics.AU *  i, 0])]);
-          ticks.push([i, this.position([Physics.AU * -i, 0])]);
-        }
-
-        return ticks;
-      },
-    },
-    template: `
-<div v-square class="plot-root p-0 m-0" style="position:relative">
-  <transit-point v-for="(pt, body) in extras()" :key="body" :x="adjust(pt[0])" :y="adjust(pt[1])" :alpha="alpha(pt)" :label="body" sm=1 :max="width()">&bull;</transit-point>
-  <transit-point class="text-info" :x="adjust(orig.position[0])" :y="adjust(orig.position[1])" :label="orig.body" :max="width()">&bull;</transit-point>
-  <transit-point class="text-danger" :x="adjust(dest.position[0])" :y="adjust(dest.position[1])" :label="dest.body" :max="width()">&#8982;</transit-point>
-  <transit-point class="text-warning" :x="adjust(0)" :y="adjust(0)" :max="width()">&bull;</transit-point>
-  <transit-point class="text-success" :x="adjust(coords[0])" :y="adjust(coords[1])" :max="width()">&#9652</transit-point>
-
-  <transit-point v-for="(tick, idx) in ticks()" :key="'tick-' + idx"
-      :x="tick[1][0]" :y="tick[1][1]" :max="width()" sm=1
-      style="font-size:0.5rem" class="text-secondary">
-    .
-  </transit-point>
-
-  <transit-point v-for="(p, idx) in pretty" :key="'path-' + idx"
-      :v-if="idx % 9 == 0"
-      :x="adjust(p.x)" :y="adjust(p.y)" :sm=1 :max="width()"
-      style="font-size:0.25rem" :class="idx < turn ? 'text-secondary' : 'text-success'" :idx="idx">
-    .
-  </transit-point>
-</div>
-    `,
-  });
-
-  Vue.component('transit-point', {
-    props: ['x', 'y', 'label', 'sm', 'alpha', 'max'],
-    computed: {
-      isVisible: function() {
-        if (this.x <= 0) return false;
-        if (this.y <= 0) return false;
-        if (this.x >= this.max) return false;
-        if (this.y >= this.max) return false;
-        return true;
-      },
-    },
-    template: `
-<span v-show="isVisible" class="plot-point" :class="{big: !sm}" :style="{left: x + 'px', top: y + 'px'}">
-  <slot />
-  <badge v-if="label" class="m-1" :style="{opacity: isVisible ? alpha : 0}">{{label|caps}}</badge>
-</span>
     `,
   });
 
