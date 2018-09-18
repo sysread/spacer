@@ -11,10 +11,12 @@ define(function(require, exports, module) {
   const SCALE_MIN_AU     = 0.00001;
   const SCALE_MAX_AU     = 35;
 
+  require('component/commerce');
   require('component/common');
   require('component/exchange');
+  require('component/modal');
   require('component/summary');
-  require('component/commerce');
+  require('component/card');
 
   function plotWidth() {
     const elt = document.getElementById('map-root');
@@ -90,21 +92,21 @@ define(function(require, exports, module) {
     template: `
 <table v-if="transit" class="bg-black w-100 table table-sm" style="position:relative;z-index:10;font-size:0.75rem;font-family:mono">
   <tr>
-    <th>Field of view</th>
+    <th>FoV</th>
     <td>{{fov}}</td>
-    <th>Current location</th>
+    <th>Loc</th>
     <td>{{current_loc}}</td>
   </tr>
   <tr>
-    <th>Dist.</th>
+    <th>Dist</th>
     <td>{{transit_dist|R(2)|unit('AU')}}</td>
     <th>Time</th>
     <td>{{transit_time[0]}} days, {{transit_time[1]}} hours</td>
   </tr>
   <tr>
-    <th>Max vel.</th>
+    <th>V<sub>max</sub></th>
     <td>{{transit_maxv|R(2)|unit('km/s')}}</td>
-    <th>Max accel.</th>
+    <th>Accel</th>
     <td>{{transit_acc}}</td>
   </tr>
   <tr>
@@ -223,6 +225,220 @@ define(function(require, exports, module) {
   });
 
 
+  Vue.component('dest-picker', {
+    data: function() {
+      return {
+        selected: null,
+      };
+    },
+
+    computed: {
+      bodies() { return Object.keys(data.bodies) },
+    },
+
+    methods: {
+      name(b)    { return System.name(b)           },
+      faction(b) { return System.faction(b)        },
+      central(b) { return System.central(b)        },
+      kind(b)    { return System.kind(b)           },
+      isMoon(b)  { return System.type(b) == 'moon' },
+      isHere(b)  { return game.locus == b          },
+
+      dist(b) {
+        const p0 = System.position(game.locus);
+        const p1 = System.position(b);
+        const d  = Physics.distance(p0, p1);
+
+        if (d < Physics.AU * 0.01) {
+          return util.csn(util.R(d / 1000)) + ' km';
+        } else {
+          return util.R(d / Physics.AU, 2) + ' AU';
+        }
+      },
+
+      style(b) {
+        let color;
+
+        switch (this.faction(b)) {
+          case 'UN':     color = 'text-info';      break;
+          case 'MC':     color = 'text-danger';    break;
+          case 'JFT':    color = 'text-warning';   break;
+          case 'TRANSA': color = 'text-secondary'; break;
+          case 'CERES':  color = 'text-success';   break;
+          default:       color = '';               break;
+        }
+
+        return color + ' text-left';
+      }
+    },
+
+    template: `
+<modal @close="$emit('close', selected)" title="Select destination" xclose=true close="Choose">
+  <btn v-for="body of bodies" :key="body" @click="selected=body" block=1 close=1 :disabled="isHere(body) || selected" :class="style(body)">
+    {{name(body)}}
+    <badge right=1 class="ml-1">{{dist(body)}}</badge>
+    <badge right=1 class="ml-1 d-none d-sm-inline">{{faction(body)}}</badge>
+    <badge right=1 v-if="isMoon(body)" class="ml-1 d-none d-sm-inline">{{kind(body)}}</badge>
+  </btn>
+</modal>
+    `,
+  });
+
+
+
+  Vue.component('focus-picker', {
+    props: ['dest', 'orig', 'init-fov'],
+
+    data: function() {
+      return {
+        focus: null,
+        fov:   this.initFov,
+      };
+    },
+
+    computed: {
+      bodies()  { return Object.keys(data.bodies) },
+      min_fov() { return 0.1 },
+      max_fov() { return SCALE_MAX_AU },
+      result()  { return {focus: this.focus, fov: this.fov} },
+    },
+
+    template: `
+<modal @close="$emit('close', result)" title="Map view controls" xclose=true close="Choose">
+  <def split=5 class="p-0 m-0">
+    <span slot="term">
+      Field of view: {{ fov|R(1) }} AU
+    </span>
+    <span slot="def">
+      <slider :value.sync="fov" step=0.1 :min="min_fov" :max="max_fov" />
+    </span>
+  </def>
+
+  <card title="Focus map center">
+    <card-text>
+      <btn :muted="focus!='path'" block=1 class="text-left m-1" @click="focus='path'" v-if="dest">Transit Path</btn>
+      <btn :muted="body!=focus" class="text-left col-5 m-1" @click="focus=body" v-for="body in bodies" :key="body">
+        {{body|caps}}
+        <span v-if="body == dest" class="text-warning">&target;</span>
+        <span v-else-if="body == orig" class="text-success">&#9055;</span>
+      </btn>
+    </card-text>
+  </card>
+</modal>
+    `,
+  });
+
+  Vue.component('plot-menu', {
+    props: ['dest', 'fov', 'legend', 'relprices', 'show_all', 'fuel'],
+
+    data: function() {
+      return {
+        show:   null,
+        result: {
+          view:       'map',
+          relprices:  this.relprices,
+          dest:       this.dest,
+          focus:      null,
+          fov:        this.fov,
+          legend:     this.legend,
+          all_routes: this.show_all,
+          fuel:       this.fuel,
+        },
+      };
+    },
+
+    computed: {
+      player()       { return game.player                                                    },
+      playerHome()   { return game.planets[this.player.home]                                 },
+      playerDeltaV() { return util.R(this.player.maxAcceleration()  / Physics.G, 3)          },
+      shipDeltaV()   { return util.R(this.player.shipAcceleration() / Physics.G, 3)          },
+      shipMass()     { return util.csn(util.R(this.player.ship.currentMass()))               },
+      shipFuelMass() { return util.R(this.player.ship.fuel, 3)                               },
+      shipBurnTime() { return util.csn(this.player.ship.maxBurnTime() * data.hours_per_turn) },
+      playerLocus()  { return game.locus                                                     },
+      max_fuel()     { return game.player.ship.fuel                                          },
+      origin()       { return game.locus                                                     },
+
+      destination() {
+        if (this.result.dest)
+          return System.short_name(this.result.dest);
+
+        if (this.dest)
+          return System.short_name(this.dest);
+
+        return;
+      }
+    },
+
+    methods: {
+      setDest(dest) {
+        this.show = null;
+
+        if (dest) {
+          this.result.dest = dest;
+          this.result.focus = 'path';
+          this.result.fov = null;
+        }
+      },
+
+      setFocus(opt) {
+        this.show = null;
+        this.result.fov = opt.fov;
+
+        if (opt.focus) {
+          this.result.focus = opt.focus;
+        }
+      },
+    },
+
+    template: `
+<div>
+  <modal title="NavComp Controls" close="Done" @close="$emit('close', result)">
+    <p>Your navigational computer automatically calculates the optimal trajectory from your current location to the other settlements in the system.</p>
+    <p>Being born on {{playerHome.name}}, your body is adapted to {{playerHome.gravity|R(3)}}G, allowing you to endure a sustained burn of {{playerDeltaV}}G.</p>
+    <p>Your ship is capable of {{shipDeltaV}}Gs of acceleration with her current load out ({{shipMass}} metric tonnes of materiél). With {{shipFuelMass}} tonnes of fuel, your ship has a maximum burn time of {{shipBurnTime}} hours at maximum thrust.</p>
+
+    <btn block=1 close=1 @click="result.view='map'">Show system map</btn>
+
+    <btn block=1 @click="show='dest'">Set destination</btn>
+
+    <btn block=1 close=1 v-if="dest || result.dest" @click="result.view='info'">Information about {{destination}}</btn>
+    <btn block=1 close=1 v-if="dest || result.dest" @click="result.relprices=false;result.view='market'">Relative market prices on {{destination}}</btn>
+    <btn block=1 close=1 v-if="dest || result.dest" @click="result.relprices=true;result.view='market'">Absolute market prices on {{destination}}</btn>
+
+    <btn block=1 close=1 v-if="result.legend" @click="result.legend=false">Map legend enabled</btn>
+    <btn block=1 close=1 v-else @click="result.legend=true">Map legend disabled</btn>
+
+    <btn block=1 @click="show='fuel'">Fuel consumption</btn>
+
+    <btn block=1 @click="show='focus'">Map view controls</btn>
+  </modal>
+
+  <modal v-if="show=='fuel'" @close="show=null" title="Fuel usage" xclose=true close="Confirm">
+    <p>The navigation computer is capable of customizing routes based on optimal fuel usage.</p>
+
+    <p v-if="!result.all_routes">It is currently configured to build trajectories requiring no more than {{result.fuel|R(2)}} tonnes of fuel.</p>
+    <p v-else>It is currently configured to show all trajectories.</p>
+
+    <def term="Fuel" split=3 class="p-0 m-0">
+      <btn slot="def" @click="result.all_routes=!result.all_routes">
+        <span v-if="result.all_routes">All routes</span>
+        <span v-else>Fuel constrained</span>
+      </btn>
+    </def>
+
+    <def v-if="!result.all_routes" term="Fuel" split=3 class="p-0 m-0">
+      <slider slot="def" :value.sync="result.fuel" step=1 min=1 :max="max_fuel" />
+    </def>
+  </modal>
+
+  <dest-picker  v-if="show=='dest'"  @close="setDest" />
+  <focus-picker v-if="show=='focus'" @close="setFocus" :dest="result.dest || dest" :orig="origin" :init-fov="result.fov" />
+</div>
+    `,
+  });
+
+
   Vue.component('plot', {
     props: ['controls', 'plan', 'focus'],
 
@@ -244,9 +460,9 @@ define(function(require, exports, module) {
         show_all:  false,                 // flag passed to NavComp to include all routes rather than skipping inefficient ones
         max_fuel:  game.player.ship.fuel, // contrains fuel usage in NavComp calculations
         fuel:      game.player.ship.fuel, // player-supplied constraint for fuel usage
-        show:      'map',                 // currently displayed view
+        show:      'menu',                // currently displayed view
+        relprices: false,                 // toggle relative prices in market view
         legend:    true,                  // toggle visibility of legend
-        relprices: false,                 // for market prices, display relative prices when true
         offsetX:   0,                     // offset from zero-zero point when panning map
         offsetY:   0,                     // offset from zero-zero point when panning map
         initX:     0,                     // initial position when panning
@@ -328,9 +544,15 @@ define(function(require, exports, module) {
 
     computed: {
       centerPoint: function() {
-        return this.focus
-            || this.transitCenterPoint()
-            || [0, 0, 0];
+        if (this.focus) {
+          return this.focus;
+        }
+
+        if (this.transit) {
+          return this.transitCenterPoint();
+        }
+
+        return [0, 0, 0];
       },
 
       planet: function() {
@@ -340,13 +562,14 @@ define(function(require, exports, module) {
       },
 
       transits: function() {
-        if (this.dest) {
-          if (!this.transit_cache[this.dest]) {
-            this.transit_cache[this.dest] = this.navcomp.getTransitsTo(this.dest);
-          }
+        if (!this.dest) return;
+        if (!this.show == 'map') return;
 
-          return this.transit_cache[this.dest];
+        if (!this.transit_cache[this.dest]) {
+          this.transit_cache[this.dest] = this.navcomp.getTransitsTo(this.dest);
         }
+
+        return this.transit_cache[this.dest];
       },
 
       transit: function() {
@@ -407,6 +630,10 @@ define(function(require, exports, module) {
     },
 
     methods: {
+      setView: function(view) {
+        this.show = view;
+      },
+
       resize:  function() { this.width = plotWidth() },
       adjustX: function(n, offset=true) { return scaleX(n, this.zero(), this.scale, offset ? this.offsetX : 0) },
       adjustY: function(n, offset=true) { return scaleY(n, this.zero(), this.scale, offset ? this.offsetY : 0) },
@@ -463,6 +690,8 @@ define(function(require, exports, module) {
       },
 
       setDest: function(body, target) {
+        this.show = 'map';
+
         if (this.plan) {
           return;
         }
@@ -565,6 +794,7 @@ define(function(require, exports, module) {
 
       autoScale: function() {
         const center = this.centerPoint;
+
         const rels = [
           Physics.AU,
           Physics.distance(center, [0, 0, 0]),
@@ -590,40 +820,91 @@ define(function(require, exports, module) {
         this.initY   = this.offsetY;
       },
 
+      setTarget: function(focus, fov) {
+        const center = focus == 'path' ? this.transitCenterPoint()
+                     : focus == 'sun'  ? [0, 0, 0]
+                     : focus           ? System.position(focus)
+                                       : System.position(game.locus);
+
+        const point = this.point(center, false);
+        const zero  = this.zero();
+
+        this.initX = this.offsetX = zero - point[0];
+        this.initY = this.offsetY = zero - point[1];
+
+        if (fov) {
+          this.setScale(util.R(Math.min(Math.max(fov, SCALE_MIN_AU), SCALE_MAX_AU), 3));
+        } else {
+          this.autoScale();
+        }
+      },
+
       beginTransit: function() {
         $('#spacer').data('info', this.transit);
         game.open('transit');
         $('#spacer').data('state', 'transit');
       },
+
+      onMenuClosed: function(opt) {
+        if (opt.all_routes != this.all_routes) {
+          this.show_all = opt.all_routes;
+          this.fuel     = opt.fuel;
+          this.index    = 0;
+          this.navcomp  = new NavComp(this.fuel, this.show_all);
+        }
+
+        if (this.dest != opt.dest) {
+          this.setDest(opt.dest, !!opt.focus);
+        }
+
+        this.setTarget(opt.focus, opt.fov);
+
+        this.show = opt.view;
+        this.legend = opt.legend;
+        this.relprices = opt.relprices;
+      },
     },
 
     template: `
-<div id="map-root">
-  <div v-if="controls" id="map-controls" class="btn-toolbar justify-content-between" :style="{'width': width + 'px'}">
-    <div class="btn-group btn-group-sm">
-      <btn :disabled="!dest" @click="show='map'">&#8982;</btn>
-      <btn :disabled="!dest" @click="show='info'">?</btn>
-      <btn :disabled="!dest" @click="show='market';relprices=false">$</btn>
-      <btn :disabled="!dest" @click="show='market';relprices=true">$&plusmn;</btn>
-    </div>
+<card id="map-root" nopad=1>
+  <card-header>
+    <h3>
+      NavComp
+      <btn @click="beginTransit" v-if="transit">Engage</btn>
+      <btn @click="show='menu'"  v-if="controls">Menu</btn>
+    </h3>
+  </card-header>
 
-    <div class="btn-group btn-group-sm">
-      <btn :disabled="!transit" @click="beginTransit">Engage</btn>
-    </div>
 
-    <div class="btn-group btn-group-sm">
-      <btn v-if="!dest" @click="setDest(dests[0], true)">Destination</btn>
-      <btn v-for="(name, idx) of dests" :key="name" v-if="name == dest" @click="setDest(dests[idx + 1], true)">{{name|caps}}</btn>
-      <btn :disabled="!dest" @click="show='fuel'">Fuel</btn>
-      <btn @click="legend=!legend" class="text-warning">&#9919;</btn>
-      <btn @click="resetScale()" class="text-warning" title="Reset map scale">&#9055;</btn>
-      <btn @click="center()" class="text-warning font-weight-bold" title="Center map">&target;</btn>
-    </div>
-  </div>
+  <plot-menu
+    v-if="show=='menu'"
+    @close="onMenuClosed"
+    :dest="dest"
+    :fov="scale"
+    :legend="legend"
+    :relprices="relprices"
+    :show_all="show_all"
+    :fuel="fuel" />
 
-  <planet-summary v-if="show=='info'" mini=true :planet="planet" class="p-3" />
 
-  <market-report v-if="show=='market'" :relprices="relprices" :body="dest" class="m-3 p-1 bg-black" />
+  <card v-if="show=='info'">
+    <card-subtitle>
+      Showing
+      <span v-if="relprices">relative</span>
+      <span v-else>absolute</span>
+      prices on {{dest|caps}}
+    </card-subtitle>
+
+    <planet-summary mini=true :planet="planet" class="p-3" />
+  </card>
+
+
+  <market-report
+    v-if="show=='market'"
+    :relprices="relprices"
+    :body="dest"
+    class="m-3 p-1 bg-black" />
+
 
   <div v-resizable
        v-show="show=='map'"
@@ -693,11 +974,16 @@ define(function(require, exports, module) {
       &#9652
     </plot-point>
 
-    <plot-transit-legend v-if="controls && legend" :dest="dest" :scale="scale" :transit="transit" :fuel="fuel" />
+    <plot-transit-legend
+      v-if="controls && legend"
+      :dest="dest"
+      :scale="scale"
+      :transit="transit"
+      :fuel="fuel" />
   </div>
 
   <slider
-    v-if="controls && dest"
+    v-if="controls && dest && show=='map'"
     @change="center"
     id="transit-time"
     class="my-1"
@@ -707,24 +993,7 @@ define(function(require, exports, module) {
     step=1
     min=0
     :max="transits.length- 1" />
-
-  <modal v-if="show=='fuel'" @close="show='map'" title="Fuel usage" xclose=true close="Confirm">
-    <p>The navigation computer is capable of customizing routes based on optimal fuel usage.</p>
-
-    <p>It is currently configured to build trajectories requiring no more than {{fuel|R(2)}} tonnes of fuel.</p>
-
-    <def v-if="dest" term="Fuel" split=3 class="p-0 m-0">
-      <btn slot="def" @click="show_all=!show_all;onConstraintChange()">
-        <span v-if="show_all">All routes</span>
-        <span v-else>Fuel constrained</span>
-      </btn>
-    </def>
-
-    <def v-if="!plan && dest && !show_all" term="Fuel" split=3 class="p-0 m-0">
-      <slider slot="def" :value.sync="fuel" step=1 min=1 :max="max_fuel" @change="onConstraintChange()" />
-    </def>
-  </modal>
-</div>
+</card>
     `,
   });
 

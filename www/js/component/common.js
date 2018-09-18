@@ -52,7 +52,7 @@ define(function(require, exports, module) {
 <button
     type="button"
     class="btn btn-dark"
-    :class="{'btn-secondary': muted, 'disabled': disabled, 'btn-block': block}"
+    :class="{'btn-secondary': muted, 'disabled': disabled, 'btn-block': block, 'text-muted': muted}"
     :data-dismiss="close ? 'modal' : ''"
     :disabled="disabled"
     @click="activate()" >
