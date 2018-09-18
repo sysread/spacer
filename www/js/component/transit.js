@@ -134,16 +134,12 @@ define(function(require, exports, module) {
           <tr>
             <th scope="col">Time</th>
             <td>{{daysLeft|R|unit('days')}}</td>
-          </tr>
-          <tr>
             <th scope="col">Distance</th>
             <td>{{distance|R(1)|unit('AU')}}</td>
           </tr>
           <tr>
             <th scope="col">Status</th>
             <td>{{plan.pct_complete < 50 ? 'Accelerating' : 'Decelerating'}} at {{plan.accel|R(2)|unit('G')}}</td>
-          </tr>
-          <tr>
             <th scope="col">Speed</th>
             <td>{{(velocity/1000)|R|csn|unit('km/s')}}</td>
           </tr>

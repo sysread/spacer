@@ -101,12 +101,16 @@ define(function(require, exports, module) {
       return [y, m < 10 ? `0${m}` : m, d < 10 ? `0${d}` : d].join('-');
     }
 
+    status_date() {
+      return this.strdate().replace(/-/g, '.');
+    }
+
     refresh() {
       $('#spacer-location').text(this.locus);
       $('#spacer-credits').text(`${util.csn(this.player.money)}c`);
       $('#spacer-cargo').text(`${this.player.ship.cargoUsed}/${this.player.ship.cargoSpace} cu`);
       $('#spacer-fuel').text(`${Math.floor(this.player.ship.fuel)}/${this.player.ship.tank} fuel`);
-      $('#spacer-turn').text(`${this.strdate()}`);
+      $('#spacer-turn').text(`${this.status_date()}`);
     }
 
     turn(n=1, no_save=false) {

@@ -11,6 +11,7 @@
     "license": "Apache-2.0",
     "dependencies": {
         "cordova": "^8.0.0",
+        "cordova-android": "^7.0.0",
         "cordova-browser": "^5.0.4",
         "cordova-plugin-statusbar": "^2.4.2",
         "npm": "^6.4.1",
@@ -19,7 +20,8 @@
     },
     "cordova": {
         "platforms": [
-            "browser"
+            "browser",
+            "android"
         ],
         "plugins": {
             "cordova-plugin-statusbar": {}

@@ -697,7 +697,7 @@ define(function(require, exports, module) {
   </div>
 
   <slider
-    v-if="dest"
+    v-if="controls && dest"
     @change="center"
     id="transit-time"
     class="my-1"
