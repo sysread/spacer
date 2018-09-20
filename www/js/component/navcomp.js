@@ -1,10 +1,11 @@
 define(function(require, exports, module) {
   const Vue     = require('vendor/vue');
-  const Hammer  = require('vendor/hammer.min');
   const System  = require('system');
   const Physics = require('physics');
   const util    = require('util');
   const data    = require('data');
+  const Layout  = require('layout');
+  const NavComp = require('navcomp');
 
   require('component/common');
   require('component/card');
@@ -12,163 +13,7 @@ define(function(require, exports, module) {
   require('component/commerce');
   require('component/summary');
 
-  const SCALE_DEFAULT_AU = 2;
-  const SCALE_MIN_AU     = 0.00001;
-  const SCALE_MAX_AU     = 35;
-  const BODIES           = System.bodies();
-
-
-  const Layout = class {
-    constructor() {
-      this.fov_au   = SCALE_DEFAULT_AU;
-      this.width_px = 0;
-      this.init_x   = 0;
-      this.init_y   = 0;
-      this.offset_x = 0;
-      this.offset_y = 0;
-      this.update_width();
-    }
-
-    get zero() {
-      if (!this._zero) {
-        this._zero = this.width_px / 2;
-      }
-
-      return this._zero;
-    }
-
-    get elt() {
-      if (!this._elt) {
-        this._elt = document.getElementById('navcomp-map-root');
-
-        if (this._elt) {
-          console.log('layout: navcomp-map-root found');
-
-          this.clear_mc();
-          this.install_handlers();
-        }
-      }
-
-      return this._elt;
-    }
-
-    get mc() {
-      if (!this._mc) {
-        if (!this.elt) {
-          return;
-        }
-
-        this._mc = new Hammer(this.elt);
-        console.log('layout: hammer time');
-      }
-
-      return this._mc;
-    }
-
-    clear_zero() {
-      this._zero = null;
-    }
-
-    clear_mc() {
-      this._mc = null;
-    }
-
-    scale(n) {
-      return this.zero * (n / (this.fov_au * Physics.AU));
-    }
-
-    scale_x(n) {
-      return (this.zero + this.scale(n, this.fov_au)) + this.offset_x;
-    }
-
-    scale_y(n) {
-      return (this.zero - this.scale(n, this.fov_au)) + this.offset_y;
-    }
-
-    scale_point(p) {
-      return [ this.scale_x(p[0]), this.scale_y(p[1]) ];
-    }
-
-    update_width() {
-      if (!this.elt) {
-        return 0;
-      }
-
-      const height
-        = window.innerHeight
-        + window.scrollY
-        - this.elt.getBoundingClientRect().top
-        - $('#spacer-status').outerHeight()
-        - $('#spacer-navbar').outerHeight();
-
-      const width = $(this.elt).parent().width();
-
-      this.clear_zero();
-      this.width_px = Math.min(width, height);
-
-      console.log('layout: width updated to', this.width_px);
-    }
-
-    install_handlers() {
-      window.addEventListener('resize', () => {
-        this.update_width();
-      });
-
-      this.elt.addEventListener('wheel', ev => {
-        ev.preventDefault();
-        ev.stopPropagation();
-
-        const fov_au  = this.fov_au;
-        const inc     = fov_au / 10;
-        const amount  = ((ev.deltaX + ev.deltaY) / 2) > 0 ? inc : -inc;
-        const new_fov = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, fov_au + amount)), 6);
-
-        this.fov_au = new_fov;
-      });
-
-      // Drag the map on pan events
-      this.mc.get('pan').set({
-        direction: Hammer.DIRECTION_UP | Hammer.DIRECTION_DOWN | Hammer.DIRECTION_LEFT | Hammer.DIRECTION_RIGHT,
-      });
-
-      this.mc.on('pan', ev => {
-        if (ev.isFirst) {
-          this.init_x = this.offset_x;
-          this.init_y = this.offset_y;
-        }
-
-        // Update the node's offset values
-        this.offset_x = this.init_x + ev.deltaX;
-        this.offset_y = this.init_y + ev.deltaY;
-
-        // Reset initial positions on final event
-        if (ev.isFinal) {
-          this.init_x = this.offset_x;
-          this.init_y = this.offset_y;
-        }
-      });
-
-      // Scale the map on pinch and wheel events
-      this.mc.get('pinch').set({ enable: true });
-
-      this.mc.on('pinch', ev => {
-        let amount = ev.scale;
-
-        if (amount > 1) {         // movement out <--*-->
-          amount = -(amount - 1); // "spreads out" the map by zooming in to a smaller scale in AU
-        } else {                  // movement in -->*<--
-          amount = 1 - amount;    // zooms out by increasing the scale to a larger value in AU
-        }
-
-        amount /= 10;             // reduce to a reasonable fractional value
-
-        const fov_au = util.R(Math.max(SCALE_MIN_AU, Math.min(SCALE_MAX_AU, vnode.context.scale + amount)), 6);
-        this.fov_au = fov_au;
-      });
-
-      console.log('layout: handlers installed');
-    }
-  };
+  const BODIES = System.bodies();
 
 
   Vue.component('NavDestOpt', {
@@ -179,8 +24,8 @@ define(function(require, exports, module) {
       faction() { return System.faction(this.body)        },
       central() { return System.central(this.body)        },
       kind()    { return System.kind(this.body)           },
-      isMoon()  { return System.type(this.body) == 'moon' },
-      isHere()  { return game.locus == this.body          },
+      is_moon() { return System.type(this.body) == 'moon' },
+      is_here() { return game.locus == this.body          },
 
       dist() {
         const p0 = System.position(game.locus);
@@ -211,37 +56,37 @@ define(function(require, exports, module) {
     },
 
     'template': `
-      <Opt :val="body" final=1 :disabled="isHere" :class="color">
+      <Opt :val="body" final=1 :disabled="is_here" :class="color">
         {{name}}
 
-        <span v-if="isHere" class="m-1 text-warning font-weight-bold">&#128907;</span>
+        <span v-if="is_here" class="m-1 text-warning font-weight-bold">&#128907;</span>
 
         <slot />
 
         <badge right=1 class="ml-1">{{dist}}</badge>
         <badge right=1 class="ml-1 d-none d-sm-inline">{{faction}}</badge>
-        <badge right=1 v-if="isMoon" class="ml-1 d-none d-sm-inline">{{kind}}</badge>
+        <badge right=1 v-if="is_moon" class="ml-1 d-none d-sm-inline">{{kind}}</badge>
       </Opt>
     `,
   });
 
 
   Vue.component('NavDestMenu', {
-    'props': ['prev'],
+    'props': ['prev', 'title'],
 
     'computed': {
       bodies() { return BODIES },
     },
 
     'methods': {
-      onAnswer(dest) {
+      on_answer(dest) {
         this.$emit('answer', dest);
       },
     },
 
     'template': `
       <Menu title="Select a destination">
-        <NavDestOpt v-for="body in bodies" :key="body" :body="body" @answer="onAnswer">
+        <NavDestOpt v-for="body in bodies" :key="body" :body="body" @answer="on_answer">
           <span v-if="body == prev" class="m-1 text-warning font-weight-bold">&target;</span>
         </NavDestOpt>
       </Menu>
@@ -254,18 +99,18 @@ define(function(require, exports, module) {
 
     data() {
       return {
-        show:      'map',
-        dest:      null,
-        relprices: false,
+        show: 'map',
+        dest: null,
+        rel:  false,
       };
     },
 
     'computed': {
-      showHomeMenu() { return this.show == 'home'   },
-      showDestMenu() { return this.show == 'dest'   },
-      showMap()      { return this.show == 'map'    },
-      showInfo()     { return this.show == 'info'   },
-      showMarket()   { return this.show == 'market' },
+      show_home_menu() { return this.show == 'home'   },
+      show_dest_menu() { return this.show == 'dest'   },
+      show_map()       { return this.show == 'map'    },
+      show_info()      { return this.show == 'info'   },
+      show_market()    { return this.show == 'market' },
 
       planet() {
         if (this.dest) {
@@ -275,24 +120,31 @@ define(function(require, exports, module) {
     },
 
     'methods': {
-      goHomeMenu()   { this.show = 'home'           },
-      goDestMenu()   { this.show = 'dest'           },
-      goMap()        { this.show = 'map'            },
-      goInfo()       { this.show = 'info'           },
-      goMarket()     { this.show = 'market'         },
+      go_home_menu() { this.show = 'home'   },
+      go_dest_menu() { this.show = 'dest'   },
+      go_map()       { this.show = 'map'    },
+      go_info()      { this.show = 'info'   },
+      go_market()    { this.show = 'market' },
 
-      isHere(body)   { return body == game.locus    },
-
-      setDest(dest) {
-        if (this.isHere(dest)) {
-          return;
-        }
-
-        this.dest = dest;
-        this.goHomeMenu();
+      is_here(body) {
+        return body == game.locus;
       },
 
-      nextDest() {
+      set_dest(dest, go_home) {
+        if (!this.is_here(dest)) {
+          this.dest = dest;
+        }
+
+        if (go_home) {
+          this.go_home_menu();
+        }
+      },
+
+      set_dest_return(dest) {
+        this.set_dest(dest, true);
+      },
+
+      next_dest() {
         if (!this.dest) {
           this.dest = BODIES[0];
           return;
@@ -303,7 +155,7 @@ define(function(require, exports, module) {
             for (let j = i; j < BODIES.length; ++j) {
               const idx = j + 1 == BODIES.length ? 0 : j + 1;
 
-              if (this.isHere(BODIES[idx])) {
+              if (this.is_here(BODIES[idx])) {
                 continue;
               }
               else {
@@ -321,13 +173,13 @@ define(function(require, exports, module) {
         <card-header class="px-0">
           <h3 class="p-2">
             NavComp
-            <btn v-if="!showHomeMenu" @click="goHomeMenu">Back</btn>
+            <btn v-if="!show_home_menu" @click="go_home_menu">Back</btn>
           </h3>
         </card-header>
 
-        <div class="p-2" v-if="!showMap">
-          <Menu title="Navigation"  v-if="showHomeMenu">
-            <Opt @click="goDestMenu">
+        <div class="p-2" v-if="!show_map">
+          <Menu title="Navigation"  v-if="show_home_menu">
+            <Opt @click="go_dest_menu">
               <span v-if="!dest">Set destination</span>
               <span v-else>
                 Change destination
@@ -335,34 +187,34 @@ define(function(require, exports, module) {
               </span>
             </Opt>
 
-            <Opt @click="goMap">Show system map</Opt>
-            <Opt @click="goInfo" v-if="dest">Show system info</Opt>
-            <Opt @click="goMarket" v-if="dest">Show market prices</Opt>
+            <Opt @click="go_map">Show system map</Opt>
+            <Opt @click="go_info" v-if="dest">Show system info</Opt>
+            <Opt @click="go_market" v-if="dest">Show market prices</Opt>
 
-            <Opt @click="relprices=!relprices">
+            <Opt @click="rel=!rel">
               Showing
-              <span v-if="relprices">relative</span>
+              <span v-if="rel">relative</span>
               <span v-else>absolute</span>
               prices
             </Opt>
           </Menu>
 
-          <NavDestMenu v-if="showDestMenu" :prev="dest" @answer="setDest" />
+          <NavDestMenu title="Select a destination" v-if="show_dest_menu" :prev="dest" @answer="set_dest_return" />
 
-          <div v-if="showMarket">
+          <div v-if="show_market">
             <Menu>
-              <NavDestOpt @answer="nextDest" :body="dest"></NavDestOpt>
-              <Opt @click="relprices=false" v-if="relprices">Relative prices</Opt>
-              <Opt @click="relprices=true" v-if="!relprices">Absolute prices</Opt>
+              <NavDestOpt @answer="next_dest" :body="dest"></NavDestOpt>
+              <Opt @click="rel=false" v-if="rel">Relative prices</Opt>
+              <Opt @click="rel=true" v-if="!rel">Absolute prices</Opt>
             </Menu>
 
-            <market-report :relprices="relprices" :body="dest" />
+            <market-report :relprices="rel" :body="dest" />
           </div>
 
-          <planet-summary v-if="showInfo" mini=true :planet="planet" />
+          <planet-summary v-if="show_info" mini=true :planet="planet" />
         </div>
 
-        <NavMap :dest="dest" v-if="showMap"></NavMap>
+        <NavMap v-if="show_map" :focus="dest" @click="set_dest" @cycle="next_dest" />
       </card>
     `,
   });
@@ -380,15 +232,23 @@ define(function(require, exports, module) {
 
 
   Vue.component('NavMapBody', {
-    'props': ['body', 'nolabel', 'layout', 'pos'],
+    'props': ['body', 'nolabel', 'layout', 'pos', 'focus'],
 
     'computed': {
+      is_moon() {
+        return this.body != 'sun' && System.central(this.body) !== 'sun';
+      },
+
+      is_focus() {
+        return this.body == this.focus;
+      },
+
       img() {
         return 'img/' + this.body + '.png';
       },
 
-      is_moon() {
-        return this.body != 'sun' && System.central(this.body) !== 'sun';
+      central() {
+        return System.central(this.body);
       },
 
       position() {
@@ -413,8 +273,20 @@ define(function(require, exports, module) {
         return this.point[1] - (this.diameter / 2);
       },
 
+      circle_diameter() {
+        return this.diameter * 10;
+      },
+
       label_visible() {
         if (this.nolabel) {
+          return false;
+        }
+
+        if (this.is_focus) {
+          return true;
+        }
+
+        if (this.focus && this.body == System.central(this.focus)) {
           return false;
         }
 
@@ -429,48 +301,48 @@ define(function(require, exports, module) {
     },
 
     'template': `
-      <NavMapPoint :top="top" :left="left">
+      <NavMapPoint :top="top" :left="left" @click="$emit('click')">
         <img :src="img" :style="{'width': diameter + 'px'}" class="plot-image" />
 
-        <badge v-show="label_visible" class="m-1">
+        <badge v-show="label_visible" class="m-1" :class="{'dest': is_focus}">
           {{body|caps}}
+          <span v-if="is_focus && is_moon">
+            ({{central|caps}})
+          </span>
         </badge>
       </NavMapPoint>
     `,
   });
 
 
-  Vue.component('NavMap', {
-    'props': ['dest'],
+  Vue.component('NavMapPlot', {
+    'props': ['focus'],
 
     data() {
       return {
-        layout: new Layout(),
+        'layout': new Layout,
       };
     },
 
     'directives': {
       'resizable': {
         inserted(el, binding, vnode) {
-          vnode.context.layout = new Layout();
+          vnode.context.layout = new Layout;
         }
       },
     },
 
+    'watch': {
+      focus(newFocus, oldFocus) {
+        this.auto_scale();
+      },
+    },
+
     'computed': {
-      visible_bodies() {
+      plot_points() {
         const bodies = {};
-
-        for (const body of BODIES) {
-          if (this.is_within_fov(body)) {
-            bodies[body] = this.layout.scale_point(this.position(body));
-
-            const central = System.central(body);
-
-            if (central != 'sun' && !bodies[central] && !bodies[central]) {
-              bodies[central] = this.layout.scale_point(this.position(central));
-            }
-          }
+        for (const body of this.visible_bodies()) {
+          bodies[body] = this.layout.scale_point(this.position(body));
         }
 
         return bodies;
@@ -478,14 +350,62 @@ define(function(require, exports, module) {
     },
 
     'methods': {
+      *bodies() {
+        const seen = {};
+        for (const body of BODIES) {
+          if (!seen[body]) {
+            seen[body] = true;
+            yield body;
+
+            const central = System.central(body);
+            if (central != 'sun' && !seen[central]) {
+              seen[central] = true;
+              yield central;
+            }
+          }
+        }
+      },
+
+      *visible_bodies() {
+        const bodies = {};
+        for (const body of this.bodies()) {
+          if (this.is_within_fov(body)) {
+            yield body;
+          }
+        }
+      },
+
       position(body) {
         const p = System.position(body);
         return [p[0], p[1]];
       },
 
+      orbital_radius(body) {
+        return Physics.distance(this.position(body), [0, 0]);
+      },
+
       is_within_fov(body) {
-        const orbit = Physics.distance(this.position(body), [0, 0]) / Physics.AU;
-        return orbit < this.layout.fov_au;
+        return (this.orbital_radius(body) / Physics.AU) < this.layout.fov_au;
+      },
+
+      is_focused(body) {
+        return body == this.focus;
+      },
+
+      is_here(body) {
+        return body == game.locus;
+      },
+
+      auto_scale() {
+        const bodies = [ game.locus ];
+        let fov = this.fov_au;
+
+        if (this.focus && !this.is_here(this.focus)) {
+          bodies.push(this.focus);
+        }
+
+        const orbital_radii = bodies.map(b => this.orbital_radius(b));
+        this.layout.set_fov_au( Math.max(...orbital_radii) / Physics.AU * 1.1 );
       },
     },
 
@@ -502,10 +422,47 @@ define(function(require, exports, module) {
             nolabel = 0 />
 
         <NavMapBody
-            v-for   = "(point, body) of visible_bodies"
+            v-for   = "(point, body) of plot_points"
             :key    = "body"
             :body   = "body"
-            :layout = "layout" />
+            :layout = "layout"
+            :focus  = "focus"
+            @click  = "$emit('click', body)" />
+
+        <slot />
+      </div>
+    `,
+  });
+
+
+  Vue.component('NavMap', {
+    'props': ['focus'],
+
+    data() {
+      return {
+        'show':    'map',
+        'navcomp': new NavComp,
+      };
+    },
+
+    'computed': {
+      show_menu() { return this.show == 'menu' },
+    },
+
+    'methods': {
+      go_menu() { this.show = 'menu' },
+
+      set_focus(body) {
+        this.$emit('click', body);
+      },
+    },
+
+    'template': `
+      <div class="p-0 m-0">
+        <NavMapPlot @click="set_focus" :focus="focus">
+          <btn class="float-right" @click="go_menu">&#9881;</btn>
+          <btn class="float-right" @click="$emit('cycle')">&#9654;</btn>
+        </NavMapPlot>
       </div>
     `,
   });

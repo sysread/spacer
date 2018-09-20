@@ -48,7 +48,7 @@ define(function(require, exports, module) {
 
       return this.target.pos         // change in position
         .sub(this.agent.pos)         // (2s / 2) for flip point
-        .div_scalar(tflip * tflip) // t^2
+        .div_scalar(tflip * tflip)   // t^2
         .sub(dvi);                   // less the change in velocity
     }
 
@@ -89,10 +89,10 @@ define(function(require, exports, module) {
   const NavComp = class {
     constructor(fuel_target, show_all) {
       this.fuel_target = fuel_target || game.player.ship.fuel;
-      this.show_all = show_all || false;
-      this.max  = game.player.maxAcceleration();
-      this.ship = game.player.ship;
-      this.orig = game.here.body;
+      this.show_all    = show_all || false;
+      this.max         = game.player.maxAcceleration();
+      this.ship        = game.player.ship;
+      this.orig        = game.here.body;
     }
 
     get maxdv() { return Math.min(this.max, this.ship.currentAcceleration()) }

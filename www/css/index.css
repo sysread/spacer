@@ -146,9 +146,10 @@ body {
   vertical-align: middle;
 }
 
-.plot-point .dest {
-  border: 1px solid red;
-  border-radius: 50%;
+.dest {
+  background-color: black !important;
+  border-color: red !important;
+  color: white !important;
 }
 
 .plot-point.big {
