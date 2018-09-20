@@ -71,6 +71,15 @@ define(function(require, exports, module) {
         (((1 - t) * z0) + (t * z1))
       ];
     }
+
+    static centroid(...points) {
+      let sum_x = points.reduce((a, p) => a + p[0], 0);
+      let sum_y = points.reduce((a, p) => a + p[1], 0);
+      return [
+        sum_x / points.length,
+        sum_y / points.length,
+      ];
+    }
   };
 
   physics = Physics;

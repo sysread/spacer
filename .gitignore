@@ -5,3 +5,4 @@ plugins/*
 !plugins/README
 platform
 run
+Session.vim

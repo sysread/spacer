@@ -316,26 +316,21 @@ define(function(require, exports, module) {
 
 
   Vue.component('NavMapPlot', {
-    'props': ['focus'],
-
-    data() {
-      return {
-        'layout': new Layout,
-      };
-    },
+    'props': ['focus', 'layout', 'center', 'fov'],
 
     'directives': {
       'resizable': {
         inserted(el, binding, vnode) {
-          vnode.context.layout = new Layout;
+          vnode.context.$emit('update:layout', new Layout);
+          vnode.context.auto_focus();
         }
       },
     },
 
     'watch': {
-      focus(newFocus, oldFocus) {
-        this.auto_scale();
-      },
+      focus()  { this.auto_focus() },
+      fov()    { this.auto_focus() },
+      center() { this.auto_focus() },
     },
 
     'computed': {
@@ -346,6 +341,39 @@ define(function(require, exports, module) {
         }
 
         return bodies;
+      },
+
+      center_point() {
+        if (this.center) {
+          return this.center;
+        }
+
+        // If there is no center point specified, set the new center point to
+        // be the centroid of the new focus, the current location, and the sun.
+        const points = [[0, 0], this.position(game.locus)];
+
+        if (this.focus) {
+          points.push(this.position(this.focus));
+        }
+
+        return Physics.centroid(...points);
+      },
+
+      fov_au() {
+        if (this.fov) {
+          return this.fov;
+        }
+
+        if (this.focus) {
+          const focus  = this.position(this.focus);
+          const locus  = this.position(game.locus);
+          const orbits = [focus, locus].map(b => Physics.distance(b, [0, 0]));
+          const max    = Math.max(...orbits);
+          const fov    = (max + (Physics.AU / 2)) / Physics.AU;
+          return fov;
+        }
+
+        return;
       },
     },
 
@@ -367,11 +395,8 @@ define(function(require, exports, module) {
       },
 
       *visible_bodies() {
-        const bodies = {};
         for (const body of this.bodies()) {
-          if (this.is_within_fov(body)) {
-            yield body;
-          }
+          yield body;
         }
       },
 
@@ -380,15 +405,12 @@ define(function(require, exports, module) {
         return [p[0], p[1]];
       },
 
-      orbital_radius(body) {
-        return Physics.distance(this.position(body), [0, 0]);
-      },
-
       is_within_fov(body) {
-        return (this.orbital_radius(body) / Physics.AU) < this.layout.fov_au;
+        const d = Physics.distance(this.position(b), [0, 0]);
+        return (d / Physics.AU) < this.layout.fov_au;
       },
 
-      is_focused(body) {
+      is_focus(body) {
         return body == this.focus;
       },
 
@@ -396,16 +418,38 @@ define(function(require, exports, module) {
         return body == game.locus;
       },
 
-      auto_scale() {
-        const bodies = [ game.locus ];
-        let fov = this.fov_au;
+      body_clicked(body) {
+        // Find navigable targets in the system on which the player clicked
+        const central = System.central(body);
+        const sats    = System.body(central == 'sun' ? body : central).satellites;
+        const targets = Object.keys(data.bodies)
+          .filter(d => sats[d] || d == body || d == central)
+          .filter(d => !this.is_here(d));
 
-        if (this.focus && !this.is_here(this.focus)) {
-          bodies.push(this.focus);
+        // Rotate through objects in the system
+        let focus;
+        for (let i = 0; i < targets.length; ++i) {
+          if (this.is_focus(targets[i])) {
+            if (i + 1 >= targets.length) {
+              focus = targets[0];
+            } else {
+              focus = targets[i + 1];
+            }
+          }
         }
 
-        const orbital_radii = bodies.map(b => this.orbital_radius(b));
-        this.layout.set_fov_au( Math.max(...orbital_radii) / Physics.AU * 1.1 );
+        // If focus is still undefined, the current focus is not in the system
+        // being selected.
+        if (focus === undefined) {
+          focus = targets[0];
+        }
+
+        this.$emit('click', focus);
+      },
+
+      auto_focus() {
+        this.layout.set_fov_au(this.fov_au);
+        this.layout.set_center(this.center_point);
       },
     },
 
@@ -417,7 +461,7 @@ define(function(require, exports, module) {
 
         <NavMapBody
             body    = "sun"
-            :pos    = "[0, 0]"
+            :pos    = "layout.scale_point([0, 0])"
             :layout = "layout"
             nolabel = 0 />
 
@@ -427,7 +471,7 @@ define(function(require, exports, module) {
             :body   = "body"
             :layout = "layout"
             :focus  = "focus"
-            @click  = "$emit('click', body)" />
+            @click  = "body_clicked(body)" />
 
         <slot />
       </div>
@@ -441,29 +485,222 @@ define(function(require, exports, module) {
     data() {
       return {
         'show':    'map',
-        'navcomp': new NavComp,
+        'modal':   null,
+        'transit': null,
+        'layout':  new Layout,
+        'target':  null,
       };
     },
 
+    'watch': {
+      focus(new_focus, old_focus) {
+        this.transit = null;
+      },
+    },
+
     'computed': {
-      show_menu() { return this.show == 'menu' },
+      show_routes()  { return this.show == 'routes'   },
+      show_targets() { return this.modal == 'targets' },
+
+      transit_path() {
+        const transit = this.transit;
+
+        if (transit) {
+          const points = transit.path;
+
+          const path = [];
+
+          let each = 1;
+          while (points.length / each > 100) {
+            each += 1;
+          }
+
+          for (let i = 0; i < points.length; i += each) {
+            path.push( this.layout.scale_point( points[i].position.point ) );
+          }
+
+          if (points.length % each != 0) {
+            path.push( this.layout.scale_point( points[ points.length - 1 ].position.point ) );
+          }
+
+          return path;
+        }
+      },
+
+      target_path() {
+        const transit = this.transit;
+
+        if (transit) {
+          const orbit = System.orbit_by_turns(this.focus).slice(0, transit.path.length);
+          const min   = this.layout.fov_au * Physics.AU / 30;
+          const path  = [ this.layout.scale_point( orbit[0] ) ];
+
+          let mark = orbit[0];
+          for (let i = 1; i < orbit.length; ++i) {
+            if (Physics.distance(mark, orbit[i]) > min) {
+              path.push( this.layout.scale_point( orbit[i] ) );
+              mark = orbit[i];
+            }
+          }
+
+          path.push( this.layout.scale_point( orbit[ orbit.length - 1 ] ) );
+
+          return path;
+        }
+      },
+
+      center_point() {
+        if (this.target) {
+          return System.position(this.target);
+        }
+
+        const transit = this.transit;
+
+        if (transit) {
+          const points = transit.path.map(p => p.position.point);
+          return Physics.centroid(...points);
+        }
+
+        return;
+      },
+
+      fov_au() {
+        if (this.target) {
+
+        }
+
+        const transit = this.transit;
+
+        if (transit) {
+          return this.transit.au;
+        }
+
+        return;
+      },
     },
 
     'methods': {
-      go_menu() { this.show = 'menu' },
+      go_map()     { this.show = 'map'      },
+      go_routes()  { this.show = 'routes'   },
+      go_targets() { this.modal = 'targets' },
 
-      set_focus(body) {
+      on_click(body) {
         this.$emit('click', body);
+      },
+
+      set_route(transit) {
+        this.transit = transit;
+        this.go_map();
+      },
+
+      set_target(target) {
+        this.target = target;
       },
     },
 
     'template': `
       <div class="p-0 m-0">
-        <NavMapPlot @click="set_focus" :focus="focus">
-          <btn class="float-right" @click="go_menu">&#9881;</btn>
-          <btn class="float-right" @click="$emit('cycle')">&#9654;</btn>
+        <NavMapPlot @click="on_click" :focus="focus" :center="center_point" :layout.sync="layout" :fov="fov_au">
+          <btn class="float-left" @click="go_routes" v-if="focus">Route</btn>
+
+          <btn class="float-right" @click="go_targets">
+            &#128906;
+          </btn>
+
+          <btn class="float-right" @click="$emit('cycle')">
+            <span v-if="focus" class="text-danger">[ {{ focus|caps }} ]</span>
+            &#9654;
+          </btn>
+
+          <NavMapPoint
+              v-for="(p, idx) in target_path"
+              :key="'target-' + idx"
+              :left="p[0]"
+              :top="p[1]"
+              :idx="idx">
+            <span v-if="idx == target_path.length - 1" class="text-danger">&target;</span>
+            <span v-else class="text-warning">&sdot;</span>
+          </NavMapPoint>
+
+          <NavMapPoint
+              v-for="(p, idx) in transit_path"
+              :key="'transit-' + idx"
+              :left="p[0]"
+              :top="p[1]"
+              class="text-success">
+            <span>&sdot;</span>
+          </NavMapPoint>
         </NavMapPlot>
+
+        <NavRoutePlanner v-if="show_routes" :dest="focus" @route="set_route" />
+
+        <modal v-if="show_targets" title="Find on map" @close="modal=null">
+          <Opt :val="transit" :disabled="!transit" final=1>Flight path</Opt>
+          <NavDestMenu @answer="set_target" final=1 />
+        </modal>
       </div>
+    `,
+  });
+
+
+  // Cache
+  let transits;
+
+  Vue.component('NavRoutePlanner', {
+    'props': ['dest'],
+
+    data() {
+      const nav = new NavComp;
+      transits = nav.getTransitsTo(this.dest);
+
+      return {
+        'navcomp':  nav,
+        'selected': 0,
+      };
+    },
+
+    'computed': {
+      home()           { return game.player.home.name },
+      gravity()        { return game.player.homeGravity },
+      max_accel()      { return game.player.maxAcceleration() / Physics.G },
+      ship_accel()     { return game.player.shipAcceleration() / Physics.G },
+      ship_mass()      { return game.player.ship.currentMass() },
+      ship_fuel()      { return game.player.ship.fuel },
+      ship_burn_time() { return game.player.ship.maxBurnTime() * data.hours_per_turn },
+      has_route()      { return transits.length > 0 },
+      num_routes()     { return transits.length },
+      transit()        { if (this.has_route) return transits[this.selected] },
+      distance()       { if (this.has_route) return this.transit.au },
+    },
+
+    'template': `
+      <modal title="Route planner" close="Plot route" xclose=1 @close="$emit('route', transit)">
+        <div v-if="has_route">
+          <p>Your navigational computer automatically calculates the optimal trajectory from your current location to the other settlements in the system.</p>
+
+          <p>Being born on {{home}}, your body is adapted to {{gravity|R(2)}}G, allowing you to endure a sustained burn of {{max_accel|R(2)}}G.</p>
+
+          <p>
+            Carrying {{ship_mass|R(2)|csn|unit('metric tonnes')}}, your ship is capable of {{ship_accel|R(2)|unit('G')}} of acceleraction.
+            With {{ship_fuel|R(2)|csn}} tonnes of fuel, your ship has a maximum burn time of {{ship_burn_time|R|csn}} hours at maximum thrust.
+          </p>
+
+          <def split="4" term="Total"        :def="distance|R(2)|unit('AU')" />
+          <def split="4" term="Acceleration" :def="transit.accel|R(2)|unit('m/s/s')" />
+          <def split="4" term="Max velocity" :def="(transit.maxVelocity/1000)|R(2)|unit('km/s')" />
+          <def split="4" term="Fuel"         :def="transit.fuel|R(2)|unit('tonnes')" />
+          <def split="4" term="Time"         :def="transit.str_arrival" />
+
+          <row y=1>
+            <cell size=12>
+              <slider minmax=true step="1" min="0" :max="num_routes - 1" :value.sync="selected" />
+            </cell>
+          </row>
+        </div>
+        <p v-else class="text-warning font-italic">
+          Your ship, as loaded, cannot reach this destination in less than 1 year with available fuel.
+        </p>
+      </modal>
     `,
   });
 });

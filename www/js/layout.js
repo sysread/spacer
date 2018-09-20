@@ -54,14 +54,32 @@ define(function(require, exports, module) {
       return this._mc;
     }
 
+    get center() {
+      return [this.offset_x, this.offset_y];
+    }
+
     set_fov_au(au) {
-      this.fov_au = util.R(
-        Math.max(
-          Layout.SCALE_MIN_AU,
-          Math.min(Layout.SCALE_MAX_AU, au),
-        ),
-        6,
-      );
+      let new_fov;
+      if (au === undefined) {
+        new_fov = Layout.SCALE_DEFAULT_AU;
+      } else {
+        new_fov = util.R(Math.max(Layout.SCALE_MIN_AU, Math.min(Layout.SCALE_MAX_AU, au)), 6);
+      }
+
+      const old_fov  = this.fov_au;
+      this.fov_au    = new_fov;
+      this.offset_x -= ((this.offset_x * new_fov) - (this.offset_x * old_fov)) / new_fov;
+      this.offset_y -= ((this.offset_y * new_fov) - (this.offset_y * old_fov)) / new_fov;
+      this.init_x    = this.offset_x;
+      this.init_y    = this.offset_y;
+    }
+
+    set_center(point) {
+      const [x, y]  = this.scale_point(point, true);
+      this.offset_x = this.zero - x;
+      this.offset_y = this.zero - y;
+      this.init_x   = this.offset_x;
+      this.init_y   = this.offset_y;
     }
 
     clear_zero() {
@@ -73,19 +91,25 @@ define(function(require, exports, module) {
     }
 
     scale(n) {
-      return this.zero * (n / (this.fov_au * Physics.AU));
+      const fov_m = this.fov_au * Physics.AU;
+      return n / fov_m * this.zero;
     }
 
-    scale_x(n) {
-      return (this.zero + this.scale(n, this.fov_au)) + this.offset_x;
+    scale_x(n, no_offset) {
+      const n_scaled = this.zero + this.scale(n);
+      return no_offset ? n_scaled : n_scaled + this.offset_x;
     }
 
-    scale_y(n) {
-      return (this.zero - this.scale(n, this.fov_au)) + this.offset_y;
+    scale_y(n, no_offset) {
+      const n_scaled = this.zero - this.scale(n);
+      return no_offset ? n_scaled : n_scaled + this.offset_y;
     }
 
-    scale_point(p) {
-      return [ this.scale_x(p[0]), this.scale_y(p[1]) ];
+    scale_point(p, no_offset) {
+      return [
+        this.scale_x(p[0], no_offset),
+        this.scale_y(p[1], no_offset),
+      ];
     }
 
     update_width() {
@@ -117,8 +141,25 @@ define(function(require, exports, module) {
         ev.preventDefault();
         ev.stopPropagation();
 
-        const inc = this.fov_au / 10;
+        const inc    = this.fov_au / 10;
         const amount = ((ev.deltaX + ev.deltaY) / 2) > 0 ? inc : -inc;
+
+        this.set_fov_au(this.fov_au + amount);
+      });
+
+      // Scale the map on pinch and wheel events
+      this.mc.get('pinch').set({ enable: true });
+
+      this.mc.on('pinch', ev => {
+        let amount = ev.scale;
+
+        if (amount > 1) {         // movement out <--*-->
+          amount = -(amount - 1); // "spreads out" the map by zooming in to a smaller scale in AU
+        } else {                  // movement in -->*<--
+          amount = 1 - amount;    // zooms out by increasing the scale to a larger value in AU
+        }
+
+        amount /= 10;             // reduce to a reasonable fractional value
 
         this.set_fov_au(this.fov_au + amount);
       });
@@ -146,23 +187,6 @@ define(function(require, exports, module) {
           this.init_x = this.offset_x;
           this.init_y = this.offset_y;
         }
-      });
-
-      // Scale the map on pinch and wheel events
-      this.mc.get('pinch').set({ enable: true });
-
-      this.mc.on('pinch', ev => {
-        let amount = ev.scale;
-
-        if (amount > 1) {         // movement out <--*-->
-          amount = -(amount - 1); // "spreads out" the map by zooming in to a smaller scale in AU
-        } else {                  // movement in -->*<--
-          amount = 1 - amount;    // zooms out by increasing the scale to a larger value in AU
-        }
-
-        amount /= 10;             // reduce to a reasonable fractional value
-
-        this.set_fov_au(this.fov_au + amount);
       });
 
       console.debug('layout: handlers installed');
