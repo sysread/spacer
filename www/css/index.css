@@ -134,6 +134,7 @@ body {
   background-color: #000;
   border: 1px solid rgb(139,0,0);
   overflow: hidden;
+  position: relative;
 }
 
 .plot-point {

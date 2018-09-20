@@ -21,10 +21,12 @@ define(function(require, exports, module) {
   Vue.component('gold',  { template: '<span class="text-warning"><slot /></span>' });
   Vue.component('red',   { template: '<span class="text-danger"><slot /></span>'  });
 
+
   Vue.component('badge', {
     props: ['right'],
     template: '<span class="badge badge-pill" :class="{\'float-right\': right}"><slot /></span>',
   });
+
 
   Vue.component('progress-bar', {
     props: ['percent'],
@@ -38,6 +40,7 @@ define(function(require, exports, module) {
 </div>
     `,
   });
+
 
   Vue.component('btn', {
     props: ['disabled', 'muted', 'block', 'close'],
@@ -61,6 +64,7 @@ define(function(require, exports, module) {
     `,
   });
 
+
   Vue.component('ask', {
     props: ['choices'],
     data: function() { return { choice: null } },
@@ -82,5 +86,39 @@ define(function(require, exports, module) {
     props: ['yes', 'no'],
     methods: { trigger: function(choice) { this.$emit('confirm', choice === 'Y') } },
     template: `<ask :choices="{Y: yes, N: no}" @pick="trigger"><slot /></ask>`,
+  });
+
+
+  Vue.component('Opt', {
+    props: ['val', 'final', 'disabled'],
+
+    methods: {
+      onClick() {
+        this.$emit('click', this.val);
+        this.$parent.$emit('answer', this.val);
+      }
+    },
+
+    template: `
+<btn block=1 :close="final" :disabled="disabled" @click="onClick" class="text-left">
+  <slot />
+</btn>
+    `,
+  });
+
+  Vue.component('Menu', {
+    props: ['title', 'close'],
+
+    methods: {
+      onAnswer(val) {
+        this.$emit('answer', val);
+      },
+    },
+
+    template: `
+<div @answer="onAnswer" class="py-3">
+  <slot />
+</div>
+    `,
   });
 });
