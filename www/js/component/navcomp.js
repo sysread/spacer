@@ -492,8 +492,8 @@ define(function(require, exports, module) {
     'template': `
       <div v-resizable
           id     = "navcomp-map-root"
-          class  = "plot-root p-0 m-0"
-          :style = "{'position':'relative', 'width':layout.width_px+'px', 'height':layout.width_px+'px'}">
+          class  = "plot-root"
+          :style = "{'width': layout.width_px + 'px', 'height': layout.width_px + 'px'}">
 
         <NavMapBody
             body    = "sun"
