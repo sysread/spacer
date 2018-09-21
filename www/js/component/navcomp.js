@@ -166,10 +166,7 @@ define(function(require, exports, module) {
       },
 
       next_dest() {
-        if (!this.dest) {
-          this.dest = BODIES[0];
-          return;
-        }
+        let done = false;
 
         for (let i = 0; i < BODIES.length; ++i) {
           if (this.dest == BODIES[i]) {
@@ -181,11 +178,23 @@ define(function(require, exports, module) {
               }
               else {
                 this.dest = BODIES[idx];
+                done = true;
                 return;
               }
             }
           }
         }
+
+        if (!done) {
+          this.dest = BODIES[game.locus == BODIES[0] ? 1 : 0];
+          return;
+        }
+      },
+
+      begin_transit() {
+        $('#spacer').data('info', this.transit);
+        game.open('transit');
+        $('#spacer').data('state', 'transit');
       },
     },
 
@@ -210,10 +219,14 @@ define(function(require, exports, module) {
 
             <Opt @click="go_map">System map</Opt>
 
-            <Opt @click="go_routes" :disabled="!dest">Route planner</Opt>
-            <Opt @click="go_info"   :disabled="!dest">System info</Opt>
+            <Opt @click="go_routes" :disabled="!dest">Plan route</Opt>
+            <Opt @click="go_info" :disabled="!dest">System info</Opt>
             <Opt @click="go_market" :disabled="!dest">Market prices</Opt>
-            <Opt @click=""          :disabled="!transit">Engage</Opt>
+
+            <Opt @click="begin_transit" :disabled="!transit">
+              Begin transit
+              <badge right=1 v-if="transit">{{transit.str_arrival}}</badge>
+            </Opt>
           </Menu>
 
           <NavDestMenu
@@ -347,12 +360,8 @@ define(function(require, exports, module) {
         return System.central(this.body);
       },
 
-      position() {
-        return this.pos ? this.pos : System.position(this.body);
-      },
-
       point() {
-        return this.layout.scale_point(this.position);
+        return this.layout.scale_point(this.position());
       },
 
       diameter() {
@@ -390,9 +399,15 @@ define(function(require, exports, module) {
           return this.layout.fov_au < 0.5;
         }
 
-        const pos   = this.position;
+        const pos   = this.position();
         const orbit = Physics.distance(pos, [0, 0, 0]) / Physics.AU;
         return this.layout.fov_au / 6 < orbit;
+      },
+    },
+
+    'methods': {
+      position() {
+        return this.pos ? this.pos : System.position(this.body);
       },
     },
 
@@ -657,7 +672,7 @@ define(function(require, exports, module) {
 
       fov_au() {
         if (this.target) {
-
+          return Physics.distance(this.target, [0, 0]) / Physics.AU * 1.1;
         }
 
         const transit = this.transit;
@@ -686,7 +701,7 @@ define(function(require, exports, module) {
 
       set_target(target) {
         this.target = target;
-        this.modal = null;
+        this.modal  = null;
       },
     },
 

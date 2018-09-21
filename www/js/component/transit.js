@@ -6,10 +6,12 @@ define(function(require, exports, module) {
   const data    = require('data');
   const system  = require('system');
   const util    = require('util');
+  const Layout  = require('layout');
 
   require('component/common');
   require('component/card');
   require('component/combat');
+  require('component/navcomp');
 
   Vue.component('transit', {
     props: ['plan'],
@@ -21,10 +23,49 @@ define(function(require, exports, module) {
         inspection: null,
         daysLeft:   null,
         velocity:   0,
+        layout:     new Layout,
       };
     },
     computed: {
       destination: function() { return system.name(this.plan.dest) },
+
+      fov: function() {
+        const center = Physics.centroid(
+          this.plan.end,
+          this.plan.start,
+          this.plan.coords,
+        );
+
+        return center / Physics.AU * 0.9;
+      },
+
+      ship_x: function() {
+        return this.layout.scale_x(this.plan.coords[0]);
+      },
+
+      ship_y: function() {
+        return this.layout.scale_y(this.plan.coords[1]);
+      },
+
+      transit_path: function() {
+        const points = this.plan.path;
+        const path = [];
+
+        let each = 1;
+        while (points.length / each > 100) {
+          each += 1;
+        }
+
+        for (let i = 0; i < points.length; i += each) {
+          path.push( this.layout.scale_point( points[i].position.point ) );
+        }
+
+        if (points.length % each != 0) {
+          path.push( this.layout.scale_point( points[ points.length - 1 ].position.point ) );
+        }
+
+        return path;
+      },
     },
     methods: {
       pause: function() {
@@ -51,7 +92,7 @@ define(function(require, exports, module) {
           }
           else {
             game.turn(1, true);
-            game.player.ship.burn(this.plan.accel);
+            //game.player.ship.burn(this.plan.accel);
             this.plan.turn();
 
             if (this.paused) {
@@ -146,7 +187,20 @@ define(function(require, exports, module) {
         </table>
       </cell>
       <cell size=8 brkpt="sm" y=0 class="p-0 m-0">
-        <plot :controls="false" :plan="plan" :focus="plan.coords" />
+        <NavMapPlot :layout.sync="layout" :center="plan.coords" :fov="fov">
+          <NavMapPoint :top="ship_y" :left="ship_x" class="text-success">
+            &diams;
+          </NavMapPoint>
+        </NavMapPlot>
+
+        <NavMapPoint
+            v-for="(p, idx) in transit_path"
+            :key="'transit-' + idx"
+            :left="p[0]"
+            :top="p[1]"
+            class="text-muted">
+          <span>&sdot;</span>
+        </NavMapPoint>
       </cell>
     </row>
 
