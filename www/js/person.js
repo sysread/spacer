@@ -40,7 +40,7 @@ define(function(require, exports, module) {
     }
 
     get homeGravity() {
-      return Physics.G * system.gravity(this.home);
+      return system.gravity(this.home);
     }
 
     canCraft(item) {
@@ -55,7 +55,7 @@ define(function(require, exports, module) {
     }
 
     maxAcceleration() {
-      return this.homeGravity * data.grav_deltav_factor;
+      return Physics.G * this.homeGravity * data.grav_deltav_factor;
     }
 
     shipAcceleration() {

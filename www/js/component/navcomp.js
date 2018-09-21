@@ -199,7 +199,7 @@ define(function(require, exports, module) {
         </card-header>
 
         <div class="p-2" v-if="!show_map">
-          <Menu title="Navigation"  v-if="show_home_menu">
+          <Menu title="Navigation"  v-show="show_home_menu">
             <Opt @click="go_dest_menu">
               <span v-if="!dest">Set destination</span>
               <span v-else>
@@ -209,19 +209,27 @@ define(function(require, exports, module) {
             </Opt>
 
             <Opt @click="go_map">System map</Opt>
-            <Opt @click="go_routes" v-if="dest">Route planner</Opt>
-            <Opt @click="go_info" v-if="dest">System info</Opt>
-            <Opt @click="go_market" v-if="dest">Market prices</Opt>
 
-            <Opt v-if="transit">Engage</Opt>
+            <Opt @click="go_routes" :disabled="!dest">Route planner</Opt>
+            <Opt @click="go_info"   :disabled="!dest">System info</Opt>
+            <Opt @click="go_market" :disabled="!dest">Market prices</Opt>
+            <Opt @click=""          :disabled="!transit">Engage</Opt>
           </Menu>
 
-          <NavDestMenu title="Select a destination" v-if="show_dest_menu" :prev="dest" @answer="set_dest_return" />
-          <NavRoutePlanner v-if="show_routes" :dest="dest" @route="set_transit_return" />
+          <NavDestMenu
+              title="Select a destination"
+              v-if="show_dest_menu"
+              :prev="dest"
+              @answer="set_dest_return" />
+
+          <NavRoutePlanner
+              v-if="show_routes"
+              :dest="dest"
+              @route="set_transit_return" />
 
           <div v-if="show_market">
             <Menu>
-              <NavDestOpt @answer="next_dest" :body="dest"></NavDestOpt>
+              <NavDestOpt @answer="next_dest" :body="dest" />
               <Opt @click="rel=false" v-if="rel">Relative prices</Opt>
               <Opt @click="rel=true" v-if="!rel">Absolute prices</Opt>
             </Menu>
@@ -245,17 +253,14 @@ define(function(require, exports, module) {
   });
 
 
-  let transits; // cache
+
   Vue.component('NavRoutePlanner', {
     'props': ['dest'],
 
     data() {
-      const nav = new NavComp;
-      transits = nav.getTransitsTo(this.dest);
-
       return {
-        'navcomp':  nav,
         'selected': 0,
+        'navcomp':  new NavComp,
       };
     },
 
@@ -267,24 +272,24 @@ define(function(require, exports, module) {
       ship_mass()      { return game.player.ship.currentMass() },
       ship_fuel()      { return game.player.ship.fuel },
       ship_burn_time() { return game.player.ship.maxBurnTime() * data.hours_per_turn },
-      has_route()      { return transits.length > 0 },
-      num_routes()     { return transits.length },
-      transit()        { if (this.has_route) return transits[this.selected] },
+      transits()       { return this.navcomp.getTransitsTo(this.dest) },
+      has_route()      { return this.transits.length > 0 },
+      num_routes()     { return this.transits.length },
+      transit()        { if (this.has_route) return this.transits[this.selected] },
       distance()       { if (this.has_route) return this.transit.au },
     },
 
     'template': `
       <div>
+        <p>Your navigational computer automatically calculates the optimal trajectory from your current location to the other settlements in the system.</p>
+        <p>Being born on {{home}}, your body is adapted to {{gravity|R(2)}}G, allowing you to endure a sustained burn of {{max_accel|R(2)}}G.</p>
+
+        <p>
+          Carrying {{ship_mass|R|csn|unit('metric tonnes')}}, your ship is capable of {{ship_accel|R(2)|unit('G')}} of acceleraction.
+          With {{ship_fuel|R(2)|csn}} tonnes of fuel, your ship has a maximum burn time of {{ship_burn_time|R|csn}} hours at maximum thrust.
+        </p>
+
         <div v-if="has_route">
-          <p>Your navigational computer automatically calculates the optimal trajectory from your current location to the other settlements in the system.</p>
-
-          <p>Being born on {{home}}, your body is adapted to {{gravity|R(2)}}G, allowing you to endure a sustained burn of {{max_accel|R(2)}}G.</p>
-
-          <p>
-            Carrying {{ship_mass|R(2)|csn|unit('metric tonnes')}}, your ship is capable of {{ship_accel|R(2)|unit('G')}} of acceleraction.
-            With {{ship_fuel|R(2)|csn}} tonnes of fuel, your ship has a maximum burn time of {{ship_burn_time|R|csn}} hours at maximum thrust.
-          </p>
-
           <def split="4" term="Total"        :def="distance|R(2)|unit('AU')" />
           <def split="4" term="Acceleration" :def="transit.accel|R(2)|unit('m/s/s')" />
           <def split="4" term="Max velocity" :def="(transit.maxVelocity/1000)|R(2)|unit('km/s')" />
@@ -636,7 +641,7 @@ define(function(require, exports, module) {
       },
 
       center_point() {
-        if (this.target) {
+        if (this.target && this.target != 'transit') {
           return System.position(this.target);
         }
 
@@ -681,6 +686,7 @@ define(function(require, exports, module) {
 
       set_target(target) {
         this.target = target;
+        this.modal = null;
       },
     },
 
@@ -723,7 +729,7 @@ define(function(require, exports, module) {
         </modal>
 
         <modal v-if="show_targets" title="Find on map" @close="modal=null">
-          <Opt :val="transit" :disabled="!transit" final=1>Flight path</Opt>
+          <Opt @click="set_target('transit')" :val="transit" :disabled="!transit" final=1>Flight path</Opt>
           <NavDestMenu @answer="set_target" final=1 />
         </modal>
       </div>
