@@ -203,7 +203,7 @@ define(function(require, exports, module) {
         <card-header class="px-0">
           <h3 class="p-2">
             NavComp
-            <btn v-if="!show_home_menu" @click="go_home_menu">Main menu</btn>
+            <btn v-if="!show_home_menu" @click="go_home_menu">Back</btn>
           </h3>
         </card-header>
 
@@ -708,16 +708,18 @@ define(function(require, exports, module) {
     'template': `
       <div class="p-0 m-0">
         <NavMapPlot @click="on_click" :focus="focus" :center="center_point" :layout.sync="layout" :fov="fov_au">
-          <btn class="float-left" @click="go_routes" v-if="focus">Route</btn>
+          <span v-if="focus" class="text-success">[ {{ focus|caps }} ]</span>
 
           <btn class="float-right" @click="go_targets">
             &#128906;
           </btn>
 
           <btn class="float-right" @click="$emit('cycle')">
-            <span v-if="focus" class="text-danger">[ {{ focus|caps }} ]</span>
             &#9654;
           </btn>
+
+          <btn class="float-right" @click="go_routes" v-if="focus">Route</btn>
+
 
           <NavMapPoint
               v-for="(p, idx) in target_path"

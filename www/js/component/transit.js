@@ -30,13 +30,7 @@ define(function(require, exports, module) {
       destination: function() { return system.name(this.plan.dest) },
 
       fov: function() {
-        const center = Physics.centroid(
-          this.plan.end,
-          this.plan.start,
-          this.plan.coords,
-        );
-
-        return center / Physics.AU * 0.9;
+        return this.plan.au / 2;
       },
 
       ship_x: function() {

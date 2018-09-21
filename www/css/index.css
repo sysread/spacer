@@ -145,7 +145,7 @@ body {
   vertical-align: middle;
 }
 
-.plot-point span {
+.plot-point span:not(.badge) {
   font-size: 0.05rem;
 }
 
