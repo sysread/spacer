@@ -86,7 +86,7 @@ define(function(require, exports, module) {
           }
           else {
             game.turn(1, true);
-            //game.player.ship.burn(this.plan.accel);
+            game.player.ship.burn(this.plan.accel);
             this.plan.turn();
 
             if (this.paused) {
