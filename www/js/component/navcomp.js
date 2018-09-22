@@ -728,7 +728,7 @@ define(function(require, exports, module) {
           </btn>
 
           <btn class="float-right" @click="go_routes" v-if="focus">
-            &#11208;
+            &#9784;
           </btn>
 
             Route

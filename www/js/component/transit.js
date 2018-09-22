@@ -40,16 +40,20 @@ define(function(require, exports, module) {
 
       fov: function() {
         const max_distance = Math.max(
-          Physics.distance(this.plan.start, [0, 0]),
-          Physics.distance(this.plan.end, [0, 0]),
-          Physics.distance(this.plan.coords, [0, 0]),
+          Physics.distance([0, 0],           this.transit_center),
+          Physics.distance(this.plan.end,    this.transit_center),
+          Physics.distance(this.plan.coords, this.transit_center),
         );
 
         return max_distance / Physics.AU * 1.1;
       },
 
       transit_center: function() {
-        return [0, 0];
+        return Physics.centroid(
+          [0, 0],
+          this.plan.end,
+          this.plan.coords,
+        );
       },
 
       transit_path: function() {

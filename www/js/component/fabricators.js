@@ -64,7 +64,7 @@ define(function(require, exports, module) {
     },
     template: `
 <div class="my-2">
-  <btn block=1 :disabled="!amount()" @click="open=!open">
+  <btn block=1 @click="open=!open" :class="{'disabled': !amount()}">
     {{item|caps}}
   </btn>
 
