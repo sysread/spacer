@@ -35,17 +35,23 @@ define(function(require, exports, module) {
       },
 
       compression: function() {
-        return this.plan.velocity / this.plan.maxVelocity;
+        return Math.sin( Math.PI * this.plan.velocity / this.plan.maxVelocity );
+      },
+
+      batch: function() {
+        return Math.min(this.plan.left, Math.max(1, Math.ceil(this.fov * this.compression)));
       },
 
       fov: function() {
-        const max_distance = Math.max(
-          Physics.distance([0, 0],           this.transit_center),
-          Physics.distance(this.plan.end,    this.transit_center),
-          Physics.distance(this.plan.coords, this.transit_center),
+        const c = this.transit_center;
+
+        const d = Math.max(
+          Physics.distance(this.plan.coords, c),
+          Physics.distance(this.plan.end, c),
+          Physics.distance([0, 0, 0], c),
         );
 
-        return max_distance / Physics.AU * 1.1;
+        return d / Physics.AU * 1.25;
       },
 
       transit_center: function() {
@@ -64,7 +70,7 @@ define(function(require, exports, module) {
       },
 
       interval() {
-        return 50;
+        return 100;
       },
     },
     methods: {
@@ -91,9 +97,13 @@ define(function(require, exports, module) {
             return;
           }
           else {
-            game.turn(1, true);
-            this.plan.turn();
-            game.player.ship.burn(this.plan.accel);
+            const batch = this.batch;
+            game.turn(batch, true);
+            this.plan.turn(batch);
+
+            for (let i = 0; i < batch; ++i) {
+              game.player.ship.burn(this.plan.accel);
+            }
 
             if (this.paused) {
               window.clearTimeout(this.timer);
@@ -171,10 +181,10 @@ define(function(require, exports, module) {
   </card-header>
 
   <NavMapPlot v-show="!inspection" :layout.sync="layout" :focus="plan.dest" :center="transit_center" :fov="fov">
-    <span class="float-left text-success w-25">{{daysLeft|R|unit('days')}}</span>
-    <span class="float-left text-info    w-25">{{distance|R(1)|unit('AU')}}</span>
-    <span class="float-left text-danger  w-25">{{plan.accel|R(2)|unit('G')}}</span>
-    <span class="float-left text-warning w-25">{{(velocity/1000)|R|csn|unit('km/s')}}</span>
+    <span class="float-left text-success w-25 text-left" >{{daysLeft|R|unit('days')}}</span>
+    <span class="float-left text-info    w-25 text-left" >{{distance|R(2)|unit('AU')}}</span>
+    <span class="float-left text-danger  w-25 text-right">{{plan.accel|R(3)|unit('G')}}</span>
+    <span class="float-left text-warning w-25 text-right">{{(velocity/1000)|R|csn|unit('km/s')}}</span>
 
     <NavMapPoint class="text-success" :left="ship_x" :top="ship_y">
       &#9660;

@@ -315,6 +315,7 @@ define(function(require, exports, module) {
         </p>
 
         <div v-if="has_route">
+          <def split="4" term="Destination"  :def="transit.dest|caps" />
           <def split="4" term="Total"        :def="distance|R(2)|unit('AU')" />
           <def split="4" term="Acceleration" :def="transit.accel|R(2)|unit('m/s/s')" />
           <def split="4" term="Max velocity" :def="(transit.maxVelocity/1000)|R(2)|unit('km/s')" />
@@ -379,7 +380,8 @@ define(function(require, exports, module) {
       diameter() {
         const d = System.body(this.body).radius * 2;
         const w = this.layout.width_px * (d / (this.layout.fov_au * Physics.AU));
-        return Math.max(3, Math.ceil(w));
+        const min = this.is_moon ? 1 : 5;
+        return Math.max(min, Math.ceil(w));
       },
 
       left() {
