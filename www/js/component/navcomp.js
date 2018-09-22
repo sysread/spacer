@@ -65,7 +65,7 @@ define(function(require, exports, module) {
 
         <badge right=1 class="ml-1">{{dist}}</badge>
         <badge right=1 class="ml-1 d-none d-sm-inline">{{faction}}</badge>
-        <badge right=1 v-if="is_moon" class="ml-1 d-none d-sm-inline">{{kind}}</badge>
+        <badge right=1 v-if="is_moon" class="ml-1">{{kind}}</badge>
       </Opt>
     `,
   });
@@ -204,12 +204,12 @@ define(function(require, exports, module) {
           <h3 class="p-2">
             NavComp
 
-            <btn v-if="!show_home_menu" @click="go_home_menu" class="mx-1">
+            <btn v-if="!show_home_menu" @click="go_home_menu">
               Back
             </btn>
 
             <btn @click="begin_transit" v-if="transit" right=1 class="mx-1">
-              Begin transit
+              Launch
             </btn>
           </h3>
         </card-header>
@@ -224,16 +224,17 @@ define(function(require, exports, module) {
               </span>
             </Opt>
 
-            <Opt @click="go_map">System map</Opt>
-
             <Opt @click="go_routes" :disabled="!dest">Plan route</Opt>
-            <Opt @click="go_info" :disabled="!dest">System info</Opt>
-            <Opt @click="go_market" :disabled="!dest">Market prices</Opt>
 
             <Opt @click="begin_transit" :disabled="!transit">
               Begin transit
               <badge right=1 v-if="transit">{{transit.str_arrival}}</badge>
             </Opt>
+
+            <Opt @click="go_map">System map</Opt>
+
+            <Opt @click="go_info" :disabled="!dest">System info</Opt>
+            <Opt @click="go_market" :disabled="!dest">Market prices</Opt>
           </Menu>
 
           <NavDestMenu
@@ -264,7 +265,6 @@ define(function(require, exports, module) {
             v-if="show_map"
             :focus="dest"
             :transit="transit"
-            @cycle="next_dest"
             @dest="set_dest"
             @transit="set_transit" />
 
@@ -374,7 +374,7 @@ define(function(require, exports, module) {
       diameter() {
         const d = System.body(this.body).radius * 2;
         const w = this.layout.width_px * (d / (this.layout.fov_au * Physics.AU));
-        return Math.max(5, Math.ceil(w));
+        return Math.max(3, Math.ceil(w));
       },
 
       left() {
@@ -383,10 +383,6 @@ define(function(require, exports, module) {
 
       top() {
         return this.point[1] - (this.diameter / 2);
-      },
-
-      circle_diameter() {
-        return this.diameter * 10;
       },
 
       label_visible() {
@@ -516,6 +512,10 @@ define(function(require, exports, module) {
 
       *visible_bodies() {
         for (const body of this.bodies()) {
+          if (!this.is_within_fov(body)) {
+            continue;
+          }
+
           yield body;
         }
       },
@@ -526,8 +526,10 @@ define(function(require, exports, module) {
       },
 
       is_within_fov(body) {
-        const d = Physics.distance(this.position(b), [0, 0]);
-        return (d / Physics.AU) < this.layout.fov_au;
+        return this.layout.is_within_fov(
+          this.position(body),
+          this.center_point,
+        );
       },
 
       is_focus(body) {
@@ -620,7 +622,6 @@ define(function(require, exports, module) {
 
         if (transit) {
           const points = transit.path;
-
           const path = [];
 
           let each = 1;
@@ -670,7 +671,13 @@ define(function(require, exports, module) {
         const transit = this.transit;
 
         if (transit) {
-          const points = transit.path.map(p => p.position.point);
+          const points = [
+            transit.start,
+            transit.end,
+            System.position(this.focus),
+            System.position(game.locus),
+          ];
+
           return Physics.centroid(...points);
         }
 
@@ -679,13 +686,11 @@ define(function(require, exports, module) {
 
       fov_au() {
         if (this.target) {
-          return Physics.distance(this.target, [0, 0]) / Physics.AU * 1.1;
+          return Physics.distance(this.target, [0, 0]) / Physics.AU;
         }
 
-        const transit = this.transit;
-
-        if (transit) {
-          return this.transit.au;
+        if (this.transit) {
+          return this.transit.segment_au;
         }
 
         return;
@@ -723,11 +728,10 @@ define(function(require, exports, module) {
             &CircleDot;
           </btn>
 
-          <btn class="float-right" @click="$emit('cycle')">
+          <btn class="float-right" @click="go_routes" v-if="focus">
             &#9654;
           </btn>
 
-          <btn class="float-right" @click="go_routes" v-if="focus">
             Route
           </btn>
 
@@ -756,8 +760,7 @@ define(function(require, exports, module) {
         </modal>
 
         <modal v-if="show_targets" title="Find on map" @close="modal=null">
-          <Opt @click="set_target('transit')" :val="transit" :disabled="!transit" final=1>Flight path</Opt>
-          <NavDestMenu @answer="set_target" final=1 />
+          <NavDestMenu @answer="on_click" final=1 />
         </modal>
       </div>
     `,

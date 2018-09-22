@@ -42,7 +42,10 @@ define(function(require, exports, module) {
       },
 
       transit_path: function() {
-        const points = this.plan.path;
+        const points = this.plan.path.filter(p =>
+          this.layout.is_within_fov(p.position.point, this.plan.coords)
+        );
+
         const path = [];
 
         let each = 1;
@@ -165,17 +168,17 @@ define(function(require, exports, module) {
 
     <row v-show="!inspection" class="p-0 m-0">
       <cell size=4 brkpt="sm" y=0>
-        <table class="transit-detail table table-sm my-2">
+        <table class="transit-detail table table-sm" style="font-size:0.8rem">
           <tr>
-            <th scope="col">Time</th>
-            <td>{{daysLeft|R|unit('days')}}</td>
-            <th scope="col">Distance</th>
-            <td>{{distance|R(1)|unit('AU')}}</td>
+            <th scope="col">Remaining</th>
+            <td>{{daysLeft|R|unit('days')}}, {{distance|R(1)|unit('AU')}}</td>
           </tr>
           <tr>
-            <th scope="col">Status</th>
-            <td>{{plan.pct_complete < 50 ? 'Accelerating' : 'Decelerating'}} at {{plan.accel|R(2)|unit('G')}}</td>
-            <th scope="col">Speed</th>
+            <th scope="col">Accel</th>
+            <td>{{plan.accel|R(2)|unit('G')}}</td>
+          </tr>
+          <tr>
+            <th scope="col">Vel</th>
             <td>{{(velocity/1000)|R|csn|unit('km/s')}}</td>
           </tr>
         </table>

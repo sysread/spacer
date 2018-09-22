@@ -112,6 +112,12 @@ define(function(require, exports, module) {
       ];
     }
 
+    is_within_fov(target, reference_point) {
+      const d = Physics.distance(target, reference_point) / Physics.AU;
+      return d < Layout.SCALE_MIN_AU * 100
+          || d < this.fov_au;
+    }
+
     update_width() {
       if (!this.elt) {
         return 0;
@@ -159,7 +165,7 @@ define(function(require, exports, module) {
           amount = 1 - amount;    // zooms out by increasing the scale to a larger value in AU
         }
 
-        amount = amount / this.fov_au / 10; // reduce to a reasonable fractional value
+        amount = amount * this.fov_au / 10; // reduce to a reasonable fractional value
 
         this.set_fov_au(this.fov_au + amount);
       });

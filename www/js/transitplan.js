@@ -28,6 +28,8 @@ define(function(require, exports, module) {
     get au()           { return this.dist / Physics.AU }           // distance in AU
     get is_complete()  { return this.left === 0 }
     get pct_complete() { return Math.ceil(100 - (this.left * this.turnpct)) }
+    get segment()      { return Physics.distance(this.start, this.end) }
+    get segment_au()   { return this.segment / Physics.AU }
 
     get days_hours() {
       const d = this.hours / 24;
@@ -45,7 +47,7 @@ define(function(require, exports, module) {
         const turn = this.turns - this.left;
         --this.left;
         this.velocity = this.path[turn].velocity.length;
-        this.coords = this.path[turn].position.point;
+        this.coords   = this.path[turn].position.point;
       }
     }
 
