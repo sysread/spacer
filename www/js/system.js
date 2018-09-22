@@ -174,16 +174,30 @@ define(function(require, exports, module) {
       const key = `${name}.orbit.byturns`;
 
       if (!this.cache.hasOwnProperty(key)) {
-        const turns_per_day = 24 / data.hours_per_turn;
+        const tpd = 24 / data.hours_per_turn;
         const orbit = this.orbit(name);
-        const end   = orbit.length;
-        const curve = new jsspline.Bezier({steps: (turns_per_day * 3) - 1});
 
-        for (const point of orbit) {
-          curve.addWayPoint({x: point[0], y: point[1], z: point[2]});
+        let point = orbit[0];
+        const path = [point];
+
+        for (let day = 1; day < orbit.length; ++day) {
+          const next = orbit[day];
+          const dx = Math.ceil((next[0] - point[0]) / tpd);
+          const dy = Math.ceil((next[1] - point[1]) / tpd);
+          const dz = Math.ceil((next[2] - point[2]) / tpd);
+
+          for (let i = 1; i <= tpd; ++i) {
+            path.push([
+              point[0] + (i * dx),
+              point[1] + (i * dy),
+              point[2] + (i * dz),
+            ]);
+          }
+
+          point = next;
         }
 
-        this.cache[key] = curve.nodes.map(p => [p.x, p.y, p.z]);
+        this.cache[key] = path;
       }
 
       return this.cache[key];

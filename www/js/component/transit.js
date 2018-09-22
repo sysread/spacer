@@ -27,10 +27,12 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      destination: function() { return system.name(this.plan.dest) },
+      destination: function() {
+        return system.name(this.plan.dest);
+      },
 
       fov: function() {
-        return this.plan.au / 2;
+        return this.plan.au;
       },
 
       ship_x: function() {
@@ -41,27 +43,26 @@ define(function(require, exports, module) {
         return this.layout.scale_y(this.plan.coords[1]);
       },
 
+      transit_center: function() {
+        return Physics.centroid(this.plan.start, this.plan.end);
+      },
+
       transit_path: function() {
-        const points = this.plan.path.filter(p =>
-          this.layout.is_within_fov(p.position.point, this.plan.coords)
+        return this.layout.scale_path(
+          this.plan.path
+            .map(p => p.position)
         );
+      },
 
-        const path = [];
+      target_path() {
+        return this.layout.scale_path(
+          system.orbit_by_turns(this.plan.dest)
+            .slice(0, this.plan.turns)
+        );
+      },
 
-        let each = 1;
-        while (points.length / each > 100) {
-          each += 1;
-        }
-
-        for (let i = 0; i < points.length; i += each) {
-          path.push( this.layout.scale_point( points[i].position.point ) );
-        }
-
-        if (points.length % each != 0) {
-          path.push( this.layout.scale_point( points[ points.length - 1 ].position.point ) );
-        }
-
-        return path;
+      batch_size() {
+        return Math.ceil(this.plan.turns / 200);
       },
     },
     methods: {
@@ -88,9 +89,10 @@ define(function(require, exports, module) {
             return;
           }
           else {
-            game.turn(1, true);
-            game.player.ship.burn(this.plan.accel);
-            this.plan.turn();
+            const turns = Math.max(1, Math.min(this.batch_size, this.plan.left));
+            game.turn(turns, true);
+            this.plan.turn(turns);
+            //game.player.ship.burn(this.plan.accel);
 
             if (this.paused) {
               window.clearTimeout(this.timer);
@@ -158,59 +160,51 @@ define(function(require, exports, module) {
       },
     },
     template: `
-<div class="p-0 m-0">
-  <card>
-    <card-header slot="header">
-      Transiting from {{plan.origin|caps}} to {{plan.dest|caps}}
-      <btn v-if="paused" @click="resume">Resume</btn>
-      <btn v-else @click="pause">Pause</btn>
-    </card-header>
+<card nopad=1>
+  <card-header slot="header">
+    Transiting from {{plan.origin|caps}} to {{plan.dest|caps}}
+    <btn v-if="paused" @click="resume">Resume</btn>
+    <btn v-else @click="pause">Pause</btn>
+  </card-header>
 
-    <row v-show="!inspection" class="p-0 m-0">
-      <cell size=4 brkpt="sm" y=0>
-        <table class="transit-detail table table-sm" style="font-size:0.8rem">
-          <tr>
-            <th scope="col">Remaining</th>
-            <td>{{daysLeft|R|unit('days')}}, {{distance|R(1)|unit('AU')}}</td>
-          </tr>
-          <tr>
-            <th scope="col">Accel</th>
-            <td>{{plan.accel|R(2)|unit('G')}}</td>
-          </tr>
-          <tr>
-            <th scope="col">Vel</th>
-            <td>{{(velocity/1000)|R|csn|unit('km/s')}}</td>
-          </tr>
-        </table>
-      </cell>
-      <cell size=8 brkpt="sm" y=0 class="p-0 m-0">
-        <NavMapPlot :layout.sync="layout" :center="plan.coords" :fov="fov">
-          <NavMapPoint :top="ship_y" :left="ship_x" class="text-success">
-            &diams;
-          </NavMapPoint>
-        </NavMapPlot>
+  <NavMapPlot v-show="!inspection" :layout.sync="layout" :focus="plan.dest" :center="transit_center" :fov="fov">
+    <span class="float-left m-2 text-success">{{daysLeft|R|unit('days')}}</span>
+    <span class="float-left m-2 text-info">{{distance|R(1)|unit('AU')}}</span>
+    <span class="float-left m-2 text-danger">{{plan.accel|R(2)|unit('G')}}</span>
+    <span class="float-left m-2 text-warning">{{(velocity/1000)|R|csn|unit('km/s')}}</span>
 
-        <NavMapPoint
-            v-for="(p, idx) in transit_path"
-            :key="'transit-' + idx"
-            :left="p[0]"
-            :top="p[1]"
-            class="text-muted">
-          <span>&sdot;</span>
-        </NavMapPoint>
-      </cell>
-    </row>
+    <NavMapPoint :top="ship_y" :left="ship_x" class="text-success">
+      &#9660;
+    </NavMapPoint>
 
-    <transit-inspection
-      v-if="inspection"
-      @done="schedule"
-      :body="inspection.body"
-      :faction="inspection.faction"
-      :distance="inspection.distance"
-      class="my-3"
-    />
-  </card>
-</div>
+    <NavMapPoint
+        v-for="(p, idx) in transit_path"
+        :class="{'text-dark': idx <= plan.currentTurn, 'text-muted': idx > plan.currentTurn}"
+        :key="'transit-' + idx"
+        :left="p[0]"
+        :top="p[1]">
+      <span class="tiny">&sdot;</span>
+    </NavMapPoint>
+
+    <NavMapPoint
+        v-for="(p, idx) in target_path"
+        :class="{'text-dark': idx <= plan.currentTurn, 'text-warning': idx > plan.currentTurn}"
+        :key="'target-' + idx"
+        :left="p[0]"
+        :top="p[1]">
+      <span class="tiny">&sdot;</span>
+    </NavMapPoint>
+
+  </NavMapPlot>
+
+  <transit-inspection
+    v-if="inspection"
+    @done="schedule"
+    :body="inspection.body"
+    :faction="inspection.faction"
+    :distance="inspection.distance"
+    class="my-3" />
+</card>
     `,
   });
 

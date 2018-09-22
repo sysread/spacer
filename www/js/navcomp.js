@@ -28,36 +28,45 @@ define(function(require, exports, module) {
       this.agent    = agent;
       this.maxAccel = maxAccel;
       this.turns    = turns;
+      this.tflip    = SPT * this.turns / 2; // seconds to flip point
       this.accel    = this.calculateAcceleration();
+      this._path    = null;
     }
 
     get acc() { return this.accel.clone() }
 
     // a = (2s / t^2) - (2v / t)
     calculateAcceleration() {
-      const tflip = SPT * this.turns / 2;
-
       // Calculate portion of target velocity to match by flip point
       const dvf = this.target.vel
-        .mul_scalar(2 / tflip);
+        .mul_scalar(2 / this.tflip);
 
       // Calculate portion of total change in velocity to apply by flip point
       const dvi = this.agent.vel
         .sub(dvf)
-        .mul_scalar(2 / tflip);
+        .mul_scalar(2 / this.tflip);
 
-      return this.target.pos         // change in position
-        .sub(this.agent.pos)         // (2s / 2) for flip point
-        .div_scalar(tflip * tflip)   // t^2
-        .sub(dvi);                   // less the change in velocity
+      return this.target.pos                  // change in position
+        .sub(this.agent.position)             // (2s / 2) for flip point
+        .div_scalar(this.tflip * this.tflip)  // t^2
+        .sub(dvi);                            // less the change in velocity
     }
 
-    *path() {
-      const tflip = SPT * (this.turns / 2);           // seconds to flip point
-      const p     = this.agent.pos;                   // initial position
-      const v     = this.agent.vel;                   // initial velocity
-      const vax   = this.acc.mul_scalar(TI);          // static portion of change in velocity each TI
-      const dax   = this.acc.mul_scalar(TI * TI / 2); // static portion of change in position each TI
+    maxVelocity() {
+      const t = this.tflip;
+      return this.accel.clone().mul_scalar(t).length;
+    }
+
+    path() {
+      if (this._path) {
+        return this._path;
+      }
+
+      const p    = this.agent.pos;                   // initial position
+      const v    = this.agent.vel;                   // initial velocity
+      const vax  = this.acc.mul_scalar(TI);          // static portion of change in velocity each TI
+      const dax  = this.acc.mul_scalar(TI * TI / 2); // static portion of change in position each TI
+      const path = [];
 
       let t = 0;
 
@@ -67,7 +76,7 @@ define(function(require, exports, module) {
         for (let i = 0; i < DT; ++i) {
           t += TI;
 
-          if (t > tflip) {
+          if (t > this.tflip) {
             v.sub(vax); // decelerate after flip
           } else {
             v.add(vax); // accelerate before flip
@@ -77,11 +86,16 @@ define(function(require, exports, module) {
           p.add( v.clone().mul_scalar(TI).add(dax) );
         }
 
-        yield {
-          position: p.clone(),
-          velocity: v.clone(),
+        const segment = {
+          position: p.clone().point,
+          velocity: v.clone().length,
         };
+
+        path.push(segment);
       }
+
+      this._path = path;
+      return path;
     }
   };
 
@@ -174,33 +188,14 @@ define(function(require, exports, module) {
           continue;
         }
 
-        let max_vel = 0;
-        let idx = 0;
-
-        const path = [];
-
-        for (let seg of course.path()) {
-          if (seg.velocity.length > max_vel) {
-            max_vel = seg.velocity.length;
-          }
-
-          seg.fuel = fuelUsedPerTurn * (idx + 1);
-          path.push(seg);
-
-          ++idx;
-        }
-
         yield new TransitPlan({
           origin: origin,
           dest:   destination,
-          turns:  turns,
-          fuel:   fuelUsed,
-          start:  orig[0],
-          end:    dest[turns],
+          start:  startPos.point,
+          end:    targetPos.point,
           dist:   distance,
-          vel:    max_vel,
-          accel:  a,
-          path:   path,
+          fuel:   fuelUsed,
+          course: course,
         });
       }
     }

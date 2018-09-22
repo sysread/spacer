@@ -217,18 +217,23 @@ define(function(require, exports, module) {
         <div class="p-2" v-if="!show_map">
           <Menu title="Navigation"  v-show="show_home_menu">
             <Opt @click="go_dest_menu">
-              <span v-if="!dest">Set destination</span>
+              <span v-if="!dest">
+                Set destination
+              </span>
               <span v-else>
                 Change destination
                 <badge right=1>{{dest|caps}}</badge>
               </span>
             </Opt>
 
-            <Opt @click="go_routes" :disabled="!dest">Plan route</Opt>
-
-            <Opt @click="begin_transit" :disabled="!transit">
-              Begin transit
-              <badge right=1 v-if="transit">{{transit.str_arrival}}</badge>
+            <Opt @click="go_routes" :disabled="!dest">
+              <span v-if="!transit">
+                Plan route
+              </span>
+              <span v-else>
+                Modify route
+                <badge right=1 v-if="transit">{{transit.str_arrival}}</badge>
+              </span>
             </Opt>
 
             <Opt @click="go_map">System map</Opt>
@@ -450,15 +455,6 @@ define(function(require, exports, module) {
     },
 
     'computed': {
-      plot_points() {
-        const bodies = {};
-        for (const body of this.visible_bodies()) {
-          bodies[body] = this.layout.scale_point(this.position(body));
-        }
-
-        return bodies;
-      },
-
       center_point() {
         if (this.center) {
           return this.center;
@@ -491,35 +487,34 @@ define(function(require, exports, module) {
         const fov    = (max + (Physics.AU / 2)) / Physics.AU;
         return fov;
       },
-    },
 
-    'methods': {
-      *bodies() {
-        const seen = {};
+      bodies() {
+        const seen   = {};
+        const bodies = [];
+
         for (const body of BODIES) {
           if (!seen[body]) {
             seen[body] = true;
-            yield body;
+            bodies.push(body);
 
             const central = System.central(body);
             if (central != 'sun' && !seen[central]) {
               seen[central] = true;
-              yield central;
+              bodies.push(central);
             }
           }
         }
+
+        return bodies;
       },
 
-      *visible_bodies() {
-        for (const body of this.bodies()) {
-          if (!this.is_within_fov(body)) {
-            continue;
-          }
-
-          yield body;
-        }
+      visible_bodies() {
+        return this.bodies.filter(b => this.is_within_fov(b));
       },
 
+    },
+
+    'methods': {
       position(body) {
         const p = System.position(body);
         return [p[0], p[1]];
@@ -540,7 +535,17 @@ define(function(require, exports, module) {
         return body == game.locus;
       },
 
-      body_clicked(body) {
+     plot_points() {
+      const t = System.system.time;
+      const bodies = {};
+      for (const body of this.visible_bodies) {
+        bodies[body] = System.position(body, t);
+      }
+
+      return bodies;
+    },
+
+     body_clicked(body) {
         // Find navigable targets in the system on which the player clicked
         const central = System.central(body);
         const sats    = System.body(central == 'sun' ? body : central).satellites;
@@ -578,7 +583,7 @@ define(function(require, exports, module) {
     'template': `
       <div v-resizable
           id     = "navcomp-map-root"
-          class  = "plot-root"
+          class  = "plot-root border border-dark"
           :style = "{'width': layout.width_px + 'px', 'height': layout.width_px + 'px'}">
 
         <NavMapBody
@@ -588,11 +593,12 @@ define(function(require, exports, module) {
             nolabel = 0 />
 
         <NavMapBody
-            v-for   = "(point, body) of plot_points"
+            v-for   = "(point, body) of plot_points()"
             :key    = "body"
             :body   = "body"
             :layout = "layout"
             :focus  = "focus"
+            :pos    = "point"
             @click  = "body_clicked(body)" />
 
         <slot />
@@ -621,23 +627,13 @@ define(function(require, exports, module) {
         const transit = this.transit;
 
         if (transit) {
-          const points = transit.path;
-          const path = [];
+          const center = this.center_point || [0, 0];
 
-          let each = 1;
-          while (points.length / each > 100) {
-            each += 1;
-          }
+          const path = this.transit.path
+            .map(p => p.position)
+            .filter(p => this.layout.is_within_fov(p, center));
 
-          for (let i = 0; i < points.length; i += each) {
-            path.push( this.layout.scale_point( points[i].position.point ) );
-          }
-
-          if (points.length % each != 0) {
-            path.push( this.layout.scale_point( points[ points.length - 1 ].position.point ) );
-          }
-
-          return path;
+          return this.layout.scale_path(path, 100);
         }
       },
 
@@ -645,15 +641,18 @@ define(function(require, exports, module) {
         const transit = this.transit;
 
         if (transit) {
-          const orbit = System.orbit_by_turns(this.focus).slice(0, transit.path.length);
-          const min   = this.layout.fov_au * Physics.AU / 30;
-          const path  = [ this.layout.scale_point( orbit[0] ) ];
+          const center = this.center_point || [0, 0];
+          const orbit  = System.orbit_by_turns(this.focus).slice(0, transit.turns);
+          const min    = this.layout.fov_au * Physics.AU / 30;
+          const path   = [ this.layout.scale_point( orbit[0] ) ];
 
           let mark = orbit[0];
           for (let i = 1; i < orbit.length; ++i) {
-            if (Physics.distance(mark, orbit[i]) > min) {
-              path.push( this.layout.scale_point( orbit[i] ) );
-              mark = orbit[i];
+            if (this.layout.is_within_fov(orbit[i], center)) {
+              if (Physics.distance(mark, orbit[i]) > min) {
+                path.push( this.layout.scale_point( orbit[i] ) );
+                mark = orbit[i];
+              }
             }
           }
 
@@ -729,7 +728,7 @@ define(function(require, exports, module) {
           </btn>
 
           <btn class="float-right" @click="go_routes" v-if="focus">
-            &#9654;
+            &#11208;
           </btn>
 
             Route
@@ -759,7 +758,7 @@ define(function(require, exports, module) {
           <NavRoutePlanner :dest="focus" @route="set_route" />
         </modal>
 
-        <modal v-if="show_targets" title="Find on map" @close="modal=null">
+        <modal v-if="show_targets" title="Find on map" @close="modal=null" xclose=1>
           <NavDestMenu @answer="on_click" final=1 />
         </modal>
       </div>

@@ -149,6 +149,10 @@ body {
   font-size: 0.05rem;
 }
 
+.plot-point span:not(.badge).tiny {
+  font-size: 0.025rem;
+}
+
 .dest {
   background-color: black !important;
   border-color: red !important;

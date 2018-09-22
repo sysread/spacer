@@ -32,7 +32,6 @@ define(function(require, exports, module) {
 
         if (this._elt) {
           console.debug('layout: navcomp-map-root found');
-
           this.clear_mc();
           this.install_handlers();
         }
@@ -110,6 +109,34 @@ define(function(require, exports, module) {
         this.scale_x(p[0], no_offset),
         this.scale_y(p[1], no_offset),
       ];
+    }
+
+    scale_path(points, max) {
+      if (max === undefined) {
+        max = points.length;
+      }
+
+      const path = [];
+
+      let each = 1;
+      while (points.length / each > max) {
+        each += 1;
+      }
+
+      let pos;
+      for (let i = 0; i < points.length; ++i) {
+        pos = points[i];
+
+        if (i % each == 0) {
+          path.push(this.scale_point(pos));
+        }
+      }
+
+      if (path.length % each != 0) {
+        path.push(this.scale_point(pos));
+      }
+
+      return path;
     }
 
     is_within_fov(target, reference_point) {
