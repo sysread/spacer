@@ -27,24 +27,29 @@ define(function(require, exports, module) {
       };
     },
     computed: {
+      ship_x: function() { return this.layout.scale_x( this.plan.coords[0] ) },
+      ship_y: function() { return this.layout.scale_y( this.plan.coords[1] ) },
+
       destination: function() {
         return system.name(this.plan.dest);
       },
 
+      compression: function() {
+        return this.plan.velocity / this.plan.maxVelocity;
+      },
+
       fov: function() {
-        return this.plan.au;
-      },
+        const max_distance = Math.max(
+          Physics.distance(this.plan.start, [0, 0]),
+          Physics.distance(this.plan.end, [0, 0]),
+          Physics.distance(this.plan.coords, [0, 0]),
+        );
 
-      ship_x: function() {
-        return this.layout.scale_x(this.plan.coords[0]);
-      },
-
-      ship_y: function() {
-        return this.layout.scale_y(this.plan.coords[1]);
+        return max_distance / Physics.AU * 1.1;
       },
 
       transit_center: function() {
-        return Physics.centroid(this.plan.start, this.plan.end);
+        return [0, 0];
       },
 
       transit_path: function() {
@@ -54,15 +59,8 @@ define(function(require, exports, module) {
         );
       },
 
-      target_path() {
-        return this.layout.scale_path(
-          system.orbit_by_turns(this.plan.dest)
-            .slice(0, this.plan.turns)
-        );
-      },
-
-      batch_size() {
-        return Math.ceil(this.plan.turns / 200);
+      interval() {
+        return 50;
       },
     },
     methods: {
@@ -80,7 +78,7 @@ define(function(require, exports, module) {
         this.velocity = this.plan.velocity;
         this.daysLeft = Math.floor(this.plan.left * data.hours_per_turn / 24);
         this.distance = util.R(this.plan.auRemaining(), 2);
-        return window.setTimeout(() => { this.turn() }, 75);
+        return window.setTimeout(() => { this.turn() }, this.interval);
       },
 
       turn: function() {
@@ -89,10 +87,9 @@ define(function(require, exports, module) {
             return;
           }
           else {
-            const turns = Math.max(1, Math.min(this.batch_size, this.plan.left));
-            game.turn(turns, true);
-            this.plan.turn(turns);
-            //game.player.ship.burn(this.plan.accel);
+            game.turn(1, true);
+            this.plan.turn();
+            game.player.ship.burn(this.plan.accel);
 
             if (this.paused) {
               window.clearTimeout(this.timer);
@@ -102,6 +99,8 @@ define(function(require, exports, module) {
               this.timer = this.schedule();
             }
           }
+
+          this.$forceUpdate();
         }
         else {
           window.clearTimeout(this.timer);
@@ -168,33 +167,14 @@ define(function(require, exports, module) {
   </card-header>
 
   <NavMapPlot v-show="!inspection" :layout.sync="layout" :focus="plan.dest" :center="transit_center" :fov="fov">
-    <span class="float-left m-2 text-success">{{daysLeft|R|unit('days')}}</span>
-    <span class="float-left m-2 text-info">{{distance|R(1)|unit('AU')}}</span>
-    <span class="float-left m-2 text-danger">{{plan.accel|R(2)|unit('G')}}</span>
-    <span class="float-left m-2 text-warning">{{(velocity/1000)|R|csn|unit('km/s')}}</span>
+    <span class="float-left text-success w-25">{{daysLeft|R|unit('days')}}</span>
+    <span class="float-left text-info    w-25">{{distance|R(1)|unit('AU')}}</span>
+    <span class="float-left text-danger  w-25">{{plan.accel|R(2)|unit('G')}}</span>
+    <span class="float-left text-warning w-25">{{(velocity/1000)|R|csn|unit('km/s')}}</span>
 
-    <NavMapPoint :top="ship_y" :left="ship_x" class="text-success">
+    <NavMapPoint class="text-success" :left="ship_x" :top="ship_y">
       &#9660;
     </NavMapPoint>
-
-    <NavMapPoint
-        v-for="(p, idx) in transit_path"
-        :class="{'text-dark': idx <= plan.currentTurn, 'text-muted': idx > plan.currentTurn}"
-        :key="'transit-' + idx"
-        :left="p[0]"
-        :top="p[1]">
-      <span class="tiny">&sdot;</span>
-    </NavMapPoint>
-
-    <NavMapPoint
-        v-for="(p, idx) in target_path"
-        :class="{'text-dark': idx <= plan.currentTurn, 'text-warning': idx > plan.currentTurn}"
-        :key="'target-' + idx"
-        :left="p[0]"
-        :top="p[1]">
-      <span class="tiny">&sdot;</span>
-    </NavMapPoint>
-
   </NavMapPlot>
 
   <transit-inspection

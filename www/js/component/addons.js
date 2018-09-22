@@ -17,7 +17,11 @@ define(function(require, exports, module) {
     template: `
 <card title="Equipment and upgrades">
   <btn slot="header" @click="returnToShipyard">Back to shipyard</btn>
-  <card-text>Description of the area</card-text>
+
+  <card-text>
+    Write me
+  </card-text>
+
   <addon v-for="addon in addons" :key="addon" :type="addon" />
 </card>
     `,

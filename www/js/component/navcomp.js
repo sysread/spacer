@@ -535,17 +535,17 @@ define(function(require, exports, module) {
         return body == game.locus;
       },
 
-     plot_points() {
-      const t = System.system.time;
-      const bodies = {};
-      for (const body of this.visible_bodies) {
-        bodies[body] = System.position(body, t);
-      }
+      plot_points() {
+        const t = System.system.time;
+        const bodies = {};
+        for (const body of this.visible_bodies) {
+          bodies[body] = System.position(body, t);
+        }
 
-      return bodies;
-    },
+        return bodies;
+      },
 
-     body_clicked(body) {
+      body_clicked(body) {
         // Find navigable targets in the system on which the player clicked
         const central = System.central(body);
         const sats    = System.body(central == 'sun' ? body : central).satellites;
