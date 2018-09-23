@@ -27,10 +27,10 @@ define(function(require, exports, module) {
     get mass()           { return this.shipclass.mass + this.driveMass }
     get restricted()     { return this.shipclass.restricted }
     get faction()        { return this.shipclass.faction }
-    get thrust()         { return this.drives * this.drive.thrust }
-    get fuelrate()       { return this.drives * this.drive.burn_rate }
+    get thrust()         { return this.drives * this.drive.thrust + Math.max(0, this.attr('thrust', true)) }
+    get fuelrate()       { return this.drives * this.drive.burn_rate + Math.max(0, this.attr('burn_rate', true)) }
     get acceleration()   { return Physics.deltav(this.thrust, this.mass) }
-    get tank()           { return Math.max(0, this.attr('tank', true)) }
+    get tank()           { return Math.max(0,    this.attr('tank', true)) }
     get fullHull()       { return Math.max(0,    this.attr('hull', true)) }
     get fullArmor()      { return Math.max(0,    this.attr('armor', true)) }
     get hull()           { return Math.max(0,    this.attr('hull')) }

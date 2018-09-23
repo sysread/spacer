@@ -179,7 +179,7 @@ define(function(require, exports, module) {
 
     <span class="float-left text-success w-25 text-left"  >{{plan.days_left|unit('days')}}</span>
     <span class="float-left text-info    w-25 text-center">{{plan.auRemaining()|R(2)|unit('AU')}}</span>
-    <span class="float-left text-danger  w-25 text-center">{{plan.accel|R(3)|unit('m/s/s')}}</span>
+    <span class="float-left text-danger  w-25 text-center">{{plan.accel_g|R(3)|unit('G')}}</span>
     <span class="float-left text-warning w-25 text-right" >{{(plan.velocity/1000)|R|csn|unit('km/s')}}</span>
 
     <NavMapPoint

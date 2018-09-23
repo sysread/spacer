@@ -325,7 +325,6 @@ define(function() {
         mass:      10,
         desc:      'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
         burn_rate: 0.005,
-        hull:      1,
         value:     30,
       },
       fusion: {
@@ -334,7 +333,6 @@ define(function() {
         mass:      40,
         desc:      'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
         burn_rate: .073,
-        hull:      5,
         value:     5000,
       }
     },
@@ -396,6 +394,23 @@ define(function() {
         cargo:      -4,
         price:      6000,
       },
+      ion: {
+        name:       'Ion drive',
+        desc:       'Adds an additionl pair of ion drives to the hull, increasing thrust. Care must be taken not to unbalance the ship, however.',
+        mass:       20,
+        thrust:     1600,
+        burn_rate:  0.01,
+        price:      3500,
+      },
+      fusion: {
+        name:       'Fusion drive',
+        desc:       'Somewhat reduced in efficiency when installed as a set of external pods, adding a fusion drive to an existing craft can drastically increase thrust and manuevering.',
+        mass:       80,
+        thrust:     7200,
+        burn_rate:  0.088,
+        price:      35000,
+        restricted: 'Trusted',
+      },
       railgun_turret: {
         name:       'Rail gun turret',
         desc:       'A military-grade rail gun turret, magnetically accelerating 100kg rounds at an appreciable fraction of the speed of light.',
@@ -404,7 +419,7 @@ define(function() {
         reload:     1,
         rate:       3,
         magazine:   6,
-        price:      200000,
+        price:      20000,
         restricted: 'Trusted',
       },
       railgun_cannon: {
@@ -415,7 +430,7 @@ define(function() {
         reload:     2,
         rate:       1,
         magazine:   1,
-        price:      450000,
+        price:      45000,
         restricted: 'Admired',
       },
       light_torpedo: {
@@ -427,7 +442,7 @@ define(function() {
         rate:          1,
         magazine:      2,
         interceptable: true,
-        price:         120000,
+        price:         12000,
         restricted:    'Friendly',
       },
       medium_torpedo: {
@@ -439,7 +454,7 @@ define(function() {
         rate:          1,
         magazine:      1,
         interceptable: true,
-        price:         185000,
+        price:         18500,
         restricted:    'Trusted',
       },
       heavy_torpedo: {
@@ -451,7 +466,7 @@ define(function() {
         rate:          1,
         magazine:      1,
         interceptable: true,
-        price:         250000,
+        price:         25000,
         restricted:    'Admired',
       },
       pds: {
@@ -463,7 +478,7 @@ define(function() {
         reload:     1,
         rate:       10,
         magazine:   40,
-        price:      35000,
+        price:      12500,
         restricted: 'Friendly',
       },
       ecm: {
@@ -473,7 +488,7 @@ define(function() {
         intercept:  0.1,
         dodge:      0.2,
         stealth:    0.2,
-        price:      90000,
+        price:      18000,
         restricted: 'Admired',
       },
       stealthPlating: {
@@ -483,7 +498,7 @@ define(function() {
         dodge:      0.05,
         stealth:    0.5,
         armor:      -1,
-        price:      350000,
+        price:      75000,
         restricted: 'Admired',
       },
     }
