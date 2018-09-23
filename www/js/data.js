@@ -379,17 +379,25 @@ define(function() {
      */
     addons: {
       cargo_pod: {
-        name:       'external cargo pod',
+        name:       'External cargo pod',
         desc:       'Welds additional cargo units onto the outer hull, increasing total cargo space but reducing the effectiveness of armor.',
-        mass:       10,
-        cargo:      20,
+        mass:       5,
+        cargo:      10,
         armor:      -1,
         dodge:      -0.25,
         stealth:    -0.2,
-        price:      10000,
+        price:      8000,
+      },
+      fuel_tank: {
+        name:       'Auxiliary fuel tank',
+        desc:       'Installs a supplementary fuel tank in the cargo bay, trading storage for range.',
+        mass:       1,
+        tank:       4,
+        cargo:      -4,
+        price:      6000,
       },
       railgun_turret: {
-        name:       'rail gun turret',
+        name:       'Rail gun turret',
         desc:       'A military-grade rail gun turret, magnetically accelerating 100kg rounds at an appreciable fraction of the speed of light.',
         mass:       15,
         damage:     1,
@@ -400,7 +408,7 @@ define(function() {
         restricted: 'Trusted',
       },
       railgun_cannon: {
-        name:       'rail gun cannon',
+        name:       'Rail gun cannon',
         desc:       "More powerful than it's smaller cousin, a rail gun cannon fires heavier slugs of denser material, resulting in more energy released on impact.",
         mass:       30,
         damage:     10,
@@ -411,7 +419,7 @@ define(function() {
         restricted: 'Admired',
       },
       light_torpedo: {
-        name:          'light torpedo launcher',
+        name:          'Light torpedo launcher',
         desc:          'Adds a torpedo launcher tube suitable for low yield, self-guided payloads.',
         mass:          20,
         damage:        6,
@@ -423,7 +431,7 @@ define(function() {
         restricted:    'Friendly',
       },
       medium_torpedo: {
-        name:          'medium torpedo launcher',
+        name:          'Medium torpedo launcher',
         desc:          'Adds a torpedo launcher tube suitable for moderate yield, self-guided payloads.',
         mass:          40,
         damage:        10,
@@ -435,7 +443,7 @@ define(function() {
         restricted:    'Trusted',
       },
       heavy_torpedo: {
-        name:          'heavy torpedo launcher',
+        name:          'Heavy torpedo launcher',
         desc:          'Adds a torpedo launcher tube suitable for high yield, self-guided payloads.',
         mass:          60,
         damage:        18,
@@ -469,7 +477,7 @@ define(function() {
         restricted: 'Admired',
       },
       stealthPlating: {
-        name:       "adaptive hull plating",
+        name:       "Adaptive hull plating",
         desc:       "This Martian technology, originally designed as part of an adaptive camouflage system for ground forces' power armor, alters the absorbtive range of the ships' outer hull to absorb EM radiation, making it effectively invisible except at very close range.",
         mass:       100,
         dodge:      0.05,

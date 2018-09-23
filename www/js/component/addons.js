@@ -107,14 +107,16 @@ define(function(require, exports, module) {
     <def y=0 split="5" term="Buy" :def="price|csn" />
     <def y=0 split="5" term="Sell" :def="sellPrice|csn" />
     <def y=0 split="5" term="Mass" :def="info.mass|csn" />
-    <def v-if="info.cargo" y=0 split="5" term="Cargo" :def="info.cargo" />
-    <def v-if="info.armor" y=0 split="5" term="Armor" :def="info.armor" />
+
+    <def v-if="info.cargo" y=0 split="5" term="Cargo space" :def="info.cargo" />
+    <def v-if="info.tank"  y=0 split="5" term="Fuel tank" :def="info.tank" />
 
     <def v-if="info.damage" y=0 split="5" term="Damage" :def="info.damage" />
-    <def v-if="info.reload" y=0 split="5" term="Reload" :def="info.reload|unit('rounds')" />
-    <def v-if="info.rate" y=0 split="5" term="Rate" :def="info.rate|unit('/round')" />
+    <def v-if="info.reload" y=0 split="5" term="Reloads every" :def="info.reload|unit('rounds')" />
+    <def v-if="info.rate" y=0 split="5" term="Rate of fire" :def="info.rate|unit('/round')" />
     <def v-if="info.interceptable" y=0 split="5" term="Interceptable" :def="info.interceptable|yn|caps" />
 
+    <def v-if="info.armor" y=0 split="5" term="Armor" :def="info.armor" />
     <def v-if="info.dodge" y=0 split="5" term="Dodge" :def="info.dodge|pct(2)" />
     <def v-if="info.intercept" y=0 split="5" term="Intercept" :def="info.intercept|pct(2)" />
   </card>
