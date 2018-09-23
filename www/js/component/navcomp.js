@@ -328,7 +328,7 @@ define(function(require, exports, module) {
         <div v-if="has_route">
           <def split="4" term="Destination"  :def="transit.dest|caps" />
           <def split="4" term="Total"        :def="distance|R(2)|unit('AU')" />
-          <def split="4" term="Acceleration" :def="transit.accel|R(2)|unit('m/s/s')" />
+          <def split="4" term="Acceleration" :def="transit.accel|R|unit('m/s/s')" />
           <def split="4" term="Max velocity" :def="(transit.maxVelocity/1000)|R(2)|unit('km/s')" />
           <def split="4" term="Fuel"         :def="transit.fuel|R(2)|unit('tonnes')" />
           <def split="4" term="Time"         :def="transit.str_arrival" />

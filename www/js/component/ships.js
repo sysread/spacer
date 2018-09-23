@@ -136,10 +136,10 @@ define(function(require, exports, module) {
     <def y=1 brkpt="sm" term="Range">
       <div slot="def">
         <row>
-          <def class="col-md-4" term="Accel." :def="rangeForDeltaV|R(1)|unit('G')" />
-          <def class="col-md-8" term="Range"  :def="maxRange()|R(2)|unit('AU')"    />
+          <def class="col-md-4" term="Acc" :def="rangeForDeltaV|R(2)|unit('G')" />
+          <def class="col-md-8" term="Range"  :def="maxRange()|R(2)|unit('AU')" />
         </row>
-        <slider :value.sync="rangeForDeltaV" min=0.1 :max="deltaVinG|R(1)" step=0.1 minmax=true />
+        <slider :value.sync="rangeForDeltaV" min=0.01 :max="deltaVinG|R(2)" step=0.01 minmax=true />
       </div>
     </def>
 

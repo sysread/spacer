@@ -24,7 +24,7 @@ define(function(require, exports, module) {
     get drive()          { return data.drives[this.shipclass.drive] }
     get drives()         { return this.shipclass.drives }
     get driveMass()      { return this.drives * this.drive.mass }
-    get mass()           { return this.shipclass.mass * this.driveMass }
+    get mass()           { return this.shipclass.mass + this.driveMass }
     get tank()           { return this.shipclass.tank }
     get restricted()     { return this.shipclass.restricted }
     get faction()        { return this.shipclass.faction }
