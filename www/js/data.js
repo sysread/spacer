@@ -316,10 +316,10 @@ define(function() {
     drives: {
       ion: {
         name:      'Ion',
-        thrust:    1000,
+        thrust:    800,
         mass:      10,
         desc:      'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
-        burn_rate: 0.015,
+        burn_rate: 0.005,
         hull:      1,
         value:     30,
       },
