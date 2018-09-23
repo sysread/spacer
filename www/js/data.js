@@ -59,26 +59,31 @@ define(function() {
     },
 
     traits: {
-      'mineral rich':     {produces: {ore: 4, minerals: 2}, consumes: {}},
-      'mineral poor':     {produces: {ore: -4, minerals: -2}, consumes: {}},
+      'mineral rich':      {produces: {ore: 4, minerals: 2}, consumes: {}},
+      'mineral poor':      {produces: {ore: -4, minerals: -2}, consumes: {}},
 
-      'water rich':       {produces: {water: 1}, consumes: {}},
-      'water poor':       {produces: {water: -1}, consumes: {}},
+      'water rich':        {produces: {water: 1}, consumes: {}},
+      'water poor':        {produces: {water: -1}, consumes: {}},
 
-      'hydrocarbon rich': {produces: {hydrocarbons: 1}, consumes: {}},
-      'hydrocarbon poor': {produces: {hydrocarbons: -1}, consumes: {}},
+      'hydrocarbon rich':  {produces: {hydrocarbons: 1}, consumes: {}},
+      'hydrocarbon poor':  {produces: {hydrocarbons: -1}, consumes: {}},
 
-      'rocky':            {produces: {ore: 5, minerals: 2} , consumes: {}},
-      'icy':              {produces: {water: 3, minerals: 1, hydrocarbons: 1}, consumes: {}},
+      'rocky':             {produces: {ore: 5, minerals: 2} , consumes: {}},
+      'icy':               {produces: {water: 3, minerals: 1, hydrocarbons: 1}, consumes: {}},
 
-      'asteroids':        {produces: {ore: 10, minerals: 7}, consumes: {fuel: 1.5, electronics: 0.3, machines: 1, cybernetics: 0.3}},
-      'ringed system':    {produces: {water: 6, minerals: 2, hydrocarbons: 1}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
+      'asteroids':         {produces: {ore: 10, minerals: 7}, consumes: {fuel: 1.5, electronics: 0.3, machines: 1, cybernetics: 0.3}},
+      'ringed system':     {produces: {water: 6, minerals: 2, hydrocarbons: 1}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
 
-      'agricultural':     {produces: {food: 8, hydrocarbons: 0.5}, consumes: {machines: 0.5, fuel: 0.5, water: 2, hydrocarbons: 4}},
-      'habitable':        {produces: {food: 6, hydrocarbons: 3}, consumes: {food: 4, narcotics: 0.25, weapons: 0.5}},
-      'domed':            {produces: {food: 1, hydrocarbons: 1}, consumes: {metal: 0.6, fuel: 0.6, electronics: 0.5, machines: 0.5, water: 0.75, hydrocarbons: 0.75, weapons: 0.5}},
-      'subterranean':     {produces: {food: 0.75, hydrocarbons: 0.5}, consumes: {metal: 0.6, fuel: 0.3, electronics: 0.5, machines: 0.5, water: 0.3, hydrocarbons: 1, weapons: 0.35}},
-      'orbital':          {produces: {food: 0.5, hydrocarbons: 0.25}, consumes: {metal: 1, fuel: 1.5, electronics: 0.75, machines: 0.75, water: 0.15, hydrocarbons: 0.5, weapons: 0.2}}
+      'agricultural':      {produces: {food: 8, hydrocarbons: 0.5}, consumes: {machines: 0.5, fuel: 0.5, water: 2, hydrocarbons: 4}},
+      'habitable':         {produces: {food: 6, hydrocarbons: 3}, consumes: {food: 4, narcotics: 0.25, weapons: 0.5}},
+      'domed':             {produces: {food: 1, hydrocarbons: 1}, consumes: {metal: 0.6, fuel: 0.6, electronics: 0.5, machines: 0.5, water: 0.75, hydrocarbons: 0.75, weapons: 0.5}},
+      'subterranean':      {produces: {food: 0.75, hydrocarbons: 0.5}, consumes: {metal: 0.6, fuel: 0.3, electronics: 0.5, machines: 0.5, water: 0.3, hydrocarbons: 1, weapons: 0.35}},
+      'orbital':           {produces: {food: 0.5, hydrocarbons: 0.25}, consumes: {metal: 1, fuel: 1.5, electronics: 0.75, machines: 0.75, water: 0.15, hydrocarbons: 0.5, weapons: 0.2}},
+
+      'black market':      {produces: {narcotics: 0.2, weapons: 0.2}},
+      'tech hub':          {produces: {electronics: 0.2}},
+      'manufacturing hub': {produces: {machines: 0.2}},
+      'capitol':           {produces: {medicine: 0.1}, consumes: {weapons: 0.1}},
     },
 
     // TODO: risk of injury
@@ -201,13 +206,13 @@ define(function() {
       mercury: {
         name:    'Mercury',
         size:    'small',
-        traits:  ['subterranean', 'rocky', 'mineral rich', 'water poor', 'hydrocarbon poor'],
+        traits:  ['subterranean', 'rocky', 'mineral rich', 'water poor', 'hydrocarbon poor', 'manufacturing hub'],
         faction: 'UN',
       },
       earth: {
         name:    'Earth',
         size:    'huge',
-        traits:  ['habitable', 'orbital', 'rocky', 'water rich'],
+        traits:  ['habitable', 'orbital', 'rocky', 'water rich', 'capitol'],
         faction: 'UN',
       },
       moon: {
@@ -219,13 +224,13 @@ define(function() {
       mars: {
         name:    'Mars',
         size:    'large',
-        traits:  ['domed', 'subterranean', 'orbital', 'rocky', 'water poor', 'mineral rich', 'hydrocarbon poor'],
+        traits:  ['domed', 'subterranean', 'orbital', 'rocky', 'water poor', 'mineral rich', 'hydrocarbon poor', 'tech hub', 'capitol'],
         faction: 'MC',
       },
       ceres: {
         name:    'Ceres',
         size:    'large',
-        traits:  ['subterranean', 'rocky', 'asteroids', 'mineral rich'],
+        traits:  ['subterranean', 'rocky', 'asteroids', 'mineral rich', 'black market', 'capitol'],
         faction: 'CERES',
         gravity: 0.35,
       },
@@ -244,7 +249,7 @@ define(function() {
       ganymede: {
         name:    'Ganymede',
         size:    'large',
-        traits:  ['domed', 'subterranean', 'orbital', 'rocky', 'mineral poor', 'agricultural'],
+        traits:  ['domed', 'subterranean', 'orbital', 'rocky', 'mineral poor', 'agricultural', 'capitol'],
         faction: 'JFT',
       },
       enceladus: {
@@ -257,34 +262,34 @@ define(function() {
       rhea: {
         name:    'Rhea Orbital Lab',
         size:    'small',
-        traits:  ['orbital', 'ringed system', 'icy', 'water rich', 'mineral poor'],
+        traits:  ['orbital', 'ringed system', 'icy', 'water rich', 'mineral poor', 'tech hub'],
         faction: 'JFT',
         gravity: 0.5,
       },
       titan: {
         name:    'Titan',
         size:    'normal',
-        traits:  ['domed', 'ringed system', 'icy', 'hydrocarbon rich'],
+        traits:  ['domed', 'ringed system', 'icy', 'hydrocarbon rich', 'black market'],
         faction: 'TRANSA',
       },
       triton: {
         name:    'Triton Command',
         size:    'small',
-        traits:  ['orbital', 'icy', 'water rich', 'mineral poor'],
+        traits:  ['orbital', 'icy', 'water rich', 'mineral poor', 'black market'],
         faction: 'TRANSA',
         gravity: 0.5,
       },
       titania: {
         name:    'Titania Outpost',
         size:    'small',
-        traits:  ['subterranean', 'ringed system', 'icy', 'rocky', 'mineral rich'],
+        traits:  ['subterranean', 'ringed system', 'icy', 'rocky', 'mineral rich', 'black market', 'manufacturing hub'],
         faction: 'TRANSA',
         gravity: 0.235,
       },
       pluto: {
         name:    'Pluto',
         size:    'small',
-        traits:  ['subterranean', 'rocky', 'icy', 'mineral rich'],
+        traits:  ['subterranean', 'rocky', 'icy', 'mineral rich', 'black market', 'capitol'],
         faction: 'TRANSA',
       }
     },
@@ -483,7 +488,7 @@ define(function() {
   data.factions.MC.desc           = "Nearly 50 years after its founding as a science outpost in the early 22nd century, Mars declared independence from an Earth that it increasingly viewed as a distant, intrusive micromanager. In the 84 years since its founding, Mars has grown into a military power rivaling Earth, with a thriving economy and highly educated populace. Since its independence, Mars has focused its significant resources toward the scientific and technological achievements necessary to realize its population's dream of a \"Green Mars\".|The Martian Commonwealth controls Mars and its moons as well as several of the Jovian moons, providing the infrastructure and resource to maintain and grow their subterranean and domed habitats, whose proximity to the radiant gas giant make them the bread basket of the outer planets.";
   data.factions.TRANSA.desc       = "Those who live in the outer planets are exquisitely aware of the fragile existence they lead, completely dependent on shipments of food, water, medicine, and technology in order to survive.|When Mars broke from Earth, deliveries to the furthest installations in the outer system ceased in the face of privateering and the realities of a war economy. Those who survived the food riots shortly found themselves under the unforgiving magnetic boot of the corporate security forces originally contracted to protect and police the scientific mission stationed on Pluto.|Collectively calling themselves the Trans-Neptunian Authority, they quickly restored order and set to work building a strict, tightly controlled, society with the ultimate goal of achieving self-sufficiency.|With resources stretched and hungry mouths to feed, TRANSA offers the lowest tax rate in the system, promising a hefty margin to any traders willing to make the \"Long Haul\", as it is popularly known. Given the size of TRANSA's tiny fleet and the vast volume of space it patrols, the Long Haul can as be perilous as it is profitable.";
   data.factions.CERES.desc        = "Holding a favorable position orbiting within the asteroid belt, the independent planetoid Ceres has long served as a trade hub between the inner and outer planets. Its location also serves to make it a launching point for mining operations within the asteroid belt.|A number of shipyards have grown up around Ceres, taking advantage of the central location and ease of access to materials to make Ceres the primary ship-bulding center in the system."
-  data.factions.JFT.desc          = "Faced with the same economic constraints and pressures as the outer planets during the war but with much closer and more powerful corporate interests at hand, the Saturnian moons controlling interests joined to form the United Trade Collective. Funded by some of the richest corporations on Earth, the JFT has become a force unto itself, patrolling the outer planets' trade routes with its corporate fleet.|Life in the domes of Saturn is difficult, and the harvesting of ice and ore in the outer system is dangerous work, but citizen employees can rest assured that the Board of Directors has their best interests at heart, or at least their compound interest at heart, as many are bound by contract or debt to their Syndicate.";
+  data.factions.JFT.desc          = "Faced with the same economic constraints and pressures as the outer planets during the war but with much closer and more powerful corporate interests at hand, the Saturnian moons controlling interests joined to form the Jovian Free Traders collective. Funded by some of the richest corporations on Earth, the JFT has become a force unto itself, patrolling the outer planets' trade routes with its corporate fleet.|Life in the domes of Saturn is difficult, and the harvesting of ice and ore in the outer system is dangerous work, but citizen employees can rest assured that the Board of Directors has their best interests at heart, or at least their compound interest at heart, as many are bound by contract or debt to their Syndicate.";
 
   data.bodies.mercury.desc        = "Too close to the sun to permit domed habitations, Mercury's single city, Quicksilver, lies deep underground, providing it with a modicum of protection against the intense solar radiation bathing the surface.|Known for its rich mineral deposits and hard-nosed populace, the knowledge gained during the process of excavating and settling Mercury was a major factor in the success of later colonies. Although nominally a member of the UN, Mercury is widely known to be effectively run by the unions, who work to ensure that Mercury is not unfairly exploited by Earth. Nobody messes with the local 127.";
   data.bodies.earth.desc          = "Under the unified governance of the UN, Earth has been at peace for decades. As the sole habital body in the system, Earth remains the largest population, economy, and military force in the system.";
