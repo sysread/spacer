@@ -78,7 +78,6 @@ define(function(require, exports, module) {
       },
 
       schedule: function() {
-        this.inspection = null;
         this.velocity = this.plan.velocity;
         this.daysLeft = Math.floor(this.plan.left * data.hours_per_turn / 24);
         this.distance = util.R(this.plan.auRemaining(), 2);
@@ -87,7 +86,7 @@ define(function(require, exports, module) {
 
       turn: function() {
         if (this.plan.left > 0) {
-          if (this.inspectionChance()) {
+          if (this.inspection || this.inspectionChance()) {
             return;
           }
           else {
