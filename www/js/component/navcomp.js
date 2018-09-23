@@ -765,7 +765,7 @@ define(function(require, exports, module) {
           </NavMapPoint>
         </NavMapPlot>
 
-        <modal v-if="show_routes" title="Route planner" close="Plot route" xclose=1>
+        <modal v-if="show_routes" title="Route planner" close="Plot route" xclose=1 @close="go_map">
           <NavRoutePlanner :dest="focus" @route="set_route" />
         </modal>
 
