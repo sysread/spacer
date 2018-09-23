@@ -107,7 +107,7 @@ define(function(require, exports, module) {
     <span v-else>{{type}} <span class="badge badge-pill float-right">{{price|csn}}</span></span>
   </btn>
 
-  <card v-if="detail">
+  <card v-if="detail" :title="type|caps">
     <p v-if="isAvailable">
       <button @click="buy=true" type="button" class="btn btn-dark">Purchase</button>
     </p>
