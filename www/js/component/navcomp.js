@@ -290,7 +290,7 @@ define(function(require, exports, module) {
     },
 
     'computed': {
-      home()           { return game.player.home.name },
+      home()           { return game.player.home },
       gravity()        { return game.player.homeGravity },
       max_accel()      { return game.player.maxAcceleration() / Physics.G },
       ship_accel()     { return game.player.shipAcceleration() / Physics.G },
@@ -306,12 +306,23 @@ define(function(require, exports, module) {
 
     'template': `
       <div>
-        <p>Your navigational computer automatically calculates the optimal trajectory from your current location to the other settlements in the system.</p>
-        <p>Being born on {{home}}, your body is adapted to {{gravity|R(2)}}G, allowing you to endure a sustained burn of {{max_accel|R(2)}}G.</p>
+        <p>
+          Your navigational computer automatically calculates the optimal
+          trajectory from your current location to the other settlements in the
+          system.
+        </p>
 
         <p>
-          Carrying {{ship_mass|R|csn|unit('metric tonnes')}}, your ship is capable of {{ship_accel|R(2)|unit('G')}} of acceleraction.
-          With {{ship_fuel|R(2)|csn}} tonnes of fuel, your ship has a maximum burn time of {{ship_burn_time|R|csn}} hours at maximum thrust.
+          Being born on {{home|caps}}, your body is adapted to
+          {{gravity|R(2)}}G, allowing you to endure a maximum sustained burn of
+          {{max_accel|R(2)}}G.
+        </p>
+
+        <p>
+          Carrying {{ship_mass|R|csn|unit('metric tonnes')}}, your ship is
+          capable of {{ship_accel|R(2)|unit('G')}} of acceleraction. With
+          {{ship_fuel|R(2)|csn}} tonnes of fuel, your ship has a maximum burn
+          time of {{ship_burn_time|R|csn}} hours at maximum thrust.
         </p>
 
         <div v-if="has_route">
