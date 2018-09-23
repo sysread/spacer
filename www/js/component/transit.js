@@ -109,8 +109,6 @@ define(function(require, exports, module) {
               this.timer = this.schedule();
             }
           }
-
-          //this.$forceUpdate();
         }
         else {
           window.clearTimeout(this.timer);
@@ -179,7 +177,7 @@ define(function(require, exports, module) {
   <NavMapPlot v-show="!inspection" :layout.sync="layout" :focus="plan.dest" :center="transit_center" :fov="fov">
     <span class="float-left text-success w-25 text-left"  >{{daysLeft|R|unit('days')}}</span>
     <span class="float-left text-info    w-25 text-center">{{distance|R(2)|unit('AU')}}</span>
-    <span class="float-left text-danger  w-25 text-center">{{plan.accel|R(3)|unit('G')}}</span>
+    <span class="float-left text-danger  w-25 text-center">{{plan.accel|R(3)|unit('m/s/s')}}</span>
     <span class="float-left text-warning w-25 text-right" >{{(velocity/1000)|R|csn|unit('km/s')}}</span>
 
     <NavMapPoint
