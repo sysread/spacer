@@ -70,7 +70,7 @@ define(function(require, exports, module) {
       },
 
       interval() {
-        return 100;
+        return 50;
       },
     },
     methods: {
@@ -97,13 +97,9 @@ define(function(require, exports, module) {
             return;
           }
           else {
-            const batch = this.batch;
-            game.turn(batch, true);
-            this.plan.turn(batch);
-
-            for (let i = 0; i < batch; ++i) {
-              game.player.ship.burn(this.plan.accel);
-            }
+            game.turn(1, true);
+            this.plan.turn(1);
+            game.player.ship.burn(this.plan.accel);
 
             if (this.paused) {
               window.clearTimeout(this.timer);
@@ -186,9 +182,20 @@ define(function(require, exports, module) {
     <span class="float-left text-danger  w-25 text-right">{{plan.accel|R(3)|unit('G')}}</span>
     <span class="float-left text-warning w-25 text-right">{{(velocity/1000)|R|csn|unit('km/s')}}</span>
 
-    <NavMapPoint class="text-success" :left="ship_x" :top="ship_y">
-      &#9660;
+    <NavMapPoint
+        :class="{'text-dark': idx <= plan.currentTurn, 'text-muted': idx > plan.currentTurn, 'tiny': true}"
+        v-for="(p, idx) in transit_path"
+        v-if="idx % 3 == 0"
+        :key="'transit-' + idx"
+        :left="p[0]"
+        :top="p[1]">
+      &sdot;
     </NavMapPoint>
+
+    <NavMapPoint :left="ship_x" :top="ship_y" class="text-success">
+      &tridot;
+    </NavMapPoint>
+
   </NavMapPlot>
 
   <transit-inspection
