@@ -12,14 +12,17 @@ define(function(require, exports, module) {
   require('component/row');
 
   Vue.component('addons', {
-    computed: { addons: function() { return Object.keys(data.addons) } },
+    computed: {
+      addons: function() { return Object.keys(data.addons) },
+      hardpoints: function() { return game.player.ship.availableHardPoints() },
+    },
     methods: { returnToShipyard: function() { game.open('shipyard') } },
     template: `
 <card title="Equipment and upgrades">
   <btn slot="header" @click="returnToShipyard">Back to shipyard</btn>
 
   <card-text>
-    Write me
+    You have {{hardpoints}} unused hard points to which upgrades may be installed.
   </card-text>
 
   <addon v-for="addon in addons" :key="addon" :type="addon" />
