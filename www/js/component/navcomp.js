@@ -448,7 +448,7 @@ define(function(require, exports, module) {
 
 
   Vue.component('NavMapPlot', {
-    'props': ['focus', 'layout', 'center', 'fov'],
+    'props': ['focus', 'layout', 'center', 'fov', 'nolabels'],
 
     'directives': {
       'resizable': {
@@ -606,13 +606,14 @@ define(function(require, exports, module) {
             nolabel = 0 />
 
         <NavMapBody
-            v-for   = "(point, body) of plot_points()"
-            :key    = "body"
-            :body   = "body"
-            :layout = "layout"
-            :focus  = "focus"
-            :pos    = "point"
-            @click  = "body_clicked(body)" />
+            v-for    = "(point, body) of plot_points()"
+            :key     = "body"
+            :body    = "body"
+            :layout  = "layout"
+            :focus   = "focus"
+            :pos     = "point"
+            :nolabel = 'nolabels'
+            @click   = "body_clicked(body)" />
 
         <slot />
       </div>

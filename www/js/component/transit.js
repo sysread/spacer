@@ -35,30 +35,24 @@ define(function(require, exports, module) {
       },
 
       compression: function() {
-        return Math.sin( Math.PI * this.plan.velocity / this.plan.maxVelocity );
-      },
-
-      batch: function() {
-        return Math.min(this.plan.left, Math.max(1, Math.ceil(this.fov * this.compression)));
+        return Math.sin( Math.PI * Math.max(this.plan.currentTurn, 1) / this.plan.turns );
       },
 
       fov: function() {
-        const c = this.transit_center;
-
         const d = Math.max(
-          Physics.distance(this.plan.coords, c),
-          Physics.distance(this.plan.end, c),
-          Physics.distance([0, 0, 0], c),
+          Physics.distance(this.transit_center, this.plan.coords),
+          Physics.distance(this.transit_center, this.plan.end),
+          Physics.distance(this.transit_center, [0, 0]),
         );
 
-        return d / Physics.AU * 1.25;
+        return d / Physics.AU * 1.2;
       },
 
       transit_center: function() {
         return Physics.centroid(
-          [0, 0],
           this.plan.end,
           this.plan.coords,
+          [0, 0],
         );
       },
 
@@ -70,7 +64,7 @@ define(function(require, exports, module) {
       },
 
       interval() {
-        return 100;
+        return 200 - Math.ceil(200 * this.compression);
       },
     },
     methods: {
@@ -108,6 +102,8 @@ define(function(require, exports, module) {
             else {
               this.timer = this.schedule();
             }
+
+            this.$forceUpdate();
           }
         }
         else {
@@ -174,16 +170,23 @@ define(function(require, exports, module) {
     <btn v-else @click="pause">Pause</btn>
   </card-header>
 
-  <NavMapPlot v-show="!inspection" :layout.sync="layout" :focus="plan.dest" :center="transit_center" :fov="fov">
-    <span class="float-left text-success w-25 text-left"  >{{daysLeft|R|unit('days')}}</span>
-    <span class="float-left text-info    w-25 text-center">{{distance|R(2)|unit('AU')}}</span>
+  <NavMapPlot
+      v-show="!inspection"
+      :layout.sync="layout"
+      :center="transit_center"
+      :fov="fov"
+      :focus="plan.dest"
+      :nolabels="fov < 0.5">
+
+    <span class="float-left text-success w-25 text-left"  >{{plan.days_left|unit('days')}}</span>
+    <span class="float-left text-info    w-25 text-center">{{plan.auRemaining()|R(2)|unit('AU')}}</span>
     <span class="float-left text-danger  w-25 text-center">{{plan.accel|R(3)|unit('m/s/s')}}</span>
-    <span class="float-left text-warning w-25 text-right" >{{(velocity/1000)|R|csn|unit('km/s')}}</span>
+    <span class="float-left text-warning w-25 text-right" >{{(plan.velocity/1000)|R|csn|unit('km/s')}}</span>
 
     <NavMapPoint
         :class="{'text-dark': idx <= plan.currentTurn, 'text-muted': idx > plan.currentTurn, 'tiny': true}"
         v-for="(p, idx) in transit_path"
-        v-if="idx % 3 == 0"
+        v-if="false && idx % 3 == 0"
         :key="'transit-' + idx"
         :left="p[0]"
         :top="p[1]">

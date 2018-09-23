@@ -33,6 +33,10 @@ define(function(require, exports, module) {
     get segment()      { return Physics.distance(this.start, this.end) }
     get segment_au()   { return this.segment / Physics.AU }
 
+    get days_left() {
+      return Math.ceil(this.left * data.hours_per_turn / 24);
+    }
+
     get days_hours() {
       const d = this.hours / 24;
       const h = this.hours % 24;

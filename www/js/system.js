@@ -3,8 +3,6 @@ define(function(require, exports, module) {
   const Physics = require('physics');
   const SolarSystem = require('vendor/solaris-model/dist/solaris-model.min');
 
-  require('vendor/jsspline');
-
   const System = class {
     constructor() {
       this.system = new SolarSystem;
