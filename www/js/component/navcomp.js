@@ -744,9 +744,6 @@ define(function(require, exports, module) {
             &#9784;
           </btn>
 
-            Route
-          </btn>
-
           <NavMapPoint
               v-for="(p, idx) in target_path"
               :key="'target-' + idx"
