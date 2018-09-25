@@ -170,14 +170,13 @@ define(function(require, exports, module) {
       });
 
       this.elt.addEventListener('wheel', ev => {
-        ev.preventDefault();
         ev.stopPropagation();
 
         const inc    = this.fov_au / 10;
         const amount = ((ev.deltaX + ev.deltaY) / 2) > 0 ? inc : -inc;
 
         this.set_fov_au(this.fov_au + amount);
-      });
+      }, {passive: true});
 
       // Scale the map on pinch and wheel events
       this.mc.get('pinch').set({ enable: true });

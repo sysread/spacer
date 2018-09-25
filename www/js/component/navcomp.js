@@ -269,12 +269,14 @@ define(function(require, exports, module) {
           <planet-summary v-if="show_info" mini=true :planet="planet" />
         </div>
 
-        <NavMap
+        <NavPlot
             v-if="show_map"
             :focus="dest"
             :transit="transit"
             @dest="set_dest"
-            @transit="set_transit" />
+            @transit="set_transit"
+            show_target_path=1
+            show_transit_path=1 />
 
       </card>
     `,
@@ -356,44 +358,6 @@ define(function(require, exports, module) {
   });
 
 
-  Vue.component('NavMapPoint', {
-    'props': ['pos'],
-
-    data() {
-      return {
-        'initpos': this.pos,
-      };
-    },
-
-    'watch': {
-      pos() {
-        this.step();
-      },
-    },
-
-    mounted() {
-      this.$el.style.left = this.pos[0]+'px';
-      this.$el.style.top  = this.pos[1]+'px';
-    },
-
-    'methods': {
-      step(time=0.5) {
-        TweenLite.to(this.$el, time, {
-          'left': this.pos[0]+'px',
-          'top':  this.pos[1]+'px',
-          'ease': Power0.eastIn,
-        }).play();
-      }
-    },
-
-    'template': `
-      <span @click="$emit('click')" class="plot-point">
-        <slot />
-      </span>
-    `,
-  });
-
-
   Vue.component('SvgPlot', {
     'props': ['layout'],
 
@@ -404,7 +368,11 @@ define(function(require, exports, module) {
     },
 
     'template': `
-      <svg :viewBox="view_box" fill="none" style="position:absolute;display:inline;z-index:0">
+      <svg :viewBox="view_box"
+           fill="none"
+           style="position:absolute;display:inline;z-index:0"
+           xmlns="http://www.w3.org/2000/svg"
+           xmlns:xlink="http://www.w3.org/1999/xlink">
         <slot />
       </svg>
     `
@@ -421,7 +389,7 @@ define(function(require, exports, module) {
         let cmd = [ `M${path[0]}` ];
 
         let i = 1;
-        for (i = 0; i < path.length + 1; ++i) {
+        for (i = 0; i + 1 < path.length; ++i) {
           const p1 = path[i];
           const p2 = path[i + 1];
           cmd.push(`Q${p1}, ${p2}`);
@@ -447,14 +415,85 @@ define(function(require, exports, module) {
   });
 
 
-  Vue.component('NavMapPlot', {
-    'props': ['focus', 'layout', 'center', 'fov', 'nolabels'],
+  Vue.component('SvgPlotPoint', {
+    'props': ['label', 'pos', 'diameter', 'img', 'layout'],
+
+    'mounted': function() {
+      this.$refs.img.x      = this.pos[0];
+      this.$refs.img.y      = this.pos[1];
+      this.$refs.img.height = this.diameter;
+      this.$refs.img.width  = this.diameter;
+
+      if (this.$refs.lbl) {
+        this.$refs.lbl.x = this.pos[0] + this.diameter + 10;
+        this.$refs.lbl.y = this.pos[0] + this.diameter / 2;
+      }
+    },
+
+    'watch': {
+      pos() {
+        if (this.layout.fov < 0.25) {
+          this.$refs.img.x      = this.pos[0];
+          this.$refs.img.y      = this.pos[1];
+          this.$refs.img.height = this.diameter;
+          this.$refs.img.width  = this.diameter;
+
+          if (this.$refs.lbl) {
+            this.$refs.lbl.x = this.pos[0] + this.diameter + 10;
+            this.$refs.lbl.y = this.pos[0] + this.diameter / 2;
+          }
+        }
+        else {
+          TweenLite.to(this.$refs.img, 0.5, {
+            'x':      this.pos[0],
+            'y':      this.pos[1],
+            'width':  this.diameter,
+            'height': this.diameter,
+            'ease':   Power0.easeNone,
+          }).play();
+
+          if (this.$refs.lbl) {
+            TweenLite.to(this.$refs.lbl, 0.5, {
+              'x':    this.pos[0] + this.diameter + 10,
+              'y':    this.pos[1] + this.diameter / 2,
+              'ease': Power0.easeNone,
+            }).play();
+          }
+        }
+      },
+    },
+
+    'template': `
+      <g>
+        <image ref="img"
+               v-if="img"
+               :xlink:href="img" />
+
+        <text ref="lbl"
+              v-show="label"
+              style="font:12px monospace; fill:#EEEEEE;">
+          {{label|caps}}
+        </text>
+      </g>
+    `,
+  });
+
+
+  Vue.component('NavPlot', {
+    'props': ['focus', 'center', 'fov', 'nolabels', 'transit', 'show_transit_path', 'show_target_path'],
+
+    'data': function() {
+      return {
+        layout: new Layout,
+      };
+    },
 
     'directives': {
       'resizable': {
         inserted(el, binding, vnode) {
           const layout = new Layout;
           vnode.context.$emit('update:layout', layout);
+          vnode.context.layout = layout;
           layout.set_fov_au(vnode.context.fov_au);
           layout.set_center(vnode.context.center_point);
         }
@@ -468,6 +507,34 @@ define(function(require, exports, module) {
     },
 
     'computed': {
+      transit_path() {
+        const transit = this.transit;
+
+        if (transit) {
+          const points = this.transit.path.slice(this.transit.currentTurn);
+          const path   = this.layout.scale_path(points.map(p => p.position));
+
+          if (this.transit.currentTurn == 0) {
+            path.unshift(this.layout.scale_point(this.transit.start));
+          }
+
+          path.push(this.layout.scale_point(this.transit.end));
+
+          return path;
+        }
+      },
+
+      target_path() {
+        const transit = this.transit;
+
+        if (transit) {
+          return this.layout.scale_path(
+            System.orbit_by_turns(this.focus)
+              .slice(0, transit.left + 1)
+          );
+        }
+      },
+
       center_point() {
         if (this.center) {
           return this.center;
@@ -489,6 +556,10 @@ define(function(require, exports, module) {
           return this.fov;
         }
 
+        if (this.transit) {
+          return this.transit.segment_au;
+        }
+
         const bodies = [this.position(game.locus)];
 
         if (this.focus) {
@@ -496,8 +567,8 @@ define(function(require, exports, module) {
         }
 
         const orbits = bodies.map(b => Physics.distance(b, [0, 0]));
-        const max    = Math.max(...orbits);
-        const fov    = (max + (Physics.AU / 2)) / Physics.AU;
+        const max = Math.max(...orbits);
+        const fov = (max + (Physics.AU / 2)) / Physics.AU;
         return fov;
       },
 
@@ -544,8 +615,23 @@ define(function(require, exports, module) {
         const t = System.system.time;
         const bodies = {};
         for (const body of this.visible_bodies) {
-          bodies[body] = this.layout.scale_point( System.position(body, t) );
+          const d = this.diameter(body);
+          const p = this.layout.scale_point( System.position(body, t) );
+          p[0] -= d / 2;
+          p[1] -= d / 2;
+
+          bodies[body] = {
+            point:    p,
+            diameter: d,
+            label:    this.show_label(body),
+          };
         }
+
+        const d_sun = this.diameter('sun');
+        const p_sun = this.layout.scale_point([0, 0]);
+        p_sun[0] -= d_sun / 2;
+        p_sun[1] -= d_sun / 2;
+        bodies.sun = {point: p_sun, diameter: d_sun, label: false};
 
         return bodies;
       },
@@ -563,14 +649,20 @@ define(function(require, exports, module) {
       },
 
       show_label(body) {
-        if (System.central(body) != 'sun') {
-          const position = System.position(body);
-          const central  = System.position(System.central(body));
-          const distance = Physics.distance(position, central) / Physics.AU;
-          return distance > this.layout.fov_au / 10;
+        if (this.nolabels) {
+          return false;
         }
 
-        return true;
+        const central = System.central(body);
+
+        if (this.focus == body && central == 'sun') {
+          return true;
+        }
+
+        const position = System.position(body);
+        const center   = central == 'sun' ? [0, 0] : System.position(central);
+        const distance = Physics.distance(position, center) / Physics.AU;
+        return distance > this.layout.fov_au / 10;
       },
     },
 
@@ -581,107 +673,22 @@ define(function(require, exports, module) {
            :style = "{'width': layout.width_px + 'px', 'height': layout.width_px + 'px'}">
 
         <SvgPlot :layout="layout">
-            style="position:absolute;display:inline;z-index:0"
-            xmlns="http://www.w3.org/2000/svg"
-            xmlns:xlink="http://www.w3.org/1999/xlink">
+          <SvgPath v-if="show_target_path && transit" :points="target_path"  color="#8B8B8B" />
+          <SvgPath v-if="show_transit_path && transit" :points="transit_path" color="#A01B1B" />
 
-          <image
-            :xlink:href="'img/sun.png'"
-            :height="diameter('sun')"
-            :width="diameter('sun')"
-            :x="layout.scale_x(0)"
-            :y="layout.scale_y(0)" />
+          <SvgPlotPoint
+            v-for="(info, body) of plot_points()"
+            :key="body"
+            :layout="layout"
+            :label="info.label ? body : ''"
+            :diameter="info.diameter"
+            :pos="info.point"
+            :img="'img/' + body + '.png'" />
 
-          <template v-for="(point, body) of plot_points()">
-
-            <image
-              :xlink:href="'img/' + body + '.png'"
-              :height="diameter(body)"
-              :width="diameter(body)"
-              :x="point[0]"
-              :y="point[1]" />
-
-            <text v-if="show_label(body)"
-                :x="point[0] + (diameter(body) / 4)"
-                :y="point[1] - (diameter(body) / 4)"
-                style="font:14px monospace; fill:#EEEEEE;">
-              {{body|caps}}
-            </text>
-
-          </template>
-
+          <slot name="svg" />
         </SvgPlot>
 
         <slot />
-      </div>
-    `,
-  });
-
-
-  Vue.component('NavMap', {
-    'props': ['focus', 'transit'],
-
-    data() {
-      return {
-        'layout': new Layout,
-      };
-    },
-
-    'computed': {
-      transit_path() {
-        const transit = this.transit;
-
-        if (transit) {
-          const center = this.center_point || [0, 0];
-          return this.layout.scale_path(this.transit.path.map(p => p.position));
-        }
-      },
-
-      target_path() {
-        const transit = this.transit;
-
-        if (transit) {
-          const center = this.center_point || [0, 0];
-          return this.layout.scale_path(
-            System.orbit_by_turns(this.focus)
-              .slice(0, transit.turns)
-          );
-        }
-      },
-
-      center_point() {
-        const transit = this.transit;
-
-        if (transit) {
-          const points = [
-            transit.start,
-            transit.end,
-            System.position(this.focus),
-          ];
-
-          return Physics.centroid(...points);
-        }
-
-        return;
-      },
-
-      fov_au() {
-        if (this.transit) {
-          return this.transit.segment_au;
-        }
-
-        return;
-      },
-    },
-
-    'template': `
-      <div class="p-0 m-0">
-        <NavMapPlot :focus="focus" :center="center_point" :layout.sync="layout" :fov="fov_au">
-          <SvgPlot :layout="layout" v-if="transit">
-            <SvgPath :points="target_path"  color="yellow" />
-            <SvgPath :points="transit_path" color="green"  />
-          </SvgPlot>
-        </NavMapPlot>
       </div>
     `,
   });
