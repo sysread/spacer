@@ -52,7 +52,7 @@ define(function(require, exports, module) {
 
       fov: function() {
         const d = Physics.distance(this.plan.coords, system.position(this.plan.dest));
-        return Math.max(0.3, d / Physics.AU * 1.5);
+        return Math.max(0.1, d / Physics.AU * 1.25);
       },
 
       interval() {
