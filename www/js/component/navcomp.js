@@ -13,6 +13,9 @@ define(function(require, exports, module) {
   require('component/commerce');
   require('component/summary');
 
+  require('vendor/TweenMax.min');
+
+
   const BODIES = System.bodies();
 
 
@@ -354,12 +357,114 @@ define(function(require, exports, module) {
 
 
   Vue.component('NavMapPoint', {
-    'props': ['top', 'left'],
+    'props': ['pos'],
+
+    data() {
+      return {
+        'initpos': this.pos,
+      };
+    },
+
+    'watch': {
+      pos() {
+        this.step();
+      },
+    },
+
+    mounted() {
+      this.$el.style.left = this.pos[0]+'px';
+      this.$el.style.top  = this.pos[1]+'px';
+    },
+
+    'methods': {
+      step(time=0.5) {
+        TweenLite.to(this.$el, time, {
+          'left': this.pos[0]+'px',
+          'top':  this.pos[1]+'px',
+          'ease': Power0.eastIn,
+        }).play();
+      }
+    },
 
     'template': `
-      <span @click="$emit('click')" class="plot-point" :style="{left: left + 'px', top: top + 'px', 'z-index': 0}">
+      <span @click="$emit('click')" class="plot-point">
         <slot />
       </span>
+    `,
+  });
+
+
+  Vue.component('SvgPlot', {
+    'props': ['layout'],
+
+    'computed': {
+      view_box() {
+        return '0 0 ' + this.layout.width_px + ' ' + this.layout.width_px;
+      },
+    },
+
+    'template': `
+      <svg :viewBox="view_box" fill="none" style="position:absolute;display:inline;z-index:0">
+        <slot />
+      </svg>
+    `
+  });
+
+
+  Vue.component('SvgPath', {
+    'props': ['points', 'color'],
+
+    'methods': {
+      svg_path() {
+        const path = this.points.map(p => p.map(n => Math.ceil(n)).join(','));
+
+        let cmd = [ `M${path[0]}` ];
+
+        // Build curve
+        let i = 1;
+        let n = 0;
+        while (i < path.length) {
+          if (n % 2 == 0) {
+            if (i + 3 >= path.length) {
+              break;
+            }
+
+            const p1 = path[i];
+            const p2 = path[i + 1];
+            const p3 = path[i + 2];
+            cmd.push(`C${p1} ${p2} ${p3}`);
+            i+= 3;
+          }
+          else if (i % 2 == 1) {
+            if (i + 2 >= path.length) {
+              break;
+            }
+
+            const p1 = path[i];
+            const p2 = path[i + 1];
+            cmd.push(`S${p1} ${p2}`);
+            i+= 2;
+          }
+
+          ++n;
+        }
+
+        if (i < path.length) {
+          for (i; i < path.length; ++i) {
+            cmd.push(`L${path[i]}`);
+          }
+        }
+
+        return cmd.join(' ');
+      },
+
+    },
+
+    'template': `
+      <path fill="none"
+        :stroke="color"
+        stroke-width="1px"
+        :d="svg_path()" />
     `,
   });
 
@@ -433,7 +538,7 @@ define(function(require, exports, module) {
     },
 
     'template': `
-      <NavMapPoint :top="top" :left="left" @click="$emit('click')">
+      <NavMapPoint :pos="[left, top]" @click="$emit('click')">
         <img :src="img" :style="{'width': diameter + 'px'}" class="plot-image" />
 
         <badge v-show="label_visible" class="m-1" :class="{'dest': is_focus}">
@@ -522,9 +627,9 @@ define(function(require, exports, module) {
       },
 
       visible_bodies() {
-        return this.bodies.filter(b => this.is_within_fov(b));
+        return this.bodies;
+        //return this.bodies.filter(b => this.is_within_fov(b));
       },
-
     },
 
     'methods': {
@@ -552,7 +657,7 @@ define(function(require, exports, module) {
         const t = System.system.time;
         const bodies = {};
         for (const body of this.visible_bodies) {
-          bodies[body] = System.position(body, t);
+          bodies[body] = this.layout.scale_point( System.position(body, t) );
         }
 
         return bodies;
@@ -591,6 +696,13 @@ define(function(require, exports, module) {
         this.layout.set_fov_au(this.fov_au);
         this.layout.set_center(this.center_point);
       },
+
+      diameter(body) {
+        const d   = System.body(body).radius * 2;
+        const w   = this.layout.width_px * (d / (this.layout.fov_au * Physics.AU));
+        const min = body == 'sun' ? 10 : System.central(body) != 'sun' ? 1 : 5;
+        return Math.max(min, Math.ceil(w));
+      },
     },
 
     'template': `
@@ -599,21 +711,26 @@ define(function(require, exports, module) {
           class  = "plot-root border border-dark"
           :style = "{'width': layout.width_px + 'px', 'height': layout.width_px + 'px'}">
 
-        <NavMapBody
-            body    = "sun"
-            :pos    = "layout.scale_point([0, 0])"
-            :layout = "layout"
-            nolabel = 0 />
+        <svg :viewBox="'0 0 ' + layout.width_px + ' ' + layout.width_px"
+            style="position:absolute;display:inline;z-index:0"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:xlink="http://www.w3.org/1999/xlink">
 
-        <NavMapBody
-            v-for    = "(point, body) of plot_points()"
-            :key     = "body"
-            :body    = "body"
-            :layout  = "layout"
-            :focus   = "focus"
-            :pos     = "point"
-            :nolabel = 'nolabels'
-            @click   = "body_clicked(body)" />
+          <image
+            :xlink:href="'img/sun.png'"
+            :height="diameter('sun')"
+            :width="diameter('sun')"
+            :x="layout.scale_x(0)"
+            :y="layout.scale_y(0)" />
+
+          <image v-for="(point, body) of plot_points()"
+            :xlink:href="'img/' + body + '.png'"
+            :height="diameter(body)"
+            :width="diameter(body)"
+            :x="point[0]"
+            :y="point[1]" />
+
+        </svg>
 
         <slot />
       </div>
@@ -626,28 +743,17 @@ define(function(require, exports, module) {
 
     data() {
       return {
-        'show':    'map',
-        'modal':   null,
-        'layout':  new Layout,
-        'target':  null,
+        'layout': new Layout,
       };
     },
 
     'computed': {
-      show_routes()  { return this.show == 'routes'   },
-      show_targets() { return this.modal == 'targets' },
-
       transit_path() {
         const transit = this.transit;
 
         if (transit) {
           const center = this.center_point || [0, 0];
-
-          const path = this.transit.path
-            .map(p => p.position)
-            .filter(p => this.layout.is_within_fov(p, center));
-
-          return this.layout.scale_path(path, 100);
+          return this.layout.scale_path(this.transit.path.map(p => p.position));
         }
       },
 
@@ -656,31 +762,14 @@ define(function(require, exports, module) {
 
         if (transit) {
           const center = this.center_point || [0, 0];
-          const orbit  = System.orbit_by_turns(this.focus).slice(0, transit.turns);
-          const min    = this.layout.fov_au * Physics.AU / 30;
-          const path   = [ this.layout.scale_point( orbit[0] ) ];
-
-          let mark = orbit[0];
-          for (let i = 1; i < orbit.length; ++i) {
-            if (this.layout.is_within_fov(orbit[i], center)) {
-              if (Physics.distance(mark, orbit[i]) > min) {
-                path.push( this.layout.scale_point( orbit[i] ) );
-                mark = orbit[i];
-              }
-            }
-          }
-
-          path.push( this.layout.scale_point( orbit[ orbit.length - 1 ] ) );
-
-          return path;
+          return this.layout.scale_path(
+            System.orbit_by_turns(this.focus)
+              .slice(0, transit.turns)
+          );
         }
       },
 
       center_point() {
-        if (this.target && this.target != 'transit') {
-          return System.position(this.target);
-        }
-
         const transit = this.transit;
 
         if (transit) {
@@ -688,7 +777,6 @@ define(function(require, exports, module) {
             transit.start,
             transit.end,
             System.position(this.focus),
-            System.position(game.locus),
           ];
 
           return Physics.centroid(...points);
@@ -698,10 +786,6 @@ define(function(require, exports, module) {
       },
 
       fov_au() {
-        if (this.target) {
-          return Physics.distance(this.target, [0, 0]) / Physics.AU;
-        }
-
         if (this.transit) {
           return this.transit.segment_au;
         }
@@ -710,68 +794,14 @@ define(function(require, exports, module) {
       },
     },
 
-    'methods': {
-      go_map()     { this.show = 'map'      },
-      go_routes()  { this.show = 'routes'   },
-      go_targets() { this.modal = 'targets' },
-
-      on_click(body) {
-        this.$emit('dest', body);
-      },
-
-      set_route(transit) {
-        this.$emit('transit', transit);
-        this.go_map();
-      },
-
-      set_target(target) {
-        this.target = target;
-        this.modal  = null;
-      },
-    },
-
     'template': `
       <div class="p-0 m-0">
-        <NavMapPlot @click="on_click" :focus="focus" :center="center_point" :layout.sync="layout" :fov="fov_au">
-          <span v-if="focus" class="text-success">
-            [ {{ focus|caps }} ]
-          </span>
-
-          <btn class="float-right" @click="go_targets">
-            &CircleDot;
-          </btn>
-
-          <btn class="float-right" @click="go_routes" v-if="focus">
-            &#9784;
-          </btn>
-
-          <NavMapPoint
-              v-for="(p, idx) in target_path"
-              :key="'target-' + idx"
-              :left="p[0]"
-              :top="p[1]"
-              :idx="idx">
-            <span v-if="idx == target_path.length - 1" class="text-danger">&target;</span>
-            <span v-else class="text-warning">&sdot;</span>
-          </NavMapPoint>
-
-          <NavMapPoint
-              v-for="(p, idx) in transit_path"
-              :key="'transit-' + idx"
-              :left="p[0]"
-              :top="p[1]"
-              class="text-success">
-            <span>&sdot;</span>
-          </NavMapPoint>
+        <NavMapPlot :focus="focus" :center="center_point" :layout.sync="layout" :fov="fov_au">
+          <SvgPlot :layout="layout" v-if="transit">
+            <SvgPath :points="target_path"  color="#626262" />
+            <SvgPath :points="transit_path" color="green" />
+          </SvgPlot>
         </NavMapPlot>
-
-        <modal v-if="show_routes" title="Route planner" close="Plot route" xclose=1 @close="go_map">
-          <NavRoutePlanner :dest="focus" @route="set_route" />
-        </modal>
-
-        <modal v-if="show_targets" title="Find on map" @close="modal=null" xclose=1>
-          <NavDestMenu @answer="on_click" final=1 />
-        </modal>
       </div>
     `,
   });

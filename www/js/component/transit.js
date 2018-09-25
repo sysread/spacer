@@ -13,8 +13,10 @@ define(function(require, exports, module) {
   require('component/combat');
   require('component/navcomp');
 
+
   Vue.component('transit', {
     props: ['plan'],
+
     data: function() {
       return {
         paused:     false,
@@ -26,9 +28,9 @@ define(function(require, exports, module) {
         layout:     new Layout,
       };
     },
+
     computed: {
-      ship_x: function() { return this.layout.scale_x( this.plan.coords[0] ) },
-      ship_y: function() { return this.layout.scale_y( this.plan.coords[1] ) },
+      ship_pos: function() { return this.layout.scale_point(this.plan.coords) },
 
       destination: function() {
         return system.name(this.plan.dest);
@@ -67,6 +69,7 @@ define(function(require, exports, module) {
         return 200 - Math.ceil(200 * this.compression);
       },
     },
+
     methods: {
       pause: function() {
         this.paused = true;
@@ -97,12 +100,12 @@ define(function(require, exports, module) {
             if (this.paused) {
               window.clearTimeout(this.timer);
               this.timer = null;
+              return;
             }
             else {
+              this.$forceUpdate();
               this.timer = this.schedule();
             }
-
-            this.$forceUpdate();
           }
         }
         else {
@@ -161,6 +164,7 @@ define(function(require, exports, module) {
         return false;
       },
     },
+
     template: `
 <card nopad=1>
   <card-header slot="header">
@@ -187,12 +191,11 @@ define(function(require, exports, module) {
         v-for="(p, idx) in transit_path"
         v-if="false && idx % 3 == 0"
         :key="'transit-' + idx"
-        :left="p[0]"
-        :top="p[1]">
+        :pos="p">
       &sdot;
     </NavMapPoint>
 
-    <NavMapPoint :left="ship_x" :top="ship_y" class="text-success">
+    <NavMapPoint :pos="ship_pos" class="text-success">
       &tridot;
     </NavMapPoint>
 

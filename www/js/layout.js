@@ -141,8 +141,7 @@ define(function(require, exports, module) {
 
     is_within_fov(target, reference_point) {
       const d = Physics.distance(target, reference_point) / Physics.AU;
-      return d < Layout.SCALE_MIN_AU * 100
-          || d < this.fov_au;
+      return d < 0.5 || d < this.fov_au;
     }
 
     update_width() {
