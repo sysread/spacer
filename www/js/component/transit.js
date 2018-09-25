@@ -56,7 +56,7 @@ define(function(require, exports, module) {
       },
 
       interval() {
-        return Math.max(50, 200 - Math.ceil(200 * this.compression));
+        return Math.max(75, 300 - Math.ceil(300 * this.compression));
       },
     },
 
