@@ -416,37 +416,15 @@ define(function(require, exports, module) {
 
     'methods': {
       svg_path() {
-        const path = this.points.map(p => p.map(n => Math.ceil(n)).join(','));
+        const path = this.points.map(p => p.map(n => Math.ceil(n)).join(' '));
 
         let cmd = [ `M${path[0]}` ];
 
-        // Build curve
         let i = 1;
-        let n = 0;
-        while (i < path.length) {
-          if (n % 2 == 0) {
-            if (i + 3 >= path.length) {
-              break;
-            }
-
-            const p1 = path[i];
-            const p2 = path[i + 1];
-            const p3 = path[i + 2];
-            cmd.push(`C${p1} ${p2} ${p3}`);
-            i+= 3;
-          }
-          else if (i % 2 == 1) {
-            if (i + 2 >= path.length) {
-              break;
-            }
-
-            const p1 = path[i];
-            const p2 = path[i + 1];
-            cmd.push(`S${p1} ${p2}`);
-            i+= 2;
-          }
-
-          ++n;
+        for (i = 0; i < path.length + 1; ++i) {
+          const p1 = path[i];
+          const p2 = path[i + 1];
+          cmd.push(`Q${p1}, ${p2}`);
         }
 
         if (i < path.length) {
@@ -463,91 +441,8 @@ define(function(require, exports, module) {
     'template': `
       <path fill="none"
         :stroke="color"
-        stroke-width="1px"
+        stroke-width="0.5px"
         :d="svg_path()" />
-    `,
-  });
-
-
-  Vue.component('NavMapBody', {
-    'props': ['body', 'nolabel', 'layout', 'pos', 'focus'],
-
-    'computed': {
-      is_moon() {
-        return this.body != 'sun' && System.central(this.body) !== 'sun';
-      },
-
-      is_focus() {
-        return this.body == this.focus;
-      },
-
-      img() {
-        return 'img/' + this.body + '.png';
-      },
-
-      central() {
-        return System.central(this.body);
-      },
-
-      point() {
-        return this.layout.scale_point(this.position());
-      },
-
-      diameter() {
-        const d = System.body(this.body).radius * 2;
-        const w = this.layout.width_px * (d / (this.layout.fov_au * Physics.AU));
-        const min = this.is_moon ? 1 : 5;
-        return Math.max(min, Math.ceil(w));
-      },
-
-      left() {
-        return this.point[0] - (this.diameter / 2);
-      },
-
-      top() {
-        return this.point[1] - (this.diameter / 2);
-      },
-
-      label_visible() {
-        if (this.nolabel) {
-          return false;
-        }
-
-        if (this.is_focus) {
-          return true;
-        }
-
-        if (this.focus && this.body == System.central(this.focus)) {
-          return false;
-        }
-
-        if (this.is_moon) {
-          return this.layout.fov_au < 0.5;
-        }
-
-        const pos   = this.position();
-        const orbit = Physics.distance(pos, [0, 0, 0]) / Physics.AU;
-        return this.layout.fov_au / 6 < orbit;
-      },
-    },
-
-    'methods': {
-      position() {
-        return this.pos ? this.pos : System.position(this.body);
-      },
-    },
-
-    'template': `
-      <NavMapPoint :pos="[left, top]" @click="$emit('click')">
-        <img :src="img" :style="{'width': diameter + 'px'}" class="plot-image" />
-
-        <badge v-show="label_visible" class="m-1" :class="{'dest': is_focus}">
-          {{body|caps}}
-          <span v-if="is_focus && is_moon">
-            ({{central|caps}})
-          </span>
-        </badge>
-      </NavMapPoint>
     `,
   });
 
@@ -645,14 +540,6 @@ define(function(require, exports, module) {
         );
       },
 
-      is_focus(body) {
-        return body == this.focus;
-      },
-
-      is_here(body) {
-        return body == game.locus;
-      },
-
       plot_points() {
         const t = System.system.time;
         const bodies = {};
@@ -661,35 +548,6 @@ define(function(require, exports, module) {
         }
 
         return bodies;
-      },
-
-      body_clicked(body) {
-        // Find navigable targets in the system on which the player clicked
-        const central = System.central(body);
-        const sats    = System.body(central == 'sun' ? body : central).satellites;
-        const targets = Object.keys(data.bodies)
-          .filter(d => sats[d] || d == body || d == central)
-          .filter(d => !this.is_here(d));
-
-        // Rotate through objects in the system
-        let focus;
-        for (let i = 0; i < targets.length; ++i) {
-          if (this.is_focus(targets[i])) {
-            if (i + 1 >= targets.length) {
-              focus = targets[0];
-            } else {
-              focus = targets[i + 1];
-            }
-          }
-        }
-
-        // If focus is still undefined, the current focus is not in the system
-        // being selected.
-        if (focus === undefined) {
-          focus = targets[0];
-        }
-
-        this.$emit('click', focus);
       },
 
       auto_focus() {
@@ -703,15 +561,26 @@ define(function(require, exports, module) {
         const min = body == 'sun' ? 10 : System.central(body) != 'sun' ? 1 : 5;
         return Math.max(min, Math.ceil(w));
       },
+
+      show_label(body) {
+        if (System.central(body) != 'sun') {
+          const position = System.position(body);
+          const central  = System.position(System.central(body));
+          const distance = Physics.distance(position, central) / Physics.AU;
+          return distance > this.layout.fov_au / 10;
+        }
+
+        return true;
+      },
     },
 
     'template': `
       <div v-resizable
-          id     = "navcomp-map-root"
-          class  = "plot-root border border-dark"
-          :style = "{'width': layout.width_px + 'px', 'height': layout.width_px + 'px'}">
+           id     = "navcomp-map-root"
+           class  = "plot-root border border-dark"
+           :style = "{'width': layout.width_px + 'px', 'height': layout.width_px + 'px'}">
 
-        <svg :viewBox="'0 0 ' + layout.width_px + ' ' + layout.width_px"
+        <SvgPlot :layout="layout">
             style="position:absolute;display:inline;z-index:0"
             xmlns="http://www.w3.org/2000/svg"
             xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -723,14 +592,25 @@ define(function(require, exports, module) {
             :x="layout.scale_x(0)"
             :y="layout.scale_y(0)" />
 
-          <image v-for="(point, body) of plot_points()"
-            :xlink:href="'img/' + body + '.png'"
-            :height="diameter(body)"
-            :width="diameter(body)"
-            :x="point[0]"
-            :y="point[1]" />
+          <template v-for="(point, body) of plot_points()">
 
-        </svg>
+            <image
+              :xlink:href="'img/' + body + '.png'"
+              :height="diameter(body)"
+              :width="diameter(body)"
+              :x="point[0]"
+              :y="point[1]" />
+
+            <text v-if="show_label(body)"
+                :x="point[0] + (diameter(body) / 4)"
+                :y="point[1] - (diameter(body) / 4)"
+                style="font:14px monospace; fill:#EEEEEE;">
+              {{body|caps}}
+            </text>
+
+          </template>
+
+        </SvgPlot>
 
         <slot />
       </div>
@@ -798,8 +678,8 @@ define(function(require, exports, module) {
       <div class="p-0 m-0">
         <NavMapPlot :focus="focus" :center="center_point" :layout.sync="layout" :fov="fov_au">
           <SvgPlot :layout="layout" v-if="transit">
-            <SvgPath :points="target_path"  color="#626262" />
-            <SvgPath :points="transit_path" color="green" />
+            <SvgPath :points="target_path"  color="yellow" />
+            <SvgPath :points="transit_path" color="green"  />
           </SvgPlot>
         </NavMapPlot>
       </div>
