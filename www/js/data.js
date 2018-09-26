@@ -13,7 +13,6 @@ define(function() {
     initial_stock:      20,
     market_history:     10 * turnsPerDay,
     update_prices:      10, // days between price updates
-    base_unit_price:    30,
     scarcity_markup:    0.25,
     necessity:          {water: true, food: true, medicine: true, fuel: true},
     craft_fee:          0.05,
@@ -34,11 +33,11 @@ define(function() {
     },
 
     resources: {
-      water:        {mass: 5,  mine: {tics: 1}},
-      ore:          {mass: 25, mine: {tics: 2}},
-      minerals:     {mass: 10, mine: {tics: 2}},
-      hydrocarbons: {mass: 2,  mine: {tics: 2}},
-      food:         {mass: 5,  mine: {tics: 2}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 1}}},
+      water:        {mass: 5,  mine: {tics: 1, value: 10}},
+      ore:          {mass: 25, mine: {tics: 2, value: 15}},
+      minerals:     {mass: 10, mine: {tics: 2, value: 20}},
+      hydrocarbons: {mass: 2,  mine: {tics: 2, value: 25}},
+      food:         {mass: 5,  mine: {tics: 2, value: 30}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 1}}},
       fuel:         {mass: 1,  recipe: {tics: 2, materials: {ore: 1}}},
       metal:        {mass: 40, recipe: {tics: 2, materials: {ore: 2}}},
       ceramics:     {mass: 10, recipe: {tics: 2, materials: {minerals: 2}}},

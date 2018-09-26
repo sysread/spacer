@@ -23,15 +23,13 @@ define(function(require, exports, module) {
       let value = 0;
 
       if (this.isMinable) {
-        value = data.base_unit_price * this.mineTurns;
+        value = data.resources[this.name].mine.value;
       }
       else if (this.isCraftable) {
         for (const mat of Object.keys(this.recipe)) {
           value += this.recipe[mat] * resources[mat].calculateBaseValue();
         }
-      }
 
-      if (this.isCraftable) {
         value *= this.craftTurns;
       }
 
@@ -417,7 +415,6 @@ define(function(require, exports, module) {
         const value  = resources[item].value;
         const markup = data.necessity[item] ? 1 + data.scarcity_markup : 1;
         const need   = this.getNeed(item);
-        let price;
 
         if (need > 1) {
           this._price[item] = Math.ceil(markup * Math.min(value * 3, value * (1 + (need / (need + 5)))));
