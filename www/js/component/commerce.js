@@ -23,23 +23,28 @@ define(function(require, exports, module) {
       resources: function() { return Object.keys(data.resources) },
     },
     methods: {
-      dock: function(item) { return this.planet.getStock(item) },
-      hold: function(item) { return this.player.ship.cargo.count(item) },
-      buy:  function(item) { return this.planet.buyPrice(item, this.player) },
-      sell: function(item) { return this.planet.sellPrice(item) },
+      dock:          function(item) { return this.planet.getStock(item) },
+      hold:          function(item) { return this.player.ship.cargo.count(item) },
+      buy:           function(item) { return this.planet.buyPrice(item, this.player) },
+      sell:          function(item) { return this.planet.sellPrice(item) },
+      is_contraband: function(item) { return data.resources[item].contraband },
     },
     template: `
 <card title="Commerce">
   <card-text>
     There are endless warehouses along the docks. As you approach the resource
     exchange, you are approached by several warehouse managers and sales people
-    eager to do business with you.
+    eager to do business with you. Moving here and there among the throng you
+    notice the occasional security agent or inspector watching for evidence of
+    contraband.
   </card-text>
 
   <div class="container container-fluid">
     <row v-for="item of resources" :key="item" :class="{'text-muted':dock(item) == 0 && hold(item) == 0}">
       <cell size=4 brkpt="sm" y=0 class="px-0 my-1">
-        <btn @click="trade=item" block=1 :class="{'btn-secondary':dock(item) == 0 && hold(item) == 0}">{{item|caps}}</btn>
+        <btn @click="trade=item" block=1 :class="{'btn-secondary': dock(item) == 0 && hold(item) == 0, 'text-warning': is_contraband(item)}">
+          {{item|caps}}
+        </btn>
       </cell>
       <cell size=8 brkpt="sm" y=0>
         <table class="table table-sm table-mini table-noborder">
@@ -148,6 +153,10 @@ define(function(require, exports, module) {
 <div>
   <modal @close="$emit('update:item', null)" close="Cancel" :title="'Exchange of ' + this.item">
     <button @click="report=true" slot="header" type="button" class="btn btn-dark">Report</button>
+
+    <p v-if="contraband" class="text-warning font-italic">
+      Trade in contraband goods may result in fines and loss of standing.
+    </p>
 
     <row>
       <cell size="3" class="font-weight-bold">Credits</cell><cell size="3">{{credits|csn}}</cell>
