@@ -601,9 +601,16 @@ define(function(require, exports, module) {
           canCraft = false;
         }
 
+        // Cache so we don't recalculate these over and over
+        const mat_stock = {};
+        const mat_short = {};
+
         for (const mat of resources[i].ingredients) {
           for (const mat of resources[i].ingredients) {
-            if (this.getStock(mat) < resources[i].recipe[mat] || this.hasShortage(mat)) {
+            if (!mat_stock[mat]) mat_stock[mat] = this.getStock(mat);
+            if (!mat_short[mat]) mat_short[mat] = this.hasShortage(mat);
+
+            if (mat_stock[mat] < resources[i].recipe[mat] || mat_short[mat]) {
               this.incDemand(mat, resources[i].recipe[mat]);
               canCraft = false;
             }
@@ -618,7 +625,9 @@ define(function(require, exports, module) {
       }
 
       while (Object.keys(want).length > 0) {
-        const items = list.filter(i => {return want[i]}).map(i => {return resources[i]});
+        const items = list
+          .filter(i => want[i])
+          .map(i => resources[i]);
 
         for (const item of items) {
           for (const mat of item.ingredients) {

@@ -445,40 +445,25 @@ define(function(require, exports, module) {
 
     'watch': {
       pos() {
-        if (this.layout.fov < 0.25) {
-          this.$refs.img.x      = this.pos[0];
-          this.$refs.img.y      = this.pos[1];
-          this.$refs.img.height = this.diameter;
-          this.$refs.img.width  = this.diameter;
+        TweenLite.to(this.$refs.img, 0.5, {
+          'x':      this.pos[0],
+          'y':      this.pos[1],
+          'ease':   Power0.easeNone,
+        }).play();
 
-          if (this.$refs.lbl) {
-            this.$refs.lbl.x = this.pos[0] + this.diameter + 10;
-            this.$refs.lbl.y = this.pos[0] + this.diameter / 2;
-          }
-        }
-        else {
-          TweenLite.to(this.$refs.img, 0.5, {
-            'x':      this.pos[0],
-            'y':      this.pos[1],
-            'width':  this.diameter,
-            'height': this.diameter,
-            'ease':   Power0.easeNone,
+        if (this.$refs.lbl) {
+          TweenLite.to(this.$refs.lbl, 0.5, {
+            'x':    this.pos[0] + this.diameter + 10,
+            'y':    this.pos[1] + this.diameter / 2,
+            'ease': Power0.easeNone,
           }).play();
-
-          if (this.$refs.lbl) {
-            TweenLite.to(this.$refs.lbl, 0.5, {
-              'x':    this.pos[0] + this.diameter + 10,
-              'y':    this.pos[1] + this.diameter / 2,
-              'ease': Power0.easeNone,
-            }).play();
-          }
         }
       },
     },
 
     'template': `
       <g>
-        <image ref="img" v-if="img" :xlink:href="img" />
+        <image ref="img" v-if="img" :xlink:href="img" :height="diameter" :width="diameter" />
 
         <text ref="lbl" v-show="label" style="font:12px monospace; fill:#EEEEEE;">
           {{label|caps}}

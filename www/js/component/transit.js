@@ -42,21 +42,48 @@ define(function(require, exports, module) {
         return Math.sin( Math.PI * Math.max(this.plan.currentTurn, 1) / this.plan.turns );
       },
 
+      nearest_skip() {
+        const skip = {};
+        skip[this.plan.dest] = true;
+        skip[this.plan.origin] = true;
+        if (system.central(this.plan.dest) != 'sun') skip[system.central(this.plan.dest)] = true;
+        if (system.central(this.plan.origin) != 'sun') skip[system.central(this.plan.origin)] = true;
+        return skip;
+      },
+
+      nearest_body() {
+        const skip = this.nearest_skip;
+        const ranges = system.ranges(this.plan.end);
+
+        const nearest = Object.keys(ranges)
+          .filter(b => !skip[b] && (system.central(b) == 'sun' || !skip[system.central(b)]))
+          .reduce((a, b) => ranges[a] > ranges[b] ? b : a);
+
+        return nearest;
+      },
+
       center_point: function() {
         return Physics.centroid(
-          this.plan.coords,
+          this.plan.start,
           this.plan.end,
-          system.position(this.plan.dest),
+          system.position(this.nearest_body),
         );
       },
 
       fov: function() {
-        const d = Physics.distance(this.plan.coords, system.position(this.plan.dest));
-        return Math.max(0.1, d / Physics.AU * 1.25);
+        const c = this.center_point;
+
+        const d = Math.max(
+          Physics.distance(this.plan.start, c),
+          Physics.distance(this.plan.end, c),
+          Physics.distance(system.position(this.nearest_body), c),
+        );
+
+        return d / Physics.AU * 1.1;
       },
 
       interval() {
-        return Math.max(75, 300 - Math.ceil(300 * this.compression));
+        return Math.max(50, 200 - Math.ceil(200 * this.compression));
       },
     },
 
@@ -175,7 +202,7 @@ define(function(require, exports, module) {
 
         <NavPlot v-show="!inspection"
                  :layout.sync="layout"
-                 :center="plan.coords"
+                 :center="center_point"
                  :fov="fov"
                  :focus="plan.dest"
                  :transit="plan">
