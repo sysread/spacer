@@ -106,6 +106,7 @@ define(function(require, exports, module) {
         dest:    null,
         rel:     false,
         transit: null,
+        confirm: false,
       };
     },
 
@@ -194,10 +195,14 @@ define(function(require, exports, module) {
         }
       },
 
-      begin_transit() {
-        $('#spacer').data('info', this.transit);
-        game.open('transit');
-        $('#spacer').data('state', 'transit');
+      confirm_transit(yes) {
+        this.confirm = false;
+
+        if (yes) {
+          $('#spacer').data('info', this.transit);
+          game.open('transit');
+          $('#spacer').data('state', 'transit');
+        }
       },
     },
 
@@ -211,7 +216,7 @@ define(function(require, exports, module) {
               Back
             </btn>
 
-            <btn @click="begin_transit" v-if="transit" right=1 class="mx-1">
+            <btn @click="confirm=true" v-if="transit" right=1 class="mx-1">
               Launch
             </btn>
           </h3>
@@ -268,6 +273,14 @@ define(function(require, exports, module) {
 
           <planet-summary v-if="show_info" mini=true :planet="planet" />
         </div>
+
+        <confirm v-if="confirm" yes="Yes" no="No" @confirm="confirm_transit">
+          <h3>Confirm trip details</h3>
+          <def split=4 term="Origin"      :def="transit.origin|caps" />
+          <def split=4 term="Destination" :def="transit.dest|caps" />
+          <def split=4 term="Duration"    :def="transit.str_arrival" />
+          <def split=4 term="Fuel"        :def="transit.fuel|R(2)|unit('tonnes')" />
+        </confirm>
 
         <NavPlot
             v-if="show_map"
@@ -465,13 +478,9 @@ define(function(require, exports, module) {
 
     'template': `
       <g>
-        <image ref="img"
-               v-if="img"
-               :xlink:href="img" />
+        <image ref="img" v-if="img" :xlink:href="img" />
 
-        <text ref="lbl"
-              v-show="label"
-              style="font:12px monospace; fill:#EEEEEE;">
+        <text ref="lbl" v-show="label" style="font:12px monospace; fill:#EEEEEE;">
           {{label|caps}}
         </text>
       </g>
