@@ -130,6 +130,33 @@ define(function(require, exports, module) {
         this.save_game();
       }
     }
+
+    trade_routes() {
+      const trade = {};
+      for (const planet of Object.values(this.planets)) {
+        for (const task of planet.queue) {
+          const info = task[3];
+
+          if (info.type === 'import') {
+            if (!trade.hasOwnProperty(info.item)) {
+              trade[ info.item ] = {};
+            }
+
+            if (!trade[ info.item ].hasOwnProperty(info.from)) {
+              trade[ info.item ][ info.from ] = {};
+            }
+
+            if (!trade[ info.item ][ info.from ].hasOwnProperty(info.to)) {
+              trade[ info.item ][ info.from ][ info.to ] = 0;
+            }
+
+            trade[ info.item ][ info.from ][ info.to ] += info.count;
+          }
+        }
+      }
+
+      return trade;
+    }
   };
 
   return Game;

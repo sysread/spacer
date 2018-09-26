@@ -187,19 +187,39 @@ define(function(require, exports, module) {
 
   Vue.component('resource-report', {
     props: ['item'],
-    data: function() { return { relprices: false } },
+    data() { return { relprices: false, show_routes: false } },
     computed: {
-      here:   function() { return game.locus },
-      bodies: function() { return Object.keys(data.bodies) },
+      here()   { return game.locus },
+      bodies() { return Object.keys(data.bodies) },
+
+      routes() {
+        const info = game.trade_routes()[this.item];
+        const routes = [];
+
+        for (const from of Object.keys(info).sort()) {
+          for (const to of Object.keys(info[from]).sort()) {
+            routes.push([from, to, info[from][to]]);
+          }
+        }
+
+        return routes;
+      },
     },
     template: `
 <div>
-  <btn block=1 @click="relprices=!relprices" class="my-3">
-    <span v-if="relprices">Show absolute prices</span>
-    <span v-else>Show relative prices</span>
-  </btn>
+  <div class="my-2">
+    <btn @click="show_routes=!show_routes">
+      <span v-if="show_routes">Shipments</span>
+      <span v-else>Price report</span>
+    </btn>
 
-  <table class="table table-sm">
+    <btn v-if="!show_routes" @click="relprices=!relprices">
+      <span v-if="relprices">Relative prices</span>
+      <span v-else>Absolute prices</span>
+    </btn>
+  </div>
+
+  <table class="table table-sm" v-if="!show_routes">
     <thead>
       <tr>
         <th>Market</th>
@@ -210,6 +230,23 @@ define(function(require, exports, module) {
     </thead>
     <tbody>
       <resource-report-row v-for="body in bodies" :key="body" :item="item" :body="body" :relprices="relprices" />
+    </tbody>
+  </table>
+
+  <table class="table table-sm" v-else>
+    <thead>
+      <tr>
+        <th>Source</th>
+        <th>Destination</th>
+        <th class="text-right">Tonnes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="[from, to, amount] of routes">
+        <th scope="row">{{from|caps}}</th>
+        <td>{{to|caps}}</td>
+        <td class="text-right">{{amount|csn}}</td>
+      </tr>
     </tbody>
   </table>
 </div>
