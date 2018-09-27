@@ -1,7 +1,4 @@
 define(function(require, exports, module) {
-  const data = require('data');
-  const util = require('util');
-
   const Vector = class {
     constructor(x=0, y=0, z=0) {
       this.x = x;
@@ -137,7 +134,7 @@ define(function(require, exports, module) {
     }
   };
 
-  function vec(x, y, z) {
+  const vec = function(x, y, z) {
     if (x instanceof Array) {
       [x, y, z] = x;
     }

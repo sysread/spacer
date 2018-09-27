@@ -5,25 +5,24 @@ define(function(require, exports, module) {
 
   return class {
     constructor(opt) {
-      this.opt      = opt || {};
-      this.left     = this.turns;
-      this.coords   = this.start;
-      this.velocity = 0;
+      this.fuel     = opt.fuel;           // fuel used during trip
+      this.start    = opt.start;          // start point of transit
+      this.end      = opt.end;            // final point of transit
+      this.origin   = opt.origin;         // origin body name
+      this.dest     = opt.dest;           // destination body name
+      this.dist     = opt.dist;           // trip distance in meters
+      this.course   = opt.course;         // NavComp.Course object
+
+      this.left     = this.course.turns;  // remaining turns in transit; updated by turn()
+      this.coords   = this.start;         // current position; updated by turn()
+      this.velocity = 0;                  // current ship velocity; updated by turn()
     }
 
-    get fuel()         { return this.opt.fuel                               }
-    get start()        { return this.opt.start                              }// start point (x, y, z)
-    get end()          { return this.opt.end                                }// end point (x, y, z)
-    get origin()       { return this.opt.origin                             }// origin body name
-    get dest()         { return this.opt.dest                               }// destination body name
-    get dist()         { return this.opt.dist                               }// meters
-    get course()       { return this.opt.course                             }
     get turns()        { return this.course.turns                           }// turns
     get accel()        { return this.course.accel.length                    }// m/s/s
     get accel_g()      { return this.course.accel.length / Physics.G        }
     get path()         { return this.course.path()                          }
     get maxVelocity()  { return this.course.maxVelocity()                   }
-
     get hours()        { return this.turns * data.hours_per_turn            }// hours
     get currentTurn()  { return this.turns - this.left                      }
     get turnpct()      { return 100 / this.turns                            }// percent of trip per turn

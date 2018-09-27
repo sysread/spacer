@@ -476,7 +476,7 @@ define(function(require, exports, module) {
   Vue.component('NavPlot', {
     'props': ['focus', 'center', 'fov', 'nolabels', 'transit', 'show_transit_path', 'show_target_path'],
 
-    'data': function() {
+    data() {
       return {
         layout: new Layout,
       };
@@ -585,11 +585,6 @@ define(function(require, exports, module) {
 
         return bodies;
       },
-
-      visible_bodies() {
-        return this.bodies;
-        //return this.bodies.filter(b => this.is_within_fov(b));
-      },
     },
 
     'methods': {
@@ -608,7 +603,7 @@ define(function(require, exports, module) {
       plot_points() {
         const t = System.system.time;
         const bodies = {};
-        for (const body of this.visible_bodies) {
+        for (const body of this.bodies) {
           const d = this.diameter(body);
           const p = this.layout.scale_point( System.position(body, t) );
           p[0] -= d / 2;

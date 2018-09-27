@@ -1,6 +1,5 @@
 define(function(require, exports, module) {
   const data        = require('data');
-  const util        = require('util');
   const system      = require('system');
   const Physics     = require('physics');
   const TransitPlan = require('transitplan');
@@ -109,42 +108,22 @@ define(function(require, exports, module) {
       this.orig        = game.here.body;
     }
 
-    get maxdv() { return Math.min(this.max, this.ship.currentAcceleration()) }
-
-    get transits() {
-      if (this.data === undefined) {
+    getTransitsTo(dest) {
+      if (!this.data) {
         this.data = {};
+      }
 
-        for (const dest of system.bodies()) {
-          if (!this.data.hasOwnProperty(dest)) {
-            this.data[dest] = this.getTransitsTo(dest);
-          }
+      if (!this.data[dest]) {
+        this.data[dest] = [];
+
+        const transits = this.astrogator(this.orig, dest);
+
+        for (const transit of transits) {
+          this.data[dest].push(transit);
         }
       }
 
-      return this.data;
-    }
-
-    getTransitsTo(dest) {
-      const transits = [];
-
-      for (let transit of this.astrogator(this.orig, dest)) {
-        transits.push(transit);
-      }
-
-      return transits;
-    }
-
-    search(destination, approve) {
-      if (!approve) return this.transits[destination];
-      return this.transits[destination].filter(approve);
-    }
-
-    fastest(destination) {
-      if (this.transits[destination].length === 0) return;
-      return this.transits[destination].reduce((a, b) => {
-        return a.turns < b.turns ? a : b;
-      });
+      return this.data[dest];
     }
 
     *astrogator(origin, destination) {
