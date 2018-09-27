@@ -219,7 +219,7 @@ define(function(require, exports, module) {
     template: `
       <card nopad=1>
         <card-header slot="header">
-          Transiting from {{plan.origin|caps}} to {{plan.dest|caps}}
+          Transiting to {{plan.dest|caps}}
           <btn v-if="paused" @click="resume">Resume</btn>
           <btn v-else @click="pause">Pause</btn>
         </card-header>
