@@ -13,25 +13,38 @@ define(function(require, exports, module) {
   require('component/combat');
   require('component/navcomp');
 
+  require('vendor/TweenMax.min');
+
 
   Vue.component('transit', {
     props: ['plan'],
 
     data: function() {
       return {
-        paused:     false,
-        timer:      this.schedule(),
-        stoppedBy:  {},
-        inspection: null,
-        daysLeft:   null,
-        velocity:   0,
-        layout:     new Layout,
+        paused:        false,
+        timer:         this.schedule(),
+        stoppedBy:     {},
+        inspection:    null,
+        daysLeft:      null,
+        velocity:      0,
+        layout:        null,
+        ship_inserted: false,
       };
+    },
+
+    watch: {
+      ship_pos: function() {
+        this.set_position();
+      },
     },
 
     computed: {
       ship_pos: function() {
-        return this.layout.scale_point(this.plan.coords);
+        if (this.layout) {
+          return this.layout.scale_point(this.plan.coords);
+        }
+
+        return [0, 0];
       },
 
       destination: function() {
@@ -88,6 +101,22 @@ define(function(require, exports, module) {
     },
 
     methods: {
+      set_position: function(inserted) {
+        if (this.$refs.ship && this.layout) {
+          const time = this.ship_inserted ? 0.5 : 0;
+
+          TweenLite.to(this.$refs.ship, time, {
+            'x': this.ship_pos[0],
+            'y': this.ship_pos[1],
+            'ease': Power0.easeNone,
+          }).play();
+
+          if (!this.ship_inserted) {
+            this.ship_inserted = true;
+          }
+        }
+      },
+
       pause: function() {
         this.paused = true;
       },
@@ -208,8 +237,8 @@ define(function(require, exports, module) {
                  :transit="plan">
 
           <text slot="svg"
-                :x="ship_pos[0]"
-                :y="ship_pos[1]"
+                ref="ship"
+                v-if="layout"
                 text-anchor="middle"
                 alignment-baseline="middle"
                 style="fill:yellow; font:16px monospace;">

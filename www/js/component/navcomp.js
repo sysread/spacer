@@ -431,30 +431,30 @@ define(function(require, exports, module) {
   Vue.component('SvgPlotPoint', {
     'props': ['label', 'pos', 'diameter', 'img', 'layout'],
 
-    'mounted': function() {
-      this.$refs.img.x      = this.pos[0];
-      this.$refs.img.y      = this.pos[1];
-      this.$refs.img.height = this.diameter;
-      this.$refs.img.width  = this.diameter;
-
-      if (this.$refs.lbl) {
-        this.$refs.lbl.x = this.pos[0] + this.diameter + 10;
-        this.$refs.lbl.y = this.pos[0] + this.diameter / 2;
-      }
-    },
-
     'watch': {
       pos() {
-        TweenLite.to(this.$refs.img, 0.5, {
-          'x':      this.pos[0],
-          'y':      this.pos[1],
-          'ease':   Power0.easeNone,
+        this.set_position(false);
+      },
+    },
+
+    mounted() {
+      this.set_position(true);
+    },
+
+    'methods': {
+      set_position(inserted) {
+        const time = inserted ? 0 : 0.5;
+
+        TweenLite.to(this.$refs.img, time, {
+          'x': this.pos[0],
+          'y': this.pos[1],
+          'ease': Power0.easeNone,
         }).play();
 
         if (this.$refs.lbl) {
-          TweenLite.to(this.$refs.lbl, 0.5, {
-            'x':    this.pos[0] + this.diameter + 10,
-            'y':    this.pos[1] + this.diameter / 2,
+          TweenLite.to(this.$refs.lbl, time, {
+            'x': this.pos[0] + this.diameter + 10,
+            'y': this.pos[1] + this.diameter / 2,
             'ease': Power0.easeNone,
           }).play();
         }
@@ -478,7 +478,7 @@ define(function(require, exports, module) {
 
     data() {
       return {
-        layout: new Layout,
+        layout: null,
       };
     },
 
@@ -490,6 +490,7 @@ define(function(require, exports, module) {
           vnode.context.layout = layout;
           layout.set_fov_au(vnode.context.fov_au);
           layout.set_center(vnode.context.center_point);
+          vnode.context.$nextTick(vnode.context.$forceUpdate);
         }
       },
     },
@@ -501,6 +502,14 @@ define(function(require, exports, module) {
     },
 
     'computed': {
+      width() {
+        if (this.layout) {
+          return this.layout.width_px;
+        }
+
+        return 0;
+      },
+
       transit_path() {
         const transit = this.transit;
 
@@ -659,9 +668,9 @@ define(function(require, exports, module) {
       <div v-resizable
            id     = "navcomp-map-root"
            class  = "plot-root border border-dark"
-           :style = "{'width': layout.width_px + 'px', 'height': layout.width_px + 'px'}">
+           :style = "{'width': width + 'px', 'height': width + 'px'}">
 
-        <SvgPlot :layout="layout">
+        <SvgPlot v-if="layout" :layout="layout">
           <SvgPath v-if="show_target_path && transit" :points="target_path"  color="#8B8B8B" />
           <SvgPath v-if="show_transit_path && transit" :points="transit_path" color="#A01B1B" />
 
