@@ -514,7 +514,7 @@ define(function(require, exports, module) {
         const transit = this.transit;
 
         if (transit) {
-          const points = this.transit.path.slice(this.transit.currentTurn);
+          const points = this.transit.path;
           const path   = this.layout.scale_path(points.map(p => p.position));
 
           if (this.transit.currentTurn == 0) {
