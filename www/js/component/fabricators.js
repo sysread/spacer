@@ -26,15 +26,15 @@ define(function(require, exports, module) {
       turns:     function() { return this.planet.fabricationTime(this.item) },
       hours:     function() { return this.data.hours_per_turn * this.turns },
       materials: function() { return this.data.resources[this.item].recipe.materials },
-    },
-    methods: {
+
       amount: function() {
         return Math.min(
           Math.floor(this.player.money / this.fee),
           this.player.canCraft(this.item),
         );
       },
-
+    },
+    methods: {
       fabricate: function() {
         for (let i = 0; i < this.count; ++i) {
           this.player.debit(this.fee);
@@ -64,13 +64,13 @@ define(function(require, exports, module) {
     },
     template: `
 <div class="my-2">
-  <btn block=1 @click="open=!open" :class="{'disabled': !amount()}">
+  <btn block=1 @click="open=!open" :class="{'disabled': !amount}">
     {{item|caps}}
   </btn>
 
   <card v-if="open" class="my-3">
     <card-text>The current market value of {{item}} is {{price||csn}} credits.</card-text>
-    <card-text v-if="amount()" class="font-italic text-success">You have the resources to fabricate {{amount()}} of this item.</card-text>
+    <card-text v-if="amount" class="font-italic text-success">You have the resources to fabricate {{amount}} of this item.</card-text>
     <card-text v-else class="font-italic text-warning">You do not have the required resources to fabricate this item.</card-text>
 
     <def y=0 split=4 brkpt="sm" term="Count" :def="count" />
@@ -82,8 +82,8 @@ define(function(require, exports, module) {
       </div>
     </def>
 
-    <slider v-if="amount() > 1" class="my-3" :value.sync="count" min="1" :max="amount()" minmax=1 step=1 />
-    <btn v-if="amount()" block=1 @click="fabricate" class="my-3">Push the big red button</btn>
+    <slider v-if="amount > 1" class="my-3" :value.sync="count" min="1" :max="amount" minmax=1 step=1 />
+    <btn v-if="amount" block=1 @click="fabricate" class="my-3">Push the big red button</btn>
 
     <ok v-if="done" @ok="reset">{{count}} unit(s) of {{item}} have been placed in your ship's hold.</ok>
   </card>
