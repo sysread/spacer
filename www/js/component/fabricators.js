@@ -73,10 +73,10 @@ define(function(require, exports, module) {
     <card-text v-if="amount()" class="font-italic text-success">You have the resources to fabricate {{amount()}} of this item.</card-text>
     <card-text v-else class="font-italic text-warning">You do not have the required resources to fabricate this item.</card-text>
 
-    <def y=0 split=3 term="Count" :def="count" />
-    <def y=0 split=3 term="Cost"  :def="(fee * count)|R(0)|csn|unit('credits')" />
-    <def y=0 split=3 term="Time"  :def="(hours * count)|csn|unit('hours')" />
-    <def y=0 split=3 term="Materials">
+    <def y=0 split=4 brkpt="sm" term="Count" :def="count" />
+    <def y=0 split=4 brkpt="sm" term="Cost"  :def="(fee * count)|R(0)|csn|unit('credits')" />
+    <def y=0 split=4 brkpt="sm" term="Time"  :def="(hours * count)|csn|unit('hours')" />
+    <def y=0 split=4 brkpt="sm" term="Materials">
       <div slot="def" v-for="(amt, item) of materials">
         {{(amt * count)|csn|unit(item)}} ({{priceOf(item)|csn}} credits)
       </div>
