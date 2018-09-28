@@ -39,6 +39,10 @@ define(function(require, exports, module) {
       active() {
         return this.game.page;
       },
+
+      enabled() {
+        return !this.game.freeze;
+      },
     },
 
     'methods': {
@@ -49,7 +53,7 @@ define(function(require, exports, module) {
       },
 
       open(page) {
-        if (page) {
+        if (page && this.enabled) {
           this.game.open(page);
         }
 
@@ -58,12 +62,10 @@ define(function(require, exports, module) {
     },
 
     'template': `
-      <nav id="spacer-navbar" data-toggle="collapse"
-         class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
-
+      <nav id="spacer-navbar" data-toggle="collapse" class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
         <span class="navbar-brand">Spacer</span>
 
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#spacer-nav">
+        <button class="navbar-toggler" type="button" :data-toggle="enabled ? 'collapse' : ''" data-target="#spacer-nav">
           <span class="navbar-toggler-icon"></span>
         </button>
 

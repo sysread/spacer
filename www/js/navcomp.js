@@ -1,4 +1,5 @@
 define(function(require, exports, module) {
+  const game        = require('game');
   const data        = require('data');
   const system      = require('system');
   const Physics     = require('physics');

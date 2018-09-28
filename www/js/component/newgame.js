@@ -45,6 +45,7 @@ define(function(require, exports, module) {
         });
 
         this.game.new_game(me, this.home);
+        this.game.freeze = true;
 
         const turns = this.data.initial_days * 24 / this.data.hours_per_turn;
         const step = Math.ceil(turns / 25);
@@ -64,8 +65,8 @@ define(function(require, exports, module) {
           else {
             this.percent = 100;
             this.display = '100% - Done!';
+            this.game.freeze = false;
             this.game.refresh();
-            $('#spacer-nav').data('in-transit', false);
             window.setTimeout(() => {this.game.open('summary')}, 100);
           }
         };

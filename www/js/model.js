@@ -1,5 +1,7 @@
+/*
+ * Special case: must use window.game to avoid circular reference with game.js
+ */
 define(function(require, exports, module) {
-  const game      = require('game');
   const data      = require('data');
   const system    = require('system');
   const util      = require('util');
@@ -248,20 +250,20 @@ define(function(require, exports, module) {
      * Patrols and inspections
      */
     inspectionRate(distance) {
-      const standing = 1 - (game.player.getStanding(this.faction.abbrev) / data.max_abs_standing);
+      const standing = 1 - (window.game.player.getStanding(this.faction.abbrev) / data.max_abs_standing);
       const rate = this.scale(this.faction.patrol * standing);
       return distance ? rate * Math.pow(data.jurisdiction, 2) / Math.pow(distance, 2) : rate;
     }
 
     inspectionChance(distance) {
-      const stealth = 1 - game.player.ship.stealth;
+      const stealth = 1 - window.game.player.ship.stealth;
       const rate = this.inspectionRate(distance);
       const rand = Math.random();
       return rand <= (rate * stealth);
     }
 
     inspectionFine() {
-      return Math.max(10, data.max_abs_standing - game.player.getStanding(this.faction));
+      return Math.max(10, data.max_abs_standing - window.game.player.getStanding(this.faction));
     }
 
     /*
@@ -408,7 +410,7 @@ define(function(require, exports, module) {
         this._price = {};
       }
 
-      if (game.turns % (this.cycle[item] % 24 / data.hours_per_turn) === 0) {
+      if (window.game.turns % (this.cycle[item] % 24 / data.hours_per_turn) === 0) {
         delete this._price[item];
       }
 
@@ -533,8 +535,8 @@ define(function(require, exports, module) {
     }
 
     exporters(item) {
-      return Object.keys(game.planets).filter(name => {
-        const p = game.planets[name];
+      return Object.keys(window.game.planets).filter(name => {
+        const p = window.game.planets[name];
         return p.body !== this.body
             && !p.hasShortage(item)
             && p.getStock(item) >= 1
@@ -551,9 +553,9 @@ define(function(require, exports, module) {
       // Calculate a rating based on difference from average distance, price, stock
       const dist  = {}, price = {}, stock = {};
       for (const body of exporters) {
-        dist[body]  = this.distance(body) / Physics.AU * game.planets[body].buyPrice('fuel');
-        price[body] = game.planets[body].buyPrice(item);
-        stock[body] = Math.min(amount, game.planets[body].getStock(item));
+        dist[body]  = this.distance(body) / Physics.AU * window.game.planets[body].buyPrice('fuel');
+        price[body] = window.game.planets[body].buyPrice(item);
+        stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
       }
 
       const avgDist
@@ -669,12 +671,12 @@ define(function(require, exports, module) {
         const planet = this.selectExporter(item, amount);
         if (!planet) continue;
 
-        const [bought, price] = game.planets[planet].buy(item, amount);
+        const [bought, price] = window.game.planets[planet].buy(item, amount);
 
         if (bought > 0) {
           const distance = this.distance(planet) / Physics.AU;
           const turns = Math.ceil(distance * 10);
-          game.planets[planet].buy('fuel', distance);
+          window.game.planets[planet].buy('fuel', distance);
           this.schedule(turns, item, bought, {type: 'import', item: item, count: bought, from: planet, to: this.body});
           console.debug( sprintf('[import] [%10s] %12s: %02d from %10s', this.body, item, bought, planet) );
         }
@@ -696,7 +698,7 @@ define(function(require, exports, module) {
     }
 
     rollups() {
-      if (game.turns % (24 / data.hours_per_turn) === 0) {
+      if (window.game.turns % (24 / data.hours_per_turn) === 0) {
         for (const item of this.stock.keys) {
           this.incSupply(item, this.getStock(item));
         }

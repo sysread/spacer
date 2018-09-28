@@ -160,7 +160,7 @@ define(function(require, exports, module) {
         else {
           window.clearTimeout(this.timer);
           this.timer = null;
-          $('#spacer').data({state: null, data: null});
+          $('#spacer').data({data: null});
           this.game.transit(this.plan.dest);
           this.game.open('summary');
         }

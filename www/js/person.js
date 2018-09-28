@@ -1,3 +1,6 @@
+/*
+ * Special case: must use window.game to avoid circular reference with game.js
+ */
 define(function(require, exports, module) {
   const data    = require('data');
   const system  = require('system');
@@ -32,11 +35,11 @@ define(function(require, exports, module) {
     }
 
     get localStanding() {
-      return this.getStanding(game.here.faction);
+      return this.getStanding(window.game.here.faction);
     }
 
     get localStandingLabel() {
-      return this.getStandingLabel(game.here.faction);
+      return this.getStandingLabel(window.game.here.faction);
     }
 
     get homeGravity() {

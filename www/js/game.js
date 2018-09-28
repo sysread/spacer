@@ -1,8 +1,8 @@
 define(function(require, exports, module) {
   const data   = require('data');
-  const model  = require('model');
   const system = require('system');
   const util   = require('util');
+  const model  = require('model');
   const Person = require('person');
 
   const start_page = 'summary';
@@ -12,6 +12,7 @@ define(function(require, exports, module) {
       const saved = window.localStorage.getItem('game');
       const init  = JSON.parse(saved) || {};
 
+      this.freeze  = false;
       this.page    = init.page  || null;
       this.locus   = init.locus || null;
       this.turns   = init.turns || 0;
@@ -22,29 +23,12 @@ define(function(require, exports, module) {
       system.set_date(this.strdate());
 
       try {
-        this.player = new Person(init.player);
-
-        this.planets = {};
-        for (const body of Object.keys(data.bodies)) {
-          this.planets[body] = new model.Planet(body, init.planets ? init.planets[body] : undefined);
-        }
+        this.build_player(init.player);
+        this.build_planets(init.planets);
       }
       catch (e) {
         console.warn('initialization error; clearing data. error was:', e);
-        window.localStorage.removeItem('game');
-
-        this.locus  = null;
-        this.turns  = 0;
-        this.player = new Person;
-
-        this.date = new Date(data.start_date);
-        console.log('resetting system date', this.date);
-        system.set_date(this.strdate());
-
-        this.planets = {};
-        for (const body of Object.keys(data.bodies)) {
-          this.planets[body] = new model.Planet(body, undefined);
-        }
+        this.new_game(null, null);
       }
 
       this.refresh();
@@ -56,22 +40,36 @@ define(function(require, exports, module) {
       }
     }
 
+    reset_date() {
+      this.date = new Date(data.start_date);
+      this.date.setDate(this.date.getDate() - data.initial_days);
+      console.log('resetting system date', this.date);
+      system.set_date(this.strdate());
+    }
+
+    build_player(init, person) {
+      this.player = person || new Person(init);
+    }
+
+    build_planets(init) {
+      this.planets = {};
+      for (const body of Object.keys(data.bodies)) {
+        this.planets[body] = new model.Planet(body, init ? init[body] : undefined);
+        this.planets[body] = new model.Planet(body, undefined);
+      }
+    }
+
     get here() {
       return this.planets[this.locus];
     }
 
     new_game(player, home) {
       window.localStorage.removeItem('game');
-
-      const date = new Date(data.start_date);
-      date.setDate(date.getDate() - data.initial_days);
-
-      this.player  = player;
-      this.locus   = home;
-      this.date    = date;
-      this.turns   = 0;
-
-      // TODO fresh planets
+      this.locus  = home;
+      this.turns  = 0;
+      this.reset_date();
+      this.build_player(player);
+      this.build_planets();
     }
 
     save_game() {
@@ -80,11 +78,16 @@ define(function(require, exports, module) {
 
     transit(dest) {
       this.locus = dest;
+      this.freeze = false;
       this.save_game();
       this.refresh();
     }
 
     open(name) {
+      if (this.freeze) {
+        return;
+      }
+
       if ($('#spacer').data('state') === 'transit') {
         return;
       }
@@ -163,5 +166,10 @@ define(function(require, exports, module) {
   };
 
   console.log('Spacer is GO');
-  return new Game;
+
+  if (!window.game) {
+    window.game = new Game;
+  }
+
+  return window.game;
 });

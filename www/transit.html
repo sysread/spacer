@@ -2,16 +2,9 @@
 
 require(
   ['game', 'vendor/vue', 'component/transit'],
-  function(Game, Vue) {
-    let data = $('#spacer').data();
-
-    if (data.state !== 'transit') {
-      Game.game.open('summary');
-      return;
-    }
- 
+  function(game, Vue) {
     const app = new Vue({
-      data: { plan: data.info },
+      data: { plan: $('#spacer').data().info },
       el: '#transit',
       template: '<transit :plan="plan" />',
     });
