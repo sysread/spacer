@@ -4,6 +4,9 @@ define(function(require, exports, module) {
   require('component/global');
 
   Vue.component('NavBar', {
+    'props': [
+    ],
+
     'methods': {
       open(page) { this.game.open(page) },
     },

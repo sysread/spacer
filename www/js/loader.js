@@ -18,7 +18,7 @@ requirejs(
 
     document.addEventListener("deviceready", onDeviceReady, false);
 
-    document.addEventListener("backbutton", function (e) {
+    document.addEventListener("backbutton", (e) => {
       if (confirm('Are you sure you want to quit?')) {
         return navigator.app.exitApp();
       }
