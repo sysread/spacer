@@ -234,9 +234,7 @@ define(function(require, exports, module) {
                  :center="center_point"
                  :fov="fov"
                  :focus="plan.dest"
-                 :transit="plan"
-                 show_transit_path=1
-                 show_target_path=1>
+                 :transit="plan">
 
           <text slot="svg"
                 ref="ship"
