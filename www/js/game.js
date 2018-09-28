@@ -55,7 +55,6 @@ define(function(require, exports, module) {
       this.planets = {};
       for (const body of Object.keys(data.bodies)) {
         this.planets[body] = new model.Planet(body, init ? init[body] : undefined);
-        this.planets[body] = new model.Planet(body, undefined);
       }
     }
 
