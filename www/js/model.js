@@ -33,8 +33,10 @@ define(function(require, exports, module) {
           value += this.recipe[mat] * resources[mat].calculateBaseValue();
         }
 
+        value += Math.max(1, util.R(data.craft_fee * value, 2));
+
         for (let i = 0; i < this.craftTurns; ++i) {
-          value *= 1.2;
+          value *= 1.5;
         }
       }
 

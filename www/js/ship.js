@@ -162,7 +162,7 @@ define(function(require, exports, module) {
     }
 
     currentMass() {
-      return this.mass + this.cargoMass() + this.addOnMass() + (data.resources['fuel'].mass * this.fuel);
+      return this.mass + this.cargoMass() + this.addOnMass() + this.fuel;
     }
 
     currentAcceleration() {
