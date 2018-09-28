@@ -47,7 +47,7 @@ define(function(require, exports, module) {
 
     'methods': {
       collapse() {
-        if (!$('#spacer-nav').hasClass('collapsed')) {
+        if ($('#spacer-nav').hasClass('show')) {
           $('#spacer-nav').collapse('hide');
         }
       },
@@ -59,10 +59,16 @@ define(function(require, exports, module) {
 
         this.collapse();
       },
+
+      click() {
+        if ($('#spacer-navbar').css('flex-flow') == 'row wrap') {
+          $('#spacer-nav').collapse('toggle');
+        }
+      },
     },
 
     'template': `
-      <nav id="spacer-navbar" data-toggle="collapse" class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
+      <nav @click="click" id="spacer-navbar" data-toggle="collapse" class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
         <span class="navbar-brand">Spacer</span>
 
         <button class="navbar-toggler" type="button" :data-toggle="enabled ? 'collapse' : ''" data-target="#spacer-nav">

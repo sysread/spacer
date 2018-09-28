@@ -12,11 +12,10 @@ define(function(require, exports, module) {
   Vue.component('new-game', {
     data: function() {
       return {
-        name:     'Marco Solo',
-        home:     'mars',
-        starting: false,
-        percent:  0,
-        display:  null,
+        name:          'Marco Solo',
+        home:          'mars',
+        starting:      false,
+        turnsComplete: 0,
       };
     },
     computed: {
@@ -27,6 +26,10 @@ define(function(require, exports, module) {
       deltaV:      function() { return this.gravity * this.data.grav_deltav_factor },
       homeDesc:    function() { return this.body.desc.split('|') },
       factionDesc: function() { return this.faction.desc.split('|') },
+      startTurns:  function() { return this.data.initial_days * 24 / this.data.hours_per_turn },
+      step:        function() { return Math.ceil(this.startTurns / 25) },
+      percent:     function() { return Math.min(100, Math.floor((this.turnsComplete / this.startTurns) * 100)) },
+      display:     function() { return this.percent + '%' },
     },
     methods: {
       startGame: function() {
@@ -47,31 +50,19 @@ define(function(require, exports, module) {
         this.game.new_game(me, this.home);
         this.game.freeze = true;
 
-        const turns = this.data.initial_days * 24 / this.data.hours_per_turn;
-        const step = Math.ceil(turns / 25);
-        let done = 0;
-        let timer;
-
-        const interval = () => {
-          if (done < turns) {
-            const count = Math.min(turns - done, step);
-            const pct = Math.floor((done / turns) * 100);
-            done += count;
+        let timer; timer = window.setInterval(() => {
+          if (this.turnsComplete < this.startTurns) {
+            const count = Math.min(this.startTurns - this.turnsComplete, this.step);
+            this.turnsComplete += count;
             this.game.turn(count);
-            this.percent = pct;
-            this.display = pct + '%';
-            timer = window.setTimeout(interval, 200);
           }
           else {
-            this.percent = 100;
-            this.display = '100% - Done!';
             this.game.freeze = false;
             this.game.refresh();
-            window.setTimeout(() => {this.game.open('summary')}, 100);
+            window.clearInterval(timer);
+            this.$nextTick(() => this.game.open('summary'));
           }
-        };
-
-        timer = window.setTimeout(interval, 50);
+        }, 200);
       },
     },
     template: `

@@ -643,7 +643,7 @@ define(function(require, exports, module) {
 
           const turns = this.fabricate(item.name);
           this.schedule(turns, item.name, 1, {type: 'craft', item: item.name, count: 1});
-          console.debug( sprintf('[ craft] [%10s] %12s: %02d', this.body, item.name, 1) );
+          //console.debug( sprintf('[ craft] [%10s] %12s: %02d', this.body, item.name, 1) );
         }
       }
     }
@@ -678,7 +678,7 @@ define(function(require, exports, module) {
           const turns = Math.ceil(distance * 10);
           window.game.planets[planet].buy('fuel', distance);
           this.schedule(turns, item, bought, {type: 'import', item: item, count: bought, from: planet, to: this.body});
-          console.debug( sprintf('[import] [%10s] %12s: %02d from %10s', this.body, item, bought, planet) );
+          //console.debug( sprintf('[import] [%10s] %12s: %02d from %10s', this.body, item, bought, planet) );
         }
       }
     }

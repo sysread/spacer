@@ -32,10 +32,8 @@ define(function(require, exports, module) {
     props: ['percent'],
     template: `
 <div class="progress bg-dark">
-  <div class="progress-bar bg-warning" :style="{height: '35px', width: (percent || 0) + '%'}">
-    <span class="badge badge-pill badge-dark float-left m-1 font-weight-normal" style="font-size:14px">
-      <slot />
-    </span>
+  <div class="progress-bar bg-warning text-dark" :style="{width: (percent || 0) + '%'}">
+    <slot />
   </div>
 </div>
     `,
