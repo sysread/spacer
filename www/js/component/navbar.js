@@ -3,19 +3,63 @@ define(function(require, exports, module) {
 
   require('component/global');
 
+
+  Vue.component('NavItem', {
+    'props': ['active'],
+
+    'template': `
+      <li class="nav-item">
+        <a href="#" :class="{'nav-link': true, 'active': active}" @click="$emit('click')">
+          <slot />
+        </a>
+      </li>
+    `,
+  });
+
+
   Vue.component('NavBar', {
-    'props': [
-    ],
+    'props': [],
+
+    'data': function() {
+      return {
+        menu: {
+          'Summary':     'summary',
+          'Work':        'work',
+          'Commerce':    'commerce',
+          'Fabricators': 'fabricators',
+          'Shipyard':    'shipyard',
+          'Navigation':  'navigation',
+          'Status':      'status',
+          'Testing':     'test',
+        },
+      };
+    },
+
+    'computed': {
+      active() {
+        return this.game.page;
+      },
+    },
 
     'methods': {
-      open(page) { this.game.open(page) },
+      collapse() {
+        if (!$('#spacer-nav').hasClass('collapsed')) {
+          $('#spacer-nav').collapse('hide');
+        }
+      },
+
+      open(page) {
+        if (page) {
+          this.game.open(page);
+        }
+
+        this.collapse();
+      },
     },
 
     'template': `
-      <nav id="spacer-navbar"
-           data-toggle="collapse"
-           data-target="#spacer-nav"
-           class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
+      <nav id="spacer-navbar" data-toggle="collapse"
+         class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
 
         <span class="navbar-brand">Spacer</span>
 
@@ -25,14 +69,9 @@ define(function(require, exports, module) {
 
         <div class="collapse navbar-collapse" id="spacer-nav">
           <ul class="navbar-nav mr-auto">
-            <li class="nav-item"><a href="#" data-name="summary"  @click="open('summary')"     class="nav-link active">Summary</a></li>
-            <li class="nav-item"><a href="#" data-name="work"     @click="open('work')"        class="nav-link">Work</a></li>
-            <li class="nav-item"><a href="#" data-name="docks"    @click="open('commerce')"    class="nav-link">Commerce</a></li>
-            <li class="nav-item"><a href="#" data-name="fabs"     @click="open('fabricators')" class="nav-link">Fabricators</a></li>
-            <li class="nav-item"><a href="#" data-name="shipyard" @click="open('shipyard')"    class="nav-link">Shipyard</a></li>
-            <li class="nav-item"><a href="#" data-name="nav"      @click="open('navigation')"  class="nav-link">Navigation</a></li>
-            <li class="nav-item"><a href="#" data-name="status"   @click="open('status')"      class="nav-link">Status</a></li>
-            <li class="nav-item"><a href="#" data-name="test"     @click="open('test')"        class="nav-link">Testing</a></li>
+            <NavItem v-for="(target, label) of menu" :key="target" :active="active == target" @click="open(target)">
+              {{label}}
+            </NavItem>
           </ul>
         </div>
       </nav>

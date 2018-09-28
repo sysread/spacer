@@ -18,26 +18,6 @@
     <!-- Libs -->
     <script data-main="js/loader" src="js/vendor/require.js"></script>
 
-    <script>
-    require(
-      [
-        'vendor/vue',         // load base framework
-        'game',               // load central data classes
-        'data',
-        'system',
-        'physics',
-        'component/navbar',   // load nav bar
-      ],
-      function(Vue) {
-        const nav_app = new Vue({
-          el: '#navbar',
-          template: '<NavBar />',
-        });
-      },
-    );
-
-    </script>
-
     <title>Spacer</title>
   </head>
   <body id="spacer">
@@ -56,27 +36,21 @@
     <!-- Navigation -->
     <div id="navbar" />
 
-    <!--
-    <nav id="spacer-navbar" data-toggle="collapse" data-target="#spacer-nav" class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
-      <span class="navbar-brand">Spacer</span>
+    <script>
+      require(
+        [
+          'vendor/vue',       // base framework
+          'component/global', // global state
+          'component/navbar', // nav bar
+        ],
 
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#spacer-nav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="spacer-nav">
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item"><a href="#" data-name="summary"  data-path="summary.html"     class="nav-link active">Summary</a></li>
-          <li class="nav-item"><a href="#" data-name="work"     data-path="work.html"        class="nav-link">Work</a></li>
-          <li class="nav-item"><a href="#" data-name="docks"    data-path="commerce.html"    class="nav-link">Commerce</a></li>
-          <li class="nav-item"><a href="#" data-name="fabs"     data-path="fabricators.html" class="nav-link">Fabricators</a></li>
-          <li class="nav-item"><a href="#" data-name="shipyard" data-path="shipyard.html"    class="nav-link">Shipyard</a></li>
-          <li class="nav-item"><a href="#" data-name="nav"      data-path="navigation.html"  class="nav-link">Navigation</a></li>
-          <li class="nav-item"><a href="#" data-name="status"   data-path="status.html"      class="nav-link">Status</a></li>
-          <li class="nav-item"><a href="#" data-name="test"     data-path="test.html"        class="nav-link">Testing</a></li>
-        </ul>
-      </div>
-    </nav>
-    -->
+        function(Vue) {
+          const nav_app = new Vue({
+            'el': '#navbar',
+            'template': '<NavBar />',
+          });
+        },
+      );
+    </script>
   </body>
 </html>

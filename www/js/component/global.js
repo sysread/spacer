@@ -5,8 +5,13 @@ define(function(require, exports, module) {
   const system = require('system');
 
   Vue.mixin({
+    'data': function() {
+      return {
+        'game': game,
+      };
+    },
+
     'computed': {
-      game()   { return game   },
       data()   { return data   },
       system() { return system },
     },

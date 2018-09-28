@@ -12,6 +12,7 @@ define(function(require, exports, module) {
       const saved = window.localStorage.getItem('game');
       const init  = JSON.parse(saved) || {};
 
+      this.page    = init.page  || null;
       this.locus   = init.locus || null;
       this.turns   = init.turns || 0;
       this.date    = new Date(data.start_date);
@@ -48,11 +49,10 @@ define(function(require, exports, module) {
 
       this.refresh();
 
-      if (this.turns > 0) {
-        this.open(start_page);
-      }
-      else {
+      if (this.turns == 0) {
         this.open('newgame');
+      } else {
+        this.open(start_page);
       }
     }
 
@@ -85,13 +85,16 @@ define(function(require, exports, module) {
     }
 
     open(name) {
-      if ($('#spacer').data('state') === 'transit') return;
-      if (!window.localStorage.getItem('game')) name = 'newgame';
-      const path = $(`#spacer-nav a[data-name='${name}']`).data('path') || name + '.html';
-      $('#spacer-nav a').removeClass('active');
-      $(`#spacer-nav a[data-name="${name}"]`).addClass('active');
-      $('#spacer-content').empty().load(path);
-      $('#spacer-nav').collapse('hide');
+      if ($('#spacer').data('state') === 'transit') {
+        return;
+      }
+
+      if (!window.localStorage.getItem('game')) {
+        name = 'newgame';
+      }
+
+      this.page = name;
+      $('#spacer-content').empty().load(this.page + '.html');
     }
 
     strdate() {

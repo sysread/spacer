@@ -2,22 +2,20 @@ requirejs.config({baseUrl: 'js'});
 
 requirejs(
   function() {
-    function onDeviceReady() {
+    /*
+     * Initialize system-level integrations on deviceready
+     */
+    document.addEventListener("deviceready", (e) => {
       if (StatusBar.isVisible) {
         StatusBar.hide();
       }
 
-      $(window).on('click', (e) => {
-        if (!$('#spacer-nav').hasClass('collapsed')) {
-          $('#spacer-nav').collapse('hide');
-        }
-      });
-
       FastClick.attach(document.body);
-    }
+    }, false);
 
-    document.addEventListener("deviceready", onDeviceReady, false);
-
+    /*
+     * Add confirmation before exiting app via back button
+     */
     document.addEventListener("backbutton", (e) => {
       if (confirm('Are you sure you want to quit?')) {
         return navigator.app.exitApp();

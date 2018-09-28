@@ -67,25 +67,24 @@ define(function(require, exports, module) {
   Vue.component('exchange', {
     props: ['store'],
     data: function() {
-      const resources = new model.Store;
-
-      for (const item of game.player.ship.cargo.keys) {
-        resources.inc(item, game.player.ship.cargo.count(item));
+      return {
+        resources: new model.Store,
+      };
+    },
+    mounted: function() {
+      for (const item of this.game.player.ship.cargo.keys) {
+        this.resources.inc(item, this.game.player.ship.cargo.count(item));
       }
 
       for (const item of this.store.keys) {
-        resources.inc(item, this.store.count(item));
+        this.resources.inc(item, this.store.count(item));
       }
-
-      return {
-        cargo: game.player.ship.cargo,
-        resources: resources,
-      };
     },
     computed: {
-      cargoSpace: function() {return game.player.ship.cargoSpace},
-      cargoUsed:  function() {return game.player.ship.cargoUsed},
-      cargoLeft:  function() {return game.player.ship.cargoLeft},
+      cargo:      function() {return this.game.player.ship.cargo},
+      cargoSpace: function() {return this.game.player.ship.cargoSpace},
+      cargoUsed:  function() {return this.game.player.ship.cargoUsed},
+      cargoLeft:  function() {return this.game.player.ship.cargoLeft},
     },
     methods: {
       update: function(item, amt) {
@@ -97,7 +96,7 @@ define(function(require, exports, module) {
 
         this.store.set(item, this.resources.get(item) - amt);
         this.cargo.set(item, amt);
-        game.refresh();
+        this.game.refresh();
       },
     },
     template: `
