@@ -33,7 +33,9 @@ define(function(require, exports, module) {
           value += this.recipe[mat] * resources[mat].calculateBaseValue();
         }
 
-        value *= this.craftTurns;
+        for (let i = 0; i < this.craftTurns; ++i) {
+          value *= 1.2;
+        }
       }
 
       return value;

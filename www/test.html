@@ -26,10 +26,14 @@ require(
         resources: function() { return Object.keys(data.resources) },
         bodies:    function() { return Object.keys(game.planets) },
         places:    function() { return Object.values(game.planets) },
+        resource:  function() { return model.resources[ this.item ] },
+
+        value: function() {
+          if (this.resource) return Math.floor(this.resource.value);
+          return 0;
+        },
       },
       methods: {
-        value: function() { if (this.item) return Resource.get(this.item).value },
-
         gameTurns: function(turns) {
           let left = turns;
           let intvl;
@@ -75,6 +79,10 @@ require(
       <option value="">Resource</option>
       <option v-for="item in resources" :key="item" :value="item">{{item|caps}}</option>
     </select>
+
+    <badge>
+      {{value}}c
+    </badge>
   </div>
 
   <table v-if="item" class="table table-sm mini">
