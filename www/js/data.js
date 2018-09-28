@@ -33,20 +33,20 @@ define(function() {
     },
 
     resources: {
-      water:        {mass: 5,  mine: {tics: 1, value: 10}},
-      ore:          {mass: 25, mine: {tics: 2, value: 15}},
-      minerals:     {mass: 10, mine: {tics: 2, value: 20}},
-      hydrocarbons: {mass: 2,  mine: {tics: 2, value: 25}},
-      food:         {mass: 5,  mine: {tics: 2, value: 30}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 1}}},
-      fuel:         {mass: 1,  recipe: {tics: 2, materials: {ore: 1}}},
-      metal:        {mass: 40, recipe: {tics: 2, materials: {ore: 2}}},
-      ceramics:     {mass: 10, recipe: {tics: 2, materials: {minerals: 2}}},
-      medicine:     {mass: 2,  recipe: {tics: 3, materials: {food: 1, hydrocarbons: 1}}},
-      machines:     {mass: 30, recipe: {tics: 3, materials: {metal: 2}}},
-      electronics:  {mass: 10, recipe: {tics: 3, materials: {ceramics: 2}}},
-      cybernetics:  {mass: 40, recipe: {tics: 4, materials: {machines: 1, electronics: 1}}},
-      narcotics:    {mass: 2,  recipe: {tics: 2, materials: {medicine: 2}}, contraband: 5},
-      weapons:      {mass: 10, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}, contraband: 7},
+      water:        {mass: 10, mine: {tics: 1, value: 10}},
+      ore:          {mass: 30, mine: {tics: 2, value: 15}},
+      minerals:     {mass: 20, mine: {tics: 2, value: 20}},
+      hydrocarbons: {mass: 5,  mine: {tics: 2, value: 25}},
+      food:         {mass: 8,  mine: {tics: 2, value: 30}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 1}}},
+      fuel:         {mass: 10, recipe: {tics: 2, materials: {ore: 1}}},
+      metal:        {mass: 50, recipe: {tics: 2, materials: {ore: 2}}},
+      ceramics:     {mass: 20, recipe: {tics: 2, materials: {minerals: 2}}},
+      medicine:     {mass: 5,  recipe: {tics: 3, materials: {food: 1, hydrocarbons: 1}}},
+      machines:     {mass: 60, recipe: {tics: 3, materials: {metal: 2}}},
+      electronics:  {mass: 20, recipe: {tics: 3, materials: {ceramics: 2}}},
+      cybernetics:  {mass: 80, recipe: {tics: 4, materials: {machines: 1, electronics: 1}}},
+      narcotics:    {mass: 5,  recipe: {tics: 2, materials: {medicine: 2}}, contraband: 5},
+      weapons:      {mass: 20, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}, contraband: 7},
     },
 
     market: {
@@ -295,7 +295,7 @@ define(function() {
 
     ship: {
       mass: {
-        value: 80,
+        value: 40,
       },
 
       tank: {
@@ -320,7 +320,7 @@ define(function() {
     drives: {
       ion: {
         name:      'Ion',
-        thrust:    800,
+        thrust:    600,
         mass:      10,
         desc:      'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
         burn_rate: 0.005,
@@ -338,30 +338,30 @@ define(function() {
 
     shipclass: {
       /* Civilian */
-      shuttle:     {hull: 2,  armor: 0,  cargo: 2,  hardpoints: 0,  mass: 200,   tank: 1,   drives: 1,  drive: 'ion',    restricted: false},
-      schooner:    {hull: 4,  armor: 1,  cargo: 8,  hardpoints: 1,  mass: 450,   tank: 2,   drives: 2,  drive: 'ion',    restricted: false},
-      runner:      {hull: 4,  armor: 2,  cargo: 14, hardpoints: 1,  mass: 850,   tank: 4,   drives: 2,  drive: 'ion',    restricted: false},
+      shuttle:     {hull: 2,  armor: 0,  cargo: 2,  hardpoints: 0,  mass: 100,   tank: 1,   drives: 1,  drive: 'ion',    restricted: false},
+      schooner:    {hull: 4,  armor: 1,  cargo: 8,  hardpoints: 1,  mass: 250,   tank: 2,   drives: 2,  drive: 'ion',    restricted: false},
+      runner:      {hull: 4,  armor: 2,  cargo: 14, hardpoints: 1,  mass: 400,   tank: 4,   drives: 2,  drive: 'ion',    restricted: false},
 
       /* Merchant */
-      trader:      {hull: 4,  armor: 4,  cargo: 25, hardpoints: 2,  mass: 1200,  tank: 8,   drives: 10, drive: 'ion',    restricted: false},
-      merchantman: {hull: 7,  armor: 4,  cargo: 30, hardpoints: 3,  mass: 1500,  tank: 12,  drives: 15, drive: 'ion',    restricted: false},
-      freighter:   {hull: 10, armor: 6,  cargo: 50, hardpoints: 3,  mass: 2300,  tank: 18,  drives: 25, drive: 'ion',    restricted: false},
-      hauler:      {hull: 20, armor: 8,  cargo: 80, hardpoints: 5,  mass: 2700,  tank: 25,  drives: 40, drive: 'ion',    restricted: false},
+      trader:      {hull: 4,  armor: 4,  cargo: 25, hardpoints: 2,  mass: 500,   tank: 6,   drives: 5,  drive: 'ion',    restricted: false},
+      merchantman: {hull: 7,  armor: 4,  cargo: 30, hardpoints: 3,  mass: 600,   tank: 8,   drives: 8,  drive: 'ion',    restricted: false},
+      freighter:   {hull: 10, armor: 6,  cargo: 40, hardpoints: 3,  mass: 850,   tank: 10,  drives: 14, drive: 'ion',    restricted: false},
+      hauler:      {hull: 20, armor: 8,  cargo: 60, hardpoints: 5,  mass: 1050,  tank: 15,  drives: 20, drive: 'ion',    restricted: false},
 
       /* Military */
       corvette:    {hull: 15, armor: 10, cargo: 10, hardpoints: 4,  mass: 450,   tank: 4,   drives: 1,  drive: 'fusion', restricted: 'Trusted'},
-      frigate:     {hull: 20, armor: 14, cargo: 20, hardpoints: 6,  mass: 650,   tank: 6,   drives: 2,  drive: 'fusion', restricted: 'Trusted'},
-      destroyer:   {hull: 30, armor: 18, cargo: 12, hardpoints: 8,  mass: 800,   tank: 10,  drives: 3,  drive: 'fusion', restricted: 'Admired'},
-      cruiser:     {hull: 50, armor: 25, cargo: 15, hardpoints: 10, mass: 900,   tank: 12,  drives: 5,  drive: 'fusion', restricted: 'Admired'},
-      battleship:  {hull: 65, armor: 40, cargo: 20, hardpoints: 16, mass: 1200,  tank: 14,  drives: 8,  drive: 'fusion', restricted: 'Admired'},
+      frigate:     {hull: 20, armor: 14, cargo: 20, hardpoints: 4,  mass: 650,   tank: 6,   drives: 2,  drive: 'fusion', restricted: 'Trusted'},
+      destroyer:   {hull: 30, armor: 18, cargo: 12, hardpoints: 6,  mass: 800,   tank: 10,  drives: 3,  drive: 'fusion', restricted: 'Admired'},
+      cruiser:     {hull: 50, armor: 25, cargo: 15, hardpoints: 8,  mass: 900,   tank: 12,  drives: 5,  drive: 'fusion', restricted: 'Admired'},
+      battleship:  {hull: 65, armor: 40, cargo: 20, hardpoints: 10, mass: 1200,  tank: 14,  drives: 8,  drive: 'fusion', restricted: 'Admired'},
       transport:   {hull: 40, armor: 20, cargo: 50, hardpoints: 6,  mass: 1600,  tank: 20,  drives: 8,  drive: 'fusion', restricted: 'Admired'},
 
       /* Faction ships */
       scout:       {hull: 8,  armor: 10, cargo: 12, hardpoints: 2,  mass: 500,   tank: 6,   drives: 4,  drive: 'ion',    restricted: 'Respected', faction: 'CERES'},
-      fortuna:     {hull: 20, armor: 8,  cargo: 60, hardpoints: 2,  mass: 1200,  tank: 15,  drives: 30, drive: 'ion',    restricted: 'Respected', faction: 'JFT'},
-      neptune:     {hull: 14, armor: 10, cargo: 40, hardpoints: 3,  mass: 1500,  tank: 20,  drives: 15, drive: 'ion',    restricted: 'Respected', faction: 'TRANSA'},
-      barsoom:     {hull: 20, armor: 20, cargo: 25, hardpoints: 4,  mass: 600,   tank: 8,   drives: 2,  drive: 'fusion', restricted: 'Admired',   faction: 'MC'},
-      interceptor: {hull: 25, armor: 8,  cargo: 15, hardpoints: 4,  mass: 700,   tank: 12,  drives: 3,  drive: 'fusion', restricted: 'Admired',   faction: 'UN'},
+      fortuna:     {hull: 20, armor: 8,  cargo: 60, hardpoints: 2,  mass: 900,   tank: 10,  drives: 15, drive: 'ion',    restricted: 'Respected', faction: 'JFT'},
+      neptune:     {hull: 14, armor: 10, cargo: 40, hardpoints: 4,  mass: 700,   tank: 10,  drives: 10, drive: 'ion',    restricted: 'Respected', faction: 'TRANSA'},
+      barsoom:     {hull: 20, armor: 20, cargo: 25, hardpoints: 6,  mass: 600,   tank: 8,   drives: 2,  drive: 'fusion', restricted: 'Admired',   faction: 'MC'},
+      interceptor: {hull: 25, armor: 8,  cargo: 15, hardpoints: 8,  mass: 700,   tank: 10,  drives: 3,  drive: 'fusion', restricted: 'Admired',   faction: 'UN'},
     },
 
     /*
