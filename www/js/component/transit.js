@@ -3,11 +3,10 @@ define(function(require, exports, module) {
   const Ship    = require('ship');
   const Physics = require('physics');
   const Vue     = require('vendor/vue');
-  const data    = require('data');
-  const system  = require('system');
   const util    = require('util');
   const Layout  = require('layout');
 
+  require('component/global');
   require('component/common');
   require('component/card');
   require('component/combat');
@@ -22,7 +21,7 @@ define(function(require, exports, module) {
     data: function() {
       return {
         paused:        false,
-        timer:         this.schedule(),
+        timer:         null,
         stoppedBy:     {},
         inspection:    null,
         daysLeft:      null,
@@ -30,6 +29,10 @@ define(function(require, exports, module) {
         layout:        null,
         ship_inserted: false,
       };
+    },
+
+    mounted() {
+      this.$nextTick(this.schedule);
     },
 
     watch: {
@@ -48,7 +51,7 @@ define(function(require, exports, module) {
       },
 
       destination: function() {
-        return system.name(this.plan.dest);
+        return this.system.name(this.plan.dest);
       },
 
       compression: function() {
@@ -59,17 +62,17 @@ define(function(require, exports, module) {
         const skip = {};
         skip[this.plan.dest] = true;
         skip[this.plan.origin] = true;
-        if (system.central(this.plan.dest) != 'sun') skip[system.central(this.plan.dest)] = true;
-        if (system.central(this.plan.origin) != 'sun') skip[system.central(this.plan.origin)] = true;
+        if (this.system.central(this.plan.dest) != 'sun') skip[this.system.central(this.plan.dest)] = true;
+        if (this.system.central(this.plan.origin) != 'sun') skip[this.system.central(this.plan.origin)] = true;
         return skip;
       },
 
       nearest_body() {
         const skip = this.nearest_skip;
-        const ranges = system.ranges(this.plan.end);
+        const ranges = this.system.ranges(this.plan.end);
 
         const nearest = Object.keys(ranges)
-          .filter(b => !skip[b] && (system.central(b) == 'sun' || !skip[system.central(b)]))
+          .filter(b => !skip[b] && (this.system.central(b) == 'sun' || !skip[this.system.central(b)]))
           .reduce((a, b) => ranges[a] > ranges[b] ? b : a);
 
         return nearest;
@@ -79,7 +82,7 @@ define(function(require, exports, module) {
         return Physics.centroid(
           this.plan.start,
           this.plan.end,
-          system.position(this.nearest_body),
+          this.system.position(this.nearest_body),
         );
       },
 
@@ -89,7 +92,7 @@ define(function(require, exports, module) {
         const d = Math.max(
           Physics.distance(this.plan.start, c),
           Physics.distance(this.plan.end, c),
-          Physics.distance(system.position(this.nearest_body), c),
+          Physics.distance(this.system.position(this.nearest_body), c),
         );
 
         return d / Physics.AU * 1.1;
@@ -128,7 +131,7 @@ define(function(require, exports, module) {
 
       schedule: function() {
         this.velocity = this.plan.velocity;
-        this.daysLeft = Math.floor(this.plan.left * data.hours_per_turn / 24);
+        this.daysLeft = Math.floor(this.plan.left * this.data.hours_per_turn / 24);
         this.distance = util.R(this.plan.auRemaining(), 2);
         window.setTimeout(() => { this.turn() }, this.interval);
       },
@@ -139,9 +142,9 @@ define(function(require, exports, module) {
             return;
           }
           else {
-            game.turn(1, true);
+            this.game.turn(1, true);
             this.plan.turn(1);
-            game.player.ship.burn(this.plan.accel);
+            this.game.player.ship.burn(this.plan.accel);
 
             if (this.paused) {
               window.clearTimeout(this.timer);
@@ -158,8 +161,8 @@ define(function(require, exports, module) {
           window.clearTimeout(this.timer);
           this.timer = null;
           $('#spacer').data({state: null, data: null});
-          game.transit(this.plan.dest);
-          game.open('summary');
+          this.game.transit(this.plan.dest);
+          this.game.open('summary');
         }
       },
 
@@ -169,13 +172,13 @@ define(function(require, exports, module) {
       },
 
       nearby: function() {
-        const ranges = system.ranges(this.plan.coords);
+        const ranges = this.system.ranges(this.plan.coords);
         const bodies = {};
 
         for (const body of Object.keys(ranges)) {
           const au = ranges[body] / Physics.AU;
 
-          if (au <= data.jurisdiction) {
+          if (au <= this.data.jurisdiction) {
             bodies[body] = ranges[body];
           }
         }
@@ -192,18 +195,18 @@ define(function(require, exports, module) {
         for (const body of Object.keys(ranges)) {
           const km = Math.floor(ranges[body] / 1000);
 
-          if (game.planets[body].inspectionChance(km)) {
-            const faction = data.bodies[body].faction;
+          if (this.game.planets[body].inspectionChance(km)) {
+            const faction = this.data.bodies[body].faction;
 
             if (this.stoppedBy[faction]) {
               continue;
             }
             else {
-              const dist = util.R(Physics.distance(this.plan.coords, system.position(body)) / Physics.AU, 3);
+              const dist = util.R(Physics.distance(this.plan.coords, this.system.position(body)) / Physics.AU, 3);
               this.stoppedBy[faction] = true;
               this.inspection = {
                 body:     body,
-                faction:  data.bodies[body].faction,
+                faction:  this.data.bodies[body].faction,
                 distance: dist,
               };
 
@@ -279,14 +282,14 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      planet: function() { return game.planets[this.body] },
-      bribeAmount: function() { return Math.ceil(game.player.ship.price() * 0.03) },
-      canAffordBribe: function() { return this.bribeAmount <= game.player.money },
+      planet: function() { return this.game.planets[this.body] },
+      bribeAmount: function() { return Math.ceil(this.game.player.ship.price() * 0.03) },
+      canAffordBribe: function() { return this.bribeAmount <= this.game.player.money },
 
       hasContraband: function() {
-        for (const item of Object.keys(data.resources)) {
-          if (data.resources[item].contraband) {
-            if (game.player.ship.cargo.get(item) > 0) {
+        for (const item of Object.keys(this.data.resources)) {
+          if (this.data.resources[item].contraband) {
+            if (this.game.player.ship.cargo.get(item) > 0) {
               return true;
             }
           }
@@ -302,22 +305,22 @@ define(function(require, exports, module) {
 
       submit: function() {
         let fine = 0;
-        for (const item of game.player.ship.cargo.keys) {
-          const amt = game.player.ship.cargo.count(item);
-          if (data.resources[item].contraband) {
+        for (const item of this.game.player.ship.cargo.keys) {
+          const amt = this.game.player.ship.cargo.count(item);
+          if (this.data.resources[item].contraband) {
             fine += amt * this.planet.inspectionFine();
           }
         }
 
-        this.fine = Math.min(fine, game.player.money);
+        this.fine = Math.min(fine, this.game.player.money);
 
         if (this.fine > 0) {
-          game.player.debit(this.fine);
+          this.game.player.debit(this.fine);
 
-          for (const [item, amt] of game.player.ship.cargo.entries()) {
-            if (amt > 0 && data.resources[item].contraband) {
-              game.player.ship.cargo.dec(item, amt);
-              game.player.decStanding(this.faction, data.resources[item].contraband);
+          for (const [item, amt] of this.game.player.ship.cargo.entries()) {
+            if (amt > 0 && this.data.resources[item].contraband) {
+              this.game.player.ship.cargo.dec(item, amt);
+              this.game.player.decStanding(this.faction, this.data.resources[item].contraband);
             }
           }
 
@@ -329,14 +332,14 @@ define(function(require, exports, module) {
       },
 
       bribe: function() {
-        game.player.debit(this.bribeAmount);
+        this.game.player.debit(this.bribeAmount);
         this.done();
       },
 
       flee: function() {
         $('#spacer').data({state: null, data: null});
         window.localStorage.removeItem('game');
-        game.open('newgame');
+        this.game.open('newgame');
       },
 
       done: function() {

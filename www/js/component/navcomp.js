@@ -1,12 +1,11 @@
 define(function(require, exports, module) {
   const Vue     = require('vendor/vue');
-  const System  = require('system');
   const Physics = require('physics');
   const util    = require('util');
-  const data    = require('data');
   const Layout  = require('layout');
   const NavComp = require('navcomp');
 
+  require('component/global');
   require('component/common');
   require('component/card');
   require('component/modal');
@@ -16,23 +15,20 @@ define(function(require, exports, module) {
   require('vendor/TweenMax.min');
 
 
-  const BODIES = System.bodies();
-
-
   Vue.component('NavDestOpt', {
     'props': ['body'],
 
     'computed': {
-      name()    { return System.name(this.body)           },
-      faction() { return System.faction(this.body)        },
-      central() { return System.central(this.body)        },
-      kind()    { return System.kind(this.body)           },
-      is_moon() { return System.type(this.body) == 'moon' },
-      is_here() { return game.locus == this.body          },
+      name()    { return this.system.name(this.body)           },
+      faction() { return this.system.faction(this.body)        },
+      central() { return this.system.central(this.body)        },
+      kind()    { return this.system.kind(this.body)           },
+      is_moon() { return this.system.type(this.body) == 'moon' },
+      is_here() { return this.game.locus == this.body          },
 
       dist() {
-        const p0 = System.position(game.locus);
-        const p1 = System.position(this.body);
+        const p0 = this.system.position(this.game.locus);
+        const p1 = this.system.position(this.body);
         const d  = Physics.distance(p0, p1);
 
         if (d < Physics.AU * 0.01) {
@@ -78,7 +74,7 @@ define(function(require, exports, module) {
     'props': ['prev', 'title'],
 
     'computed': {
-      bodies() { return BODIES },
+      bodies() { return this.system.bodies() },
     },
 
     'methods': {
@@ -126,7 +122,7 @@ define(function(require, exports, module) {
 
       planet() {
         if (this.dest) {
-          return game.planets[this.dest];
+          return this.game.planets[this.dest];
         }
       },
     },
@@ -140,7 +136,7 @@ define(function(require, exports, module) {
       go_routes()    { this.show = 'routes' },
 
       is_here(body) {
-        return body == game.locus;
+        return body == this.game.locus;
       },
 
       set_transit(transit, go_home) {
@@ -172,16 +168,16 @@ define(function(require, exports, module) {
       next_dest() {
         let done = false;
 
-        for (let i = 0; i < BODIES.length; ++i) {
-          if (this.dest == BODIES[i]) {
-            for (let j = i; j < BODIES.length; ++j) {
-              const idx = j + 1 == BODIES.length ? 0 : j + 1;
+        for (let i = 0; i < this.system.bodies().length; ++i) {
+          if (this.dest == this.system.bodies()[i]) {
+            for (let j = i; j < this.system.bodies().length; ++j) {
+              const idx = j + 1 == this.system.bodies().length ? 0 : j + 1;
 
-              if (this.is_here(BODIES[idx])) {
+              if (this.is_here(this.system.bodies()[idx])) {
                 continue;
               }
               else {
-                this.dest = BODIES[idx];
+                this.dest = this.system.bodies()[idx];
                 done = true;
                 return;
               }
@@ -190,7 +186,7 @@ define(function(require, exports, module) {
         }
 
         if (!done) {
-          this.dest = BODIES[game.locus == BODIES[0] ? 1 : 0];
+          this.dest = this.system.bodies()[this.game.locus == this.system.bodies()[0] ? 1 : 0];
           return;
         }
       },
@@ -200,7 +196,7 @@ define(function(require, exports, module) {
 
         if (yes) {
           $('#spacer').data('info', this.transit);
-          game.open('transit');
+          this.game.open('transit');
           $('#spacer').data('state', 'transit');
         }
       },
@@ -308,13 +304,13 @@ define(function(require, exports, module) {
     },
 
     'computed': {
-      home()           { return game.player.home },
-      gravity()        { return game.player.homeGravity },
-      max_accel()      { return game.player.maxAcceleration() / Physics.G },
-      ship_accel()     { return game.player.shipAcceleration() / Physics.G },
-      ship_mass()      { return game.player.ship.currentMass() },
-      ship_fuel()      { return game.player.ship.fuel },
-      ship_burn_time() { return game.player.ship.maxBurnTime() * data.hours_per_turn },
+      home()           { return this.game.player.home },
+      gravity()        { return this.game.player.homeGravity },
+      max_accel()      { return this.game.player.maxAcceleration() / Physics.G },
+      ship_accel()     { return this.game.player.shipAcceleration() / Physics.G },
+      ship_mass()      { return this.game.player.ship.currentMass() },
+      ship_fuel()      { return this.game.player.ship.fuel },
+      ship_burn_time() { return this.game.player.ship.maxBurnTime() * this.data.hours_per_turn },
       transits()       { return this.navcomp.getTransitsTo(this.dest) },
       has_route()      { return this.transits.length > 0 },
       num_routes()     { return this.transits.length },
@@ -532,7 +528,7 @@ define(function(require, exports, module) {
 
         if (transit) {
           return this.layout.scale_path(
-            System.orbit_by_turns(this.focus)
+            this.system.orbit_by_turns(this.focus)
               .slice(0, transit.left + 1)
           );
         }
@@ -545,7 +541,7 @@ define(function(require, exports, module) {
 
         // If there is no center point specified, set the new center point to
         // be the centroid of the new focus, the current location, and the sun.
-        const points = [[0, 0], this.position(game.locus)];
+        const points = [[0, 0], this.position(this.game.locus)];
 
         if (this.focus) {
           points.push(this.position(this.focus));
@@ -563,7 +559,7 @@ define(function(require, exports, module) {
           return this.transit.segment_au;
         }
 
-        const bodies = [this.position(game.locus)];
+        const bodies = [this.position(this.game.locus)];
 
         if (this.focus) {
           bodies.push(this.position(this.focus));
@@ -579,12 +575,12 @@ define(function(require, exports, module) {
         const seen   = {};
         const bodies = [];
 
-        for (const body of BODIES) {
+        for (const body of this.system.bodies()) {
           if (!seen[body]) {
             seen[body] = true;
             bodies.push(body);
 
-            const central = System.central(body);
+            const central = this.system.central(body);
             if (central != 'sun' && !seen[central]) {
               seen[central] = true;
               bodies.push(central);
@@ -598,7 +594,7 @@ define(function(require, exports, module) {
 
     'methods': {
       position(body) {
-        const p = System.position(body);
+        const p = this.system.position(body);
         return [p[0], p[1]];
       },
 
@@ -610,11 +606,11 @@ define(function(require, exports, module) {
       },
 
       plot_points() {
-        const t = System.system.time;
+        const t = this.system.system.time;
         const bodies = {};
         for (const body of this.bodies) {
           const d = this.diameter(body);
-          const p = this.layout.scale_point( System.position(body, t) );
+          const p = this.layout.scale_point( this.system.position(body, t) );
           p[0] -= d / 2;
           p[1] -= d / 2;
 
@@ -640,9 +636,9 @@ define(function(require, exports, module) {
       },
 
       diameter(body) {
-        const d   = System.body(body).radius * 2;
+        const d   = this.system.body(body).radius * 2;
         const w   = this.layout.width_px * (d / (this.layout.fov_au * Physics.AU));
-        const min = body == 'sun' ? 10 : System.central(body) != 'sun' ? 1 : 5;
+        const min = body == 'sun' ? 10 : this.system.central(body) != 'sun' ? 1 : 5;
         return Math.max(min, Math.ceil(w));
       },
 
@@ -651,14 +647,14 @@ define(function(require, exports, module) {
           return false;
         }
 
-        const central = System.central(body);
+        const central = this.system.central(body);
 
         if (this.focus == body && central == 'sun') {
           return true;
         }
 
-        const position = System.position(body);
-        const center   = central == 'sun' ? [0, 0] : System.position(central);
+        const position = this.system.position(body);
+        const center   = central == 'sun' ? [0, 0] : this.system.position(central);
         const distance = Physics.distance(position, center) / Physics.AU;
         return distance > this.layout.fov_au / 10;
       },

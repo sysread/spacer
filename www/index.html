@@ -16,6 +16,29 @@
     <script src="js/vendor/bootstrap.min.js"></script>
     <script src="js/vendor/sprintf.min.js"></script>
 
+    <!-- Libs -->
+    <script data-main="js/loader" src="js/vendor/require.js"></script>
+
+    <script>
+    require(
+      [
+        'vendor/vue',         // load base framework
+        'game',               // load central data classes
+        'data',
+        'system',
+        'physics',
+        'component/navbar',   // load nav bar
+      ],
+      function(Vue) {
+        const nav_app = new Vue({
+          el: '#navbar',
+          template: '<NavBar />',
+        });
+      },
+    );
+
+    </script>
+
     <title>Spacer</title>
   </head>
   <body id="spacer">
@@ -32,6 +55,9 @@
     <div id="spacer-content" class="container-fluid pt-3 pb-1 mt-5"></div>
 
     <!-- Navigation -->
+    <div id="navbar" />
+
+    <!--
     <nav id="spacer-navbar" data-toggle="collapse" data-target="#spacer-nav" class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
       <span class="navbar-brand">Spacer</span>
 
@@ -52,9 +78,6 @@
         </ul>
       </div>
     </nav>
-
-    <!-- Libs -->
-    <script data-main="js/loader" src="js/vendor/require.js"></script>
-
+    -->
   </body>
 </html>

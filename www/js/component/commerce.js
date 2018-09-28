@@ -1,10 +1,9 @@
 define(function(require, exports, module) {
-  const Vue    = require('vendor/vue');
-  const data   = require('data');
-  const system = require('system');
-  const util   = require('util');
-  const model  = require('model');
+  const Vue   = require('vendor/vue');
+  const util  = require('util');
+  const model = require('model');
 
+  require('component/global');
   require('component/common');
   require('component/modal');
   require('component/card');
@@ -18,16 +17,16 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      planet:    function() { return game.here },
-      player:    function() { return game.player },
-      resources: function() { return Object.keys(data.resources) },
+      planet:    function() { return this.game.here },
+      player:    function() { return this.game.player },
+      resources: function() { return Object.keys(this.data.resources) },
     },
     methods: {
       dock:          function(item) { return this.planet.getStock(item) },
       hold:          function(item) { return this.player.ship.cargo.count(item) },
       buy:           function(item) { return this.planet.buyPrice(item, this.player) },
       sell:          function(item) { return this.planet.sellPrice(item) },
-      is_contraband: function(item) { return data.resources[item].contraband },
+      is_contraband: function(item) { return this.data.resources[item].contraband },
     },
     template: `
 <card title="Commerce">
@@ -70,22 +69,66 @@ define(function(require, exports, module) {
     props: ['item'],
     data: function() {
       return {
-        credits: game.player.money,
-        hold:    game.player.ship.cargo.get(this.item),
-        dock:    game.here.getStock(this.item),
-        cargo:   game.player.ship.cargoUsed,
-        report:  false,
-        caught:  false,
+        report:     false,
+        caught:     false,
+        tx_dock:    null,
+        tx_hold:    null,
+        tx_credits: null,
+        tx_cargo:   null,
       };
     },
     computed: {
-      planet:     function() { return game.here },
-      player:     function() { return game.player },
+      planet:     function() { return this.game.here },
+      player:     function() { return this.game.player },
       faction:    function() { return this.planet.faction },
       buy:        function() { return this.planet.buyPrice(this.item, this.player) },
       sell:       function() { return this.planet.sellPrice(this.item, this.player) },
       count:      function() { return this.hold - this.player.ship.cargo.get(this.item) },
-      contraband: function() { return data.resources[this.item].contraband },
+      contraband: function() { return this.data.resources[this.item].contraband },
+
+      dock: {
+        get() {
+          if (this.tx_dock === null) this.tx_dock = this.game.here.getStock(this.item);
+          return this.tx_dock;
+        },
+
+        set(new_value) {
+          this.tx_dock = new_value;
+        }
+      },
+
+      hold: {
+        get() {
+          if (this.tx_hold === null) this.tx_hold = this.game.player.ship.cargo.get(this.item);
+          return this.tx_hold;
+        },
+
+        set(new_value) {
+          this.tx_hold = new_value;
+        }
+      },
+
+      credits: {
+        get() {
+          if (this.tx_credits === null) this.tx_credits = this.game.player.money;
+          return this.tx_credits;
+        },
+
+        set(new_value) {
+          this.tx_credits = new_value;
+        }
+      },
+
+      cargo: {
+        get() {
+          if (this.tx_cargo === null) this.tx_cargo = this.game.player.ship.cargoUsed;
+          return this.tx_cargo;
+        },
+
+        set(new_value) {
+          this.tx_cargo = new_value;
+        }
+      },
 
       max: function() {
         const cred  = this.player.money;
@@ -135,17 +178,17 @@ define(function(require, exports, module) {
         }
         else {
           if (this.count > 0) {
-            const [bought, price] = game.here.buy(this.item, this.count, this.player);
+            const [bought, price] = this.game.here.buy(this.item, this.count, this.player);
           }
           else {
-            const [bought, price, standing] = game.here.sell(this.item, -this.count, this.player);
+            const [bought, price, standing] = this.game.here.sell(this.item, -this.count, this.player);
             if (standing > 1)
               alert(`You ended the local supply shortage of ${this.item}! Your standing with this faction has increased.`);
           }
         }
 
-        game.save_game();
-        game.refresh();
+        this.game.save_game();
+        this.game.refresh();
         this.$emit('update:item', null);
       },
     },
@@ -173,7 +216,7 @@ define(function(require, exports, module) {
       <cell size="3" class="font-weight-bold">Hold</cell><cell size="3" class="text-success">{{hold|csn}}</cell>
     </row>
 
-    <slider minmax=true :value.sync="hold" min=0 :max="max" step=1 @update:value="updateState" />
+    <slider minmax=true :value.sync="tx_hold" min=0 :max="max" step=1 @update:value="updateState" />
 
     <btn slot="footer" @click="complete" close=1>Complete transaction</btn>
   </modal>
@@ -189,11 +232,11 @@ define(function(require, exports, module) {
     props: ['item'],
     data() { return { relprices: false, show_routes: false } },
     computed: {
-      here()   { return game.locus },
-      bodies() { return Object.keys(data.bodies) },
+      here()   { return this.game.locus },
+      bodies() { return Object.keys(this.data.bodies) },
 
       routes() {
-        const info = game.trade_routes()[this.item];
+        const info = this.game.trade_routes()[this.item];
         const routes = [];
 
         for (const from of Object.keys(info).sort()) {
@@ -256,10 +299,10 @@ define(function(require, exports, module) {
   Vue.component('resource-report-row', {
     props: ['item', 'body', 'relprices'],
     computed: {
-      player:  function() { return game.player },
-      isHere:  function() { return this.body === game.locus },
-      remote:  function() { return game.planets[this.body] },
-      local:   function() { return game.here },
+      player:  function() { return this.game.player },
+      isHere:  function() { return this.body === this.game.locus },
+      remote:  function() { return this.game.planets[this.body] },
+      local:   function() { return this.game.here },
       stock:   function() { return this.remote.getStock(this.item) },
       rBuy:    function() { return this.remote.buyPrice(this.item, this.player) },
       rSell:   function() { return this.remote.sellPrice(this.item) },
@@ -267,7 +310,7 @@ define(function(require, exports, module) {
       lSell:   function() { return this.local.sellPrice(this.item) },
       relBuy:  function() { return this.rBuy - this.lSell },
       relSell: function() { return this.rSell - this.lBuy },
-      central: function() { return system.central(this.body) },
+      central: function() { return this.system.central(this.body) },
     },
     template: `
 <tr :class="{'bg-dark': isHere}">
@@ -291,7 +334,7 @@ define(function(require, exports, module) {
   Vue.component('market-report', {
     props: ['body', 'relprices'],
     computed: {
-      planet:    function() { return game.planets[this.body] },
+      planet:    function() { return this.game.planets[this.body] },
       resources: function() { return Object.keys(model.resources) },
     },
     template: `
@@ -316,8 +359,8 @@ define(function(require, exports, module) {
   Vue.component('market-report-row', {
     props: ['resource', 'planet', 'relprices'],
     computed: {
-      player:  function() { return game.player },
-      local:   function() { return game.here },
+      player:  function() { return this.game.player },
+      local:   function() { return this.game.here },
       stock:   function() { return this.planet.getStock(this.resource) },
       rBuy:    function() { return this.planet.buyPrice(this.resource, this.player) },
       rSell:   function() { return this.planet.sellPrice(this.resource) },

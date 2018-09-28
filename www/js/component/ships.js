@@ -2,9 +2,9 @@ define(function(require, exports, module) {
   const Physics = require('physics');
   const Ship    = require('ship');
   const Vue     = require('vendor/vue');
-  const data    = require('data');
   const util    = require('util');
 
+  require('component/global');
   require('component/common');
   require('component/card');
   require('component/exchange');
@@ -18,11 +18,11 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      ships: function() { return Object.keys(data.shipclass) },
+      ships: function() { return Object.keys(this.data.shipclass) },
     },
     methods: {
       returnToShipyard: function() {
-        game.open('shipyard');
+        this.game.open('shipyard');
       },
 
       selectShip: function(ship) {
@@ -55,26 +55,26 @@ define(function(require, exports, module) {
     },
     methods: {
       completeTradeIn: function() {
-        game.player.credit(this.playerShipValue);
-        game.player.debit(this.price);
-        game.player.ship = this.ship;
-        game.turn();
-        game.save_game();
+        this.game.player.credit(this.playerShipValue);
+        this.game.player.debit(this.price);
+        this.game.player.ship = this.ship;
+        this.game.turn();
+        this.game.save_game();
       },
 
       maxRange: function() {
         const dv = this.rangeForDeltaV * Physics.G;
-        const burnTime = this.ship.maxBurnTime(dv, true) * data.hours_per_turn;
+        const burnTime = this.ship.maxBurnTime(dv, true) * this.data.hours_per_turn;
         return Physics.range(burnTime * 3600, 0, dv) / Physics.AU;
       },
     },
     computed: {
       // Pricing and availability
-      planet:          function() { return game.here },
-      player:          function() { return game.player },
+      planet:          function() { return this.game.here },
+      player:          function() { return this.game.player },
       playerShipValue: function() { return this.player.ship.price(true) },
       tradeIn:         function() { return this.price - this.playerShipValue },
-      shipClass:       function() { return data.shipclass[this.type] },
+      shipClass:       function() { return this.data.shipclass[this.type] },
       ship:            function() { return new Ship({type: this.type}) },
       isPlayerShip:    function() { return this.ship.isPlayerShipType() },
       isNonFaction:    function() { return this.ship.faction && this.planet.faction.abbrev != this.ship.faction },
@@ -92,11 +92,11 @@ define(function(require, exports, module) {
       // Physical properties
       deltaV:           function() { return util.R(this.ship.currentAcceleration(), 2) },
       deltaVinG:        function() { return util.R(this.deltaV / Physics.G, 2) },
-      burnTime:         function() { return this.ship.maxBurnTime(this.deltaV, true) * data.hours_per_turn },
+      burnTime:         function() { return this.ship.maxBurnTime(this.deltaV, true) * this.data.hours_per_turn },
       range:            function() { return Physics.range(this.burnTime * 3600, 0, this.deltaV) / Physics.AU },
       nominalDeltaV:    function() { return 0.5 },
       nominalDeltaVinG: function() { return this.nominalDeltaV / Physics.G },
-      nominalBurnTime:  function() { return this.ship.maxBurnTime(this.nominalDeltaV, true) * data.hours_per_turn },
+      nominalBurnTime:  function() { return this.ship.maxBurnTime(this.nominalDeltaV, true) * this.data.hours_per_turn },
       nominalRange:     function() { return Physics.range(this.nominalBurnTime * 3600, 0, 1)  / Physics.AU},
       fuelMass:         function() { return this.shipClass.tank },
     },

@@ -159,5 +159,6 @@ define(function(require, exports, module) {
     }
   };
 
-  return Game;
+  console.log('Spacer is GO');
+  return new Game;
 });

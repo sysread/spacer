@@ -1,12 +1,10 @@
 define(function(require, exports, module) {
-  const Game   = require('game');
   const Person = require('person');
   const Ship   = require('ship');
   const Vue    = require('vendor/vue');
-  const data   = require('data');
-  const system = require('system');
   const util   = require('util');
 
+  require('component/global');
   require('component/common');
   require('component/card');
   require('component/row');
@@ -22,11 +20,11 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      bodies:      function() { return data.bodies },
+      bodies:      function() { return this.data.bodies },
       body:        function() { return this.bodies[this.home] },
-      faction:     function() { return data.factions[this.body.faction] },
-      gravity:     function() { return system.gravity(this.home) },
-      deltaV:      function() { return this.gravity * data.grav_deltav_factor },
+      faction:     function() { return this.data.factions[this.body.faction] },
+      gravity:     function() { return this.system.gravity(this.home) },
+      deltaV:      function() { return this.gravity * this.data.grav_deltav_factor },
       homeDesc:    function() { return this.body.desc.split('|') },
       factionDesc: function() { return this.faction.desc.split('|') },
     },
@@ -36,7 +34,7 @@ define(function(require, exports, module) {
 
         $('#spacer-nav').data('in-transit', true);
 
-        const ship = data.initial_ship;
+        const ship = this.data.initial_ship;
 
         const me = new Person({
           name:    this.name,
@@ -46,9 +44,9 @@ define(function(require, exports, module) {
           money:   1000,
         });
 
-        game.new_game(me, this.home);
+        this.game.new_game(me, this.home);
 
-        const turns = data.initial_days * 24 / data.hours_per_turn;
+        const turns = this.data.initial_days * 24 / this.data.hours_per_turn;
         const step = Math.ceil(turns / 25);
         let done = 0;
         let timer;
@@ -58,7 +56,7 @@ define(function(require, exports, module) {
             const count = Math.min(turns - done, step);
             const pct = Math.floor((done / turns) * 100);
             done += count;
-            game.turn(count);
+            this.game.turn(count);
             this.percent = pct;
             this.display = pct + '%';
             timer = window.setTimeout(interval, 200);
@@ -66,9 +64,9 @@ define(function(require, exports, module) {
           else {
             this.percent = 100;
             this.display = '100% - Done!';
-            game.refresh();
+            this.game.refresh();
             $('#spacer-nav').data('in-transit', false);
-            window.setTimeout(() => {game.open('summary')}, 100);
+            window.setTimeout(() => {this.game.open('summary')}, 100);
           }
         };
 

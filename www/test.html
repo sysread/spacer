@@ -6,12 +6,12 @@ var system;
 
 require(
   [
-    'vendor/vue', 'data', 'util', 'system', 'model',
+    'vendor/vue', 'game', 'data', 'util', 'system', 'model',
     'component/common',
     'component/card',
     'component/row',
   ],
-  function(Vue, data, util, sys, model) {
+  function(Vue, game, data, util, sys, model) {
     window.data = data;
     window.model = model;
     system = sys;

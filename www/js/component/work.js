@@ -1,8 +1,8 @@
 define(function(require, exports, module) {
-  const data = require('data');
   const util = require('util');
   const Vue  = require('vendor/vue');
 
+  require('component/global');
   require('component/common');
   require('component/modal');
   require('component/card');
@@ -21,13 +21,13 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      player:     function() { return game.player },
+      player:     function() { return this.game.player },
       raise:      function() { return this.player.getStandingPriceAdjustment(this.planet.faction.abbrev) },
-      planet:     function() { return game.here },
+      planet:     function() { return this.game.here },
       tasks:      function() { return this.planet.work_tasks },
       payRate:    function() { if (this.task) return this.getPayRate(this.task) },
       pay:        function() { if (this.task) return this.payRate * this.days },
-      turns:      function() { return this.days * (24 / data.hours_per_turn) },
+      turns:      function() { return this.days * (24 / this.data.hours_per_turn) },
     },
     methods: {
       getPayRate: function(task) {
@@ -69,14 +69,14 @@ define(function(require, exports, module) {
             this.player.incStanding(this.planet.faction.abbrev, 1);
           }
 
-          game.turn(this.turns);
+          this.game.turn(this.turns);
         }
       },
 
       completeTask: function() {
         this.clearTask();
-        game.save_game();
-        game.refresh();
+        this.game.save_game();
+        this.game.refresh();
       },
     },
     template: `

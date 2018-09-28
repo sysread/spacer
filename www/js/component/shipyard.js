@@ -1,8 +1,8 @@
 define(function(require, exports, module) {
   const Vue  = require('vendor/vue');
-  const data = require('data');
   const util = require('util');
 
+  require('component/global');
   require('component/common');
   require('component/card');
   require('component/exchange');
@@ -16,11 +16,11 @@ define(function(require, exports, module) {
       };
     },
     methods: {
-      affordFuel: function() { return game.player.money >= game.here.buyPrice('fuel') * 1.035 },
-      needsFuel:  function() { return !game.player.ship.tankIsFull() },
-      hasFuel:    function() { return game.player.ship.cargo.count('fuel') > 0 },
-      hasDamage:  function() { return game.player.ship.hasDamage() },
-      open:       game.open,
+      affordFuel: function()    { return this.game.player.money >= this.game.here.buyPrice('fuel') * 1.035 },
+      needsFuel:  function()    { return !this.game.player.ship.tankIsFull() },
+      hasFuel:    function()    { return this.game.player.ship.cargo.count('fuel') > 0 },
+      hasDamage:  function()    { return this.game.player.ship.hasDamage() },
+      open:       function(loc) { this.game.open(loc) },
     },
     template: `
 <div>
@@ -65,16 +65,16 @@ define(function(require, exports, module) {
   Vue.component('shipyard-refuel', {
     data: function() { return { change: 0 } },
     computed: {
-      need:  function() { return game.player.ship.refuelUnits() },
-      max:   function() { return Math.min(this.need, Math.floor(game.player.money / this.price)) },
-      price: function() { return Math.ceil(game.here.buyPrice('fuel') * 1.035) },
+      need:  function() { return this.game.player.ship.refuelUnits() },
+      max:   function() { return Math.min(this.need, Math.floor(this.game.player.money / this.price)) },
+      price: function() { return Math.ceil(this.game.here.buyPrice('fuel') * 1.035) },
     },
     methods: {
       fillHerUp: function() {
         if (this.change !== NaN && this.change > 0 && this.change <= this.max) {
-          game.player.debit(this.change * this.price);
-          game.player.ship.refuel(this.change);
-          game.turn();
+          this.game.player.debit(this.change * this.price);
+          this.game.player.ship.refuel(this.change);
+          this.game.turn();
         }
       },
     },
@@ -98,18 +98,18 @@ define(function(require, exports, module) {
       return { change: 0 };
     },
     computed: {
-      need:  function() { return game.player.ship.refuelUnits() },
-      have:  function() { return game.player.ship.cargo.count('fuel') },
+      need:  function() { return this.game.player.ship.refuelUnits() },
+      have:  function() { return this.game.player.ship.cargo.count('fuel') },
       max:   function() { return Math.min(this.have, this.need) },
-      tank:  function() { return Math.min(game.player.ship.tank, game.player.ship.fuel + this.change) },
-      cargo: function() { return game.player.ship.cargo.count('fuel') - this.change },
+      tank:  function() { return Math.min(this.game.player.ship.tank, this.game.player.ship.fuel + this.change) },
+      cargo: function() { return this.game.player.ship.cargo.count('fuel') - this.change },
     },
     methods: {
       fillHerUp: function() {
         if (this.change !== NaN && this.change > 0 && this.change <= this.max) {
-          game.player.ship.refuel(this.change);
-          game.player.ship.cargo.dec('fuel', this.change);
-          game.turn();
+          this.game.player.ship.refuel(this.change);
+          this.game.player.ship.cargo.dec('fuel', this.change);
+          this.game.turn();
         }
       },
     },
@@ -132,11 +132,11 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      money:            function() { return game.player.money },
-      need_hull:        function() { return game.player.ship.damage.hull },
-      need_armor:       function() { return game.player.ship.damage.armor },
-      price_hull_each:  function() { return data.ship.hull.repair },
-      price_armor_each: function() { return data.ship.armor.repair },
+      money:            function() { return this.game.player.money },
+      need_hull:        function() { return this.game.player.ship.damage.hull },
+      need_armor:       function() { return this.game.player.ship.damage.armor },
+      price_hull_each:  function() { return this.data.ship.hull.repair },
+      price_armor_each: function() { return this.data.ship.armor.repair },
       price_hull:       function() { return this.price_hull_each * this.repair_hull },
       price_armor:      function() { return this.price_armor_each * this.repair_armor },
       price_total:      function() { return this.price_hull + this.price_armor },
@@ -158,9 +158,9 @@ define(function(require, exports, module) {
     methods: {
       repair: function() {
         if (this.price_total) {
-          game.player.debit(this.price_total);
-          game.player.ship.repairDamage(this.repair_hull, this.repair_armor);
-          game.turn();
+          this.game.player.debit(this.price_total);
+          this.game.player.ship.repairDamage(this.repair_hull, this.repair_armor);
+          this.game.turn();
         }
       },
     },

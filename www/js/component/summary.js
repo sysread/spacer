@@ -2,6 +2,7 @@ define(function(require, exports, module) {
   const Physics = require('physics');
   const Vue     = require('vendor/vue');
 
+  require('component/global');
   require('component/common');
   require('component/card');
   require('component/row');
@@ -10,8 +11,8 @@ define(function(require, exports, module) {
     props: ['planet', 'mini'],
     computed: {
       desc:     function() {return this.planet.desc.split('|')},
-      isThere:  function() {return this.planet.body === game.locus},
-      distance: function() {return this.planet.distance(game.locus) / Physics.AU},
+      isThere:  function() {return this.planet.body === this.game.locus},
+      distance: function() {return this.planet.distance(this.game.locus) / Physics.AU},
       kind:     function() {return this.planet.kind},
       faction:  function() {return this.planet.faction.full_name},
     },

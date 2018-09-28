@@ -2,9 +2,9 @@ define(function(require, exports, module) {
   const Physics = require('physics');
   const Ship    = require('ship');
   const Vue     = require('vendor/vue');
-  const data    = require('data');
   const util    = require('util');
 
+  require('component/global');
   require('component/common');
   require('component/card');
   require('component/exchange');
@@ -13,10 +13,10 @@ define(function(require, exports, module) {
 
   Vue.component('addons', {
     computed: {
-      addons: function() { return Object.keys(data.addons) },
-      hardpoints: function() { return game.player.ship.availableHardPoints() },
+      addons: function() { return Object.keys(this.data.addons) },
+      hardpoints: function() { return this.game.player.ship.availableHardPoints() },
     },
-    methods: { returnToShipyard: function() { game.open('shipyard') } },
+    methods: { returnToShipyard: function() { this.game.open('shipyard') } },
     template: `
 <card title="Equipment and upgrades">
   <btn slot="header" @click="returnToShipyard">Back to shipyard</btn>
@@ -34,10 +34,10 @@ define(function(require, exports, module) {
     props: ['type'],
     data: function() { return { detail: false, buy: false, sell: false } },
     computed: {
-      planet:    function() { return game.here },
-      player:    function() { return game.player },
+      planet:    function() { return this.game.here },
+      player:    function() { return this.game.player },
       ship:      function() { return this.player.ship },
-      info:      function() { return data.addons[this.type] },
+      info:      function() { return this.data.addons[this.type] },
       sellPrice: function() { return Math.ceil(0.7 * this.price) },
 
       price: function() {
@@ -71,15 +71,15 @@ define(function(require, exports, module) {
       buyAddOn: function() {
         this.player.debit(this.price);
         this.player.ship.installAddOn(this.type);
-        game.save_game();
-        game.refresh();
+        this.game.save_game();
+        this.game.refresh();
       },
 
       sellAddOn: function() {
         this.player.ship.removeAddOn(this.type);
         this.player.credit(this.sellPrice);
-        game.save_game();
-        game.refresh();
+        this.game.save_game();
+        this.game.refresh();
       },
     },
     template: `

@@ -1,9 +1,9 @@
 define(function(require, exports, module) {
-  const data    = require('data');
   const util    = require('util');
   const Physics = require('physics');
   const Vue     = require('vendor/vue');
 
+  require('component/global');
   require('component/common');
   require('component/card');
   require('component/modal');
@@ -13,13 +13,13 @@ define(function(require, exports, module) {
     props: ['person'],
     computed: {
       money   : function() {return this.person.money},
-      home    : function() {return data.bodies[this.person.home].name},
+      home    : function() {return this.data.bodies[this.person.home].name},
       faction : function() {return this.person.faction.full_name},
       accel   : function() {return this.person.maxAcceleration() / Physics.G },
     },
     methods: {
       newGame: function() {
-        game.open('newgame');
+        this.game.open('newgame');
       }
     },
     template: `
@@ -39,19 +39,19 @@ define(function(require, exports, module) {
   Vue.component('faction-status', {
     props: ['person'],
     computed: {
-      factions: function() {return Object.keys(data.factions)},
+      factions: function() {return Object.keys(this.data.factions)},
     },
     methods: {
       factionStanding: function(faction) {
-        const label    = game.player.getStandingLabel(faction);
-        const standing = game.player.getStanding(faction);
+        const label    = this.game.player.getStandingLabel(faction);
+        const standing = this.game.player.getStanding(faction);
         return `${label} <span class="badge badge-pill">${standing}</span>`;
       },
       standing: function(faction) {
-        return game.player.getStanding(faction);
+        return this.game.player.getStanding(faction);
       },
       label: function(faction) {
-        return game.player.getStandingLabel(faction);
+        return this.game.player.getStandingLabel(faction);
       },
     },
     template: `
@@ -80,15 +80,15 @@ define(function(require, exports, module) {
       mass:      function() {return util.csn(Math.floor(this.ship.currentMass()))},
       thrust:    function() {return util.csn(this.ship.thrust)},
       tank:      function() {return util.R(this.ship.fuel, 2) + '/' + this.ship.tank},
-      burn:      function() {return util.csn(this.ship.maxBurnTime() * data.hours_per_turn)},
+      burn:      function() {return util.csn(this.ship.maxBurnTime() * this.data.hours_per_turn)},
       addons:    function() {return this.ship.addons},
-      addOnData: function() {return data.addons[this.showAddOn]},
+      addOnData: function() {return this.data.addons[this.showAddOn]},
       cargo:     function() {
         const cargo = [];
         for (const item of this.ship.cargo.keys) {
           const amt = this.ship.cargo.get(item);
           if (amt === 0) continue;
-          cargo.push({name: item, amount: amt, mass: data.resources[item].mass * amt});
+          cargo.push({name: item, amount: amt, mass: this.data.resources[item].mass * amt});
         }
 
         return cargo;
@@ -96,7 +96,7 @@ define(function(require, exports, module) {
     },
     methods: {
       addOnName: function(addon) {
-        return data.addons[addon].name;
+        return this.data.addons[addon].name;
       },
 
       toggleAddOn: function(addon) {
@@ -148,7 +148,7 @@ define(function(require, exports, module) {
   Vue.component('player-status', {
     computed: {
       person: function() {
-        return game.player;
+        return this.game.player;
       }
     },
     template: `

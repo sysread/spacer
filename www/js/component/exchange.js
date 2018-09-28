@@ -1,9 +1,9 @@
 define(function(require, exports, module) {
-  const data  = require('data');
   const model = require('model');
   const util  = require('util');
   const Vue   = require('vendor/vue');
 
+  require('component/global');
   require('component/common');
 
   Vue.component('slider', {

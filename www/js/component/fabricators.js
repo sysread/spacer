@@ -1,8 +1,8 @@
 define(function(require, exports, module) {
   const Vue  = require('vendor/vue');
-  const data = require('data');
   const util = require('util');
 
+  require('component/global');
   require('component/common');
   require('component/card');
   require('component/exchange');
@@ -19,13 +19,13 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      planet:    function() { return game.here },
-      player:    function() { return game.player },
+      planet:    function() { return this.game.here },
+      player:    function() { return this.game.player },
       price:     function() { return this.planet.sellPrice(this.item) },
-      fee:       function() { return util.R(Math.max(1, util.R(data.craft_fee * this.price, 2))) },
+      fee:       function() { return util.R(Math.max(1, util.R(this.data.craft_fee * this.price, 2))) },
       turns:     function() { return this.planet.fabricationTime(this.item) },
-      hours:     function() { return data.hours_per_turn * this.turns },
-      materials: function() { return data.resources[this.item].recipe.materials },
+      hours:     function() { return this.data.hours_per_turn * this.turns },
+      materials: function() { return this.data.resources[this.item].recipe.materials },
     },
     methods: {
       amount: function() {
@@ -43,12 +43,12 @@ define(function(require, exports, module) {
           for (const mat of Object.keys(this.materials))
             this.player.ship.unloadCargo(mat, this.materials[mat]);
 
-          game.turn(this.turns);
+          this.game.turn(this.turns);
           this.player.ship.loadCargo(this.item, 1);
-          game.refresh();
+          this.game.refresh();
         }
 
-        game.save_game();
+        this.game.save_game();
         this.done = 1;
       },
 
@@ -82,7 +82,7 @@ define(function(require, exports, module) {
       </div>
     </def>
 
-    <slider v-if="amount() > 1" class="my-3" :value.sync="count" min="1" :max="amount()" minmax=1 />
+    <slider v-if="amount() > 1" class="my-3" :value.sync="count" min="1" :max="amount()" minmax=1 step=1 />
     <btn v-if="amount()" block=1 @click="fabricate" class="my-3">Push the big red button</btn>
 
     <ok v-if="done" @ok="reset">{{count}} unit(s) of {{item}} have been placed in your ship's hold.</ok>
@@ -93,10 +93,10 @@ define(function(require, exports, module) {
 
   Vue.component('fabricators', {
     computed: {
-      planet:       function() { return game.here },
-      player:       function() { return game.player },
+      planet:       function() { return this.game.here },
+      player:       function() { return this.game.player },
       availability: function() { return this.planet.fabricationAvailability() },
-      resources:    function() { return Object.keys(data.resources).filter((k) => {return data.resources[k].hasOwnProperty('recipe')}) },
+      resources:    function() { return Object.keys(this.data.resources).filter((k) => {return this.data.resources[k].hasOwnProperty('recipe')}) },
     },
     template: `
 <card title="Fabricators" class="my-3">
