@@ -19,7 +19,7 @@ define(function() {
     fabricators:        10, // number of fabricators, each equates to 1 unit of cybernetics
     fab_health:         30, // number of tics each fabricator can handle before needing to be replaced. be sure to make this higher than the total tics needed to craft a cybernetics unit.
     grav_deltav_factor: 2,  // factor by which native gravity is multiplied to get player's sustained deltav tolerance
-    initial_ship:       'runner',
+    initial_ship:       'schooner',
     initial_money:      1000,
     jurisdiction:       0.5, // au from body
     max_abs_standing:   100,
@@ -33,20 +33,20 @@ define(function() {
     },
 
     resources: {
-      water:        {mass: 20,  mine: {tics: 1, value: 10}},
-      ore:          {mass: 40,  mine: {tics: 2, value: 15}},
-      minerals:     {mass: 30,  mine: {tics: 2, value: 20}},
-      hydrocarbons: {mass: 10,  mine: {tics: 2, value: 25}},
-      food:         {mass: 10,  mine: {tics: 2, value: 30}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 1}}},
-      fuel:         {mass: 30,  recipe: {tics: 2, materials: {ore: 1}}},
-      metal:        {mass: 60,  recipe: {tics: 2, materials: {ore: 2}}},
-      ceramics:     {mass: 30,  recipe: {tics: 2, materials: {minerals: 2}}},
-      medicine:     {mass: 10,  recipe: {tics: 3, materials: {food: 1, hydrocarbons: 1}}},
-      machines:     {mass: 80,  recipe: {tics: 3, materials: {metal: 2}}},
-      electronics:  {mass: 30,  recipe: {tics: 3, materials: {ceramics: 2}}},
+      water:        {mass:  20, mine: {tics: 1, value: 10}},
+      ore:          {mass:  40, mine: {tics: 2, value: 15}},
+      minerals:     {mass:  30, mine: {tics: 2, value: 20}},
+      hydrocarbons: {mass:  10, mine: {tics: 2, value: 25}},
+      food:         {mass:  10, mine: {tics: 2, value: 30}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 1}}},
+      fuel:         {mass:   1, recipe: {tics: 2, materials: {ore: 1}}},
+      metal:        {mass:  60, recipe: {tics: 2, materials: {ore: 2}}},
+      ceramics:     {mass:  30, recipe: {tics: 2, materials: {minerals: 2}}},
+      medicine:     {mass:  10, recipe: {tics: 3, materials: {food: 1, hydrocarbons: 1}}},
+      machines:     {mass:  80, recipe: {tics: 3, materials: {metal: 2}}},
+      electronics:  {mass:  30, recipe: {tics: 3, materials: {ceramics: 2}}},
       cybernetics:  {mass: 120, recipe: {tics: 4, materials: {machines: 1, electronics: 1}}},
-      narcotics:    {mass: 10,  recipe: {tics: 2, materials: {medicine: 2}}, contraband: 5},
-      weapons:      {mass: 20,  recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}, contraband: 7},
+      narcotics:    {mass:  10, recipe: {tics: 2, materials: {medicine: 2}}, contraband: 5},
+      weapons:      {mass:  20, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}, contraband: 7},
     },
 
     market: {
@@ -293,30 +293,6 @@ define(function() {
       }
     },
 
-    ship: {
-      mass: {
-        value: 60,
-      },
-
-      tank: {
-        value: 150,
-      },
-
-      cargo: {
-        value: 85,
-      },
-
-      hull: {
-        value: 1000,
-        repair: 50,
-      },
-
-      armor: {
-        value: 8000,
-        repair: 200,
-      },
-    },
-
     drives: {
       ion: {
         name:      'Ion',
@@ -324,7 +300,7 @@ define(function() {
         mass:      10,
         desc:      'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
         burn_rate: 0.005,
-        value:     30,
+        value:     900,
       },
       fusion: {
         name:      'Fusion',
@@ -332,36 +308,29 @@ define(function() {
         mass:      40,
         desc:      'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
         burn_rate: .073,
-        value:     5000,
+        value:     75000,
       }
     },
 
     shipclass: {
       /* Civilian */
       shuttle:     {hull: 2,  armor: 0,  cargo: 2,  hardpoints: 0,  mass: 100,   tank: 1,   drives: 1,  drive: 'ion',    restricted: false},
-      schooner:    {hull: 4,  armor: 1,  cargo: 8,  hardpoints: 1,  mass: 250,   tank: 2,   drives: 2,  drive: 'ion',    restricted: false},
-      runner:      {hull: 4,  armor: 2,  cargo: 14, hardpoints: 1,  mass: 400,   tank: 3,   drives: 2,  drive: 'ion',    restricted: false},
+      schooner:    {hull: 4,  armor: 2,  cargo: 14, hardpoints: 1,  mass: 400,   tank: 3,   drives: 2,  drive: 'ion',    restricted: false},
 
       /* Merchant */
-      trader:      {hull: 4,  armor: 4,  cargo: 25, hardpoints: 2,  mass: 500,   tank: 4,   drives: 4,  drive: 'ion',    restricted: false},
-      merchantman: {hull: 7,  armor: 4,  cargo: 30, hardpoints: 3,  mass: 600,   tank: 5,   drives: 6,  drive: 'ion',    restricted: false},
-      freighter:   {hull: 10, armor: 6,  cargo: 40, hardpoints: 3,  mass: 850,   tank: 6,   drives: 10, drive: 'ion',    restricted: false},
-      hauler:      {hull: 20, armor: 8,  cargo: 60, hardpoints: 5,  mass: 1050,  tank: 8,   drives: 14, drive: 'ion',    restricted: false},
+      hauler:      {hull: 4,  armor: 2,  cargo: 30, hardpoints: 2,  mass: 500,   tank: 4,   drives: 4,  drive: 'ion',    restricted: false},
+      merchantman: {hull: 6,  armor: 4,  cargo: 40, hardpoints: 3,  mass: 700,   tank: 6,   drives: 6,  drive: 'ion',    restricted: false},
+      freighter:   {hull: 8,  armor: 6,  cargo: 50, hardpoints: 3,  mass: 900,   tank: 8,   drives: 10, drive: 'ion',    restricted: false},
 
       /* Military */
       corvette:    {hull: 15, armor: 10, cargo: 10, hardpoints: 4,  mass: 450,   tank: 4,   drives: 1,  drive: 'fusion', restricted: 'Trusted'},
-      frigate:     {hull: 20, armor: 14, cargo: 20, hardpoints: 4,  mass: 650,   tank: 6,   drives: 2,  drive: 'fusion', restricted: 'Trusted'},
-      destroyer:   {hull: 30, armor: 18, cargo: 12, hardpoints: 6,  mass: 800,   tank: 10,  drives: 3,  drive: 'fusion', restricted: 'Admired'},
-      cruiser:     {hull: 50, armor: 25, cargo: 15, hardpoints: 8,  mass: 900,   tank: 12,  drives: 5,  drive: 'fusion', restricted: 'Admired'},
-      battleship:  {hull: 65, armor: 40, cargo: 20, hardpoints: 10, mass: 1200,  tank: 14,  drives: 8,  drive: 'fusion', restricted: 'Admired'},
-      transport:   {hull: 40, armor: 20, cargo: 50, hardpoints: 6,  mass: 1600,  tank: 20,  drives: 8,  drive: 'fusion', restricted: 'Admired'},
+      cruiser:     {hull: 50, armor: 25, cargo: 15, hardpoints: 8,  mass: 900,   tank: 12,  drives: 4,  drive: 'fusion', restricted: 'Admired'},
+      battleship:  {hull: 65, armor: 40, cargo: 20, hardpoints: 10, mass: 1200,  tank: 14,  drives: 6,  drive: 'fusion', restricted: 'Admired'},
 
       /* Faction ships */
-      scout:       {hull: 8,  armor: 10, cargo: 12, hardpoints: 2,  mass: 500,   tank: 6,   drives: 4,  drive: 'ion',    restricted: 'Respected', faction: 'CERES'},
-      fortuna:     {hull: 20, armor: 8,  cargo: 60, hardpoints: 2,  mass: 1000,  tank: 8,   drives: 20, drive: 'ion',    restricted: 'Respected', faction: 'JFT'},
+      fortuna:     {hull: 8,  armor: 6,  cargo: 50, hardpoints: 1,  mass: 1000,  tank: 8,   drives: 14, drive: 'ion',    restricted: 'Respected', faction: 'JFT'},
       neptune:     {hull: 14, armor: 10, cargo: 40, hardpoints: 4,  mass: 700,   tank: 10,  drives: 10, drive: 'ion',    restricted: 'Respected', faction: 'TRANSA'},
       barsoom:     {hull: 20, armor: 20, cargo: 25, hardpoints: 6,  mass: 600,   tank: 8,   drives: 2,  drive: 'fusion', restricted: 'Admired',   faction: 'MC'},
-      interceptor: {hull: 25, armor: 8,  cargo: 15, hardpoints: 8,  mass: 700,   tank: 10,  drives: 3,  drive: 'fusion', restricted: 'Admired',   faction: 'UN'},
     },
 
     /*
@@ -383,7 +352,7 @@ define(function() {
         armor:      -1,
         dodge:      -0.25,
         stealth:    -0.2,
-        price:      8000,
+        price:      12500,
       },
       fuel_tank: {
         name:       'Auxiliary fuel tank',
@@ -391,7 +360,7 @@ define(function() {
         mass:       1,
         tank:       4,
         cargo:      -4,
-        price:      6000,
+        price:      16000,
       },
       ion: {
         name:       'Ion drive',
@@ -399,7 +368,7 @@ define(function() {
         mass:       20,
         thrust:     1600,
         burn_rate:  0.01,
-        price:      3500,
+        price:      8000,
       },
       fusion: {
         name:       'Fusion drive',
@@ -407,7 +376,7 @@ define(function() {
         mass:       80,
         thrust:     7200,
         burn_rate:  0.088,
-        price:      35000,
+        price:      70000,
         restricted: 'Trusted',
       },
       railgun_turret: {
@@ -418,7 +387,7 @@ define(function() {
         reload:     1,
         rate:       3,
         magazine:   6,
-        price:      20000,
+        price:      85000,
         restricted: 'Trusted',
       },
       railgun_cannon: {
@@ -429,7 +398,7 @@ define(function() {
         reload:     2,
         rate:       1,
         magazine:   1,
-        price:      45000,
+        price:      105000,
         restricted: 'Admired',
       },
       light_torpedo: {
@@ -441,7 +410,7 @@ define(function() {
         rate:          1,
         magazine:      2,
         interceptable: true,
-        price:         12000,
+        price:         25000,
         restricted:    'Friendly',
       },
       medium_torpedo: {
@@ -453,7 +422,7 @@ define(function() {
         rate:          1,
         magazine:      1,
         interceptable: true,
-        price:         18500,
+        price:         37500,
         restricted:    'Trusted',
       },
       heavy_torpedo: {
@@ -465,7 +434,7 @@ define(function() {
         rate:          1,
         magazine:      1,
         interceptable: true,
-        price:         25000,
+        price:         50000,
         restricted:    'Admired',
       },
       pds: {
@@ -477,7 +446,7 @@ define(function() {
         reload:     1,
         rate:       10,
         magazine:   40,
-        price:      12500,
+        price:      25500,
         restricted: 'Friendly',
       },
       ecm: {
@@ -487,7 +456,7 @@ define(function() {
         intercept:  0.1,
         dodge:      0.2,
         stealth:    0.2,
-        price:      18000,
+        price:      45000,
         restricted: 'Admired',
       },
       stealthPlating: {
@@ -497,7 +466,7 @@ define(function() {
         dodge:      0.05,
         stealth:    0.5,
         armor:      -1,
-        price:      75000,
+        price:      125000,
         restricted: 'Admired',
       },
     }
@@ -527,9 +496,7 @@ define(function() {
   data.bodies.titania.desc        = "Rich in heavy organic compounds, Titania is the primary source of raw materials and shipping for TRANSA. When the war began, the process of spinning up Titania was nearly halfway complete. With nearly a quarter of Earth's gravity and supported by a growing commercial mining industry, it is also one of the few TRANSA settlements with a growing population.";
   data.bodies.pluto.desc          = "The furthest outpost of humanity, Pluto is home to the TRANSA high command. It's deeply excavated chambers support a surprisingly robust population, many descended from the original scientific mission team stationed on the dwarf planet at the outset of the Martian rebellion.";
 
-  data.shipclass.scout.desc       = "Commissioned for the government of Ceres, the scout class vessel is designed for short cargo runs and asteroid prospecting.";
   data.shipclass.fortuna.desc     = "Named for the daughter of Jupiter, the Fortuna is a container ship optimized to carry larger loads at higher efficiency than a typical freighter.";
-  data.shipclass.interceptor.desc = "The UN \"Interceptor\" destroyer can manuever better than the standard destroyer class and has longer legs, making it highly effective in its role as a long distance patrol vessel for the UN.";
   data.shipclass.barsoom.desc     = "The Barsoomian class frigate adopts the latest advances in Martian technology resulting in a frigate class ship with more range, speed, and enough firepower to act as its own escort.";
   data.shipclass.neptune.desc     = "Designed and built in TRANSA's own shipyards, the Neptune class cargo hauler has the longest range of any vessel while retaining low mass and reasonable cargo space. A favorite of traders and smugglers on the Long Haul alike, it has the armor and hard points to defend itself in the unguarded outer oribts.";
 

@@ -199,15 +199,22 @@ define(function(require, exports, module) {
     }
 
     shipValue() {
-      const sc = this.shipclass;
+      const sc       = this.shipclass;
+      const market   = game.here;
+      const metal    = market.sellPrice('metal');
+      const ceramics = market.sellPrice('ceramics');
 
       let price
-        = (sc.mass   * data.ship.mass.value)
-        + (sc.hull   * data.ship.hull.value)
-        + (sc.armor  * data.ship.armor.value)
-        + (sc.tank   * data.ship.tank.value)
-        + (sc.cargo  * data.ship.cargo.value)
-        + (sc.drives * data.drives[sc.drive].value);
+        = (sc.hull       / sc.mass * metal * 5000)
+        + (sc.armor      * 5 * ceramics)
+        + (sc.tank       * 1000)
+        + (sc.cargo      * 2000)
+        + (sc.drives     * data.drives[sc.drive].value)
+        + (sc.hardpoints * 20000);
+
+      if (sc.restricted) {
+        price *= 1.5;
+      }
 
       return Math.ceil(price);
     }

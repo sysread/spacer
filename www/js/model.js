@@ -410,6 +410,10 @@ define(function(require, exports, module) {
     }
 
     price(item) {
+      if (!resources.hasOwnProperty(item)) {
+        throw new Error(`unrecognized resource: ${item}`);
+      }
+
       if (!this.hasOwnProperty('_price')) {
         this._price = {};
       }
