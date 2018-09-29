@@ -70,13 +70,24 @@ define(function(require, exports, module) {
   </btn>
 
   <card v-if="open" class="my-3">
-    <card-text>The current market value of {{item}} is {{price||csn}} credits.</card-text>
+    <card-text>The current market value of {{item}} is {{price|csn}} credits.</card-text>
     <card-text v-if="amount" class="font-italic text-success">You have the resources to fabricate {{amount}} of this item.</card-text>
     <card-text v-else class="font-italic text-warning">You do not have the required resources to fabricate this item.</card-text>
 
     <def y=0 split=4 brkpt="sm" term="Count" :def="count" />
-    <def y=0 split=4 brkpt="sm" term="Cost"  :def="fee|R(0)|csn|unit('credits')" />
-    <def y=0 split=4 brkpt="sm" term="Time"  :def="hours|csn|unit('hours')" />
+
+    <def y=0 split=4 brkpt="sm" term="Cost">
+      <span slot="def" :class="{'text-danger': planet.fab_health < turns}">
+        {{fee|R(0)|csn|unit('credits')}}
+      </span>
+    </def>
+
+    <def y=0 split=4 brkpt="sm" term="Time">
+      <span slot="def" :class="{'text-danger': planet.fab_health < turns}">
+        {{hours|csn|unit('hours')}}
+      </span>
+    </def>
+
     <def y=0 split=4 brkpt="sm" term="Materials">
       <div slot="def" v-for="(amt, item) of materials">
         {{(amt * count)|csn|unit(item)}} ({{priceOf(item)|csn}} credits)
