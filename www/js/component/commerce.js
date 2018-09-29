@@ -267,13 +267,12 @@ define(function(require, exports, module) {
     },
     template: `
 <div>
-  <div class="my-2">
-    <btn @click="show_routes=true" :disabled="show_routes">Shipments</btn>
-    <btn @click="show_routes=false" :disabled="!show_routes">Price report</btn>
-
+  <div class="my-2 btn-group">
+    <btn @click="show_routes=true" :disabled="show_routes">Pending</btn>
+    <btn @click="show_routes=false" :disabled="!show_routes">Prices</btn>
     <btn :disabled="show_routes" @click="relprices=!relprices">
-      <span v-if="relprices">Relative prices</span>
-      <span v-else>Absolute prices</span>
+      <span v-if="relprices">Rel</span>
+      <span v-else>Abs</span>
     </btn>
   </div>
 
