@@ -102,9 +102,12 @@ define(function(require, exports, module) {
     },
     template: `
 <div>
-  <btn @click="$emit('click')" :block=1 :muted="!isAvailable" class="text-capitalize my-2">
-    <span v-if="detail">Return to the show room</span>
-    <span v-else>{{type}} <span class="badge badge-pill float-right">{{price|csn}}</span></span>
+  <btn v-if="detail" @click="$emit('click')" :block=1 class="my-2">
+    Back to the show room
+  </btn>
+
+  <btn v-else @click="$emit('click')" :block=1 :muted="!isAvailable" class="my-2">
+    {{type|caps}} <span class="badge badge-pill float-right">{{price|csn}}</span>
   </btn>
 
   <card v-if="detail" :title="type|caps">

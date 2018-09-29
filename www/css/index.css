@@ -3,7 +3,7 @@ body {
   background-color: rgb(0, 0, 0);
   background-image: url('../img/bg.jpg');
   background-attachment: fixed;
-  color: #ddd;
+  color: #eee;
   line-height: 1.25;
   font-size: 0.9rem;
 }
@@ -13,7 +13,7 @@ body {
 }
 
 .text-muted, .mute {
-  color: #aaa !important;
+  color: #bbb !important;
 }
 
 .bg-black {
@@ -30,12 +30,12 @@ body {
 }
 
 .card {
-  border: 1px solid rgb(139,0,0);
+  border: 1px solid rgb(200,0,0);
   background-color: rgb(0,0,0);
 }
 
 .card-header {
-  border-bottom: 1px solid rgb(139,0,0);
+  border-bottom: 1px solid rgb(200,0,0);
 }
 
 .card-header button {
@@ -48,7 +48,7 @@ body {
 }
 
 .modal-content div {
-  border-color: rgb(139,0,0);
+  border-color: rgb(200,0,0);
 }
 
 .modal-fullscreen .modal-dialog {
@@ -80,41 +80,40 @@ body {
 }
 
 .table td, .table th {
-  border-top: 1px solid rgb(139,0,0);
+  border-top: 1px solid rgb(200,0,0);
 }
 
 .table thead th {
-  border-bottom: 2px solid rgb(139,0,0);
+  border-bottom: 2px solid rgb(200,0,0);
 }
 
 .btn-dark {
-  background-color: #202020;
-  border-bottom: 1px solid rgb(139,0,0);
+  background-color: #161616;
+  border-bottom: 1px solid rgb(200,0,0);
 }
 
 .btn-dark:hover:not([disabled]), button.btn-dark:hover:not([disabled]) {
-  background-color: #303030;
+  background-color: #530D0D;
   border-bottom: 1px solid rgb(200,0,0);
 }
 
 .btn-dark.disabled, button.btn-dark:disabled {
-  background-color: #101010;
+  background-color: #202020;
 }
 
 .btn-secondary {
   background-color: #202020;
-  border: 1px solid #202020;
+  border: 1px solid #323232;
   border-bottom: 1px solid rgb(0,0,0);
 }
 
 .btn-secondary:hover {
-  background-color: #303030;
-  border: 1px solid #202020;
+  background-color: #323232 !important;
+  border: 1px solid #323232;
   border-bottom: 1px solid rgb(10,10,10);
 }
 
 .btn-secondary:disabled, .text-muted.btn-secondary {
-  background-color: #202020;
   color: #888;
 }
 
@@ -127,12 +126,12 @@ body {
 
 .plot-controls {
   background-color: #000;
-  border: 1px solid rgb(139,0,0);
+  border: 1px solid rgb(200,0,0);
 }
 
 .plot-root {
   background-color: #000;
-  /*border: 1px solid rgb(139,0,0);*/
+  /*border: 1px solid rgb(200,0,0);*/
   overflow: hidden;
   position: relative;
   padding: 0px !important;
@@ -221,7 +220,7 @@ input[type=range]::-webkit-slider-runnable-track {
   background:    #000000;
   border:        0px;
   border-top:    1px solid rgb(52,58,64);
-  border-bottom: 1px solid rgb(139,0,0);
+  border-bottom: 1px solid rgb(200,0,0);
   height:        10px;
   width:         100%;
 }
