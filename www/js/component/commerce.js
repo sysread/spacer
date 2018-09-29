@@ -248,9 +248,9 @@ define(function(require, exports, module) {
               const days  = util.csn(Math.floor(shipment.hours / 24));
               const hours = util.csn(Math.floor(shipment.hours % 24));
 
-              let arrives = days + ' days';
+              let arrives = days + 'd';
               if (hours > 0) {
-                arrives += ', ' + hours + ' hours';
+                arrives += ', ' + hours + 'h';
               }
 
               shipment.arrives  = arrives;
@@ -271,8 +271,8 @@ define(function(require, exports, module) {
     <btn @click="show_routes=true" :disabled="show_routes">Pending</btn>
     <btn @click="show_routes=false" :disabled="!show_routes">Prices</btn>
     <btn :disabled="show_routes" @click="relprices=!relprices">
-      <span v-if="relprices">Rel</span>
-      <span v-else>Abs</span>
+      <span v-if="relprices">(rel)</span>
+      <span v-else>(abs)</span>
     </btn>
   </div>
 
@@ -294,20 +294,20 @@ define(function(require, exports, module) {
     <thead>
       <tr>
         <th>To</th>
-        <th>From</th>
-        <th>Dist.</th>
-        <th>Arrives</th>
         <th class="text-right">#</th>
+        <th>In</th>
+        <th class="d-none d-sm-table-cell">AU</th>
+        <th class="d-none d-sm-table-cell">From</th>
       </tr>
     </thead>
     <tbody>
       <tr v-for="[from, to, shipment] of routes"
           :class="{'text-warning': shipment.warning}">
         <th scope="row">{{to|caps}}</th>
-        <td>{{from|caps}}</td>
-        <td>{{shipment.distance|unit('AU')}}</td>
-        <td>{{shipment.arrives}}</td>
         <td class="text-right">{{shipment.amount|csn}}</td>
+        <td>{{shipment.arrives}}</td>
+        <td class="d-none d-sm-table-cell">{{from|caps}}</td>
+        <td class="d-none d-sm-table-cell">{{shipment.distance|unit('AU')}}</td>
       </tr>
     </tbody>
   </table>
