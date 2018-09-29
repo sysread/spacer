@@ -58,9 +58,10 @@ define(function(require, exports, module) {
     /*
      * Calculated properties of the ship itself
      */
-    get cargoUsed()  { return this.cargo.sum() }
-    get cargoLeft()  { return this.cargoSpace - this.cargoUsed }
-    get holdIsFull() { return this.cargoLeft === 0 }
+    get cargoUsed()   { return this.cargo.sum() }
+    get cargoLeft()   { return this.cargoSpace - this.cargoUsed }
+    get holdIsFull()  { return this.cargoLeft === 0 }
+    get holdIsEmpty() { return this.cargoUsed === 0 }
 
     get hasContraband() {
       for (let [item, amt] of this.cargo.entries()) {

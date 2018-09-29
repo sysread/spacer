@@ -200,7 +200,7 @@ define(function(require, exports, module) {
   Vue.component('combat-action', {
     props: ['action', 'disabled'],
     template: `
-<card-btn @click="$emit('click')" :disabled="disabled || !action.isReady" class="btn-sm" block=1>
+<card-btn @click="$emit('click')" :disabled="disabled || !action.isReady" class="btn-sm text-left" block=1>
   {{action.name|caps}} [{{action.count}}]
 
   <badge right=1 v-if="action.isReloadable" class="mx-2">

@@ -55,6 +55,7 @@ define(function(require, exports, module) {
             const count = Math.min(this.startTurns - this.turnsComplete, this.step);
             this.turnsComplete += count;
             this.game.turn(count);
+            this.$nextTick(this.$forceUpdate);
           }
           else {
             this.game.freeze = false;
@@ -62,7 +63,7 @@ define(function(require, exports, module) {
             window.clearInterval(timer);
             this.$nextTick(() => this.game.open('summary'));
           }
-        }, 200);
+        }, 500);
       },
     },
     template: `
