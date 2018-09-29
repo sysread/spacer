@@ -277,14 +277,42 @@ define(function(require, exports, module) {
       return Math.ceil(Math.min(100, this.fab_health / this.max_fab_health * 100));
     }
 
-    fabricationTime(item) {
+    fabricationTime(item, count=1) {
       const resource = resources[item];
-      if (!resource.isCraftable) return;
-      if (resource.craftTurns <= this.fab_health) {
-        return Math.ceil(resource.craftTurns / 2);
-      } else {
-        return Math.max(1, Math.ceil((resource.craftTurns - this.fab_health) / 2));
+
+      if (!resource.isCraftable) {
+        throw new Error(`${item} is not craftable`);
       }
+
+      let health = this.fab_health;
+      let turns = resource.craftTurns * count;
+
+      for (let i = 0; i < count && health > 0; ++i) {
+        turns  -= resource.craftTurns / 2;
+        health -= resource.craftTurns;
+      }
+
+      return Math.max(1, Math.ceil(turns));
+    }
+
+    fabricationFee(item, count=1, player) {
+      const resource = resources[item];
+      const rate = data.craft_fee * this.sellPrice(item);
+
+      let health = this.fab_health;
+      let turns = resource.craftTurns * count;
+      let fee = 5 * rate * count;
+
+      for (let i = 0; i < count && health > 0; ++i) {
+        turns  -= resource.craftTurns / 2;
+        health -= resource.craftTurns;
+        fee    -= rate * 4;
+      }
+
+      fee -= fee * player.getStandingPriceAdjustment(this.faction.abbrev);
+      fee += fee * this.faction.sales_tax;
+
+      return Math.max(1, Math.ceil(fee));
     }
 
     fabricate(item) {

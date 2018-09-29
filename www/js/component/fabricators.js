@@ -19,15 +19,16 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      planet:    function() { return this.game.here },
-      player:    function() { return this.game.player },
-      price:     function() { return this.planet.sellPrice(this.item) },
-      fee:       function() { return util.R(Math.max(1, util.R(this.data.craft_fee * this.price, 2))) },
-      turns:     function() { return this.planet.fabricationTime(this.item) },
-      hours:     function() { return this.data.hours_per_turn * this.turns },
-      materials: function() { return this.data.resources[this.item].recipe.materials },
+      planet()    { return this.game.here },
+      player()    { return this.game.player },
+      base_fee()  { return this.data.craft_fee },
+      price()     { return this.planet.sellPrice(this.item) },
+      fee()       { return this.planet.fabricationFee(this.item, this.count, this.player) },
+      turns()     { return this.planet.fabricationTime(this.item, this.count) },
+      hours()     { return this.data.hours_per_turn * this.turns },
+      materials() { return this.data.resources[this.item].recipe.materials },
 
-      amount: function() {
+      amount() {
         return Math.min(
           Math.floor(this.player.money / this.fee),
           this.player.canCraft(this.item),
@@ -74,8 +75,8 @@ define(function(require, exports, module) {
     <card-text v-else class="font-italic text-warning">You do not have the required resources to fabricate this item.</card-text>
 
     <def y=0 split=4 brkpt="sm" term="Count" :def="count" />
-    <def y=0 split=4 brkpt="sm" term="Cost"  :def="(fee * count)|R(0)|csn|unit('credits')" />
-    <def y=0 split=4 brkpt="sm" term="Time"  :def="(hours * count)|csn|unit('hours')" />
+    <def y=0 split=4 brkpt="sm" term="Cost"  :def="fee|R(0)|csn|unit('credits')" />
+    <def y=0 split=4 brkpt="sm" term="Time"  :def="hours|csn|unit('hours')" />
     <def y=0 split=4 brkpt="sm" term="Materials">
       <div slot="def" v-for="(amt, item) of materials">
         {{(amt * count)|csn|unit(item)}} ({{priceOf(item)|csn}} credits)
@@ -100,8 +101,22 @@ define(function(require, exports, module) {
     },
     template: `
 <card title="Fabricators" class="my-3">
-  <card-text>A triumph of cybernetics, the fabricators are able to manufacture nearly anything, given the necessary materials and plans... and a small fee, of course.</card-text>
-  <card-text>{{availability}}% of fabricator capacity is available at this time.</card-text>
+  <card-text>
+    A triumph of cybernetics, the fabricators are able to manufacture nearly
+    anything, given the necessary materials and plans... and a small fee, of
+    course.
+  </card-text>
+
+  <card-text>
+    Use of the fabricators is based on the value of the resource being
+    manufactured and increases based on the availability of fabricator
+    resources themselves, faction tax rate, a small builder's fee, and faction
+    standing.
+  </card-text>
+
+  <card-text>
+    {{availability}}% of fabricator capacity is available at this time.
+  </card-text>
 
   <craft v-for="item of resources" :key="item" :item="item" />
 </card>
