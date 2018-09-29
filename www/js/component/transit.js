@@ -232,7 +232,7 @@ define(function(require, exports, module) {
 
         for (const body of Object.keys(ranges)) {
           const km   = Math.floor(ranges[body] / 1000);
-          const rate = 0.02 - this.game.planets[body].inspectionRate(km);
+          const rate = 0.01 - this.game.planets[body].inspectionRate(km);
           const rand = Math.random();
 
           if (rate > 0 && rand < rate) {
