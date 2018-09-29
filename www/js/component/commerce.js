@@ -240,11 +240,11 @@ define(function(require, exports, module) {
         const info = this.game.trade_routes()[this.item];
         const routes = [];
 
-        for (const from of Object.keys(info).sort()) {
-          for (const to of Object.keys(info[from]).sort()) {
+        for (const to of Object.keys(info).sort()) {
+          for (const from of Object.keys(info[to]).sort()) {
             const distance = util.R(this.system.distance(from, to) / Physics.AU, 2);
 
-            for (const shipment of info[from][to]) {
+            for (const shipment of info[to][from]) {
               const days  = util.csn(Math.floor(shipment.hours / 24));
               const hours = util.csn(Math.floor(shipment.hours % 24));
 
@@ -268,12 +268,10 @@ define(function(require, exports, module) {
     template: `
 <div>
   <div class="my-2">
-    <btn @click="show_routes=!show_routes">
-      <span v-if="show_routes">Shipments</span>
-      <span v-else>Price report</span>
-    </btn>
+    <btn @click="show_routes=true" :disabled="show_routes">Shipments</btn>
+    <btn @click="show_routes=false" :disabled="!show_routes">Price report</btn>
 
-    <btn v-if="!show_routes" @click="relprices=!relprices">
+    <btn :disabled="show_routes" @click="relprices=!relprices">
       <span v-if="relprices">Relative prices</span>
       <span v-else>Absolute prices</span>
     </btn>
@@ -296,8 +294,8 @@ define(function(require, exports, module) {
   <table class="table table-sm" v-else>
     <thead>
       <tr>
-        <th>From</th>
         <th>To</th>
+        <th>From</th>
         <th>Dist.</th>
         <th>Arrives</th>
         <th class="text-right">#</th>
@@ -306,8 +304,8 @@ define(function(require, exports, module) {
     <tbody>
       <tr v-for="[from, to, shipment] of routes"
           :class="{'text-warning': shipment.warning}">
-        <th scope="row">{{from|caps}}</th>
-        <td>{{to|caps}}</td>
+        <th scope="row">{{to|caps}}</th>
+        <td>{{from|caps}}</td>
         <td>{{shipment.distance|unit('AU')}}</td>
         <td>{{shipment.arrives}}</td>
         <td class="text-right">{{shipment.amount|csn}}</td>

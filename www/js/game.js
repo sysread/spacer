@@ -146,17 +146,17 @@ define(function(require, exports, module) {
               trade[ task.item ] = {};
             }
 
-            if (!trade[ task.item ].hasOwnProperty(task.from)) {
-              trade[ task.item ][ task.from ] = {};
+            if (!trade[ task.item ].hasOwnProperty(task.to)) {
+              trade[ task.item ][ task.to ] = {};
             }
 
-            if (!trade[ task.item ][ task.from ].hasOwnProperty(task.to)) {
-              trade[ task.item ][ task.from ][ task.to ] = [];
+            if (!trade[ task.item ][ task.to ].hasOwnProperty(task.from)) {
+              trade[ task.item ][ task.to ][ task.from ] = [];
             }
 
-            trade[ task.item ][ task.from ][ task.to ].push({
-              hours:   task.turns * data.hours_per_turn,
-              amount:  task.count,
+            trade[ task.item ][ task.to ][ task.from ].push({
+              hours:  task.turns * data.hours_per_turn,
+              amount: task.count,
             });
           }
         }
