@@ -248,12 +248,11 @@ define(function(require, exports, module) {
               const days  = util.csn(Math.floor(shipment.hours / 24));
               const hours = util.csn(Math.floor(shipment.hours % 24));
 
-              let arrives = days + 'd';
-              if (hours > 0) {
-                arrives += ', ' + hours + 'h';
-              }
+              let arrives = [];
+              if (days  > 0) arrives.push(days  + 'd');
+              if (hours > 0) arrives.push(hours + 'h');
 
-              shipment.arrives  = arrives;
+              shipment.arrives  = arrives.join(', ');
               shipment.distance = distance;
               shipment.warning  = (shipment.hours / 24) < distance;
 
@@ -294,7 +293,7 @@ define(function(require, exports, module) {
     <thead>
       <tr>
         <th>To</th>
-        <th class="text-right">#</th>
+        <th class="text-right">Amt.</th>
         <th>In</th>
         <th class="d-none d-sm-table-cell">From</th>
         <th class="d-none d-sm-table-cell">AU</th>

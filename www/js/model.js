@@ -685,8 +685,6 @@ define(function(require, exports, module) {
             item:  item.name,
             count: 1,
           });
-
-          //console.debug( sprintf('[ craft] [%10s] %12s: %02d', this.body, item.name, 1) );
         }
       }
     }
@@ -729,8 +727,6 @@ define(function(require, exports, module) {
             to:    this.body,
             turns: turns,
           });
-
-          //console.debug( sprintf('[import] [%10s] %12s: %02d from %10s', this.body, item, bought, planet) );
         }
       }
     }

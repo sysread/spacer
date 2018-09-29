@@ -65,12 +65,14 @@ require(
       },
       template: `
 <card title="Testing">
-  <btn @click="fixMe">Fix me</btn>
-  <btn @click="gameTurns(1)">1 turns</btn>
-  <btn @click="gameTurns(3)">3 turns</btn>
-  <btn @click="gameTurns(9)">9 turns</btn>
-  <btn @click="gameTurns(30)">30 turns</btn>
-  <btn @click="gameTurns(90)">90 turns</btn>
+  <div class="btn-group">
+    <btn @click="fixMe">Fix me</btn>
+    <btn @click="gameTurns(1)">1 turns</btn>
+    <btn @click="gameTurns(3)">3 turns</btn>
+    <btn @click="gameTurns(9)">9 turns</btn>
+    <btn @click="gameTurns(30)">30 turns</btn>
+    <btn @click="gameTurns(90)">90 turns</btn>
+  </div>
 
   <div class="my-3 input-group">
     <h4 class="mx-1">Resource</h4>

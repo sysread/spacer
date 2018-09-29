@@ -33,11 +33,11 @@ define(function() {
     },
 
     resources: {
-      water:        {mass:  20, mine: {tics: 1, value: 10}},
-      ore:          {mass:  40, mine: {tics: 2, value: 15}},
-      minerals:     {mass:  30, mine: {tics: 2, value: 20}},
-      hydrocarbons: {mass:  10, mine: {tics: 2, value: 25}},
-      food:         {mass:  10, mine: {tics: 2, value: 30}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 1}}},
+      water:        {mass:  20, mine: {tics: 1, value: 20}},
+      ore:          {mass:  40, mine: {tics: 2, value: 10}},
+      minerals:     {mass:  30, mine: {tics: 2, value: 25}},
+      hydrocarbons: {mass:  10, mine: {tics: 2, value: 30}},
+      food:         {mass:  10, mine: {tics: 2, value: 40}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 1}}},
       fuel:         {mass:   1, recipe: {tics: 2, materials: {ore: 1}}},
       metal:        {mass:  60, recipe: {tics: 2, materials: {ore: 2}}},
       ceramics:     {mass:  30, recipe: {tics: 2, materials: {minerals: 2}}},
@@ -64,20 +64,20 @@ define(function() {
       'water rich':        {produces: {water: 1}, consumes: {}},
       'water poor':        {produces: {water: -1}, consumes: {}},
 
-      'hydrocarbon rich':  {produces: {hydrocarbons: 1}, consumes: {}},
-      'hydrocarbon poor':  {produces: {hydrocarbons: -1}, consumes: {}},
+      'hydrocarbon rich':  {produces: {hydrocarbons: 1.5}, consumes: {}},
+      'hydrocarbon poor':  {produces: {hydrocarbons: -1.5}, consumes: {}},
 
       'rocky':             {produces: {ore: 5, minerals: 2} , consumes: {}},
       'icy':               {produces: {water: 3, minerals: 1, hydrocarbons: 1}, consumes: {}},
 
       'asteroids':         {produces: {ore: 10, minerals: 7}, consumes: {fuel: 1.5, electronics: 0.3, machines: 1, cybernetics: 0.3}},
-      'ringed system':     {produces: {water: 6, minerals: 2, hydrocarbons: 1}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
+      'ringed system':     {produces: {water: 6, minerals: 2, hydrocarbons: 2}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
 
-      'agricultural':      {produces: {food: 8, hydrocarbons: 0.5}, consumes: {machines: 0.5, fuel: 0.5, water: 2, hydrocarbons: 4}},
-      'habitable':         {produces: {food: 6, hydrocarbons: 3}, consumes: {food: 4, narcotics: 0.25, weapons: 0.5}},
-      'domed':             {produces: {food: 1, hydrocarbons: 1}, consumes: {metal: 0.6, fuel: 0.6, electronics: 0.5, machines: 0.5, water: 0.75, hydrocarbons: 0.75, weapons: 0.5}},
-      'subterranean':      {produces: {food: 0.75, hydrocarbons: 0.5}, consumes: {metal: 0.6, fuel: 0.3, electronics: 0.5, machines: 0.5, water: 0.3, hydrocarbons: 1, weapons: 0.35}},
-      'orbital':           {produces: {food: 0.5, hydrocarbons: 0.25}, consumes: {metal: 1, fuel: 1.5, electronics: 0.75, machines: 0.75, water: 0.15, hydrocarbons: 0.5, weapons: 0.2}},
+      'agricultural':      {produces: {food: 4, hydrocarbons: 2}, consumes: {machines: 0.5, fuel: 0.5, water: 2, hydrocarbons: 4}},
+      'habitable':         {produces: {food: 8, hydrocarbons: 4}, consumes: {food: 4, narcotics: 0.25, weapons: 0.5}},
+      'domed':             {produces: {food: 0.5, hydrocarbons: 0.5}, consumes: {metal: 0.6, fuel: 0.6, electronics: 0.5, machines: 0.5, water: 0.75, hydrocarbons: 0.75, weapons: 0.5}},
+      'subterranean':      {produces: {food: 0.25, hydrocarbons: 0.25}, consumes: {metal: 0.6, fuel: 0.3, electronics: 0.5, machines: 0.5, water: 0.3, hydrocarbons: 1, weapons: 0.35}},
+      'orbital':           {produces: {food: 0.1, hydrocarbons: 0.1}, consumes: {metal: 1, fuel: 1.5, electronics: 0.75, machines: 0.75, water: 0.15, hydrocarbons: 0.5, weapons: 0.2}},
 
       'black market':      {produces: {narcotics: 0.2, weapons: 0.2}},
       'tech hub':          {produces: {electronics: 0.2}},
@@ -267,7 +267,7 @@ define(function() {
       },
       titan: {
         name:    'Titan',
-        size:    'normal',
+        size:    'small',
         traits:  ['domed', 'ringed system', 'icy', 'hydrocarbon rich', 'black market'],
         faction: 'TRANSA',
       },
@@ -280,7 +280,7 @@ define(function() {
       },
       titania: {
         name:    'Titania Outpost',
-        size:    'small',
+        size:    'normal',
         traits:  ['subterranean', 'ringed system', 'icy', 'rocky', 'mineral rich', 'black market', 'manufacturing hub'],
         faction: 'TRANSA',
         gravity: 0.235,
