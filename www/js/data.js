@@ -333,6 +333,11 @@ define(function() {
       barsoom:     {hull: 20, armor: 20, cargo: 25, hardpoints: 6,  mass: 600,   tank: 8,   drives: 2,  drive: 'fusion', restricted: 'Admired',   faction: 'MC'},
     },
 
+    ship: {
+      hull:  {repair: 100},
+      armor: {repair: 500},
+    },
+
     /*
      * keys:
      *    armor, mass, cargo, etc: bonus or malus to existing ship attributes
