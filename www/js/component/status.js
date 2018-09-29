@@ -79,6 +79,7 @@ define(function(require, exports, module) {
     computed: {
       mass:      function() {return util.csn(Math.floor(this.ship.currentMass()))},
       thrust:    function() {return util.csn(this.ship.thrust)},
+      acc:       function() {return util.R(this.ship.currentAcceleration() / Physics.G, 2)},
       tank:      function() {return util.R(this.ship.fuel, 2) + '/' + this.ship.tank},
       burn:      function() {return util.csn(this.ship.maxBurnTime() * this.data.hours_per_turn)},
       addons:    function() {return this.ship.addons},
@@ -127,6 +128,7 @@ define(function(require, exports, module) {
   <def term="Hard points" :def="ship.hardpoints" />
   <def term="Mass" :def="mass|unit('tonnes')" />
   <def term="Thrust" :def="thrust|unit('kN')" />
+  <def term="Max Acc." :def="acc|unit('G')" />
   <def term="Fuel" :def="tank|unit('tonnes')" />
   <def term="Range" :def="burn|unit('hours at maximum thrust')" />
   <def term="Drive" :def="ship.drives|unit(ship.drive.name)" />
