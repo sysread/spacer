@@ -296,8 +296,8 @@ define(function(require, exports, module) {
         <th>To</th>
         <th class="text-right">#</th>
         <th>In</th>
-        <th class="d-none d-sm-table-cell">AU</th>
         <th class="d-none d-sm-table-cell">From</th>
+        <th class="d-none d-sm-table-cell">AU</th>
       </tr>
     </thead>
     <tbody>
