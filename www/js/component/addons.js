@@ -112,7 +112,10 @@ define(function(require, exports, module) {
     <def y=0 split="5" term="Mass" :def="info.mass|csn" />
 
     <def v-if="info.cargo" y=0 split="5" term="Cargo space" :def="info.cargo" />
-    <def v-if="info.tank"  y=0 split="5" term="Fuel tank" :def="info.tank" />
+    <def v-if="info.tank" y=0 split="5" term="Fuel tank" :def="info.tank" />
+
+    <def v-if="info.burn_rate" y=0 split="5" term="Fuel rate" :def="info.burn_rate" />
+    <def v-if="info.thrust" y=0 split="5" term="Thrust" :def="info.burn_rate" />
 
     <def v-if="info.damage" y=0 split="5" term="Damage" :def="info.damage" />
     <def v-if="info.reload" y=0 split="5" term="Reloads every" :def="info.reload|unit('rounds')" />
@@ -122,6 +125,7 @@ define(function(require, exports, module) {
     <def v-if="info.armor" y=0 split="5" term="Armor" :def="info.armor" />
     <def v-if="info.dodge" y=0 split="5" term="Dodge" :def="info.dodge|pct(2)" />
     <def v-if="info.intercept" y=0 split="5" term="Intercept" :def="info.intercept|pct(2)" />
+    <def v-if="info.stealth" y=0 split=5 term="Stealth" :def="info.stealth|pct(2)" />
   </card>
 
   <modal v-if="buy" @close="buy=false" close='No'>
