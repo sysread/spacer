@@ -99,15 +99,16 @@ define(function(require, exports, module) {
       $('#spacer-content').empty().load(this.page + '.html');
     }
 
-    strdate() {
-      let y = this.date.getFullYear();
-      let m = this.date.getMonth() + 1;
-      let d = this.date.getDate();
+    strdate(date) {
+      date = date || this.date;
+      let y = date.getFullYear();
+      let m = date.getMonth() + 1;
+      let d = date.getDate();
       return [y, m < 10 ? `0${m}` : m, d < 10 ? `0${d}` : d].join('-');
     }
 
-    status_date() {
-      return this.strdate().replace(/-/g, '.');
+    status_date(date) {
+      return this.strdate(date).replace(/-/g, '.');
     }
 
     refresh() {
@@ -140,22 +141,23 @@ define(function(require, exports, module) {
       const trade = {};
       for (const planet of Object.values(this.planets)) {
         for (const task of planet.queue) {
-          const info = task[3];
-
-          if (info.type === 'import') {
-            if (!trade.hasOwnProperty(info.item)) {
-              trade[ info.item ] = {};
+          if (task.type === 'import') {
+            if (!trade.hasOwnProperty(task.item)) {
+              trade[ task.item ] = {};
             }
 
-            if (!trade[ info.item ].hasOwnProperty(info.from)) {
-              trade[ info.item ][ info.from ] = {};
+            if (!trade[ task.item ].hasOwnProperty(task.from)) {
+              trade[ task.item ][ task.from ] = {};
             }
 
-            if (!trade[ info.item ][ info.from ].hasOwnProperty(info.to)) {
-              trade[ info.item ][ info.from ][ info.to ] = 0;
+            if (!trade[ task.item ][ task.from ].hasOwnProperty(task.to)) {
+              trade[ task.item ][ task.from ][ task.to ] = [];
             }
 
-            trade[ info.item ][ info.from ][ info.to ] += info.count;
+            trade[ task.item ][ task.from ][ task.to ].push({
+              hours:   task.turns * data.hours_per_turn,
+              amount:  task.count,
+            });
           }
         }
       }
@@ -164,7 +166,7 @@ define(function(require, exports, module) {
     }
   };
 
-  console.log('Spacer is GO');
+  console.log('Spacer is starting');
 
   if (!window.game) {
     window.game = new Game;

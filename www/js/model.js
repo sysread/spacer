@@ -496,9 +496,9 @@ define(function(require, exports, module) {
       return [amount, price, standing];
     }
 
-    schedule(turns, item, amt, msg) {
-      this.pending.inc(item, amt);
-      this.queue.push([turns, item, amt, msg]);
+    schedule(task) {
+      this.pending.inc(task.item, task.count);
+      this.queue.push(task);
     }
 
     processQueue() {
@@ -508,12 +508,12 @@ define(function(require, exports, module) {
       this.queue = [];
 
       for (const task of queue) {
-        if (--task[0] > 0) {
+        if (--task.turns > 0) {
           this.queue.push(task);
         }
         else {
-          this.sell(task[1], task[2]);
-          this.pending.dec(task[1], task[2]);
+          this.sell(task.item, task.count);
+          this.pending.dec(task.item, task.count);
         }
       }
     }
@@ -650,7 +650,14 @@ define(function(require, exports, module) {
           }
 
           const turns = this.fabricate(item.name);
-          this.schedule(turns, item.name, 1, {type: 'craft', item: item.name, count: 1});
+
+          this.schedule({
+            type:  'craft',
+            turns: turns,
+            item:  item.name,
+            count: 1,
+          });
+
           //console.debug( sprintf('[ craft] [%10s] %12s: %02d', this.body, item.name, 1) );
         }
       }
@@ -685,7 +692,16 @@ define(function(require, exports, module) {
           const distance = this.distance(planet) / Physics.AU;
           const turns = Math.ceil(distance * 10);
           window.game.planets[planet].buy('fuel', distance);
-          this.schedule(turns, item, bought, {type: 'import', item: item, count: bought, from: planet, to: this.body});
+
+          this.schedule({
+            type:  'import',
+            item:  item,
+            count: bought,
+            from:  planet,
+            to:    this.body,
+            turns: turns,
+          });
+
           //console.debug( sprintf('[import] [%10s] %12s: %02d from %10s', this.body, item, bought, planet) );
         }
       }

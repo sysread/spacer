@@ -1,7 +1,8 @@
 define(function(require, exports, module) {
-  const Vue   = require('vendor/vue');
-  const util  = require('util');
-  const model = require('model');
+  const Vue     = require('vendor/vue');
+  const util    = require('util');
+  const model   = require('model');
+  const Physics = require('physics');
 
   require('component/global');
   require('component/common');
@@ -241,7 +242,23 @@ define(function(require, exports, module) {
 
         for (const from of Object.keys(info).sort()) {
           for (const to of Object.keys(info[from]).sort()) {
-            routes.push([from, to, info[from][to]]);
+            const distance = util.R(this.system.distance(from, to) / Physics.AU, 2);
+
+            for (const shipment of info[from][to]) {
+              const days  = util.csn(Math.floor(shipment.hours / 24));
+              const hours = util.csn(Math.floor(shipment.hours % 24));
+
+              let arrives = days + ' days';
+              if (hours > 0) {
+                arrives += ', ' + hours + ' hours';
+              }
+
+              shipment.arrives  = arrives;
+              shipment.distance = distance;
+              shipment.warning  = (shipment.hours / 24) < distance;
+
+              routes.push([ from, to, shipment ]);
+            }
           }
         }
 
@@ -279,16 +296,21 @@ define(function(require, exports, module) {
   <table class="table table-sm" v-else>
     <thead>
       <tr>
-        <th>Source</th>
-        <th>Destination</th>
-        <th class="text-right">Tonnes</th>
+        <th>From</th>
+        <th>To</th>
+        <th>Dist.</th>
+        <th>Arrives</th>
+        <th class="text-right">#</th>
       </tr>
     </thead>
     <tbody>
-      <tr v-for="[from, to, amount] of routes">
+      <tr v-for="[from, to, shipment] of routes"
+          :class="{'text-warning': shipment.warning}">
         <th scope="row">{{from|caps}}</th>
         <td>{{to|caps}}</td>
-        <td class="text-right">{{amount|csn}}</td>
+        <td>{{shipment.distance|unit('AU')}}</td>
+        <td>{{shipment.arrives}}</td>
+        <td class="text-right">{{shipment.amount|csn}}</td>
       </tr>
     </tbody>
   </table>
