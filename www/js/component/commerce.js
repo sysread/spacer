@@ -40,7 +40,7 @@ define(function(require, exports, module) {
   </card-text>
 
   <div class="container container-fluid">
-    <row v-for="item of resources" :key="item" :class="{'text-muted':dock(item) == 0 && hold(item) == 0}">
+    <row v-for="item of resources" :key="item" class="p-1 rounded" :style="{'background-color': hold(item) > 0 ? '#400A0A' : '#000000'}">   <!-- :class="{'text-muted':dock(item) == 0 && hold(item) == 0}">-->
       <cell size=4 brkpt="sm" y=0 class="px-0 my-1">
         <btn @click="trade=item" block=1 :class="{'btn-secondary': dock(item) == 0 && hold(item) == 0, 'text-warning': is_contraband(item)}">
           {{item|caps}}
@@ -54,7 +54,7 @@ define(function(require, exports, module) {
           </tr>
           <tr>
             <th scope="col" class="w-25">Dock</th><td class="w-25" :class="{'text-warning': dock(item) > 0}">{{dock(item)}}</td>
-            <th scope="col" class="w-25">Ship</th><td class="w-25" :class="{'text-success': hold(item) > 0}">{{hold(item)}}</td>
+            <th scope="col" class="w-25">Ship</th><td class="w-25" :class="{'text-warning': hold(item) > 0}">{{hold(item)}}</td>
           </tr>
         </table>
       </cell>
