@@ -190,10 +190,7 @@ define(function(require, exports, module) {
 
         for (const body of Object.keys(ranges)) {
           const au = ranges[body] / Physics.AU;
-
-          if (au <= this.data.jurisdiction) {
-            bodies[body] = ranges[body];
-          }
+          bodies[body] = ranges[body];
         }
 
         return bodies;
@@ -207,6 +204,10 @@ define(function(require, exports, module) {
         const ranges = this.nearby();
 
         for (const body of Object.keys(ranges)) {
+          if (ranges[body] / Physics.AU > this.data.jurisdiction) {
+            continue;
+          }
+
           const km = Math.floor(ranges[body] / 1000);
 
           if (this.game.planets[body].inspectionChance(km)) {
@@ -238,21 +239,21 @@ define(function(require, exports, module) {
           return;
         }
 
+        let chance = 0.05;
+
         const ranges = this.nearby();
 
         for (const body of Object.keys(ranges)) {
-          if (ranges[body] / Physics.AU > this.data.max_pirate_ao) {
-            continue;
-          }
-
           const au = ranges[body] / Physics.AU;
-          const patrol = this.game.planets[body].inspectionRate(0) * au
-            / this.data.jurisdiction;
+          const pct = this.data.jurisdiction / au;
+          const patrol = this.game.planets[body].faction.patrol * pct;
+          chance -= patrol;
+        }
 
-          const rate = 0.02 - patrol - (this.stoppedBy.pirate / 200);
+        if (chance > 0) {
           const rand = Math.random();
 
-          if (rate > 0 && rand < rate) {
+          if (rand < chance) {
             ++this.stoppedBy.pirate;
             this.encounter = {type: 'pirate'};
             return true;
