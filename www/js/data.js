@@ -323,9 +323,9 @@ define(function() {
       freighter:   {hull: 8,  armor: 6,  cargo: 50, hardpoints: 3,  mass: 900,   tank: 8,   drives: 10, drive: 'ion',    restricted: false},
 
       /* Military */
-      corvette:    {hull: 15, armor: 10, cargo: 10, hardpoints: 4,  mass: 450,   tank: 4,   drives: 1,  drive: 'fusion', restricted: 'Trusted'},
-      cruiser:     {hull: 50, armor: 25, cargo: 15, hardpoints: 8,  mass: 900,   tank: 12,  drives: 4,  drive: 'fusion', restricted: 'Admired'},
-      battleship:  {hull: 65, armor: 40, cargo: 20, hardpoints: 10, mass: 1200,  tank: 14,  drives: 6,  drive: 'fusion', restricted: 'Admired'},
+      corvette:    {hull: 10, armor: 10, cargo: 10, hardpoints: 4,  mass: 450,   tank: 4,   drives: 1,  drive: 'fusion', restricted: 'Trusted'},
+      cruiser:     {hull: 20, armor: 15, cargo: 15, hardpoints: 8,  mass: 900,   tank: 12,  drives: 4,  drive: 'fusion', restricted: 'Admired'},
+      battleship:  {hull: 30, armor: 20, cargo: 20, hardpoints: 10, mass: 1200,  tank: 14,  drives: 6,  drive: 'fusion', restricted: 'Admired'},
 
       /* Faction ships */
       fortuna:     {hull: 8,  armor: 6,  cargo: 50, hardpoints: 1,  mass: 1000,  tank: 8,   drives: 14, drive: 'ion',    restricted: 'Respected', faction: 'JFT'},
@@ -399,7 +399,7 @@ define(function() {
         name:       'Rail gun cannon',
         desc:       "More powerful than it's smaller cousin, a rail gun cannon fires heavier slugs of denser material, resulting in more energy released on impact.",
         mass:       30,
-        damage:     10,
+        damage:     3,
         reload:     2,
         rate:       1,
         magazine:   1,
@@ -410,7 +410,7 @@ define(function() {
         name:          'Light torpedo launcher',
         desc:          'Adds a torpedo launcher tube suitable for low yield, self-guided payloads.',
         mass:          20,
-        damage:        6,
+        damage:        1,
         reload:        2,
         rate:          1,
         magazine:      2,
@@ -434,7 +434,7 @@ define(function() {
         name:          'Heavy torpedo launcher',
         desc:          'Adds a torpedo launcher tube suitable for high yield, self-guided payloads.',
         mass:          60,
-        damage:        18,
+        damage:        5,
         reload:        2,
         rate:          1,
         magazine:      1,

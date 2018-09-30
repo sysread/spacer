@@ -75,6 +75,10 @@ define(function(require, exports, module) {
       window.localStorage.setItem('game', JSON.stringify(this));
     }
 
+    delete_game() {
+      window.localStorage.removeItem('game');
+    }
+
     transit(dest) {
       this.locus = dest;
       this.freeze = false;
@@ -83,11 +87,7 @@ define(function(require, exports, module) {
     }
 
     open(name) {
-      if (this.freeze) {
-        return;
-      }
-
-      if ($('#spacer').data('state') === 'transit') {
+      if (this.freeze && name != 'newgame') {
         return;
       }
 

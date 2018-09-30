@@ -139,6 +139,9 @@ define(function(require, exports, module) {
 
       turn: function() {
         if (this.plan.left > 0) {
+          if (this.game.player.ship.isDestroyed) {
+            this.game.open('newgame');
+          }
           if (this.encounter) {
             return;
           }
@@ -481,9 +484,6 @@ define(function(require, exports, module) {
       };
     },
 
-    computed: {
-    },
-
     methods: {
       setChoice(choice) {
         this.choice = choice || 'ready';
@@ -501,7 +501,6 @@ define(function(require, exports, module) {
 
         while (!npc.holdIsFull && !player.holdIsEmpty) {
           const items = player.cargo.keys.filter(a => player.cargo.get(a) > 0);
-          console.log(items);
 
           items.sort((a, b) => {
             const va = value(a);

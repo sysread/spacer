@@ -66,10 +66,11 @@ define(function(require, exports, module) {
         this.salvage = false;
 
         if (this.combat.player.isDestroyed) {
-          game.open('newgame');
+          this.game.delete_game();
+          this.game.open('newgame');
         }
         else {
-          game.save_game();
+          this.game.save_game();
           this.$emit('complete');
         }
       },
@@ -105,29 +106,31 @@ define(function(require, exports, module) {
       <btn @click="complete">New game</btn>
     </div>
 
-    <div v-else-if="combat.opponent.isDestroyed" class="my-3 text-success">
-      You destroyed your opponent's ship.
+    <div v-else>
+      <div v-if="combat.opponent.isDestroyed" class="my-3 text-success">
+        You destroyed your opponent's ship.
 
-      <span v-if="hasLoot">
-        Amid the wreckage of the drifting hulk, some cargo containers appear to remain intact.
+        <span v-if="hasLoot">
+          Amid the wreckage of the drifting hulk, some cargo containers appear to remain intact.
 
-        <btn @click="salvage=true" block=1 class="mt-3">Salvage</btn>
-      </span>
+          <btn @click="salvage=true" block=1 class="mt-3">Salvage</btn>
+        </span>
 
-      <modal v-if="hasLoot && salvage" @close="complete" title="Salvage" close="Leave the hulk" xclose=1>
-        <exchange :store="loot" class="small" />
-      </modal>
+        <modal v-if="hasLoot && salvage" @close="complete" title="Salvage" close="Leave the hulk" xclose=1>
+          <exchange :store="loot" class="small" />
+        </modal>
+      </div>
+
+      <div v-else-if="escaped === combat.player.name" class="my-3 large font-italic text-center">
+        You have escaped your opponent.
+      </div>
+
+      <div v-else-if="escaped === combat.opponent.name" class="my-3 large font-italic text-center">
+        Your opponent has escaped.
+      </div>
+
+      <btn @click="complete" block=1>Leave</btn>
     </div>
-
-    <div v-else-if="escaped === combat.player.name" class="my-3 large font-italic text-center">
-      You have escaped your opponent.
-    </div>
-
-    <div v-else-if="escaped === combat.opponent.name" class="my-3 large font-italic text-center">
-      Your opponent has escaped.
-    </div>
-
-    <btn @click="complete" block=1>Leave</btn>
   </div>
 
   <combat-log :log="combat.log" :tick="tick" />
