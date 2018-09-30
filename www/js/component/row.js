@@ -36,7 +36,7 @@ define(function(require, exports, module) {
     template: `
 <row :y="y">
   <cell :brkpt="brkpt" :size="termSize" :y="y" class="font-weight-bold" :class="{'text-capitalize': caps}">{{term}}<slot name="term" /></cell>
-  <cell :brkpt="brkpt" :size="defnSize" :y="y" class="text-muted" :class="{'text-capitalize': caps}">{{def}}<slot name="def" /></cell>
+  <cell :brkpt="brkpt" :size="defnSize" :y="y" class="text-muted" :class="{'text-capitalize': caps}">{{def}}<slot name="def" /><slot /></cell>
 </row>
     `,
   });

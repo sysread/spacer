@@ -13,10 +13,14 @@ define(function(require, exports, module) {
 
   Vue.component('addons', {
     computed: {
-      addons: function() { return Object.keys(this.data.addons) },
-      hardpoints: function() { return this.game.player.ship.availableHardPoints() },
+      addons()     { return Object.keys(this.data.addons) },
+      hardpoints() { return this.game.player.ship.availableHardPoints() },
     },
-    methods: { returnToShipyard: function() { this.game.open('shipyard') } },
+
+    methods: {
+      returnToShipyard() { this.game.open('shipyard') },
+    },
+
     template: `
 <card title="Equipment and upgrades">
   <btn slot="header" @click="returnToShipyard">Back to shipyard</btn>
@@ -32,56 +36,66 @@ define(function(require, exports, module) {
 
   Vue.component('addon', {
     props: ['type'],
-    data: function() { return { detail: false, buy: false, sell: false } },
-    computed: {
-      planet:    function() { return this.game.here },
-      player:    function() { return this.game.player },
-      ship:      function() { return this.player.ship },
-      info:      function() { return this.data.addons[this.type] },
-      sellPrice: function() { return Math.ceil(0.7 * this.price) },
 
-      price: function() {
+    data() { return { detail: false, buy: false, sell: false } },
+
+    computed: {
+      planet()     { return this.game.here              },
+      player()     { return this.game.player            },
+      ship()       { return this.player.ship            },
+      info()       { return this.data.addons[this.type] },
+      sellPrice()  { return Math.ceil(0.7 * this.price) },
+
+      fuelRate() {
+        if (this.info.burn_rate) {
+          return this.info.burn_rate / this.data.hours_per_turn;
+        }
+      },
+
+      price() {
         let price = this.info.price;
         price -= price * this.player.getStandingPriceAdjustment(this.planet.faction.abbrev);
         price += price * this.planet.faction.sales_tax;
         return Math.ceil(price);
       },
 
-      isRestricted: function() {
+      isRestricted() {
         return this.info.restricted && !this.player.hasStanding(this.planet.faction.abbrev, this.info.restricted);
       },
 
-      canAfford: function() {
+      canAfford() {
         return this.player.money >= this.price;
       },
 
-      hasRoom: function() {
+      hasRoom() {
         return this.ship.availableHardPoints() > 0;
       },
 
-      isAvailable: function() {
+      isAvailable() {
         return !this.isRestricted && this.canAfford && this.hasRoom;
       },
 
-      hasUpgrade: function() {
+      hasUpgrade() {
         return this.ship.hasAddOn(this.type);
       },
     },
+
     methods: {
-      buyAddOn: function() {
+      buyAddOn() {
         this.player.debit(this.price);
         this.player.ship.installAddOn(this.type);
         this.game.save_game();
         this.game.refresh();
       },
 
-      sellAddOn: function() {
+      sellAddOn() {
         this.player.ship.removeAddOn(this.type);
         this.player.credit(this.sellPrice);
         this.game.save_game();
         this.game.refresh();
       },
     },
+
     template: `
 <div>
   <button @click="detail=!detail" type="button" class="btn btn-block my-3" :class="{'text-success': hasUpgrade, 'text-secondary': !hasUpgrade && !isAvailable, 'btn-dark': detail, 'btn-secondary': !detail}">
@@ -114,8 +128,11 @@ define(function(require, exports, module) {
     <def v-if="info.cargo" y=0 split="5" term="Cargo space" :def="info.cargo" />
     <def v-if="info.tank" y=0 split="5" term="Fuel tank" :def="info.tank" />
 
-    <def v-if="info.burn_rate" y=0 split="5" term="Fuel rate" :def="info.burn_rate" />
-    <def v-if="info.thrust" y=0 split="5" term="Thrust" :def="info.burn_rate" />
+    <def v-if="info.thrust" y=0 split="5" term="Max thrust" :def="info.thrust|unit('kN')" />
+
+    <def v-if="info.burn_rate" y=0 split="5" term="Fuel rate">
+      {{fuelRate|unit('tonnes/hr')}} at maximum thrust
+    </def>
 
     <def v-if="info.damage" y=0 split="5" term="Damage" :def="info.damage" />
     <def v-if="info.reload" y=0 split="5" term="Reloads every" :def="info.reload|unit('rounds')" />

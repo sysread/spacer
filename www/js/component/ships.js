@@ -99,6 +99,7 @@ define(function(require, exports, module) {
       nominalBurnTime:  function() { return this.ship.maxBurnTime(this.nominalDeltaV, true) * this.data.hours_per_turn },
       nominalRange:     function() { return Physics.range(this.nominalBurnTime * 3600, 0, 1)  / Physics.AU},
       fuelMass:         function() { return this.shipClass.tank },
+      fuelRate:         function() { return this.ship.fuelrate / this.data.hours_per_turn },
     },
     template: `
 <div>
@@ -148,6 +149,11 @@ define(function(require, exports, module) {
     <def y=1 brkpt="sm" term="Fuel"        :def="shipClass.tank|csn|unit('tonnes')" />
     <def y=1 brkpt="sm" term="Drive"       :def="shipClass.drives + ' ' + ship.drive.name" />
     <def y=1 brkpt="sm" term="Thrust"      :def="ship.thrust|csn|unit('kN')" />
+
+    <def y=1 brkpt="sm" term="Fuel rate">
+      {{fuelRate|unit('tonnes/hr')}} at maximum thrust
+    </def>
+
     <def y=1 brkpt="sm" term="Mass"        :def="ship.currentMass()|csn|unit('tonnes (fueled)')" />
     <def y=1 brkpt="sm" term="Hull"        :def="shipClass.hull" />
     <def y=1 brkpt="sm" term="Armor"       :def="shipClass.armor" />
