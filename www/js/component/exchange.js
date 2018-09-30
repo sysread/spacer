@@ -8,46 +8,47 @@ define(function(require, exports, module) {
 
   Vue.component('slider', {
     props: ['value', 'min', 'max', 'step', 'minmax'],
-    data: function() { return { timer: null } },
-    computed: {
-      minValue:  function() { return parseFloat(`${this.min}`) },
-      maxValue:  function() { return parseFloat(`${this.max}`) },
-      stepValue: function() { return parseFloat(`${this.step}`) },
+
+    data() {
+      return {
+        timer: null,
+        slider_value: this.value,
+      };
     },
+
+    watch: {
+      slider_value() {
+        this.$emit('update:value', this.slider_value);
+        this.$emit('change', this.slider_value);
+      },
+    },
+
+    computed: {
+      minValue()  { return parseFloat(`${this.min}`)  },
+      maxValue()  { return parseFloat(`${this.max}`)  },
+      stepValue() { return parseFloat(`${this.step}`) },
+    },
+
     methods: {
-      inc:    function()   { this.setValue(Math.min(this.maxValue, this.value + this.stepValue)) },
-      dec:    function()   { this.setValue(Math.max(this.minValue, this.value - this.stepValue)) },
-      setMin: function()   { this.setValue(this.minValue) },
-      setMax: function()   { this.setValue(this.maxValue) },
-      update: function(ev) { this.setValue(parseFloat(ev.target.value)) },
-      setValue: function(value) {
+      inc()      { this.setValue(Math.min(this.maxValue, this.value + this.stepValue)) },
+      dec()      { this.setValue(Math.max(this.minValue, this.value - this.stepValue)) },
+      setMin()   { this.setValue(this.minValue) },
+      setMax()   { this.setValue(this.maxValue) },
+      update(ev) { this.setValue(parseFloat(ev.target.value)) },
+
+      setValue(value) {
         this.$emit('update:value', value);
         this.$emit('change', value);
       },
     },
-    directives: {
-      'monitor': {
-        inserted: function(el, binding, vnode) {
-          vnode.context.timer = window.setInterval(() => {
-            const value = parseFloat(el.value);
-            if (value != vnode.context.value) {
-              vnode.context.setValue(value);
-            }
-          }, 350);
-        },
-        unbind: function(el, binding, vnode) {
-          window.clearInterval(vnode.context.timer);
-          vnode.context.timer = null;
-        },
-      }
-    },
+
     template: `
 <div class="input-group">
   <slot name="pre" />
   <span @click="setMin" v-if="minmax" class="input-group-btn"><btn class="font-weight-bold btn-sm">&lt;&lt;</btn></span>
   <span @click="dec" class="input-group-btn"><btn class="font-weight-bold btn-sm">&lt;</btn></span>
 
-  <input v-monitor
+  <input
     class="form-control"
     @change="update"
     :value="value || 0"
@@ -66,12 +67,12 @@ define(function(require, exports, module) {
 
   Vue.component('exchange', {
     props: ['store'],
-    data: function() {
+    data() {
       return {
         resources: new model.Store,
       };
     },
-    mounted: function() {
+    mounted() {
       for (const item of this.game.player.ship.cargo.keys) {
         this.resources.inc(item, this.game.player.ship.cargo.count(item));
       }
@@ -81,13 +82,13 @@ define(function(require, exports, module) {
       }
     },
     computed: {
-      cargo:      function() {return this.game.player.ship.cargo},
-      cargoSpace: function() {return this.game.player.ship.cargoSpace},
-      cargoUsed:  function() {return this.game.player.ship.cargoUsed},
-      cargoLeft:  function() {return this.game.player.ship.cargoLeft},
+      cargo() {return this.game.player.ship.cargo},
+      cargoSpace() {return this.game.player.ship.cargoSpace},
+      cargoUsed() {return this.game.player.ship.cargoUsed},
+      cargoLeft() {return this.game.player.ship.cargoLeft},
     },
     methods: {
-      update: function(item, amt) {
+      update(item, amt) {
         const change = amt - this.cargo.get(item);
 
         if (change > this.cargoLeft) {
