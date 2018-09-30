@@ -125,42 +125,40 @@ define(function(require, exports, module) {
   });
 
   Vue.component('shipyard-repair', {
-    data: function() {
+    data() {
       return {
         repair_hull:  0,
         repair_armor: 0,
       };
     },
-    computed: {
-      money:            function() { return this.game.player.money },
-      need_hull:        function() { return util.R(this.game.player.ship.damage.hull, 1) },
-      need_armor:       function() { return util.R(this.game.player.ship.damage.armor, 1) },
-      price_hull_each:  function() { return this.data.ship.hull.repair },
-      price_armor_each: function() { return this.data.ship.armor.repair },
-      price_hull:       function() { return this.price_hull_each * this.repair_hull },
-      price_armor:      function() { return this.price_armor_each * this.repair_armor },
-      price_total:      function() { return this.price_hull + this.price_armor },
 
-      max_hull: function() {
-        return Math.floor(
-          Math.min(
-            (this.money - this.price_armor) / this.price_hull_each,
-            this.need_hull,
-          )
+    computed: {
+      money()            { return this.game.player.money                        },
+      need_hull()        { return Math.ceil(this.game.player.ship.damage.hull)  },
+      need_armor()       { return Math.ceil(this.game.player.ship.damage.armor) },
+      price_hull_each()  { return this.data.ship.hull.repair                    },
+      price_armor_each() { return this.data.ship.armor.repair                   },
+      price_hull()       { return this.price_hull_each * this.repair_hull       },
+      price_armor()      { return this.price_armor_each * this.repair_armor     },
+      price_total()      { return this.price_hull + this.price_armor            },
+
+      max_hull() {
+        return Math.min(
+          (this.money - this.price_armor) / this.price_hull_each,
+          this.need_hull,
         );
       },
 
-      max_armor: function() {
-        return Math.floor(
-          Math.min(
-            (this.money - this.price_hull) / this.price_armor_each,
-            this.need_armor,
-          )
+      max_armor() {
+        return Math.min(
+          (this.money - this.price_hull) / this.price_armor_each,
+          this.need_armor,
         );
       },
     },
+
     methods: {
-      repair: function() {
+      repair() {
         if (this.price_total) {
           this.game.player.debit(this.price_total);
           this.game.player.ship.repairDamage(this.repair_hull, this.repair_armor);
@@ -168,6 +166,7 @@ define(function(require, exports, module) {
         }
       },
     },
+
     template: `
 <modal title="Repair your ship" close="Nevermind" xclose=true @close="$emit('close')">
   <p>
@@ -178,13 +177,13 @@ define(function(require, exports, module) {
   <def term="Total price" :def="price_total|R(1)|csn|unit('c')" />
 
   <def term="Hull" :def="price_hull|R(1)|csn|unit('c')" />
-  <slider class="my-3" :value.sync="repair_hull"  min=0 :max="max_hull|R(1)"  step="0.1" minmax=true>
+  <slider class="my-3" :value.sync="repair_hull"  min=0 :max="max_hull|R(1)"  step=1 minmax=true>
     <span class="btn btn-dark" slot="pre">{{need_hull - repair_hull|R(1)}}</span>
     <span class="btn btn-dark" slot="post">{{repair_hull|R(1)}}</span>
   </slider>
 
   <def term="Armor" :def="price_armor|R(1)|csn|unit('c')" />
-  <slider class="my-3" :value.sync="repair_armor" min=0 :max="max_armor|R(1)" step="0.1" minmax=true>
+  <slider class="my-3" :value.sync="repair_armor" min=0 :max="max_armor|R(1)" step=1 minmax=true>
     <span class="btn btn-dark" slot="pre">{{need_armor - repair_armor|R(1)}}</span>
     <span class="btn btn-dark" slot="post">{{repair_armor|R(1)}}</span>
   </slider>
