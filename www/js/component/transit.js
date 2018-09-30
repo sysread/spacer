@@ -272,7 +272,7 @@ define(function(require, exports, module) {
           <btn v-else @click="pause">Pause</btn>
         </card-header>
 
-        <div class="row" style="font-size:0.8rem">
+        <div class="row" style="font-size:0.8rem" :style="{'width': layout ? (layout.width_px + 'px') : '100%'}">
           <span class="col-2">Arrival</span>
           <span class="col-2">{{plan.days_left|unit('days')}}</span>
           <span class="col-2">Distance</span>

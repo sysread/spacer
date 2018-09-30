@@ -335,8 +335,8 @@ define(function() {
     },
 
     ship: {
-      hull:  {repair: 100},
-      armor: {repair: 500},
+      hull:  {repair: 50},
+      armor: {repair: 200},
     },
 
     /*
