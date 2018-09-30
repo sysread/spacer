@@ -571,7 +571,7 @@ define(function(require, exports, module) {
 
       done(result) {
         if (result == 'surrendered') {
-          this.submit();
+          this.setChoice('submit-yes');
         }
         else {
           this.choice = 'ready';

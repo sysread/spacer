@@ -193,6 +193,9 @@ define(function(require, exports, module) {
     <div v-else-if="entry.effect === 'chase'">
       {{who}} attempted to flee battle unsuccesfully.
     </div>
+    <div v-else-if="entry.effect === 'surrender'">
+      {{who}} surrendered.
+    </div>
     <div v-else>
       {{who}} attacked with {{entry.type}}
       <span      v-if="entry.effect === 'miss'">but missed.</span>
