@@ -273,12 +273,9 @@ define(function(require, exports, module) {
         </card-header>
 
         <div class="row" style="font-size:0.8rem" :style="{'width': layout ? (layout.width_px + 'px') : '100%'}">
-          <span class="col-2">Arrival</span>
-          <span class="col-2">{{plan.days_left|unit('days')}}</span>
-          <span class="col-2">Distance</span>
-          <span class="col-2">{{plan.auRemaining()|R(2)|unit('AU')}}</span>
-          <span class="col-2">Velocity</span>
-          <span class="col-2">{{plan.velocity/1000|R|csn|unit('km/s')}}</span>
+          <span class="col-4">{{plan.days_left|unit('days')}}</span>
+          <span class="col-4">{{plan.auRemaining()|R(2)|unit('AU')}}</span>
+          <span class="col-4">{{plan.velocity/1000|R|csn|unit('km/s')}}</span>
         </div>
 
         <NavPlot v-show="!encounter"
