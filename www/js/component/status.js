@@ -84,6 +84,8 @@ define(function(require, exports, module) {
       burn:      function() {return util.csn(this.ship.maxBurnTime() * this.data.hours_per_turn)},
       addons:    function() {return this.ship.addons},
       addOnData: function() {return this.data.addons[this.showAddOn]},
+      fuelRate:  function() {return this.ship.fuelrate / this.data.hours_per_turn},
+
       cargo:     function() {
         const cargo = [];
         for (const item of this.ship.cargo.keys) {
@@ -131,6 +133,9 @@ define(function(require, exports, module) {
   <def term="Max Acc." :def="acc|unit('G')" />
   <def term="Fuel" :def="tank|unit('tonnes')" />
   <def term="Range" :def="burn|unit('hours at maximum thrust')" />
+  <def term="Fuel rate">
+    {{fuelRate|unit('tonnes/hr')}} at maximum thrust
+  </def>
   <def term="Drive" :def="ship.drives|unit(ship.drive.name)" />
   <def term="Stealth" :def="(ship.stealth * 100) + '%'" />
 
