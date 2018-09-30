@@ -253,13 +253,13 @@ define(function(require, exports, module) {
     /*
      * Patrols and inspections
      */
-    inspectionRate(distance) {
+    inspectionRate(distance=0) {
       const standing = 1 - (window.game.player.getStanding(this.faction.abbrev) / data.max_abs_standing);
       const rate = this.scale(this.faction.patrol * standing);
       return distance ? rate * Math.pow(data.jurisdiction, 2) / Math.pow(distance, 2) : rate;
     }
 
-    inspectionChance(distance) {
+    inspectionChance(distance=0) {
       const stealth = 1 - window.game.player.ship.stealth;
       const rate = this.inspectionRate(distance);
       const rand = Math.random();

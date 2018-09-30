@@ -21,9 +21,10 @@ define(function() {
     grav_deltav_factor:     2,  // factor by which native gravity is multiplied to get player's sustained deltav tolerance
     initial_ship:           'schooner',
     initial_money:          1000,
-    jurisdiction:           0.5, // au from body
     max_abs_standing:       100,
     max_encounter_velocity: 1000000, // m/s
+    max_pirate_ao:          2.0, // au from home body
+    jurisdiction:           0.5, // au from body
 
     scales: {
       tiny:   0.6,

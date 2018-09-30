@@ -23,7 +23,7 @@ define(function(require, exports, module) {
       return {
         paused:        false,
         timer:         null,
-        stoppedBy:     {},
+        stoppedBy:     {'pirate': 0},
         encounter:     null,
         daysLeft:      null,
         layout:        null,
@@ -238,19 +238,22 @@ define(function(require, exports, module) {
           return;
         }
 
-        if (this.stoppedBy.pirate) {
-          return false;
-        }
-
         const ranges = this.nearby();
 
         for (const body of Object.keys(ranges)) {
-          const km   = Math.floor(ranges[body] / 1000);
-          const rate = 0.02 - this.game.planets[body].inspectionRate(km);
+          if (ranges[body] / Physics.AU > this.data.max_pirate_ao) {
+            continue;
+          }
+
+          const au = ranges[body] / Physics.AU;
+          const patrol = this.game.planets[body].inspectionRate(0) * au
+            / this.data.jurisdiction;
+
+          const rate = 0.02 - patrol - (this.stoppedBy.pirate / 200);
           const rand = Math.random();
 
           if (rate > 0 && rand < rate) {
-            this.stoppedBy.pirate = true;
+            ++this.stoppedBy.pirate;
             this.encounter = {type: 'pirate'};
             return true;
           }
@@ -268,10 +271,14 @@ define(function(require, exports, module) {
           <btn v-else @click="pause">Pause</btn>
         </card-header>
 
-        <span class="float-left text-success w-25 text-left"  >{{plan.days_left|unit('days')}}</span>
-        <span class="float-left text-info    w-25 text-center">{{plan.auRemaining()|R(2)|unit('AU')}}</span>
-        <span class="float-left text-danger  w-25 text-center">{{plan.accel_g|R(3)|unit('G')}}</span>
-        <span class="float-left text-warning w-25 text-right" >{{(plan.velocity/1000)|R|csn|unit('km/s')}}</span>
+        <div class="row" style="font-size:0.8rem">
+          <span class="col-2">Arrival</span>
+          <span class="col-2">{{plan.days_left|unit('days')}}</span>
+          <span class="col-2">Distance</span>
+          <span class="col-2">{{plan.auRemaining()|R(2)|unit('AU')}}</span>
+          <span class="col-2">Velocity</span>
+          <span class="col-2">{{plan.velocity/1000|R|csn|unit('km/s')}}</span>
+        </div>
 
         <NavPlot v-show="!encounter"
                  :layout.sync="layout"
