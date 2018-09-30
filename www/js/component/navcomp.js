@@ -179,7 +179,7 @@ define(function(require, exports, module) {
               else {
                 this.dest = this.system.bodies()[idx];
                 done = true;
-                return;
+                return this.dest;
               }
             }
           }
@@ -187,7 +187,7 @@ define(function(require, exports, module) {
 
         if (!done) {
           this.dest = this.system.bodies()[this.game.locus == this.system.bodies()[0] ? 1 : 0];
-          return;
+          return this.dest;
         }
       },
 
@@ -218,7 +218,7 @@ define(function(require, exports, module) {
           </h3>
         </card-header>
 
-        <div class="p-2" v-if="!show_map">
+        <div class="p-2" v-if="!show_map"> 
           <Menu title="Navigation"  v-show="show_home_menu">
             <Opt @click="go_dest_menu">
               <span v-if="!dest">
@@ -267,7 +267,12 @@ define(function(require, exports, module) {
             <market-report :relprices="rel" :body="dest" />
           </div>
 
-          <planet-summary v-if="show_info" mini=true :planet="planet" />
+          <div v-if="show_info">
+            <Menu>
+              <NavDestOpt @answer="next_dest" :body="dest || next_dest()" />
+            </Menu>
+            <planet-summary mini=true :planet="planet" />
+          </div>
         </div>
 
         <confirm v-if="confirm" yes="Yes" no="No" @confirm="confirm_transit">
