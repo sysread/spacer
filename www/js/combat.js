@@ -297,9 +297,21 @@ define(function(require, exports, module) {
       if (this.isPlayerTurn) throw new Error("It is not the opponents's turn");
       this.opponent.nextRound();
 
-      const action = util.chance(this.opponent.flightRisk)
-        ? this.opponent.flight
-        : util.oneOf(this.opponent.attacks);
+      const risk = this.opponent.flightRisk;
+      const chance = util.chance(risk);
+
+      let action;
+
+      if (chance) {
+        if (this.opponent.pctHull < 25) {
+          action = this.opponent.surrender;
+        } else {
+          action = this.opponent.flight;
+        }
+      }
+      else {
+        action = util.oneOf(this.opponent.attacks);
+      }
 
       this.doAction(action, this.opponent, this.player);
     }
