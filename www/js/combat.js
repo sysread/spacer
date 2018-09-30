@@ -125,10 +125,25 @@ define(function(require, exports, module) {
     }
   };
 
+  const Surrender = class extends Action {
+    constructor() {
+      super({name: 'Surrender'});
+    }
+
+    use(from, to) {
+      return {
+        type:   this.name,
+        source: from.name,
+        effect: 'surrender',
+      };
+    }
+  };
+
   const Combatant = class {
     constructor(combatant) {
       this.combatant = combatant;
       this.flight    = new Flight;
+      this.surrender = new Surrender;
       this._actions  = {};
 
       for (const addon of this.ship.addons) {
@@ -144,7 +159,8 @@ define(function(require, exports, module) {
         }
       }
 
-      this._actions.flight = this.flight;
+      this._actions.flight    = this.flight;
+      this._actions.surrender = this.surrender;
     }
 
     get name()        { return this.combatant.name }
@@ -197,37 +213,47 @@ define(function(require, exports, module) {
 
   const Combat = class {
     constructor(opt) {
-      this.player     = new Combatant(game.player);
-      this.opponent   = new Combatant(opt.opponent);
-      this.initiative = util.oneOf(['player', 'opponent']);
-      this.round      = 1;
-      this.log        = [];
-      this.result     = undefined;
-      this.escaped    = false;
+      this.player      = new Combatant(game.player);
+      this.opponent    = new Combatant(opt.opponent);
+      this.initiative  = util.oneOf(['player', 'opponent']);
+      this.round       = 1;
+      this.log         = [];
+      this.escaped     = false;
+      this.surrendered = false;
     }
 
     get isOver() {
       return this.escaped
+          || this.surrendered
           || this.player.isDestroyed
           || this.opponent.isDestroyed;
     }
 
+    get playerSurrendered() {
+      return this.surrendered === this.player.name;
+    }
+
     get salvage() {
-      if (!this.isOver || this.escaped || this.player.isDestroyed) {
-        return;
-      }
+      if (this.opponent.isDestroyed || this.surrendered == this.opponent.name) {
+        if (!this._salvage) {
+          this._salvage = new model.Store;
 
-      if (!this._salvage) {
-        // Randomize the remaining cargo amounts that survived the encounter
-        this._salvage = new model.Store;
+          for (const item of this.opponent.ship.cargo.keys) {
+            let amount = this.opponent.ship.cargo.count(item);
 
-        for (const item of this.opponent.ship.cargo.keys) {
-          const amount = util.getRandomInt(0, this.opponent.ship.cargo.count(item));
-          this._salvage.inc(item, amount);
+            // Randomize the remaining cargo amounts that survived the encounter
+            if (!this.surrendered) {
+              amount = util.getRandomInt(0, this.opponent.ship.cargo.count(item));
+            }
+
+            this._salvage.inc(item, amount);
+          }
         }
+
+        return this._salvage;
       }
 
-      return this._salvage;
+      return;
     }
 
     get currentRound() {
@@ -280,7 +306,14 @@ define(function(require, exports, module) {
 
     doAction(action, from, to) {
       const result = action.use(from, to);
-      if (result.effect === 'flee') this.escaped = from.name;
+
+      if (result.effect === 'flee') {
+        this.escaped = from.name;
+      }
+      else if (result.effect === 'surrender') {
+        this.surrendered = from.name;
+      }
+
       this.addLogEntry(result);
       ++this.round;
     }

@@ -28,11 +28,24 @@ define(function(require, exports, module) {
     },
 
     computed: {
-      logEntries: function() { return this.combat.log },
-      isOver:     function() { return this.combat.isOver },
-      escaped:    function() { return this.combat.escaped },
-      loot:       function() { return this.combat.salvage },
-      hasLoot:    function() { return this.loot && this.loot.sum() > 0 },
+      logEntries:  function() { return this.combat.log },
+      isOver:      function() { return this.combat.isOver },
+      escaped:     function() { return this.combat.escaped },
+      surrendered: function() { return this.combat.surrendered },
+      loot:        function() { return this.combat.salvage },
+      hasLoot:     function() { return this.loot && this.loot.sum() > 0 },
+    },
+
+    watch: {
+      isOver() {
+        if (this.isOver) {
+          if (this.combat.player.isDestroyed) {
+            window.localStorage.removeItem('game');
+          } else {
+            game.save_game();
+          }
+        }
+      },
     },
 
     methods: {
@@ -44,22 +57,15 @@ define(function(require, exports, module) {
         this.incTick();
 
         window.setTimeout(() => {
-          if (this.combat.isOver) {
-            if (this.combat.player.isDestroyed) {
-              window.localStorage.removeItem('game');
-            }
-            else {
-              game.save_game();
-            }
-          }
-          else {
+          if (!this.combat.isOver) {
             this.combat.opponentAction();
+
             window.setTimeout(() => {
               this.incTick();
               this.isPlayerTurn = true;
-            }, 250);
+            }, 500);
           }
-        }, 250);
+        }, 500);
       },
 
       complete() {
@@ -71,7 +77,13 @@ define(function(require, exports, module) {
         }
         else {
           this.game.save_game();
-          this.$emit('complete');
+
+          if (this.combat.playerSurrendered) {
+            this.$emit('complete', 'surrendered');
+          }
+          else {
+            this.$emit('complete');
+          }
         }
       },
     },
@@ -103,7 +115,7 @@ define(function(require, exports, module) {
   <div v-else class="p-3 m-3 border border-danger">
     <div v-if="combat.player.isDestroyed" class="my-3 text-warning">
       {{combat.player.name}} has died of dysentery.
-      <btn @click="complete">New game</btn>
+      <btn @click="complete" block=1>New game</btn>
     </div>
 
     <div v-else>

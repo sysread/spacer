@@ -19,14 +19,13 @@ define(function(require, exports, module) {
   Vue.component('transit', {
     props: ['plan'],
 
-    data: function() {
+    data() {
       return {
         paused:        false,
         timer:         null,
         stoppedBy:     {},
         encounter:     null,
         daysLeft:      null,
-        velocity:      0,
         layout:        null,
         ship_inserted: false,
       };
@@ -37,13 +36,17 @@ define(function(require, exports, module) {
     },
 
     watch: {
-      ship_pos: function() {
+      ship_pos() {
         this.set_position();
       },
     },
 
     computed: {
-      ship_pos: function() {
+      encounter_possible() {
+        return this.plan.velocity <= this.data.max_encounter_velocity;
+      },
+
+      ship_pos() {
         if (this.layout) {
           return this.layout.scale_point(this.plan.coords);
         }
@@ -51,11 +54,11 @@ define(function(require, exports, module) {
         return [0, 0];
       },
 
-      destination: function() {
+      destination() {
         return this.system.name(this.plan.dest);
       },
 
-      compression: function() {
+      compression() {
         return Math.sin( Math.PI * Math.max(this.plan.currentTurn, 1) / this.plan.turns );
       },
 
@@ -79,7 +82,7 @@ define(function(require, exports, module) {
         return nearest;
       },
 
-      center_point: function() {
+      center_point() {
         return Physics.centroid(
           this.plan.start,
           this.plan.end,
@@ -87,7 +90,7 @@ define(function(require, exports, module) {
         );
       },
 
-      fov: function() {
+      fov() {
         const c = this.center_point;
 
         const d = Math.max(
@@ -100,12 +103,13 @@ define(function(require, exports, module) {
       },
 
       interval() {
-        return Math.max(50, 200 - Math.ceil(200 * this.compression));
+        const intvl = 300 - Math.ceil(300 * this.compression);
+        return util.clamp(intvl, 100, 300);
       },
     },
 
     methods: {
-      set_position: function(inserted) {
+      set_position(inserted) {
         if (this.$refs.ship && this.layout) {
           const time = this.ship_inserted ? 0.5 : 0;
 
@@ -121,23 +125,22 @@ define(function(require, exports, module) {
         }
       },
 
-      pause: function() {
+      pause() {
         this.paused = true;
       },
 
-      resume: function() {
+      resume() {
         this.paused = false;
         this.timer = this.schedule();
       },
 
-      schedule: function() {
-        this.velocity = this.plan.velocity;
+      schedule() {
         this.daysLeft = Math.floor(this.plan.left * this.data.hours_per_turn / 24);
         this.distance = util.R(this.plan.auRemaining(), 2);
         window.setTimeout(() => { this.turn() }, this.interval);
       },
 
-      turn: function() {
+      turn() {
         if (this.plan.left > 0) {
           if (this.game.player.ship.isDestroyed) {
             this.game.open('newgame');
@@ -181,7 +184,7 @@ define(function(require, exports, module) {
         this.timer = this.schedule();
       },
 
-      nearby: function() {
+      nearby() {
         const ranges = this.system.ranges(this.plan.coords);
         const bodies = {};
 
@@ -196,7 +199,11 @@ define(function(require, exports, module) {
         return bodies;
       },
 
-      inspectionChance: function() {
+      inspectionChance() {
+        if (!this.encounter_possible) {
+          return;
+        }
+
         const ranges = this.nearby();
 
         for (const body of Object.keys(ranges)) {
@@ -226,7 +233,11 @@ define(function(require, exports, module) {
         return false;
       },
 
-      piracyChance: function() {
+      piracyChance() {
+        if (!this.encounter_possible) {
+          return;
+        }
+
         if (this.stoppedBy.pirate) {
           return false;
         }
@@ -299,7 +310,8 @@ define(function(require, exports, module) {
 
   Vue.component('transit-inspection', {
     props: ['faction', 'body', 'distance'],
-    data: function() {
+
+    data() {
       // TODO more (any) randomness in ship and loadout, customizations based
       // on faction and scale of origin body
       const ship = new Ship({
@@ -327,12 +339,13 @@ define(function(require, exports, module) {
         fine: 0,
       };
     },
-    computed: {
-      planet: function() { return this.game.planets[this.body] },
-      bribeAmount: function() { return Math.ceil(this.game.player.ship.price() * 0.03) },
-      canAffordBribe: function() { return this.bribeAmount <= this.game.player.money },
 
-      hasContraband: function() {
+    computed: {
+      planet()         { return this.game.planets[this.body]                    },
+      bribeAmount()    { return Math.ceil(this.game.player.ship.price() * 0.03) },
+      canAffordBribe() { return this.bribeAmount <= this.game.player.money      },
+
+      hasContraband() {
         for (const item of Object.keys(this.data.resources)) {
           if (this.data.resources[item].contraband) {
             if (this.game.player.ship.cargo.get(item) > 0) {
@@ -343,13 +356,22 @@ define(function(require, exports, module) {
 
         return false;
       },
+
+      isHostile() {
+        return this.game.player.hasStandingOrLower('Untrusted');
+      },
     },
+
     methods: {
       setChoice(choice) {
+        if (choice == 'attack') {
+          this.game.player.setStanding(this.standing, -50);
+        }
+
         this.choice = choice || 'ready';
       },
 
-      submit: function() {
+      submit() {
         let fine = 0;
         for (const item of this.game.player.ship.cargo.keys) {
           const amt = this.game.player.ship.cargo.count(item);
@@ -377,22 +399,29 @@ define(function(require, exports, module) {
         }
       },
 
-      bribe: function() {
+      bribe() {
         this.game.player.debit(this.bribeAmount);
+        this.game.player.decStanding(this.faction, 3);
         this.done();
       },
 
-      flee: function() {
+      flee() {
         $('#spacer').data({state: null, data: null});
         window.localStorage.removeItem('game');
         this.game.open('newgame');
       },
 
-      done: function() {
-        this.choice = 'ready';
-        this.$emit('done');
+      done(result) {
+        if (result == 'surrendered') {
+          this.submit();
+        }
+        else {
+          this.choice = 'ready';
+          this.$emit('done');
+        }
       },
-   },
+    },
+
     template: `
 <card :title="'Police inspection: ' + faction">
   <div v-if="choice=='ready'">
@@ -415,7 +444,12 @@ define(function(require, exports, module) {
   </ok>
   <ok v-if="choice=='submit-done'" @ok="done">
     No contraband was found.
-    The police apologize for the inconvenience and send you on your way.
+    <template v-if="isHostile">
+      The police do not seem convinced and assure you that they <i>will</i> catch you the next time around.
+    </template>
+    <template v-else>
+      The police apologize for the inconvenience and send you on your way.
+    </template>
   </ok>
 
   <ask v-if="choice=='bribe'" @pick="setChoice" :choices="{'bribe-yes': 'Yes, it is my duty as a fellow captain', 'ready': 'No, that would be dishonest'}">
@@ -527,9 +561,14 @@ define(function(require, exports, module) {
         return took;
       },
 
-      done: function() {
-        this.choice = 'ready';
-        this.$emit('done');
+      done(result) {
+        if (result == 'surrendered') {
+          this.submit();
+        }
+        else {
+          this.choice = 'ready';
+          this.$emit('done');
+        }
       },
     },
 
@@ -558,8 +597,7 @@ define(function(require, exports, module) {
         <ok v-if="choice=='submit-yes'" @ok="done">
           Armed pirates board your ship, roughing you and your crew up while
           they take anything of value they can fit aboard their ship. Forcing
-          you to help with the loading, the pirates get away with the following
-          crates from your hold.
+          you to help with the loading, the pirates plunder your ship's hold.
 
           <ul>
             <li v-for="(count, item) of took">

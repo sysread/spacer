@@ -60,6 +60,13 @@ define(function(require, exports, module) {
   };
 
   /*
+   * Force n to be no less than min and no more than max.
+   */
+  util.clamp = function(n, min, max) {
+    return Math.min(max, Math.max(min, n));
+  };
+
+  /*
    * Returns a random float between min and max.
    */
   util.getRandomNum = function(min, max) {

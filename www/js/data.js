@@ -7,22 +7,23 @@ define(function() {
   const turnsPerDay  = 24 / hoursPerTurn;
 
   const data = {
-    start_date:         new Date(2242, 0, 1, 1),
-    hours_per_turn:     hoursPerTurn,
-    initial_days:       2 * 365,
-    initial_stock:      20,
-    market_history:     10 * turnsPerDay,
-    update_prices:      10, // days between price updates
-    scarcity_markup:    0.25,
-    necessity:          {water: true, food: true, medicine: true, fuel: true},
-    craft_fee:          0.05,
-    fabricators:        10, // number of fabricators, each equates to 1 unit of cybernetics
-    fab_health:         30, // number of tics each fabricator can handle before needing to be replaced. be sure to make this higher than the total tics needed to craft a cybernetics unit.
-    grav_deltav_factor: 2,  // factor by which native gravity is multiplied to get player's sustained deltav tolerance
-    initial_ship:       'schooner',
-    initial_money:      1000,
-    jurisdiction:       0.5, // au from body
-    max_abs_standing:   100,
+    start_date:             new Date(2242, 0, 1, 1),
+    hours_per_turn:         hoursPerTurn,
+    initial_days:           2 * 365,
+    initial_stock:          20,
+    market_history:         10 * turnsPerDay,
+    update_prices:          10, // days between price updates
+    scarcity_markup:        0.25,
+    necessity:              {water: true, food: true, medicine: true, fuel: true},
+    craft_fee:              0.05,
+    fabricators:            10, // number of fabricators, each equates to 1 unit of cybernetics
+    fab_health:             30, // number of tics each fabricator can handle before needing to be replaced. be sure to make this higher than the total tics needed to craft a cybernetics unit.
+    grav_deltav_factor:     2,  // factor by which native gravity is multiplied to get player's sustained deltav tolerance
+    initial_ship:           'schooner',
+    initial_money:          1000,
+    jurisdiction:           0.5, // au from body
+    max_abs_standing:       100,
+    max_encounter_velocity: 1000000, // m/s
 
     scales: {
       tiny:   0.6,
@@ -163,7 +164,7 @@ define(function() {
         full_name: 'United Nations',
         capital:   'Earth',
         sales_tax: 0.105,
-        patrol:    0.15,
+        patrol:    0.25,
         produces:  {electronics: 0.3, cybernetics: 0.1, medicine: 0.5},
         consumes:  {},
       },
@@ -171,7 +172,7 @@ define(function() {
         full_name: 'Martian Commonwealth',
         capital:   'Mars',
         sales_tax: 0.085,
-        patrol:    0.10,
+        patrol:    0.2,
         produces:  {machines: 0.2, electronics: 0.2, weapons: 0.2, metal: 0.2},
         consumes:  {},
       },
@@ -179,7 +180,7 @@ define(function() {
         full_name: 'The Most Serene Republic of Ceres',
         capital:   'Ceres',
         sales_tax: 0.04,
-        patrol:    0.05,
+        patrol:    0.1,
         produces:  {fuel: 0.3, machines: 0.2},
         consumes:  {},
       },
@@ -187,7 +188,7 @@ define(function() {
         full_name: 'Jovian Free Traders',
         capital:   'Ganymede',
         sales_tax: 0.065,
-        patrol:    0.05,
+        patrol:    0.15,
         produces:  {fuel: 0.5, food: 0.25, metal: 0.1, ceramics: 0.1},
         consumes:  {},
       },
@@ -195,7 +196,7 @@ define(function() {
         full_name: 'Trans-Neptunian Authority',
         capital:   'Pluto',
         sales_tax: 0.0175,
-        patrol:    0.0,
+        patrol:    0.05,
         produces:  {fuel: 0.5, narcotics: 0.5, weapons: 0.5},
         consumes:  {},
       },

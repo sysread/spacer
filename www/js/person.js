@@ -103,6 +103,10 @@ define(function(require, exports, module) {
       return this.getStanding(faction) >= this.standingCutoff(label);
     }
 
+    hasStandingOrLower(faction, label) {
+      return this.getStanding(faction) <= this.standingCutoff(label);
+    }
+
     standingCutoff(standing) {
       switch (standing) {
         case 'Criminal'   : return -50; break;
@@ -132,6 +136,10 @@ define(function(require, exports, module) {
 
     decStanding(faction, amt) {
       this.standing[faction] = Math.max(-data.max_abs_standing, this.getStanding(faction) - amt);
+    }
+
+    setStanding(faction, amt) {
+      this.standing[faction] = Math.min(data.max_abs_standing, Math.max(-data.max_abs_standing, amt));
     }
 
     getStandingPriceAdjustment(faction) {
