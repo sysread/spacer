@@ -3,6 +3,7 @@ define(function(require, exports, module) {
   const util    = require('util');
   const Physics = require('physics');
 
+  require('vendor/TweenMax.min');
   require('component/modal');
 
   Vue.filter('csn',  function(value) { return util.csn((value || 0).toString()) });
@@ -29,13 +30,22 @@ define(function(require, exports, module) {
 
 
   Vue.component('progress-bar', {
-    props: ['percent'],
+    props: ['percent', 'width'],
+
+    watch: {
+      percent() {
+        TweenLite.to(this.$el, 0.5, {
+          'value': this.percent,
+          'ease': Sine.easeInOut,
+          'onComplete': () => { this.$emit('ready') },
+        }).play();
+      },
+    },
+
     template: `
-<div class="progress bg-dark">
-  <div class="progress-bar bg-warning text-dark" :style="{width: (percent || 0) + '%'}">
-    <slot />
-  </div>
-</div>
+      <progress max="100" value="0" :class="'w-' + (width||100)">
+        {{percent||0}}%
+      </progress>
     `,
   });
 

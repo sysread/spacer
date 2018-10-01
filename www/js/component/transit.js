@@ -137,7 +137,7 @@ define(function(require, exports, module) {
       schedule() {
         this.daysLeft = Math.floor(this.plan.left * this.data.hours_per_turn / 24);
         this.distance = util.R(this.plan.auRemaining(), 2);
-        window.setTimeout(() => { this.turn() }, this.interval);
+        return window.setTimeout(() => { this.turn() }, this.interval);
       },
 
       turn() {

@@ -18,6 +18,7 @@ define(function(require, exports, module) {
         turnsComplete: 0,
       };
     },
+
     computed: {
       bodies:      function() { return this.data.bodies },
       body:        function() { return this.bodies[this.home] },
@@ -27,49 +28,50 @@ define(function(require, exports, module) {
       homeDesc:    function() { return this.body.desc.split('|') },
       factionDesc: function() { return this.faction.desc.split('|') },
       startTurns:  function() { return this.data.initial_days * 24 / this.data.hours_per_turn },
-      step:        function() { return Math.ceil(this.startTurns / 25) },
+      step:        function() { return Math.ceil(this.startTurns / 50) },
       percent:     function() { return Math.min(100, Math.floor((this.turnsComplete / this.startTurns) * 100)) },
       display:     function() { return this.percent + '%' },
     },
+
     methods: {
-      startGame: function() {
-        this.starting = true;
-
-        $('#spacer-nav').data('in-transit', true);
-
-        const ship = this.data.initial_ship;
-
-        const me = new Person({
-          name:    this.name,
-          home:    this.home,
-          faction: this.body.faction,
-          ship:    new Ship({type: ship}),
-          money:   1000,
-        });
-
-        this.game.new_game(me, this.home);
-        this.game.freeze = true;
-
-        let timer; timer = window.setInterval(() => {
+      processBatch() {
+        this.$nextTick(function() {
           if (this.turnsComplete < this.startTurns) {
             const count = Math.min(this.startTurns - this.turnsComplete, this.step);
             this.turnsComplete += count;
             this.game.turn(count);
-            this.$nextTick(this.$forceUpdate);
           }
           else {
             this.game.freeze = false;
             this.game.refresh();
-            window.clearInterval(timer);
             this.$nextTick(() => this.game.open('summary'));
           }
-        }, 500);
+        });
+      },
+
+      startGame() {
+        this.starting = true;
+        this.game.freeze = true;
+
+        this.game.new_game(
+          new Person({
+            name:    this.name,
+            home:    this.home,
+            faction: this.body.faction,
+            ship:    new Ship({type: this.data.initial_ship}),
+            money:   1000,
+          }),
+          this.home
+        );
+
+        this.$nextTick(this.processBatch);
       },
     },
+
     template: `
 <div class="container container-fluid">
   <card v-if="starting" title="Starting game">
-    <progress-bar :percent="percent">{{display}}</progress-bar>
+    <progress-bar :percent="percent" width=100 @ready="processBatch" />
   </card>
 
   <card v-else>
