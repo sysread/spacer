@@ -22,7 +22,6 @@ define(function(require, exports, module) {
     data() {
       return {
         paused:        false,
-        timer:         null,
         stoppedBy:     {'pirate': 0},
         encounter:     null,
         daysLeft:      null,
@@ -32,14 +31,14 @@ define(function(require, exports, module) {
     },
 
     mounted() {
-      this.$nextTick(this.schedule);
+      this.$nextTick(this.turn);
     },
 
-    watch: {
+    /*watch: {
       ship_pos() {
         this.set_position();
       },
-    },
+    },*/
 
     computed: {
       encounter_possible() {
@@ -106,6 +105,10 @@ define(function(require, exports, module) {
         const intvl = 300 - Math.ceil(300 * this.compression);
         return util.clamp(intvl, 100, 300);
       },
+
+      percent() {
+        return this.plan.pct_complete;
+      },
     },
 
     methods: {
@@ -131,16 +134,13 @@ define(function(require, exports, module) {
 
       resume() {
         this.paused = false;
-        this.timer = this.schedule();
-      },
-
-      schedule() {
-        this.daysLeft = Math.floor(this.plan.left * this.data.hours_per_turn / 24);
-        this.distance = util.R(this.plan.auRemaining(), 2);
-        return window.setTimeout(() => { this.turn() }, this.interval);
+        this.$nextTick(this.turn);
       },
 
       turn() {
+        this.daysLeft = Math.floor(this.plan.left * this.data.hours_per_turn / 24);
+        this.distance = util.R(this.plan.auRemaining(), 2);
+
         if (this.plan.left > 0) {
           if (this.game.player.ship.isDestroyed) {
             this.game.open('newgame');
@@ -158,21 +158,14 @@ define(function(require, exports, module) {
             this.game.turn(1, true);
             this.plan.turn(1);
             this.game.player.ship.burn(this.plan.accel);
+            this.set_position();
 
             if (this.paused) {
-              window.clearTimeout(this.timer);
-              this.timer = null;
               return;
-            }
-            else {
-              this.$forceUpdate();
-              this.timer = this.schedule();
             }
           }
         }
         else {
-          window.clearTimeout(this.timer);
-          this.timer = null;
           $('#spacer').data({data: null});
           this.game.transit(this.plan.dest);
           this.game.open('summary');
@@ -181,7 +174,7 @@ define(function(require, exports, module) {
 
       complete_encounter() {
         this.encounter = null;
-        this.timer = this.schedule();
+        this.turn();
       },
 
       nearby() {
@@ -265,12 +258,12 @@ define(function(require, exports, module) {
     },
 
     template: `
-      <card nopad=1>
-        <card-header slot="header">
+      <card>
+        <card-title>
           Transiting to {{plan.dest|caps}}
           <btn v-if="paused" @click="resume">Resume</btn>
           <btn v-else @click="pause">Pause</btn>
-        </card-header>
+        </card-title>
 
         <div class="row" style="font-size:0.8rem" :style="{'width': layout ? (layout.width_px + 'px') : '100%'}">
           <span class="col-4 text-left">{{plan.days_left|unit('days')}}</span>
@@ -284,6 +277,8 @@ define(function(require, exports, module) {
                  :fov="fov"
                  :focus="plan.dest"
                  :transit="plan">
+
+          <progress-bar width=100 :percent="percent" class="d-inline" @ready="turn" />
 
           <text slot="svg"
                 ref="ship"

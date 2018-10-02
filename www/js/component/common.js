@@ -43,9 +43,11 @@ define(function(require, exports, module) {
     },
 
     template: `
-      <progress max="100" value="0" :class="'w-' + (width||100)">
-        {{percent||0}}%
-      </progress>
+      <div class="progress">
+        <div class="progress-bar bg-dark text-warning" :style="{'width': percent + '%'}">
+          {{(percent||0)|R}}%
+        </div>
+      </div>
     `,
   });
 

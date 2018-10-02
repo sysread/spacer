@@ -442,7 +442,7 @@ define(function(require, exports, module) {
 
     'methods': {
       set_position(inserted) {
-        const time = inserted ? 0 : 0.5;
+        const time = inserted ? 0 : 1;
 
         TweenLite.to(this.$refs.img, time, {
           'x': this.pos[0],

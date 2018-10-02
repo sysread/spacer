@@ -29,7 +29,7 @@ define(function(require, exports, module) {
     get km()           { return this.dist / 1000                            }// distance in kilometers
     get au()           { return this.dist / Physics.AU                      }// distance in AU
     get is_complete()  { return this.left === 0                             }
-    get pct_complete() { return Math.ceil(100 - (this.left * this.turnpct)) }
+    get pct_complete() { return 100 - (this.left * this.turnpct) }
     get segment()      { return Physics.distance(this.start, this.end)      }
     get segment_au()   { return this.segment / Physics.AU                   }
 
