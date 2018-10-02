@@ -34,12 +34,6 @@ define(function(require, exports, module) {
       this.$nextTick(this.turn);
     },
 
-    /*watch: {
-      ship_pos() {
-        this.set_position();
-      },
-    },*/
-
     computed: {
       encounter_possible() {
         return this.plan.velocity <= this.data.max_encounter_velocity;
@@ -138,6 +132,10 @@ define(function(require, exports, module) {
       },
 
       turn() {
+        if (this.paused) {
+          return;
+        }
+
         this.daysLeft = Math.floor(this.plan.left * this.data.hours_per_turn / 24);
         this.distance = util.R(this.plan.auRemaining(), 2);
 
@@ -258,12 +256,14 @@ define(function(require, exports, module) {
     },
 
     template: `
-      <card>
-        <card-title>
-          Transiting to {{plan.dest|caps}}
-          <btn v-if="paused" @click="resume">Resume</btn>
-          <btn v-else @click="pause">Pause</btn>
-        </card-title>
+      <card nopad=1>
+        <card-header class="px-0">
+          <h3 class="p-2">
+            Transiting to {{plan.dest|caps}}
+            <btn v-if="paused" @click="resume" right=1 class="mx-1">Resume</btn>
+            <btn v-else @click="pause" right=1 class="mx-1">Pause</btn>
+          </h3>
+        </card-header>
 
         <div class="row" style="font-size:0.8rem" :style="{'width': layout ? (layout.width_px + 'px') : '100%'}">
           <span class="col-4 text-left">{{plan.days_left|unit('days')}}</span>
