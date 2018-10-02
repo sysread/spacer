@@ -156,7 +156,7 @@ define(function(require, exports, module) {
         - $('#spacer-status').outerHeight()
         - $('#spacer-navbar').outerHeight();
 
-      const width = $(this.elt).parent().width() - 42.5; // 42.5 for .card padding
+      const width = $(this.elt).parent().width();
 
       this.clear_zero();
       this.width_px = Math.min(width, height);

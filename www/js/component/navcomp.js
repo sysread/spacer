@@ -203,20 +203,22 @@ define(function(require, exports, module) {
     },
 
     'template': `
-      <card id="navcomp">
-        <card-title>
-          NavComp
+      <card id="navcomp" nopad=1>
+        <card-header class="px-0">
+          <h3 class="p-2">
+            NavComp
 
-          <btn v-if="!show_home_menu" @click="go_home_menu">
-            Back
-          </btn>
+            <btn v-if="!show_home_menu" @click="go_home_menu">
+              Back
+            </btn>
 
-          <btn @click="confirm=true" v-if="transit" right=1 class="mx-1">
-            Launch
-          </btn>
-        </card-title>
+            <btn @click="confirm=true" v-if="transit" right=1 class="mx-1">
+              Launch
+            </btn>
+          </h3>
+        </card-header>
 
-        <div class="p-2" v-if="!show_map">
+        <div class="p-2" v-if="!show_map"> 
           <Menu title="Navigation"  v-show="show_home_menu">
             <Opt @click="go_dest_menu">
               <span v-if="!dest">
