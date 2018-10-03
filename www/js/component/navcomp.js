@@ -218,7 +218,7 @@ define(function(require, exports, module) {
           </h3>
         </card-header>
 
-        <div class="p-2" v-if="!show_map"> 
+        <div class="p-2" v-if="!show_map">
           <Menu title="Navigation"  v-show="show_home_menu">
             <Opt @click="go_dest_menu">
               <span v-if="!dest">
@@ -290,7 +290,8 @@ define(function(require, exports, module) {
             @dest="set_dest"
             @transit="set_transit"
             show_target_path=1
-            show_transit_path=1 />
+            show_transit_path=1
+            show_bodies=1 />
 
       </card>
     `,
@@ -475,7 +476,7 @@ define(function(require, exports, module) {
 
 
   Vue.component('NavPlot', {
-    'props': ['focus', 'center', 'fov', 'nolabels', 'transit', 'show_transit_path', 'show_target_path'],
+    'props': ['focus', 'center', 'fov', 'nolabels', 'transit', 'show_bodies', 'show_transit_path', 'show_target_path'],
 
     data() {
       return {
@@ -676,6 +677,7 @@ define(function(require, exports, module) {
           <SvgPath v-if="show_transit_path && transit" :points="transit_path" color="#A01B1B" />
 
           <SvgPlotPoint
+            v-if="show_bodies"
             v-for="(info, body) of plot_points()"
             :key="body"
             :layout="layout"

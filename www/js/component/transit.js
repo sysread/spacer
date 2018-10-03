@@ -21,6 +21,8 @@ define(function(require, exports, module) {
 
     data() {
       return {
+        timeline:      null,
+        started:       false,
         paused:        false,
         stoppedBy:     {'pirate': 0},
         encounter:     null,
@@ -31,10 +33,60 @@ define(function(require, exports, module) {
     },
 
     mounted() {
-      this.$nextTick(this.turn);
+      this.$nextTick(() => {
+        const t = 0.3;
+
+        const timeline = new TimelineLite({
+          onComplete: function() {console.log('complete')},
+        });
+
+        const bodies = this.bodies;
+
+        timeline.to(this.$refs.sun, 0, {
+          'x': this.layout.scale_x(0),
+          'y': this.layout.scale_y(0),
+        });
+
+        for (const body of bodies) {
+          const tl    = new TimelineLite;
+          const orbit = this.system.orbit_by_turns(body);
+
+          for (let i = 0; i < this.plan.turns; ++i) {
+            const [x, y] = this.layout.scale_point(orbit[i]);
+
+            tl.to(this.$refs[body], t, {
+              'x': x,
+              'y': x,
+              'ease': Power0.easeNone,
+            });
+          }
+
+          timeline.add(tl, 0);
+        }
+
+        const ship_tl = new TimelineLite;
+
+        for (let i = 0; i < this.plan.turns; ++i) {
+          const [x, y] = this.layout.scale_point(this.plan.path[i].position);
+          ship_tl.to(this.$refs.ship, t, {
+            'x': x,
+            'y': x,
+            'ease': Power0.easeNone,
+          });
+        }
+
+        timeline.add(ship_tl, 0);
+
+        this.timeline = timeline;
+        this.$nextTick(this.turn);
+      });
     },
 
     computed: {
+      bodies() {
+        return this.system.bodies();
+      },
+
       encounter_possible() {
         return this.plan.velocity <= this.data.max_encounter_velocity;
       },
@@ -55,44 +107,46 @@ define(function(require, exports, module) {
         return Math.sin( Math.PI * Math.max(this.plan.currentTurn, 1) / this.plan.turns );
       },
 
-      nearest_skip() {
-        const skip = {};
-        skip[this.plan.dest] = true;
-        skip[this.plan.origin] = true;
-        if (this.system.central(this.plan.dest) != 'sun') skip[this.system.central(this.plan.dest)] = true;
-        if (this.system.central(this.plan.origin) != 'sun') skip[this.system.central(this.plan.origin)] = true;
-        return skip;
-      },
-
       nearest_body() {
-        const skip = this.nearest_skip;
         const ranges = this.system.ranges(this.plan.end);
+        ranges['sun'] = Physics.distance(this.plan.coords, [0, 0]);
 
         const nearest = Object.keys(ranges)
-          .filter(b => !skip[b] && (this.system.central(b) == 'sun' || !skip[this.system.central(b)]))
+          .filter(b => this.system.central(b) != this.plan.end)
           .reduce((a, b) => ranges[a] > ranges[b] ? b : a);
 
         return nearest;
       },
 
+      points_of_view() {
+        const points = [this.plan.coords, this.plan.end];
+
+        if (this.system.central(this.plan.dest) == 'sun') {
+          points.push(this.system.position(this.plan.dest));
+        } else {
+          points.push(this.system.position(this.system.central(this.plan.dest)));
+        }
+
+        points.push(this.system.position(this.nearest_body));
+        return points;
+      },
+
       center_point() {
-        return Physics.centroid(
-          this.plan.start,
-          this.plan.end,
-          this.system.position(this.nearest_body),
-        );
+        return Physics.centroid(...this.points_of_view);
       },
 
       fov() {
         const c = this.center_point;
 
         const d = Math.max(
-          Physics.distance(this.plan.start, c),
+          Physics.distance(this.plan.coords, c),
           Physics.distance(this.plan.end, c),
           Physics.distance(this.system.position(this.nearest_body), c),
         );
 
-        return d / Physics.AU * 1.1;
+        const fov = d / Physics.AU * 1.1;
+
+        return Math.min(fov, Physics.AU / 4);
       },
 
       interval() {
@@ -106,7 +160,15 @@ define(function(require, exports, module) {
     },
 
     methods: {
+      diameter(body) {
+        const d   = this.system.body(body).radius * 2;
+        const w   = this.layout.width_px * (d / (this.layout.fov_au * Physics.AU));
+        const min = body == 'sun' ? 10 : this.system.central(body) != 'sun' ? 1 : 5;
+        return Math.max(min, Math.ceil(w));
+      },
+
       set_position(inserted) {
+return;
         if (this.$refs.ship && this.layout) {
           const time = this.ship_inserted ? 0.5 : 0;
 
@@ -124,16 +186,23 @@ define(function(require, exports, module) {
 
       pause() {
         this.paused = true;
+        this.$nextTick(() => {this.timeline.pause()});
       },
 
       resume() {
         this.paused = false;
         this.$nextTick(this.turn);
+        this.$nextTick(() => {this.timeline.resume()});
       },
 
       turn() {
         if (this.paused) {
           return;
+        }
+
+        if (!this.started) {
+          this.timeline.play();
+          this.started = true;
         }
 
         this.daysLeft = Math.floor(this.plan.left * this.data.hours_per_turn / 24);
@@ -278,17 +347,31 @@ define(function(require, exports, module) {
                  :focus="plan.dest"
                  :transit="plan">
 
+          <g slot="svg">
+            <image v-if="layout"
+                   ref="sun"
+                   xlink:href="img/sun.png"
+                   :height="diameter('sun')"
+                   :width="diameter('sun')" />
+
+            <image v-if="layout"
+                   v-for="body of bodies"
+                   :key="body"
+                   :ref="body"
+                   :xlink:href="'img/' + body + '.png'"
+                   :height="diameter(body)"
+                   :width="diameter(body)" />
+
+            <text ref="ship"
+                  v-if="layout"
+                  text-anchor="middle"
+                  alignment-baseline="middle"
+                  style="fill:yellow; font:16px monospace;">
+              &tridot;
+            </text>
+          </g>
+
           <progress-bar width=100 :percent="percent" class="d-inline" @ready="turn" />
-
-          <text slot="svg"
-                ref="ship"
-                v-if="layout"
-                text-anchor="middle"
-                alignment-baseline="middle"
-                style="fill:yellow; font:16px monospace;">
-            &tridot;
-          </text>
-
         </NavPlot>
 
         <transit-inspection
