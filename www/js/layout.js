@@ -18,8 +18,6 @@ define(function(require, exports, module) {
       this.init_y   = 0;
       this.offset_x = 0;
       this.offset_y = 0;
-
-      this.update_width();
     }
 
     get zero() {
@@ -157,8 +155,8 @@ define(function(require, exports, module) {
         = window.innerHeight
         + window.scrollY
         - this.elt.getBoundingClientRect().top
-        - $('#spacer-status').outerHeight()
-        - $('#spacer-navbar').outerHeight();
+        - $('#spacer-status').height()
+        - $('#spacer-navbar').height();
 
       const width = $(this.elt).parent().width();
 
@@ -243,6 +241,10 @@ define(function(require, exports, module) {
         layout_scaling: false,
         layout_target_id: null,
       };
+    },
+
+    mounted() {
+      this.layout.update_width();
     },
 
     directives: {
