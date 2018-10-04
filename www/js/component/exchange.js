@@ -13,7 +13,25 @@ define(function(require, exports, module) {
       return {
         timer: null,
         slider_value: this.value,
+        monitor: null,
       };
+    },
+
+    /*
+     * Uses an interval timer to track the value of the input, as @changed is
+     * only emitted after the user releases the slider.
+     */
+    mounted() {
+      this.monitor = window.setInterval(() => {
+        const value = this.$refs.slider.value;
+        if (value != this.slider_value) {
+          this.slider_value = value;
+        }
+      }, 100);
+    },
+
+    beforeDestroy() {
+      window.clearTimeout(this.monitor);
     },
 
     watch: {
@@ -49,6 +67,7 @@ define(function(require, exports, module) {
   <span @click="dec" class="input-group-btn"><btn class="font-weight-bold btn-sm">&lt;</btn></span>
 
   <input
+    ref="slider"
     class="form-control"
     @change="update"
     :value="value || 0"
