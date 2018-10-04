@@ -15,86 +15,8 @@ define(function(require, exports, module) {
   require('vendor/TweenMax.min');
 
 
-  Vue.component('NavDestOpt', {
-    'props': ['body'],
-
-    'computed': {
-      name()    { return this.system.name(this.body)           },
-      faction() { return this.system.faction(this.body)        },
-      central() { return this.system.central(this.body)        },
-      kind()    { return this.system.kind(this.body)           },
-      is_moon() { return this.system.type(this.body) == 'moon' },
-      is_here() { return this.game.locus == this.body          },
-
-      dist() {
-        const p0 = this.system.position(this.game.locus);
-        const p1 = this.system.position(this.body);
-        const d  = Physics.distance(p0, p1);
-
-        if (d < Physics.AU * 0.01) {
-          return util.csn(util.R(d / 1000)) + ' km';
-        } else {
-          return util.R(d / Physics.AU, 2) + ' AU';
-        }
-      },
-
-      color() {
-        let color;
-
-        switch (this.faction) {
-          case 'UN':     color = 'text-success';   break;
-          case 'MC':     color = 'text-danger';    break;
-          case 'JFT':    color = 'text-warning';   break;
-          case 'TRANSA': color = 'text-secondary'; break;
-          case 'CERES':  color = 'text-info';      break;
-          default:       color = '';               break;
-        }
-
-        return color;
-      },
-    },
-
-    'template': `
-      <Opt :val="body" final=1 :disabled="is_here" :class="color">
-        {{name}}
-
-        <span v-if="is_here" class="m-1 text-warning font-weight-bold">&#128907;</span>
-
-        <slot />
-
-        <badge right=1 class="ml-1">{{dist}}</badge>
-        <badge right=1 class="ml-1 d-none d-sm-inline">{{faction}}</badge>
-        <badge right=1 v-if="is_moon" class="ml-1">{{kind}}</badge>
-      </Opt>
-    `,
-  });
-
-
-  Vue.component('NavDestMenu', {
-    'props': ['prev', 'title'],
-
-    'computed': {
-      bodies() { return this.system.bodies() },
-    },
-
-    'methods': {
-      on_answer(dest) {
-        this.$emit('answer', dest);
-      },
-    },
-
-    'template': `
-      <Menu title="Select a destination">
-        <NavDestOpt v-for="body in bodies" :key="body" :body="body" @answer="on_answer">
-          <span v-if="body == prev" class="m-1 text-warning font-weight-bold">&target;</span>
-        </NavDestOpt>
-      </Menu>
-    `,
-  });
-
-
   Vue.component('NavComp', {
-    'props': [],
+    mixins: [ Layout.LayoutMixin ],
 
     data() {
       return {
@@ -103,16 +25,18 @@ define(function(require, exports, module) {
         rel:     false,
         transit: null,
         confirm: false,
+        layout_target_id: 'navcomp-map-root',
+        layout_scaling: true,
       };
     },
 
-    'watch': {
-      dest() {
-        this.transit = null;
-      },
+    watch: {
+      dest()             { this.transit = null },
+      map_center_point() { this.layout.set_center( this.map_center_point ) },
+      map_fov_au()       { this.layout.set_fov_au( this.map_fov_au ) },
     },
 
-    'computed': {
+    computed: {
       show_home_menu() { return this.show == 'home'   },
       show_dest_menu() { return this.show == 'dest'   },
       show_map()       { return this.show == 'map'    },
@@ -125,9 +49,38 @@ define(function(require, exports, module) {
           return this.game.planets[this.dest];
         }
       },
+
+      map_center_point() {
+        const points = [ [0, 0], this.system.position(this.game.locus) ];
+
+        if (this.dest) {
+          points.push(this.system.position(this.dest));
+        }
+
+        return Physics.centroid(...points);
+      },
+
+      map_fov_au() {
+        if (this.transit) {
+          return this.transit.segment_au;
+        }
+
+        const bodies = [
+          this.system.position(this.game.locus),
+        ];
+
+        if (this.dest) {
+          bodies.push(this.system.position(this.dest));
+        }
+
+        const orbits = bodies.map(b => Physics.distance(b, [0, 0]));
+        const max = Math.max(...orbits);
+        const fov = (max + (Physics.AU / 2)) / Physics.AU;
+        return fov;
+      },
     },
 
-    'methods': {
+    methods: {
       go_home_menu() { this.show = 'home'   },
       go_dest_menu() { this.show = 'dest'   },
       go_map()       { this.show = 'map'    },
@@ -202,7 +155,7 @@ define(function(require, exports, module) {
       },
     },
 
-    'template': `
+    template: `
       <card id="navcomp" nopad=1>
         <card-header class="px-0">
           <h3 class="p-2">
@@ -283,20 +236,99 @@ define(function(require, exports, module) {
           <def split=4 term="Fuel"        :def="transit.fuel|R(2)|unit('tonnes')" />
         </confirm>
 
-        <NavPlot
-            v-if="show_map"
-            :focus="dest"
-            :transit="transit"
-            @dest="set_dest"
-            @transit="set_transit"
-            show_target_path=1
-            show_transit_path=1
-            show_bodies=1 />
+        <NavPlot v-show="show_map"
+                 v-layout
+                 :layout="layout"
+                 :style="layout_css_dimensions"
+                 :transit="transit">
+
+          <NavBodies slot="svg"
+                     :layout="layout"
+                     :focus="dest" />
+
+        </NavPlot>
 
       </card>
     `,
   });
 
+
+  Vue.component('NavDestOpt', {
+    'props': ['body'],
+
+    'computed': {
+      name()    { return this.system.name(this.body)           },
+      faction() { return this.system.faction(this.body)        },
+      central() { return this.system.central(this.body)        },
+      kind()    { return this.system.kind(this.body)           },
+      is_moon() { return this.system.type(this.body) == 'moon' },
+      is_here() { return this.game.locus == this.body          },
+
+      dist() {
+        const p0 = this.system.position(this.game.locus);
+        const p1 = this.system.position(this.body);
+        const d  = Physics.distance(p0, p1);
+
+        if (d < Physics.AU * 0.01) {
+          return util.csn(util.R(d / 1000)) + ' km';
+        } else {
+          return util.R(d / Physics.AU, 2) + ' AU';
+        }
+      },
+
+      color() {
+        let color;
+
+        switch (this.faction) {
+          case 'UN':     color = 'text-success';   break;
+          case 'MC':     color = 'text-danger';    break;
+          case 'JFT':    color = 'text-warning';   break;
+          case 'TRANSA': color = 'text-secondary'; break;
+          case 'CERES':  color = 'text-info';      break;
+          default:       color = '';               break;
+        }
+
+        return color;
+      },
+    },
+
+    'template': `
+      <Opt :val="body" final=1 :disabled="is_here" :class="color">
+        {{name}}
+
+        <span v-if="is_here" class="m-1 text-warning font-weight-bold">&#128907;</span>
+
+        <slot />
+
+        <badge right=1 class="ml-1">{{dist}}</badge>
+        <badge right=1 class="ml-1 d-none d-sm-inline">{{faction}}</badge>
+        <badge right=1 v-if="is_moon" class="ml-1">{{kind}}</badge>
+      </Opt>
+    `,
+  });
+
+
+  Vue.component('NavDestMenu', {
+    'props': ['prev', 'title'],
+
+    'computed': {
+      bodies() { return this.system.bodies() },
+    },
+
+    'methods': {
+      on_answer(dest) {
+        this.$emit('answer', dest);
+      },
+    },
+
+    'template': `
+      <Menu title="Select a destination">
+        <NavDestOpt v-for="body in bodies" :key="body" :body="body" @answer="on_answer">
+          <span v-if="body == prev" class="m-1 text-warning font-weight-bold">&target;</span>
+        </NavDestOpt>
+      </Menu>
+    `,
+  });
 
 
   Vue.component('NavRoutePlanner', {
@@ -378,7 +410,10 @@ define(function(require, exports, module) {
 
     'computed': {
       view_box() {
-        return '0 0 ' + this.layout.width_px + ' ' + this.layout.width_px;
+        return '0 0 '
+             + this.layout.width_px
+             + ' '
+             + this.layout.width_px;
       },
     },
 
@@ -430,44 +465,57 @@ define(function(require, exports, module) {
   });
 
 
-  Vue.component('SvgPlotPoint', {
-    'props': ['label', 'pos', 'diameter', 'img', 'layout'],
+  Vue.component('SvgDestinationPath', {
+    props: ['transit', 'color', 'layout'],
 
-    'watch': {
-      pos() {
-        this.set_position(false);
-      },
-    },
-
-    mounted() {
-      this.set_position(true);
-    },
-
-    'methods': {
-      set_position(inserted) {
-        const time = inserted ? 0 : 1;
-
-        TweenLite.to(this.$refs.img, time, {
-          'x': this.pos[0],
-          'y': this.pos[1],
-          'ease': Power0.easeNone,
-        }).play();
-
-        if (this.$refs.lbl) {
-          TweenLite.to(this.$refs.lbl, time, {
-            'x': this.pos[0] + this.diameter + 10,
-            'y': this.pos[1] + this.diameter / 2,
-            'ease': Power0.easeNone,
-          }).play();
+    computed: {
+      path() {
+        if (this.transit) {
+          return this.layout.scale_path(
+            this.system
+              .orbit_by_turns(this.transit.dest)
+              .slice(0, this.transit.left + 1)
+          );
         }
       },
     },
 
-    'template': `
-      <g>
-        <image ref="img" v-if="img" :xlink:href="img" :height="diameter" :width="diameter" />
+    template: `
+      <SvgPath :points="path" :color="color || '#8B8B8B'" />
+    `,
+  });
 
-        <text ref="lbl" v-show="label" style="font:12px monospace; fill:#EEEEEE;">
+
+  Vue.component('SvgTransitPath', {
+    props: ['transit', 'color', 'layout'],
+
+    computed: {
+      path() {
+        if (this.transit) {
+          const path = this.layout.scale_path(
+            this.transit.path
+              .slice(this.transit.currentTurn, this.transit.left + 1)
+              .map(p => p.position)
+          );
+
+          return path;
+        }
+      },
+    },
+
+    template: `
+      <SvgPath :points="path" :color="color || '#A01B1B'" />
+    `,
+  });
+
+
+  Vue.component('SvgPlotPoint', {
+    props: ['label', 'pos', 'diameter', 'img'],
+    template: `
+      <g>
+        <image ref="img" v-if="img" :xlink:href="img" :height="diameter" :width="diameter" :x="pos[0]" :y="pos[1]" />
+
+        <text ref="lbl" v-show="label" style="font:12px monospace; fill:#EEEEEE;" :x="pos[0]+diameter+10" :y="pos[1]+diameter/2">
           {{label|caps}}
         </text>
       </g>
@@ -475,107 +523,11 @@ define(function(require, exports, module) {
   });
 
 
-  Vue.component('NavPlot', {
-    'props': ['focus', 'center', 'fov', 'nolabels', 'transit', 'show_bodies', 'show_transit_path', 'show_target_path'],
+  Vue.component('NavBodies', {
+    props: ['focus', 'layout'],
 
-    data() {
-      return {
-        layout: null,
-      };
-    },
-
-    'directives': {
-      'resizable': {
-        inserted(el, binding, vnode) {
-          const layout = new Layout;
-          vnode.context.$emit('update:layout', layout);
-          vnode.context.layout = layout;
-          layout.set_fov_au(vnode.context.fov_au);
-          layout.set_center(vnode.context.center_point);
-          vnode.context.$nextTick(vnode.context.$forceUpdate);
-        }
-      },
-    },
-
-    'watch': {
-      focus()  { this.auto_focus() },
-      fov()    { this.auto_focus() },
-      center() { this.auto_focus() },
-    },
-
-    'computed': {
-      width() {
-        if (this.layout) {
-          return this.layout.width_px;
-        }
-
-        return 0;
-      },
-
-      transit_path() {
-        const transit = this.transit;
-
-        if (transit) {
-          const points = this.transit.path;
-          const path   = this.layout.scale_path(points.map(p => p.position));
-
-          if (this.transit.currentTurn == 0) {
-            path.unshift(this.layout.scale_point(this.transit.start));
-          }
-
-          path.push(this.layout.scale_point(this.transit.end));
-
-          return path;
-        }
-      },
-
-      target_path() {
-        const transit = this.transit;
-
-        if (transit) {
-          return this.layout.scale_path(
-            this.system.orbit_by_turns(this.focus)
-              .slice(0, transit.left + 1)
-          );
-        }
-      },
-
-      center_point() {
-        if (this.center) {
-          return this.center;
-        }
-
-        // If there is no center point specified, set the new center point to
-        // be the centroid of the new focus, the current location, and the sun.
-        const points = [[0, 0], this.position(this.game.locus)];
-
-        if (this.focus) {
-          points.push(this.position(this.focus));
-        }
-
-        return Physics.centroid(...points);
-      },
-
-      fov_au() {
-        if (this.fov) {
-          return this.fov;
-        }
-
-        if (this.transit) {
-          return this.transit.segment_au;
-        }
-
-        const bodies = [this.position(this.game.locus)];
-
-        if (this.focus) {
-          bodies.push(this.position(this.focus));
-        }
-
-        const orbits = bodies.map(b => Physics.distance(b, [0, 0]));
-        const max = Math.max(...orbits);
-        const fov = (max + (Physics.AU / 2)) / Physics.AU;
-        return fov;
-      },
+    computed: {
+      fov() { return this.layout.fov_au },
 
       bodies() {
         const seen   = {};
@@ -596,63 +548,55 @@ define(function(require, exports, module) {
 
         return bodies;
       },
-    },
-
-    'methods': {
-      position(body) {
-        const p = this.system.position(body);
-        return [p[0], p[1]];
-      },
-
-      is_within_fov(body) {
-        return this.layout.is_within_fov(
-          this.position(body),
-          this.center_point,
-        );
-      },
 
       plot_points() {
-        const t = this.system.system.time;
-        const bodies = {};
-        for (const body of this.bodies) {
-          const d = this.diameter(body);
-          const p = this.layout.scale_point( this.system.position(body, t) );
-          p[0] -= d / 2;
-          p[1] -= d / 2;
+        if (this.layout) {
+          const t = this.system.system.time;
+          const bodies = {};
 
-          bodies[body] = {
-            point:    p,
-            diameter: d,
-            label:    this.show_label(body),
+          for (const body of this.bodies) {
+            const d = this.diameter(body);
+            const p = this.layout.scale_point( this.system.position(body, t) );
+            p[0] -= d / 2;
+            p[1] -= d / 2;
+
+            bodies[body] = {
+              point:    p,
+              diameter: d,
+              label:    this.show_label(body),
+            };
+          }
+
+          const d_sun = this.diameter('sun');
+          const p_sun = this.layout.scale_point([0, 0]);
+          p_sun[0] -= d_sun / 2;
+          p_sun[1] -= d_sun / 2;
+
+          bodies.sun = {
+            point:    p_sun,
+            diameter: d_sun,
+            label:    false,
           };
+
+          return bodies;
         }
-
-        const d_sun = this.diameter('sun');
-        const p_sun = this.layout.scale_point([0, 0]);
-        p_sun[0] -= d_sun / 2;
-        p_sun[1] -= d_sun / 2;
-        bodies.sun = {point: p_sun, diameter: d_sun, label: false};
-
-        return bodies;
       },
+    },
 
-      auto_focus() {
-        this.layout.set_fov_au(this.fov_au);
-        this.layout.set_center(this.center_point);
-      },
-
+    methods: {
       diameter(body) {
-        const d   = this.system.body(body).radius * 2;
-        const w   = this.layout.width_px * (d / (this.layout.fov_au * Physics.AU));
         const min = body == 'sun' ? 10 : this.system.central(body) != 'sun' ? 1 : 5;
-        return Math.max(min, Math.ceil(w));
+
+        if (this.layout) {
+          const d   = this.system.body(body).radius * 2;
+          const w   = this.layout.width_px * (d / (this.layout.fov_au * Physics.AU));
+          return Math.max(min, Math.ceil(w));
+        } else {
+          return min;
+        }
       },
 
       show_label(body) {
-        if (this.nolabels) {
-          return false;
-        }
-
         const central = this.system.central(body);
 
         if (this.focus == body && central == 'sun') {
@@ -666,26 +610,29 @@ define(function(require, exports, module) {
       },
     },
 
-    'template': `
-      <div v-resizable
-           id     = "navcomp-map-root"
-           class  = "plot-root border border-dark"
-           :style = "{'width': width + 'px', 'height': width + 'px'}">
+    template: `
+      <g>
+        <SvgPlotPoint
+          v-for="(info, body) of plot_points"
+          :key="body"
+          :layout="layout"
+          :label="info.label ? body : ''"
+          :diameter="info.diameter"
+          :pos="info.point"
+          :img="'img/' + body + '.png'" />
+      </g>
+    `,
+  });
 
+
+  Vue.component('NavPlot', {
+    props: ['transit', 'layout'],
+
+    template: `
+      <div id="navcomp-map-root" class="plot-root border border-dark">
         <SvgPlot v-if="layout" :layout="layout">
-          <SvgPath v-if="show_target_path && transit" :points="target_path"  color="#8B8B8B" />
-          <SvgPath v-if="show_transit_path && transit" :points="transit_path" color="#A01B1B" />
-
-          <SvgPlotPoint
-            v-if="show_bodies"
-            v-for="(info, body) of plot_points()"
-            :key="body"
-            :layout="layout"
-            :label="info.label ? body : ''"
-            :diameter="info.diameter"
-            :pos="info.point"
-            :img="'img/' + body + '.png'" />
-
+          <SvgDestinationPath v-if="transit" :layout="layout" :transit="transit" />
+          <SvgTransitPath     v-if="transit" :layout="layout" :transit="transit" />
           <slot name="svg" />
         </SvgPlot>
 

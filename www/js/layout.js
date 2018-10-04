@@ -3,18 +3,22 @@ define(function(require, exports, module) {
   const Hammer  = require('vendor/hammer.min');
   const util    = require('util');
 
+
   const Layout = class {
     static get SCALE_DEFAULT_AU() { return 2       }
     static get SCALE_MIN_AU()     { return 0.00001 };
     static get SCALE_MAX_AU()     { return 35      };
 
-    constructor() {
+    constructor(id, scaling) {
+      this.id       = id;
+      this.scaling  = scaling;
       this.fov_au   = Layout.SCALE_DEFAULT_AU;
       this.width_px = 0;
       this.init_x   = 0;
       this.init_y   = 0;
       this.offset_x = 0;
       this.offset_y = 0;
+
       this.update_width();
     }
 
@@ -28,10 +32,10 @@ define(function(require, exports, module) {
 
     get elt() {
       if (!this._elt) {
-        this._elt = document.getElementById('navcomp-map-root');
+        this._elt = document.getElementById(this.id);
 
         if (this._elt) {
-          console.debug('layout: navcomp-map-root found');
+          console.debug(`layout: ${this.id} found`);
           this.clear_mc();
           this.install_handlers();
         }
@@ -169,6 +173,10 @@ define(function(require, exports, module) {
         this.update_width();
       });
 
+      if (!this.scaling) {
+        return;
+      }
+
       this.elt.addEventListener('wheel', ev => {
         ev.stopPropagation();
 
@@ -224,5 +232,52 @@ define(function(require, exports, module) {
     }
   };
 
-  return Layout;
+
+  exports.Layout = Layout;
+
+
+  exports.LayoutMixin = {
+    data() {
+      return {
+        layout: null,
+        layout_scaling: false,
+        layout_target_id: null,
+      };
+    },
+
+    directives: {
+      layout: {
+        inserted(el, binding, vnode) {
+          vnode.context.layout = new Layout(
+            vnode.context.layout_target_id,
+            vnode.context.layout_scaling,
+          );
+
+          vnode.context.$emit('update:layout', vnode.context.layout);
+        }
+      },
+    },
+
+    watch: {
+      'layout.width_px':  function() { this.layout_set() },
+      'layout.fov_au':    function() { this.layout_set() },
+      'layout.offset_x':  function() { this.layout_set() },
+      'layout.offset_y': function() { this.layout_set() },
+    },
+
+    computed: {
+      layout_css_dimensions() {
+        if (this.layout) {
+          return {
+            width:  this.layout.width_px + 'px',
+            height: this.layout.width_px + 'px',
+          };
+        }
+      },
+    },
+
+    methods: {
+      layout_set() {},
+    },
+  };
 });

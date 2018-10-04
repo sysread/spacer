@@ -15,131 +15,97 @@ define(function(require, exports, module) {
 
   require('vendor/TweenMax.min');
 
-
+  /*
+   * NOTES:
+   *  layout_set now uses build_timeline to build the timeline object. that should
+   *  provide the basis for a mechanism to handle resizing the window during transit,
+   *  which currently moves the transit and target paths without changing the
+   *  timeline and its dimensions.
+   *
+   *  i also want a way to modify the fov and focus of the camera during transit.
+   */
   Vue.component('transit', {
+    mixins: [ Layout.LayoutMixin ],
+
     props: ['plan'],
 
     data() {
       return {
-        timeline:      null,
-        started:       false,
-        paused:        false,
-        stoppedBy:     {'pirate': 0},
-        encounter:     null,
-        daysLeft:      null,
-        layout:        null,
-        ship_inserted: false,
+        layout_target_id: 'transit-map-root',
+        timeline:  null,
+        started:   false,
+        paused:    false,
+        stoppedBy: {'pirate': 0},
+        encounter: null,
+        daysLeft:  null,
       };
     },
 
-    mounted() {
-      this.$nextTick(() => {
-        const t = 0.3;
-
-        const timeline = new TimelineLite({
-          onComplete: function() {console.log('complete')},
-        });
-
-        const bodies = this.bodies;
-
-        timeline.to(this.$refs.sun, 0, {
-          'x': this.layout.scale_x(0),
-          'y': this.layout.scale_y(0),
-        });
-
-        for (const body of bodies) {
-          const tl    = new TimelineLite;
-          const orbit = this.system.orbit_by_turns(body);
-
-          for (let i = 0; i < this.plan.turns; ++i) {
-            const [x, y] = this.layout.scale_point(orbit[i]);
-
-            tl.to(this.$refs[body], t, {
-              'x': x,
-              'y': x,
-              'ease': Power0.easeNone,
-            });
-          }
-
-          timeline.add(tl, 0);
-        }
-
-        const ship_tl = new TimelineLite;
-
-        for (let i = 0; i < this.plan.turns; ++i) {
-          const [x, y] = this.layout.scale_point(this.plan.path[i].position);
-          ship_tl.to(this.$refs.ship, t, {
-            'x': x,
-            'y': x,
-            'ease': Power0.easeNone,
-          });
-        }
-
-        timeline.add(ship_tl, 0);
-
-        this.timeline = timeline;
-        this.$nextTick(this.turn);
-      });
-    },
-
     computed: {
-      bodies() {
-        return this.system.bodies();
-      },
-
-      encounter_possible() {
-        return this.plan.velocity <= this.data.max_encounter_velocity;
-      },
-
-      ship_pos() {
-        if (this.layout) {
-          return this.layout.scale_point(this.plan.coords);
-        }
-
-        return [0, 0];
-      },
-
-      destination() {
-        return this.system.name(this.plan.dest);
-      },
-
-      compression() {
-        return Math.sin( Math.PI * Math.max(this.plan.currentTurn, 1) / this.plan.turns );
-      },
+      bodies()             { return this.system.bodies() },
+      encounter_possible() { return this.plan.velocity <= this.data.max_encounter_velocity },
+      destination()        { return this.system.name(this.plan.dest) },
+      compression()        { return Math.sin( Math.PI * Math.max(this.plan.currentTurn, 1) / this.plan.turns ) },
+      center_point()       { return Physics.centroid(...this.points_of_view) },
+      percent()            { return this.plan.pct_complete },
 
       nearest_body() {
+        const origin = this.plan.flip_point;
         const ranges = this.system.ranges(this.plan.end);
-        ranges['sun'] = Physics.distance(this.plan.coords, [0, 0]);
 
-        const nearest = Object.keys(ranges)
-          .filter(b => this.system.central(b) != this.plan.end)
+        // Add the sun
+        ranges['sun'] = Physics.distance(origin, [0, 0]);
+
+        // Filter out the origin and destination as well as their satellites
+        let candidates = Object.keys(ranges)
+          .filter(b => b != this.plan.dest)
+          .filter(b => b != this.plan.origin)
+          .filter(b => this.system.central(b) != this.plan.dest)
+          .filter(b => this.system.central(b) != this.plan.origin);
+
+        // If the origin is a moon, exclude moons of the same system
+        if (this.system.central(this.plan.origin) != 'sun') {
+          candidates = candidates
+            .filter(b => this.system.central(b) != this.system.central(this.plan.origin));
+        }
+
+        // If the destination is a moon, exclude moons of the same system
+        if (this.system.central(this.plan.dest) != 'sun') {
+          candidates = candidates
+            .filter(b => this.system.central(b) != this.system.central(this.plan.dest));
+        }
+
+        const nearest = candidates
           .reduce((a, b) => ranges[a] > ranges[b] ? b : a);
 
         return nearest;
       },
 
       points_of_view() {
-        const points = [this.plan.coords, this.plan.end];
+        // Start with the depart and arrival points as well as the next nearest
+        // body for perspective.
+        const points = [
+          this.plan.start,
+          this.plan.end,
+          this.system.position(this.nearest_body),
+        ];
 
-        if (this.system.central(this.plan.dest) == 'sun') {
-          points.push(this.system.position(this.plan.dest));
-        } else {
+        // Include the destination's final position at arrival
+        points.push(this.system.position(this.plan.dest));
+
+        // If the destination is a moon, also include its host
+        if (this.system.central(this.plan.dest) != 'sun') {
           points.push(this.system.position(this.system.central(this.plan.dest)));
         }
 
-        points.push(this.system.position(this.nearest_body));
         return points;
-      },
-
-      center_point() {
-        return Physics.centroid(...this.points_of_view);
       },
 
       fov() {
         const c = this.center_point;
 
         const d = Math.max(
-          Physics.distance(this.plan.coords, c),
+          Physics.distance(this.plan.start, c),
           Physics.distance(this.plan.end, c),
           Physics.distance(this.system.position(this.nearest_body), c),
         );
@@ -153,13 +119,83 @@ define(function(require, exports, module) {
         const intvl = 300 - Math.ceil(300 * this.compression);
         return util.clamp(intvl, 100, 300);
       },
-
-      percent() {
-        return this.plan.pct_complete;
-      },
     },
 
     methods: {
+      layout_set() {
+        this.$nextTick(() => {
+          if (this.timeline) {
+            this.timeline.kill();
+            this.timeline = null;
+          }
+
+          this.timeline = this.build_timeline();
+        });
+      },
+
+      build_timeline() {
+        this.layout.set_center(this.center_point);
+        this.layout.set_fov_au(this.fov);
+
+        const t = 0.3;
+
+        const timeline = new TimelineLite({
+          onComplete: () => {
+            $('#spacer').data({data: null});
+            this.game.transit(this.plan.dest);
+            this.game.open('summary');
+          },
+        });
+
+        // Add the sun
+        const [sun_x, sun_y] = this.layout.scale_point([0, 0]);
+        timeline.to(this.$refs.sun, 0, {x: sun_x, y: sun_y});
+
+        // Add the planets
+        const bodies = this.bodies;
+
+        for (const body of bodies) {
+          const tl    = new TimelineLite;
+          const orbit = this.system.orbit_by_turns(body);
+
+          for (let i = 0; i < this.plan.left; ++i) {
+            const [x, y] = this.layout.scale_point(orbit[i]);
+            tl.to(this.$refs[body], t, {x: x, y: y, ease: Power0.easeNone});
+          }
+
+          timeline.add(tl, 0);
+        }
+
+        // Ship animation
+        const ship_tl = new TimelineLite;
+
+        for (let i = this.plan.currentTurn; i < this.plan.turns; ++i) {
+          const [x, y] = this.layout.scale_point(this.plan.path[i].position);
+
+          ship_tl.to(this.$refs.ship, t, {x: x, y: y, ease: Power0.easeNone});
+
+          ship_tl.call(() => {
+            if (this.paused || this.encounter) {
+              if (!timeline.paused()) {
+                timeline.pause();
+              }
+
+              return;
+            }
+
+            if (timeline.paused()) {
+              timeline.resume();
+            }
+
+            this.turn();
+          });
+        }
+
+        timeline.add(ship_tl, 0);
+
+        return timeline;
+      },
+
       diameter(body) {
         const d   = this.system.body(body).radius * 2;
         const w   = this.layout.width_px * (d / (this.layout.fov_au * Physics.AU));
@@ -167,75 +203,36 @@ define(function(require, exports, module) {
         return Math.max(min, Math.ceil(w));
       },
 
-      set_position(inserted) {
-return;
-        if (this.$refs.ship && this.layout) {
-          const time = this.ship_inserted ? 0.5 : 0;
-
-          TweenLite.to(this.$refs.ship, time, {
-            'x': this.ship_pos[0],
-            'y': this.ship_pos[1],
-            'ease': Power0.easeNone,
-          }).play();
-
-          if (!this.ship_inserted) {
-            this.ship_inserted = true;
-          }
-        }
-      },
-
       pause() {
         this.paused = true;
-        this.$nextTick(() => {this.timeline.pause()});
+        this.$nextTick(() => this.timeline.pause());
       },
 
       resume() {
         this.paused = false;
-        this.$nextTick(this.turn);
-        this.$nextTick(() => {this.timeline.resume()});
+        this.$nextTick(() => this.timeline.resume());
       },
 
       turn() {
-        if (this.paused) {
-          return;
-        }
-
-        if (!this.started) {
-          this.timeline.play();
-          this.started = true;
-        }
-
         this.daysLeft = Math.floor(this.plan.left * this.data.hours_per_turn / 24);
         this.distance = util.R(this.plan.auRemaining(), 2);
 
-        if (this.plan.left > 0) {
-          if (this.game.player.ship.isDestroyed) {
-            this.game.open('newgame');
-          }
-          if (this.encounter) {
-            return;
-          }
-          else if (this.inspectionChance()) {
-            return;
-          }
-          else if (this.piracyChance()) {
-            return;
-          }
-          else {
-            this.game.turn(1, true);
-            this.plan.turn(1);
-            this.game.player.ship.burn(this.plan.accel);
-            this.set_position();
-
-            if (this.paused) {
-              return;
-            }
-          }
+        if (this.game.player.ship.isDestroyed) {
+          this.game.open('newgame');
+        }
+        if (this.encounter) {
+          return;
+        }
+        else if (this.inspectionChance()) {
+          return;
+        }
+        else if (this.piracyChance()) {
+          return;
         }
         else {
-          $('#spacer').data({data: null});
-          this.game.transit(this.plan.dest);
-          this.game.open('summary');
+          this.game.turn(1, true);
+          this.plan.turn(1);
+          this.game.player.ship.burn(this.plan.accel);
         }
       },
 
@@ -340,22 +337,24 @@ return;
           <span class="col-4 text-right">{{plan.velocity/1000|R|csn|unit('km/s')}}</span>
         </div>
 
-        <NavPlot v-show="!encounter"
-                 :layout.sync="layout"
-                 :center="center_point"
-                 :fov="fov"
-                 :focus="plan.dest"
-                 :transit="plan">
+        <div v-layout
+             v-show="!encounter"
+             id="transit-map-root"
+             :style="layout_css_dimensions"
+             class="plot-root border border-dark">
 
-          <g slot="svg">
-            <image v-if="layout"
-                   ref="sun"
+          <progress-bar width=100 :percent="percent" class="d-inline" />
+
+          <SvgPlot v-if="layout" :layout="layout">
+            <!--<SvgDestinationPath :layout="layout" :transit="plan" />-->
+            <!--<SvgTransitPath     :layout="layout" :transit="plan" />-->
+
+            <image ref="sun"
                    xlink:href="img/sun.png"
                    :height="diameter('sun')"
                    :width="diameter('sun')" />
 
-            <image v-if="layout"
-                   v-for="body of bodies"
+            <image v-for="body of bodies"
                    :key="body"
                    :ref="body"
                    :xlink:href="'img/' + body + '.png'"
@@ -363,16 +362,14 @@ return;
                    :width="diameter(body)" />
 
             <text ref="ship"
-                  v-if="layout"
                   text-anchor="middle"
                   alignment-baseline="middle"
                   style="fill:yellow; font:16px monospace;">
               &tridot;
             </text>
-          </g>
+          </SvgPlot>
 
-          <progress-bar width=100 :percent="percent" class="d-inline" @ready="turn" />
-        </NavPlot>
+        </div>
 
         <transit-inspection
             v-if="encounter && encounter.type == 'inspection'"

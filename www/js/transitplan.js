@@ -18,20 +18,21 @@ define(function(require, exports, module) {
       this.velocity = 0;                  // current ship velocity; updated by turn()
     }
 
-    get turns()        { return this.course.turns                           }// turns
-    get accel()        { return this.course.accel.length                    }// m/s/s
-    get accel_g()      { return this.course.accel.length / Physics.G        }
-    get path()         { return this.course.path()                          }
-    get maxVelocity()  { return this.course.maxVelocity()                   }
-    get hours()        { return this.turns * data.hours_per_turn            }// hours
-    get currentTurn()  { return this.turns - this.left                      }
-    get turnpct()      { return 100 / this.turns                            }// percent of trip per turn
-    get km()           { return this.dist / 1000                            }// distance in kilometers
-    get au()           { return this.dist / Physics.AU                      }// distance in AU
-    get is_complete()  { return this.left === 0                             }
-    get pct_complete() { return 100 - (this.left * this.turnpct) }
-    get segment()      { return Physics.distance(this.start, this.end)      }
-    get segment_au()   { return this.segment / Physics.AU                   }
+    get turns()        { return this.course.turns                              }// turns
+    get accel()        { return this.course.accel.length                       }// m/s/s
+    get accel_g()      { return this.course.accel.length / Physics.G           }
+    get path()         { return this.course.path()                             }
+    get maxVelocity()  { return this.course.maxVelocity()                      }
+    get hours()        { return this.turns * data.hours_per_turn               }// hours
+    get currentTurn()  { return this.turns - this.left                         }
+    get turnpct()      { return 100 / this.turns                               }// percent of trip per turn
+    get km()           { return this.dist / 1000                               }// distance in kilometers
+    get au()           { return this.dist / Physics.AU                         }// distance in AU
+    get is_complete()  { return this.left === 0                                }
+    get pct_complete() { return 100 - (this.left * this.turnpct)               }
+    get segment()      { return Physics.distance(this.start, this.end)         }
+    get segment_au()   { return this.segment / Physics.AU                      }
+    get flip_point()   { return this.path[Math.floor(this.turns / 2)].position }
 
     get days_left() {
       return Math.ceil(this.left * data.hours_per_turn / 24);

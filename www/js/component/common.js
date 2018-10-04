@@ -30,16 +30,30 @@ define(function(require, exports, module) {
 
 
   Vue.component('progress-bar', {
-    props: ['percent', 'width'],
+    props: ['percent', 'width', 'frame_rate'],
+
+    data() {
+      return {
+        animation: null,
+      };
+    },
 
     watch: {
       percent() {
-        TweenLite.to(this.$el, 0.5, {
+        if (this.animation) {
+          this.animation.kill(null, this.$el);
+        }
+
+        this.animation = TweenLite.to(this.$el, this.rate, {
           'value': this.percent,
           'ease': Sine.easeInOut,
           'onComplete': () => { this.$emit('ready') },
         }).play();
       },
+    },
+
+    computed: {
+      rate() { return this.frame_rate === undefined ? 0.2 : this.frame_rate }
     },
 
     template: `

@@ -61,6 +61,7 @@ require(
           game.player.ship.damage.hull = game.player.ship.damage.armor = 0;
           game.player.ship.fuel = game.player.ship.tank;
           game.save_game();
+          game.refresh();
         },
       },
       template: `

@@ -130,6 +130,10 @@ define(function(require, exports, module) {
     }
 
     position(name, date) {
+      if (name == 'sun') {
+        return [0, 0, 0];
+      }
+
       date = date || this.system.time;
       const key = date.valueOf();
 
