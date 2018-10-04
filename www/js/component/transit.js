@@ -17,12 +17,7 @@ define(function(require, exports, module) {
 
   /*
    * NOTES:
-   *  layout_set now uses build_timeline to build the timeline object. that should
-   *  provide the basis for a mechanism to handle resizing the window during transit,
-   *  which currently moves the transit and target paths without changing the
-   *  timeline and its dimensions.
-   *
-   *  i also want a way to modify the fov and focus of the camera during transit.
+   *  need a way to modify the fov and focus of the camera during transit.
    */
   Vue.component('transit', {
     mixins: [ Layout.LayoutMixin ],
@@ -48,6 +43,22 @@ define(function(require, exports, module) {
       compression()        { return Math.sin( Math.PI * Math.max(this.plan.currentTurn, 1) / this.plan.turns ) },
       center_point()       { return Physics.centroid(...this.points_of_view) },
       percent()            { return this.plan.pct_complete },
+
+      bodies() {
+        // Build list of planetary bodies to show
+        const bodies = {};
+        for (const body of this.system.bodies()) {
+          const central = this.system.central(body);
+
+          if (central != 'sun') {
+            bodies[central] = true;
+          }
+
+          bodies[body] = true;
+        }
+
+        return Object.keys(bodies);
+      },
 
       nearest_body() {
         const origin = this.plan.flip_point;
@@ -152,9 +163,7 @@ define(function(require, exports, module) {
         timeline.to(this.$refs.sun, 0, {x: sun_x, y: sun_y});
 
         // Add the planets
-        const bodies = this.bodies;
-
-        for (const body of bodies) {
+        for (const body of this.bodies) {
           const tl    = new TimelineLite;
           const orbit = this.system.orbit_by_turns(body);
 
@@ -203,6 +212,19 @@ define(function(require, exports, module) {
         return Math.max(min, Math.ceil(w));
       },
 
+      show_label(body) {
+        const central = this.system.central(body);
+
+        if (this.plan.dest == body && central == 'sun') {
+          return true;
+        }
+
+        const position = this.system.position(body);
+        const center   = central == 'sun' ? [0, 0] : this.system.position(central);
+        const distance = Physics.distance(position, center) / Physics.AU;
+        return distance > this.layout.fov_au / 10;
+      },
+
       pause() {
         this.paused = true;
         this.$nextTick(() => this.timeline.pause());
@@ -238,7 +260,7 @@ define(function(require, exports, module) {
 
       complete_encounter() {
         this.encounter = null;
-        this.turn();
+        this.resume();
       },
 
       nearby() {
@@ -346,25 +368,28 @@ define(function(require, exports, module) {
           <progress-bar width=100 :percent="percent" class="d-inline" />
 
           <SvgPlot v-if="layout" :layout="layout">
-            <!--<SvgDestinationPath :layout="layout" :transit="plan" />-->
-            <!--<SvgTransitPath     :layout="layout" :transit="plan" />-->
-
             <image ref="sun"
                    xlink:href="img/sun.png"
                    :height="diameter('sun')"
                    :width="diameter('sun')" />
 
-            <image v-for="body of bodies"
-                   :key="body"
-                   :ref="body"
-                   :xlink:href="'img/' + body + '.png'"
-                   :height="diameter(body)"
-                   :width="diameter(body)" />
+            <g v-for="body of bodies" :key="body" :ref="body">
+              <image :xlink:href="'img/' + body + '.png'"
+                     :height="diameter(body)"
+                     :width="diameter(body)" />
+
+              <text v-show="show_label(body)"
+                    style="font:12px monospace; fill:#EEEEEE;"
+                    :y="diameter(body)/2"
+                    x="10">
+                {{body|caps}}
+              </text>
+            </g>
 
             <text ref="ship"
                   text-anchor="middle"
                   alignment-baseline="middle"
-                  style="fill:yellow; font:16px monospace;">
+                  style="fill:yellow; font:12px monospace;">
               &tridot;
             </text>
           </SvgPlot>
