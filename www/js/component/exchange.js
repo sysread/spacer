@@ -22,18 +22,14 @@ define(function(require, exports, module) {
      */
     mounted() {
       this.monitor = window.setInterval(() => {
-        this.setValue(this.$refs.slider.value);
-      }, 100);
+        if (this.$refs.slider.value != this.value) {
+          this.setValue(this.$refs.slider.value);
+        }
+      }, 350);
     },
 
     beforeDestroy() {
       window.clearTimeout(this.monitor);
-    },
-
-    watch: {
-      slider_value() {
-        this.setValue(this.slider_value);
-      },
     },
 
     computed: {
