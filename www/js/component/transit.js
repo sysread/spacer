@@ -261,7 +261,10 @@ define(function(require, exports, module) {
 
       complete_encounter() {
         this.encounter = null;
-        this.resume();
+
+        if (!this.paused) {
+          this.resume();
+        }
       },
 
       nearby() {
