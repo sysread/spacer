@@ -12,7 +12,6 @@ define(function(require, exports, module) {
     data() {
       return {
         timer: null,
-        slider_value: this.value,
         monitor: null,
       };
     },
@@ -24,8 +23,8 @@ define(function(require, exports, module) {
     mounted() {
       this.monitor = window.setInterval(() => {
         const value = this.$refs.slider.value;
-        if (value != this.slider_value) {
-          this.slider_value = value;
+        if (value != this.value) {
+          this.setValue(parseFloat(value));;
         }
       }, 100);
     },
