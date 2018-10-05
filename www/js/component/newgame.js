@@ -30,7 +30,6 @@ define(function(require, exports, module) {
       startTurns:  function() { return this.data.initial_days * 24 / this.data.hours_per_turn },
       step:        function() { return Math.ceil(this.startTurns / 50) },
       percent:     function() { return Math.min(100, Math.floor((this.turnsComplete / this.startTurns) * 100)) },
-      display:     function() { return this.percent + '%' },
     },
 
     methods: {

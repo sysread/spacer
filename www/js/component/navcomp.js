@@ -12,8 +12,6 @@ define(function(require, exports, module) {
   require('component/commerce');
   require('component/summary');
 
-  require('vendor/TweenMax.min');
-
 
   Vue.component('NavComp', {
     mixins: [ Layout.LayoutMixin ],

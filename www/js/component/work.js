@@ -12,12 +12,13 @@ define(function(require, exports, module) {
   Vue.component('work', {
     data: function() {
       return {
-        days:       1,
-        task:       null,
-        result:     null,
-        hitQuota:   false,
-        isReady:    false,
-        isFinished: false,
+        days:        1,
+        task:        null,
+        result:      null,
+        hitQuota:    false,
+        isReady:     false,
+        isFinished:  false,
+        turnsWorked: 0,
       };
     },
     computed: {
@@ -28,6 +29,8 @@ define(function(require, exports, module) {
       payRate:    function() { if (this.task) return this.getPayRate(this.task) },
       pay:        function() { if (this.task) return this.payRate * this.days },
       turns:      function() { return this.days * (24 / this.data.hours_per_turn) },
+      percent:    function() { return Math.min(100, Math.ceil(this.turnsWorked / this.turns * 100)) },
+      timeSpent:  function() { return Math.floor(this.turnsWorked / (24 / this.data.hours_per_turn)) },
     },
     methods: {
       getPayRate: function(task) {
@@ -40,12 +43,13 @@ define(function(require, exports, module) {
       },
 
       clearTask: function() {
-        this.days       = 1;
-        this.task       = null;
-        this.result     = null;
-        this.hitQuota   = false;
-        this.isReady    = false;
-        this.isFinished = false;
+        this.days        = 1;
+        this.task        = null;
+        this.result      = null;
+        this.hitQuota    = false;
+        this.isReady     = false;
+        this.isFinished  = false;
+        this.turnsWorked = 0;
       },
 
       setTask: function(task) {
@@ -57,19 +61,26 @@ define(function(require, exports, module) {
       performWork: function() {
         if (this.isReady && !this.isFinished) {
           this.isReady = false;
-
           const reward = this.planet.work(this.player, this.task, this.days);
-          this.player.credit(reward.pay);
           this.hitQuota = Math.floor(reward.items.sum()) > 0 ? true : false;
-          this.result = reward.items;
-          this.isFinished = true;
 
-          // Working increases standing no higher than "Respected"
-          if (!this.player.hasStanding('Admired')) {
-            this.player.incStanding(this.planet.faction.abbrev, 1);
-          }
+          let timer; timer = window.setInterval(() => {
+            ++this.turnsWorked;
 
-          this.game.turn(this.turns);
+            if (this.turnsWorked == this.turns) {
+              window.clearTimeout(timer);
+              this.isFinished = true;
+              this.player.credit(reward.pay);
+              this.result = reward.items;
+
+              // Working increases standing no higher than "Respected"
+              if (!this.player.hasStanding('Admired')) {
+                this.player.incStanding(this.planet.faction.abbrev, 1);
+              }
+
+              this.game.turn(this.turns);
+            }
+          }, 500);
         }
       },
 
@@ -100,7 +111,7 @@ define(function(require, exports, module) {
     </btn>
   </card-text>
 
-  <modal v-if="task" @close="completeTask()" :xclose="isReady" :title="task.name" footer=1 close="Close">
+  <modal v-if="task" @close="completeTask()" :xclose="isReady" :title="task.name" footer=1 :static="isReady">
     <div v-if="isReady">
       <p><i>{{task.desc}}</i></p>
       <p>Working at a daily wage of <gold>{{payRate}}</gold> credits for <gold>{{days}}</gold> days will earn <gold>{{pay}}</gold> credits.</p>
@@ -114,6 +125,12 @@ define(function(require, exports, module) {
 
     <div v-else-if="isFinished && !hitQuota">
       <p>We appreciate you helping out. No luck on beating the quota, but you did earn an honest paycheck to the tune of {{pay}} credits.</p>
+    </div>
+
+    <div v-else-if="!isFinished && !isReady">
+      <progress-bar :percent="percent" width=100 hide_pct=1>
+        {{timeSpent}} days
+      </progress-bar>
     </div>
 
     <btn slot="footer" v-if="isReady" @click="performWork">Get to work</btn>
