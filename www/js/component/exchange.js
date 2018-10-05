@@ -25,7 +25,7 @@ define(function(require, exports, module) {
         if (this.$refs.slider.value != this.value) {
           this.setValue(this.$refs.slider.value);
         }
-      }, 350);
+      }, 100);
     },
 
     beforeDestroy() {

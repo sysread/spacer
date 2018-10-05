@@ -31,7 +31,7 @@ define(function(require, exports, module) {
     },
     template: `
 <card title="Commerce">
-  <card-text>
+  <card-text v-show="!trade">
     There are endless warehouses along the docks. As you approach the resource
     exchange, you are approached by several warehouse managers and sales people
     eager to do business with you. Moving here and there among the throng you
@@ -39,7 +39,7 @@ define(function(require, exports, module) {
     contraband.
   </card-text>
 
-  <div class="container container-fluid">
+  <div class="container" v-show="!trade">
     <row v-for="item of resources" :key="item" class="p-1 rounded" :style="{'background-color': hold(item) > 0 ? '#400A0A' : '#000000'}">   <!-- :class="{'text-muted':dock(item) == 0 && hold(item) == 0}">-->
       <cell size=4 brkpt="sm" y=0 class="px-0 my-1">
         <btn @click="trade=item" block=1 :class="{'btn-secondary': dock(item) == 0 && hold(item) == 0, 'text-warning': is_contraband(item)}">
@@ -76,6 +76,8 @@ define(function(require, exports, module) {
         tx_hold:    null,
         tx_credits: null,
         tx_cargo:   null,
+        busted:     false,
+        standing:   false,
       };
     },
     computed: {
@@ -171,11 +173,7 @@ define(function(require, exports, module) {
             this.planet.store.dec(this.item, this.count);
           }
 
-          alert(
-              `As you complete your exchange, ${this.faction.abbrev} agents in powered armor smash their way into the room.`
-            + `A ${this.agentGender()} with a corporal's stripes informs you that your cargo has been confiscated and you have been fined ${this.fine()} credits.`,
-            + `Your reputation with this faction has decreased by ${this.contraband}.`
-          );
+          this.busted = true;
         }
         else {
           if (this.count > 0) {
@@ -183,48 +181,71 @@ define(function(require, exports, module) {
           }
           else {
             const [bought, price, standing] = this.game.here.sell(this.item, -this.count, this.player);
-            if (standing > 1)
-              alert(`You ended the local supply shortage of ${this.item}! Your standing with this faction has increased.`);
+            if (standing > 1) {
+              this.standing = true;
+            }
           }
         }
 
         this.game.save_game();
         this.game.refresh();
+
+        if (!this.busted && !this.standing) {
+          this.close_trade();
+        }
+      },
+
+      close_trade: function() {
+        this.busted = false;
+        this.standing = false;
         this.$emit('update:item', null);
       },
     },
     template: `
 <div>
-  <modal @close="$emit('update:item', null)" close="Cancel" :title="'Exchange of ' + this.item">
-    <button @click="report=true" slot="header" type="button" class="btn btn-dark">Report</button>
+  <h3>Exchange of {{item}}</h3>
 
-    <p v-if="contraband" class="text-warning font-italic">
-      Trade in contraband goods may result in fines and loss of standing.
-    </p>
+  <p v-if="contraband" class="text-warning font-italic">
+    Trade in contraband goods may result in fines and loss of standing.
+  </p>
 
-    <row>
-      <cell size="3" class="font-weight-bold">Credits</cell><cell size="3">{{credits|csn}}</cell>
-      <cell size="3" class="font-weight-bold">Cargo</cell><cell size="3">{{cargo|csn}}</cell>
-    </row>
+  <row>
+    <cell size="3" class="font-weight-bold">Credits</cell><cell size="3">{{credits|csn}}</cell>
+    <cell size="3" class="font-weight-bold">Cargo</cell><cell size="3">{{cargo|csn}}</cell>
+  </row>
 
-    <row>
-      <cell size="3" class="font-weight-bold">Buy</cell><cell size="3">{{buy|csn}}</cell>
-      <cell size="3" class="font-weight-bold">Sell</cell><cell size="3">{{sell|csn}}</cell>
-    </row>
+  <row>
+    <cell size="3" class="font-weight-bold">Buy</cell><cell size="3">{{buy|csn}}</cell>
+    <cell size="3" class="font-weight-bold">Sell</cell><cell size="3">{{sell|csn}}</cell>
+  </row>
 
-    <row>
-      <cell size="3" class="font-weight-bold">Dock</cell><cell size="3" class="text-warning">{{dock|csn}}</cell>
-      <cell size="3" class="font-weight-bold">Hold</cell><cell size="3" class="text-success">{{hold|csn}}</cell>
-    </row>
+  <row>
+    <cell size="3" class="font-weight-bold">Dock</cell><cell size="3" class="text-warning">{{dock|csn}}</cell>
+    <cell size="3" class="font-weight-bold">Hold</cell><cell size="3" class="text-success">{{hold|csn}}</cell>
+  </row>
 
-    <slider minmax=true :value.sync="tx_hold" min=0 :max="max" step=1 @update:value="updateState" />
+  <slider minmax=true :value.sync="tx_hold" min=0 :max="max" step=1 @update:value="updateState" class="my-3" />
 
-    <btn slot="footer" @click="complete" close=1>Complete transaction</btn>
-  </modal>
+  <div class="button-group row justify-content-end">
+    <btn @click="complete" :disabled="count == 0">Complete transaction</btn>
+    <btn @click="report=true">Market report</btn>
+    <btn @click="close_trade">Done</btn>
+  </div>
 
   <modal v-if="report" @close="report=false" close="Close" xclose=true :title="'System market report for ' + item">
     <resource-report :item="item" />
   </modal>
+
+  <ok v-if="busted" @ok="close_trade">
+    As you complete your exchange, {{faction.abbrev}} agents in powered armor smash their way into the room.
+    A {{agentGender()}} with a corporal's stripes informs you that your cargo has been confiscated and you have been fined {{fine()}}) credits.
+    Your reputation with this faction has decreased by {{contraband}}.
+  </ok>
+
+  <ok v-if="standing" @ok="close_trade">
+    You ended the local supply shortage of {{item}}!
+    Your standing with the local faction has increased.
+  </ok>
 </div>
     `,
   });
