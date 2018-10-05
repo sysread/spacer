@@ -10,14 +10,14 @@ define(function(require, exports, module) {
     static get SCALE_MAX_AU()     { return 35      };
 
     constructor(id, scaling) {
-      this.id       = id;
-      this.scaling  = scaling;
-      this.fov_au   = Layout.SCALE_DEFAULT_AU;
-      this.width_px = 0;
-      this.init_x   = 0;
-      this.init_y   = 0;
-      this.offset_x = 0;
-      this.offset_y = 0;
+      this.id        = id;
+      this.scaling   = scaling;
+      this.fov_au    = Layout.SCALE_DEFAULT_AU;
+      this.width_px  = 0;
+      this.init_x    = 0;
+      this.init_y    = 0;
+      this.offset_x  = 0;
+      this.offset_y  = 0;
     }
 
     get zero() {
@@ -33,7 +33,7 @@ define(function(require, exports, module) {
         this._elt = document.getElementById(this.id);
 
         if (this._elt) {
-          console.debug(`layout: ${this.id} found`);
+          console.debug(`layout: id ${this.id} found`);
           this.clear_mc();
           this.install_handlers();
         }
@@ -237,9 +237,9 @@ define(function(require, exports, module) {
   exports.LayoutMixin = {
     data() {
       return {
-        layout: null,
-        layout_scaling: false,
-        layout_target_id: null,
+        layout: null,           // the layout object
+        layout_scaling: false,  // whether to inject handlers for pan & zoom
+        layout_target_id: null, // element to control size of
       };
     },
 

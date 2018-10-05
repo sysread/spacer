@@ -26,7 +26,7 @@ define(function(require, exports, module) {
 
     data() {
       return {
-        layout_target_id: 'transit-map-root',
+        layout_target_id: 'transit-plot-root',
         timeline:  null,
         started:   false,
         paused:    false,
@@ -43,6 +43,7 @@ define(function(require, exports, module) {
       compression()        { return Math.sin( Math.PI * Math.max(this.plan.currentTurn, 1) / this.plan.turns ) },
       center_point()       { return Physics.centroid(...this.points_of_view) },
       percent()            { return this.plan.pct_complete },
+      show_plot()          { return this.layout && this.layout.width_px >= 300 },
 
       bodies() {
         // Build list of planetary bodies to show
@@ -345,57 +346,42 @@ define(function(require, exports, module) {
 
     template: `
       <card nopad=1>
-        <card-header class="px-0">
-          <h3 class="p-2">
-            Transiting to {{plan.dest|caps}}
-            <btn v-if="paused" @click="resume" right=1 class="mx-1">Resume</btn>
-            <btn v-else @click="pause" right=1 class="mx-1">Pause</btn>
-          </h3>
+        <card-header class="px-0 py-1">
+          <h4 class="p-1">
+            Transit to {{plan.dest|caps}}
+            <span v-if="paused" @click="resume" class="mx-1 float-right">&#9199;</span>
+            <span v-else        @click="pause"  class="mx-1 float-right">&#9208;</span>
+          </h4>
         </card-header>
 
-        <table class="table table-sm" :style="{width: (layout ? layout.width_px : 0) + 'px'}">
+        <table class="table table-sm" :style="{width: show_plot ? layout.width_px + 'px' : '100%'}">
           <tr>
             <td class="text-left">{{plan.days_left|unit('days')}}</td>
-            <td class="text-right">{{plan.velocity/1000|R|csn|unit('km/s')}}</td>
-            <td class="text-center">{{plan.auRemaining()|R(2)|unit('AU')}}</td>
+            <td class="text-center">{{plan.velocity/1000|R|csn|unit('km/s')}}</td>
+            <td class="text-right">{{plan.auRemaining()|R(2)|unit('AU')}}</td>
           </tr>
         </table>
 
-        <div v-layout
-             v-show="!encounter"
-             id="transit-map-root"
-             :style="layout_css_dimensions"
-             class="plot-root border border-dark">
+        <progress-bar v-if="!show_plot" class="w-100 d-block bg-dark" :percent="percent" />
 
+        <div v-layout v-show="!encounter && show_plot" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
           <progress-bar width=100 :percent="percent" class="d-inline" />
 
           <SvgPlot v-if="layout" :layout="layout">
-            <image ref="sun"
-                   xlink:href="img/sun.png"
-                   :height="diameter('sun')"
-                   :width="diameter('sun')" />
+            <image ref="sun" xlink:href="img/sun.png" :height="diameter('sun')" :width="diameter('sun')" />
 
             <g v-for="body of bodies" :key="body" :ref="body">
-              <image :xlink:href="'img/' + body + '.png'"
-                     :height="diameter(body)"
-                     :width="diameter(body)" />
+              <image :xlink:href="'img/' + body + '.png'" :height="diameter(body)" :width="diameter(body)" />
 
-              <text v-show="show_label(body)"
-                    style="font:12px monospace; fill:#EEEEEE;"
-                    :y="diameter(body)/2"
-                    x="10">
+              <text v-show="show_label(body)" style="font:12px monospace; fill:#EEEEEE;" :y="diameter(body)/2" x="10">
                 {{body|caps}}
               </text>
             </g>
 
-            <text ref="ship"
-                  text-anchor="middle"
-                  alignment-baseline="middle"
-                  style="fill:yellow; font:12px monospace;">
+            <text ref="ship" text-anchor="middle" alignment-baseline="middle" style="fill:yellow; font:12px monospace;">
               &tridot;
             </text>
           </SvgPlot>
-
         </div>
 
         <transit-inspection
