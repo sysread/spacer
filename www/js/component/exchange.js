@@ -22,10 +22,7 @@ define(function(require, exports, module) {
      */
     mounted() {
       this.monitor = window.setInterval(() => {
-        const value = this.$refs.slider.value;
-        if (value != this.value) {
-          this.setValue(parseFloat(value));;
-        }
+        this.setValue(this.$refs.slider.value);
       }, 100);
     },
 
@@ -35,15 +32,14 @@ define(function(require, exports, module) {
 
     watch: {
       slider_value() {
-        this.$emit('update:value', this.slider_value);
-        this.$emit('change', this.slider_value);
+        this.setValue(this.slider_value);
       },
     },
 
     computed: {
       minValue()  { return parseFloat(`${this.min}`)  },
       maxValue()  { return parseFloat(`${this.max}`)  },
-      stepValue() { return parseFloat(`${this.step}`) },
+      stepValue() { return parseFloat(`${this.step}`) || 1 },
     },
 
     methods: {
@@ -51,9 +47,10 @@ define(function(require, exports, module) {
       dec()      { this.setValue(Math.max(this.minValue, this.value - this.stepValue)) },
       setMin()   { this.setValue(this.minValue) },
       setMax()   { this.setValue(this.maxValue) },
-      update(ev) { this.setValue(parseFloat(ev.target.value)) },
+      update(ev) { this.setValue(ev.target.value) },
 
       setValue(value) {
+        value = parseFloat(`${value}`);
         this.$emit('update:value', value);
         this.$emit('change', value);
       },
