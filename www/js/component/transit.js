@@ -7,6 +7,8 @@ define(function(require, exports, module) {
   const Layout  = require('layout');
   const model   = require('model');
 
+  const intvl   = 0.3;
+
   require('component/global');
   require('component/common');
   require('component/card');
@@ -126,11 +128,6 @@ define(function(require, exports, module) {
 
         return Math.min(fov, Physics.AU / 4);
       },
-
-      interval() {
-        const intvl = 300 - Math.ceil(300 * this.compression);
-        return util.clamp(intvl, 100, 300);
-      },
     },
 
     methods: {
@@ -148,8 +145,6 @@ define(function(require, exports, module) {
       build_timeline() {
         this.layout.set_center(this.center_point);
         this.layout.set_fov_au(this.fov);
-
-        const t = 0.3;
 
         const timeline = new TimelineLite({
           onComplete: () => {
@@ -170,7 +165,7 @@ define(function(require, exports, module) {
 
           for (let i = 0; i < this.plan.left; ++i) {
             const [x, y] = this.layout.scale_point(orbit[i]);
-            tl.to(this.$refs[body], t, {x: x, y: y, ease: Power0.easeNone});
+            tl.to(this.$refs[body], intvl, {x: x, y: y, ease: Power0.easeNone});
           }
 
           timeline.add(tl, 0);
@@ -182,7 +177,7 @@ define(function(require, exports, module) {
         for (let i = this.plan.currentTurn; i < this.plan.turns; ++i) {
           const [x, y] = this.layout.scale_point(this.plan.path[i].position);
 
-          ship_tl.to(this.$refs.ship, t, {x: x, y: y, ease: Power0.easeNone});
+          ship_tl.to(this.$refs.ship, intvl, {x: x, y: y, ease: Power0.easeNone});
 
           ship_tl.call(() => {
             if (this.paused || this.encounter) {
@@ -365,10 +360,12 @@ define(function(require, exports, module) {
           </tr>
         </table>
 
-        <div v-layout v-show="!encounter" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
+        <progress-bar width=100 :percent="percent" v-if="!show_plot" />
+
+        <div v-layout v-show="!encounter && show_plot" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
           <progress-bar width=100 :percent="percent" class="d-inline" />
 
-          <SvgPlot v-if="layout" :layout="layout" v-show="show_plot">
+          <SvgPlot v-if="layout" :layout="layout">
             <image ref="sun" xlink:href="img/sun.png" :height="diameter('sun')" :width="diameter('sun')" />
 
             <SvgDestinationPath :layout="layout" :transit="plan" />
