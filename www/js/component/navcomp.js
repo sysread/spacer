@@ -492,11 +492,10 @@ define(function(require, exports, module) {
     computed: {
       path() {
         if (this.transit) {
-          const path = this.layout.scale_path(
-            this.transit.path
-              .slice(this.transit.currentTurn, this.transit.left + 1)
-              .map(p => p.position)
-          );
+          const path = [];
+          for (let i = this.transit.currentTurn; i < this.transit.turns; ++i) {
+            path.push(this.layout.scale_point(this.transit.path[i].position));
+          }
 
           return path;
         }

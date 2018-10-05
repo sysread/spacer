@@ -354,7 +354,7 @@ define(function(require, exports, module) {
           </h4>
         </card-header>
 
-        <table class="table table-sm" :style="{width: show_plot ? layout.width_px + 'px' : '100%'}">
+        <table class="table table-sm m-0" :style="{width: show_plot ? layout.width_px + 'px' : '100%'}">
           <tr>
             <td class="text-left">{{plan.days_left|unit('days')}}</td>
             <td class="text-center">{{plan.velocity/1000|R|csn|unit('km/s')}}</td>
@@ -362,17 +362,17 @@ define(function(require, exports, module) {
           </tr>
         </table>
 
-        <progress-bar v-if="!show_plot" class="w-100 d-block bg-dark" :percent="percent" />
-
-        <div v-layout v-show="!encounter && show_plot" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
+        <div v-layout v-show="!encounter" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
           <progress-bar width=100 :percent="percent" class="d-inline" />
 
-          <SvgPlot v-if="layout" :layout="layout">
+          <SvgPlot v-if="layout" :layout="layout" v-show="show_plot">
             <image ref="sun" xlink:href="img/sun.png" :height="diameter('sun')" :width="diameter('sun')" />
+
+            <SvgDestinationPath :layout="layout" :transit="plan" />
+            <SvgTransitPath     :layout="layout" :transit="plan" />
 
             <g v-for="body of bodies" :key="body" :ref="body">
               <image :xlink:href="'img/' + body + '.png'" :height="diameter(body)" :width="diameter(body)" />
-
               <text v-show="show_label(body)" style="font:12px monospace; fill:#EEEEEE;" :y="diameter(body)/2" x="10">
                 {{body|caps}}
               </text>
