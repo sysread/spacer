@@ -243,10 +243,6 @@ define(function(require, exports, module) {
       };
     },
 
-    mounted() {
-      this.layout.update_width();
-    },
-
     directives: {
       layout: {
         inserted(el, binding, vnode) {
@@ -256,14 +252,15 @@ define(function(require, exports, module) {
           );
 
           vnode.context.$emit('update:layout', vnode.context.layout);
+          vnode.context.$nextTick(() => vnode.context.layout.update_width());
         }
       },
     },
 
     watch: {
-      'layout.width_px':  function() { this.layout_set() },
-      'layout.fov_au':    function() { this.layout_set() },
-      'layout.offset_x':  function() { this.layout_set() },
+      'layout.width_px': function() { this.layout_set() },
+      'layout.fov_au':   function() { this.layout_set() },
+      'layout.offset_x': function() { this.layout_set() },
       'layout.offset_y': function() { this.layout_set() },
     },
 
@@ -279,7 +276,7 @@ define(function(require, exports, module) {
     },
 
     methods: {
-      layout_set() {},
+      layout_set() { },
     },
   };
 });

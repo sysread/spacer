@@ -29,9 +29,7 @@ define(function(require, exports, module) {
     },
 
     watch: {
-      dest()             { this.transit = null },
-      map_center_point() { this.layout.set_center( this.map_center_point ) },
-      map_fov_au()       { this.layout.set_fov_au( this.map_fov_au ) },
+      dest() { this.transit = null },
     },
 
     computed: {
@@ -170,7 +168,7 @@ define(function(require, exports, module) {
         </card-header>
 
         <div class="p-2" v-if="!show_map">
-          <Menu title="Navigation"  v-show="show_home_menu">
+          <Menu title="Navigation" v-show="show_home_menu">
             <Opt @click="go_dest_menu">
               <span v-if="!dest">
                 Set destination
@@ -234,7 +232,7 @@ define(function(require, exports, module) {
           <def split=4 term="Fuel"        :def="transit.fuel|R(2)|unit('tonnes')" />
         </confirm>
 
-        <NavPlot v-show="show_map"
+        <NavPlot v-if="show_map"
                  v-layout
                  :layout="layout"
                  :style="layout_css_dimensions"

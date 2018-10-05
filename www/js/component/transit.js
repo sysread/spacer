@@ -45,7 +45,6 @@ define(function(require, exports, module) {
       compression()        { return Math.sin( Math.PI * Math.max(this.plan.currentTurn, 1) / this.plan.turns ) },
       center_point()       { return Physics.centroid(...this.points_of_view) },
       percent()            { return this.plan.pct_complete },
-      show_plot()          { return this.layout && this.layout.width_px >= 300 },
 
       bodies() {
         // Build list of planetary bodies to show
@@ -201,10 +200,24 @@ define(function(require, exports, module) {
         return timeline;
       },
 
+      show_plot() {
+        // this.layout.width_px >= 300
+        if ($(this.$refs.plot).width() < 300) {
+          return false;
+        }
+
+        return true;
+      },
+
       diameter(body) {
-        const d   = this.system.body(body).radius * 2;
-        const w   = this.layout.width_px * (d / (this.layout.fov_au * Physics.AU));
         const min = body == 'sun' ? 10 : this.system.central(body) != 'sun' ? 1 : 5;
+
+        if (!this.layout) {
+          return min;
+        }
+
+        const d = this.system.body(body).radius * 2;
+        const w = this.layout.width_px * (d / (this.layout.fov_au * Physics.AU));
         return Math.max(min, Math.ceil(w));
       },
 
@@ -352,20 +365,23 @@ define(function(require, exports, module) {
           </h4>
         </card-header>
 
-        <table class="table table-sm m-0" :style="{width: show_plot ? layout.width_px + 'px' : '100%'}">
+        <table class="table table-sm m-0" :style="{width: show_plot() && layout ? layout.width_px + 'px' : '100%'}">
           <tr>
             <td class="text-left">{{plan.days_left|unit('days')}}</td>
             <td class="text-center">{{plan.velocity/1000|R|csn|unit('km/s')}}</td>
             <td class="text-right">{{plan.auRemaining()|R(2)|unit('AU')}}</td>
           </tr>
+          <tr v-if="!show_plot()">
+            <td colspan="3">
+              <progress-bar width=100 :percent="percent" />
+            </td>
+          </tr>
         </table>
 
-        <progress-bar width=100 :percent="percent" v-if="!show_plot" />
-
-        <div v-layout v-show="!encounter && show_plot" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
+        <div v-layout ref="plot" v-if="!encounter" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
           <progress-bar width=100 :percent="percent" class="d-inline" />
 
-          <SvgPlot v-if="layout" :layout="layout">
+          <SvgPlot :layout="layout" v-if="layout">
             <image ref="sun" xlink:href="img/sun.png" :height="diameter('sun')" :width="diameter('sun')" />
 
             <g v-for="body of bodies" :key="body" :ref="body">
