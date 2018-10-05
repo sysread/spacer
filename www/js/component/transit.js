@@ -353,11 +353,13 @@ define(function(require, exports, module) {
           </h3>
         </card-header>
 
-        <div class="row" style="font-size:0.8rem" :style="{'width': layout ? (layout.width_px + 'px') : '100%'}">
-          <span class="col-4 text-left">{{plan.days_left|unit('days')}}</span>
-          <span class="col-4 text-center">{{plan.auRemaining()|R(2)|unit('AU')}}</span>
-          <span class="col-4 text-right">{{plan.velocity/1000|R|csn|unit('km/s')}}</span>
-        </div>
+        <table class="table table-sm" :style="{width: (layout ? layout.width_px : 0) + 'px'}">
+          <tr>
+            <td class="text-left">{{plan.days_left|unit('days')}}</td>
+            <td class="text-right">{{plan.velocity/1000|R|csn|unit('km/s')}}</td>
+            <td class="text-center">{{plan.auRemaining()|R(2)|unit('AU')}}</td>
+          </tr>
+        </table>
 
         <div v-layout
              v-show="!encounter"
