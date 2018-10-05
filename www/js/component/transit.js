@@ -368,9 +368,6 @@ define(function(require, exports, module) {
           <SvgPlot v-if="layout" :layout="layout">
             <image ref="sun" xlink:href="img/sun.png" :height="diameter('sun')" :width="diameter('sun')" />
 
-            <SvgDestinationPath :layout="layout" :transit="plan" />
-            <SvgTransitPath     :layout="layout" :transit="plan" />
-
             <g v-for="body of bodies" :key="body" :ref="body">
               <image :xlink:href="'img/' + body + '.png'" :height="diameter(body)" :width="diameter(body)" />
               <text v-show="show_label(body)" style="font:12px monospace; fill:#EEEEEE;" :y="diameter(body)/2" x="10">
