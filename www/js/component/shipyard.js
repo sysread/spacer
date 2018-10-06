@@ -20,7 +20,7 @@ define(function(require, exports, module) {
       needsFuel:  function()    { return !this.game.player.ship.tankIsFull() },
       hasFuel:    function()    { return this.game.player.ship.cargo.count('fuel') > 0 },
       hasDamage:  function()    { return this.game.player.ship.hasDamage() },
-      open:       function(loc) { this.game.open(loc) },
+      open:       function(loc) { this.$emit('open', loc) },
     },
     template: `
 <div>

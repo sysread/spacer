@@ -19,7 +19,7 @@ define(function(require, exports, module) {
     },
     methods: {
       newGame: function() {
-        this.game.open('newgame');
+        this.$emit('open', 'newgame');
       }
     },
     template: `
@@ -158,9 +158,16 @@ define(function(require, exports, module) {
         return this.game.player;
       }
     },
+
+    methods: {
+      open(page) {
+        this.$emit('open', page);
+      },
+    },
+
     template: `
 <div>
-  <person-status :person="person" class="my-3" />
+  <person-status :person="person" class="my-3" @open="open" />
   <faction-status :person="person" class="my-3" />
   <ship-status :ship="person.ship" class="my-3" />
 </div>

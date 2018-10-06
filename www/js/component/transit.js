@@ -24,8 +24,6 @@ define(function(require, exports, module) {
   Vue.component('transit', {
     mixins: [ Layout.LayoutMixin ],
 
-    props: ['plan'],
-
     data() {
       return {
         layout_target_id: 'transit-plot-root',
@@ -39,6 +37,7 @@ define(function(require, exports, module) {
     },
 
     computed: {
+      plan()               { return $('#spacer').data().info },
       bodies()             { return this.system.bodies() },
       encounter_possible() { return this.plan.velocity <= this.data.max_encounter_velocity },
       destination()        { return this.system.name(this.plan.dest) },
@@ -130,6 +129,10 @@ define(function(require, exports, module) {
     },
 
     methods: {
+      dead() {
+        this.$emit('open', 'newgame');
+      },
+
       layout_set() {
         this.$nextTick(() => {
           if (this.timeline) {
@@ -149,7 +152,7 @@ define(function(require, exports, module) {
           onComplete: () => {
             $('#spacer').data({data: null});
             this.game.transit(this.plan.dest);
-            this.game.open('summary');
+            this.$emit('open', 'summary');
           },
         });
 
@@ -249,7 +252,7 @@ define(function(require, exports, module) {
         this.distance = util.R(this.plan.auRemaining(), 2);
 
         if (this.game.player.ship.isDestroyed) {
-          this.game.open('newgame');
+          this.$emit('open', 'newgame');
         }
         if (this.encounter) {
           return;
@@ -400,6 +403,7 @@ define(function(require, exports, module) {
         <transit-inspection
             v-if="encounter && encounter.type == 'inspection'"
             @done="complete_encounter"
+            @dead="dead"
             :body="encounter.body"
             :faction="encounter.faction"
             :distance="encounter.distance"
@@ -514,7 +518,7 @@ define(function(require, exports, module) {
       flee() {
         $('#spacer').data({state: null, data: null});
         window.localStorage.removeItem('game');
-        this.game.open('newgame');
+        this.$emit('dead');
       },
 
       done(result) {

@@ -31,23 +31,56 @@
     </nav>
 
     <!-- Content window -->
-    <div id="spacer-content" class="container-fluid pt-3 pb-1 mt-5"></div>
+    <!--<div id="spacer-content" class="container-fluid pt-3 pb-1 mt-5"></div>-->
+    <div id="content" />
 
     <!-- Navigation -->
-    <div id="navbar" />
+    <!-- <div id="navbar" /> -->
 
     <script>
       require(
         [
-          'vendor/vue',       // base framework
-          'component/global', // global state
-          'component/navbar', // nav bar
+          'vendor/vue',        // base framework
+          'component/global',  // global state
+          'component/navbar',  // nav bar
+          'component/content', // content div
         ],
 
         function(Vue) {
-          const nav_app = new Vue({
-            'el': '#navbar',
-            'template': '<NavBar />',
+          const content_app = new Vue({
+            el: '#content',
+
+            data: {
+              page: 'summary',
+            },
+
+            watch: {
+              page() {
+                if (this.game.turns == 0) {
+                  this.page = 'newgame';
+                }
+                else if (this.game.player.ship.isDestroyed) {
+                  this.page = 'newgame';
+                }
+              },
+            },
+
+            computed: {
+              nav_disabled() { return this.game.freeze },
+            },
+
+            methods: {
+              open(page) {
+                this.page = page;
+              },
+            },
+
+            template: `
+              <div>
+                <Content @open="open" :page="page" />
+                <NavBar  @open="open" :disabled="nav_disabled" />
+              </div>
+            `,
           });
         },
       );

@@ -1,31 +1,77 @@
-<script type="text/javascript">
+define(function(require, exports, module) {
+  const Vue   = require('vendor/vue');
+  const model = require('model');
+  const util  = require('util');
 
-var data;
-var model;
-var system;
+  require('component/global');
+  require('component/common');
+  require('component/card');
 
-require(
-  [
-    'vendor/vue', 'game', 'data', 'util', 'system', 'model',
-    'component/common',
-    'component/card',
-    'component/row',
-  ],
-  function(Vue, game, data, util, sys, model) {
-    window.data = data;
-    window.model = model;
-    system = sys;
+  require('component/newgame');
+  require('component/summary');
+  require('component/work');
+  require('component/commerce');
+  require('component/fabricators');
+  require('component/shipyard');
+  require('component/ships');
+  require('component/addons');
+  require('component/navcomp');
+  require('component/transit');
+  require('component/status');
 
-    const app = new Vue({
-      el: '#test',
-      data: {
-        item: 'water',
+  Vue.component('Content', {
+    props: ['page'],
+
+    methods: {
+      open(page) {
+        this.$emit('open', page);
       },
+    },
+
+    template: `
+      <div id="spacer-content" class="container-fluid pt-3 pb-1 mt-5">
+        <new-game           v-if="page == 'newgame'"     @open="open" />
+        <SummaryPage        v-if="page == 'summary'"     @open="open" />
+        <work          v-else-if="page == 'work'"        @open="open" />
+        <market        v-else-if="page == 'commerce'"    @open="open" />
+        <fabricators   v-else-if="page == 'fabricators'" @open="open" />
+        <shipyard      v-else-if="page == 'shipyard'"    @open="open" />
+        <ships         v-else-if="page == 'ships'"       @open="open" />
+        <addons        v-else-if="page == 'addons'"      @open="open" />
+        <NavComp       v-else-if="page == 'navigation'"  @open="open" />
+        <transit       v-else-if="page == 'transit'"     @open="open" />
+        <player-status v-else-if="page == 'status'"      @open="open" />
+        <Testing       v-else-if="page == 'test'"        @open="open" />
+      </div>
+    `,
+  });
+
+
+  Vue.component('SummaryPage', {
+    computed: {
+      planet() { return this.game.here },
+    },
+
+    template: `
+      <card :title="planet.name">
+        <planet-summary :planet="planet" />
+      </card>
+    `,
+  });
+
+
+  Vue.component('Testing', {
+      data() {
+        return {
+          item: 'water',
+        };
+      },
+
       computed: {
-        turns:     function() { return game.turns },
-        resources: function() { return Object.keys(data.resources) },
-        bodies:    function() { return Object.keys(game.planets) },
-        places:    function() { return Object.values(game.planets) },
+        turns:     function() { return this.game.turns },
+        resources: function() { return Object.keys(this.data.resources) },
+        bodies:    function() { return Object.keys(this.game.planets) },
+        places:    function() { return Object.values(this.game.planets) },
         resource:  function() { return model.resources[ this.item ] },
 
         value: function() {
@@ -33,6 +79,7 @@ require(
           return 0;
         },
       },
+
       methods: {
         gameTurns: function(turns) {
           let left = turns;
@@ -44,7 +91,7 @@ require(
               left -= batch;
 
               for (let i = 0; i < batch; ++i) {
-                game.turn(batch);
+                this.game.turn(batch);
               }
             }
             else {
@@ -58,12 +105,13 @@ require(
         },
 
         fixMe: function() {
-          game.player.ship.damage.hull = game.player.ship.damage.armor = 0;
-          game.player.ship.fuel = game.player.ship.tank;
-          game.save_game();
-          game.refresh();
+          this.game.player.ship.damage.hull = this.game.player.ship.damage.armor = 0;
+          this.game.player.ship.fuel = this.game.player.ship.tank;
+          this.game.save_game();
+          this.game.refresh();
         },
       },
+
       template: `
 <card title="Testing">
   <div class="btn-group">
@@ -119,9 +167,5 @@ require(
 </card>
       `,
     });
-  }
-);
 
-</script>
-
-<div id="test"></div>
+});

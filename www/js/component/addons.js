@@ -18,7 +18,7 @@ define(function(require, exports, module) {
     },
 
     methods: {
-      returnToShipyard() { this.game.open('shipyard') },
+      returnToShipyard() { this.$emit('open', 'shipyard') },
     },
 
     template: `

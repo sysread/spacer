@@ -145,7 +145,7 @@ define(function(require, exports, module) {
 
         if (yes) {
           $('#spacer').data('info', this.transit);
-          this.game.open('transit');
+          this.$emit('open', 'transit');
           this.game.freeze = true;
         }
       },

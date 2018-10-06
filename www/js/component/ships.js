@@ -22,7 +22,7 @@ define(function(require, exports, module) {
     },
     methods: {
       returnToShipyard: function() {
-        this.game.open('shipyard');
+        this.$emit('open', 'shipyard');
       },
 
       selectShip: function(ship) {
