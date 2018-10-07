@@ -226,10 +226,10 @@ define(function(require, exports, module) {
 
   <slider minmax=true :value.sync="tx_hold" min=0 :max="max" step=1 @update:value="updateState" class="my-3" />
 
-  <div class="button-group row justify-content-end">
-    <btn @click="complete" :disabled="count == 0">Complete transaction</btn>
-    <btn @click="report=true">Market report</btn>
-    <btn @click="close_trade">Done</btn>
+  <div>
+    <btn block=1 @click="complete" :disabled="count == 0">Complete transaction</btn>
+    <btn block=1 @click="report=true">Market report</btn>
+    <btn block=1 @click="close_trade">Done</btn>
   </div>
 
   <modal v-if="report" @close="report=false" close="Close" xclose=true :title="'System market report for ' + item">
@@ -287,13 +287,10 @@ define(function(require, exports, module) {
     },
     template: `
 <div>
-  <div class="my-2 btn-group">
-    <btn @click="show_routes=true" :disabled="show_routes">Pending</btn>
-    <btn @click="show_routes=false" :disabled="!show_routes">Prices</btn>
-    <btn :disabled="show_routes" @click="relprices=!relprices">
-      <span v-if="relprices">(rel)</span>
-      <span v-else>(abs)</span>
-    </btn>
+  <div class="button-group row justify-content-end">
+    <btn class="col" @click="show_routes=true" :disabled="show_routes">Pending</btn>
+    <btn class="col" @click="show_routes=false;relprices=false" :disabled="!show_routes && !relprices">Absolute Prices</btn>
+    <btn class="col" @click="show_routes=false;relprices=true" :disabled="!show_routes && relprices">Relative Prices</btn>
   </div>
 
   <table class="table table-sm" v-if="!show_routes">
@@ -327,7 +324,7 @@ define(function(require, exports, module) {
         <td class="text-right">{{shipment.amount|csn}}</td>
         <td>{{shipment.arrives}}</td>
         <td class="d-none d-sm-table-cell">{{from|caps}}</td>
-        <td class="d-none d-sm-table-cell">{{shipment.distance|unit('AU')}}</td>
+        <td class="d-none d-sm-table-cell">{{shipment.distance}}</td>
       </tr>
     </tbody>
   </table>
