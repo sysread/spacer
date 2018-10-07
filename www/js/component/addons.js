@@ -53,10 +53,7 @@ define(function(require, exports, module) {
       },
 
       price() {
-        let price = this.info.price;
-        price -= price * this.player.getStandingPriceAdjustment(this.planet.faction.abbrev);
-        price += price * this.planet.faction.sales_tax;
-        return Math.ceil(price);
+        return Math.ceil(this.planet.addonPrice(this.type, this.player));
       },
 
       isRestricted() {

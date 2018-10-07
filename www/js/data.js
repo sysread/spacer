@@ -81,9 +81,9 @@ define(function() {
       'orbital':           {produces: {food: 0.1, hydrocarbons: 0.1}, consumes: {metal: 1, fuel: 1.5, electronics: 0.75, machines: 0.75, water: 0.15, hydrocarbons: 0.25, weapons: 0.2}},
 
       'black market':      {produces: {narcotics: 0.2, weapons: 0.2}, price: {narcotics: 0.5, weapons: 0.7}},
-      'tech hub':          {produces: {electronics: 0.2}, price: {machines: 0.9, electronics: 0.65, cybernetics: 0.8}},
-      'manufacturing hub': {produces: {machines: 0.2}, price: {machines: 0.7, cybernetics: 0.9}},
-      'capitol':           {produces: {medicine: 0.1}, consumes: {weapons: 0.1}},
+      'tech hub':          {produces: {electronics: 0.2}, price: {machines: 0.9, electronics: 0.65, cybernetics: 0.8, addons: 0.7}},
+      'manufacturing hub': {produces: {machines: 0.2}, price: {machines: 0.7, cybernetics: 0.9, addons: 0.8}},
+      'capitol':           {produces: {medicine: 0.1}, consumes: {weapons: 0.1}, price: {addons: 0.9}},
     },
 
     // TODO: risk of injury

@@ -802,6 +802,25 @@ define(function(require, exports, module) {
       this.imports();
       this.rollups();
     }
+
+    /*
+     * Misc
+     */
+    addonPrice(addon, player) {
+      const base     = data.addons[addon].price;
+      const standing = base * player.getStandingPriceAdjustment(this.faction.abbrev);
+      const tax      = base * this.faction.sales_tax;
+
+      let price = base - standing + tax;
+
+      for (const trait of this.traits) {
+        if (trait.hasOwnProperty('price') && trait.price.hasOwnProperty('addons')) {
+          price -= base * traits.price.addons;
+        }
+      }
+
+      return price;
+    }
   };
 
   for (const name of Object.keys(data.resources))
