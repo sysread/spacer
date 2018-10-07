@@ -31,7 +31,7 @@ define(function(require, exports, module) {
           color:               black;
           position:            fixed;
           top:                 auto;
-          right:               120px;
+          right:               54px;
         `
       },
     },
