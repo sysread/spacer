@@ -17,6 +17,23 @@ define(function(require, exports, module) {
       kind()     { return this.planet.kind                                       },
       faction()  { return this.planet.faction.full_name                          },
       standing() { return this.game.player.getStandingLabel(this.planet.faction) },
+      img()      { return 'img/' + this.planet.body + '.png'                     },
+
+      img_css() {
+        return `
+          background-image:    url("${this.img}");
+          background-repeat:   no-repeat;
+          background-position: top right;
+          background-size:     100px 100px;
+          height:              100px;
+          width:               100px;
+          opacity:             0.5;
+          color:               black;
+          position:            fixed;
+          top:                 auto;
+          right:               120px;
+        `
+      },
     },
 
     methods: {
@@ -27,6 +44,8 @@ define(function(require, exports, module) {
 
     template: `
 <div>
+  <div :style="img_css"></div>
+
   <def y=1 v-if="isThere" term="Location" def="Docked" />
   <def y=1 v-else term="Distance" :def="distance|R(2)|csn|unit('AU')" />
 
