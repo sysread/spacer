@@ -30,6 +30,15 @@ define(function(require, exports, module) {
 
     watch: {
       dest() { this.transit = null },
+
+      layout() {
+        if (this.show == 'map' && this.dest) {
+          this.$nextTick(() => {
+            this.layout.set_center(this.map_center_point);
+            this.layout.set_fov_au(this.map_fov_au);
+          });
+        }
+      },
     },
 
     computed: {
