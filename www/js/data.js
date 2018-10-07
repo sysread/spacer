@@ -55,7 +55,7 @@ define(function() {
       fabricators: 10,
       minability:  0.1,
       produces:    {},
-      consumes:    {water: 2, food: 1.5, medicine: 1, narcotics: 0.3, weapons: 0.6},
+      consumes:    {water: 2, food: 1.5, medicine: 1.5, narcotics: 0.3, weapons: 0.6},
     },
 
     traits: {
@@ -65,8 +65,8 @@ define(function() {
       'water rich':        {produces: {water: 1}, consumes: {}},
       'water poor':        {produces: {water: -1}, consumes: {}},
 
-      'hydrocarbon rich':  {produces: {hydrocarbons: 1.5}, consumes: {}},
-      'hydrocarbon poor':  {produces: {hydrocarbons: -1.5}, consumes: {}},
+      'hydrocarbon rich':  {produces: {hydrocarbons: 2}, consumes: {}},
+      'hydrocarbon poor':  {produces: {hydrocarbons: -1}, consumes: {}},
 
       'rocky':             {produces: {ore: 5, minerals: 2} , consumes: {}},
       'icy':               {produces: {water: 3, minerals: 1, hydrocarbons: 1}, consumes: {}},
@@ -74,15 +74,15 @@ define(function() {
       'asteroids':         {produces: {ore: 10, minerals: 7}, consumes: {fuel: 1.5, electronics: 0.3, machines: 1, cybernetics: 0.3}},
       'ringed system':     {produces: {water: 6, minerals: 2, hydrocarbons: 2}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
 
-      'agricultural':      {produces: {food: 4, hydrocarbons: 2}, consumes: {machines: 0.5, fuel: 0.5, water: 2, hydrocarbons: 4}},
-      'habitable':         {produces: {food: 8, hydrocarbons: 4}, consumes: {food: 4, narcotics: 0.25, weapons: 0.5}},
-      'domed':             {produces: {food: 0.5, hydrocarbons: 0.5}, consumes: {metal: 0.6, fuel: 0.6, electronics: 0.5, machines: 0.5, water: 0.75, hydrocarbons: 0.75, weapons: 0.5}},
-      'subterranean':      {produces: {food: 0.25, hydrocarbons: 0.25}, consumes: {metal: 0.6, fuel: 0.3, electronics: 0.5, machines: 0.5, water: 0.3, hydrocarbons: 1, weapons: 0.35}},
-      'orbital':           {produces: {food: 0.1, hydrocarbons: 0.1}, consumes: {metal: 1, fuel: 1.5, electronics: 0.75, machines: 0.75, water: 0.15, hydrocarbons: 0.5, weapons: 0.2}},
+      'agricultural':      {produces: {food: 4, hydrocarbons: 1}, consumes: {machines: 0.5, fuel: 0.5, water: 2, hydrocarbons: 2}},
+      'habitable':         {produces: {food: 8, hydrocarbons: 3}, consumes: {food: 4, narcotics: 0.25, weapons: 0.5}},
+      'domed':             {produces: {food: 0.5, hydrocarbons: 0.25}, consumes: {metal: 0.6, fuel: 0.6, electronics: 0.5, machines: 0.5, water: 0.75, hydrocarbons: 0.75, weapons: 0.5}},
+      'subterranean':      {produces: {food: 0.25, hydrocarbons: 0.25}, consumes: {metal: 0.6, fuel: 0.3, electronics: 0.5, machines: 0.5, water: 0.3, hydrocarbons: 0.75, weapons: 0.35}},
+      'orbital':           {produces: {food: 0.1, hydrocarbons: 0.1}, consumes: {metal: 1, fuel: 1.5, electronics: 0.75, machines: 0.75, water: 0.15, hydrocarbons: 0.25, weapons: 0.2}},
 
-      'black market':      {produces: {narcotics: 0.2, weapons: 0.2}},
-      'tech hub':          {produces: {electronics: 0.2}},
-      'manufacturing hub': {produces: {machines: 0.2}},
+      'black market':      {produces: {narcotics: 0.2, weapons: 0.2}, price: {narcotics: 0.5, weapons: 0.7}},
+      'tech hub':          {produces: {electronics: 0.2}, price: {machines: 0.9, electronics: 0.65, cybernetics: 0.8}},
+      'manufacturing hub': {produces: {machines: 0.2}, price: {machines: 0.7, cybernetics: 0.9}},
       'capitol':           {produces: {medicine: 0.1}, consumes: {weapons: 0.1}},
     },
 

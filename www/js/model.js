@@ -250,6 +250,16 @@ define(function(require, exports, module) {
     get position()   { return system.position(this.body) }
     distance(toBody) { return system.distance(this.body, toBody) }
 
+    hasTrait(trait) {
+      for (const t of this.traits) {
+        if (t == trait) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
     /*
      * Patrols and inspections
      */
@@ -468,6 +478,15 @@ define(function(require, exports, module) {
           this._price[item] = Math.ceil(markup * Math.max(value / 4, value * need));
         } else {
           this._price[item] = Math.ceil(markup * value);
+        }
+      }
+
+      // Special cases for market classifications
+      for (const trait of this.traits) {
+        if (trait.hasOwnProperty('price')
+         && trait.price.hasOwnProperty(item))
+        {
+          this._price[item] -= this._price[item] * trait.price[item];
         }
       }
 
