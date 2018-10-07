@@ -9,13 +9,22 @@ define(function(require, exports, module) {
 
   Vue.component('planet-summary', {
     props: ['planet', 'mini'],
+
     computed: {
-      desc:     function() {return this.planet.desc.split('|')},
-      isThere:  function() {return this.planet.body === this.game.locus},
-      distance: function() {return this.planet.distance(this.game.locus) / Physics.AU},
-      kind:     function() {return this.planet.kind},
-      faction:  function() {return this.planet.faction.full_name},
+      desc()     { return this.planet.desc.split('|')                            },
+      isThere()  { return this.planet.body === this.game.locus                   },
+      distance() { return this.planet.distance(this.game.locus) / Physics.AU     },
+      kind()     { return this.planet.kind                                       },
+      faction()  { return this.planet.faction.full_name                          },
+      standing() { return this.game.player.getStandingLabel(this.planet.faction) },
     },
+
+    methods: {
+      is_hostile()   { return this.game.player.hasStandingOrLower(this.faction, 'Untrusted') },
+      is_dubious()   { return this.game.player.hasStandingOrLower(this.faction, 'Dubious')   },
+      is_respected() { return this.game.player.hasStanding(this.faction, 'Respected') },
+    },
+
     template: `
 <div>
   <def y=1 v-if="isThere" term="Location" def="Docked" />
@@ -30,6 +39,14 @@ define(function(require, exports, module) {
       <cell y=0 class="col-sm-6 font-italic" v-for="trait in planet.traits" :key="trait.name">{{trait.name|caps}}</cell>
     </row>
     <span v-else slot="def">N/A</span>
+  </def>
+
+  <def y=1 term="Standing">
+    Your standing with this faction is
+      <span v-if="is_hostile" class="text-success">{{standing|lower}}.</span>
+      <span v-else-if="is_dubious" class="text-warning">{{standing|lower}}.</span>
+      <span v-else-if="is_respected" class="text-danger" >{{standing|lower}}.</span>
+      <span v-else>{{standing|lower}}.</span>
   </def>
 
   <card v-if="!mini" class="my-3">

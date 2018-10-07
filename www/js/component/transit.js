@@ -468,7 +468,7 @@ define(function(require, exports, module) {
       },
 
       isHostile() {
-        return this.game.player.hasStandingOrLower('Untrusted');
+        return this.game.player.hasStandingOrLower(this.faction, 'Untrusted');
       },
     },
 
