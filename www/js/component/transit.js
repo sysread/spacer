@@ -213,15 +213,17 @@ define(function(require, exports, module) {
       },
 
       diameter(body) {
-        const min = body == 'sun' ? 10 : this.system.central(body) != 'sun' ? 1 : 5;
-
-        if (!this.layout) {
-          return min;
+        if (this.layout) {
+          const px_per_meter = this.layout.width_px / (this.layout.fov_au * Physics.AU);
+          const diameter = this.system.body(body).radius * 2;
+          const adjust = body == 'sun' ? 10
+                       : body.match(/jupiter|saturn|uranus|neptune/) ? 100
+                       : 500
+          return Math.max(3, diameter * adjust * px_per_meter);
         }
-
-        const d = this.system.body(body).radius * 2;
-        const w = this.layout.width_px * (d / (this.layout.fov_au * Physics.AU));
-        return Math.max(min, Math.ceil(w));
+        else {
+          return 1;
+        }
       },
 
       show_label(body) {
@@ -234,7 +236,7 @@ define(function(require, exports, module) {
         const position = this.system.position(body);
         const center   = central == 'sun' ? [0, 0] : this.system.position(central);
         const distance = Physics.distance(position, center) / Physics.AU;
-        return distance > this.layout.fov_au / 10;
+        return distance > this.layout.fov_au / 5;
       },
 
       pause() {
