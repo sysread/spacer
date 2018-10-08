@@ -185,6 +185,7 @@ define(function(require, exports, module) {
       this.size    = data.bodies[body].size;
       this.traits  = data.bodies[body].traits.map((t) => {return new Trait(t)});
       this.faction = new Faction(data.bodies[body].faction);
+      this.radius  = system.body(body).radius;
 
       /*
        * Fabrication

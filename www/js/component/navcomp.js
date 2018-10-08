@@ -13,6 +13,14 @@ define(function(require, exports, module) {
   require('component/summary');
 
 
+  const min_body_radius = Object.values(window.game.planets)
+    .map(p => p.radius)
+    .reduce((a, b) => { return a < b ? a : b });
+
+  const min_body_ratio = 5 / min_body_radius;
+console.log(min_body_radius, min_body_ratio);
+
+
   Vue.component('NavComp', {
     mixins: [ Layout.LayoutMixin ],
 
@@ -514,12 +522,22 @@ define(function(require, exports, module) {
 
 
   Vue.component('SvgPlotPoint', {
-    props: ['label', 'pos', 'diameter', 'img'],
+    props: ['layout', 'label', 'pos', 'diameter', 'img'],
+
+    computed: {
+      zero()    { return this.layout.zero },
+      label_x() { return this.pos[0] + (this.diameter / 2) + 10 },
+      label_y() { return this.pos[1] + this.diameter / 2 },
+    },
+
+    methods: {
+    },
+
     template: `
       <g>
         <image ref="img" v-if="img" :xlink:href="img" :height="diameter" :width="diameter" :x="pos[0]" :y="pos[1]" />
 
-        <text ref="lbl" v-show="label" style="font:12px monospace; fill:#EEEEEE;" :x="pos[0]+diameter+10" :y="pos[1]+diameter/2">
+        <text ref="lbl" v-show="label" style="font:12px monospace; fill:#EEEEEE;" :x="label_x" :y="label_y">
           {{label|caps}}
         </text>
       </g>
@@ -558,6 +576,17 @@ define(function(require, exports, module) {
           const t = this.system.system.time;
           const bodies = {};
 
+          const d_sun = this.diameter('sun');
+          const p_sun = this.layout.scale_point([0, 0]);
+          p_sun[0] -= d_sun / 2;
+          p_sun[1] -= d_sun / 2;
+
+          bodies.sun = {
+            point:    p_sun,
+            diameter: d_sun,
+            label:    false,
+          };
+
           for (const body of this.bodies) {
             const d = this.diameter(body);
             const p = this.layout.scale_point( this.system.position(body, t) );
@@ -571,17 +600,6 @@ define(function(require, exports, module) {
             };
           }
 
-          const d_sun = this.diameter('sun');
-          const p_sun = this.layout.scale_point([0, 0]);
-          p_sun[0] -= d_sun / 2;
-          p_sun[1] -= d_sun / 2;
-
-          bodies.sun = {
-            point:    p_sun,
-            diameter: d_sun,
-            label:    false,
-          };
-
           return bodies;
         }
       },
@@ -589,14 +607,16 @@ define(function(require, exports, module) {
 
     methods: {
       diameter(body) {
-        const min = body == 'sun' ? 10 : this.system.central(body) != 'sun' ? 1 : 5;
-
         if (this.layout) {
-          const d   = this.system.body(body).radius * 2;
-          const w   = this.layout.width_px * (d / (this.layout.fov_au * Physics.AU));
-          return Math.max(min, Math.ceil(w));
-        } else {
-          return min;
+          const px_per_meter = this.layout.width_px / (this.layout.fov_au * Physics.AU);
+          const diameter = this.system.body(body).radius * 2;
+          const adjust = body == 'sun' ? 10
+                       : body.match(/jupiter|saturn|uranus|neptune/) ? 100
+                       : 500
+          return Math.max(3, diameter * adjust * px_per_meter);
+        }
+        else {
+          return 1;
         }
       },
 
@@ -610,7 +630,7 @@ define(function(require, exports, module) {
         const position = this.system.position(body);
         const center   = central == 'sun' ? [0, 0] : this.system.position(central);
         const distance = Physics.distance(position, center) / Physics.AU;
-        return distance > this.layout.fov_au / 10;
+        return distance > this.layout.fov_au / 5;
       },
     },
 
