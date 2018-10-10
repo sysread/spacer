@@ -63,7 +63,9 @@ define(function(require, exports, module) {
    * Force n to be no less than min and no more than max.
    */
   util.clamp = function(n, min, max) {
-    return Math.min(max, Math.max(min, n));
+    if (min !== undefined) n = Math.max(min, n);
+    if (max !== undefined) n = Math.min(max, n);
+    return n;
   };
 
   /*

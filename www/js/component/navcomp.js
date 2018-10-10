@@ -535,9 +535,9 @@ console.log(min_body_radius, min_body_ratio);
 
     template: `
       <g>
-        <image ref="img" v-if="img" :xlink:href="img" :height="diameter" :width="diameter" :x="pos[0]" :y="pos[1]" />
+        <image v-if="img" :xlink:href="img" :height="diameter" :width="diameter" :x="pos[0]" :y="pos[1]" />
 
-        <text ref="lbl" v-show="label" style="font:12px monospace; fill:#EEEEEE;" :x="label_x" :y="label_y">
+        <text v-show="label" style="font:12px monospace; fill:#EEEEEE;" :x="label_x" :y="label_y">
           {{label|caps}}
         </text>
       </g>
@@ -608,12 +608,17 @@ console.log(min_body_radius, min_body_ratio);
     methods: {
       diameter(body) {
         if (this.layout) {
-          const px_per_meter = this.layout.width_px / (this.layout.fov_au * Physics.AU);
+          const fov_m    = this.layout.fov_au * Physics.AU;
+          const px_per_m = this.layout.width_px / fov_m;
           const diameter = this.system.body(body).radius * 2;
-          const adjust = body == 'sun' ? 10
-                       : body.match(/jupiter|saturn|uranus|neptune/) ? 100
-                       : 500
-          return Math.max(3, diameter * adjust * px_per_meter);
+
+          const adjust = body == 'sun' ? 1
+                       : body.match(/jupiter|saturn|uranus|neptune/) ? 10
+                       : 100;
+
+          const factor = this.layout.fov_au + Math.log2(Math.max(1, this.layout.fov_au));
+          const amount = util.clamp(adjust * factor, 1);
+          return util.clamp(diameter * px_per_m * amount, 3, this.layout.width_px);
         }
         else {
           return 1;
