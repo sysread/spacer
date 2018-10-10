@@ -374,7 +374,7 @@ define(function(require, exports, module) {
           <tr>
             <td class="text-left">{{plan.days_left|unit('days')}}</td>
             <td class="text-center">{{plan.velocity/1000|R|csn|unit('km/s')}}</td>
-            <td class="text-right">{{plan.auRemaining()|R(2)|unit('AU')}}</td>
+            <td class="text-right">{{plan.auRemaining()|R(2)|sprintf('%0.2f')|unit('AU')}}</td>
           </tr>
           <tr v-if="!show_plot()">
             <td colspan="3">

@@ -3,8 +3,11 @@ define(function(require, exports, module) {
   const util    = require('util');
   const Physics = require('physics');
 
-  require('vendor/TweenMax.min');
   require('component/modal');
+  require('vendor/TweenMax.min');
+  require('vendor/sprintf.min');
+
+  Vue.filter('sprintf', (value, format, ...args) => sprintf(format, value, ...args));
 
   Vue.filter('csn',   function(value) { return util.csn((value || 0).toString()) });
   Vue.filter('R',     function(value, places) { return util.R((value || 0).toString(), places) });
