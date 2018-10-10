@@ -151,7 +151,7 @@ define(function(require, exports, module) {
     <def y=1 brkpt="sm" term="Thrust"      :def="ship.thrust|csn|unit('kN')" />
 
     <def y=1 brkpt="sm" term="Fuel rate">
-      {{fuelRate|unit('tonnes/hr')}} at maximum thrust
+      {{fuelRate|R(3)|unit('tonnes/hr')}} at maximum thrust
     </def>
 
     <def y=1 brkpt="sm" term="Mass"        :def="ship.currentMass()|csn|unit('tonnes (fueled)')" />
