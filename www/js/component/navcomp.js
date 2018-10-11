@@ -13,14 +13,6 @@ define(function(require, exports, module) {
   require('component/summary');
 
 
-  const min_body_radius = Object.values(window.game.planets)
-    .map(p => p.radius)
-    .reduce((a, b) => { return a < b ? a : b });
-
-  const min_body_ratio = 5 / min_body_radius;
-console.log(min_body_radius, min_body_ratio);
-
-
   Vue.component('NavComp', {
     mixins: [ Layout.LayoutMixin ],
 
