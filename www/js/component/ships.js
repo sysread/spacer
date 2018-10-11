@@ -47,12 +47,14 @@ define(function(require, exports, module) {
 
   Vue.component('ship', {
     props: ['type', 'detail'],
+
     data: function() {
       return {
         buy: false,
         rangeForDeltaV: 0.5,
       }
     },
+
     methods: {
       completeTradeIn: function() {
         this.game.player.credit(this.playerShipValue);
@@ -68,6 +70,7 @@ define(function(require, exports, module) {
         return Physics.range(burnTime * 3600, 0, dv) / Physics.AU;
       },
     },
+
     computed: {
       // Pricing and availability
       planet:          function() { return this.game.here },
@@ -80,7 +83,19 @@ define(function(require, exports, module) {
       isNonFaction:    function() { return this.ship.faction && this.planet.faction.abbrev != this.ship.faction },
       isRestricted:    function() { return !this.ship.playerHasStanding() },
       canAfford:       function() { return this.player.money >= this.tradeIn },
-      isAvailable:     function() { return !this.isPlayerShip && !this.isNonFaction && !this.isRestricted && this.canAfford },
+      isAvailable:     function() { return !this.isPlayerShip && !this.isNonFaction && !this.isRestricted && this.canAfford && this.hasShip },
+
+      hasShip() {
+        if (this.shipClass.hasOwnProperty('markets')) {
+          for (const trait of this.shipClass.markets) {
+            if (this.planet.hasTrait(trait)) {
+              return true;
+            }
+          }
+        }
+
+        return false;
+      },
 
       price: function() {
         let price = this.ship.price();
@@ -101,6 +116,7 @@ define(function(require, exports, module) {
       fuelMass:         function() { return this.shipClass.tank },
       fuelRate:         function() { return this.ship.fuelrate / this.data.hours_per_turn },
     },
+
     template: `
 <div>
   <btn v-if="detail" @click="$emit('click')" :block=1 class="my-2">
@@ -118,8 +134,8 @@ define(function(require, exports, module) {
 
     <card-text v-if="shipClass.desc" class="font-italic">{{shipClass.desc}}</card-text>
 
-    <card-text class="text-warning font-italic">
-      <span v-if="isNonFaction">This ship is not available here.</span>
+    <card-text v-if="!isAvailable" class="text-warning font-italic">
+      <span v-if="!hasShip || isNonFaction">This ship is not available here.</span>
       <span v-else-if="isRestricted">
         Your reputation with this faction precludes the sale of this ship to you.
         That does not prevent you from salivating from the show room window, however.

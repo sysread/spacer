@@ -84,6 +84,7 @@ define(function() {
       'tech hub':          {produces: {electronics: 0.2}, price: {machines: 0.9, electronics: 0.65, cybernetics: 0.8, addons: 0.7}},
       'manufacturing hub': {produces: {machines: 0.2}, price: {machines: 0.7, cybernetics: 0.9, addons: 0.8}},
       'capitol':           {produces: {medicine: 0.1}, consumes: {weapons: 0.1}, price: {addons: 0.9}},
+      'military':          {produces: {}, consumes: {weapons: 0.8, machines: 0.5, electronics: 0.25, medicine: 0.2}, price: {addons: 0.7}},
     },
 
     // TODO: risk of injury
@@ -255,7 +256,7 @@ define(function() {
       enceladus: {
         name:    'Enceladus Depot',
         size:    'small',
-        traits:  ['orbital', 'ringed system', 'icy', 'water rich', 'mineral poor', 'hydrocarbon rich'],
+        traits:  ['orbital', 'ringed system', 'icy', 'water rich', 'mineral poor', 'hydrocarbon rich', 'military'],
         faction: 'TRANSA',
         gravity: 0.5,
       },
@@ -275,7 +276,7 @@ define(function() {
       triton: {
         name:    'Triton Command',
         size:    'small',
-        traits:  ['orbital', 'icy', 'water rich', 'mineral poor', 'black market'],
+        traits:  ['orbital', 'icy', 'water rich', 'mineral poor', 'black market', 'military'],
         faction: 'TRANSA',
         gravity: 0.5,
       },
@@ -324,14 +325,14 @@ define(function() {
       freighter:   {hull: 8,  armor: 6,  cargo: 50, hardpoints: 3,  mass: 900,   tank: 8,   drives: 10, drive: 'ion',    restricted: false},
 
       /* Military */
-      corvette:    {hull: 10, armor: 10, cargo: 10, hardpoints: 4,  mass: 450,   tank: 4,   drives: 1,  drive: 'fusion', restricted: 'Trusted'},
-      cruiser:     {hull: 20, armor: 15, cargo: 15, hardpoints: 8,  mass: 900,   tank: 12,  drives: 4,  drive: 'fusion', restricted: 'Admired'},
-      battleship:  {hull: 30, armor: 20, cargo: 20, hardpoints: 10, mass: 1200,  tank: 14,  drives: 6,  drive: 'fusion', restricted: 'Admired'},
+      corvette:    {hull: 10, armor: 10, cargo: 10, hardpoints: 4,  mass: 450,   tank: 4,   drives: 1,  drive: 'fusion', restricted: 'Trusted', markets: ['capitol', 'military']},
+      cruiser:     {hull: 20, armor: 15, cargo: 15, hardpoints: 8,  mass: 900,   tank: 12,  drives: 4,  drive: 'fusion', restricted: 'Admired', markets: ['capitol', 'military']},
+      battleship:  {hull: 30, armor: 20, cargo: 20, hardpoints: 10, mass: 1200,  tank: 14,  drives: 6,  drive: 'fusion', restricted: 'Admired', markets: ['capitol', 'military']},
 
       /* Faction ships */
       fortuna:     {hull: 8,  armor: 6,  cargo: 50, hardpoints: 1,  mass: 1000,  tank: 8,   drives: 14, drive: 'ion',    restricted: 'Respected', faction: 'JFT'},
-      neptune:     {hull: 14, armor: 10, cargo: 40, hardpoints: 4,  mass: 700,   tank: 10,  drives: 10, drive: 'ion',    restricted: 'Respected', faction: 'TRANSA'},
-      barsoom:     {hull: 20, armor: 20, cargo: 25, hardpoints: 6,  mass: 600,   tank: 8,   drives: 2,  drive: 'fusion', restricted: 'Admired',   faction: 'MC'},
+      neptune:     {hull: 14, armor: 10, cargo: 40, hardpoints: 4,  mass: 700,   tank: 10,  drives: 10, drive: 'ion',    restricted: 'Respected', faction: 'TRANSA', markets: ['capitol', 'military']},
+      barsoom:     {hull: 20, armor: 20, cargo: 25, hardpoints: 6,  mass: 600,   tank: 8,   drives: 2,  drive: 'fusion', restricted: 'Admired',   faction: 'MC',     markets: ['capitol', 'military']},
     },
 
     ship: {
@@ -395,6 +396,7 @@ define(function() {
         magazine:   6,
         price:      85000,
         restricted: 'Trusted',
+        markets:    ['military', 'capitol'],
       },
       railgun_cannon: {
         name:       'Rail gun cannon',
@@ -406,6 +408,7 @@ define(function() {
         magazine:   1,
         price:      105000,
         restricted: 'Admired',
+        markets:    ['military', 'capitol'],
       },
       light_torpedo: {
         name:          'Light torpedo launcher',
@@ -430,6 +433,7 @@ define(function() {
         interceptable: true,
         price:         37500,
         restricted:    'Trusted',
+        markets:       ['military', 'capitol'],
       },
       heavy_torpedo: {
         name:          'Heavy torpedo launcher',
@@ -442,6 +446,7 @@ define(function() {
         interceptable: true,
         price:         50000,
         restricted:    'Admired',
+        markets:       ['military', 'capitol'],
       },
       pds: {
         name:       'PDS',
@@ -464,6 +469,7 @@ define(function() {
         stealth:    0.2,
         price:      45000,
         restricted: 'Admired',
+        markets:    ['military', 'capitol'],
       },
       stealthPlating: {
         name:       "Adaptive hull plating",
@@ -474,6 +480,7 @@ define(function() {
         armor:      -1,
         price:      125000,
         restricted: 'Admired',
+        markets:    ['military', 'capitol'],
       },
     }
   };
