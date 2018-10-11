@@ -45,28 +45,27 @@ define(function(require, exports, module) {
       turn() {
         this.$nextTick(() => {
           if (this.left > 0) {
-            for (const mat of Object.keys(this.materials)) {
-              this.player.ship.unloadCargo(mat, this.materials[mat]);
-            }
-
             this.game.turn(this.turns);
             this.player.ship.loadCargo(this.item, 1);
             this.game.refresh();
-            this.game.save_game();
-
             this.left -= 1;
           }
           else {
             this.run  = false;
             this.done = true;
+            this.game.save_game();
           }
         });
       },
 
       fabricate() {
-        this.left = this.turns;
+        for (const mat of Object.keys(this.materials)) {
+          this.player.ship.unloadCargo(mat, this.count * this.materials[mat]);
+        }
+
         this.player.debit(this.fee);
         this.planet.fabricate(this.item);
+        this.left = this.turns;
         this.run = true;
         this.$nextTick(this.turn);
       },
