@@ -25,12 +25,24 @@ define(function(require, exports, module) {
       return Math.min(this.width_px, this.height_px);
     }
 
-    get zero() {
-      if (!this._zero) {
-        this._zero = this.scale_px / 2;
+    get zero_x() {
+      if (!this._zero_x) {
+        this._zero_x = this.width_px / 2;
       }
 
-      return this._zero;
+      return this._zero_x;
+    }
+
+    get zero_y() {
+      if (!this._zero_y) {
+        this._zero_y = this.height_px / 2;
+      }
+
+      return this._zero_y;
+    }
+
+    get zero() {
+      return Math.min(this.zero_x, this.zero_y);
     }
 
     get elt() {
@@ -82,14 +94,15 @@ define(function(require, exports, module) {
 
     set_center(point) {
       const [x, y]  = this.scale_point(point, true);
-      this.offset_x = this.zero - x;
-      this.offset_y = this.zero - y;
+      this.offset_x = this.zero_x - x;
+      this.offset_y = this.zero_y - y;
       this.init_x   = this.offset_x;
       this.init_y   = this.offset_y;
     }
 
     clear_zero() {
-      this._zero = null;
+      this._zero_x = null;
+      this._zero_y = null;
     }
 
     clear_mc() {
