@@ -92,9 +92,11 @@ define(function(require, exports, module) {
               return true;
             }
           }
+
+          return false;
         }
 
-        return false;
+        return true;
       },
 
       price: function() {

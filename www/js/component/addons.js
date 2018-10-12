@@ -37,7 +37,13 @@ define(function(require, exports, module) {
   Vue.component('addon', {
     props: ['type'],
 
-    data() { return { detail: false, buy: false, sell: false } },
+    data() {
+      return {
+        detail: false,
+        buy:    false,
+        sell:   false,
+      };
+    },
 
     computed: {
       planet()     { return this.game.here              },
@@ -68,20 +74,22 @@ define(function(require, exports, module) {
         return this.ship.availableHardPoints() > 0;
       },
 
-      hasUpgrade() {
+      marketHasUpgrade() {
         if (this.info.hasOwnProperty('markets')) {
           for (const trait of this.info.markets) {
             if (this.planet.hasTrait(trait)) {
               return true;
             }
           }
+
+          return false;
         }
 
-        return false;
+        return true;
       },
 
       isAvailable() {
-        return !this.isRestricted && this.canAfford && this.hasRoom && this.hasUpgrade;
+        return !this.isRestricted && this.canAfford && this.hasRoom && this.marketHasUpgrade;
       },
 
       hasUpgrade() {
@@ -115,11 +123,11 @@ define(function(require, exports, module) {
   <card v-if="detail" class="my-3" :title="info.name|caps">
     <card-text class="font-italic">{{info.desc}}</card-text>
 
-    <card-text v-if="!hasUpgrade" class="text-warning font-italic">
+    <card-text v-if="!marketHasUpgrade" class="text-warning font-italic">
       This upgrade is not available here.
     </card-text>
 
-    <card-text v-if="hasUpgrade && !isAvailable" class="text-warning font-italic">
+    <card-text v-if="marketHasUpgrade && !isAvailable" class="text-warning font-italic">
       <span v-if="isRestricted">
         Your reputation with this faction precludes the sale of this equipment to you.
         That does not prevent you from salivating from the show room window, however.
