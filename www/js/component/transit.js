@@ -204,7 +204,6 @@ define(function(require, exports, module) {
       },
 
       show_plot() {
-        // this.layout.width_px >= 300
         if ($(this.$refs.plot).width() < 300) {
           return false;
         }
@@ -215,7 +214,7 @@ define(function(require, exports, module) {
       diameter(body) {
         if (this.layout) {
           const fov_m    = this.layout.fov_au * Physics.AU;
-          const px_per_m = this.layout.width_px / fov_m;
+          const px_per_m = this.layout.scale_px / fov_m;
           const diameter = this.system.body(body).radius * 2;
 
           const adjust = body == 'sun' ? 1
@@ -224,7 +223,7 @@ define(function(require, exports, module) {
 
           const factor = this.layout.fov_au + Math.log2(Math.max(1, this.layout.fov_au));
           const amount = util.clamp(adjust * factor, 1);
-          return util.clamp(diameter * px_per_m * amount, 3, this.layout.width_px);
+          return util.clamp(diameter * px_per_m * amount, 3, this.layout.scale_px);
         }
         else {
           return 1;

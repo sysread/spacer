@@ -14,15 +14,20 @@ define(function(require, exports, module) {
       this.scaling   = scaling;
       this.fov_au    = Layout.SCALE_DEFAULT_AU;
       this.width_px  = 0;
+      this.height_px = 0;
       this.init_x    = 0;
       this.init_y    = 0;
       this.offset_x  = 0;
       this.offset_y  = 0;
     }
 
+    get scale_px() {
+      return Math.min(this.width_px, this.height_px);
+    }
+
     get zero() {
       if (!this._zero) {
-        this._zero = this.width_px / 2;
+        this._zero = this.scale_px / 2;
       }
 
       return this._zero;
@@ -161,9 +166,10 @@ define(function(require, exports, module) {
       const width = $(this.elt).parent().width();
 
       this.clear_zero();
-      this.width_px = Math.min(width, height);
+      this.width_px  = width;
+      this.height_px = height;
 
-      console.debug('layout: width updated to', this.width_px);
+      console.debug('layout: width updated to', this.width_px, 'x', this.height_px);
     }
 
     install_handlers() {
@@ -258,18 +264,19 @@ define(function(require, exports, module) {
     },
 
     watch: {
-      'layout.width_px': function() { this.layout_set() },
-      'layout.fov_au':   function() { this.layout_set() },
-      'layout.offset_x': function() { this.layout_set() },
-      'layout.offset_y': function() { this.layout_set() },
+      'layout.width_px':  function() { this.layout_set() },
+      'layout.height_px': function() { this.layout_set() },
+      'layout.fov_au':    function() { this.layout_set() },
+      'layout.offset_x':  function() { this.layout_set() },
+      'layout.offset_y':  function() { this.layout_set() },
     },
 
     computed: {
       layout_css_dimensions() {
         if (this.layout) {
           return {
-            width:  this.layout.width_px + 'px',
-            height: this.layout.width_px + 'px',
+            width:  this.layout.width_px  + 'px',
+            height: this.layout.height_px + 'px',
           };
         }
       },
