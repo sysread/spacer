@@ -28,7 +28,7 @@ define(function(require, exports, module) {
       return {
         layout_target_id: 'transit-plot-root',
         timeline:  null,
-        started:   false,
+        building:  false,
         paused:    false,
         stoppedBy: {'pirate': 0},
         encounter: null,
@@ -61,9 +61,62 @@ define(function(require, exports, module) {
         return Object.keys(bodies);
       },
 
-      nearest_body() {
+      points_of_view() {
+        // Start with the depart and arrival points as well as the next nearest
+        // body for perspective.
+        const points = [
+          this.plan.start,
+          this.plan.end,
+          this.system.position(this.nearest_body()),
+        ];
+
+        // Include the destination's final position at arrival
+        points.push(this.system.position(this.plan.dest));
+
+        // If the destination is a moon, also include its host
+        if (this.system.central(this.plan.dest) != 'sun') {
+          points.push(this.system.position(this.system.central(this.plan.dest)));
+        }
+
+        return points;
+      },
+    },
+
+    methods: {
+      dead() {
+        this.$emit('open', 'newgame');
+      },
+
+      layout_set() {
+        if (!this.building) {
+          this.$nextTick(() => {
+            if (this.timeline) {
+              this.timeline.kill();
+              this.timeline = null;
+            }
+
+            this.timeline = this.build_timeline();
+          });
+        }
+      },
+
+      fov(turn) {
+        const c = this.center(turn);
+
+        const d = Math.max(
+          Physics.distance(this.plan.path[turn].position, c),
+          Physics.distance(this.plan.end, c),
+          Physics.distance(this.system.position(this.nearest_body(turn)), c),
+        );
+
+        const fov = d / Physics.AU * 1.1;
+
+        return Math.min(fov, Physics.AU / 4);
+      },
+
+      nearest_body(turn=0) {
         const origin = this.plan.flip_point;
-        const ranges = this.system.ranges(this.plan.end);
+        const ranges = this.system.ranges(this.plan.path[turn]);
 
         // Add the sun
         ranges['sun'] = Physics.distance(origin, [0, 0]);
@@ -93,13 +146,13 @@ define(function(require, exports, module) {
         return nearest;
       },
 
-      points_of_view() {
+      center(turn) {
         // Start with the depart and arrival points as well as the next nearest
         // body for perspective.
         const points = [
-          this.plan.start,
+          this.plan.path[turn].position,
           this.plan.end,
-          this.system.position(this.nearest_body),
+          this.system.position(this.nearest_body(turn)),
         ];
 
         // Include the destination's final position at arrival
@@ -110,43 +163,13 @@ define(function(require, exports, module) {
           points.push(this.system.position(this.system.central(this.plan.dest)));
         }
 
-        return points;
-      },
-
-      fov() {
-        const c = this.center_point;
-
-        const d = Math.max(
-          Physics.distance(this.plan.start, c),
-          Physics.distance(this.plan.end, c),
-          Physics.distance(this.system.position(this.nearest_body), c),
-        );
-
-        const fov = d / Physics.AU * 1.1;
-
-        return Math.min(fov, Physics.AU / 4);
-      },
-    },
-
-    methods: {
-      dead() {
-        this.$emit('open', 'newgame');
-      },
-
-      layout_set() {
-        this.$nextTick(() => {
-          if (this.timeline) {
-            this.timeline.kill();
-            this.timeline = null;
-          }
-
-          this.timeline = this.build_timeline();
-        });
+        return Physics.centroid(...points);
       },
 
       build_timeline() {
-        this.layout.set_center(this.center_point);
-        this.layout.set_fov_au(this.fov);
+        this.building = true;
+        this.layout.set_center(this.center(0));
+        this.layout.set_fov_au(this.fov(0));
 
         const timeline = new TimelineLite({
           onComplete: () => {
@@ -156,32 +179,33 @@ define(function(require, exports, module) {
           },
         });
 
-        // Add the sun
-        const [sun_x, sun_y] = this.layout.scale_point([0, 0]);
-        timeline.to(this.$refs.sun, 0, {x: sun_x, y: sun_y});
+        const orbits = {};
+        const timelines = {ship: new TimelineLite, sun: new TimelineLite};
 
-        // Add the planets
         for (const body of this.bodies) {
-          const tl    = new TimelineLite;
-          const orbit = this.system.orbit_by_turns(body);
-
-          for (let i = 0; i < this.plan.left; ++i) {
-            const [x, y] = this.layout.scale_point(orbit[i]);
-            tl.to(this.$refs[body], intvl, {x: x, y: y, ease: Power0.easeNone});
-          }
-
-          timeline.add(tl, 0);
+          orbits[body]= this.system.orbit_by_turns(body);
+          timelines[body] = new TimelineLite;
         }
 
-        // Ship animation
-        const ship_tl = new TimelineLite;
+        for (let turn = 0; turn < this.plan.left; ++turn) {
+          this.layout.set_center(this.center(turn));
+          this.layout.set_fov_au(this.fov(turn));
 
-        for (let i = this.plan.currentTurn; i < this.plan.turns; ++i) {
-          const [x, y] = this.layout.scale_point(this.plan.path[i].position);
+          // Update sun
+          const [sun_x, sun_y] = this.layout.scale_point([0, 0]);
+          timelines.sun.to(this.$refs.sun, intvl, {x: sun_x, y: sun_y});
 
-          ship_tl.to(this.$refs.ship, intvl, {x: x, y: y, ease: Power0.easeNone});
+          // Update planets
+          for (const body of this.bodies) {
+            const [x, y] = this.layout.scale_point(orbits[body][turn]);
+            timelines[body].to(this.$refs[body], intvl, {x: x, y: y, ease: Power0.easeNone});
+          }
 
-          ship_tl.call(() => {
+          // Update ship
+          const [ship_x, ship_y] = this.layout.scale_point(this.plan.path[turn].position);
+          timelines.ship.to(this.$refs.ship, intvl, {x: ship_x, y: ship_y, ease: Power0.easeNone});
+
+          timelines.ship.call(() => {
             if (this.paused || this.encounter) {
               if (!timeline.paused()) {
                 timeline.pause();
@@ -198,7 +222,11 @@ define(function(require, exports, module) {
           });
         }
 
-        timeline.add(ship_tl, 0);
+        for (const tl of Object.values(timelines)) {
+          timeline.add(tl, 0);
+        }
+
+        this.building = false;
 
         return timeline;
       },
