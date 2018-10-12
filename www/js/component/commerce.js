@@ -288,9 +288,9 @@ define(function(require, exports, module) {
     template: `
 <div>
   <div class="button-group row justify-content-end">
-    <btn class="col" @click="show_routes=true" :disabled="show_routes">Pending</btn>
     <btn class="col" @click="show_routes=false;relprices=false" :disabled="!show_routes && !relprices">Absolute Prices</btn>
     <btn class="col" @click="show_routes=false;relprices=true" :disabled="!show_routes && relprices">Relative Prices</btn>
+    <btn class="col" @click="show_routes=true" :disabled="show_routes">Pending</btn>
   </div>
 
   <table class="table table-sm" v-if="!show_routes">

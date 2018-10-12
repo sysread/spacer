@@ -46,11 +46,11 @@ define(function(require, exports, module) {
         this.$nextTick(() => {
           if (this.left > 0) {
             this.game.turn(this.turns);
-            this.player.ship.loadCargo(this.item, 1);
             this.game.refresh();
             this.left -= 1;
           }
           else {
+            this.player.ship.loadCargo(this.item, this.count);
             this.run  = false;
             this.done = true;
             this.game.save_game();
