@@ -115,12 +115,12 @@ define(function(require, exports, module) {
     }
 
     scale_x(n, no_offset) {
-      const n_scaled = this.zero + this.scale(n);
+      const n_scaled = this.zero_x + this.scale(n);
       return no_offset ? n_scaled : n_scaled + this.offset_x;
     }
 
     scale_y(n, no_offset) {
-      const n_scaled = this.zero - this.scale(n);
+      const n_scaled = this.zero_y - this.scale(n);
       return no_offset ? n_scaled : n_scaled + this.offset_y;
     }
 
