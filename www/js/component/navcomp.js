@@ -229,7 +229,7 @@ define(function(require, exports, module) {
             <Menu>
               <NavDestOpt @answer="next_dest" :body="dest || next_dest()" />
             </Menu>
-            <planet-summary mini=true :planet="planet" />
+            <planet-summary :planet="planet" />
           </div>
         </div>
 
