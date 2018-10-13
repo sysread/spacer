@@ -140,15 +140,15 @@ define(function(require, exports, module) {
         const cargo = this.player.ship.cargoLeft;
         return hold + Math.min(dock, Math.floor(cred / this.buy), cargo);
       },
-    },
-    methods: {
-      agentGender: function() {
-        return util.oneOf(['man', 'woman']);
-      },
 
       fine: function() {
         const base = this.planet.inspectionFine();
         return Math.min(this.player.money, base * Math.abs(this.count));
+      },
+    },
+    methods: {
+      agentGender: function() {
+        return util.oneOf(['man', 'woman']);
       },
 
       updateState: function() {
@@ -163,14 +163,14 @@ define(function(require, exports, module) {
 
       complete: function() {
         if (this.contraband && this.planet.inspectionChance(0)) {
-          this.player.debit(this.fine());
+          this.player.debit(this.fine);
           this.player.decStanding(this.faction.abbrev, this.contraband);
 
           if (this.count < 0) {
             this.player.ship.cargo.set(this.item, 0);
           }
           else {
-            this.planet.store.dec(this.item, this.count);
+            this.planet.stock.dec(this.item, this.count);
           }
 
           this.busted = true;
@@ -237,9 +237,11 @@ define(function(require, exports, module) {
   </modal>
 
   <ok v-if="busted" @ok="close_trade">
-    As you complete your exchange, {{faction.abbrev}} agents in powered armor smash their way into the room.
-    A {{agentGender()}} with a corporal's stripes informs you that your cargo has been confiscated and you have been fined {{fine()}}) credits.
-    Your reputation with this faction has decreased by {{contraband}}.
+    As you complete your exchange, {{faction.abbrev}} agents in powered armor
+    smash their way into the room. A {{agentGender()}} with a corporal's
+    stripes informs you that your cargo has been confiscated and you have been
+    fined {{fine|csn}} credits. Your reputation with this faction has decreased
+    by {{contraband}}.
   </ok>
 
   <ok v-if="standing" @ok="close_trade">
