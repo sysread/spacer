@@ -253,7 +253,7 @@ define(function(require, exports, module) {
 
     hasTrait(trait) {
       for (const t of this.traits) {
-        if (t == trait) {
+        if (t.name == trait) {
           return true;
         }
       }
