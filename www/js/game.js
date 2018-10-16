@@ -5,8 +5,6 @@ define(function(require, exports, module) {
   const model  = require('model');
   const Person = require('person');
 
-  const start_page = 'summary';
-
   const Game = class {
     constructor() {
       const saved = window.localStorage.getItem('game');
@@ -32,12 +30,6 @@ define(function(require, exports, module) {
       }
 
       this.refresh();
-
-      if (this.turns == 0) {
-        this.open('newgame');
-      } else {
-        this.open(start_page);
-      }
     }
 
     reset_date() {
@@ -84,19 +76,6 @@ define(function(require, exports, module) {
       this.freeze = false;
       this.save_game();
       this.refresh();
-    }
-
-    open(name) {
-      if (this.freeze && name != 'newgame') {
-        return;
-      }
-
-      if (!window.localStorage.getItem('game')) {
-        name = 'newgame';
-      }
-
-      this.page = name;
-      $('#spacer-content').empty().load(this.page + '.html');
     }
 
     strdate(date) {

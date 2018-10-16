@@ -16,6 +16,9 @@ define(function(require, exports, module) {
       this.left     = this.course.turns;  // remaining turns in transit; updated by turn()
       this.coords   = this.start;         // current position; updated by turn()
       this.velocity = 0;                  // current ship velocity; updated by turn()
+
+      this.au = this.dist / Physics.AU;
+      this.km = this.dist / 1000;
     }
 
     get turns()        { return this.course.turns                              }// turns
@@ -26,8 +29,6 @@ define(function(require, exports, module) {
     get hours()        { return this.turns * data.hours_per_turn               }// hours
     get currentTurn()  { return this.turns - this.left                         }
     get turnpct()      { return 100 / this.turns                               }// percent of trip per turn
-    get km()           { return this.dist / 1000                               }// distance in kilometers
-    get au()           { return this.dist / Physics.AU                         }// distance in AU
     get is_complete()  { return this.left === 0                                }
     get pct_complete() { return 100 - (this.left * this.turnpct)               }
     get segment()      { return Physics.distance(this.start, this.end)         }

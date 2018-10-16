@@ -6,7 +6,6 @@ define(function(require, exports, module) {
   const util    = require('util');
   const Layout  = require('layout');
   const model   = require('model');
-
   const intvl   = 0.3;
 
   require('component/global');
@@ -17,10 +16,6 @@ define(function(require, exports, module) {
 
   require('vendor/TweenMax.min');
 
-  /*
-   * NOTES:
-   *  need a way to modify the fov and focus of the camera during transit.
-   */
   Vue.component('transit', {
     mixins: [ Layout.LayoutMixin ],
 
@@ -37,13 +32,21 @@ define(function(require, exports, module) {
     },
 
     computed: {
+      intvl()              { return intvl },
       plan()               { return $('#spacer').data().info },
-      bodies()             { return this.system.bodies() },
       encounter_possible() { return this.plan.velocity <= this.data.max_encounter_velocity },
       destination()        { return this.system.name(this.plan.dest) },
-      compression()        { return Math.sin( Math.PI * Math.max(this.plan.currentTurn, 1) / this.plan.turns ) },
-      center_point()       { return Physics.centroid(...this.points_of_view) },
       percent()            { return this.plan.pct_complete },
+      current_turn()       { return this.plan.currentTurn },
+
+      fov() {
+        const fov = Math.max(
+          Physics.distance([0, 0], this.plan.start),
+          Physics.distance([0, 0], this.plan.end),
+        ) / Physics.AU;
+
+        return fov * 0.75;
+      },
 
       bodies() {
         // Build list of planetary bodies to show
@@ -60,165 +63,128 @@ define(function(require, exports, module) {
 
         return Object.keys(bodies);
       },
-
-      points_of_view() {
-        // Start with the depart and arrival points as well as the next nearest
-        // body for perspective.
-        const points = [
-          this.plan.start,
-          this.plan.end,
-          this.system.position(this.nearest_body()),
-        ];
-
-        // Include the destination's final position at arrival
-        points.push(this.system.position(this.plan.dest));
-
-        // If the destination is a moon, also include its host
-        if (this.system.central(this.plan.dest) != 'sun') {
-          points.push(this.system.position(this.system.central(this.plan.dest)));
-        }
-
-        return points;
-      },
     },
 
     methods: {
-      dead() {
-        this.$emit('open', 'newgame');
-      },
+      dead()          { this.$emit('open', 'newgame') },
+      layout_set()    { this.build_timeline()         },
+      layout_resize() { this.rebuild_timeline()       },
 
-      layout_set() {
+      rebuild_timeline() {
         if (!this.building) {
-          this.$nextTick(() => {
-            if (this.timeline) {
-              this.timeline.kill();
-              this.timeline = null;
-            }
+          if (this.timeline) {
+            this.timeline.kill();
+            this.timeline = null;
+          }
 
-            this.timeline = this.build_timeline();
-          });
+          this.$nextTick(() => this.build_timeline());
         }
-      },
-
-      fov(turn) {
-        const c = this.center(turn);
-
-        const d = Math.max(
-          Physics.distance(this.plan.path[turn].position, c),
-          Physics.distance(this.plan.end, c),
-          Physics.distance(this.system.position(this.nearest_body(turn)), c),
-        );
-
-        const fov = d / Physics.AU * 1.1;
-
-        return Math.min(fov, Physics.AU / 4);
-      },
-
-      nearest_body(turn=0) {
-        const origin = this.plan.flip_point;
-        const ranges = this.system.ranges(this.plan.path[turn]);
-
-        // Add the sun
-        ranges['sun'] = Physics.distance(origin, [0, 0]);
-
-        // Filter out the origin and destination as well as their satellites
-        let candidates = Object.keys(ranges)
-          .filter(b => b != this.plan.dest)
-          .filter(b => b != this.plan.origin)
-          .filter(b => this.system.central(b) != this.plan.dest)
-          .filter(b => this.system.central(b) != this.plan.origin);
-
-        // If the origin is a moon, exclude moons of the same system
-        if (this.system.central(this.plan.origin) != 'sun') {
-          candidates = candidates
-            .filter(b => this.system.central(b) != this.system.central(this.plan.origin));
-        }
-
-        // If the destination is a moon, exclude moons of the same system
-        if (this.system.central(this.plan.dest) != 'sun') {
-          candidates = candidates
-            .filter(b => this.system.central(b) != this.system.central(this.plan.dest));
-        }
-
-        const nearest = candidates
-          .reduce((a, b) => ranges[a] > ranges[b] ? b : a);
-
-        return nearest;
-      },
-
-      center(turn) {
-        // Start with the depart and arrival points as well as the next nearest
-        // body for perspective.
-        const points = [
-          this.plan.path[turn].position,
-          this.plan.end,
-          this.system.position(this.nearest_body(turn)),
-        ];
-
-        // Include the destination's final position at arrival
-        points.push(this.system.position(this.plan.dest));
-
-        // If the destination is a moon, also include its host
-        if (this.system.central(this.plan.dest) != 'sun') {
-          points.push(this.system.position(this.system.central(this.plan.dest)));
-        }
-
-        return Physics.centroid(...points);
       },
 
       build_timeline() {
-        this.building = true;
-        this.layout.set_center(this.center(0));
-        this.layout.set_fov_au(this.fov(0));
+        if (!this.$refs.sun)  return;
+        if (!this.$refs.ship) return;
+        for (const body of this.bodies) {
+          if (!this.$refs[body]) {
+            return;
+          }
+        }
 
-        const timeline = new TimelineLite({
-          onComplete: () => {
-            $('#spacer').data({data: null});
-            this.game.transit(this.plan.dest);
-            this.$emit('open', 'summary');
-          },
-        });
+        this.building = true;
+
+        const center = Physics.centroid(
+          this.plan.start,
+          this.plan.end,
+          [0, 0],
+        );
+
+        const fov = 0.5 + Math.max(
+          Physics.distance(this.plan.start, center),
+          Physics.distance(this.plan.end, center),
+          Physics.distance([0, 0], center),
+        ) / Physics.AU;
+
+        this.layout.set_center(center);
+        this.layout.set_fov_au(fov);
+
+        const timeline = new TimelineLite;
+
+        const timelines = {
+          sun:  new TimelineLite,
+          ship: new TimelineLite({
+            onComplete: () => {
+              this.$nextTick(() => {
+                $('#spacer').data({data: null});
+                this.game.transit(this.plan.dest);
+                this.$emit('open', 'summary');
+              });
+            },
+          }),
+        };
 
         const orbits = {};
-        const timelines = {ship: new TimelineLite, sun: new TimelineLite};
-
         for (const body of this.bodies) {
           orbits[body]= this.system.orbit_by_turns(body);
           timelines[body] = new TimelineLite;
+          timelines[body + '_label'] = new TimelineLite;
         }
 
-        for (let turn = 0; turn < this.plan.left; ++turn) {
-          this.layout.set_center(this.center(turn));
-          this.layout.set_fov_au(this.fov(turn));
+        for (let turn = this.plan.currentTurn; turn < this.plan.turns; ++turn) {
+          // On the first turn, do not animate transition to starting location
+          const time = turn == 0 ? 0 : this.intvl;
 
           // Update sun
           const [sun_x, sun_y] = this.layout.scale_point([0, 0]);
-          timelines.sun.to(this.$refs.sun, intvl, {x: sun_x, y: sun_y});
+          const sun_d = this.diameter('sun');
+          timelines.sun.to(this.$refs.sun, time, {
+            x:      sun_x,
+            y:      sun_y,
+            height: sun_d,
+            width:  sun_d,
+            ease:   Power0.easeNone,
+          });
 
           // Update planets
           for (const body of this.bodies) {
             const [x, y] = this.layout.scale_point(orbits[body][turn]);
-            timelines[body].to(this.$refs[body], intvl, {x: x, y: y, ease: Power0.easeNone});
+            const d = this.diameter(body);
+
+            timelines[body].to(this.$refs[body], time, {
+              x:      x,
+              y:      y,
+              height: d,
+              width:  d,
+              ease:   Power0.easeNone,
+            });
+
+            timelines[body + '_label'].to(this.$refs[body + '_label'], time, {
+              x: x + (d / 2) + 10,
+              y: y + (d / 2),
+              ease: Power0.easeNone,
+            });
           }
 
           // Update ship
           const [ship_x, ship_y] = this.layout.scale_point(this.plan.path[turn].position);
-          timelines.ship.to(this.$refs.ship, intvl, {x: ship_x, y: ship_y, ease: Power0.easeNone});
+          timelines.ship.to(this.$refs.ship, time, {
+            x:    ship_x,
+            y:    ship_y,
+            ease: Power0.easeNone,
+            onComplete: () => {
+              if (this.paused || this.encounter) {
+                if (!timeline.paused()) {
+                  timeline.pause();
+                }
 
-          timelines.ship.call(() => {
-            if (this.paused || this.encounter) {
-              if (!timeline.paused()) {
-                timeline.pause();
+                return;
               }
 
-              return;
-            }
+              if (timeline.paused()) {
+                timeline.resume();
+              }
 
-            if (timeline.paused()) {
-              timeline.resume();
-            }
-
-            this.turn();
+              this.turn();
+            },
           });
         }
 
@@ -227,12 +193,17 @@ define(function(require, exports, module) {
         }
 
         this.building = false;
+        this.timeline = timeline;
 
         return timeline;
       },
 
       show_plot() {
         if ($(this.$refs.plot).width() < 300) {
+          return false;
+        }
+
+        if (this.encounter) {
           return false;
         }
 
@@ -254,7 +225,7 @@ define(function(require, exports, module) {
           return util.clamp(diameter * px_per_m * amount, 3, this.layout.scale_px);
         }
         else {
-          return 1;
+          return 3;
         }
       },
 
@@ -273,12 +244,12 @@ define(function(require, exports, module) {
 
       pause() {
         this.paused = true;
-        this.$nextTick(() => this.timeline.pause());
+        this.timeline.pause();
       },
 
       resume() {
         this.paused = false;
-        this.$nextTick(() => this.timeline.resume());
+        this.timeline.resume();
       },
 
       turn() {
@@ -410,20 +381,20 @@ define(function(require, exports, module) {
           </tr>
           <tr v-if="!show_plot()">
             <td colspan="3">
-              <progress-bar width=100 :percent="percent" />
+              <progress-bar width=100 :percent="percent" :frame_rate="intvl" />
             </td>
           </tr>
         </table>
 
-        <div v-layout ref="plot" v-if="!encounter" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
+        <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
           <progress-bar width=100 :percent="percent" class="d-inline" />
 
           <SvgPlot :layout="layout" v-if="layout">
-            <image ref="sun" xlink:href="img/sun.png" :height="diameter('sun')" :width="diameter('sun')" />
+            <image ref="sun" xlink:href="img/sun.png" />
 
-            <g v-for="body of bodies" :key="body" :ref="body">
-              <image :xlink:href="'img/' + body + '.png'" :height="diameter(body)" :width="diameter(body)" />
-              <text v-show="show_label(body)" style="font:12px monospace; fill:#EEEEEE;" :y="diameter(body)/2" x="10">
+            <g v-for="body of bodies" :key="body">
+              <image :ref="body" :xlink:href="'img/' + body + '.png'" />
+              <text :ref="body + '_label'" v-show="show_label(body)" style="font:12px monospace; fill:#EEEEEE;">
                 {{body|caps}}
               </text>
             </g>

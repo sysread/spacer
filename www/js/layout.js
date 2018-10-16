@@ -9,9 +9,12 @@ define(function(require, exports, module) {
     static get SCALE_MIN_AU()     { return 0.00001 };
     static get SCALE_MAX_AU()     { return 35      };
 
-    constructor(id, scaling) {
+    constructor(id, scaling, on_scale, on_pan, on_resize) {
       this.id        = id;
       this.scaling   = scaling;
+      this.on_scale  = on_scale;
+      this.on_pan    = on_pan;
+      this.on_resize = on_resize;
       this.fov_au    = Layout.SCALE_DEFAULT_AU;
       this.width_px  = 0;
       this.height_px = 0;
@@ -90,6 +93,10 @@ define(function(require, exports, module) {
       this.offset_y -= ((this.offset_y * new_fov) - (this.offset_y * old_fov)) / new_fov;
       this.init_x    = this.offset_x;
       this.init_y    = this.offset_y;
+
+      if (this.on_scale) {
+        this.on_scale();
+      }
     }
 
     set_center(point) {
@@ -98,6 +105,10 @@ define(function(require, exports, module) {
       this.offset_y = this.zero_y - y;
       this.init_x   = this.offset_x;
       this.init_y   = this.offset_y;
+
+      if (this.on_pan) {
+        this.on_pan();
+      }
     }
 
     clear_zero() {
@@ -178,11 +189,17 @@ define(function(require, exports, module) {
 
       const width = $(this.elt).parent().width();
 
+      const changed = width != this.width_px || height != this.height_px;
+
       this.clear_zero();
       this.width_px  = width;
       this.height_px = height;
 
       console.debug('layout: width updated to', this.width_px, 'x', this.height_px);
+
+      if (changed && this.on_resize) {
+        this.on_resize();
+      }
     }
 
     install_handlers() {
@@ -268,20 +285,18 @@ define(function(require, exports, module) {
           vnode.context.layout = new Layout(
             vnode.context.layout_target_id,
             vnode.context.layout_scaling,
+            () => { vnode.context.layout_scale()  },
+            () => { vnode.context.layout_pan()    },
+            () => { vnode.context.layout_resize() },
           );
 
           vnode.context.$emit('update:layout', vnode.context.layout);
-          vnode.context.$nextTick(() => vnode.context.layout.update_width());
+          vnode.context.$nextTick(() => {
+            vnode.context.layout.update_width();
+            vnode.context.layout_set();
+          });
         }
       },
-    },
-
-    watch: {
-      'layout.width_px':  function() { this.layout_set() },
-      'layout.height_px': function() { this.layout_set() },
-      'layout.fov_au':    function() { this.layout_set() },
-      'layout.offset_x':  function() { this.layout_set() },
-      'layout.offset_y':  function() { this.layout_set() },
     },
 
     computed: {
@@ -296,7 +311,10 @@ define(function(require, exports, module) {
     },
 
     methods: {
-      layout_set() { },
+      layout_set()    { },
+      layout_resize() { },
+      layout_scale()  { },
+      layout_pan()    { },
     },
   };
 });

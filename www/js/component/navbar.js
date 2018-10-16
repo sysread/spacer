@@ -37,7 +37,10 @@ define(function(require, exports, module) {
 
     'methods': {
       open(page) {
-        this.$emit('open', page);
+        if (!this.disabled) {
+          this.$emit('open', page);
+        }
+
         this.collapse();
       },
 
@@ -55,7 +58,7 @@ define(function(require, exports, module) {
     },
 
     'template': `
-      <nav @click="click" id="spacer-navbar" data-toggle="collapse" class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
+      <nav @click="click" id="spacer-navbar" :data-toggle="disabled ? '' : 'collapse'" class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
         <span class="navbar-brand">Spacer</span>
 
         <button class="navbar-toggler" type="button" :data-toggle="disabled ? '' : 'collapse'" data-target="#spacer-nav">

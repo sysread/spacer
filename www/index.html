@@ -30,11 +30,7 @@
     </nav>
 
     <!-- Content window -->
-    <!--<div id="spacer-content" class="container-fluid pt-3 pb-1 mt-5"></div>-->
     <div id="content" />
-
-    <!-- Navigation -->
-    <!-- <div id="navbar" /> -->
 
     <script>
       require(
@@ -70,6 +66,10 @@
 
             methods: {
               open(page) {
+                if (this.game.freeze && page != 'newgame') {
+                  return;
+                }
+
                 this.page = page;
               },
             },
