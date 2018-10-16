@@ -822,6 +822,36 @@ define(function(require, exports, module) {
 
       return price;
     }
+
+    resourceDependencyPriceAdjustment(resource) {
+      if (this.hasShortage(resource)) {
+        return this.getNeed(resource);
+      } else if (this.hasSurplus(resource)) {
+        return 1 / this.getNeed(resource);
+      } else {
+        return 1;
+      }
+    }
+
+    hasRepairs() {
+      return this.resourceDependencyPriceAdjustment('metal') < 10;
+    }
+
+    hullRepairPrice(player) {
+      const base     = data.ship.hull.repair;
+      const tax      = this.faction.sales_tax;
+      const standing = player.getStandingPriceAdjustment(this.faction.abbrev);
+      const scarcity = this.resourceDependencyPriceAdjustment('metal');
+      return (base + (base * tax) - (base * standing)) * scarcity;
+    }
+
+    armorRepairPrice(player) {
+      const base     = data.ship.armor.repair;
+      const tax      = this.faction.sales_tax;
+      const standing = player.getStandingPriceAdjustment(this.faction.abbrev);
+      const scarcity = this.resourceDependencyPriceAdjustment('metal');
+      return (base + (base * tax) - (base * standing)) * scarcity;
+    }
   };
 
   for (const name of Object.keys(data.resources))
