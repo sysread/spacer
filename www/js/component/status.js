@@ -134,7 +134,7 @@ define(function(require, exports, module) {
   <def term="Fuel" :def="tank|unit('tonnes')" />
   <def term="Range" :def="burn|unit('hours at maximum thrust')" />
   <def term="Fuel rate">
-    {{fuelRate|unit('tonnes/hr')}} at maximum thrust
+    {{fuelRate|R(4)|unit('tonnes/hr')}} at maximum thrust
   </def>
   <def term="Drive" :def="ship.drives|unit(ship.drive.name)" />
   <def term="Stealth" :def="(ship.stealth * 100) + '%'" />
