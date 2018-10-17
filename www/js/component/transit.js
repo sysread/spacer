@@ -3,10 +3,12 @@ define(function(require, exports, module) {
   const Ship    = require('ship');
   const Physics = require('physics');
   const Vue     = require('vendor/vue');
+  const data    = require('data');
   const util    = require('util');
   const Layout  = require('layout');
   const model   = require('model');
   const intvl   = 0.3;
+  const turns_per_day = 24 / data.hours_per_turn;
 
   require('component/global');
   require('component/common');
@@ -27,7 +29,6 @@ define(function(require, exports, module) {
         paused:    false,
         stoppedBy: {'pirate': 0},
         encounter: null,
-        daysLeft:  null,
       };
     },
 
@@ -36,8 +37,11 @@ define(function(require, exports, module) {
       plan()               { return $('#spacer').data().info },
       encounter_possible() { return this.plan.velocity <= this.data.max_encounter_velocity },
       destination()        { return this.system.name(this.plan.dest) },
-      percent()            { return this.plan.pct_complete },
       current_turn()       { return this.plan.currentTurn },
+
+      daysLeft()  { return Math.floor(this.plan.left * this.data.hours_per_turn / 24) },
+      daysTotal() { return Math.floor(this.plan.turns * this.data.hours_per_turn / 24) },
+      percent()   { return 100 - (100 * (this.daysLeft / this.daysTotal)) },
 
       fov() {
         const fov = Math.max(
@@ -126,42 +130,47 @@ define(function(require, exports, module) {
         for (const body of this.bodies) {
           orbits[body]= this.system.orbit_by_turns(body);
           timelines[body] = new TimelineLite;
-          timelines[body + '_label'] = new TimelineLite;
         }
 
         for (let turn = this.plan.currentTurn; turn < this.plan.turns; ++turn) {
           // On the first turn, do not animate transition to starting location
           const time = turn == 0 ? 0 : this.intvl;
 
-          // Update sun
-          const [sun_x, sun_y] = this.layout.scale_point([0, 0]);
-          const sun_d = this.diameter('sun');
-          timelines.sun.to(this.$refs.sun, time, {
-            x:      sun_x,
-            y:      sun_y,
-            height: sun_d,
-            width:  sun_d,
-            ease:   Power0.easeNone,
-          });
+          if (turn == 0 || turn % turns_per_day == 0 || turn == this.plan.turns - 1) {
+            const mark = 'mark-' + turn;
 
-          // Update planets
-          for (const body of this.bodies) {
-            const [x, y] = this.layout.scale_point(orbits[body][turn]);
-            const d = this.diameter(body);
-
-            timelines[body].to(this.$refs[body], time, {
-              x:      x,
-              y:      y,
-              height: d,
-              width:  d,
+            // Update sun
+            const [sun_x, sun_y] = this.layout.scale_point([0, 0]);
+            const sun_d = this.diameter('sun');
+            timelines.sun.to(this.$refs.sun, time, {
+              x:      sun_x,
+              y:      sun_y,
+              height: sun_d,
+              width:  sun_d,
               ease:   Power0.easeNone,
             });
 
-            timelines[body + '_label'].to(this.$refs[body + '_label'], time, {
-              x: x + (d / 2) + 10,
-              y: y + (d / 2),
-              ease: Power0.easeNone,
-            });
+            // Update planets
+            for (const body of this.bodies) {
+              const [x, y] = this.layout.scale_point(orbits[body][turn]);
+              const d = this.diameter(body);
+
+              timelines[body].add(mark);
+
+              timelines[body].to(this.$refs[body], time * turns_per_day, {
+                x:      x,
+                y:      y,
+                height: d,
+                width:  d,
+                ease:   Power0.easeNone,
+              }, mark);
+
+              timelines[body].to(this.$refs[body + '_label'], time * turns_per_day, {
+                x: x + (d / 2) + 10,
+                y: y + (d / 2),
+                ease: Power0.easeNone,
+              }, mark);
+            }
           }
 
           // Update ship
@@ -170,6 +179,7 @@ define(function(require, exports, module) {
             x:    ship_x,
             y:    ship_y,
             ease: Power0.easeNone,
+
             onComplete: () => {
               if (this.paused || this.encounter) {
                 if (!timeline.paused()) {
@@ -177,10 +187,6 @@ define(function(require, exports, module) {
                 }
 
                 return;
-              }
-
-              if (timeline.paused()) {
-                timeline.resume();
               }
 
               this.$nextTick(() => this.turn());
@@ -253,7 +259,6 @@ define(function(require, exports, module) {
       },
 
       turn() {
-        this.daysLeft = Math.floor(this.plan.left * this.data.hours_per_turn / 24);
         this.distance = util.R(this.plan.auRemaining(), 2);
 
         if (this.game.player.ship.isDestroyed) {
@@ -381,13 +386,13 @@ define(function(require, exports, module) {
           </tr>
           <tr v-if="!show_plot()">
             <td colspan="3">
-              <progress-bar width=100 :percent="percent" :frame_rate="intvl" />
+              <progress-bar width=100 :percent="percent" frame_rate="0" />
             </td>
           </tr>
         </table>
 
         <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
-          <progress-bar width=100 :percent="percent" class="d-inline" />
+          <progress-bar width=100 :percent="percent" frame_rate="0" class="d-inline" />
 
           <SvgPlot :layout="layout" v-if="layout">
             <image ref="sun" xlink:href="img/sun.png" />
