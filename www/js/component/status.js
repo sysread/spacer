@@ -125,8 +125,8 @@ define(function(require, exports, module) {
     </div>
   </def>
 
-  <def term="Hull" :def="ship.hull" />
-  <def term="Armor" :def="ship.armor" />
+  <def term="Hull">{{ship.hull}}/{{ship.fullHull}}</def>
+  <def term="Armor">{{ship.armor}}/{{ship.fullArmor}}</def>
   <def term="Hard points" :def="ship.hardpoints" />
   <def term="Mass" :def="mass|unit('tonnes')" />
   <def term="Thrust" :def="thrust|unit('kN')" />
