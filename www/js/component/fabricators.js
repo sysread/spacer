@@ -193,13 +193,7 @@ define(function(require, exports, module) {
     },
 
     template: `
-      <card>
-        <card-title>
-          <btn block=1 @click="complete" :disabled="running">
-            Return to fabricators
-          </btn>
-        </card-title>
-
+      <card :title="item|caps">
         <ok v-if="queue.result" @ok="complete">
           <span :class="{'text-warning': !queue.success}">
             {{ queue.result }}
@@ -304,6 +298,10 @@ define(function(require, exports, module) {
 
     template: `
       <card title="Fabricators" class="my-3">
+        <template slot="header" v-if="selected">
+          <btn @click="clear">Back to fabricators</btn>
+        </template>
+
         <template v-if="!selected">
           <card-text>
             A triumph of cybernetics, the von Neumann fabricators are able to
