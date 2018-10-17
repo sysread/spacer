@@ -735,7 +735,7 @@ define(function(require, exports, module) {
 
       ITEM: for (const item of list) {
         // Import amounts should be between 5-20 units
-        const amount = Math.min(20, Math.max(want[item], 5));
+        const amount = util.clamp(want[item], 5, 20);
         const planet = this.selectExporter(item, amount);
         if (!planet) continue;
 
@@ -743,7 +743,7 @@ define(function(require, exports, module) {
 
         if (bought > 0) {
           const distance = this.distance(planet) / Physics.AU;
-          const turns = Math.ceil(distance * 10);
+          const turns = Math.ceil(distance * (24 / data.hours_per_turn) * 3); // 3 days per AU
           window.game.planets[planet].buy('fuel', distance);
 
           this.schedule({
