@@ -183,7 +183,7 @@ define(function(require, exports, module) {
                 timeline.resume();
               }
 
-              this.turn();
+              this.$nextTick(() => this.turn());
             },
           });
         }
