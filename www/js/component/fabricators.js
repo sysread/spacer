@@ -53,12 +53,16 @@ define(function(require, exports, module) {
             this.player.ship.loadCargo(this.item, this.count);
             this.run  = false;
             this.done = true;
+            this.game.refresh();
             this.game.save_game();
+            this.game.freeze = false;
           }
         });
       },
 
       fabricate() {
+        this.game.freeze = true;
+
         for (const mat of Object.keys(this.materials)) {
           this.player.ship.unloadCargo(mat, this.count * this.materials[mat]);
         }
