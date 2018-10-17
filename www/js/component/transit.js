@@ -38,10 +38,9 @@ define(function(require, exports, module) {
       encounter_possible() { return this.plan.velocity <= this.data.max_encounter_velocity },
       destination()        { return this.system.name(this.plan.dest) },
       current_turn()       { return this.plan.currentTurn },
-
-      daysLeft()  { return Math.floor(this.plan.left * this.data.hours_per_turn / 24) },
-      daysTotal() { return Math.floor(this.plan.turns * this.data.hours_per_turn / 24) },
-      percent()   { return 100 - (100 * (this.daysLeft / this.daysTotal)) },
+      daysLeft()           { return Math.floor(this.plan.left * this.data.hours_per_turn / 24) },
+      percent()            { return this.plan.pct_complete },
+      distance()           { return util.R(this.plan.auRemaining()) },
 
       fov() {
         const fov = Math.max(
@@ -259,8 +258,6 @@ define(function(require, exports, module) {
       },
 
       turn() {
-        this.distance = util.R(this.plan.auRemaining(), 2);
-
         if (this.game.player.ship.isDestroyed) {
           this.$emit('open', 'newgame');
         }
@@ -386,14 +383,12 @@ define(function(require, exports, module) {
           </tr>
           <tr v-if="!show_plot()">
             <td colspan="3">
-              <progress-bar width=100 :percent="percent" frame_rate="0" />
+              <progress-bar width=100 :percent="percent" :frame_rate="intvl" />
             </td>
           </tr>
         </table>
 
         <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
-          <progress-bar width=100 :percent="percent" frame_rate="0" class="d-inline" />
-
           <SvgPlot :layout="layout" v-if="layout">
             <image ref="sun" xlink:href="img/sun.png" />
 
