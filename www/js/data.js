@@ -15,7 +15,7 @@ define(function() {
     update_prices:          10, // days between price updates
     scarcity_markup:        0.25,
     necessity:              {water: true, food: true, medicine: true, fuel: true},
-    craft_fee:              0.05,
+    craft_fee:              0.2,
     fabricators:            10, // number of fabricators, each equates to 1 unit of cybernetics
     fab_health:             30, // number of tics each fabricator can handle before needing to be replaced. be sure to make this higher than the total tics needed to craft a cybernetics unit.
     grav_deltav_factor:     2,  // factor by which native gravity is multiplied to get player's sustained deltav tolerance
