@@ -240,9 +240,9 @@ define(function(require, exports, module) {
               <th>Total (est)</th>
             </tr>
             <tr v-if="amount">
-              <th>Amount</th>
-              <td>{{queue.goal|csn|unit('cu')}}</td>
-              <td>{{left|csn|unit('cu')}}</td>
+              <th>Count</th>
+              <td>{{queue.goal|csn}}</td>
+              <td>{{left|csn}}</td>
             </tr>
             <tr>
               <th>Market value</th>
