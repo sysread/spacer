@@ -55,6 +55,10 @@ define(function(require, exports, module) {
           $('#spacer-nav').collapse('toggle');
         }
       },
+
+      is_open(page) {
+        return page == (this.page || 'summary');
+      },
     },
 
     'template': `
@@ -67,7 +71,7 @@ define(function(require, exports, module) {
 
         <div class="collapse navbar-collapse" id="spacer-nav">
           <ul class="navbar-nav mr-auto">
-            <NavItem v-for="(target, label) of menu" :key="target" :active="page == target" @click="open(target)">
+            <NavItem v-for="(target, label) of menu" :key="target" :active="is_open(target)" @click="open(target)">
               {{label}}
             </NavItem>
           </ul>

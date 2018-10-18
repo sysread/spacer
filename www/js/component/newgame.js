@@ -41,7 +41,7 @@ define(function(require, exports, module) {
             this.game.turn(count);
           }
           else {
-            this.game.freeze = false;
+            this.game.unfreeze();
             this.game.refresh();
             this.$nextTick(() => this.$emit('open', 'summary'));
           }
@@ -50,7 +50,7 @@ define(function(require, exports, module) {
 
       startGame() {
         this.starting = true;
-        this.game.freeze = true;
+        this.game.freeze();
 
         this.game.new_game(
           new Person({

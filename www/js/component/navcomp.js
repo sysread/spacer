@@ -153,9 +153,9 @@ define(function(require, exports, module) {
         this.confirm = false;
 
         if (yes) {
-          $('#spacer').data('info', this.transit);
+          this.game.set_transit_plan(this.transit);
           this.$emit('open', 'transit');
-          this.game.freeze = true;
+          this.game.freeze();
         }
       },
     },

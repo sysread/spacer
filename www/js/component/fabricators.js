@@ -161,7 +161,7 @@ define(function(require, exports, module) {
 
     methods: {
       start() {
-        this.game.freeze = true;
+        this.game.freeze();
         this.running = true;
         this.$nextTick(() => this.turn());
       },
@@ -170,7 +170,7 @@ define(function(require, exports, module) {
         this.game.refresh();
         this.game.save_game();
         this.running = false;
-        this.game.freeze = false;
+        this.game.unfreeze();
       },
 
       turn() {

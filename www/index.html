@@ -61,12 +61,12 @@
             },
 
             computed: {
-              nav_disabled() { return this.game.freeze },
+              nav_disabled() { return this.game.is_frozen },
             },
 
             methods: {
               open(page) {
-                if (this.game.freeze && page != 'newgame') {
+                if (this.game.is_frozen && page != 'newgame') {
                   return;
                 }
 
@@ -77,7 +77,7 @@
             template: `
               <div>
                 <Content @open="open" :page="page" />
-                <NavBar  @open="open" :disabled="nav_disabled" />
+                <NavBar  @open="open" :page="page" :disabled="nav_disabled" />
               </div>
             `,
           });

@@ -10,7 +10,7 @@ define(function(require, exports, module) {
       const saved = window.localStorage.getItem('game');
       const init  = JSON.parse(saved) || {};
 
-      this.freeze  = false;
+      this.frozen  = false;
       this.page    = init.page  || null;
       this.locus   = init.locus || null;
       this.turns   = init.turns || 0;
@@ -71,13 +71,6 @@ define(function(require, exports, module) {
       window.localStorage.removeItem('game');
     }
 
-    transit(dest) {
-      this.locus = dest;
-      this.freeze = false;
-      this.save_game();
-      this.refresh();
-    }
-
     strdate(date) {
       date = date || this.date;
       let y = date.getFullYear();
@@ -114,6 +107,27 @@ define(function(require, exports, module) {
       if (!no_save) {
         this.save_game();
       }
+    }
+
+    get is_frozen() {
+      return this.frozen;
+    }
+
+    freeze() {
+      this.frozen = true;
+    }
+
+    unfreeze() {
+      this.frozen = false;
+    }
+
+    set_transit_plan(transit_plan) {
+      this.transit_plan = transit_plan;
+    }
+
+    arrive() {
+      this.locus = this.transit_plan.dest;
+      this.transit_plan = null;
     }
 
     trade_routes() {

@@ -34,7 +34,7 @@ define(function(require, exports, module) {
 
     computed: {
       intvl()              { return intvl },
-      plan()               { return $('#spacer').data().info },
+      plan()               { return this.game.transit_plan },
       encounter_possible() { return this.plan.velocity <= this.data.max_encounter_velocity },
       destination()        { return this.system.name(this.plan.dest) },
       current_turn()       { return this.plan.currentTurn },
@@ -123,8 +123,10 @@ define(function(require, exports, module) {
           ship: new TimelineLite({
             onComplete: () => {
               this.$nextTick(() => {
-                $('#spacer').data({data: null});
-                this.game.transit(this.plan.dest);
+                this.game.arrive();
+                this.game.unfreeze();
+                this.game.save_game();
+                this.game.refresh();
                 this.$emit('open', 'summary');
               });
             },
