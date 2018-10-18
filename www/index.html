@@ -36,28 +36,29 @@
       require(
         [
           'vendor/vue',        // base framework
+          'game',              // game state
           'component/global',  // global state
           'component/navbar',  // nav bar
           'component/content', // content div
         ],
 
-        function(Vue) {
+        function(Vue, game) {
+          const initial_page
+            = game.turns == 0              ? 'newgame'
+            : game.player.ship.isDestroyed ? 'newgame'
+                                           : 'summary';
+
           const content_app = new Vue({
             el: '#content',
 
             data: {
-              page: 'summary',
+              page: initial_page,
             },
 
+            mounted() { this.override_page() },
+
             watch: {
-              page() {
-                if (this.game.turns == 0) {
-                  this.page = 'newgame';
-                }
-                else if (this.game.player.ship.isDestroyed) {
-                  this.page = 'newgame';
-                }
-              },
+              page() { this.override_page() },
             },
 
             computed: {
@@ -65,6 +66,15 @@
             },
 
             methods: {
+              override_page() {
+                if (this.game.turns == 0) {
+                  this.page = 'newgame';
+                }
+                else if (this.game.player.ship.isDestroyed) {
+                  this.page = 'newgame';
+                }
+              },
+
               open(page) {
                 if (this.game.is_frozen && page != 'newgame') {
                   return;
