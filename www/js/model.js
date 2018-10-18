@@ -735,7 +735,7 @@ define(function(require, exports, module) {
 
       ITEM: for (const item of list) {
         // Import amounts should be between 5-20 units
-        const amount = util.clamp(want[item], 5, 20);
+        const amount = util.clamp(want[item] * (data.necessity[item] ? 2 : 1), 5, 20);
         const planet = this.selectExporter(item, amount);
         if (!planet) continue;
 
