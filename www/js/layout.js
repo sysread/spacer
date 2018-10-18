@@ -22,6 +22,7 @@ define(function(require, exports, module) {
       this.init_y    = 0;
       this.offset_x  = 0;
       this.offset_y  = 0;
+      this.init_set  = false;
     }
 
     get scale_px() {
@@ -187,8 +188,7 @@ define(function(require, exports, module) {
         - $('#spacer-status').height()
         - $('#spacer-navbar').height();
 
-      const width = $(this.elt).parent().width();
-
+      const width   = $(this.elt).parent().width();
       const changed = width != this.width_px || height != this.height_px;
 
       this.clear_zero();
@@ -197,9 +197,11 @@ define(function(require, exports, module) {
 
       console.debug('layout: width updated to', this.width_px, 'x', this.height_px);
 
-      if (changed && this.on_resize) {
+      if (this.init_set && changed && this.on_resize) {
         this.on_resize();
       }
+
+      this.init_set = true;
     }
 
     install_handlers() {
@@ -273,9 +275,9 @@ define(function(require, exports, module) {
   exports.LayoutMixin = {
     data() {
       return {
-        layout: null,           // the layout object
-        layout_scaling: false,  // whether to inject handlers for pan & zoom
-        layout_target_id: null, // element to control size of
+        layout:           null,  // the layout object
+        layout_scaling:   false, // whether to inject handlers for pan & zoom
+        layout_target_id: null,  // element to control size of
       };
     },
 
@@ -291,6 +293,7 @@ define(function(require, exports, module) {
           );
 
           vnode.context.$emit('update:layout', vnode.context.layout);
+
           vnode.context.$nextTick(() => {
             vnode.context.layout.update_width();
             vnode.context.layout_set();
@@ -312,9 +315,9 @@ define(function(require, exports, module) {
 
     methods: {
       layout_set()    { },
-      layout_resize() { },
       layout_scale()  { },
       layout_pan()    { },
+      layout_resize() { },
     },
   };
 });

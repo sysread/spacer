@@ -75,12 +75,18 @@ define(function(require, exports, module) {
 
       rebuild_timeline() {
         if (!this.building) {
+          this.pause();
+
           if (this.timeline) {
             this.timeline.kill();
             this.timeline = null;
           }
 
-          this.$nextTick(() => this.build_timeline());
+          // Execute in next tick to allow timeline to terminate
+          this.$nextTick(() => {
+            this.build_timeline();
+            this.resume();
+          });
         }
       },
 
@@ -133,7 +139,7 @@ define(function(require, exports, module) {
 
         for (let turn = this.plan.currentTurn; turn < this.plan.turns; ++turn) {
           // On the first turn, do not animate transition to starting location
-          const time = turn == 0 ? 0 : this.intvl;
+          const time = turn == this.plan.currentTurn ? 0 : this.intvl;
 
           if (turn == 0 || turn % turns_per_day == 0 || turn == this.plan.turns - 1) {
             const mark = 'mark-' + turn;
