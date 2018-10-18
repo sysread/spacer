@@ -56,8 +56,8 @@ define(function(require, exports, module) {
 
     new_game(player, home) {
       window.localStorage.removeItem('game');
-      this.locus  = home;
-      this.turns  = 0;
+      this.locus = home;
+      this.turns = 0;
       this.reset_date();
       this.build_player(player);
       this.build_planets();
