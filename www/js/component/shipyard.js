@@ -35,8 +35,8 @@ define(function(require, exports, module) {
     <card-text>
       And, of course, the yard manager who is only too happy to top off your
       fuel tank, repair any damage your ship might have sustained, no
-      questions asked, heh, heh, and perform maintenance that cannot easily
-      be done while underway.
+      questions asked, just my little joke, heh, heh, and perform maintenance
+      that cannot easily be done while underway.
     </card-text>
 
     <card-text>
