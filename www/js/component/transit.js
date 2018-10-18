@@ -425,6 +425,7 @@ define(function(require, exports, module) {
         <PirateEncounter
             v-if="encounter && encounter.type == 'pirate'"
             @done="complete_encounter"
+            @dead="dead"
             class="my-3" />
 
       </card>
@@ -535,7 +536,10 @@ define(function(require, exports, module) {
       },
 
       done(result) {
-        if (result == 'surrendered') {
+        if (result == 'destroyed') {
+          this.$emit('dead');
+        }
+        else if (result == 'surrendered') {
           this.submit();
         }
         else {
@@ -685,7 +689,10 @@ define(function(require, exports, module) {
       },
 
       done(result) {
-        if (result == 'surrendered') {
+        if (result == 'destroyed') {
+          this.$emit('dead');
+        }
+        else if (result == 'surrendered') {
           this.setChoice('submit-yes');
         }
         else {

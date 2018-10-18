@@ -73,7 +73,7 @@ define(function(require, exports, module) {
 
         if (this.combat.player.isDestroyed) {
           this.game.delete_game();
-          this.$emit('open', 'newgame');
+          this.$emit('complete', 'destroyed');
         }
         else {
           this.game.save_game();
