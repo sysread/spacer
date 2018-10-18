@@ -55,7 +55,9 @@
               page: initial_page,
             },
 
-            mounted() { this.override_page() },
+            mounted() {
+              this.override_page();
+            },
 
             watch: {
               page() { this.override_page() },

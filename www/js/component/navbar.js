@@ -18,9 +18,9 @@ define(function(require, exports, module) {
 
 
   Vue.component('NavBar', {
-    'props': ['page', 'disabled'],
+    props: ['page', 'disabled'],
 
-    'data': function() {
+    data: function() {
       return {
         menu: {
           'Summary':     'summary',
@@ -35,7 +35,27 @@ define(function(require, exports, module) {
       };
     },
 
-    'methods': {
+    mounted() {
+      document.addEventListener('click', (e) => {
+        if (this.is_expanded()) {
+          this.collapse();
+        }
+      });
+    },
+
+    watch: {
+      disabled() {
+        if (this.disabled) {
+          this.collapse();
+        }
+      },
+    },
+
+    methods: {
+      is_expanded() {
+        return $('#spacer-nav').hasClass('show');
+      },
+
       open(page) {
         if (!this.disabled) {
           this.$emit('open', page);
@@ -45,7 +65,7 @@ define(function(require, exports, module) {
       },
 
       collapse() {
-        if ($('#spacer-nav').hasClass('show')) {
+        if (this.is_expanded()) {
           $('#spacer-nav').collapse('hide');
         }
       },
@@ -61,15 +81,15 @@ define(function(require, exports, module) {
       },
     },
 
-    'template': `
-      <nav @click="click" id="spacer-navbar" :data-toggle="disabled ? '' : 'collapse'" class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
+    template: `
+      <nav @click="click" id="spacer-navbar" data-toggle="collapse" class="fixed-bottom navbar navbar-dark navbar-expand-md border-danger border border-left-0 border-right-0 border-bottom-0">
         <span class="navbar-brand">Spacer</span>
 
-        <button class="navbar-toggler" type="button" :data-toggle="disabled ? '' : 'collapse'" data-target="#spacer-nav">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#spacer-nav">
           <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="collapse navbar-collapse" id="spacer-nav">
+        <div v-if="!disabled" class="collapse navbar-collapse" id="spacer-nav">
           <ul class="navbar-nav mr-auto">
             <NavItem v-for="(target, label) of menu" :key="target" :active="is_open(target)" @click="open(target)">
               {{label}}
