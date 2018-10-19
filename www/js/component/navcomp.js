@@ -68,13 +68,37 @@ define(function(require, exports, module) {
       },
 
       map_center_point() {
-        const points = [ [0, 0], this.system.position(this.game.locus) ];
+        let center;
 
         if (this.dest) {
-          points.push(this.system.position(this.dest));
+          const dest_central = this.system.central(this.dest);
+          const orig_central = this.system.central(this.game.locus);
+
+          // Moon to moon in same system
+          if (dest_central == orig_central && dest_central != 'sun') {
+            center = this.system.position(dest_central);
+          }
+          // Planet to its own moon
+          else if (this.game.locus == dest_central) {
+            center = this.system.position(this.game.locus);
+          }
+          // Moon to it's host planet
+          else if (this.dest == orig_central) {
+            center = this.system.position(this.dest);
+          }
+          // Cross system path
+          else {
+            center = Physics.centroid(
+              this.system.position(this.dest),
+              this.system.position(this.game.locus),
+            );
+          }
+        }
+        else {
+          center = this.system.position(this.game.locus);
         }
 
-        return Physics.centroid(...points);
+        return center;
       },
 
       map_fov_au() {
@@ -82,9 +106,13 @@ define(function(require, exports, module) {
         let central;
 
         if (this.dest) {
+          if (this.transit) {
+            return this.transit.au;
+          }
+
           central = this.system.central(this.dest);
 
-          if (central == 'sun') {
+          if (central != this.system.central(this.game.locus)) {
             bodies.push(this.game.locus);
             bodies.push(this.dest);
           }
@@ -103,15 +131,11 @@ define(function(require, exports, module) {
           bodies.push(this.game.locus);
         }
 
-        const extra = central == 'sun' ? Physics.AU / 4 : Physics.AU / 100;
-
         const max = bodies
           .map(b => Physics.distance(this.system.position(b), this.system.position(central)))
           .reduce((a, b) => a > b ? a : b);
 
-        const fov = (max + extra) / Physics.AU;
-
-        return fov;
+        return max * 1.1 / Physics.AU;
       },
     },
 
@@ -140,15 +164,21 @@ define(function(require, exports, module) {
       },
 
       set_dest(dest, go_home) {
-        let center = dest;
-
+        // Player clicked on central body from wide fov; find the next dest for
+        // that sub-system.
         if (!this.data.bodies.hasOwnProperty(dest) || this.dest == dest) {
           dest = this.next_dest(dest);
-          center = this.system.central(dest);
         }
 
         if (!this.is_here(dest)) {
           this.dest = dest;
+
+          // Select the first transit path for that destination
+          const transits = this.navcomp.getTransitsTo(this.dest);
+
+          if (transits.length > 0) {
+            this.transit = transits[0];
+          }
         }
 
         if (go_home) {
@@ -157,7 +187,7 @@ define(function(require, exports, module) {
 
         this.$nextTick(() => {
           if (this.layout) {
-            this.layout.set_center(this.system.position(center));
+            this.layout.set_center(this.map_center_point);
             this.layout.set_fov_au(this.map_fov_au);
           }
         });
@@ -292,17 +322,12 @@ define(function(require, exports, module) {
           <def split=4 term="Fuel"        :def="transit.fuel|R(2)|unit('tonnes')" />
         </confirm>
 
-        <NavPlot v-if="show_map"
-                 v-layout
-                 :layout="layout"
-                 :style="layout_css_dimensions"
-                 :transit="transit"
-                 @click="set_dest">
-
-          <NavBodies slot="svg"
-                     :layout="layout"
-                     :focus="dest || game.locus" />
-
+        <NavPlot v-layout v-if="show_map" :layout="layout" :style="layout_css_dimensions" @click="set_dest">
+          <template slot="svg">
+            <NavBodies :layout="layout" :focus="dest || game.locus" />
+            <SvgTransitPath v-if="transit" :layout="layout" :transit="transit" />
+            <SvgDestinationPath v-if="transit" :layout="layout" :transit="transit" />
+          </template>
         </NavPlot>
 
       </card>
@@ -549,6 +574,9 @@ define(function(require, exports, module) {
       path() {
         if (this.transit) {
           const path = [];
+
+          path.push(this.layout.scale_point(this.system.position(this.transit.origin)));
+
           for (let i = this.transit.currentTurn; i < this.transit.turns; ++i) {
             path.push(this.layout.scale_point(this.transit.path[i].position));
           }
@@ -711,7 +739,7 @@ define(function(require, exports, module) {
 
 
   Vue.component('NavPlot', {
-    props: ['transit', 'layout'],
+    props: ['layout'],
 
     methods: {
       click(e) {
@@ -722,7 +750,7 @@ define(function(require, exports, module) {
           let match;
           let closest;
           for (let body of this.system.bodies()) {
-            if (this.system.central(body) != 'sun') {
+            if (this.layout.fov_au > 0.1 && this.system.central(body) != 'sun') {
               body = this.system.central(body);
             }
 
@@ -746,11 +774,8 @@ define(function(require, exports, module) {
     template: `
       <div id="navcomp-map-root" class="plot-root border border-dark" @click="click">
         <SvgPlot v-if="layout" :layout="layout">
-          <SvgDestinationPath v-if="transit" :layout="layout" :transit="transit" />
-          <SvgTransitPath     v-if="transit" :layout="layout" :transit="transit" />
           <slot name="svg" />
         </SvgPlot>
-
         <slot />
       </div>
     `,
