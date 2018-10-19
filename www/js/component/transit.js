@@ -143,7 +143,7 @@ define(function(require, exports, module) {
           // On the first turn, do not animate transition to starting location
           const time = turn == this.plan.currentTurn ? 0 : this.intvl;
 
-          if (turn == 0 || turn % turns_per_day == 0 || turn == this.plan.turns - 1) {
+          if (turn == this.plan.currentTurn || turn % turns_per_day == 0 || turn == this.plan.turns - 1) {
             const mark = 'mark-' + turn;
 
             // Update sun
