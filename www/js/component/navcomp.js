@@ -21,6 +21,7 @@ define(function(require, exports, module) {
         show:    'home',
         dest:    null,
         rel:     false,
+        navcomp: new NavComp,
         transit: null,
         confirm: false,
         layout_target_id: 'navcomp-map-root',
@@ -29,7 +30,18 @@ define(function(require, exports, module) {
     },
 
     watch: {
-      dest() { this.transit = null },
+      dest() {
+        if (this.dest) {
+          const transits = this.navcomp.getTransitsTo(this.dest);
+
+          if (transits.length > 0) {
+            this.transit = transits[0];
+          }
+        }
+        else {
+          this.transit = null;
+        }
+      },
 
       layout() {
         if (this.show == 'map' && this.dest) {
@@ -66,21 +78,39 @@ define(function(require, exports, module) {
       },
 
       map_fov_au() {
-        if (this.transit) {
-          return this.transit.segment_au;
-        }
-
-        const bodies = [
-          this.system.position(this.game.locus),
-        ];
+        const bodies = [];
+        let central;
 
         if (this.dest) {
-          bodies.push(this.system.position(this.dest));
+          central = this.system.central(this.dest);
+
+          if (central == 'sun') {
+            bodies.push(this.game.locus);
+            bodies.push(this.dest);
+          }
+          else {
+            bodies.push(central);
+
+            for (const body of this.system.bodies()) {
+              if (this.system.central(body) == central) {
+                bodies.push(body);
+              }
+            }
+          }
+        }
+        else {
+          central = this.system.central(this.game.locus);
+          bodies.push(this.game.locus);
         }
 
-        const orbits = bodies.map(b => Physics.distance(b, [0, 0]));
-        const max = Math.max(...orbits);
-        const fov = (max + (Physics.AU / 2)) / Physics.AU;
+        const extra = central == 'sun' ? Physics.AU / 4 : Physics.AU / 100;
+
+        const max = bodies
+          .map(b => Physics.distance(this.system.position(b), this.system.position(central)))
+          .reduce((a, b) => a > b ? a : b);
+
+        const fov = (max + extra) / Physics.AU;
+
         return fov;
       },
     },
@@ -110,6 +140,13 @@ define(function(require, exports, module) {
       },
 
       set_dest(dest, go_home) {
+        let center = dest;
+
+        if (!this.data.bodies.hasOwnProperty(dest) || this.dest == dest) {
+          dest = this.next_dest(dest);
+          center = this.system.central(dest);
+        }
+
         if (!this.is_here(dest)) {
           this.dest = dest;
         }
@@ -117,25 +154,38 @@ define(function(require, exports, module) {
         if (go_home) {
           this.go_home_menu();
         }
+
+        this.$nextTick(() => {
+          if (this.layout) {
+            this.layout.set_center(this.system.position(center));
+            this.layout.set_fov_au(this.map_fov_au);
+          }
+        });
       },
 
       set_dest_return(dest) {
         this.set_dest(dest, true);
       },
 
-      next_dest() {
+      next_dest(system) {
+        let bodies = this.system.bodies();
+
+        if (system) {
+          bodies = bodies.filter((b) => this.system.central(b) == system);
+        }
+
         let done = false;
 
-        for (let i = 0; i < this.system.bodies().length; ++i) {
-          if (this.dest == this.system.bodies()[i]) {
-            for (let j = i; j < this.system.bodies().length; ++j) {
-              const idx = j + 1 == this.system.bodies().length ? 0 : j + 1;
+        for (let i = 0; i < bodies.length; ++i) {
+          if (this.dest == bodies[i]) {
+            for (let j = i; j < bodies.length; ++j) {
+              const idx = j + 1 == bodies.length ? 0 : j + 1;
 
-              if (this.is_here(this.system.bodies()[idx])) {
+              if (this.is_here(bodies[idx])) {
                 continue;
               }
               else {
-                this.dest = this.system.bodies()[idx];
+                this.dest = bodies[idx];
                 done = true;
                 return this.dest;
               }
@@ -144,7 +194,7 @@ define(function(require, exports, module) {
         }
 
         if (!done) {
-          this.dest = this.system.bodies()[this.game.locus == this.system.bodies()[0] ? 1 : 0];
+          this.dest = bodies[this.game.locus == bodies[0] ? 1 : 0];
           return this.dest;
         }
       },
@@ -213,6 +263,7 @@ define(function(require, exports, module) {
           <NavRoutePlanner
               v-if="show_routes"
               :dest="dest"
+              :navcomp="navcomp"
               @route="set_transit_return" />
 
           <div v-if="show_market">
@@ -245,11 +296,12 @@ define(function(require, exports, module) {
                  v-layout
                  :layout="layout"
                  :style="layout_css_dimensions"
-                 :transit="transit">
+                 :transit="transit"
+                 @click="set_dest">
 
           <NavBodies slot="svg"
                      :layout="layout"
-                     :focus="dest" />
+                     :focus="dest || game.locus" />
 
         </NavPlot>
 
@@ -337,12 +389,11 @@ define(function(require, exports, module) {
 
 
   Vue.component('NavRoutePlanner', {
-    'props': ['dest'],
+    'props': ['dest', 'navcomp'],
 
     data() {
       return {
         'selected': 0,
-        'navcomp':  new NavComp,
       };
     },
 
@@ -514,22 +565,26 @@ define(function(require, exports, module) {
 
 
   Vue.component('SvgPlotPoint', {
-    props: ['layout', 'label', 'pos', 'diameter', 'img'],
+    props: ['layout', 'label', 'pos', 'diameter', 'img', 'focus'],
 
     computed: {
       zero()    { return this.layout.zero },
       label_x() { return this.pos[0] + (this.diameter / 2) + 10 },
       label_y() { return this.pos[1] + this.diameter / 2 },
-    },
 
-    methods: {
+      text_style() {
+        return {
+          'font': '12px monospace',
+          'fill': this.focus ? '#7FDF3F' : '#EEEEEE',
+        };
+      },
     },
 
     template: `
       <g>
         <image v-if="img" :xlink:href="img" :height="diameter" :width="diameter" :x="pos[0]" :y="pos[1]" />
 
-        <text v-show="label" style="font:12px monospace; fill:#EEEEEE;" :x="label_x" :y="label_y">
+        <text v-show="label" :style="text_style" :x="label_x" :y="label_y">
           {{label|caps}}
         </text>
       </g>
@@ -620,14 +675,22 @@ define(function(require, exports, module) {
       show_label(body) {
         const central = this.system.central(body);
 
-        if (this.focus == body && central == 'sun') {
+        if (this.focus == body) {
           return true;
+        }
+
+        if (this.system.central(this.focus) == body) {
+          return false;
         }
 
         const position = this.system.position(body);
         const center   = central == 'sun' ? [0, 0] : this.system.position(central);
         const distance = Physics.distance(position, center) / Physics.AU;
         return distance > this.layout.fov_au / 5;
+      },
+
+      is_focus(body) {
+        return body == this.focus;
       },
     },
 
@@ -640,7 +703,8 @@ define(function(require, exports, module) {
           :label="info.label ? body : ''"
           :diameter="info.diameter"
           :pos="info.point"
-          :img="'img/' + body + '.png'" />
+          :img="'img/' + body + '.png'"
+          :focus="is_focus(body)" />
       </g>
     `,
   });
@@ -649,8 +713,38 @@ define(function(require, exports, module) {
   Vue.component('NavPlot', {
     props: ['transit', 'layout'],
 
+    methods: {
+      click(e) {
+        if (this.layout) {
+          const max = 20;
+          const target = [e.offsetX, e.offsetY];
+
+          let match;
+          let closest;
+          for (let body of this.system.bodies()) {
+            if (this.system.central(body) != 'sun') {
+              body = this.system.central(body);
+            }
+
+            const pos   = this.system.position(body);
+            const point = this.layout.scale_point(pos);
+            const dist  = Physics.distance(target, point);
+
+            if (closest === undefined || dist < closest) {
+              match   = body;
+              closest = dist;
+            }
+          }
+
+          if (closest <= max) {
+            this.$emit('click', match);
+          }
+        }
+      },
+    },
+
     template: `
-      <div id="navcomp-map-root" class="plot-root border border-dark">
+      <div id="navcomp-map-root" class="plot-root border border-dark" @click="click">
         <SvgPlot v-if="layout" :layout="layout">
           <SvgDestinationPath v-if="transit" :layout="layout" :transit="transit" />
           <SvgTransitPath     v-if="transit" :layout="layout" :transit="transit" />
