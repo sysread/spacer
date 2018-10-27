@@ -743,7 +743,7 @@ define(function(require, exports, module) {
 
         if (bought > 0) {
           const distance = this.distance(planet) / Physics.AU;
-          const turns = Math.ceil(distance * (24 / data.hours_per_turn) * 3); // 3 days per AU
+          const turns = Math.ceil(distance * (24 / data.hours_per_turn) * 5); // 5 days per AU
           window.game.planets[planet].buy('fuel', distance);
 
           this.schedule({

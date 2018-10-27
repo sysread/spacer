@@ -39,15 +39,15 @@ define(function() {
       minerals:     {mass:  30, mine: {tics: 2, value: 25}},
       hydrocarbons: {mass:  10, mine: {tics: 2, value: 30}},
       food:         {mass:  10, mine: {tics: 2, value: 40}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 1}}},
-      fuel:         {mass:   1, recipe: {tics: 1, materials: {ore: 1, water: 1}}},
-      metal:        {mass:  60, recipe: {tics: 2, materials: {ore: 3}}},
-      ceramics:     {mass:  30, recipe: {tics: 2, materials: {minerals: 3}}},
-      medicine:     {mass:  10, recipe: {tics: 3, materials: {food: 2, hydrocarbons: 1}}},
-      machines:     {mass:  80, recipe: {tics: 3, materials: {metal: 2}}},
-      electronics:  {mass:  30, recipe: {tics: 3, materials: {ceramics: 2}}},
-      cybernetics:  {mass: 120, recipe: {tics: 4, materials: {machines: 1, electronics: 1}}},
-      narcotics:    {mass:  10, recipe: {tics: 2, materials: {medicine: 2}}, contraband: 5},
-      weapons:      {mass:  20, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}, contraband: 7},
+      fuel:         {mass:   1, recipe: {tics: 1, materials: {ore: 2, water: 1}}},
+      metal:        {mass:  60, recipe: {tics: 2, materials: {ore: 4}}},
+      ceramics:     {mass:  30, recipe: {tics: 2, materials: {minerals: 5}}},
+      medicine:     {mass:  10, recipe: {tics: 3, materials: {food: 3, hydrocarbons: 2}}},
+      machines:     {mass:  80, recipe: {tics: 3, materials: {metal: 4}}},
+      electronics:  {mass:  30, recipe: {tics: 3, materials: {ceramics: 4}}},
+      cybernetics:  {mass: 120, recipe: {tics: 4, materials: {machines: 3, electronics: 3}}},
+      narcotics:    {mass:  10, recipe: {tics: 2, materials: {medicine: 3, hydrocarbons: 1}}, contraband: 5},
+      weapons:      {mass:  20, recipe: {tics: 4, materials: {metal: 3, ceramics: 2}}, contraband: 7},
     },
 
     market: {
@@ -59,32 +59,32 @@ define(function() {
     },
 
     traits: {
-      'mineral rich':      {produces: {ore: 5, minerals: 3}, consumes: {}},
+      'mineral rich':      {produces: {ore: 6, minerals: 3}, consumes: {}},
       'mineral poor':      {produces: {ore: -3, minerals: -1}, consumes: {}},
 
-      'water rich':        {produces: {water: 2}, consumes: {}},
+      'water rich':        {produces: {water: 3}, consumes: {}},
       'water poor':        {produces: {water: -1}, consumes: {}},
 
-      'hydrocarbon rich':  {produces: {hydrocarbons: 3}, consumes: {}},
-      'hydrocarbon poor':  {produces: {hydrocarbons: -1}, consumes: {}},
+      'hydrocarbon rich':  {produces: {hydrocarbons: 4}, consumes: {}},
+      'hydrocarbon poor':  {produces: {hydrocarbons: -2}, consumes: {}},
 
-      'rocky':             {produces: {ore: 6, minerals: 3} , consumes: {}},
-      'icy':               {produces: {water: 4.5, minerals: 2, hydrocarbons: 2}, consumes: {}},
+      'rocky':             {produces: {ore: 7, minerals: 4} , consumes: {}},
+      'icy':               {produces: {water: 5, minerals: 1, hydrocarbons: 2}, consumes: {}},
 
-      'asteroids':         {produces: {ore: 12, minerals: 7}, consumes: {fuel: 1.5, electronics: 0.3, machines: 1, cybernetics: 0.3}},
-      'ringed system':     {produces: {water: 7, minerals: 2, hydrocarbons: 2}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
+      'asteroids':         {produces: {ore: 12, minerals: 8}, consumes: {fuel: 1.5, electronics: 0.3, machines: 1, cybernetics: 0.3}},
+      'ringed system':     {produces: {water: 8, minerals: 2, hydrocarbons: 3}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
 
       'agricultural':      {produces: {food: 4, hydrocarbons: 1}, consumes: {machines: 0.5, fuel: 0.5, water: 2, hydrocarbons: 2}},
-      'habitable':         {produces: {food: 8, hydrocarbons: 3}, consumes: {food: 4, narcotics: 0.25, weapons: 0.5}},
+      'habitable':         {produces: {food: 8, hydrocarbons: 4}, consumes: {food: 4, narcotics: 0.25, weapons: 0.5}},
       'domed':             {produces: {food: 0.5, hydrocarbons: 0.25}, consumes: {metal: 0.6, fuel: 0.6, electronics: 0.5, machines: 0.5, water: 0.75, hydrocarbons: 0.75, weapons: 0.5}},
       'subterranean':      {produces: {food: 0.25, hydrocarbons: 0.25}, consumes: {metal: 0.6, fuel: 0.3, electronics: 0.5, machines: 0.5, water: 0.3, hydrocarbons: 0.75, weapons: 0.35}},
       'orbital':           {produces: {food: 0.1, hydrocarbons: 0.1}, consumes: {metal: 1, fuel: 1.5, electronics: 0.75, machines: 0.75, water: 0.15, hydrocarbons: 0.25, weapons: 0.2}},
 
-      'black market':      {produces: {narcotics: 0.2, weapons: 0.2}, price: {narcotics: 0.5, weapons: 0.7}},
-      'tech hub':          {produces: {electronics: 0.2}, price: {machines: 0.9, electronics: 0.65, cybernetics: 0.8, addons: 0.7}},
-      'manufacturing hub': {produces: {machines: 0.2}, price: {machines: 0.7, cybernetics: 0.9, addons: 0.8}},
-      'capitol':           {produces: {medicine: 0.1}, consumes: {weapons: 0.1}, price: {addons: 0.9}},
-      'military':          {produces: {}, consumes: {weapons: 0.8, machines: 0.5, electronics: 0.25, medicine: 0.2}, price: {addons: 0.7}},
+      'black market':      {produces: {narcotics: 0.5, weapons: 0.5}, price: {narcotics: 0.5, weapons: 0.7}},
+      'tech hub':          {produces: {electronics: 0.5}, price: {machines: 0.9, electronics: 0.65, cybernetics: 0.8, addons: 0.7}},
+      'manufacturing hub': {produces: {machines: 0.5}, price: {machines: 0.7, cybernetics: 0.9, addons: 0.8}},
+      'capital':           {produces: {medicine: 0.25}, consumes: {weapons: 0.1}, price: {addons: 0.9}},
+      'military':          {produces: {}, consumes: {weapons: 1, machines: 0.5, electronics: 0.5, medicine: 0.5}, price: {addons: 0.7}},
     },
 
     // TODO: risk of injury
@@ -213,7 +213,7 @@ define(function() {
       earth: {
         name:    'Earth',
         size:    'huge',
-        traits:  ['habitable', 'orbital', 'rocky', 'water rich', 'capitol'],
+        traits:  ['habitable', 'orbital', 'rocky', 'water rich', 'capital'],
         faction: 'UN',
       },
       moon: {
@@ -225,13 +225,13 @@ define(function() {
       mars: {
         name:    'Mars',
         size:    'large',
-        traits:  ['domed', 'subterranean', 'orbital', 'rocky', 'water poor', 'mineral rich', 'hydrocarbon poor', 'tech hub', 'capitol'],
+        traits:  ['domed', 'subterranean', 'orbital', 'rocky', 'water poor', 'mineral rich', 'hydrocarbon poor', 'tech hub', 'capital'],
         faction: 'MC',
       },
       ceres: {
         name:    'Ceres',
         size:    'large',
-        traits:  ['subterranean', 'rocky', 'asteroids', 'mineral rich', 'black market', 'capitol'],
+        traits:  ['subterranean', 'rocky', 'asteroids', 'mineral rich', 'black market', 'capital'],
         faction: 'CERES',
         gravity: 0.35,
       },
@@ -250,7 +250,7 @@ define(function() {
       ganymede: {
         name:    'Ganymede',
         size:    'large',
-        traits:  ['domed', 'subterranean', 'orbital', 'rocky', 'mineral poor', 'agricultural', 'capitol'],
+        traits:  ['domed', 'subterranean', 'orbital', 'rocky', 'mineral poor', 'agricultural', 'capital'],
         faction: 'JFT',
       },
       enceladus: {
@@ -290,7 +290,7 @@ define(function() {
       pluto: {
         name:    'Pluto',
         size:    'small',
-        traits:  ['subterranean', 'rocky', 'icy', 'mineral rich', 'black market', 'capitol'],
+        traits:  ['subterranean', 'rocky', 'icy', 'mineral rich', 'black market', 'capital'],
         faction: 'TRANSA',
       }
     },
@@ -325,14 +325,14 @@ define(function() {
       freighter:   {hull: 8,  armor: 6,  cargo: 50, hardpoints: 3,  mass: 900,   tank: 8,   drives: 10, drive: 'ion',    restricted: false},
 
       /* Military */
-      corvette:    {hull: 10, armor: 10, cargo: 10, hardpoints: 4,  mass: 450,   tank: 4,   drives: 1,  drive: 'fusion', restricted: 'Trusted', markets: ['capitol', 'military']},
-      cruiser:     {hull: 20, armor: 15, cargo: 15, hardpoints: 8,  mass: 900,   tank: 12,  drives: 4,  drive: 'fusion', restricted: 'Admired', markets: ['capitol', 'military']},
-      battleship:  {hull: 30, armor: 20, cargo: 20, hardpoints: 10, mass: 1200,  tank: 14,  drives: 6,  drive: 'fusion', restricted: 'Admired', markets: ['capitol', 'military']},
+      corvette:    {hull: 10, armor: 10, cargo: 10, hardpoints: 4,  mass: 450,   tank: 4,   drives: 1,  drive: 'fusion', restricted: 'Trusted', markets: ['capital', 'military']},
+      cruiser:     {hull: 20, armor: 15, cargo: 15, hardpoints: 8,  mass: 900,   tank: 12,  drives: 4,  drive: 'fusion', restricted: 'Admired', markets: ['capital', 'military']},
+      battleship:  {hull: 30, armor: 20, cargo: 20, hardpoints: 10, mass: 1200,  tank: 14,  drives: 6,  drive: 'fusion', restricted: 'Admired', markets: ['capital', 'military']},
 
       /* Faction ships */
       fortuna:     {hull: 8,  armor: 6,  cargo: 50, hardpoints: 1,  mass: 1000,  tank: 8,   drives: 14, drive: 'ion',    restricted: 'Respected', faction: 'JFT'},
-      neptune:     {hull: 14, armor: 10, cargo: 40, hardpoints: 4,  mass: 700,   tank: 10,  drives: 10, drive: 'ion',    restricted: 'Respected', faction: 'TRANSA', markets: ['capitol', 'military']},
-      barsoom:     {hull: 20, armor: 20, cargo: 25, hardpoints: 6,  mass: 600,   tank: 8,   drives: 2,  drive: 'fusion', restricted: 'Admired',   faction: 'MC',     markets: ['capitol', 'military']},
+      neptune:     {hull: 14, armor: 10, cargo: 40, hardpoints: 4,  mass: 700,   tank: 10,  drives: 10, drive: 'ion',    restricted: 'Respected', faction: 'TRANSA', markets: ['capital', 'military']},
+      barsoom:     {hull: 20, armor: 20, cargo: 25, hardpoints: 6,  mass: 600,   tank: 8,   drives: 2,  drive: 'fusion', restricted: 'Admired',   faction: 'MC',     markets: ['capital', 'military']},
     },
 
     ship: {
@@ -396,7 +396,7 @@ define(function() {
         magazine:   6,
         price:      85000,
         restricted: 'Trusted',
-        markets:    ['military', 'capitol'],
+        markets:    ['military', 'capital'],
       },
       railgun_cannon: {
         name:       'Rail gun cannon',
@@ -408,7 +408,7 @@ define(function() {
         magazine:   1,
         price:      105000,
         restricted: 'Admired',
-        markets:    ['military', 'capitol'],
+        markets:    ['military', 'capital'],
       },
       light_torpedo: {
         name:          'Light torpedo launcher',
@@ -433,7 +433,7 @@ define(function() {
         interceptable: true,
         price:         37500,
         restricted:    'Trusted',
-        markets:       ['military', 'capitol'],
+        markets:       ['military', 'capital'],
       },
       heavy_torpedo: {
         name:          'Heavy torpedo launcher',
@@ -446,7 +446,7 @@ define(function() {
         interceptable: true,
         price:         50000,
         restricted:    'Admired',
-        markets:       ['military', 'capitol'],
+        markets:       ['military', 'capital'],
       },
       pds: {
         name:       'PDS',
@@ -469,7 +469,7 @@ define(function() {
         stealth:    0.2,
         price:      45000,
         restricted: 'Admired',
-        markets:    ['military', 'capitol'],
+        markets:    ['military', 'capital'],
       },
       stealthPlating: {
         name:       "Adaptive hull plating",
@@ -480,7 +480,7 @@ define(function() {
         armor:      -1,
         price:      125000,
         restricted: 'Admired',
-        markets:    ['military', 'capitol'],
+        markets:    ['military', 'capital'],
       },
     }
   };
@@ -497,7 +497,7 @@ define(function() {
   data.bodies.mercury.desc        = "Too close to the sun to permit domed habitations, Mercury's single city, Quicksilver, lies deep underground, providing it with a modicum of protection against the intense solar radiation bathing the surface.|Known for its rich mineral deposits and hard-nosed populace, the knowledge gained during the process of excavating and settling Mercury was a major factor in the success of later colonies. Although nominally a member of the UN, Mercury is widely known to be effectively run by the unions, who work to ensure that Mercury is not unfairly exploited by Earth. Nobody messes with the local 127.";
   data.bodies.earth.desc          = "Under the unified governance of the UN, Earth has been at peace for decades. As the sole habital body in the system, Earth remains the largest population, economy, and military force in the system.";
   data.bodies.moon.desc           = "A natural target for the first extension of humanity into space, the Moon's domed cities and vast, subterranean passages hold the second largest population in the system as well as some of its best shipyards.|With its lower gravity, excellent amenities, and close proximity to Earth, Luna hosts the official embassies of both the Martian Commonwealth and TRANSA.";
-  data.bodies.mars.desc           = "Rising from the ashes of the Earth fleet's systematic bombardment during the war for independence, the Martian capitol of Barsoom is home to the most widely respected universities and scientific institutions in the system.|The memories of those scars still fresh, Mars continues to sink a sizable proportion of its resources into its fleet and planetary defenses. Although smaller than the UN fleet, the Martian navy's vessels are newer and have a small but not inconsiderable tech advantage on Earth's aging ships.";
+  data.bodies.mars.desc           = "Rising from the ashes of the Earth fleet's systematic bombardment during the war for independence, the Martian capital of Barsoom is home to the most widely respected universities and scientific institutions in the system.|The memories of those scars still fresh, Mars continues to sink a sizable proportion of its resources into its fleet and planetary defenses. Although smaller than the UN fleet, the Martian navy's vessels are newer and have a small but not inconsiderable tech advantage on Earth's aging ships.";
   data.bodies.ceres.desc          = "Large enough to be given a comfortable spin gravity of more than a third of Earth, the hollowed out planetoid Ceres is a major shipping and commercial hub between the inner and outer planets.";
   data.bodies.europa.desc         = "One of the two Jovian moons claimed by the JFT during the war, Europa's mines provide the backbone of the JFT's trade in raw materials.";
   data.bodies.callisto.desc       = "Callisto's vast domed farms produce tons of food that are shipped across the system, supporting many of the outer colonies that cannot produce enough food to be self sufficient. It also hosts the regional Martian command orbital and dock yards.";
