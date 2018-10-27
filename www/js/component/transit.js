@@ -357,6 +357,7 @@ define(function(require, exports, module) {
           const pct = this.data.jurisdiction / au;
           const patrol = this.game.planets[body].faction.patrol * pct;
           chance -= patrol;
+          chance -= (1 - this.game.player.ship.stealth);
         }
 
         if (chance > 0) {
