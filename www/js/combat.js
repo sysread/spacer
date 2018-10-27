@@ -19,6 +19,7 @@ define(function(require, exports, module) {
     get name()          { return this.opt.name }
     get rate()          { return this.count * this.opt.rate }
     get magazine()      { return this.count * this.opt.magazine }
+    get accuracy()      { return this.opt.accuracy }
     get reload()        { return this.opt.reload }
     get damage()        { return this.opt.damage }
     get interceptable() { return this.opt.interceptable ? true : false }
@@ -73,7 +74,7 @@ define(function(require, exports, module) {
       let hits   = 0;
 
       for (let i = 0; i < this.rate; ++i) {
-        if (util.chance(0.85)) { // TODO: based on *something*
+        if (util.chance(this.accuracy)) { // TODO: modified by skill?
           damage += Math.max(0.1, util.getRandomNum(0, this.damage));
           ++hits;
         }
