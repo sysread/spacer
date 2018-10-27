@@ -12,6 +12,7 @@ define(function(require, exports, module) {
   Vue.component('person-status', {
     props: ['person'],
     computed: {
+      name    : function() {return this.person.name},
       money   : function() {return this.person.money},
       home    : function() {return this.data.bodies[this.person.home].name},
       faction : function() {return this.person.faction.full_name},
@@ -28,6 +29,7 @@ define(function(require, exports, module) {
     <button @click="newGame" type="button" class="btn btn-dark">New Game</button>
     <h3>Captain</h3>
   </card-header>
+  <def term="Name" :def="name" />
   <def term="Money" :def="money|csn|unit('c')" />
   <def term="Home" :def="home|caps" />
   <def term="Faction" :def="faction|caps" />
