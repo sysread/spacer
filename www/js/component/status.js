@@ -87,6 +87,8 @@ define(function(require, exports, module) {
       addons:    function() {return this.ship.addons},
       addOnData: function() {return this.data.addons[this.showAddOn]},
       fuelRate:  function() {return this.ship.fuelrate / this.data.hours_per_turn},
+      intercept: function() {return util.R(this.ship.intercept * 100, 2)},
+      dodge:     function() {return util.R(this.ship.dodge * 100, 2)},
 
       cargo:     function() {
         const cargo = [];
@@ -140,6 +142,9 @@ define(function(require, exports, module) {
   </def>
   <def term="Drive" :def="ship.drives|unit(ship.drive.name)" />
   <def term="Stealth" :def="(ship.stealth * 100) + '%'" />
+
+  <def term="Missile intercept" :def="intercept + '%'" />
+  <def term="Evasion" :def="dodge + '%'" />
 
   <def term="Upgrades">
     <div slot="def" v-if="ship.addons.length > 0">
