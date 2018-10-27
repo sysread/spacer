@@ -4,8 +4,8 @@ define(function(require, exports, module) {
   const Physics = require('physics');
 
   require('component/modal');
-  require('vendor/TweenMax.min');
   require('vendor/sprintf.min');
+  require('vendor/TweenMax.min');
 
   Vue.filter('sprintf', (value, format, ...args) => sprintf(format, value, ...args));
 
@@ -98,7 +98,12 @@ define(function(require, exports, module) {
   });
 
   Vue.component('ok', {
-    template: `<modal close="OK" @close="$emit('ok')"><p><slot/></p></modal>`,
+    props: ['title'],
+    template: `
+<modal :title="title" close="OK" @close="$emit('ok')">
+  <p><slot/></p>
+</modal>
+    `,
   });
 
   Vue.component('confirm', {
@@ -137,6 +142,35 @@ define(function(require, exports, module) {
     template: `
 <div @answer="onAnswer" class="py-3">
   <slot />
+</div>
+    `,
+  });
+
+
+  Vue.component('Info', {
+    props: ['title'],
+
+    data() {
+      return { shown: false };
+    },
+
+    methods: {
+      click(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.shown = true;
+        return false;
+      },
+
+      reset() {
+        this.shown = false;
+      }
+    },
+
+    template: `
+<div class="d-inline px-2">
+  <a href="#" class="info" @click="click">i</a>
+  <ok v-if="shown" @ok="reset" :title="title"><slot /></ok>
 </div>
     `,
   });

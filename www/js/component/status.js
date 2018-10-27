@@ -11,6 +11,13 @@ define(function(require, exports, module) {
 
   Vue.component('person-status', {
     props: ['person'],
+
+    data() {
+      return {
+        show_confirm: false,
+      };
+    },
+
     computed: {
       name    : function() {return this.person.name},
       money   : function() {return this.person.money},
@@ -18,22 +25,34 @@ define(function(require, exports, module) {
       faction : function() {return this.person.faction.full_name},
       accel   : function() {return this.person.maxAcceleration() / Physics.G },
     },
+
     methods: {
-      newGame: function() {
-        this.$emit('open', 'newgame');
-      }
+      newGameConfirm: function() {
+        this.show_confirm = true;
+      },
+
+      newGame: function(confirmed) {
+        if (confirmed) {
+          this.$emit('open', 'newgame');
+        } else {
+          this.show_confirm = false;
+        }
+      },
     },
+
     template: `
-<card>
-  <card-header slot="header">
-    <button @click="newGame" type="button" class="btn btn-dark">New Game</button>
-    <h3>Captain</h3>
-  </card-header>
+<card :title="name">
   <def term="Name" :def="name" />
   <def term="Money" :def="money|csn|unit('c')" />
   <def term="Home" :def="home|caps" />
   <def term="Faction" :def="faction|caps" />
   <def term="Thrust endurance" :def="accel|R(2)|unit('G')" />
+
+  <btn @click="newGameConfirm" class="float-right">New Game</btn>
+
+  <confirm v-if="show_confirm" yes="Yes" no="No" @confirm="newGame">
+    Delete this game and begin a new game? This cannot be undone.
+  </confirm>
 </card>
     `,
   });
@@ -57,10 +76,7 @@ define(function(require, exports, module) {
       },
     },
     template: `
-<card>
-  <card-header slot="header">
-    <h3>Faction standing</h3>
-  </card-header>
+<card title="Politics">
   <def v-for="faction of factions" :key="faction" caps="true" :term="faction">
     <span slot="def">
       {{label(faction)}}
@@ -114,47 +130,44 @@ define(function(require, exports, module) {
       },
     },
     template: `
-<card>
-  <card-header slot="header">
-    <h3>Ship</h3>
-  </card-header>
-  <def term="Class" :def="ship.type|caps" />
-
-  <def term="Cargo">
-    <div slot="def">
-      {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
-      <div v-if="ship.cargoUsed" v-for="item in cargo" :key="item.name">
-        {{item.amount|csn}} units of {{item.name}} ({{item.mass|csn}} tonnes)
+<card :title="ship.type|caps">
+  <card class="my-3">
+    <def term="Cargo">
+      <div slot="def">
+        {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
+        <div v-if="ship.cargoUsed" v-for="item in cargo" :key="item.name">
+          {{item.amount|csn}} units of {{item.name}} ({{item.mass|csn}} tonnes)
+        </div>
       </div>
-    </div>
-  </def>
+    </def>
 
-  <def term="Hull">{{ship.hull}}/{{ship.fullHull}}</def>
-  <def term="Armor">{{ship.armor}}/{{ship.fullArmor}}</def>
-  <def term="Hard points" :def="ship.hardpoints" />
-  <def term="Mass" :def="mass|unit('tonnes')" />
-  <def term="Thrust" :def="thrust|unit('kN')" />
-  <def term="Max Acc." :def="acc|unit('G')" />
-  <def term="Fuel" :def="tank|unit('tonnes')" />
-  <def term="Range" :def="burn|unit('hours at maximum thrust')" />
-  <def term="Fuel rate">
-    {{fuelRate|R(4)|unit('tonnes/hr')}} at maximum thrust
-  </def>
-  <def term="Drive" :def="ship.drives|unit(ship.drive.name)" />
-  <def term="Stealth" :def="(ship.stealth * 100) + '%'" />
+    <def term="Mass" :def="mass|unit('tonnes')" />
+    <def term="Thrust" :def="thrust|unit('kN')" />
+    <def term="Max Acc." :def="acc|unit('G')" />
+    <def term="Fuel" :def="tank|unit('tonnes')" />
+    <def term="Drive" :def="ship.drives|unit(ship.drive.name)" />
+    <def term="Range" :def="burn|unit('hours at max thrust')" />
+    <def term="Fuel rate" :def="fuelRate|R(4)|unit('tonnes/hr at max thrust')" />
+  </card>
 
-  <def term="Missile intercept" :def="intercept + '%'" />
-  <def term="Evasion" :def="dodge + '%'" />
+  <card class="my-3">
+    <def term="Hull">{{ship.hull}}/{{ship.fullHull}}</def>
+    <def term="Armor">{{ship.armor}}/{{ship.fullArmor}}</def>
+    <def term="Hard points" :def="ship.hardpoints" />
+    <def term="Stealth" :def="(ship.stealth * 100) + '%'" info="Reduction in the chance of being noticed by patrols and pirates while en route" />
+    <def term="Intercept" :def="intercept + '%'" info="The chance of intercepting a missile attack with defensive armaments" />
+    <def term="Evasion" :def="dodge + '%'" info="The chance of dodging an attack based on the mass to thrust ratio of the ship" />
 
-  <def term="Upgrades">
-    <div slot="def" v-if="ship.addons.length > 0">
-      <btn v-for="(addon, idx) of addons" :key="idx" block=1 @click="toggleAddOn(addon)">{{addOnName(addon)|caps}}</btn>
-      <modal v-if="showAddOn" @close="toggleAddOn(showAddOn)" close="Close" :title="addOnName(showAddOn)">
-        <def v-for="(value, key) of addOnData" :key="key" :term="key|caps" :def="value" />
-      </modal>
-    </div>
-    <span slot="def" v-else>None</span>
-  </def>
+    <def term="Upgrades">
+      <div slot="def" v-if="ship.addons.length > 0">
+        <btn v-for="(addon, idx) of addons" :key="idx" block=1 @click="toggleAddOn(addon)">{{addOnName(addon)|caps}}</btn>
+        <modal v-if="showAddOn" @close="toggleAddOn(showAddOn)" close="Close" :title="addOnName(showAddOn)">
+          <def v-for="(value, key) of addOnData" :key="key" :term="key|caps" :def="value" />
+        </modal>
+      </div>
+      <span slot="def" v-else>None</span>
+    </def>
+  </card>
 </card>
     `,
   });
