@@ -233,8 +233,12 @@ define(function(require, exports, module) {
       return this.surrendered === this.player.name;
     }
 
+    get opponentSurrendered() {
+      return this.surrendered === this.opponent.name;
+    }
+
     get salvage() {
-      if (this.opponent.isDestroyed || this.surrendered == this.opponent.name) {
+      if (this.opponent.isDestroyed || this.opponentSurrendered) {
         if (!this._salvage) {
           this._salvage = new model.Store;
 

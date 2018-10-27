@@ -103,6 +103,7 @@ define(function(require, exports, module) {
       addons:    function() {return this.ship.addons},
       addOnData: function() {return this.data.addons[this.showAddOn]},
       fuelRate:  function() {return this.ship.fuelrate / this.data.hours_per_turn},
+      stealth:   function() {return util.R(this.ship.stealth * 100, 2)},
       intercept: function() {return util.R(this.ship.intercept * 100, 2)},
       dodge:     function() {return util.R(this.ship.dodge * 100, 2)},
 
@@ -151,10 +152,10 @@ define(function(require, exports, module) {
   </card>
 
   <card class="my-3">
-    <def term="Hull">{{ship.hull}}/{{ship.fullHull}}</def>
-    <def term="Armor">{{ship.armor}}/{{ship.fullArmor}}</def>
-    <def term="Hard points" :def="ship.hardpoints" />
-    <def term="Stealth" :def="(ship.stealth * 100) + '%'" info="Reduction in the chance of being noticed by patrols and pirates while en route" />
+    <def term="Hull">{{ship.hull|R(2)}} / {{ship.fullHull}}</def>
+    <def term="Armor">{{ship.armor|R(2)}} / {{ship.fullArmor}}</def>
+    <def term="Hard points">{{ship.hardpoints - ship.availableHardPoints()}} / {{ship.hardpoints}}</def>
+    <def term="Stealth" :def="stealth + '%'" info="Reduction in the chance of being noticed by patrols and pirates while en route" />
     <def term="Intercept" :def="intercept + '%'" info="The chance of intercepting a missile attack with defensive armaments" />
     <def term="Evasion" :def="dodge + '%'" info="The chance of dodging an attack based on the mass to thrust ratio of the ship" />
 

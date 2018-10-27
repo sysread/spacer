@@ -79,7 +79,10 @@ define(function(require, exports, module) {
           this.game.save_game();
 
           if (this.combat.playerSurrendered) {
-            this.$emit('complete', 'surrendered');
+            this.$emit('complete', 'player-surrendered');
+          }
+          else if (this.combat.opponentSurrendered) {
+            this.$emit('complete', 'opponent-surrendered');
           }
           else {
             this.$emit('complete');
@@ -119,8 +122,8 @@ define(function(require, exports, module) {
     </div>
 
     <div v-else>
-      <div v-if="combat.opponent.isDestroyed" class="my-3 text-success">
-        You destroyed your opponent's ship.
+      <div v-if="combat.opponent.isDestroyed" class="my-3">
+        <span class="text-success">You destroyed your opponent's ship.</span>
 
         <span v-if="hasLoot">
           Amid the wreckage of the drifting hulk, some cargo containers appear to remain intact.
@@ -129,6 +132,18 @@ define(function(require, exports, module) {
         </span>
 
         <modal v-if="hasLoot && salvage" @close="complete" title="Salvage" close="Leave the hulk" xclose=1>
+          <exchange :store="loot" class="small" />
+        </modal>
+      </div>
+
+      <div v-else-if="combat.opponentSurrendered" class="my-3">
+        <span v-if="hasLoot" class="text-success">
+          Your opponent has surrendered. You may choose to salvage any intact cargo from their vessel.
+
+          <btn @click="salvage=true" block=1 class="mt-3">Salvage</btn>
+        </span>
+
+        <modal v-if="hasLoot && salvage" @close="complete" title="Salvage" close="Leave" xclose=1>
           <exchange :store="loot" class="small" />
         </modal>
       </div>
