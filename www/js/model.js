@@ -536,8 +536,8 @@ define(function(require, exports, module) {
         if (hadShortage && !resources[item].contraband) {
           // Player ended a shortage. Increase their standing with our faction.
           if (!this.hasShortage(item)) {
-            player.incStanding(this.faction.abbrev, 5);
-            standing = 5;
+            standing = util.getRandomNum(1, 5);
+            player.incStanding(this.faction.abbrev, standing);
           }
           // Player contributed toward ending a shortage. Increase their
           // standing with our faction slightly.
