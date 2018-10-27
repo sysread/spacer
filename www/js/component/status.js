@@ -80,7 +80,7 @@ define(function(require, exports, module) {
   <def v-for="faction of factions" :key="faction" caps="true" :term="faction">
     <span slot="def">
       {{label(faction)}}
-      <span class="badge badge-pill ml-2">{{standing(faction)}}</span>
+      <span class="badge badge-pill ml-2">{{standing(faction)|R}}</span>
     </span>
   </def>
 </card>
