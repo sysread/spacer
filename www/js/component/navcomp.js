@@ -497,6 +497,7 @@ define(function(require, exports, module) {
              + this.layout.height_px;
       },
     },
+    //<image xlink:href="img/milkyway.jpg" x="0" y="0" :width="layout.width_px" :height="layout.height_px" />
 
     'template': `
       <svg :viewBox="view_box"
@@ -750,10 +751,18 @@ define(function(require, exports, module) {
           }
         }
       },
+
+      bg_css() {
+        return {
+          width:  this.layout ? this.layout.width_px  + 'px' : '100%',
+          height: this.layout ? this.layout.height_px + 'px' : '100%',
+        };
+      },
     },
 
     template: `
       <div id="navcomp-map-root" class="plot-root border border-dark" @click="click">
+        <div class="plot-root-bg" :style="bg_css()"></div>
         <SvgPlot v-if="layout" :layout="layout">
           <slot name="svg" />
         </SvgPlot>

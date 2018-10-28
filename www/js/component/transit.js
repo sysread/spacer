@@ -211,6 +211,13 @@ define(function(require, exports, module) {
         return timeline;
       },
 
+      bg_css() {
+        return {
+          width:  this.layout ? this.layout.width_px  + 'px' : '100%',
+          height: this.layout ? this.layout.height_px + 'px' : '100%',
+        };
+      },
+
       show_plot() {
         if ($(this.$refs.plot).width() < 300) {
           return false;
@@ -379,6 +386,7 @@ define(function(require, exports, module) {
         </table>
 
         <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
+          <div class="plot-root-bg" :style="bg_css()"></div>
           <SvgPlot :layout="layout" v-if="layout">
             <image ref="sun" xlink:href="img/sun.png" />
 
