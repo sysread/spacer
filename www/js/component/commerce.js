@@ -254,7 +254,7 @@ define(function(require, exports, module) {
 
   Vue.component('resource-report', {
     props: ['item'],
-    data() { return { relprices: false, show_routes: false } },
+    data() { return { relprices: true, show_routes: false } },
     computed: {
       here()   { return this.game.locus },
       bodies() { return Object.keys(this.data.bodies) },
