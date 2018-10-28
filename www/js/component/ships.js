@@ -111,6 +111,7 @@ define(function(require, exports, module) {
       // Physical properties
       deltaV:           function() { return util.R(this.ship.currentAcceleration(this.massForRange), 2) },
       deltaVinG:        function() { return util.R(this.deltaV / Physics.G, 2) },
+      deltaVinPctOfMax: function() { return util.R(100 * this.deltaVforRange / this.deltaVinG) },
       burnTime:         function() { return this.ship.maxBurnTime(this.deltaV, true, this.massForRange) * this.data.hours_per_turn },
       range:            function() { return Physics.range(this.burnTime * 3600, 0, this.deltaV) / Physics.AU },
       nominalDeltaV:    function() { return 0.5 },
@@ -178,10 +179,14 @@ define(function(require, exports, module) {
     <def y=1 brkpt="sm" term="Range">
       <div slot="def">
         <def split=4 term="Cargo mass" :def="massForRange|csn|unit('tonnes')" />
-        <def split=4 term="Acc"        :def="deltaVforRange|R(2)|unit('G')" />
-        <def split=4 term="Range"      :def="maxRange()|R(2)|unit('AU')"    />
-        <slider :value.sync="massForRange"   min=0    :max="maxCargoMass"   step=1    minmax=true class="my-1" />
+        <slider :value.sync="massForRange" min=0 :max="maxCargoMass" step=1 minmax=true class="my-1" />
+
+        <def split=4 term="Acc">
+          {{deltaVforRange|R(2)|unit('G')}} ({{deltaVinPctOfMax}}%)
+        </def>
         <slider :value.sync="deltaVforRange" min=0.01 :max="deltaVinG|R(2)" step=0.01 minmax=true class="my-1" />
+
+        <def split=4 term="Range" :def="maxRange()|R(2)|unit('AU')" />
       </div>
     </def>
   </card>

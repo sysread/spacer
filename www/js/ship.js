@@ -128,16 +128,17 @@ define(function(require, exports, module) {
     }
 
     maxBurnTime(accel, nominal=false, extra_mass=0) {
-      let fuel = this.fuel;
-      let mass = this.currentMass() + extra_mass;
+      let mass, fuel;
 
       if (nominal) {
         fuel = this.tank;
-        mass = this.nominalMass(true);
+        mass = this.nominalMass(true) + extra_mass;
         if (accel === undefined) accel = Physics.deltav(this.thrust, mass);
       }
       else {
-        if (accel === undefined) accel = this.currentAcceleration();
+        fuel = this.fuel;
+        mass = this.currentMass() + extra_mass;
+        if (accel === undefined) accel = this.currentAcceleration(extra_mass);
       }
 
       return Math.floor(fuel / this.burnRate(accel, mass));
