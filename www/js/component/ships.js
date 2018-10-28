@@ -51,7 +51,8 @@ define(function(require, exports, module) {
     data: function() {
       return {
         buy: false,
-        rangeForDeltaV: 0.5,
+        deltaVforRange: 0.5,
+        massForRange: 0,
       }
     },
 
@@ -65,14 +66,15 @@ define(function(require, exports, module) {
       },
 
       maxRange: function() {
-        const dv = this.rangeForDeltaV * Physics.G;
-        const burnTime = this.ship.maxBurnTime(dv, true) * this.data.hours_per_turn;
+        const dv = this.deltaVforRange * Physics.G;
+        const burnTime = this.ship.maxBurnTime(dv, true, this.massForRange) * this.data.hours_per_turn;
         return Physics.range(burnTime * 3600, 0, dv) / Physics.AU;
       },
     },
 
     computed: {
       // Pricing and availability
+      name:            function() { return this.type.replace('_', '-') },
       planet:          function() { return this.game.here },
       player:          function() { return this.game.player },
       playerShipValue: function() { return this.player.ship.price(true) },
@@ -107,9 +109,9 @@ define(function(require, exports, module) {
       },
 
       // Physical properties
-      deltaV:           function() { return util.R(this.ship.currentAcceleration(), 2) },
+      deltaV:           function() { return util.R(this.ship.currentAcceleration(this.massForRange), 2) },
       deltaVinG:        function() { return util.R(this.deltaV / Physics.G, 2) },
-      burnTime:         function() { return this.ship.maxBurnTime(this.deltaV, true) * this.data.hours_per_turn },
+      burnTime:         function() { return this.ship.maxBurnTime(this.deltaV, true, this.massForRange) * this.data.hours_per_turn },
       range:            function() { return Physics.range(this.burnTime * 3600, 0, this.deltaV) / Physics.AU },
       nominalDeltaV:    function() { return 0.5 },
       nominalDeltaVinG: function() { return this.nominalDeltaV / Physics.G },
@@ -117,6 +119,10 @@ define(function(require, exports, module) {
       nominalRange:     function() { return Physics.range(this.nominalBurnTime * 3600, 0, 1)  / Physics.AU},
       fuelMass:         function() { return this.shipClass.tank },
       fuelRate:         function() { return this.ship.fuelrate / this.data.hours_per_turn },
+
+      maxCargoMass: function() {
+        return this.shipClass.cargo * Math.max(...Object.values(this.data.resources).map(i => i.mass));
+      },
     },
 
     template: `
@@ -126,10 +132,10 @@ define(function(require, exports, module) {
   </btn>
 
   <btn v-else @click="$emit('click')" :block=1 :muted="!isAvailable" class="my-2">
-    {{type|caps}} <span class="badge badge-pill float-right">{{price|csn}}</span>
+    {{name|caps}} <span class="badge badge-pill float-right">{{price|csn}}</span>
   </btn>
 
-  <card v-if="detail" :title="type|caps">
+  <card v-if="detail" :title="name|caps">
     <p v-if="isAvailable">
       <button @click="buy=true" type="button" class="btn btn-dark">Purchase</button>
     </p>
@@ -155,14 +161,6 @@ define(function(require, exports, module) {
       </span>
     </def>
 
-    <def y=1 brkpt="sm" term="Range">
-      <div slot="def">
-        <def split=4 term="Acc"   :def="rangeForDeltaV|R(2)|unit('G')" />
-        <def split=4 term="Range" :def="maxRange()|R(2)|unit('AU')"    />
-        <slider :value.sync="rangeForDeltaV" min=0.01 :max="deltaVinG|R(2)" step=0.01 minmax=true />
-      </div>
-    </def>
-
     <def y=1 brkpt="sm" term="Cargo"       :def="shipClass.cargo" />
     <def y=1 brkpt="sm" term="Fuel"        :def="shipClass.tank|csn|unit('tonnes')" />
     <def y=1 brkpt="sm" term="Drive"       :def="shipClass.drives + ' ' + ship.drive.name" />
@@ -176,6 +174,16 @@ define(function(require, exports, module) {
     <def y=1 brkpt="sm" term="Hull"        :def="shipClass.hull" />
     <def y=1 brkpt="sm" term="Armor"       :def="shipClass.armor" />
     <def y=1 brkpt="sm" term="Hard points" :def="shipClass.hardpoints" />
+
+    <def y=1 brkpt="sm" term="Range">
+      <div slot="def">
+        <def split=4 term="Cargo mass" :def="massForRange|csn|unit('tonnes')" />
+        <def split=4 term="Acc"        :def="deltaVforRange|R(2)|unit('G')" />
+        <def split=4 term="Range"      :def="maxRange()|R(2)|unit('AU')"    />
+        <slider :value.sync="massForRange"   min=0    :max="maxCargoMass"   step=1    minmax=true class="my-1" />
+        <slider :value.sync="deltaVforRange" min=0.01 :max="deltaVinG|R(2)" step=0.01 minmax=true class="my-1" />
+      </div>
+    </def>
   </card>
 
   <modal v-if="buy" title="Purchase" @close="buy=false" close="Cancel" xclose=true>

@@ -127,9 +127,9 @@ define(function(require, exports, module) {
       return burnRate * thrustRatio;
     }
 
-    maxBurnTime(accel, nominal=false) {
+    maxBurnTime(accel, nominal=false, extra_mass=0) {
       let fuel = this.fuel;
-      let mass = this.currentMass();
+      let mass = this.currentMass() + extra_mass;
 
       if (nominal) {
         fuel = this.tank;
@@ -166,8 +166,8 @@ define(function(require, exports, module) {
       return this.mass + this.cargoMass() + this.addOnMass() + this.fuel;
     }
 
-    currentAcceleration() {
-      return Physics.deltav(this.thrust, this.currentMass());
+    currentAcceleration(extra_mass=0) {
+      return Physics.deltav(this.thrust, this.currentMass() + extra_mass);
     }
 
     accelerationWithMass(mass) {
