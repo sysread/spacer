@@ -163,7 +163,8 @@ define(function(require, exports, module) {
       <div slot="def" v-if="ship.addons.length > 0">
         <btn v-for="(addon, idx) of addons" :key="idx" block=1 @click="toggleAddOn(addon)">{{addOnName(addon)|caps}}</btn>
         <modal v-if="showAddOn" @close="toggleAddOn(showAddOn)" close="Close" :title="addOnName(showAddOn)">
-          <def v-for="(value, key) of addOnData" :key="key" :term="key|caps" :def="value" />
+          <def v-for="(value, key) of addOnData" v-if="key != 'price' && key != 'markets'" :key="key" :term="key|caps" :def="value" />
+          <def term="Price" :def="addOnData.price|csn" />
         </modal>
       </div>
       <span slot="def" v-else>None</span>
