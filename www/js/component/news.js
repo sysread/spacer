@@ -85,13 +85,15 @@ define(function(require, exports, module) {
     },
 
     methods: {
-      name(body)         { return this.system.short_name(body) },
-      faction(body)      { return this.game.planets[body].faction.abbrev },
-      hasShortages(body) { return this.shortages[body].length > 0 },
-      hasSurpluses(body) { return this.surpluses[body].length > 0 },
+      name(body)         { return this.system.short_name(body)                       },
+      faction(body)      { return this.game.planets[body].faction.abbrev             },
+      hasShortages(body) { return this.shortages[body].length > 0                    },
+      hasSurpluses(body) { return this.surpluses[body].length > 0                    },
       hasNews(body)      { return this.hasShortages(body) || this.hasSurpluses(body) },
-      is_shown(body)     { return (this.shown || this.game.locus) == body },
-      show(body)         { this.shown = body },
+      kind(body)         { return this.system.kind(body)                             },
+      is_moon(body)      { return this.system.type(body) == 'moon'                   },
+      is_shown(body)     { return (this.shown || this.game.locus) == body            },
+      show(body)         { this.shown = body                                         },
     },
 
     template: `
@@ -101,6 +103,7 @@ define(function(require, exports, module) {
             {{name(body)}}
             <span v-if="body == game.locus" class="m-1 text-warning font-weight-bold">&target;</span>
             <badge right=1 class="mx-1">{{faction(body)}}</badge>
+            <badge right=1 v-if="is_moon(body)" class="ml-1">{{kind(body)}}</badge>
           </btn>
 
           <card :subtitle="name(body)" v-if="is_shown(body) && hasNews(body)" class="my-2">
