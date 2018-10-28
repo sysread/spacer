@@ -1,5 +1,6 @@
 define(function(require, exports, module) {
-  const Vue = require('vendor/vue');
+  const Vue     = require('vendor/vue');
+  const Physics = require('physics');
 
   require('component/global');
   require('component/common');
@@ -85,10 +86,11 @@ define(function(require, exports, module) {
 
     methods: {
       name(body)         { return this.system.short_name(body) },
+      faction(body)      { return this.game.planets[body].faction.abbrev },
       hasShortages(body) { return this.shortages[body].length > 0 },
       hasSurpluses(body) { return this.surpluses[body].length > 0 },
       hasNews(body)      { return this.hasShortages(body) || this.hasSurpluses(body) },
-      is_shown(body)     { return this.shown == body },
+      is_shown(body)     { return (this.shown || this.game.locus) == body },
       show(body)         { this.shown = body },
     },
 
@@ -97,6 +99,8 @@ define(function(require, exports, module) {
         <template v-for="body in bodies">
           <btn block=1 @click="show(body)" class="text-left">
             {{name(body)}}
+            <span v-if="body == game.locus" class="m-1 text-warning font-weight-bold">&target;</span>
+            <badge right=1 class="mx-1">{{faction(body)}}</badge>
           </btn>
 
           <card :subtitle="name(body)" v-if="is_shown(body) && hasNews(body)" class="my-2">
