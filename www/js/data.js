@@ -333,7 +333,7 @@ define(function() {
       fortuna:     {hull: 8,  armor: 6,  cargo: 50, hardpoints: 1,  mass: 1000,  tank: 8,   drives: 14, drive: 'ion',    restricted: 'Friendly',  faction: 'JFT'},
       neptune:     {hull: 14, armor: 10, cargo: 40, hardpoints: 4,  mass: 700,   tank: 10,  drives: 10, drive: 'ion',    restricted: 'Trusted',   faction: 'TRANSA', markets: ['capital', 'military']},
       barsoom:     {hull: 20, armor: 20, cargo: 25, hardpoints: 6,  mass: 600,   tank: 8,   drives: 2,  drive: 'fusion', restricted: 'Admired',   faction: 'MC',     markets: ['capital', 'military']},
-      rock_hopper: {hull: 6,  armor: 8,  cargo: 25, hardpoints: 2,  mass: 500,   tank: 6,   drives: 6,  drive: 'ion',    restricted: 'Respected', faction: 'CERES'},
+      rock_hopper: {hull: 6,  armor: 4,  cargo: 25, hardpoints: 2,  mass: 500,   tank: 4,   drives: 20, drive: 'ion',    restricted: 'Respected', faction: 'CERES'},
     },
 
     ship: {
