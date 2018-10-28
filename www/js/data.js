@@ -371,7 +371,7 @@ define(function() {
       },
       ion: {
         name:       'Ion drive',
-        desc:       'Adds an additionl pair of ion drives to the hull, increasing thrust. Care must be taken not to unbalance the ship, however.',
+        desc:       'Adds an additional pair of ion drives to the hull, increasing thrust. Care must be taken not to unbalance the ship, however.',
         mass:       20,
         thrust:     1600,
         burn_rate:  0.01,
@@ -385,6 +385,24 @@ define(function() {
         burn_rate:  0.088,
         price:      70000,
         restricted: 'Trusted',
+      },
+      armor: {
+        name:       'Armor plating',
+        desc:       'Welds plates of ceramic carbon-steel armor to the hull, protecting it from damage, but adding greatly to the mass of the ship.',
+        mass:       100,
+        armor:      5,
+        price:      30000,
+        restricted: 'Friendly',
+        markets:    ['military', 'capital'],
+      },
+      advanced_armor: {
+        name:       'Milspec armor plating',
+        desc:       'More expensive and much more highly restricted than carbon-steel, military grade armor achieves a higher level of protection per tonne using advanced materials science.',
+        mass:       150,
+        armor:      10,
+        price:      50000,
+        restricted: 'Trusted',
+        markets:    ['military', 'capital'],
       },
       railgun_turret: {
         name:       'Rail gun turret',
