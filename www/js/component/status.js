@@ -133,7 +133,7 @@ define(function(require, exports, module) {
     template: `
 <card :title="ship.type|caps">
   <card class="my-3">
-    <def term="Cargo">
+    <def term="Cargo" info="Cargo is measured in cargo units (cu), each enough to hold a standard-sized container of material. Mass for one cu varies by material.">
       <div slot="def">
         {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
         <div v-if="ship.cargoUsed" v-for="item in cargo" :key="item.name">
