@@ -24,6 +24,7 @@ define(function(require, exports, module) {
       return {
         menu: {
           'Summary':     'summary',
+          'News':        'news',
           'Work':        'work',
           'Market':      'commerce',
           'Fabricators': 'fabricators',
