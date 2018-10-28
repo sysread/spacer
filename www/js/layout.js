@@ -2,6 +2,7 @@ define(function(require, exports, module) {
   const Physics = require('physics');
   const Hammer  = require('vendor/hammer.min');
   const util    = require('util');
+  const system  = require('system');
 
 
   const Layout = class {
@@ -169,6 +170,20 @@ define(function(require, exports, module) {
       }
 
       return path;
+    }
+
+    scale_body_diameter(body) {
+      const fov_m    = this.fov_au * Physics.AU;
+      const px_per_m = this.scale_px / fov_m;
+      const diameter = system.body(body).radius * 2;
+
+      const adjust = body == 'sun' ? 1
+                   : body.match(/jupiter|saturn|uranus|neptune/) ? 10
+                   : 50;
+
+      const factor = this.fov_au + Math.log2(Math.max(1, this.fov_au));
+      const amount = util.clamp(adjust * factor, 1);
+      return util.clamp(diameter * px_per_m * amount, 3, this.scale_px);
     }
 
     is_within_fov(target, reference_point) {

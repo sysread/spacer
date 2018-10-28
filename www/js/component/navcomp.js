@@ -651,7 +651,7 @@ define(function(require, exports, module) {
           const t = this.system.system.time;
           const bodies = {};
 
-          const d_sun = this.diameter('sun');
+          const d_sun = this.layout.scale_body_diameter('sun');
           const p_sun = this.layout.scale_point([0, 0]);
           p_sun[0] -= d_sun / 2;
           p_sun[1] -= d_sun / 2;
@@ -663,7 +663,7 @@ define(function(require, exports, module) {
           };
 
           for (const body of this.bodies) {
-            const d = this.diameter(body);
+            const d = this.layout.scale_body_diameter(body);
             const p = this.layout.scale_point( this.system.position(body, t) );
             p[0] -= d / 2;
             p[1] -= d / 2;
@@ -681,25 +681,6 @@ define(function(require, exports, module) {
     },
 
     methods: {
-      diameter(body) {
-        if (this.layout) {
-          const fov_m    = this.layout.fov_au * Physics.AU;
-          const px_per_m = this.layout.scale_px / fov_m;
-          const diameter = this.system.body(body).radius * 2;
-
-          const adjust = body == 'sun' ? 1
-                       : body.match(/jupiter|saturn|uranus|neptune/) ? 10
-                       : 100;
-
-          const factor = this.layout.fov_au + Math.log2(Math.max(1, this.layout.fov_au));
-          const amount = util.clamp(adjust * factor, 1);
-          return util.clamp(diameter * px_per_m * amount, 3, this.layout.scale_px);
-        }
-        else {
-          return 1;
-        }
-      },
-
       show_label(body) {
         const central = this.system.central(body);
 

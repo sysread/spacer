@@ -148,7 +148,7 @@ define(function(require, exports, module) {
 
             // Update sun
             const [sun_x, sun_y] = this.layout.scale_point([0, 0]);
-            const sun_d = this.diameter('sun');
+            const sun_d = this.layout.scale_body_diameter('sun');
             timelines.sun.to(this.$refs.sun, time, {
               x:      sun_x,
               y:      sun_y,
@@ -160,7 +160,7 @@ define(function(require, exports, module) {
             // Update planets
             for (const body of this.bodies) {
               const [x, y] = this.layout.scale_point(orbits[body][turn]);
-              const d = this.diameter(body);
+              const d = this.layout.scale_body_diameter(body);
 
               timelines[body].add(mark);
 
@@ -221,25 +221,6 @@ define(function(require, exports, module) {
         }
 
         return true;
-      },
-
-      diameter(body) {
-        if (this.layout) {
-          const fov_m    = this.layout.fov_au * Physics.AU;
-          const px_per_m = this.layout.scale_px / fov_m;
-          const diameter = this.system.body(body).radius * 2;
-
-          const adjust = body == 'sun' ? 1
-                       : body.match(/jupiter|saturn|uranus|neptune/) ? 10
-                       : 100;
-
-          const factor = this.layout.fov_au + Math.log2(Math.max(1, this.layout.fov_au));
-          const amount = util.clamp(adjust * factor, 1);
-          return util.clamp(diameter * px_per_m * amount, 3, this.layout.scale_px);
-        }
-        else {
-          return 3;
-        }
       },
 
       show_label(body) {
