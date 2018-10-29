@@ -671,7 +671,7 @@ define(function(require, exports, module) {
         if (result == 'destroyed') {
           this.$emit('dead');
         }
-        else if (result == 'surrendered') {
+        else if (result == 'player-surrendered') {
           this.setChoice('submit-yes');
         }
         else {
