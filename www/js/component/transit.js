@@ -307,6 +307,10 @@ define(function(require, exports, module) {
           const faction = this.data.bodies[body].faction;
           const au = ranges[body] / Physics.AU;
 
+          if (au > this.data.jurisdiction) {
+            return;
+          }
+
           let chance = this.game.planets[body].inspectionRate(au)
                      - this.game.player.ship.stealth;
 
@@ -361,13 +365,12 @@ define(function(require, exports, module) {
         let chance = this.piracyChancePct();
 
         if (this.plan.velocity > 1000) {
-           chance -= Math.log(this.plan.velocity / 1000) / 100;
+           chance -= Math.log(this.plan.velocity / 1000) / 200;
         }
 
         chance /= 1 + this.stoppedBy.pirate;
 
         if (chance > 0) {
-
           if (Math.random() <= chance) {
             ++this.stoppedBy.pirate;
             this.encounter = {type: 'pirate'};

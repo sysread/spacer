@@ -22,7 +22,7 @@ define(function() {
     initial_ship:        'schooner',
     initial_money:       1000,
     max_abs_standing:    100,
-    jurisdiction:        1, // au from body
+    jurisdiction:        0.5, // au from body
     max_patrol_rate:     0.5,
     default_piracy_rate: 0.08,
 
