@@ -196,9 +196,12 @@ define(function(require, exports, module) {
         return 0;
       }
 
+      const status_bar_height = Math.max(0, screen.height - window.innerHeight);
+
       const height
         = window.innerHeight
         + window.scrollY
+        - status_bar_height
         - this.elt.getBoundingClientRect().top
         - $('#spacer-status').height()
         - $('#spacer-navbar').height();
