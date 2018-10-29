@@ -257,20 +257,23 @@ define(function(require, exports, module) {
         if (this.game.player.ship.isDestroyed) {
           this.$emit('open', 'newgame');
         }
+
         if (this.encounter) {
           return;
         }
-        else if (this.inspectionChance()) {
-          return;
+
+        if (this.current_turn % 3 == 0) {
+          if (this.inspectionChance()) {
+            return;
+          }
+          else if (this.piracyChance()) {
+            return;
+          }
         }
-        else if (this.piracyChance()) {
-          return;
-        }
-        else {
-          this.game.turn(1, true);
-          this.plan.turn(1);
-          this.game.player.ship.burn(this.plan.accel);
-        }
+
+        this.game.turn(1, true);
+        this.plan.turn(1);
+        this.game.player.ship.burn(this.plan.accel);
       },
 
       complete_encounter() {
@@ -336,7 +339,7 @@ define(function(require, exports, module) {
           return;
         }
 
-        let chance = 0.05;
+        let chance = 0.1 - this.game.player.ship.stealth;
 
         const ranges = this.nearby();
 
@@ -345,8 +348,9 @@ define(function(require, exports, module) {
           const pct = this.data.jurisdiction / au;
           const patrol = this.game.planets[body].faction.patrol * pct;
           chance -= patrol;
-          chance -= (1 - this.game.player.ship.stealth);
         }
+
+        chance = Math.max(chance, 0.01);
 
         if (chance > 0) {
           const rand = Math.random();
