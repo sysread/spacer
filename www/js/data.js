@@ -316,7 +316,7 @@ define(function() {
 
     shipclass: {
       /* Civilian */
-      shuttle:       { hull: 2,  armor: 0,  cargo: 2,  hardpoints: 0,  mass: 100,   tank: 1,   drives: 1,  drive: 'ion',    restricted: false},
+      shuttle:       { hull: 2,  armor: 1,  cargo: 2,  hardpoints: 1,  mass: 100,   tank: 1,   drives: 1,  drive: 'ion',    restricted: false},
       schooner:      { hull: 4,  armor: 2,  cargo: 14, hardpoints: 1,  mass: 400,   tank: 3,   drives: 2,  drive: 'ion',    restricted: false},
 
       /* Merchant */
@@ -452,7 +452,7 @@ define(function() {
         reload:        2,
         rate:          1,
         magazine:      1,
-        accuracy:      0.95,
+        accuracy:      1,
         interceptable: true,
         price:         37500,
         restricted:    'Trusted',
@@ -466,7 +466,7 @@ define(function() {
         reload:        2,
         rate:          1,
         magazine:      1,
-        accuracy:      0.9,
+        accuracy:      1,
         interceptable: true,
         price:         50000,
         restricted:    'Admired',

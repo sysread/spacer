@@ -1,5 +1,5 @@
 define(function(require, exports, module) {
-  const Npc     = require('npc');
+  const NPC     = require('npc');
   const Ship    = require('ship');
   const Physics = require('physics');
   const Vue     = require('vendor/vue');
@@ -430,31 +430,18 @@ define(function(require, exports, module) {
     props: ['faction', 'body', 'distance'],
 
     data() {
-      // TODO more (any) randomness in ship and loadout, customizations based
-      // on faction and scale of origin body
-      const ship = new Ship({
-        type: util.oneOf(['schooner', 'corvette', 'cruiser']),
-        addons: ['railgun_turret', 'pds'],
-      });
-
-      for (let i = 0; i < ship.hardpoints && i < 3; ++i) {
-        let addon;
-        while (!addon || ship.hasAddOn(addon)) {
-          addon = util.oneOf(['light_torpedo', 'medium_torpedo', 'ecm']);
-        }
-
-        ship.installAddOn(addon);
-      }
-
       return {
-        npc: new Npc({
+        choice: 'ready',
+        fine:   0,
+        npc:    new NPC({
           name:    'Police Patrol',
           faction: this.faction,
-          ship:    ship,
+          options: {
+            ship:       ['schooner', 'corvette', 'cruiser', 'battleship', 'barsoom', 'neptune'],
+            addons:     ['armor', 'railgun_turret', 'pds', 'light_torpedo', 'medium_torpedo', 'ecm'],
+            min_addons: 3,
+          },
         }),
-
-        choice: 'ready',
-        fine: 0,
       };
     },
 
@@ -611,25 +598,15 @@ define(function(require, exports, module) {
     data() {
       const faction = util.oneOf(['UN', 'MC', 'CERES', 'JFT', 'TRANSA']);
 
-      const ship = new Ship({
-        type: util.oneOf(['schooner', 'corvette', 'neptune']),
-        addons: ['railgun_turret'],
-      });
-
-      for (let i = 0; i < ship.hardpoints && i < 4; ++i) {
-        let addon;
-        while (!addon || ship.hasAddOn(addon)) {
-          addon = util.oneOf(['light_torpedo', 'pds', 'ecm', 'railgun_turret']);
-        }
-
-        ship.installAddOn(addon);
-      }
-
       return {
-        npc: new Npc({
+        npc: new NPC({
           name:    'Pirate',
           faction: faction,
-          ship:    ship,
+          options: {
+            ship:       ['schooner', 'corvette', 'neptune'],
+            addons:     ['railgun_turret', 'pds', 'light_torpedo', 'ecm', 'armor'],
+            min_addons: 2,
+          },
         }),
 
         choice: 'ready',
@@ -700,6 +677,8 @@ define(function(require, exports, module) {
           <card-text>
             The lights go dim as an emergency klaxxon warns you that your ship has been
             targeted by an incoming pirate <b class="text-warning">{{npc.ship.type|caps}}</b>.
+            Its transponder is off, but its make and markings suggest that it is aligned
+            with {{npc.faction.abbrev}}... of course, the ship may have been stolen.
 
             Before long, the radio begins to chirp, notifying you of the pirate's ultimatum.
           </card-text>

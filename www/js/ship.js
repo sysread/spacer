@@ -267,8 +267,12 @@ define(function(require, exports, module) {
       return ship + cargo + fuel + dmg;
     }
 
+    numAddOns() {
+      return this.addons.length;
+    }
+
     availableHardPoints() {
-      return this.hardpoints - this.addons.length;
+      return this.hardpoints - this.numAddOns();
     }
 
     installAddOn(addon) {

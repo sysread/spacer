@@ -212,16 +212,16 @@ define(function(require, exports, module) {
       {{who}} surrendered.
     </div>
     <div v-else>
-      {{who}} attacked with {{entry.type}}
-      <span      v-if="entry.effect === 'miss'">but missed.</span>
-      <span v-else-if="entry.effect === 'intercepted'">but point defenses intercepted the attack.</span>
-      <span v-else-if="entry.effect === 'dodged'">but the target manuevered to avoid the attack.</span>
-      <span v-else-if="entry.effect === 'destroyed'">and destroyed the target!</span>
+      {{who}} attacked with <b>{{entry.type}}</b>
+      <span      v-if="entry.effect === 'miss'">but <b>missed</b>.</span>
+      <span v-else-if="entry.effect === 'intercepted'">but point defenses <b>intercepted</b> the attack.</span>
+      <span v-else-if="entry.effect === 'dodged'">but the target <b>manuevered</b> to avoid the attack.</span>
+      <span v-else-if="entry.effect === 'destroyed'">and <b>destroyed</b> the target!</span>
       <span v-else-if="entry.effect === 'hit'">
-        <span v-if="isHaymaker">and struck directly amidships, visibly staggering the vessel.</span>
-        <span v-else-if="isStrongHit">and scored a direct hit, causing significant damage.</span>
-        <span v-else-if="isGlancingBlow">and struck a glancing blow; damage was negligible.</span>
-        <span v-else>and hit the target.</span>
+        <span v-if="isHaymaker">and <b>struck directly amidships</b>, visibly staggering the vessel.</span>
+        <span v-else-if="isStrongHit">and scored a <b>direct hit</b>, causing significant damage.</span>
+        <span v-else-if="isGlancingBlow">and struck a <b>glancing blow</b>; damage was negligible.</span>
+        <span v-else>and <b>hit</b> the target.</span>
       </span>
     </div>
   </div>
