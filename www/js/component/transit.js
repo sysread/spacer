@@ -608,8 +608,6 @@ define(function(require, exports, module) {
 
 
   Vue.component('PirateEncounter', {
-    props: [],
-
     data() {
       const faction = util.oneOf(['UN', 'MC', 'CERES', 'JFT', 'TRANSA']);
 
@@ -621,7 +619,7 @@ define(function(require, exports, module) {
       for (let i = 0; i < ship.hardpoints && i < 4; ++i) {
         let addon;
         while (!addon || ship.hasAddOn(addon)) {
-          addon = util.oneOf(['light_torpedo', 'pds', 'ecm', 'stealthPlating']);
+          addon = util.oneOf(['light_torpedo', 'pds', 'ecm', 'railgun_turret']);
         }
 
         ship.installAddOn(addon);
