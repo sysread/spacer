@@ -85,7 +85,7 @@ define(function(require, exports, module) {
 
     refresh() {
       $('#spacer-location').text(this.locus);
-      $('#spacer-credits').text(`${util.csn(util.R(this.player.money))} c`);
+      $('#spacer-credits').text(`${util.csn(Math.floor(this.player.money))} c`);
       $('#spacer-cargo').text(`${this.player.ship.cargoUsed}/${this.player.ship.cargoSpace} cu`);
       $('#spacer-fuel').text('Fuel ' + util.R(100 * this.player.ship.fuel / this.player.ship.tank) + '%');
       $('#spacer-turn').text(`${this.status_date()}`);

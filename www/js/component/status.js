@@ -20,7 +20,7 @@ define(function(require, exports, module) {
 
     computed: {
       name    : function() {return this.person.name},
-      money   : function() {return this.person.money},
+      money   : function() {return Math.floor(this.person.money)},
       home    : function() {return this.data.bodies[this.person.home].name},
       faction : function() {return this.person.faction.full_name},
       accel   : function() {return this.person.maxAcceleration() / Physics.G },
