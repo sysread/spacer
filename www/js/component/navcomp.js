@@ -44,7 +44,7 @@ define(function(require, exports, module) {
       },
 
       layout() {
-        if (this.show == 'map' && this.dest) {
+        if (this.show == 'map') {
           this.$nextTick(() => {
             this.layout.set_center(this.map_center_point);
             this.layout.set_fov_au(this.map_fov_au);
