@@ -74,6 +74,8 @@ define(function(require, exports, module) {
       layout_resize() { this.rebuild_timeline()       },
 
       rebuild_timeline() {
+        const paused = this.paused;
+
         if (!this.building) {
           this.pause();
 
@@ -85,7 +87,10 @@ define(function(require, exports, module) {
           // Execute in next tick to allow timeline to terminate
           this.$nextTick(() => {
             this.build_timeline();
-            this.resume();
+
+            if (!paused) {
+              this.resume();
+            }
           });
         }
       },
