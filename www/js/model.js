@@ -274,14 +274,9 @@ define(function(require, exports, module) {
         rate = this.scale(this.faction.patrol);
       }
 
-      return distance ? rate * Math.pow(data.jurisdiction, 2) / Math.pow(distance, 2) : rate;
-    }
-
-    inspectionChance(distance=0, ignore_standing=false) {
-      const stealth = 1 - window.game.player.ship.stealth;
-      const rate = this.inspectionRate(distance, ignore_standing);
-      const rand = Math.random();
-      return rand <= (rate * stealth);
+      return distance
+        ? util.clamp(rate * Math.pow(data.jurisdiction, 2) / Math.pow(distance, 2), 0, rate)
+        : rate;
     }
 
     inspectionFine() {

@@ -33,14 +33,13 @@ define(function(require, exports, module) {
     },
 
     computed: {
-      intvl()              { return intvl },
-      plan()               { return this.game.transit_plan },
-      encounter_possible() { return this.plan.velocity <= this.data.max_encounter_velocity },
-      destination()        { return this.system.name(this.plan.dest) },
-      current_turn()       { return this.plan.currentTurn },
-      daysLeft()           { return Math.floor(this.plan.left * this.data.hours_per_turn / 24) },
-      percent()            { return this.plan.pct_complete },
-      distance()           { return util.R(this.plan.auRemaining()) },
+      intvl()        { return intvl },
+      plan()         { return this.game.transit_plan },
+      destination()  { return this.system.name(this.plan.dest) },
+      current_turn() { return this.plan.currentTurn },
+      daysLeft()     { return Math.floor(this.plan.left * this.data.hours_per_turn / 24) },
+      percent()      { return this.plan.pct_complete },
+      distance()     { return util.R(this.plan.auRemaining()) },
 
       fov() {
         const fov = Math.max(
@@ -302,36 +301,40 @@ define(function(require, exports, module) {
       },
 
       inspectionChance() {
-        if (!this.encounter_possible) {
-          return;
-        }
-
         const ranges = this.nearby();
 
         for (const body of Object.keys(ranges)) {
-          if (ranges[body] / Physics.AU > this.data.jurisdiction) {
-            continue;
+          const faction = this.data.bodies[body].faction;
+          const au = ranges[body] / Physics.AU;
+
+          let chance = this.game.planets[body].inspectionRate(au)
+                     - this.game.player.ship.stealth;
+
+          if (this.plan.velocity > 1000) {
+             chance -= Math.log(this.plan.velocity / 1000) / 300;
           }
 
-          const km = Math.floor(ranges[body] / 1000);
+          chance /= 1 + (this.stoppedBy[faction] || 0);
 
-          if (this.game.planets[body].inspectionChance(km)) {
-            const faction = this.data.bodies[body].faction;
+          if (chance > 0) {
+            chance = util.clamp(chance, 0, data.max_patrol_rate);
 
-            if (this.stoppedBy[faction]) {
-              continue;
-            }
-            else {
-              const dist = util.R(Physics.distance(this.plan.coords, this.system.position(body)) / Physics.AU, 3);
-              this.stoppedBy[faction] = true;
-              this.encounter = {
-                type:     'inspection',
-                body:     body,
-                faction:  this.data.bodies[body].faction,
-                distance: dist,
-              };
+            if (Math.random() <= chance) {
+              if (this.stoppedBy[faction]) {
+                continue;
+              }
+              else {
+                const dist = util.R(Physics.distance(this.plan.coords, this.system.position(body)) / Physics.AU, 3);
+                this.stoppedBy[faction] = true;
+                this.encounter = {
+                  type:     'inspection',
+                  body:     body,
+                  faction:  this.data.bodies[body].faction,
+                  distance: dist,
+                };
 
-              return true;
+                return true;
+              }
             }
           }
         }
@@ -340,7 +343,8 @@ define(function(require, exports, module) {
       },
 
       piracyChancePct() {
-        let chance = 0.1 - this.game.player.ship.stealth;
+        let chance = this.data.default_piracy_rate
+                   - this.game.player.ship.stealth;
 
         const ranges = this.nearby();
 
@@ -350,22 +354,21 @@ define(function(require, exports, module) {
           chance -= rate;
         }
 
-        chance = util.clamp(chance, 0, 0.1);
-
-        return chance;
+        return Math.max(chance, 0);
       },
 
       piracyChance() {
-        if (!this.encounter_possible) {
-          return;
+        let chance = this.piracyChancePct();
+
+        if (this.plan.velocity > 1000) {
+           chance -= Math.log(this.plan.velocity / 1000) / 100;
         }
 
-        const chance = this.piracyChancePct();
+        chance /= 1 + this.stoppedBy.pirate;
 
         if (chance > 0) {
-          const rand = Math.random();
 
-          if (rand < chance) {
+          if (Math.random() <= chance) {
             ++this.stoppedBy.pirate;
             this.encounter = {type: 'pirate'};
             return true;
