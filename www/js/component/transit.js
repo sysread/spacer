@@ -391,7 +391,12 @@ define(function(require, exports, module) {
 
         <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
           <div class="plot-root-bg" :style="bg_css()"></div>
+
           <SvgPlot :layout="layout" v-if="layout">
+            <text style="fill:red;font:12px monospace" x=5 y=17>
+              FoV: {{layout.fov_au|R(4)|unit('AU')}}
+            </text>
+
             <image ref="sun" xlink:href="img/sun.png" />
 
             <g v-for="body of bodies" :key="body">

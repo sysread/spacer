@@ -763,9 +763,15 @@ define(function(require, exports, module) {
     template: `
       <div id="navcomp-map-root" class="plot-root border border-dark" @click="click">
         <div class="plot-root-bg" :style="bg_css()"></div>
+
         <SvgPlot v-if="layout" :layout="layout">
+          <text style="fill:red;font:12px monospace" x=5 y=17>
+            FoV: {{layout.fov_au|R(4)|unit('AU')}}
+          </text>
+
           <slot name="svg" />
         </SvgPlot>
+
         <slot />
       </div>
     `,
