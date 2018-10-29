@@ -90,7 +90,7 @@ define(function(require, exports, module) {
           <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div v-if="!disabled" class="collapse navbar-collapse" id="spacer-nav">
+        <div class="collapse navbar-collapse" id="spacer-nav">
           <ul class="navbar-nav mr-auto">
             <NavItem v-for="(target, label) of menu" :key="target" :active="is_open(target)" @click="open(target)">
               {{label}}
