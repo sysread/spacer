@@ -339,23 +339,28 @@ define(function(require, exports, module) {
         return false;
       },
 
-      piracyChance() {
-        if (!this.encounter_possible) {
-          return;
-        }
-
+      piracyChancePct() {
         let chance = 0.1 - this.game.player.ship.stealth;
 
         const ranges = this.nearby();
 
         for (const body of Object.keys(ranges)) {
           const au = ranges[body] / Physics.AU;
-          const pct = this.data.jurisdiction / au;
-          const patrol = this.game.planets[body].faction.patrol * pct;
-          chance -= patrol;
+          const rate = this.game.planets[body].inspectionRate(au);
+          chance -= rate;
         }
 
-        chance = Math.max(chance, 0.01);
+        chance = util.clamp(chance, 0, 0.1);
+
+        return chance;
+      },
+
+      piracyChance() {
+        if (!this.encounter_possible) {
+          return;
+        }
+
+        const chance = this.piracyChancePct();
 
         if (chance > 0) {
           const rand = Math.random();
@@ -400,6 +405,7 @@ define(function(require, exports, module) {
           <SvgPlot :layout="layout" v-if="layout">
             <text style="fill:red;font:12px monospace" x=5 y=17>
               FoV: {{layout.fov_au|R(4)|unit('AU')}}
+              Piracy: {{piracyChancePct() * 100|R(3)}}%
             </text>
 
             <image ref="sun" xlink:href="img/sun.png" />
