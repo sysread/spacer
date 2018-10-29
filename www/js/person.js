@@ -15,7 +15,7 @@ define(function(require, exports, module) {
       this.ship     = new Ship(init.ship || {type: data.initial_ship});
       this.faction  = new model.Faction(init.faction || 'MC');
       this.home     = init.home  || this.faction.capital;
-      this.money    = init.money || data.initial_money;
+      this.money    = Math.floor(init.money) || data.initial_money;
       this.standing = {};
 
       // Set default values for faction standing at neutral

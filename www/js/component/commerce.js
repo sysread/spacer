@@ -210,7 +210,7 @@ define(function(require, exports, module) {
   </p>
 
   <row>
-    <cell size="3" class="font-weight-bold">Credits</cell><cell size="3">{{credits|csn}}</cell>
+    <cell size="3" class="font-weight-bold">Credits</cell><cell size="3">{{credits|R|csn}}</cell>
     <cell size="3" class="font-weight-bold">Cargo</cell><cell size="3">{{cargo|csn}}</cell>
   </row>
 
