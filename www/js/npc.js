@@ -56,7 +56,7 @@ define(function(require, exports, module) {
          */
         if (opt.ship.holdIsEmpty) {
           const min   = Math.min(opt.options.min_cargo || 0, opt.ship.cargoLeft);
-          const count = util.getRandomInt(min, opt.ship.cargoLeft);
+          const count = util.getRandomInt(min, Math.floor(opt.ship.cargoLeft / 2));
           const items = opt.options.cargo || Object.keys(data.resources);
 
           while (opt.ship.cargoUsed < count) {
