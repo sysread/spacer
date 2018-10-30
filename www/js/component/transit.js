@@ -612,7 +612,7 @@ define(function(require, exports, module) {
     <template v-else>
       The police apologize for the inconvenience and send you on your way.
     </template>
-    <btn block=1 @click="done">Ok</btn>
+    <btn block=1 @click="done" class="my-2">Ok</btn>
   </div>
 
   <ask v-if="choice=='bribe'" @pick="setChoice" :choices="{'bribe-yes': 'Yes, it is my duty as a fellow captain', 'ready': 'No, that would be dishonest'}">
