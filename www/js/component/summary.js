@@ -7,6 +7,25 @@ define(function(require, exports, module) {
   require('component/card');
   require('component/row');
 
+  Vue.component('SummaryPage', {
+    computed: {
+      planet()  { return this.game.here },
+      is_home() { return this.planet.body == this.game.player.home },
+    },
+
+    template: `
+      <card>
+        <card-title>
+          {{planet.name}}
+          <img v-if="is_home" src="img/home.png" class="circle-thingy circle-thingy-big mx-2 float-right" />
+        </card-title>
+
+        <planet-summary :planet="planet" />
+      </card>
+    `,
+  });
+
+
   Vue.component('planet-summary', {
     props: ['planet', 'mini'],
 

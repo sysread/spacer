@@ -117,6 +117,25 @@ body {
   color: #888;
 }
 
+.circle-thingy {
+  color: #101010;
+  background-color: rgb(200, 140, 50);
+  font-weight: bold;
+  font-size: 1rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  display: inline-block;
+  border-radius: 50%;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.circle-thingy-big {
+  font-size: 1.5rem;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
 a.info {
   color: #101010;
   background-color: rgb(200, 140, 50);

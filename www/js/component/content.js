@@ -49,19 +49,6 @@ define(function(require, exports, module) {
   });
 
 
-  Vue.component('SummaryPage', {
-    computed: {
-      planet() { return this.game.here },
-    },
-
-    template: `
-      <card :title="planet.name">
-        <planet-summary :planet="planet" />
-      </card>
-    `,
-  });
-
-
   Vue.component('Testing', {
       data() {
         return {
