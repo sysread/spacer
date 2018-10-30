@@ -469,9 +469,10 @@ define(function(require, exports, module) {
         const need   = this.getNeed(item);
 
         if (need > 1) {
-          this._price[item] = Math.ceil(markup * Math.min(value * 3, value * (1 + (need / (need + 5)))));
+          //this._price[item] = Math.ceil(markup * Math.min(value * 3, value * (1 + (need / (need + 5)))));
+          this._price[item] = Math.ceil(markup * Math.min(value * 2, value + (value * Math.log10(need))));
         } else if (need < 1) {
-          this._price[item] = Math.ceil(markup * Math.max(value / 4, value * need));
+          this._price[item] = Math.ceil(markup * Math.max(value / 2, value * need));
         } else {
           this._price[item] = Math.ceil(markup * value);
         }

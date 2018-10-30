@@ -35,20 +35,20 @@ define(function() {
     },
 
     resources: {
-      water:        {mass:  20, mine: {tics: 1, value: 20}},
+      water:        {mass:  20, mine: {tics: 1, value: 10}},
       ore:          {mass:  40, mine: {tics: 2, value: 10}},
-      minerals:     {mass:  30, mine: {tics: 2, value: 25}},
-      hydrocarbons: {mass:  10, mine: {tics: 2, value: 30}},
-      food:         {mass:  10, mine: {tics: 2, value: 40}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 1}}},
-      fuel:         {mass:   1, recipe: {tics: 1, materials: {ore: 2, water: 1}}},
-      metal:        {mass:  60, recipe: {tics: 2, materials: {ore: 4}}},
-      ceramics:     {mass:  30, recipe: {tics: 2, materials: {minerals: 5}}},
-      medicine:     {mass:  10, recipe: {tics: 3, materials: {food: 3, hydrocarbons: 2}}},
-      machines:     {mass:  80, recipe: {tics: 3, materials: {metal: 4}}},
-      electronics:  {mass:  30, recipe: {tics: 3, materials: {ceramics: 4}}},
-      cybernetics:  {mass: 120, recipe: {tics: 4, materials: {machines: 3, electronics: 3}}},
-      narcotics:    {mass:  10, recipe: {tics: 2, materials: {medicine: 3, hydrocarbons: 1}}, contraband: 5},
-      weapons:      {mass:  20, recipe: {tics: 4, materials: {metal: 3, ceramics: 2}}, contraband: 7},
+      minerals:     {mass:  30, mine: {tics: 2, value: 18}},
+      hydrocarbons: {mass:  10, mine: {tics: 2, value: 23}},
+      food:         {mass:  10, mine: {tics: 2, value: 30}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 1}}},
+      fuel:         {mass:   1, recipe: {tics: 1, materials: {ore: 1, water: 1}}},
+      metal:        {mass:  60, recipe: {tics: 2, materials: {ore: 3}}},
+      ceramics:     {mass:  30, recipe: {tics: 2, materials: {minerals: 3}}},
+      medicine:     {mass:  10, recipe: {tics: 3, materials: {food: 2, hydrocarbons: 1}}},
+      machines:     {mass:  80, recipe: {tics: 3, materials: {metal: 3}}},
+      electronics:  {mass:  30, recipe: {tics: 3, materials: {ceramics: 3}}},
+      cybernetics:  {mass: 120, recipe: {tics: 4, materials: {machines: 2, electronics: 3}}},
+      narcotics:    {mass:  10, recipe: {tics: 2, materials: {medicine: 1, hydrocarbons: 1, water: 1}}, contraband: 5},
+      weapons:      {mass:  20, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}, contraband: 7},
     },
 
     market: {
@@ -60,7 +60,7 @@ define(function() {
     },
 
     traits: {
-      'mineral rich':      {produces: {ore: 6, minerals: 3}, consumes: {}},
+      'mineral rich':      {produces: {ore: 5, minerals: 2}, consumes: {}},
       'mineral poor':      {produces: {ore: -3, minerals: -1}, consumes: {}},
 
       'water rich':        {produces: {water: 3}, consumes: {}},
@@ -69,7 +69,7 @@ define(function() {
       'hydrocarbon rich':  {produces: {hydrocarbons: 4}, consumes: {}},
       'hydrocarbon poor':  {produces: {hydrocarbons: -2}, consumes: {}},
 
-      'rocky':             {produces: {ore: 7, minerals: 4} , consumes: {}},
+      'rocky':             {produces: {ore: 6, minerals: 2} , consumes: {}},
       'icy':               {produces: {water: 5, minerals: 1, hydrocarbons: 2}, consumes: {}},
 
       'asteroids':         {produces: {ore: 12, minerals: 8}, consumes: {fuel: 1.5, electronics: 0.3, machines: 1, cybernetics: 0.3}},
@@ -284,7 +284,7 @@ define(function() {
       titania: {
         name:    'Titania Outpost',
         size:    'normal',
-        traits:  ['subterranean', 'ringed system', 'icy', 'rocky', 'mineral rich', 'black market', 'manufacturing hub'],
+        traits:  ['subterranean', 'ringed system', 'icy', 'rocky', 'mineral rich', 'hydrocarbon rich', 'black market', 'manufacturing hub'],
         faction: 'TRANSA',
         gravity: 0.235,
       },
