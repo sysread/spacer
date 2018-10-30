@@ -157,8 +157,9 @@ define(function(require, exports, module) {
 
     <def v-if="info.damage" y=0 split="5" term="Damage" :def="info.damage" />
     <def v-if="info.reload" y=0 split="5" term="Reloads every" :def="info.reload|unit('rounds')" />
-    <def v-if="info.rate" y=0 split="5" term="Rate of fire" :def="info.rate|unit('/round')" />
     <def v-if="info.interceptable" y=0 split="5" term="Interceptable" :def="info.interceptable|yn|caps" />
+    <def v-if="info.rate" y=0 split="5" term="Rate of fire">{{info.rate}} / round</def>
+    <def v-if="info.accuracy" y=0 split=5 term="Accuracy">{{info.accuracy*100|R}}%</def>
 
     <def v-if="info.armor" y=0 split="5" term="Armor" :def="info.armor" />
     <def v-if="info.dodge" y=0 split="5" term="Dodge" :def="info.dodge|pct(2)" />
