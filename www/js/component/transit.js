@@ -623,6 +623,10 @@ define(function(require, exports, module) {
       const faction = util.oneOf(['UN', 'MC', 'CERES', 'JFT', 'TRANSA']);
 
       return {
+        choice: 'ready',
+        took: null,
+        init_flee: false,
+
         npc: new NPC({
           name:    'Pirate',
           faction: faction,
@@ -632,14 +636,16 @@ define(function(require, exports, module) {
             min_addons: 2,
           },
         }),
-
-        choice: 'ready',
-        took: null,
       };
     },
 
     methods: {
       setChoice(choice) {
+        if (choice == 'flee') {
+          this.init_flee = true;
+          choice = 'attack';
+        }
+
         this.choice = choice || 'ready';
 
         if (this.choice == 'submit-yes') {
@@ -707,11 +713,12 @@ define(function(require, exports, module) {
             Before long, the radio begins to chirp, notifying you of the pirate's ultimatum.
           </card-text>
 
-          <button type="button" class="btn btn-dark btn-block" @click="setChoice('submit')">Surrender your ship</button>
+          <button type="button" class="btn btn-dark btn-block" @click="setChoice('flee')">Flee</button>
+          <button type="button" class="btn btn-dark btn-block" @click="setChoice('submit')">Surrender ship</button>
           <button type="button" class="btn btn-dark btn-block" @click="setChoice('attack')">Defend yourself</button>
         </div>
 
-        <melee v-if="choice=='attack'" :opponent="npc" @complete="done" />
+        <melee v-if="choice=='attack'" :opponent="npc" :init_flee="init_flee" @complete="done" />
 
         <ask v-if="choice=='submit'" @pick="setChoice" :choices="{'submit-yes': 'I am certain', 'ready': 'Nevermind'}">
           If you surrender to the pirates, they will help themselves to your

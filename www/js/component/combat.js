@@ -13,9 +13,9 @@ define(function(require, exports, module) {
   require('component/row');
 
   Vue.component('melee', {
-    props: ['opponent'],
+    props: ['opponent', 'init_flee'],
 
-    data: function() {
+    data() {
       const combat = new Combat.Combat({opponent: this.opponent});
       combat.start();
 
@@ -27,13 +27,20 @@ define(function(require, exports, module) {
       };
     },
 
+    mounted() {
+      if (this.init_flee) {
+        // This is brittle as hell, yet here we are.
+        this.useAction(this.combat.player.actions[0]);
+      }
+    },
+
     computed: {
-      logEntries:  function() { return this.combat.log },
-      isOver:      function() { return this.combat.isOver },
-      escaped:     function() { return this.combat.escaped },
-      surrendered: function() { return this.combat.surrendered },
-      loot:        function() { return this.combat.salvage },
-      hasLoot:     function() { return this.loot && this.loot.sum() > 0 },
+      logEntries()  { return this.combat.log                  },
+      isOver()      { return this.combat.isOver               },
+      escaped()     { return this.combat.escaped              },
+      surrendered() { return this.combat.surrendered          },
+      loot()        { return this.combat.salvage              },
+      hasLoot()     { return this.loot && this.loot.sum() > 0 },
     },
 
     watch: {
@@ -168,6 +175,7 @@ define(function(require, exports, module) {
 
   Vue.component('combat-log', {
     props: ['log', 'tick'],
+
     template: `
 <div class="m-0 p-3" style="overflow-y: scroll; overflow-x: hidden; height: 250px;">
   <div v-for="actions in log" :key="actions.round" class="row">
@@ -192,13 +200,15 @@ define(function(require, exports, module) {
 
   Vue.component('combat-log-entry', {
     props: ['who', 'entry'],
+
     computed: {
-      isHit:          function() { return this.entry.effect === 'hit' },
-      isDestroyed:    function() { return this.entry.effect === 'destroyed' },
-      isGlancingBlow: function() { return this.isHit && this.entry.pct < 1 },
-      isStrongHit:    function() { return this.isHit && this.entry.pct >= 10 },
-      isHaymaker:     function() { return this.isHit && this.entry.pct >= 20 },
+      isHit()          { return this.entry.effect === 'hit'        },
+      isDestroyed()    { return this.entry.effect === 'destroyed'  },
+      isGlancingBlow() { return this.isHit && this.entry.pct < 1   },
+      isStrongHit()    { return this.isHit && this.entry.pct >= 10 },
+      isHaymaker()     { return this.isHit && this.entry.pct >= 20 },
     },
+
     template: `
 <div class="font-italic small py-2 px-1 border-danger" style="border-top: 1px solid">
   <div v-if="entry" :class="{'text-warning': isHit && !isHaymaker, 'text-danger': isHaymaker || isDestroyed}">
@@ -232,6 +242,7 @@ define(function(require, exports, module) {
 
   Vue.component('combat-action', {
     props: ['action', 'disabled'],
+
     template: `
 <card-btn @click="$emit('click')" :disabled="disabled || !action.isReady" class="btn-sm text-left" block=1>
   {{action.name|caps}} [{{action.count}}]
@@ -250,10 +261,12 @@ define(function(require, exports, module) {
 
   Vue.component('combatant', {
     props: ['combatant'],
+
     computed: {
-      hull:  function() {return util.R(this.combatant.pctHull  * 100, 1)},
-      armor: function() {return util.R(this.combatant.pctArmor * 100, 1)},
+      hull()  {return util.R(this.combatant.pctHull  * 100, 1)},
+      armor() {return util.R(this.combatant.pctArmor * 100, 1)},
     },
+
     template: `
 <div class="col-5">
   <combat-stat k="Armor" :class="{'text-success': armor > 75, 'text-warning': armor <= 50 && armor > 35, 'text-danger': armor <= 35}">{{armor}}%</combat-stat>
@@ -265,6 +278,7 @@ define(function(require, exports, module) {
 
   Vue.component('combat-stat', {
     props: ['k', 'v'],
+
     template: `
 <row class="p-0 m-0">
   <div class="col-6 p-0 m-0 font-weight-bold text-right">{{k}}</div>
