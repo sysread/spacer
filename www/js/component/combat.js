@@ -30,7 +30,8 @@ define(function(require, exports, module) {
     mounted() {
       if (this.init_flee) {
         // This is brittle as hell, yet here we are.
-        this.useAction(this.combat.player.actions[0]);
+        const flee = this.combat.player.actions.filter(a => a.name == 'Flee');
+        this.useAction(flee[0]);
       }
     },
 

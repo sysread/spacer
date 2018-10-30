@@ -6,10 +6,10 @@ define(function(require, exports, module) {
 
   const Action = class {
     constructor(opt) {
-      this.opt       = opt;
-      this.count     = 1;
-      this._round    = 0;
-      this._reload   = 0;
+      this.opt     = opt;
+      this.count   = 1;
+      this._round  = 0;
+      this._reload = 0;
 
       if (this.isReloadable) {
         this._magazine = this.magazine;
