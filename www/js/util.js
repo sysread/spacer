@@ -96,7 +96,7 @@ define(function(require, exports, module) {
    * Returns a random element from an array.
    */
   util.oneOf = function(options) {
-    return options[util.getRandomInt(0, options.length)];
+    return options[util.getRandomInt(0, options.length - 1)];
   };
 
   util.resourceMap = function(dflt=0, entries) {

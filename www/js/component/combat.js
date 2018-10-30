@@ -63,16 +63,20 @@ define(function(require, exports, module) {
         this.combat.playerAction(action);
         this.incTick();
 
-        window.setTimeout(() => {
-          if (!this.combat.isOver) {
-            this.combat.opponentAction();
+        this.$nextTick(() => {
+          window.setTimeout(() => {
+            if (!this.combat.isOver) {
+              this.combat.opponentAction();
 
-            window.setTimeout(() => {
-              this.incTick();
-              this.isPlayerTurn = true;
-            }, 500);
-          }
-        }, 500);
+              this.$nextTick(() => {
+                window.setTimeout(() => {
+                  this.incTick();
+                  this.isPlayerTurn = true;
+                }, 500);
+              });
+            }
+          }, 500);
+        });
       },
 
       complete() {
