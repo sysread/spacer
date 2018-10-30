@@ -30,13 +30,18 @@ define(function(require, exports, module) {
     props: ['planet', 'mini'],
 
     computed: {
-      desc()     { return this.planet.desc.split('|')                            },
-      isThere()  { return this.planet.body === this.game.locus                   },
-      distance() { return this.planet.distance(this.game.locus) / Physics.AU     },
-      kind()     { return this.planet.kind                                       },
-      faction()  { return this.planet.faction.full_name                          },
-      standing() { return this.game.player.getStandingLabel(this.planet.faction) },
-      img()      { return 'img/' + this.planet.body + '.png'                     },
+      desc()         { return this.planet.desc.split('|')                                         },
+      isThere()      { return this.planet.body === this.game.locus                                },
+      distance()     { return this.planet.distance(this.game.locus) / Physics.AU                  },
+      kind()         { return this.planet.kind                                                    },
+      faction()      { return this.planet.faction.full_name                                       },
+      faction_abbr() { return this.planet.faction.abbrev                                          },
+      standing()     { return this.game.player.getStandingLabel(this.faction_abbrev)              },
+      is_hostile()   { return this.game.player.hasStandingOrLower(this.faction_abbr, 'Untrusted') },
+      is_dubious()   { return this.game.player.hasStandingOrLower(this.faction_abbr, 'Dubious')   },
+      is_neutral()   { return this.game.player.hasStandingOrLower(this.faction_abbr, 'Neutral')   },
+      is_friendly()  { return this.game.player.hasStanding(this.faction_abbr, 'Friendly')         },
+      img()          { return 'img/' + this.planet.body + '.png'                                  },
 
       img_css() {
         return `
@@ -53,12 +58,14 @@ define(function(require, exports, module) {
           right:               54px;
         `
       },
-    },
 
-    methods: {
-      is_hostile()   { return this.game.player.hasStandingOrLower(this.faction, 'Untrusted') },
-      is_dubious()   { return this.game.player.hasStandingOrLower(this.faction, 'Dubious')   },
-      is_respected() { return this.game.player.hasStanding(this.faction, 'Respected') },
+      standing_color_class() {
+        return this.is_hostile  ? 'text-danger'
+             : this.is_dubious  ? 'text-warning'
+             : this.is_neutral  ? 'text-secondary'
+             : this.is_friendly ? 'text-success'
+                                : '';
+      },
     },
 
     template: `
@@ -80,11 +87,7 @@ define(function(require, exports, module) {
   </def>
 
   <def y=1 term="Standing">
-    Your standing with this faction is
-      <span v-if="is_hostile" class="text-success">{{standing|lower}}.</span>
-      <span v-else-if="is_dubious" class="text-warning">{{standing|lower}}.</span>
-      <span v-else-if="is_respected" class="text-danger" >{{standing|lower}}.</span>
-      <span v-else>{{standing|lower}}.</span>
+    Your standing with this faction is <span :class="standing_color_class">{{standing|lower}}</span>.
   </def>
 
   <card v-if="!mini" class="my-3">

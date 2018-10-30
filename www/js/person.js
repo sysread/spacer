@@ -78,9 +78,7 @@ define(function(require, exports, module) {
     }
 
     getStanding(faction) {
-      if (faction === undefined) {
-        faction = this.faction;
-      }
+      faction = faction || this.faction;
 
       // model.Faction instance
       if (faction.hasOwnProperty('abbrev')) {
@@ -100,31 +98,37 @@ define(function(require, exports, module) {
     }
 
     hasStanding(faction, label) {
-      return this.getStanding(faction) >= this.standingCutoff(label);
+      const [min, max] = this.standingRange(label);
+      return this.getStanding(faction) >= min;
     }
 
     hasStandingOrLower(faction, label) {
-      return this.getStanding(faction) <= this.standingCutoff(label);
+      const [min, max] = this.standingRange(label);
+      return this.getStanding(faction) <= max;
     }
 
-    standingCutoff(standing) {
+    standingRange(standing) {
       switch (standing) {
-        case 'Criminal'   : return -50; break;
-        case 'Untrusted'  : return -30; break;
-        case 'Suspicious' : return -20; break;
-        case 'Dubious'    : return -10; break;
-        case 'Neutral'    : return  -9; break;
-        case 'Friendly'   : return  10; break;
-        case 'Respected'  : return  20; break;
-        case 'Trusted'    : return  30; break;
-        case 'Admired'    : return  50; break;
-        default           : return   0;
+        case 'Criminal'   : return [-100, -50]; break;
+        case 'Untrusted'  : return [-49,  -30]; break;
+        case 'Suspicious' : return [-29,  -20]; break;
+        case 'Dubious'    : return [-19,  -10]; break;
+        case 'Neutral'    : return [ -9,    9]; break;
+        case 'Friendly'   : return [ 10,   19]; break;
+        case 'Respected'  : return [ 20,   29]; break;
+        case 'Trusted'    : return [ 30,   49]; break;
+        case 'Admired'    : return [ 50,  100]; break;
+        default           : throw new Error(`invalid standing label: ${standing}`);
       }
     }
 
     getStandingLabel(faction) {
-      for (let standing of 'Admired Respected Friendly Neutral Dubious Untrusted Criminal'.split(/ /)) {
-        if (this.hasStanding(faction, standing)) {
+      const value = this.getStanding(faction);
+
+      for (const standing of 'Admired Trusted Respected Friendly Neutral Dubious Suspicious Untrusted Criminal'.split(/ /)) {
+        const [min, max] = this.standingRange(standing);
+
+        if (value >= min && value <= max) {
           return standing;
         }
       }
