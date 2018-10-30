@@ -566,25 +566,33 @@ define(function(require, exports, module) {
     props: ['layout', 'label', 'pos', 'diameter', 'img', 'focus'],
 
     computed: {
-      zero()    { return this.layout.zero },
-      label_x() { return this.pos[0] + (this.diameter / 2) + 10 },
-      label_y() { return this.pos[1] + this.diameter / 2 },
+      label_x() { return this.pos[0] + this.diameter + 10 },
+      label_y() { return this.pos[1] + this.diameter / 3  },
 
       text_style() {
         return {
-          'font': '12px monospace',
+          'font': '14px monospace',
           'fill': this.focus ? '#7FDF3F' : '#EEEEEE',
         };
+      },
+
+      show_label() {
+        if (this.label) {
+          if (this.diameter >= this.layout.width_px * 0.75) {
+            return false;
+          }
+
+          return true;
+        }
+
+        return false;
       },
     },
 
     template: `
       <g>
         <image v-if="img" :xlink:href="img" :height="diameter" :width="diameter" :x="pos[0]" :y="pos[1]" />
-
-        <text v-show="label" :style="text_style" :x="label_x" :y="label_y">
-          {{label|caps}}
-        </text>
+        <text v-show="show_label" :style="text_style" :x="label_x" :y="label_y">{{label|caps}}</text>
       </g>
     `,
   });

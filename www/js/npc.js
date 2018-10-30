@@ -35,6 +35,12 @@ define(function(require, exports, module) {
          * offensive capability.
          */
         if (opt.options.addons) {
+          if (opt.options.always_addons) {
+            for (const addon of opt.options.always_addons) {
+              opt.ship.installAddOn(addon);
+            }
+          }
+
           const min    = Math.min(opt.options.min_addons || 0, opt.ship.availableHardPoints());
           const count  = util.getRandomInt(min, opt.ship.availableHardPoints());
           const addons = opt.options.addons;

@@ -177,8 +177,8 @@ define(function(require, exports, module) {
               }, mark);
 
               timelines[body].to(this.$refs[body + '_label'], time * turns_per_day, {
-                x: x + (d / 2) + 10,
-                y: y + (d / 2),
+                x: x + 10,
+                y: y + (d / 3),
                 ease: Power0.easeNone,
               }, mark);
             }
@@ -486,14 +486,17 @@ define(function(require, exports, module) {
     data() {
       return {
         choice: 'ready',
-        fine:   0,
-        npc:    new NPC({
+        init_flee: false,
+        fine: 0,
+
+        npc: new NPC({
           name:    'Police Patrol',
           faction: this.faction,
           options: {
-            ship:       ['schooner', 'corvette', 'cruiser', 'battleship', 'barsoom', 'neptune'],
-            addons:     ['armor', 'railgun_turret', 'pds', 'light_torpedo', 'medium_torpedo', 'ecm'],
-            min_addons: 3,
+            ship:          ['schooner', 'corvette', 'cruiser', 'battleship', 'barsoom', 'neptune'],
+            addons:        ['armor', 'railgun_turret', 'light_torpedo', 'medium_torpedo', 'ecm'],
+            always_addons: ['pds'],
+            min_addons:    3,
           },
         }),
       };
@@ -523,6 +526,11 @@ define(function(require, exports, module) {
 
     methods: {
       setChoice(choice) {
+        if (choice == 'flee') {
+          this.init_flee = true;
+          choice = 'attack';
+        }
+
         if (choice == 'attack') {
           this.game.player.setStanding(this.standing, -50);
         }
@@ -564,12 +572,6 @@ define(function(require, exports, module) {
         this.done();
       },
 
-      flee() {
-        $('#spacer').data({state: null, data: null});
-        window.localStorage.removeItem('game');
-        this.$emit('dead');
-      },
-
       done(result) {
         if (result == 'destroyed') {
           this.$emit('dead');
@@ -593,18 +595,24 @@ define(function(require, exports, module) {
       peacefully submit to an inspection.
     </card-text>
 
-    <button type="button" class="btn btn-dark btn-block" @click="submit">Submit</button>
-    <button type="button" class="btn btn-dark btn-block" @click="setChoice('bribe')">Bribe</button>
-    <button type="button" class="btn btn-dark btn-block" @click="setChoice('flee')">Flee</button>
-    <button type="button" class="btn btn-dark btn-block" @click="setChoice('attack-confirm')">Attack</button>
+    <btn block=1 @click="submit">Submit</btn>
+    <btn block=1 @click="setChoice('bribe')">Bribe</btn>
+    <btn block=1 @click="setChoice('flee-confirm')">Flee</btn>
+    <btn block=1 @click="setChoice('attack-confirm')">Attack</btn>
   </div>
 
-  <ok v-if="choice=='submit-fined'" @ok="done">
+  <ask v-if="choice=='flee-confirm'" @pick="setChoice" :choices="{'flee': 'Yes', 'ready': 'Nevermind'}">
+    Are you sure you wish to flee from the police?
+    <span v-if="!hasContraband">You are not carrying any contraband.</span>
+  </ask>
+
+  <div v-if="choice=='submit-fined'">
     Your contraband cargo was found and confiscated.
     You have been fined {{fine|csn}} credits.
     Your reputation with {{faction}} has taken a serious hit.
-  </ok>
-  <ok v-if="choice=='submit-done'" @ok="done">
+    <btn block=1 @click="done">Ok</btn>
+  </div>
+  <div v-if="choice=='submit-done'">
     No contraband was found.
     <template v-if="isHostile">
       The police do not seem convinced and assure you that they <i>will</i> catch you the next time around.
@@ -612,7 +620,8 @@ define(function(require, exports, module) {
     <template v-else>
       The police apologize for the inconvenience and send you on your way.
     </template>
-  </ok>
+    <btn block=1 @click="done">Ok</btn>
+  </div>
 
   <ask v-if="choice=='bribe'" @pick="setChoice" :choices="{'bribe-yes': 'Yes, it is my duty as a fellow captain', 'ready': 'No, that would be dishonest'}">
     After a bit of subtle back and forth, the patrol's captain intimates that they could use {{bribeAmount|csn}} for "repairs to their tracking systems".
@@ -626,23 +635,12 @@ define(function(require, exports, module) {
     The, uh, "contribution" has been debited from your account. You are free to go.
   </ok>
 
-  <ask v-if="choice=='flee'" @pick="setChoice" :choices="{'ready': 'Oh well', 'flee-run': 'Run for Proxima'}" class="text-warning">
-    This isn't the an action movie.
-    The captain of the patrol ship can read the navigation and tracking data as well as you and will eventually overtake your ship.
-    That is, unless you are planning to make a run for Proxima...
-  </ask>
-  <ok v-if="choice=='flee-run'" @ok="flee" class="text-danger">
-    You angle away and gun the engines.
-    In just a 5 short years, your navigation computer flips the ship on automatic and begins the deceleration burn.
-    Your corpse and those of your crew arrive at Proxima Centauri after perhaps 10 years, relativistic effects notwithstanding.
-  </ok>
-
-  <ask v-if="choice=='attack-confirm'" @pick="setChoice" :choices="{'attack': 'Yes', 'ready': 'No'}">
+  <ask v-if="choice=='attack-confirm'" @pick="setChoice" :choices="{'attack': 'Yes', 'ready': 'Nevermind'}">
     Are you sure you wish to attack the police?
     <span v-if="!hasContraband">You are not carrying any contraband.</span>
   </ask>
 
-  <melee v-if="choice=='attack'" :opponent="npc" @complete="done" />
+  <melee v-if="choice=='attack'" :opponent="npc" :init_flee="init_flee" @complete="done" />
 </card>
     `,
   });
