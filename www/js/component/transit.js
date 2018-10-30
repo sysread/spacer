@@ -415,14 +415,6 @@ define(function(require, exports, module) {
 
     template: `
       <card nopad=1>
-        <card-header class="px-0 py-1">
-          <h4 class="p-1">
-            Transit to {{plan.dest|caps}}
-            <span v-if="paused" @click="resume" class="mx-1 float-right">&#9199;</span>
-            <span v-else        @click="pause"  class="mx-1 float-right">&#9208;</span>
-          </h4>
-        </card-header>
-
         <table class="table table-sm m-0" :style="{width: show_plot() && layout ? layout.width_px + 'px' : '100%'}">
           <tr>
             <td class="text-left">{{plan.days_left|unit('days')}}</td>
