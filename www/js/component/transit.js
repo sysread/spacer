@@ -354,7 +354,7 @@ define(function(require, exports, module) {
 
         for (const body of Object.keys(ranges)) {
           const au = ranges[body] / Physics.AU;
-          const rate = this.game.planets[body].inspectionRate(au);
+          const rate = this.game.planets[body].inspectionRate(au, false);
           chance -= rate;
         }
 
@@ -363,11 +363,13 @@ define(function(require, exports, module) {
 
       piracyChance() {
         let chance = this.piracyChancePct();
+        let speed_bonus = 0;
 
         if (this.plan.velocity > 1000) {
-           chance -= Math.log(this.plan.velocity / 1000) / 200;
+           speed_bonus = Math.log(this.plan.velocity / 1000) / 200;
         }
 
+        chance -= speed_bonus;
         chance /= 1 + this.stoppedBy.pirate;
 
         if (chance > 0) {
