@@ -84,7 +84,7 @@ define(function(require, exports, module) {
 
     template: `
       <nav @click="click" id="spacer-navbar" data-toggle="collapse" class="fixed-bottom navbar navbar-dark navbar-expand-sm border-danger border border-left-0 border-right-0 border-bottom-0">
-        <!--<span class="navbar-brand">Spacer</span>-->
+        <span class="navbar-brand d-block d-sm-none">Spacer</span>
 
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#spacer-nav">
           <span class="navbar-toggler-icon"></span>
