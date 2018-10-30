@@ -18,9 +18,9 @@ define(function(require, exports, module) {
 
     data() {
       return {
-        show:    'home',
+        show:    'map',
         dest:    null,
-        rel:     false,
+        rel:     true,
         navcomp: new NavComp,
         transit: null,
         confirm: false,
@@ -62,9 +62,8 @@ define(function(require, exports, module) {
       show_routes()    { return this.show == 'routes' },
 
       planet() {
-        if (this.dest) {
-          return this.game.planets[this.dest];
-        }
+        const dest = this.dest || this.next_dest();
+        return this.game.planets[dest];
       },
 
       map_center_point() {
@@ -140,7 +139,6 @@ define(function(require, exports, module) {
     },
 
     methods: {
-      go_home_menu() { this.show = 'home'   },
       go_dest_menu() { this.show = 'dest'   },
       go_map()       { this.show = 'map'    },
       go_info()      { this.show = 'info'   },
@@ -155,7 +153,7 @@ define(function(require, exports, module) {
         this.transit = transit;
 
         if (go_home) {
-          this.go_home_menu();
+          this.go_map();
         }
       },
 
@@ -163,10 +161,10 @@ define(function(require, exports, module) {
         this.set_transit(transit, true);
       },
 
-      set_dest(dest, go_home) {
+      set_dest(dest) {
         // Player clicked on central body from wide fov; find the next dest for
         // that sub-system.
-        if (!this.data.bodies.hasOwnProperty(dest) || this.dest == dest) {
+        if (!dest || !this.data.bodies.hasOwnProperty(dest) || this.dest == dest) {
           dest = this.next_dest(dest);
         }
 
@@ -180,29 +178,30 @@ define(function(require, exports, module) {
             this.transit = transits[0];
           }
         }
-
-        if (go_home) {
-          this.go_home_menu();
-        }
-
-        this.$nextTick(() => {
-          if (this.layout) {
-            this.layout.set_center(this.map_center_point);
-            this.layout.set_fov_au(this.map_fov_au);
-          }
-        });
       },
 
       set_dest_return(dest) {
         this.set_dest(dest, true);
+
+        if (this.show_dest_menu) {
+          this.go_routes();
+        }
+        else {
+          this.go_map();
+
+          this.$nextTick(() => {
+            if (this.layout) {
+              this.layout.set_center(this.map_center_point);
+              this.layout.set_fov_au(this.map_fov_au);
+            }
+          });
+        }
       },
 
       next_dest(system) {
-        let bodies = this.system.bodies();
-
-        if (system) {
-          bodies = bodies.filter((b) => this.system.central(b) == system);
-        }
+        const bodies = system
+          ? this.system.bodies().filter((b) => this.system.central(b) == system)
+          : this.system.bodies();
 
         let done = false;
 
@@ -242,48 +241,29 @@ define(function(require, exports, module) {
 
     template: `
       <card id="navcomp" nopad=1>
-        <card-header class="px-0">
-          <h3 class="p-2">
-            NavComp
+        <div class="btn-toolbar">
+          <div class="btn-group">
+            <button type="button" class="btn btn-outline-dark bg-light" @click="go_map">
+              <img src="img/home.png" style="width:1rem;height:1rem" />
+            </button>
 
-            <btn v-if="!show_home_menu" @click="go_home_menu">
-              Back
-            </btn>
+            <btn @click="go_dest_menu" v-if="!show_dest_menu" class="px-3 font-weight-bold">&target;</btn>
+            <btn disabled=1 v-else class="px-3">Destination</btn>
 
-            <btn @click="confirm=true" v-if="transit" right=1 class="mx-1">
-              Launch
-            </btn>
-          </h3>
-        </card-header>
+            <btn @click="go_routes" v-if="!show_routes" class="px-3 font-weight-bold">Rt</btn>
+            <btn disabled=1 v-else class="px-3">Route</btn>
+
+            <btn @click="go_info" v-if="!show_info" class="px-3 font-weight-bold">&#128712;</btn>
+            <btn disabled=1 v-else class="px-3">Info</btn>
+
+            <btn @click="go_market" v-if="!show_market" class="px-3 font-weight-bold">&dollar;</btn>
+            <btn disabled=1 v-else class="px-3">Market</btn>
+
+            <btn @click="confirm=true" :disabled="!transit" class="px-3">Launch</btn>
+          </div>
+        </div>
 
         <div class="p-2" v-if="!show_map">
-          <Menu title="Navigation" v-show="show_home_menu">
-            <Opt @click="go_dest_menu">
-              <span v-if="!dest">
-                Set destination
-              </span>
-              <span v-else>
-                Change destination
-                <badge right=1>{{dest|caps}}</badge>
-              </span>
-            </Opt>
-
-            <Opt @click="go_routes" :disabled="!dest">
-              <span v-if="!transit">
-                Plan route
-              </span>
-              <span v-else>
-                Modify route
-                <badge right=1 v-if="transit">{{transit.str_arrival}}</badge>
-              </span>
-            </Opt>
-
-            <Opt @click="go_map">System map</Opt>
-
-            <Opt @click="go_info" :disabled="!dest">System info</Opt>
-            <Opt @click="go_market" :disabled="!dest">Market prices</Opt>
-          </Menu>
-
           <NavDestMenu
               title="Select a destination"
               v-if="show_dest_menu"
@@ -292,34 +272,29 @@ define(function(require, exports, module) {
 
           <NavRoutePlanner
               v-if="show_routes"
-              :dest="dest"
+              :dest="dest || next_dest()"
               :navcomp="navcomp"
               @route="set_transit_return" />
 
-          <div v-if="show_market">
-            <Menu>
-              <NavDestOpt @answer="next_dest" :body="dest" />
-              <Opt @click="rel=false" v-if="rel">Relative prices</Opt>
-              <Opt @click="rel=true" v-if="!rel">Absolute prices</Opt>
-            </Menu>
-
-            <market-report :relprices="rel" :body="dest" />
-          </div>
-
           <div v-if="show_info">
-            <Menu>
-              <NavDestOpt @answer="next_dest" :body="dest || next_dest()" />
-            </Menu>
+            <h5>{{planet.name}}</h5>
             <planet-summary :planet="planet" />
           </div>
+
+          <div v-if="show_market">
+            <btn block=1 v-if="rel" @click="rel=false">Relative prices</btn>
+            <btn block=1 v-if="!rel" @click="rel=true">Absolute prices</btn>
+            <market-report :relprices="rel" :body="dest || next_dest()" />
+          </div>
+
         </div>
 
         <confirm v-if="confirm" yes="Yes" no="No" @confirm="confirm_transit">
-          <h3>Confirm trip details</h3>
-          <def split=4 term="Origin"      :def="transit.origin|caps" />
-          <def split=4 term="Destination" :def="transit.dest|caps" />
-          <def split=4 term="Duration"    :def="transit.str_arrival" />
-          <def split=4 term="Fuel"        :def="transit.fuel|R(2)|unit('tonnes')" />
+          <h4>{{game.here.name}} to {{planet.name|caps}}</h4>
+          <def split=4 term="Duration"     :def="transit.str_arrival" />
+          <def split=4 term="Distance"     :def="transit.auRemaining()|R(2)|unit('AU')" />
+          <def split=4 term="Max Velocity" :def="(transit.maxVelocity/1000)|R|csn|unit('km/s')" />
+          <def split=4 term="Fuel"         :def="transit.fuel|R(2)|unit('tonnes')" />
         </confirm>
 
         <NavPlot v-layout v-if="show_map" :layout="layout" :style="layout_css_dimensions" @click="set_dest">
@@ -397,15 +372,9 @@ define(function(require, exports, module) {
       bodies() { return this.system.bodies() },
     },
 
-    'methods': {
-      on_answer(dest) {
-        this.$emit('answer', dest);
-      },
-    },
-
     'template': `
       <Menu title="Select a destination">
-        <NavDestOpt v-for="body in bodies" :key="body" :body="body" @answer="on_answer">
+        <NavDestOpt v-for="body in bodies" :key="body" :body="body" @answer="$emit('answer', body)">
           <span v-if="body == prev" class="m-1 text-warning font-weight-bold">&target;</span>
         </NavDestOpt>
       </Menu>
@@ -460,7 +429,7 @@ define(function(require, exports, module) {
 
         <div v-if="has_route">
           <def split="4" term="Destination"  :def="transit.dest|caps" />
-          <def split="4" term="Total"        :def="distance|R(2)|unit('AU')" />
+          <def split="4" term="Distance"     :def="distance|R(2)|unit('AU')" />
           <def split="4" term="Acceleration" :def="transit.accel_g|R(3)|unit('G')" />
           <def split="4" term="Max velocity" :def="(transit.maxVelocity/1000)|R|csn|unit('km/s')" />
           <def split="4" term="Fuel"         :def="transit.fuel|R(2)|unit('tonnes')" />

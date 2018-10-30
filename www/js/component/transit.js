@@ -300,6 +300,36 @@ define(function(require, exports, module) {
         return bodies;
       },
 
+      inspectionChancePct() {
+        const ranges = this.nearby();
+        let total = 0;
+        let count = 0;
+
+        for (const body of Object.keys(ranges)) {
+          const faction = this.data.bodies[body].faction;
+          const au = ranges[body] / Physics.AU;
+
+          if (au > this.data.jurisdiction) {
+            continue;
+          }
+
+          let chance = this.game.planets[body].inspectionRate(au)
+                     - this.game.player.ship.stealth;
+
+          if (this.plan.velocity > 1000) {
+            chance -= Math.log(this.plan.velocity / 1000) / 300;
+          }
+
+          chance /= 1 + (this.stoppedBy[faction] || 0);
+          chance = util.clamp(chance, 0, data.max_patrol_rate);
+
+          total += chance;
+          ++count;
+        }
+
+        return total / count;
+      },
+
       inspectionChance() {
         const ranges = this.nearby();
 
@@ -308,21 +338,20 @@ define(function(require, exports, module) {
           const au = ranges[body] / Physics.AU;
 
           if (au > this.data.jurisdiction) {
-            return;
+            continue;
           }
 
           let chance = this.game.planets[body].inspectionRate(au)
                      - this.game.player.ship.stealth;
 
           if (this.plan.velocity > 1000) {
-             chance -= Math.log(this.plan.velocity / 1000) / 300;
+            chance -= Math.log(this.plan.velocity / 1000) / 300;
           }
 
           chance /= 1 + (this.stoppedBy[faction] || 0);
+          chance = util.clamp(chance, 0, data.max_patrol_rate);
 
           if (chance > 0) {
-            chance = util.clamp(chance, 0, data.max_patrol_rate);
-
             if (Math.random() <= chance) {
               if (this.stoppedBy[faction]) {
                 continue;
@@ -412,8 +441,9 @@ define(function(require, exports, module) {
 
           <SvgPlot :layout="layout" v-if="layout">
             <text style="fill:red;font:12px monospace" x=5 y=17>
-              FoV: {{layout.fov_au|R(4)|unit('AU')}}
-              Piracy: {{piracyChancePct() * 100|R(3)}}%
+                FoV: {{layout.fov_au|R(4)|unit('AU')}}
+              | Piracy: {{piracyChancePct() * 100|R(2)}}%
+              | Patrol: {{inspectionChancePct() * 100|R(2)}}%
             </text>
 
             <image ref="sun" xlink:href="img/sun.png" />
