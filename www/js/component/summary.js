@@ -36,7 +36,7 @@ define(function(require, exports, module) {
       kind()         { return this.planet.kind                                                    },
       faction()      { return this.planet.faction.full_name                                       },
       faction_abbr() { return this.planet.faction.abbrev                                          },
-      standing()     { return this.game.player.getStandingLabel(this.faction_abbrev)              },
+      standing()     { return this.game.player.getStandingLabel(this.faction_abbr)                },
       is_hostile()   { return this.game.player.hasStandingOrLower(this.faction_abbr, 'Untrusted') },
       is_dubious()   { return this.game.player.hasStandingOrLower(this.faction_abbr, 'Dubious')   },
       is_neutral()   { return this.game.player.hasStandingOrLower(this.faction_abbr, 'Neutral')   },
