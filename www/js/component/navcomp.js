@@ -74,8 +74,7 @@ define(function(require, exports, module) {
       layout() {
         if (this.show == 'map') {
           this.$nextTick(() => {
-            this.layout.set_center(this.map_center_point);
-            this.layout.set_fov_au(this.map_fov_au);
+            this.layout.update_width();
           });
         }
       },
@@ -167,6 +166,11 @@ define(function(require, exports, module) {
     },
 
     methods: {
+      layout_resize() {
+        this.layout.set_center(this.map_center_point);
+        this.layout.set_fov_au(this.map_fov_au);
+      },
+
       go_dest_menu() { this.show = 'dest'   },
       go_map()       { this.show = 'map'    },
       go_info()      { this.show = 'info'   },
