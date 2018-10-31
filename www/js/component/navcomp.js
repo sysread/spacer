@@ -26,7 +26,27 @@ define(function(require, exports, module) {
         confirm: false,
         layout_target_id: 'navcomp-map-root',
         layout_scaling: true,
+        is_ready: false,
       };
+    },
+
+    /*
+     * This, along with data.is_ready, is an elaborate workaround to force the
+     * layout to refresh its dimensions once the navbar has finished
+     * collapsing. The collapsing navbar prevents the layout from getting an
+     * accurate size of the navbar's height, which would otherwise cause the
+     * view port for the nav map to be shortened by whatever the mid-collapse
+     * navbar's height was at the time.
+     */
+    mounted() {
+      if ($('#spacer-nav').hasClass('collapsing')) {
+        $('#spacer-nav').one('hidden.bs.collapse', () => {
+          this.is_ready = true;
+        });
+      }
+      else {
+        this.is_ready = true;
+      }
     },
 
     watch: {
@@ -40,6 +60,14 @@ define(function(require, exports, module) {
         }
         else {
           this.transit = null;
+        }
+      },
+
+      is_ready() {
+        if (this.is_ready && this.show == 'map') {
+          this.$nextTick(() => {
+            this.layout.update_width();
+          });
         }
       },
 
