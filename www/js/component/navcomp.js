@@ -284,18 +284,10 @@ define(function(require, exports, module) {
               <img src="img/home.png" style="width:1rem;height:1rem" />
             </button>
 
-            <btn @click="go_dest_menu" v-if="!show_dest_menu" class="px-3 font-weight-bold">&target;</btn>
-            <btn disabled=1 v-else class="px-3">Destination</btn>
-
-            <btn @click="go_routes" v-if="!show_routes" class="px-3 font-weight-bold">Rt</btn>
-            <btn disabled=1 v-else class="px-3">Route</btn>
-
-            <btn @click="go_info" v-if="!show_info" class="px-3 font-weight-bold">&#128712;</btn>
-            <btn disabled=1 v-else class="px-3">Info</btn>
-
-            <btn @click="go_market" v-if="!show_market" class="px-3 font-weight-bold">&dollar;</btn>
-            <btn disabled=1 v-else class="px-3">Market</btn>
-
+            <btn @click="go_dest_menu" :disabled="show_dest_menu" class="px-3 font-weight-bold">&target;</btn>
+            <btn @click="go_routes" :disabled="show_routes" class="px-3 font-weight-bold">Rt</btn>
+            <btn @click="go_info" :disabled="show_info" class="px-3 font-weight-bold">&#9432;</btn>
+            <btn @click="go_market" :disabled="show_market" class="px-3 font-weight-bold">&dollar;</btn>
             <btn @click="confirm=true" :disabled="!transit" class="px-3">Launch</btn>
           </div>
         </div>
@@ -389,8 +381,6 @@ define(function(require, exports, module) {
     'template': `
       <Opt :val="body" final=1 :disabled="is_here" :class="color">
         {{name}}
-
-        <span v-if="is_here" class="m-1 text-warning font-weight-bold">&#128907;</span>
 
         <slot />
 
