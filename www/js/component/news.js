@@ -142,34 +142,40 @@ define(function(require, exports, module) {
         </btn>
 
         <card class="my-2">
-          <div v-if="hasConditions(body)" v-for="cond of conditions[body]" class="my-2">
-            <h6 class="text-danger">{{cond.name|caps}}</h6>
-            <p v-if="cond.left < 7">Local sources claim efforts to deal with the {{cond.name}} have been successful and are winding down.</p>
-            <p v-if="cond.left < 30">Unnamed government officials say efforts to combat the {{cond.name}} are underway but have been largely unsuccessful thus far.</p>
-            <p v-else>
-              Government officials claim the situation is under control and urge calm over the ongoing {{cond.name}}.
-              When asked why the {{cond.name}} continues unabated if the situation is contained, the same officials declined to comment.
-            </p>
-          </div>
+          <template v-if="hasNews(body)">
+            <div v-if="hasConditions(body)" v-for="cond of conditions[body]" class="my-2">
+              <h6 class="text-danger">{{cond.name|caps}}</h6>
+              <p v-if="cond.left < 7">Local sources claim efforts to deal with the {{cond.name}} have been successful and are winding down.</p>
+              <p v-if="cond.left < 30">Unnamed government officials say efforts to combat the {{cond.name}} are underway but have been largely unsuccessful thus far.</p>
+              <p v-else>
+                Government officials claim the situation is under control and urge calm over the ongoing {{cond.name}}.
+                When asked why the {{cond.name}} continues unabated if the situation is contained, the same officials declined to comment.
+              </p>
+            </div>
 
-          <div v-if="hasShortages(body)" class="my-2">
-            <h6>High market demand reported</h6>
-            <ul>
-              <li v-for="item of shortages[body]" class="text-success">
-                {{item|caps}}
-                <span v-if="shipments[item][body]" class="mx-1 font-italic text-muted">
-                  &mdash; relief arriving in {{shipments[item][body]|csn}} days
-                </span>
-              </li>
-            </ul>
-          </div>
+            <div v-if="hasShortages(body)" class="my-2">
+              <h6>High market demand reported</h6>
+              <ul>
+                <li v-for="item of shortages[body]" class="text-success">
+                  {{item|caps}}
+                  <span v-if="shipments[item][body]" class="mx-1 font-italic text-muted">
+                    &mdash; relief arriving in {{shipments[item][body]|csn}} days
+                  </span>
+                </li>
+              </ul>
+            </div>
 
-          <div v-if="hasSurpluses(body)" class="my-2">
-            <h6>Surpluses reported</h6>
-            <ul>
-              <li v-for="item of surpluses[body]" class="text-warning">{{item|caps}}</li>
-            </ul>
-          </div>
+            <div v-if="hasSurpluses(body)" class="my-2">
+              <h6>Surpluses reported</h6>
+              <ul>
+                <li v-for="item of surpluses[body]" class="text-warning">{{item|caps}}</li>
+              </ul>
+            </div>
+          </template>
+
+          <card-text v-else>
+            Nothing significant to report.
+          </card-text>
         </card>
       </card>
     `,
