@@ -2,6 +2,7 @@ define(function() {
   /*
    * Masses in metric tonnes (t)
    * Thrust in kiloNewtons
+   * Production/consumption are *daily* rates
    */
   const hoursPerTurn = 8;
   const turnsPerDay  = 24 / hoursPerTurn;
@@ -9,6 +10,7 @@ define(function() {
   const data = {
     start_date:          new Date(2242, 0, 1, 1),
     hours_per_turn:      hoursPerTurn,
+    turns_per_day:       turnsPerDay,
     initial_days:        2 * 365,
     initial_stock:       20,
     market_history:      10 * turnsPerDay,
@@ -88,7 +90,41 @@ define(function() {
       'military':          {produces: {}, consumes: {weapons: 1, machines: 0.5, electronics: 0.5, medicine: 0.5}, price: {addons: 0.7}},
     },
 
-    // TODO: risk of injury
+    conditions: {
+      'plague': {
+        days:     [15, 90],
+        consumes: {medicine: 2},
+        produces: {},
+        triggers: {
+          shortage:  {'water': 0.0002, 'food': 0.0001},
+          surplus:   {'narcotics': 0.001},
+          condition: {},
+        },
+      },
+
+      'environmental disaster': {
+        days:     [15, 90],
+        consumes: {medicine: 2, machines: 1, electronics: 1},
+        produces: {water: -1, food: -2},
+        triggers: {
+          shortage:  {},
+          surplus:   {},
+          condition: {'agricultural': 0.0001, 'habitable': 0.0002, 'manufacturing hub': 0.0003, 'military': 0.0004, 'black market': 0.0005},
+        },
+      },
+
+      'workers\' strike': {
+        days:     [7, 30],
+        consumes: {},
+        produces: {water: -2, ore: -2, minerals: -1, food: -1},
+        triggers: {
+          shortage:  {'food': 0.001, 'fuel': 0.0002, 'cybernetics': 0.0001},
+          surplus:   {},
+          condition: {'manufacturing hub': 0.0001, 'agricultural': 0.0002, 'environmental disaster': 0.0005},
+        },
+      },
+    },
+
     work: [
       {
         name:    "Food production",

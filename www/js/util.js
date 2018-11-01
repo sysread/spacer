@@ -7,7 +7,7 @@ define(function(require, exports, module) {
       return Math.random() > Math.random() ? 1 : -1;
     });
   };
- 
+
   util.csn = function(num) {
     const sign = num < 0 ? '-' : '';
 
@@ -77,7 +77,7 @@ define(function(require, exports, module) {
 
   /*
    * Returns a random integer no lower than min and lower than max.
-   * 
+   *
    * Direct copy pasta from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
    */
   util.getRandomInt = function(min, max) {

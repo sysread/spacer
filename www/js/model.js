@@ -44,6 +44,7 @@ define(function(require, exports, module) {
     }
   };
 
+
   const Faction = class {
     constructor(abbrev) {
       // Faction instance rather than abbrev string
@@ -65,13 +66,44 @@ define(function(require, exports, module) {
     toString() { return this.abbrev }
   };
 
+
   const Trait = class {
     constructor(name) {
       this.name     = name;
-      this.produces = new Store(data.traits[name].produces);
-      this.consumes = new Store(data.traits[name].consumes);
+      this.produces = new Store(this.data.produces);
+      this.consumes = new Store(this.data.consumes);
     }
+
+    get data() { return data.traits[this.name] }
   };
+
+
+  const Condition = class extends Trait {
+    constructor(name, init) {
+      super(name);
+
+      if (init) {
+        this.turns_total = init.turns_total;
+        this.turns_done  = init.turns_done;
+      }
+      else {
+        this.turns_total = data.turns_per_day * util.getRandomInt(this.data.days[0], this.data.days[1]);
+        this.turns_done  = 0;
+      }
+    }
+
+    get data()         { return data.conditions[this.name] }
+    get triggers()     { return this.data.triggers }
+    get on_shortage()  { return this.triggers.shortage  || {} }
+    get on_surplus()   { return this.triggers.surplus   || {} }
+    get on_condition() { return this.triggers.condition || {} }
+
+    get turns_left()   { return this.turns_total - this.turns_done }
+    get is_over()      { return this.turns_done >= this.turns_total }
+
+    inc_turns()        { ++this.turns_done }
+  };
+
 
   const Store = class {
     constructor(init) {
@@ -118,6 +150,7 @@ define(function(require, exports, module) {
       }
     }
   };
+
 
   const History = class {
     constructor(length, init) {
@@ -173,6 +206,7 @@ define(function(require, exports, module) {
     }
   };
 
+
   const Planet = class {
     constructor(body, init) {
       init = init || {};
@@ -183,9 +217,18 @@ define(function(require, exports, module) {
       this.body    = body;
       this.name    = data.bodies[body].name;
       this.size    = data.bodies[body].size;
-      this.traits  = data.bodies[body].traits.map((t) => {return new Trait(t)});
       this.faction = new Faction(data.bodies[body].faction);
       this.radius  = system.body(body).radius;
+      this.traits  = data.bodies[body].traits.map((t) => {return new Trait(t)});
+
+      /*
+       * Temporary conditions
+       */
+      if (init.conditions) {
+        this.conditions = init.conditions.map(c => new Condition(c.name, c));
+      } else {
+        this.conditions = [];
+      }
 
       /*
        * Fabrication
@@ -254,6 +297,16 @@ define(function(require, exports, module) {
     hasTrait(trait) {
       for (const t of this.traits) {
         if (t.name == trait) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    hasCondition(condition) {
+      for (const c of this.conditions) {
+        if (c.name == condition) {
           return true;
         }
       }
@@ -391,10 +444,28 @@ define(function(require, exports, module) {
     surplusFactor(item)  { return this.isNetExporter(item) ? 0.2 : 0.8 }
     hasSurplus(item)     { return this.getNeed(item) <= this.surplusFactor(item) }
 
-    production(item)     { return this.produces.get(item) / (24 / data.hours_per_turn) }
-    consumption(item)    { return this.consumes.get(item) / (24 / data.hours_per_turn) }
     avgProduction(item)  { return this.getSupply(item) - this.consumption(item) }
     netProduction(item)  { return this.production(item) - this.consumption(item) }
+
+    production(item) {
+      let amount = this.produces.get(item) / data.turns_per_day;
+
+      for (const condition of this.conditions) {
+        amount += this.scale(condition.produces.get(item));
+      }
+
+      return amount;
+    }
+
+    consumption(item) {
+      let amount = this.consumes.get(item) / data.turns_per_day;
+
+      for (const condition of this.conditions) {
+        amount += this.scale(condition.consumes.get(item));
+      }
+
+      return amount;
+    }
 
     incDemand(item, amount) {
       this.demand.inc(item, amount);
@@ -756,8 +827,9 @@ define(function(require, exports, module) {
 
     produce() {
       for (const item of this.produces.keys) {
-        if (this.production(item) > 0 && !this.hasSurplus(item)) {
-          this.sell(item, this.production(item));
+        const amount = this.production(item);
+        if (amount > 0 && !this.hasSurplus(item)) {
+          this.sell(item, amount);
         }
       }
     }
@@ -785,6 +857,50 @@ define(function(require, exports, module) {
       }
     }
 
+    apply_conditions() {
+      // Increment turns on each condition and filter out those which are no
+      // longer active.
+      this.conditions = this.conditions.filter(c => {
+        c.inc_turns();
+        return !c.is_over;
+      });
+
+      // Test for chance of new conditions
+      for (const c of Object.keys(data.conditions)) {
+        // Skip conditions that are already active
+        if (this.hasCondition(c)) {
+          continue;
+        }
+
+        // Shortages
+        for (const item of Object.keys(data.conditions[c].triggers.shortage)) {
+          if (this.hasShortage(item)) {
+            if (util.chance( data.conditions[c].triggers.shortage[item] )) {
+              this.conditions.push(new Condition(c));
+            }
+          }
+        }
+
+        // Surpluses
+        for (const item of Object.keys(data.conditions[c].triggers.surplus)) {
+          if (this.hasSurplus(item)) {
+            if (util.chance( data.conditions[c].triggers.surplus[item] )) {
+              this.conditions.push(new Condition(c));
+            }
+          }
+        }
+
+        // Conditions
+        for (const cond of Object.keys(data.conditions[c].triggers.condition)) {
+          if (this.hasCondition(cond) || this.hasTrait(cond)) {
+            if (util.chance( data.conditions[c].triggers.condition[cond] )) {
+              this.conditions.push(new Condition(c));
+            }
+          }
+        }
+      }
+    }
+
     clearMemos() {
       this._isNetExporter = {};
     }
@@ -797,6 +913,7 @@ define(function(require, exports, module) {
       this.manufacture();
       this.replenishFabricators();
       this.imports();
+      this.apply_conditions();
       this.rollups();
     }
 
@@ -850,14 +967,17 @@ define(function(require, exports, module) {
     }
   };
 
+
   for (const name of Object.keys(data.resources))
     resources[name] = new Resource(name);
+
 
   exports.resources = resources;
   exports.Resource  = Resource;
   exports.Store     = Store;
   exports.Faction   = Faction;
   exports.Trait     = Trait;
+  exports.Condition = Condition;
   exports.History   = History;
   exports.Planet    = Planet;
 });
