@@ -176,14 +176,17 @@ define(function(require, exports, module) {
       const fov_m    = this.fov_au * Physics.AU;
       const px_per_m = this.scale_px / fov_m;
       const diameter = system.body(body).radius * 2;
+      const is_moon  = system.body(body).central != 'sun';
 
       const adjust = body == 'sun' ? 1
                    : body.match(/jupiter|saturn|uranus|neptune/) ? 10
-                   : 50;
+                   : is_moon ? 60
+                   : 40;
 
       const factor = this.fov_au + Math.log2(Math.max(1, this.fov_au));
       const amount = util.clamp(adjust * factor, 1);
-      return util.clamp(diameter * px_per_m * amount, 3, this.scale_px);
+      const min    = is_moon ? 1 : 3;
+      return util.clamp(diameter * px_per_m * amount, min, this.scale_px);
     }
 
     is_within_fov(target, reference_point) {
