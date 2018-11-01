@@ -614,7 +614,7 @@ define(function(require, exports, module) {
         if (result == 'destroyed') {
           this.$emit('dead');
         }
-        else if (result == 'surrendered') {
+        else if (result == 'player-surrendered') {
           this.submit();
         }
         else {
@@ -625,7 +625,9 @@ define(function(require, exports, module) {
     },
 
     template: `
-<card :title="'Police inspection: ' + faction">
+<div class="p-3">
+  <h5>Police inspection: {{faction}}</h5>
+
   <div v-if="choice=='ready'">
     <card-text>
       You have been hailed by a {{faction}} patrol ship operating {{distance}} AU
@@ -679,7 +681,7 @@ define(function(require, exports, module) {
   </ask>
 
   <melee v-if="choice=='attack'" :opponent="npc" :init_flee="init_flee" @complete="done" />
-</card>
+</div>
     `,
   });
 
@@ -768,7 +770,7 @@ define(function(require, exports, module) {
     },
 
     template: `
-      <card title="Pirate">
+      <div class="p-3">
         <div v-if="choice=='ready'">
           <card-text>
             The lights go dim as an emergency klaxxon warns you that your ship has been
@@ -803,7 +805,7 @@ define(function(require, exports, module) {
             </li>
           </ul>
         </ok>
-      </card>
+      </div>
     `,
   });
 });

@@ -104,7 +104,7 @@ define(function(require, exports, module) {
     },
 
     template: `
-<card>
+<div>
   <row>
     <div class="col-4 text-left font-weight-bold">You</div>
     <small class="col-4 text-center text-weight-light font-italic">{{combat.player.faction.abbrev}} vs. {{combat.opponent.faction.abbrev}}</small>
@@ -168,12 +168,20 @@ define(function(require, exports, module) {
         Your opponent has escaped.
       </div>
 
-      <btn @click="complete" block=1>Leave</btn>
+      <div v-else-if="surrendered == combat.player.name" class="my-3 large font-italic text-center">
+        You surrendered to your opponent.
+      </div>
+
+      <div v-else-if="surrendered == combat.opponent.name" class="my-3 large font-italic text-center">
+        Your opponent has surrendered.
+      </div>
+
+      <btn @click="complete" block=1>Acknowledge</btn>
     </div>
   </div>
 
   <combat-log :log="combat.log" :tick="tick" />
-</card>
+</div>
     `,
   });
 
