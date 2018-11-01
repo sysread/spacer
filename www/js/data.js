@@ -308,6 +308,13 @@ define(function() {
         traits:  ['domed', 'subterranean', 'orbital', 'rocky', 'mineral poor', 'agricultural', 'capital'],
         faction: 'JFT',
       },
+      trojans: {
+        name:    'Trojan Archipelago',
+        size:    'large',
+        traits:  ['subterranean', 'orbital', 'rocky', 'asteroids', 'mineral rich', 'black market', 'tech hub'],
+        faction: 'CERES',
+        gravity: 0.35,
+      },
       enceladus: {
         name:    'Enceladus Depot',
         size:    'small',
@@ -581,6 +588,7 @@ define(function() {
   data.bodies.mars.desc              = "Rising from the ashes of the Earth fleet's systematic bombardment during the war for independence, the Martian capital of Barsoom is home to the most widely respected universities and scientific institutions in the system.|The memories of those scars still fresh, Mars continues to sink a sizable proportion of its resources into its fleet and planetary defenses. Although smaller than the UN fleet, the Martian navy's vessels are newer and have a small but not inconsiderable tech advantage on Earth's aging ships.";
   data.bodies.phobos.desc            = "Phobos Command hosts the orbital command center of the Martian navy, coordinating the planet's orbital defense network, as well as it's most prestigious officer training school. It is also home to the Martian Marines.";
   data.bodies.ceres.desc             = "Large enough to be given a comfortable spin gravity of more than a third of Earth, the hollowed out planetoid Ceres is a major shipping and commercial hub between the inner and outer planets.";
+  data.bodies.trojans.desc           = "Stretching across nearly half an AU of Jupiter's L5 Lagrange point, the Trojan Archipelago collectively represents the second largest population in the system. As well as being a source of incredible mineral wealth, it also boasts some of the most exotic and cleverly adapted habitats humanity has ever designed. Before the war, most shipments to and from the cluster had been contracted through Ceres. After shipments to the outer colonies fell by the wayside, Ceres continued to move goods to and from the Trojans, claiming is as a protectorate and continuing to provide basic governmental services.|Originally home to a combination of mining operations and scientific missions, it is now one of the most highly productive markets in the system.";
   data.bodies.europa.desc            = "One of the two Jovian moons claimed by the JFT during the war, Europa's mines provide the backbone of the JFT's trade in raw materials.";
   data.bodies.callisto.desc          = "Callisto's vast domed farms produce tons of food that are shipped across the system, supporting many of the outer colonies that cannot produce enough food to be self sufficient. It also hosts the regional Martian command orbital and dock yards.";
   data.bodies.ganymede.desc          = "The official headquarters of the JFT, Ganymede also hosts excellent agricultural facilities and shipyards, making it a commercial hub of the outer system.";

@@ -179,7 +179,7 @@ define(function(require, exports, module) {
       const is_moon  = system.body(body).central != 'sun';
 
       const adjust = body == 'sun' ? 1
-                   : body.match(/jupiter|saturn|uranus|neptune/) ? 10
+                   : body.match(/jupiter|saturn|uranus|neptune|trojans/) ? 10
                    : is_moon ? 60
                    : 40;
 

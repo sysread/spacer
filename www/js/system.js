@@ -39,6 +39,26 @@ define(function(require, exports, module) {
     }
 
     body(name) {
+      if (name == 'trojans') {
+        const jupiter = this.system.bodies.jupiter;
+        return {
+          name:    'Trojans',
+          type:    'asteroids',
+          central: this.system.bodies.sun,
+          kind:    'Asteroid field',
+          gravity: 0.01,
+          radius:  jupiter.radius,
+
+          getPositionAtTime: (date) => {
+            const p = jupiter.getPositionAtTime(date);
+            const r = Physics.distance(p, [0, 0, 0]);
+            const x = (p[0] * Math.cos(60)) + (-p[1] * Math.sin(60));
+            const y = (p[1] * Math.cos(60)) + ( p[0] * Math.sin(60));
+            return [x, y, 0];
+          },
+        };
+      }
+
       return this.system.bodies[name];
     }
 
@@ -58,7 +78,7 @@ define(function(require, exports, module) {
     }
 
     type(name) {
-      const type = this.system.bodies[name].type;
+      const type = this.body(name).type;
       if (type === 'dwarfPlanet') return 'dwarf';
       return type;
     }
