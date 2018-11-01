@@ -61,6 +61,8 @@ define(function(require, exports, module) {
         else {
           this.transit = null;
         }
+
+        this.layout_resize();
       },
 
       is_ready() {
@@ -81,9 +83,8 @@ define(function(require, exports, module) {
     },
 
     computed: {
-      show_home_menu() { return this.show == 'home'   },
-      show_dest_menu() { return this.show == 'dest'   },
       show_map()       { return this.show == 'map'    },
+      show_dest_menu() { return this.show == 'dest'   },
       show_info()      { return this.show == 'info'   },
       show_market()    { return this.show == 'market' },
       show_routes()    { return this.show == 'routes' },
@@ -171,8 +172,12 @@ define(function(require, exports, module) {
         this.layout.set_fov_au(this.map_fov_au);
       },
 
+      go_map() {
+        this.show = 'map';
+        this.$nextTick(() => this.layout_resize());
+      },
+
       go_dest_menu() { this.show = 'dest'   },
-      go_map()       { this.show = 'map'    },
       go_info()      { this.show = 'info'   },
       go_market()    { this.show = 'market' },
       go_routes()    { this.show = 'routes' },
