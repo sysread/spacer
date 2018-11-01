@@ -112,7 +112,7 @@ define(function() {
         },
       },
 
-      'workers\' strike': {
+      "workers' strike": {
         days:     [7, 30],
         consumes: {},
         produces: {water: -2, ore: -2, minerals: -1, food: -1},
@@ -263,11 +263,25 @@ define(function() {
         traits:  ['domed', 'subterranean', 'rocky', 'water poor', 'hydrocarbon poor'],
         faction: 'UN',
       },
+      venus: {
+        name:    'Aphrodite',
+        size:    'tiny',
+        traits:  ['orbital'],
+        faction: 'UN',
+        gravity: 0.35,
+      },
       mars: {
         name:    'Mars',
         size:    'large',
         traits:  ['domed', 'subterranean', 'orbital', 'rocky', 'water poor', 'mineral rich', 'hydrocarbon poor', 'tech hub', 'capital'],
         faction: 'MC',
+      },
+      phobos: {
+        name:    'Phobos Command',
+        size:    'tiny',
+        traits:  ['rocky', 'water poor', 'hydrocarbon poor', 'military'],
+        faction: 'MC',
+        gravity: 0.875,
       },
       ceres: {
         name:    'Ceres',
@@ -561,9 +575,11 @@ define(function() {
   data.factions.JFT.desc             = "Faced with the same economic constraints and pressures as the outer planets during the war but with much closer and more powerful corporate interests at hand, the Saturnian moons controlling interests joined to form the Jovian Free Traders collective. Funded by some of the richest corporations on Earth, the JFT has become a force unto itself, patrolling the outer planets' trade routes with its corporate fleet.|Life in the domes of Saturn is difficult, and the harvesting of ice and ore in the outer system is dangerous work, but citizen employees can rest assured that the Board of Directors has their best interests at heart, or at least their compound interest at heart, as many are bound by contract or debt to their Syndicate.";
 
   data.bodies.mercury.desc           = "Too close to the sun to permit domed habitations, Mercury's single city, Quicksilver, lies deep underground, providing it with a modicum of protection against the intense solar radiation bathing the surface.|Known for its rich mineral deposits and hard-nosed populace, the knowledge gained during the process of excavating and settling Mercury was a major factor in the success of later colonies. Although nominally a member of the UN, Mercury is widely known to be effectively run by the unions, who work to ensure that Mercury is not unfairly exploited by Earth. Nobody messes with the local 127.";
+  data.bodies.venus.desc             = "Lonely in its orbit of Venus, Aphrodite harbors one of the few remaining large-scale scientific observation stations in the system. It is suspected, at least by the Martian Commonwealth, to host the UN's most secret military research projects.";
   data.bodies.earth.desc             = "Under the unified governance of the UN, Earth has been at peace for decades. As the sole habital body in the system, Earth remains the largest population, economy, and military force in the system.";
   data.bodies.moon.desc              = "A natural target for the first extension of humanity into space, the Moon's domed cities and vast, subterranean passages hold the second largest population in the system as well as some of its best shipyards.|With its lower gravity, excellent amenities, and close proximity to Earth, Luna hosts the official embassies of both the Martian Commonwealth and TRANSA.";
   data.bodies.mars.desc              = "Rising from the ashes of the Earth fleet's systematic bombardment during the war for independence, the Martian capital of Barsoom is home to the most widely respected universities and scientific institutions in the system.|The memories of those scars still fresh, Mars continues to sink a sizable proportion of its resources into its fleet and planetary defenses. Although smaller than the UN fleet, the Martian navy's vessels are newer and have a small but not inconsiderable tech advantage on Earth's aging ships.";
+  data.bodies.phobos.desc            = "Phobos Command hosts the orbital command center of the Martian navy, coordinating the planet's orbital defense network, as well as it's most prestigious officer training school. It is also home to the Martian Marines.";
   data.bodies.ceres.desc             = "Large enough to be given a comfortable spin gravity of more than a third of Earth, the hollowed out planetoid Ceres is a major shipping and commercial hub between the inner and outer planets.";
   data.bodies.europa.desc            = "One of the two Jovian moons claimed by the JFT during the war, Europa's mines provide the backbone of the JFT's trade in raw materials.";
   data.bodies.callisto.desc          = "Callisto's vast domed farms produce tons of food that are shipped across the system, supporting many of the outer colonies that cannot produce enough food to be self sufficient. It also hosts the regional Martian command orbital and dock yards.";
