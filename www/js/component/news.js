@@ -16,7 +16,7 @@ define(function(require, exports, module) {
 
     computed: {
       bodies()  { return Object.keys(this.data.bodies)               },
-      name()    { return this.system.short_name(this.body)           },
+      name()    { return this.game.planets[this.body].name           },
       faction() { return this.game.planets[this.body].faction.abbrev },
       is_moon() { return this.system.type(this.body) == 'moon'       },
       kind()    { return this.system.kind(this.body)                 },
@@ -66,7 +66,7 @@ define(function(require, exports, module) {
     computed: {
       bodies()        { return Object.keys(this.data.bodies)               },
       resources()     { return Object.keys(this.data.resources)            },
-      name()          { return this.system.short_name(this.body)           },
+      name()          { return this.game.planets[this.body].name           },
       hasShortages()  { return this.shortages[this.body].length > 0        },
       hasSurpluses()  { return this.surpluses[this.body].length > 0        },
       hasConditions() { return this.conditions[this.body].length > 0       },
