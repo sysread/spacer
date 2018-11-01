@@ -317,19 +317,24 @@ define(function(require, exports, module) {
     /*
      * Patrols and inspections
      */
-    inspectionRate(distance=0, ignore_standing=false) {
-      let rate;
+    patrolRate(distance=0) {
+      const rate = this.scale(this.faction.patrol);
 
-      if (!ignore_standing) {
-        const standing = 1 - (window.game.player.getStanding(this.faction.abbrev) / data.max_abs_standing);
-        rate = this.scale(this.faction.patrol * standing);
-      } else {
-        rate = this.scale(this.faction.patrol);
-      }
-
-      return distance
-        ? util.clamp(rate * Math.pow(data.jurisdiction, 2) / Math.pow(distance, 2), 0, rate)
+      const invsq = distance > data.jurisdiction
+        ? rate * Math.pow(data.jurisdiction, 2) / Math.pow(distance, 2)
         : rate;
+
+      return Math.max(0, invsq);
+    }
+
+    inspectionRate(ignore_standing=false) {
+      if (ignore_standing) {
+        return this.scale(this.faction.inspection);
+      }
+      else {
+        const standing = 1 - (window.game.player.getStanding(this.faction.abbrev) / data.max_abs_standing);
+        return this.scale(this.faction.inspection) * standing;
+      }
     }
 
     inspectionFine() {

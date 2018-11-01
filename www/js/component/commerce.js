@@ -162,7 +162,7 @@ define(function(require, exports, module) {
       },
 
       complete: function() {
-        if (this.contraband && Math.random() < this.planet.inspectionRate(0)) {
+        if (this.contraband && Math.random() < this.planet.inspectionRate()) {
           this.player.debit(this.fine);
           this.player.decStanding(this.faction.abbrev, this.contraband);
 

@@ -129,6 +129,41 @@ define(function(require, exports, module) {
 
         return Object.keys(bodies);
       },
+
+      patrolRate() {
+        const ranges = this.nearby();
+        let total = 0;
+        let count = 0;
+
+        for (const body of Object.keys(ranges)) {
+          const faction = this.data.bodies[body].faction;
+          const au = ranges[body] / Physics.AU;
+
+          if (au > this.data.jurisdiction * 2) {
+            continue;
+          }
+
+          total += this.game.planets[body].patrolRate(au);
+          ++count;
+        }
+
+        return total / count;
+      },
+
+      piracyRate() {
+        let chance = this.data.default_piracy_rate
+                   - this.game.player.ship.stealth;
+
+        const ranges = this.nearby();
+
+        for (const body of Object.keys(ranges)) {
+          const au = ranges[body] / Physics.AU;
+          const rate = this.game.planets[body].patrolRate(au);
+          chance -= rate;
+        }
+
+        return Math.max(chance, 0);
+      },
     },
 
     methods: {
@@ -352,39 +387,13 @@ define(function(require, exports, module) {
         return bodies;
       },
 
-      inspectionChancePct() {
-        const ranges = this.nearby();
-        let total = 0;
-        let count = 0;
-
-        for (const body of Object.keys(ranges)) {
-          const faction = this.data.bodies[body].faction;
-          const au = ranges[body] / Physics.AU;
-
-          if (au > this.data.jurisdiction) {
-            continue;
-          }
-
-          let chance = this.game.planets[body].inspectionRate(au)
-                     - this.game.player.ship.stealth;
-
-          if (this.plan.velocity > 1000) {
-            chance -= Math.log(this.plan.velocity / 1000) / 300;
-          }
-
-          chance /= 1 + (this.stoppedBy[faction] || 0);
-          chance = util.clamp(chance, 0, data.max_patrol_rate);
-
-          total += chance;
-          ++count;
-        }
-
-        return total / count;
-      },
-
       inspectionChance() {
         const ranges = this.nearby();
 
+        if (this.current_turn == 0) {
+          return false;
+        }
+
         for (const body of Object.keys(ranges)) {
           const faction = this.data.bodies[body].faction;
           const au = ranges[body] / Physics.AU;
@@ -393,22 +402,22 @@ define(function(require, exports, module) {
             continue;
           }
 
-          let chance = this.game.planets[body].inspectionRate(au)
+          let patrol = this.game.planets[body].patrolRate(au)
                      - this.game.player.ship.stealth;
 
-          if (this.plan.velocity > 1000) {
-            chance -= Math.log(this.plan.velocity / 1000) / 300;
-          }
+          if (patrol > 0) {
+            // Encountered a patrol
+            if (util.chance(patrol)) {
+              let inspection = this.game.planets[body].inspectionRate();
 
-          chance /= 1 + this.stoppedBy.police;
-          chance = util.clamp(chance, 0, data.max_patrol_rate);
-
-          if (chance > 0) {
-            if (Math.random() <= chance) {
-              if (this.stoppedBy[faction]) {
-                continue;
+              if (this.plan.velocity > 1000) {
+                inspection -= Math.log(this.plan.velocity / 1000) / 300;
               }
-              else {
+
+              inspection /= 1 + this.stoppedBy.police;
+
+              if (util.chance(inspection)) {
+                ++this.stoppedBy.police;
                 const dist = util.R(Physics.distance(this.plan.coords, this.system.position(body)) / Physics.AU, 3);
                 this.stoppedBy[faction] = true;
                 this.encounter = {
@@ -427,23 +436,8 @@ define(function(require, exports, module) {
         return false;
       },
 
-      piracyChancePct() {
-        let chance = this.data.default_piracy_rate
-                   - this.game.player.ship.stealth;
-
-        const ranges = this.nearby();
-
-        for (const body of Object.keys(ranges)) {
-          const au = ranges[body] / Physics.AU;
-          const rate = this.game.planets[body].inspectionRate(au, true);
-          chance -= rate;
-        }
-
-        return Math.max(chance, 0);
-      },
-
       piracyChance() {
-        let chance = this.piracyChancePct();
+        let chance = this.piracyRate;
         let speed_bonus = 0;
 
         if (this.plan.velocity > 1000) {
@@ -486,8 +480,8 @@ define(function(require, exports, module) {
           <SvgPlot :layout="layout" v-if="layout">
             <text style="fill:red;font:12px monospace" x=5 y=17>
                 FoV: {{layout.fov_au|R(4)|unit('AU')}}
-              | Piracy: {{piracyChancePct() * 100|R(2)}}%
-              | Patrol: {{inspectionChancePct() * 100|R(2)}}%
+              | Piracy: {{piracyRate * 100|R(2)}}%
+              | Patrol: {{patrolRate * 100|R(2)}}%
             </text>
 
             <image ref="sun" xlink:href="img/sun.png" />
