@@ -27,7 +27,7 @@ define(function(require, exports, module) {
         timeline:  null,
         building:  false,
         paused:    false,
-        stoppedBy: {'pirate': 0},
+        stoppedBy: {'pirate': 0, 'police': 0},
         encounter: null,
       };
     },
@@ -348,7 +348,7 @@ define(function(require, exports, module) {
             chance -= Math.log(this.plan.velocity / 1000) / 300;
           }
 
-          chance /= 1 + (this.stoppedBy[faction] || 0);
+          chance /= 1 + this.stoppedBy.police;
           chance = util.clamp(chance, 0, data.max_patrol_rate);
 
           if (chance > 0) {
@@ -383,7 +383,7 @@ define(function(require, exports, module) {
 
         for (const body of Object.keys(ranges)) {
           const au = ranges[body] / Physics.AU;
-          const rate = this.game.planets[body].inspectionRate(au, false);
+          const rate = this.game.planets[body].inspectionRate(au, true);
           chance -= rate;
         }
 
