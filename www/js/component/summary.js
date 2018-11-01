@@ -6,6 +6,7 @@ define(function(require, exports, module) {
   require('component/common');
   require('component/card');
   require('component/row');
+  require('component/news');
 
   Vue.component('SummaryPage', {
     computed: {
@@ -90,7 +91,9 @@ define(function(require, exports, module) {
     Your standing with this faction is <span :class="standing_color_class">{{standing|lower}}</span>.
   </def>
 
-  <card v-if="!mini" class="my-3">
+  <News :body="planet.body" title="Local news" />
+
+  <card v-if="!mini" class="my-3" :title="'About ' + planet.name">
     <card-text v-for="(line, idx) of desc" :key="idx" class="font-italic">{{line}}</card-text>
   </card>
 </div>

@@ -33,7 +33,7 @@ define(function(require, exports, module) {
       <div id="spacer-content" class="container-fluid pt-3 pb-1 mt-5">
         <new-game           v-if="page == 'newgame'"     @open="open" />
         <SummaryPage        v-if="page == 'summary'"     @open="open" />
-        <News          v-else-if="page == 'news'"        @open="open" />
+        <NewsFeeds     v-else-if="page == 'news'"        @open="open" />
         <work          v-else-if="page == 'work'"        @open="open" />
         <market        v-else-if="page == 'commerce'"    @open="open" />
         <fabricators   v-else-if="page == 'fabricators'" @open="open" />
