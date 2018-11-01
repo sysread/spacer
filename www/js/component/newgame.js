@@ -106,13 +106,10 @@ define(function(require, exports, module) {
         </card-text>
       </card>
 
-      <div class="form-group">
-        <label for="faction">Faction</label>
-        <input class="form-control" type="text" :value="faction.full_name" readonly>
-      </div>
-
-      <card class="my-3">
-        <card-text v-for="line of factionDesc" :key="line" class="font-italic">{{line}}</card-text>
+      <card :title="faction.full_name" class="my-3">
+        <card-text v-for="line of factionDesc" :key="line" class="font-italic">
+          {{line}}
+        </card-text>
       </card>
     </form>
   </card>
