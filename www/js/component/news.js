@@ -152,6 +152,7 @@ define(function(require, exports, module) {
             return {
               name: c.name,
               left: Math.floor(c.turns_left / this.turns_per_day),
+              need: c.consumes.keys,
             };
           });
         }
@@ -171,6 +172,8 @@ define(function(require, exports, module) {
               Government officials claim the situation is under control and urge calm over the ongoing {{cond.name}}.
               When asked why the {{cond.name}} continues unabated if the situation is contained, the same officials declined to comment.
             </p>
+
+            <p>Officials are asking for any available shipping to assist with deliveries of {{cond.need.join(', ')}}.</p>
           </div>
 
           <div v-if="hasShortages" class="my-2">
