@@ -38,9 +38,9 @@ define(function() {
     resources: {
       water:        {mass:  20, mine: {tics: 1, value: 10}},
       ore:          {mass:  40, mine: {tics: 2, value: 10}},
-      minerals:     {mass:  30, mine: {tics: 2, value: 18}},
-      hydrocarbons: {mass:  10, mine: {tics: 2, value: 23}},
-      food:         {mass:  10, mine: {tics: 2, value: 30}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 1}}},
+      minerals:     {mass:  30, mine: {tics: 2, value: 20}},
+      hydrocarbons: {mass:  10, mine: {tics: 2, value: 25}},
+      food:         {mass:  10, mine: {tics: 2, value: 35}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 2}}},
       fuel:         {mass:   1, recipe: {tics: 1, materials: {ore: 1, water: 1}}},
       metal:        {mass:  60, recipe: {tics: 2, materials: {ore: 3}}},
       ceramics:     {mass:  30, recipe: {tics: 2, materials: {minerals: 3}}},
@@ -392,10 +392,10 @@ define(function() {
       battleship:    { hull: 30, armor: 20, cargo: 20, hardpoints: 10, mass: 1200,  tank: 14,  drives: 6,  drive: 'fusion', restricted: 'Admired', markets: ['capital', 'military']},
 
       /* Faction ships */
-      fortuna:       { hull: 8,  armor: 6,  cargo: 50, hardpoints: 1,  mass: 1000,  tank: 8,   drives: 14, drive: 'ion',    restricted: 'Friendly',  faction: 'JFT'},
+      fortuna:       { hull: 8,  armor: 6,  cargo: 60, hardpoints: 2,  mass: 1000,  tank: 8,   drives: 14, drive: 'ion',    restricted: 'Friendly',  faction: 'JFT'},
       neptune:       { hull: 14, armor: 10, cargo: 40, hardpoints: 4,  mass: 700,   tank: 10,  drives: 10, drive: 'ion',    restricted: 'Trusted',   faction: 'TRANSA', markets: ['capital', 'military']},
-      barsoom:       { hull: 20, armor: 20, cargo: 25, hardpoints: 6,  mass: 600,   tank: 8,   drives: 2,  drive: 'fusion', restricted: 'Admired',   faction: 'MC',     markets: ['capital', 'military']},
-      'rock-hopper': { hull: 6,  armor: 4,  cargo: 25, hardpoints: 2,  mass: 500,   tank: 4,   drives: 10, drive: 'ion',    restricted: 'Respected', faction: 'CERES'},
+      barsoom:       { hull: 20, armor: 20, cargo: 25, hardpoints: 5,  mass: 600,   tank: 8,   drives: 2,  drive: 'fusion', restricted: 'Admired',   faction: 'MC',     markets: ['capital', 'military']},
+      'rock-hopper': { hull: 6,  armor: 4,  cargo: 35, hardpoints: 3,  mass: 500,   tank: 4,   drives: 1,  drive: 'fusion', restricted: 'Respected', faction: 'CERES'},
     },
 
     ship: {
