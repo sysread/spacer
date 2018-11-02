@@ -24,6 +24,8 @@ define(function(require, exports, module) {
         tick:         combat.currentRound,
         isPlayerTurn: combat.isPlayerTurn,
         salvage:      false,
+        queue:        [],
+        intvl:        null,
       };
     },
 
@@ -33,6 +35,13 @@ define(function(require, exports, module) {
         const flee = this.combat.player.actions.filter(a => a.name == 'Flee');
         this.useAction(flee[0]);
       }
+
+      this.intvl = window.setInterval(() => {
+        if (this.queue.length > 0) {
+          const fn = this.queue.shift();
+          fn();
+        }
+      }, 500);
     },
 
     computed: {
@@ -47,6 +56,9 @@ define(function(require, exports, module) {
     watch: {
       isOver() {
         if (this.isOver) {
+          window.clearTimeout(this.intvl);
+          this.intvl = null;
+
           if (this.combat.player.isDestroyed) {
             window.localStorage.removeItem('game');
           } else {
@@ -64,19 +76,14 @@ define(function(require, exports, module) {
         this.combat.playerAction(action);
         this.incTick();
 
-        this.$nextTick(() => {
-          window.setTimeout(() => {
-            if (!this.combat.isOver) {
-              this.combat.opponentAction();
-
-              this.$nextTick(() => {
-                window.setTimeout(() => {
-                  this.incTick();
-                  this.isPlayerTurn = true;
-                }, 500);
-              });
-            }
-          }, 500);
+        this.queue.push(() => {
+          if (!this.combat.isOver) {
+            this.combat.opponentAction();
+            this.queue.push(() => {
+              this.incTick();
+              this.isPlayerTurn = true;
+            });
+          }
         });
       },
 
