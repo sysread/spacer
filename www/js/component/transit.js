@@ -706,8 +706,8 @@ define(function(require, exports, module) {
           name:    'Pirate',
           faction: faction,
           options: {
-            ship:       ['schooner', 'corvette', 'neptune'],
-            addons:     ['railgun_turret', 'pds', 'light_torpedo', 'ecm', 'armor'],
+            ship: ['schooner', 'corvette', 'neptune'],
+            addons: ['railgun_turret', 'pds', 'light_torpedo', 'ecm', 'armor'],
             min_addons: 2,
           },
         }),
@@ -782,8 +782,9 @@ define(function(require, exports, module) {
           <card-text>
             The lights go dim as an emergency klaxxon warns you that your ship has been
             targeted by an incoming pirate <b class="text-warning">{{npc.ship.type|caps}}</b>.
-            Its transponder is off, but its make and markings suggest that it is aligned
-            with {{npc.faction.abbrev}}... of course, the ship may have been stolen.
+            Its transponder is off, but its make and markings suggest that may be aligned
+            with {{npc.faction.abbrev}}, indicating that it might be a privateer. Of course,
+            the ship could just as easily have been stolen.
 
             Before long, the radio begins to chirp, notifying you of the pirate's ultimatum.
           </card-text>
