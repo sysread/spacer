@@ -13,6 +13,59 @@ define(function(require, exports, module) {
   require('component/summary');
 
 
+  Vue.component('NavBtn', {
+    props: ['name', 'active', 'disabled', 'layout'],
+
+    computed: {
+      src()       { return 'img/' + this.name + '.png'              },
+      width()     { return this.layout.width_px                     },
+      btn_width() { return Math.min(50, Math.floor(this.width / 6)) },
+      img_width() { return this.btn_width - 12                      }, // less padding px
+
+      btn_style() {
+        const style = {
+          width: this.btn_width + 'px',
+          height: this.btn_width + 'px',
+          padding: '0 6px 0 6px',
+          border: '1px solid black',
+          'background-color': '#161616',
+          'border-bottom': '1px solid rgb(200,0,0)',
+        };
+
+        if (this.disabled) {
+          style['background-color'] = '#202020';
+        }
+
+        if (this.active) {
+          style['background-color'] = '#790000';
+        }
+
+        return style;
+      },
+
+      img_style() {
+        const style = {
+          width: this.img_width + 'px',
+          height: this.img_width + 'px',
+          filter: 'invert(100%)',
+        };
+
+        if (this.disabled) {
+          style.filter += ' opacity(0.25)';
+        }
+
+        return style;
+      },
+    },
+
+    template: `
+      <button type="button" :style="btn_style" class="btn-dark" @click="$emit('click')" :disabled="disabled">
+        <img :src="src" :style="img_style" />
+      </button>
+    `,
+  });
+
+
   Vue.component('NavComp', {
     mixins: [ Layout.LayoutMixin ],
 
@@ -308,17 +361,14 @@ define(function(require, exports, module) {
 
     template: `
       <card id="navcomp" nopad=1>
-        <div class="btn-toolbar">
+        <div class="btn-toolbar" v-if="layout">
           <div class="btn-group">
-            <button type="button" class="btn btn-outline-dark bg-light" @click="go_map">
-              <img src="img/home.png" style="width:1rem;height:1rem" />
-            </button>
-
-            <btn @click="go_dest_menu" :disabled="show_dest_menu" class="px-3 font-weight-bold">&target;</btn>
-            <btn @click="go_routes" :disabled="show_routes" class="px-3 font-weight-bold">Rt</btn>
-            <btn @click="go_info" :disabled="show_info" class="px-3 font-weight-bold">&#9432;</btn>
-            <btn @click="go_market" :disabled="show_market" class="px-3 font-weight-bold">&dollar;</btn>
-            <btn @click="confirm=true" :disabled="!transit" class="px-3">Launch</btn>
+            <NavBtn :active="show_map" :layout="layout" name="compass"  @click="go_map" />
+            <NavBtn :active="show_dest_menu" :layout="layout" name="planet"  @click="go_dest_menu" />
+            <NavBtn :active="show_routes" :layout="layout" name="target" @click="go_routes" />
+            <NavBtn :active="show_info" :layout="layout" name="summary" @click="go_info" />
+            <NavBtn :active="show_market" :layout="layout" name="market"  @click="go_market" />
+            <NavBtn :active="confirm" :layout="layout" name="launch"  @click="confirm=true" :disabled="!transit" />
           </div>
         </div>
 
