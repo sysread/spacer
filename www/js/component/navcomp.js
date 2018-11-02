@@ -14,13 +14,13 @@ define(function(require, exports, module) {
 
 
   Vue.component('NavBtn', {
-    props: ['name', 'active', 'disabled', 'layout'],
+    props: ['name', 'active', 'disabled'],
 
     computed: {
-      src()       { return 'img/' + this.name + '.png'              },
-      width()     { return this.layout.width_px                     },
-      btn_width() { return Math.min(50, Math.floor(this.width / 6)) },
-      img_width() { return this.btn_width - 12                      }, // less padding px
+      src()       { return 'img/' + this.name + '.png' },
+      width()     { return 50                          },
+      btn_width() { return 50                          },
+      img_width() { return this.btn_width - 12         }, // less padding px
 
       btn_style() {
         const style = {
@@ -361,14 +361,14 @@ define(function(require, exports, module) {
 
     template: `
       <card id="navcomp" nopad=1>
-        <div class="btn-toolbar" v-if="layout">
+        <div class="btn-toolbar" id="navcomp-toolbar">
           <div class="btn-group">
-            <NavBtn :active="show_map" :layout="layout" name="compass"  @click="go_map" />
-            <NavBtn :active="show_dest_menu" :layout="layout" name="planet"  @click="go_dest_menu" />
-            <NavBtn :active="show_routes" :layout="layout" name="target" @click="go_routes" />
-            <NavBtn :active="show_info" :layout="layout" name="summary" @click="go_info" />
-            <NavBtn :active="show_market" :layout="layout" name="market"  @click="go_market" />
-            <NavBtn :active="confirm" :layout="layout" name="launch"  @click="confirm=true" :disabled="!transit" />
+            <NavBtn :active="show_map" name="compass"  @click="go_map" />
+            <NavBtn :active="show_dest_menu" name="planet"  @click="go_dest_menu" />
+            <NavBtn :active="show_routes" name="target" @click="go_routes" />
+            <NavBtn :active="show_info" name="summary" @click="go_info" />
+            <NavBtn :active="show_market" name="market"  @click="go_market" />
+            <NavBtn :active="confirm" name="launch"  @click="confirm=true" :disabled="!transit" />
           </div>
         </div>
 
@@ -756,7 +756,7 @@ define(function(require, exports, module) {
             bodies[body] = {
               point:    p,
               diameter: d,
-              label:    this.show_label(body),
+              label:    this.show_label(body) ? this.system.name(body) : '',
             };
           }
 
@@ -794,7 +794,7 @@ define(function(require, exports, module) {
           v-for="(info, body) of plot_points"
           :key="body"
           :layout="layout"
-          :label="info.label ? body : ''"
+          :label="info.label"
           :diameter="info.diameter"
           :pos="info.point"
           :img="'img/' + body + '.png'"

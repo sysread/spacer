@@ -332,6 +332,10 @@ define(function(require, exports, module) {
         return distance > this.layout.fov_au / 5;
       },
 
+      name(body) {
+        return this.system.name(body);
+      },
+
       pause() {
         this.paused = true;
         this.timeline.pause();
@@ -496,7 +500,7 @@ define(function(require, exports, module) {
             <g v-for="body of bodies" :key="body">
               <image :ref="body" :xlink:href="'img/' + body + '.png'" />
               <text :ref="body + '_label'" v-show="show_label(body)" style="font:12px monospace; fill:#EEEEEE;">
-                {{body|caps}}
+                {{name(body)}}
               </text>
             </g>
 

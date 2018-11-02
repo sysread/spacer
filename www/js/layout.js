@@ -207,7 +207,8 @@ define(function(require, exports, module) {
         - status_bar_height
         - this.elt.getBoundingClientRect().top
         - $('#spacer-status').height()
-        - $('#spacer-navbar').height();
+        - $('#spacer-navbar').height()
+        - ($('#navcomp-toolbar').height() || 0);
 
       const width   = $(this.elt).parent().width();
       const changed = width != this.width_px || height != this.height_px;
