@@ -64,12 +64,13 @@ define(function(require, exports, module) {
     props: ['body', 'title'],
 
     computed: {
-      bodies()        { return Object.keys(this.data.bodies)               },
-      resources()     { return Object.keys(this.data.resources)            },
-      name()          { return this.game.planets[this.body].name           },
-      hasShortages()  { return this.shortages[this.body].length > 0        },
-      hasSurpluses()  { return this.surpluses[this.body].length > 0        },
-      hasConditions() { return this.conditions[this.body].length > 0       },
+      bodies()    { return Object.keys(this.data.bodies)     },
+      resources() { return Object.keys(this.data.resources)  },
+      name()      { return this.game.planets[this.body].name },
+
+      hasShortages()  { return this.shortages[this.body]  && this.shortages[this.body].length > 0  },
+      hasSurpluses()  { return this.surpluses[this.body]  && this.surpluses[this.body].length > 0  },
+      hasConditions() { return this.conditions[this.body] && this.conditions[this.body].length > 0 },
 
       hasNews() {
         return this.hasShortages
