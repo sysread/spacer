@@ -94,7 +94,7 @@ define(function(require, exports, module) {
         }
       }
 
-      return this.standing[faction];
+      return Math.floor(this.standing[faction]);
     }
 
     hasStanding(faction, label) {
