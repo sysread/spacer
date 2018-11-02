@@ -438,6 +438,7 @@ define(function(require, exports, module) {
         let chance = this.piracyRate
                    - this.game.player.ship.stealth;
 
+        // Reduce chance of an encounter at higher velocities
         let speed_bonus = 0;
 
         if (this.plan.velocity > 1000) {
@@ -445,6 +446,12 @@ define(function(require, exports, module) {
         }
 
         chance -= speed_bonus;
+
+        // Increase chance of piracy if the ship has valuable cargo
+        const cargo_value = this.game.player.ship.cargoValue();
+        chance += 0.001 * Math.floor(cargo_value / 100);
+
+        // Reduce chances for each encounter
         chance /= 1 + this.stoppedBy.pirate;
 
         if (chance > 0) {
