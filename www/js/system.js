@@ -52,8 +52,7 @@ define(function(require, exports, module) {
           getPositionAtTime: (date) => {
             const p = jupiter.getPositionAtTime(date);
             const r = Physics.distance(p, [0, 0, 0]);
-            //const t = -60; // degrees
-            const t = -1.0472; // radians
+            const t = -1.0472; // 60 degrees in radians
             const x = (p[0] * Math.cos(t)) - (p[1] * Math.sin(t));
             const y = (p[0] * Math.sin(t)) + (p[1] * Math.cos(t));
             return [x, y, 0];

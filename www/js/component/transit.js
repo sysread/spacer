@@ -151,9 +151,7 @@ define(function(require, exports, module) {
       },
 
       piracyRate() {
-        let chance = this.data.default_piracy_rate
-                   - this.game.player.ship.stealth;
-
+        let chance = this.data.default_piracy_rate;
         const ranges = this.nearby();
 
         for (const body of Object.keys(ranges)) {
@@ -437,7 +435,9 @@ define(function(require, exports, module) {
       },
 
       piracyChance() {
-        let chance = this.piracyRate;
+        let chance = this.piracyRate
+                   - this.game.player.ship.stealth;
+
         let speed_bonus = 0;
 
         if (this.plan.velocity > 1000) {
