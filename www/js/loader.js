@@ -8,6 +8,11 @@ requirejs(
     document.addEventListener("deviceready", (e) => {
       if (StatusBar.isVisible) {
         StatusBar.hide();
+
+        if (typeof AndroidFullScreen !== 'undefined') {   // Fullscreen plugin exists ?
+          function errorFunction(error) { console.error(error); }
+          AndroidFullScreen.isSupported(AndroidFullScreen.immersiveMode, errorFunction);
+        }
       }
 
       FastClick.attach(document.body);
