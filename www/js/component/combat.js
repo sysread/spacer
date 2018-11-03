@@ -60,7 +60,7 @@ define(function(require, exports, module) {
 
     methods: {
       async process_queue() {
-        let promise = new Promise((resolve, reject) => {
+        const promise = new Promise((resolve, reject) => {
           setTimeout(() => {
             if (this.queue.length > 0) {
               const fn = this.queue.shift();
@@ -72,12 +72,7 @@ define(function(require, exports, module) {
         });
 
         await promise;
-
-        this.$nextTick(() => {
-          if (this.isOver) {
-            this.process_queue();
-          }
-        });
+        this.process_queue();
       },
 
       incTick() { ++this.tick },
@@ -87,15 +82,13 @@ define(function(require, exports, module) {
         this.combat.playerAction(action);
         this.incTick();
 
-        this.queue.push(() => {
-          if (!this.combat.isOver) {
+        if (!this.combat.isOver) {
+          this.queue.push(() => {
             this.combat.opponentAction();
-            this.queue.push(() => {
-              this.incTick();
-              this.isPlayerTurn = true;
-            });
-          }
-        });
+            this.incTick();
+            this.isPlayerTurn = true;
+          });
+        }
       },
 
       complete() {
