@@ -755,6 +755,10 @@ define(function(require, exports, module) {
       };
     },
 
+    computed: {
+      nearest_faction() { return this.data.bodies[this.nearest].faction }
+    },
+
     methods: {
       setChoice(choice) {
         if (choice == 'flee') {
@@ -813,6 +817,8 @@ define(function(require, exports, module) {
         else if (result == 'won' || result == 'opponent-surrendered') {
           this.setChoice('bounty');
           this.game.player.credit(this.bounty);
+          this.game.player.incStanding(this.nearest_faction, util.getRandomInt(1, 10));
+          this.game.player.decStanding(this.data.bodies[this.npc.faction.abbrev], util.getRandomInt(1, 5));
         }
         else {
           this.choice = 'ready';
@@ -863,7 +869,8 @@ define(function(require, exports, module) {
           According to the last data dump before your departure, there is a
           bounty for the elimination of this pirate. Your account has been
           credited {{bounty|csn}} credits, effective as soon as light from
-          the event reaches the nearest patrol.
+          the event reaches the nearest patrol. As a result, your standing
+          with {{nearest_faction}} has increased.
         </ok>
       </div>
     `,
