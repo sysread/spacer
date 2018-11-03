@@ -3,6 +3,7 @@ define(function(require, exports, module) {
   const Ship   = require('ship');
   const Vue    = require('vendor/vue');
   const util   = require('util');
+  const data   = require('data');
 
   require('component/global');
   require('component/common');
@@ -13,7 +14,7 @@ define(function(require, exports, module) {
     data: function() {
       return {
         name:          'Marco Solo',
-        home:          'mars',
+        home:          util.oneOf(Object.keys(data.bodies)),
         starting:      false,
         turnsComplete: 0,
       };

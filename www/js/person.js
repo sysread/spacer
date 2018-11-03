@@ -14,7 +14,7 @@ define(function(require, exports, module) {
       this.name     = init.name;
       this.ship     = new Ship(init.ship || {type: data.initial_ship});
       this.faction  = new model.Faction(init.faction || 'MC');
-      this.home     = init.home  || this.faction.capital;
+      this.home     = init.home || this.faction.capital;
       this.money    = Math.floor(init.money) || data.initial_money;
       this.standing = {};
 
@@ -23,13 +23,8 @@ define(function(require, exports, module) {
         if (init.standing && init.standing[faction]) {
           this.standing[faction] = init.standing[faction];
         }
-        else if (faction === this.faction.abbrev) {
-          // Initial value player's for own faction is "Friendly" with a small
-          // amount extra as a margin of forgiveness.
-          this.standing[faction] = 15;
-        }
         else {
-          this.standing[faction] = 0;
+          this.standing[faction] = data.factions[this.faction.abbrev].standing[faction];
         }
       }
     }

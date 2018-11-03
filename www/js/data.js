@@ -205,6 +205,7 @@ define(function() {
         inspection: 0.075,
         produces:   {electronics: 0.3, cybernetics: 0.1, medicine: 0.5},
         consumes:   {},
+        standing:   {UN: 15, MC: -10, CERES: 5, TRANSA: -15, JFT: 5},
       },
       'MC': {
         full_name:  'Martian Commonwealth',
@@ -214,6 +215,7 @@ define(function() {
         inspection: 0.1,
         produces:   {machines: 0.2, electronics: 0.2, weapons: 0.2, metal: 0.2},
         consumes:   {},
+        standing:   {UN: -10, MC: 15, CERES: 5, TRANSA: -15, JFT: 5},
       },
       'CERES': {
         full_name:  'The Most Serene Republic of Ceres',
@@ -223,6 +225,7 @@ define(function() {
         inspection: 0.05,
         produces:   {fuel: 0.3, machines: 0.2},
         consumes:   {},
+        standing:   {UN: 5, MC: 5, CERES: 15, TRANSA: 0, JFT: 10},
       },
       'JFT': {
         full_name:  'Jovian Free Traders',
@@ -232,6 +235,7 @@ define(function() {
         inspection: 0.025,
         produces:   {fuel: 0.5, food: 0.25, metal: 0.1, ceramics: 0.1},
         consumes:   {},
+        standing:   {UN: 5, MC: 5, CERES: 10, TRANSA: 10, JFT: 15},
       },
       'TRANSA': {
         full_name:  'Trans-Neptunian Authority',
@@ -241,6 +245,7 @@ define(function() {
         inspection: 0.005,
         produces:   {fuel: 0.5, narcotics: 0.5, weapons: 0.5},
         consumes:   {},
+        standing:   {UN: -15, MC: -15, CERES: 0, TRANSA: 15, JFT: 5},
       },
     },
 
