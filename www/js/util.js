@@ -31,7 +31,8 @@ define(function(require, exports, module) {
   };
 
   util.pct = function(fraction, places) {
-    return util.R(fraction * 100, places) + '%';
+    const pct = util.R(fraction * 100, places);
+    return sprintf('%0.2f%%', pct);
   };
 
   util.uniq = function(items, sep=' ') {

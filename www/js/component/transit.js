@@ -162,6 +162,39 @@ define(function(require, exports, module) {
 
         return Math.max(chance, 0);
       },
+
+      piracyEvasionMalusCargo() {
+        const cargo = this.game.player.ship.cargoValue();
+        if (cargo >= 1) {
+          return Math.log10(cargo) / 100;
+        } else {
+          return 0;
+        }
+      },
+
+      piracyEvasionBonusSpeed() {
+        if (this.plan.velocity > 1000) {
+          return Math.log(this.plan.velocity / 1000) / 200;
+        } else {
+          return 0;
+        }
+      },
+
+      adjustedPiracyRate() {
+        let chance = this.piracyRate
+                   - this.game.player.ship.stealth;
+
+        // Increase chance of piracy if the ship has valuable cargo
+        chance += this.piracyEvasionMalusCargo;
+
+        // Reduce chance of an encounter at higher velocities
+        chance -= this.piracyEvasionBonusSpeed;
+
+        // Reduce chances for each encounter
+        chance /= 1 + this.stoppedBy.pirate;
+
+        return Math.max(0, chance);
+      },
     },
 
     methods: {
@@ -439,31 +472,10 @@ define(function(require, exports, module) {
       },
 
       piracyChance() {
-        let chance = this.piracyRate
-                   - this.game.player.ship.stealth;
-
-        // Reduce chance of an encounter at higher velocities
-        let speed_bonus = 0;
-
-        if (this.plan.velocity > 1000) {
-           speed_bonus = Math.log(this.plan.velocity / 1000) / 200;
-        }
-
-        chance -= speed_bonus;
-
-        // Increase chance of piracy if the ship has valuable cargo
-        const cargo_value = this.game.player.ship.cargoValue();
-        chance += 0.001 * Math.floor(cargo_value / 100);
-
-        // Reduce chances for each encounter
-        chance /= 1 + this.stoppedBy.pirate;
-
-        if (chance > 0) {
-          if (Math.random() <= chance) {
-            ++this.stoppedBy.pirate;
-            this.encounter = {type: 'pirate'};
-            return true;
-          }
+        if (util.chance(this.adjustedPiracyRate)) {
+          ++this.stoppedBy.pirate;
+          this.encounter = {type: 'pirate'};
+          return true;
         }
 
         return false;
@@ -489,12 +501,6 @@ define(function(require, exports, module) {
           <div class="plot-root-bg" :style="bg_css()"></div>
 
           <SvgPlot :layout="layout" v-if="layout">
-            <text style="fill:red;font:12px monospace" x=5 y=17>
-                FoV: {{layout.fov_au|R(4)|unit('AU')}}
-              | Piracy: {{piracyRate * 100|R(2)}}%
-              | Patrol: {{patrolRate * 100|R(2)}}%
-            </text>
-
             <image ref="sun" xlink:href="img/sun.png" />
 
             <g v-for="body of bodies" :key="body">
@@ -506,6 +512,12 @@ define(function(require, exports, module) {
 
             <text ref="ship" text-anchor="middle" alignment-baseline="middle" style="fill:yellow; font:12px monospace;">
               &tridot;
+            </text>
+
+            <text style="fill:red;font:12px monospace" x=5 y=17>
+                FoV:    {{layout.fov_au|R(4)|unit('AU')}}
+              | Patrol: {{patrolRate|pct(2)}}
+              | Piracy: {{piracyRate|pct(2)}}
             </text>
           </SvgPlot>
         </div>
