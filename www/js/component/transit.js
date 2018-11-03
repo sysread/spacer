@@ -488,7 +488,7 @@ define(function(require, exports, module) {
       },
 
       piracyChance() {
-        if (true||util.chance(this.adjustedPiracyRate)) {
+        if (util.chance(this.adjustedPiracyRate)) {
           ++this.stoppedBy.pirate;
           this.encounter = {type: 'pirate'};
           return true;
