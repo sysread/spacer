@@ -105,10 +105,16 @@ define(function(require, exports, module) {
     harvested over the daily quota.</p>
   </card-text>
 
-  <card-text>
+  <card-text v-if="tasks.length > 0">
     <btn v-for="t in tasks" :key="t.name" @click="setTask(t)" block=1>
       {{t.name}} <badge right=1>{{getPayRate(t)}}c</badge>
     </btn>
+  </card-text>
+
+  <card-text v-else class="font-italic text-warning">
+    There are no jobs currently available. A wall screen displays the face of a
+    local council member assuring you that another soon-to-be-passed tax cut
+    for job producers practically guarantees more jobs in the future.
   </card-text>
 
   <modal v-if="task" @close="completeTask()" :xclose="isReady" :title="task.name" footer=1 :static="isReady">
