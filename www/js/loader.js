@@ -1,6 +1,6 @@
 requirejs.config({baseUrl: 'js'});
 
-requirejs(
+requirejs([],
   function() {
     /*
      * Initialize system-level integrations on deviceready

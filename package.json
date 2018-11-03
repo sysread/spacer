@@ -13,11 +13,11 @@
         "cordova": "^8.1.2",
         "cordova-android": "^7.1.1",
         "cordova-browser": "^5.0.4",
-        "cordova-plugin-fullscreen": "^1.2.0",
         "cordova-plugin-statusbar": "^2.4.2",
         "npm": "^6.4.1",
         "sprintf-js": "^1.1.1",
-        "statusbar": "^0.2.0"
+        "statusbar": "^0.2.0",
+        "cordova-plugin-fullscreen": "^1.2.0"
     },
     "cordova": {
         "platforms": [
