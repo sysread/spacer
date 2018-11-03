@@ -408,7 +408,7 @@ define(function(require, exports, module) {
 
         <NavPlot v-layout v-if="show_map" :layout="layout" :transit="transit" :style="layout_css_dimensions" @click="set_dest">
           <template slot="svg">
-            <NavBodies :layout="layout" :focus="dest || game.locus" />
+            <NavBodies :layout="layout" :focus="dest || game.locus" @click="set_dest" />
             <SvgTransitPath v-if="transit" :layout="layout" :transit="transit" />
             <SvgDestinationPath v-if="transit" :layout="layout" :transit="transit" />
           </template>
@@ -696,8 +696,14 @@ define(function(require, exports, module) {
       },
     },
 
+    methods: {
+      click() {
+        this.$emit('click');
+      },
+    },
+
     template: `
-      <g>
+      <g @click="click">
         <image v-if="img" :xlink:href="img" :height="diameter" :width="diameter" :x="pos[0]" :y="pos[1]" />
         <text v-show="show_label" :style="text_style" :x="label_x" :y="label_y">{{label|caps}}</text>
       </g>
@@ -786,6 +792,10 @@ define(function(require, exports, module) {
       is_focus(body) {
         return body == this.focus;
       },
+
+      click(body) {
+        this.$emit('click', body);
+      },
     },
 
     template: `
@@ -798,7 +808,8 @@ define(function(require, exports, module) {
           :diameter="info.diameter"
           :pos="info.point"
           :img="'img/' + body + '.png'"
-          :focus="is_focus(body)" />
+          :focus="is_focus(body)"
+          @click="click" />
       </g>
     `,
   });
