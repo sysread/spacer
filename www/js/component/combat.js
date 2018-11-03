@@ -25,23 +25,16 @@ define(function(require, exports, module) {
         isPlayerTurn: combat.isPlayerTurn,
         salvage:      false,
         queue:        [],
-        intvl:        null,
       };
     },
 
     mounted() {
       if (this.init_flee) {
-        // This is brittle as hell, yet here we are.
         const flee = this.combat.player.actions.filter(a => a.name == 'Flee');
         this.useAction(flee[0]);
       }
 
-      this.intvl = window.setInterval(() => {
-        if (this.queue.length > 0) {
-          const fn = this.queue.shift();
-          fn();
-        }
-      }, 500);
+      this.process_queue();
     },
 
     computed: {
@@ -56,9 +49,6 @@ define(function(require, exports, module) {
     watch: {
       isOver() {
         if (this.isOver) {
-          window.clearTimeout(this.intvl);
-          this.intvl = null;
-
           if (this.combat.player.isDestroyed) {
             window.localStorage.removeItem('game');
           } else {
@@ -69,6 +59,27 @@ define(function(require, exports, module) {
     },
 
     methods: {
+      async process_queue() {
+        let promise = new Promise((resolve, reject) => {
+          setTimeout(() => {
+            if (this.queue.length > 0) {
+              const fn = this.queue.shift();
+              fn();
+            }
+
+            resolve();
+          }, 500);
+        });
+
+        await promise;
+
+        this.$nextTick(() => {
+          if (this.isOver) {
+            this.process_queue();
+          }
+        });
+      },
+
       incTick() { ++this.tick },
 
       useAction(action) {
