@@ -406,7 +406,7 @@ define(function(require, exports, module) {
           <def split=4 term="Fuel"         :def="transit.fuel|R(2)|unit('tonnes')" />
         </confirm>
 
-        <NavPlot v-layout v-if="show_map" :layout="layout" :style="layout_css_dimensions" @click="set_dest">
+        <NavPlot v-layout v-if="show_map" :layout="layout" :transit="transit" :style="layout_css_dimensions" @click="set_dest">
           <template slot="svg">
             <NavBodies :layout="layout" :focus="dest || game.locus" />
             <SvgTransitPath v-if="transit" :layout="layout" :transit="transit" />
@@ -805,7 +805,7 @@ define(function(require, exports, module) {
 
 
   Vue.component('NavPlot', {
-    props: ['layout'],
+    props: ['layout', 'transit'],
 
     methods: {
       click(e) {
@@ -849,9 +849,11 @@ define(function(require, exports, module) {
         <div class="plot-root-bg" :style="bg_css()"></div>
 
         <SvgPlot v-if="layout" :layout="layout">
-          <text style="fill:red;font:12px monospace" x=5 y=17>
-            FoV: {{layout.fov_au|R(4)|unit('AU')}}
-          </text>
+          <text style="fill:red;font:12px monospace" x=5 y=17>FoV:&nbsp;&nbsp;{{layout.fov_au|R(4)|unit('AU')}}</text>
+          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=34>&Delta;V:&nbsp;&nbsp;&nbsp;{{transit.accel_g|R(3)|unit('G')}}</text>
+          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=51>MaxV:&nbsp;{{(transit.maxVelocity/1000)|R|csn|unit('km/s')}}</text>
+          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=68>Fuel:&nbsp;{{transit.fuel|R(2)}}</text>
+          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=85>Time:&nbsp;{{transit.str_arrival}}</text>
 
           <slot name="svg" />
         </SvgPlot>
