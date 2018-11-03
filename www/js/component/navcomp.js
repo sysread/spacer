@@ -260,14 +260,13 @@ define(function(require, exports, module) {
         this.$nextTick(() => this.layout_resize());
       },
 
-      go_dest_menu() { this.show = 'dest'   },
-      go_info()      { this.show = 'info'   },
-      go_market()    { this.show = 'market' },
-      go_routes()    { this.show = 'routes' },
-
-      is_here(body) {
-        return body == this.game.locus;
-      },
+      go_dest_menu()   { this.show = 'dest'   },
+      go_info()        { this.show = 'info'   },
+      go_market()      { this.show = 'market' },
+      go_routes()      { this.show = 'routes' },
+      is_here(body)    { return body == this.game.locus },
+      is_moon(body)    { return this.is_moon_of(body) != 'sun' },
+      is_moon_of(body) { return this.system.central(body) },
 
       set_transit(transit, go_home) {
         this.transit = transit;
@@ -410,7 +409,8 @@ define(function(require, exports, module) {
           <template slot="svg">
             <NavBodies :layout="layout" :focus="dest || game.locus" @click="set_dest" />
             <SvgTransitPath v-if="transit" :layout="layout" :transit="transit" />
-            <SvgDestinationPath v-if="transit" :layout="layout" :transit="transit" />
+            <SvgDestinationPath v-if="transit" :layout="layout" :transit="transit" :body="transit.dest" :turns="transit.left+1" />
+            <SvgDestinationPath v-if="transit && is_moon(transit.dest)" :layout="layout" :transit="transit" :body="is_moon_of(transit.dest)" :turns="transit.left+1" />
           </template>
         </NavPlot>
 
@@ -624,17 +624,15 @@ define(function(require, exports, module) {
 
 
   Vue.component('SvgDestinationPath', {
-    props: ['transit', 'color', 'layout'],
+    props: ['color', 'layout', 'body', 'turns'],
 
     computed: {
       path() {
-        if (this.transit) {
-          return this.layout.scale_path(
-            this.system
-              .orbit_by_turns(this.transit.dest)
-              .slice(0, this.transit.left + 1)
-          );
-        }
+        return this.layout.scale_path(
+          this.system
+            .orbit_by_turns(this.body)
+            .slice(0, this.turns)
+        );
       },
     },
 
