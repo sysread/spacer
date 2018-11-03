@@ -180,7 +180,7 @@ define(function(require, exports, module) {
           <div v-if="hasShortages" class="my-2">
             <h6>High market demand reported</h6>
             <ul>
-              <li v-for="item of shortages[body]" class="text-success">
+              <li v-for="item of shortages[body]" class="text-warning">
                 {{item|caps}}
                 <span v-if="shipments[item][body]" class="mx-1 font-italic text-muted">
                   &mdash; relief arriving in {{shipments[item][body]|csn}} days
@@ -192,7 +192,7 @@ define(function(require, exports, module) {
           <div v-if="hasSurpluses" class="my-2">
             <h6>Surpluses reported</h6>
             <ul>
-              <li v-for="item of surpluses[body]" class="text-warning">{{item|caps}}</li>
+              <li v-for="item of surpluses[body]" class="text-success">{{item|caps}}</li>
             </ul>
           </div>
         </template>
