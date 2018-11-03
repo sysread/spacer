@@ -104,7 +104,7 @@ define(function(require, exports, module) {
             this.$emit('complete', 'opponent-surrendered');
           }
           else {
-            this.$emit('complete');
+            this.$emit('complete', 'won');
           }
         }
       },

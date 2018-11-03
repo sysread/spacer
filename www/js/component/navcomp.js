@@ -807,7 +807,7 @@ define(function(require, exports, module) {
           :pos="info.point"
           :img="'img/' + body + '.png'"
           :focus="is_focus(body)"
-          @click="click" />
+          @click="click(body)" />
       </g>
     `,
   });

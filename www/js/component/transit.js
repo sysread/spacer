@@ -195,6 +195,22 @@ define(function(require, exports, module) {
 
         return Math.max(0, chance);
       },
+
+      nearest() {
+        const nearby = this.nearby();
+
+        return Object.keys(nearby).reduce((a, b) => {
+          if (nearby[a] < nearby[b]) {
+            return a;
+          } else {
+            return b;
+          }
+        });
+      },
+
+      nearest_faction() {
+        return this.system.faction(this.nearest);
+      },
     },
 
     methods: {
@@ -535,6 +551,7 @@ define(function(require, exports, module) {
             v-if="encounter && encounter.type == 'pirate'"
             @done="complete_encounter"
             @dead="dead"
+            :nearest="nearest"
             class="my-3" />
 
       </card>
@@ -710,23 +727,31 @@ define(function(require, exports, module) {
 
 
   Vue.component('PirateEncounter', {
+    props: ['nearest'],
+
     data() {
       const faction = util.oneOf(['UN', 'MC', 'CERES', 'JFT', 'TRANSA']);
+
+      const npc = new NPC({
+        name:    'Pirate',
+        faction: faction,
+        options: {
+          ship: ['schooner', 'corvette', 'neptune'],
+          always_addons: ['pds'],
+          addons: ['railgun_turret', 'light_torpedo', 'ecm', 'armor'],
+          min_addons: 2,
+        },
+      });
+
+      const ship_value = npc.ship.shipValue() + npc.ship.addOnValue();
+      const bounty = Math.ceil(ship_value / 20);
 
       return {
         choice: 'ready',
         took: null,
         init_flee: false,
-
-        npc: new NPC({
-          name:    'Pirate',
-          faction: faction,
-          options: {
-            ship: ['schooner', 'corvette', 'neptune'],
-            addons: ['railgun_turret', 'pds', 'light_torpedo', 'ecm', 'armor'],
-            min_addons: 2,
-          },
-        }),
+        bounty: bounty,
+        npc: npc,
       };
     },
 
@@ -785,6 +810,10 @@ define(function(require, exports, module) {
         else if (result == 'player-surrendered') {
           this.setChoice('submit-yes');
         }
+        else if (result == 'won' || result == 'opponent-surrendered') {
+          this.setChoice('bounty');
+          this.game.player.credit(this.bounty);
+        }
         else {
           this.choice = 'ready';
           this.$emit('done');
@@ -828,6 +857,13 @@ define(function(require, exports, module) {
               {{count}} {{item}}
             </li>
           </ul>
+        </ok>
+
+        <ok v-if="choice=='bounty'" @ok="done">
+          According to the last data dump before your departure, there is a
+          bounty for the elimination of this pirate. Your account has been
+          credited {{bounty|csn}} credits, effective as soon as light from
+          the event reaches the nearest patrol.
         </ok>
       </div>
     `,
