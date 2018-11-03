@@ -16,8 +16,7 @@
         "cordova-plugin-statusbar": "^2.4.2",
         "npm": "^6.4.1",
         "sprintf-js": "^1.1.1",
-        "statusbar": "^0.2.0",
-        "cordova-plugin-fullscreen": "^1.2.0"
+        "statusbar": "^0.2.0"
     },
     "cordova": {
         "platforms": [
@@ -25,8 +24,7 @@
             "android"
         ],
         "plugins": {
-            "cordova-plugin-statusbar": {},
-            "cordova-plugin-fullscreen": {}
+            "cordova-plugin-statusbar": {}
         }
     }
 }
