@@ -291,6 +291,10 @@ define(function(require, exports, module) {
       this.addons = this.addons.filter(x => {return x !== addon});
     }
 
+    damageMalus() {
+      return this.damage.hull / this.hull / 2;
+    }
+
     hasDamage() {
       return this.damage.hull > 0
           || this.damage.armor > 0;

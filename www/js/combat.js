@@ -174,12 +174,12 @@ define(function(require, exports, module) {
     get pctHull()     { return this.ship.hull  / this.ship.fullHull }
     get pctArmor()    { return this.ship.armor / this.ship.fullArmor }
     get rawDodge()    { return this.ship.rawDodge }
-    get dodge()       { return this.ship.dodge }
-    get intercept()   { return this.ship.intercept }
     get isDestroyed() { return this.ship.isDestroyed }
     get actions()     { return Object.values(this._actions) }
     get ready()       { return this.actions.filter(a => {return a.isReady}) }
     get attacks()     { return this.ready.filter(a => {return a.damage > 0}) }
+    get dodge()       { return Math.max(0, this.ship.dodge - this.ship.damageMalus()) }
+    get intercept()   { return Math.max(0, this.ship.intercept - this.ship.damageMalus()) }
 
     /*
      * The chance of flight is inversely proportional to the percentage of
