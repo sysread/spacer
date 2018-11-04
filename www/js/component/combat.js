@@ -108,7 +108,8 @@ define(function(require, exports, module) {
             this.$emit('complete', 'opponent-surrendered');
           }
           else {
-            this.$emit('complete', 'won');
+            // TODO this is brittle as hell
+            this.$emit('complete', this.combat.opponent.isDestroyed ? 'won' : 'fled');
           }
         }
       },
