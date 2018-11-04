@@ -707,8 +707,8 @@ define(function(require, exports, module) {
 
       const distRating  = {}, priceRating = {}, stockRating = {};
       for (const body of exporters) {
-        distRating[body]  = dist[body]  / avgDist;
-        priceRating[body] = price[body] / avgPrice;
+        distRating[body]  = avgDist / dist[body];
+        priceRating[body] = avgPrice / price[body];
         stockRating[body] = stock[body] / avgStock;
       }
 
