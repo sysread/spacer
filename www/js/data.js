@@ -398,9 +398,9 @@ define(function() {
 
       /* Faction ships */
       fortuna:       { hull: 8,  armor: 6,  cargo: 60, hardpoints: 2,  mass: 1000,  tank: 8,   drives: 14, drive: 'ion',    restricted: 'Friendly',  faction: 'JFT'},
-      neptune:       { hull: 14, armor: 10, cargo: 40, hardpoints: 4,  mass: 700,   tank: 10,  drives: 10, drive: 'ion',    restricted: 'Trusted',   faction: 'TRANSA', markets: ['capital', 'military']},
+      neptune:       { hull: 14, armor: 10, cargo: 40, hardpoints: 4,  mass: 700,   tank: 10,  drives: 10, drive: 'ion',    restricted: 'Trusted',   faction: 'TRANSA', markets: ['capital', 'military'], stealth: 0.05},
       barsoom:       { hull: 20, armor: 20, cargo: 25, hardpoints: 5,  mass: 600,   tank: 8,   drives: 2,  drive: 'fusion', restricted: 'Admired',   faction: 'MC',     markets: ['capital', 'military']},
-      'rock-hopper': { hull: 6,  armor: 4,  cargo: 35, hardpoints: 3,  mass: 500,   tank: 4,   drives: 1,  drive: 'fusion', restricted: 'Respected', faction: 'CERES'},
+      'rock-hopper': { hull: 6,  armor: 4,  cargo: 35, hardpoints: 3,  mass: 500,   tank: 4,   drives: 1,  drive: 'fusion', restricted: 'Respected', faction: 'CERES', burn_rate: -0.015},
     },
 
     ship: {
@@ -614,8 +614,8 @@ define(function() {
 
   data.shipclass.fortuna.desc = "Named for the daughter of Jupiter, the Fortuna is a container ship optimized to carry larger loads at higher efficiency than a typical freighter.";
   data.shipclass.barsoom.desc = "The Barsoomian class frigate adopts the latest advances in Martian technology resulting in a frigate class ship with more range, speed, and enough firepower to act as its own escort.";
-  data.shipclass.neptune.desc = "Designed and built in TRANSA's own shipyards, the Neptune class cargo hauler has the longest range of any vessel while retaining low mass and reasonable cargo space. A favorite of traders and smugglers on the Long Haul alike, it has the armor and hard points to defend itself in the unguarded outer oribts.";
-  data.shipclass['rock-hopper'].desc = "In the true spirit of the belt, the Rock Hopper is a rebuilt schooner class, retrofitted with upgraded armor and increased thrust, making it great for hauling moderate sized loads of the heavy materials for which it is named.";
+  data.shipclass.neptune.desc = "Designed and built in TRANSA's own shipyards, the Neptune class cargo hauler has the longest range of any vessel while retaining low mass and reasonable cargo space. A favorite of traders and smugglers on the Long Haul alike due to its low albedo design, it has the armor and hard points to defend itself in the unguarded outer oribts.";
+  data.shipclass['rock-hopper'].desc = "In the true spirit of the belt, the Rock Hopper is a rebuilt schooner class, retrofitted with upgraded armor, increased thrust, and after market hacks to boost fuel efficiency, making it great for hauling moderate sized loads of the heavy materials for which it is named.";
 
   return data;
 });
