@@ -437,6 +437,14 @@ define(function() {
         cargo:      -4,
         price:      16000,
       },
+      // TODO this
+      liquid_schwartz: {
+        name:       'Liquid Schwartz',
+        desc:       'Boosts fuel efficiency',
+        mass:       1,
+        burn_rate:  -0.025,
+        price:      18500,
+      },
       ion: {
         name:       'Ion drive',
         desc:       'Adds an additional pair of ion drives to the hull, increasing thrust. Care must be taken not to unbalance the ship, however.',

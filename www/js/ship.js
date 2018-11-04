@@ -28,7 +28,7 @@ define(function(require, exports, module) {
     get restricted()     { return this.shipclass.restricted }
     get faction()        { return this.shipclass.faction }
     get thrust()         { return this.drives * this.drive.thrust + Math.max(0, this.attr('thrust', true)) }
-    get fuelrate()       { return this.drives * this.drive.burn_rate + Math.max(0, this.attr('burn_rate', true)) }
+    get fuelrate()       { return Math.max(0.001, this.drives * this.drive.burn_rate + this.attr('burn_rate', true)) }
     get acceleration()   { return Physics.deltav(this.thrust, this.mass) }
     get tank()           { return Math.max(0,    this.attr('tank', true)) }
     get fullHull()       { return Math.max(0,    this.attr('hull', true)) }
@@ -118,13 +118,10 @@ define(function(require, exports, module) {
 
     burnRate(deltav, mass) {
       // Calculate fraction of full thrust required
-      let thrustRatio = this.thrustRatio(deltav, mass);
-
-      // Calculate nominal burn rate
-      let burnRate = this.drives * this.drive.burn_rate;
+      const thrustRatio = this.thrustRatio(deltav, mass);
 
       // Reduce burn rate by the fraction of thrust being used
-      return burnRate * thrustRatio;
+      return Math.max(0.001, this.fuelrate * thrustRatio);
     }
 
     maxBurnTime(accel, nominal=false, extra_mass=0) {
