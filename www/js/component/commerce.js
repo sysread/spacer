@@ -203,7 +203,10 @@ define(function(require, exports, module) {
     },
     template: `
 <div>
-  <h3>Exchange of {{item}}</h3>
+  <h3>
+    Exchange of {{item}}
+    <btn class="float-right" @click="close_trade">Back</btn>
+  </h3>
 
   <p v-if="contraband" class="text-warning font-italic">
     Trade in contraband goods may result in fines and loss of standing.
@@ -229,7 +232,7 @@ define(function(require, exports, module) {
   <div>
     <btn block=1 @click="complete" :disabled="count == 0">Complete transaction</btn>
     <btn block=1 @click="report=true">Market report</btn>
-    <btn block=1 @click="close_trade">Done</btn>
+    <btn block=1 @click="close_trade">Cancel</btn>
   </div>
 
   <modal v-if="report" @close="report=false" close="Close" xclose=true :title="'System market report for ' + item">
