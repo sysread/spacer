@@ -238,7 +238,7 @@ define(function(require, exports, module) {
       this.elt.addEventListener('wheel', ev => {
         ev.stopPropagation();
 
-        const inc    = this.fov_au / 10;
+        const inc    = this.fov_au / 15;
         const amount = ((ev.deltaX + ev.deltaY) / 2) > 0 ? inc : -inc;
 
         this.set_fov_au(this.fov_au + amount);
@@ -256,7 +256,7 @@ define(function(require, exports, module) {
           amount = 1 - amount;    // zooms out by increasing the scale to a larger value in AU
         }
 
-        amount = amount * this.fov_au / 10; // reduce to a reasonable fractional value
+        amount = amount * this.fov_au / 15; // reduce to a reasonable fractional value
 
         this.set_fov_au(this.fov_au + amount);
       });
