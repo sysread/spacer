@@ -283,7 +283,15 @@ define(function(require, exports, module) {
       set_dest(dest) {
         // Player clicked on central body from wide fov; find the next dest for
         // that sub-system.
-        if (!dest || !this.data.bodies.hasOwnProperty(dest) || this.dest == dest) {
+        if (!dest
+         || !this.data.bodies.hasOwnProperty(dest)
+         || this.dest == dest
+         || this.game.locus == dest)
+        {
+          if (this.system.central(dest) != 'sun') {
+            dest = this.system.central(dest);
+          }
+
           dest = this.next_dest(dest);
         }
 
@@ -321,6 +329,10 @@ define(function(require, exports, module) {
         const bodies = system
           ? this.system.bodies().filter((b) => this.system.central(b) == system)
           : this.system.bodies();
+
+        if (this.data.bodies.hasOwnProperty(system)) {
+          bodies.push(system);
+        }
 
         let done = false;
 
@@ -405,12 +417,12 @@ define(function(require, exports, module) {
           <def split=4 term="Fuel"         :def="transit.fuel|R(2)|unit('tonnes')" />
         </confirm>
 
-        <NavPlot v-layout v-if="show_map" :layout="layout" :transit="transit" :style="layout_css_dimensions" @click="set_dest">
+        <NavPlot v-layout v-if="show_map" :layout="layout" :transit="transit" :style="layout_css_dimensions">
           <template slot="svg">
             <NavBodies :layout="layout" :focus="dest || game.locus" @click="set_dest" />
             <SvgTransitPath v-if="transit" :layout="layout" :transit="transit" />
             <SvgDestinationPath v-if="transit" :layout="layout" :transit="transit" :body="transit.dest" :turns="transit.left+1" />
-            <SvgDestinationPath v-if="transit && is_moon(transit.dest)" :layout="layout" :transit="transit" :body="is_moon_of(transit.dest)" :turns="transit.left+1" />
+            <SvgDestinationPath v-if="transit && is_moon(transit.dest)" :layout="layout" :transit="transit" :body="is_moon_of(transit.dest)" :turns="transit.left+1" color="#4C4C4C" />
           </template>
         </NavPlot>
 
@@ -817,34 +829,6 @@ define(function(require, exports, module) {
     props: ['layout', 'transit'],
 
     methods: {
-      click(e) {
-        if (this.layout) {
-          const max = 20;
-          const target = [e.offsetX, e.offsetY];
-
-          let match;
-          let closest;
-          for (let body of this.system.bodies()) {
-            if (this.layout.fov_au > 0.1 && this.system.central(body) != 'sun') {
-              body = this.system.central(body);
-            }
-
-            const pos   = this.system.position(body);
-            const point = this.layout.scale_point(pos);
-            const dist  = Physics.distance(target, point);
-
-            if (closest === undefined || dist < closest) {
-              match   = body;
-              closest = dist;
-            }
-          }
-
-          if (closest <= max) {
-            this.$emit('click', match);
-          }
-        }
-      },
-
       bg_css() {
         return {
           width:  this.layout ? this.layout.width_px  + 'px' : '100%',
@@ -854,15 +838,16 @@ define(function(require, exports, module) {
     },
 
     template: `
-      <div id="navcomp-map-root" class="plot-root border border-dark" @click="click">
+      <div id="navcomp-map-root" class="plot-root border border-dark">
         <div class="plot-root-bg" :style="bg_css()"></div>
 
         <SvgPlot v-if="layout" :layout="layout">
           <text style="fill:red;font:12px monospace" x=5 y=17>FoV:&nbsp;&nbsp;{{layout.fov_au|R(4)|unit('AU')}}</text>
-          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=34>&Delta;V:&nbsp;&nbsp;&nbsp;{{transit.accel_g|R(3)|unit('G')}}</text>
-          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=51>MaxV:&nbsp;{{(transit.maxVelocity/1000)|R|csn|unit('km/s')}}</text>
-          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=68>Fuel:&nbsp;{{transit.fuel|R(2)}}</text>
-          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=85>Time:&nbsp;{{transit.str_arrival}}</text>
+          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=34>Dest.&nbsp;{{transit.dest|caps}}</text>
+          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=51>&Delta;V:&nbsp;&nbsp;&nbsp;{{transit.accel_g|R(3)|unit('G')}}</text>
+          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=68>MaxV:&nbsp;{{(transit.maxVelocity/1000)|R|csn|unit('km/s')}}</text>
+          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=85>Fuel:&nbsp;{{transit.fuel|R(2)}}</text>
+          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=102>Time:&nbsp;{{transit.str_arrival}}</text>
 
           <slot name="svg" />
         </SvgPlot>
