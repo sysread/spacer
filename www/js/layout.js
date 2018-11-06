@@ -1,18 +1,15 @@
 define(function(require, exports, module) {
   const Physics = require('physics');
-  const Hammer  = require('vendor/hammer.min');
   const util    = require('util');
   const system  = require('system');
-
 
   const Layout = class {
     static get SCALE_DEFAULT_AU() { return 2       }
     static get SCALE_MIN_AU()     { return 0.00001 };
     static get SCALE_MAX_AU()     { return 35      };
 
-    constructor(id, scaling, on_scale, on_pan, on_resize) {
+    constructor(id, on_scale, on_pan, on_resize) {
       this.id        = id;
-      this.scaling   = scaling;
       this.on_scale  = on_scale;
       this.on_pan    = on_pan;
       this.on_resize = on_resize;
@@ -51,30 +48,8 @@ define(function(require, exports, module) {
     }
 
     get elt() {
-      if (!this._elt) {
-        this._elt = document.getElementById(this.id);
-
-        if (this._elt) {
-          console.debug(`layout: id ${this.id} found`);
-          this.clear_mc();
-          this.install_handlers();
-        }
-      }
-
+      this._elt = this._elt || document.getElementById(this.id);
       return this._elt;
-    }
-
-    get mc() {
-      if (!this._mc) {
-        if (!this.elt) {
-          return;
-        }
-
-        this._mc = new Hammer(this.elt);
-        console.debug('layout: hammer time');
-      }
-
-      return this._mc;
     }
 
     get center() {
@@ -86,7 +61,7 @@ define(function(require, exports, module) {
       if (au === undefined) {
         new_fov = Layout.SCALE_DEFAULT_AU;
       } else {
-        new_fov = util.R(Math.max(Layout.SCALE_MIN_AU, Math.min(Layout.SCALE_MAX_AU, au)), 6);
+        new_fov = util.R( util.clamp(au, Layout.SCALE_MIN_AU, Layout.SCALE_MAX_AU), 6 );
       }
 
       const old_fov  = this.fov_au;
@@ -116,10 +91,6 @@ define(function(require, exports, module) {
     clear_zero() {
       this._zero_x = null;
       this._zero_y = null;
-    }
-
-    clear_mc() {
-      this._mc = null;
     }
 
     scale(n) {
@@ -225,121 +196,7 @@ define(function(require, exports, module) {
 
       this.init_set = true;
     }
-
-    install_handlers() {
-      window.addEventListener('resize', () => {
-        this.update_width();
-      });
-
-      if (!this.scaling) {
-        return;
-      }
-
-      this.elt.addEventListener('wheel', ev => {
-        ev.stopPropagation();
-
-        const inc    = this.fov_au / 15;
-        const amount = ((ev.deltaX + ev.deltaY) / 2) > 0 ? inc : -inc;
-
-        this.set_fov_au(this.fov_au + amount);
-      }, {passive: true});
-
-      // Scale the map on pinch and wheel events
-      this.mc.get('pinch').set({ enable: true });
-
-      this.mc.on('pinch', ev => {
-        let amount = ev.scale;
-
-        if (amount > 1) {         // movement out <--*-->
-          amount = -(amount - 1); // "spreads out" the map by zooming in to a smaller scale in AU
-        } else {                  // movement in -->*<--
-          amount = 1 - amount;    // zooms out by increasing the scale to a larger value in AU
-        }
-
-        amount = amount * this.fov_au / 15; // reduce to a reasonable fractional value
-
-        this.set_fov_au(this.fov_au + amount);
-      });
-
-      // Drag the map on pan events
-      this.mc.get('pan').set({
-        direction: Hammer.DIRECTION_UP
-                 | Hammer.DIRECTION_DOWN
-                 | Hammer.DIRECTION_LEFT
-                 | Hammer.DIRECTION_RIGHT,
-      });
-
-      this.mc.on('pan', ev => {
-        if (ev.isFirst) {
-          this.init_x = this.offset_x;
-          this.init_y = this.offset_y;
-        }
-
-        // Update the node's offset values
-        this.offset_x = this.init_x + ev.deltaX;
-        this.offset_y = this.init_y + ev.deltaY;
-
-        // Reset initial positions on final event
-        if (ev.isFinal) {
-          this.init_x = this.offset_x;
-          this.init_y = this.offset_y;
-        }
-      });
-
-      console.debug('layout: handlers installed');
-    }
   };
 
-
-  exports.Layout = Layout;
-
-
-  exports.LayoutMixin = {
-    data() {
-      return {
-        layout:           null,  // the layout object
-        layout_scaling:   false, // whether to inject handlers for pan & zoom
-        layout_target_id: null,  // element to control size of
-      };
-    },
-
-    directives: {
-      layout: {
-        inserted(el, binding, vnode) {
-          vnode.context.layout = new Layout(
-            vnode.context.layout_target_id,
-            vnode.context.layout_scaling,
-            () => { vnode.context.layout_scale()  },
-            () => { vnode.context.layout_pan()    },
-            () => { vnode.context.layout_resize() },
-          );
-
-          vnode.context.$emit('update:layout', vnode.context.layout);
-
-          vnode.context.$nextTick(() => {
-            vnode.context.layout.update_width();
-            vnode.context.layout_set();
-          });
-        }
-      },
-    },
-
-    computed: {
-      layout_css_dimensions() {
-        if (this.layout) {
-          return {
-            width:  this.layout.width_px  + 'px',
-            height: this.layout.height_px + 'px',
-          };
-        }
-      },
-    },
-
-    methods: {
-      layout_set()    { },
-      layout_scale()  { },
-      layout_pan()    { },
-      layout_resize() { },
-    },
-  };
+  return Layout;
 });

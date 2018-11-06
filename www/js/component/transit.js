@@ -5,8 +5,9 @@ define(function(require, exports, module) {
   const Vue     = require('vendor/vue');
   const data    = require('data');
   const util    = require('util');
-  const Layout  = require('layout');
   const model   = require('model');
+  const Layout  = require('component/layout');
+
   const intvl   = 0.3;
   const turns_per_day = 24 / data.hours_per_turn;
 
@@ -19,7 +20,7 @@ define(function(require, exports, module) {
   require('vendor/TweenMax.min');
 
   Vue.component('transit', {
-    mixins: [ Layout.LayoutMixin ],
+    mixins: [ Layout ],
 
     data() {
       return {

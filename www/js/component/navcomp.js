@@ -2,8 +2,8 @@ define(function(require, exports, module) {
   const Vue     = require('vendor/vue');
   const Physics = require('physics');
   const util    = require('util');
-  const Layout  = require('layout');
   const NavComp = require('navcomp');
+  const Layout  = require('component/layout');
 
   require('component/global');
   require('component/common');
@@ -67,7 +67,7 @@ define(function(require, exports, module) {
 
 
   Vue.component('NavComp', {
-    mixins: [ Layout.LayoutMixin ],
+    mixins: [ Layout ],
 
     data() {
       return {
