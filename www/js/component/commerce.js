@@ -39,7 +39,9 @@ define(function(require, exports, module) {
     contraband.
   </card-text>
 
-  <div class="container" v-show="!trade">
+  <market-trade v-if="trade" :item.sync="trade" />
+
+  <div class="container" v-else>
     <row v-for="item of resources" :key="item" class="p-1 rounded" :style="{'background-color': hold(item) > 0 ? '#400A0A' : '#000000'}">   <!-- :class="{'text-muted':dock(item) == 0 && hold(item) == 0}">-->
       <cell size=4 brkpt="sm" y=0 class="px-0 my-1">
         <btn @click="trade=item" block=1 :class="{'btn-secondary': dock(item) == 0 && hold(item) == 0, 'text-warning': is_contraband(item)}">
@@ -60,8 +62,6 @@ define(function(require, exports, module) {
       </cell>
     </row>
   </div>
-
-  <market-trade v-if="trade" :item.sync="trade" />
 </card>
     `
   });
@@ -113,7 +113,8 @@ define(function(require, exports, module) {
 
       credits: {
         get() {
-          if (this.tx_credits === null) this.tx_credits = this.game.player.money;
+          //if (this.tx_credits === null) this.tx_credits = this.game.player.money;
+          this.tx_credits = this.tx_credits || 0;
           return this.tx_credits;
         },
 
@@ -157,7 +158,7 @@ define(function(require, exports, module) {
         const dock   = this.planet.getStock(this.item);
         const diff   = this.hold - hold;
         this.dock    = dock - diff;
-        this.credits = cred - (diff * (diff > 0 ? this.buy : this.sell));
+        this.credits = 0 - (diff * (diff > 0 ? this.buy : this.sell));
         this.cargo   = this.player.ship.cargoUsed + diff;
       },
 
@@ -200,44 +201,70 @@ define(function(require, exports, module) {
         this.standing = false;
         this.$emit('update:item', null);
       },
+
+      back: function() {
+        if (this.report) {
+          this.report = false;
+        }
+        else {
+          this.busted = false;
+          this.standing = false;
+          this.$emit('update:item', null);
+        }
+      },
     },
     template: `
-<div>
-  <h3>
-    Exchange of {{item}}
-    <btn class="float-right" @click="close_trade">Back</btn>
-  </h3>
+<card>
+  <card-title>
+    {{item|caps}}
+    <a href="#" class="info d-inline d-sm-none px-2" @click="report=true">i</a>
+    <btn class="float-right" @click="back">Back</btn>
+  </card-title>
 
   <p v-if="contraband" class="text-warning font-italic">
     Trade in contraband goods may result in fines and loss of standing.
   </p>
 
-  <row>
-    <cell size="3" class="font-weight-bold">Credits</cell><cell size="3">{{credits|R|csn}}</cell>
-    <cell size="3" class="font-weight-bold">Cargo</cell><cell size="3">{{cargo|csn}}</cell>
-  </row>
+  <resource-report v-if="report" :item="item" class="p-3" />
 
-  <row>
-    <cell size="3" class="font-weight-bold">Buy</cell><cell size="3">{{buy|csn}}</cell>
-    <cell size="3" class="font-weight-bold">Sell</cell><cell size="3">{{sell|csn}}</cell>
-  </row>
+  <table v-else class="table table-sm table-mini table-noborder">
+    <tr>
+      <th scope="col" class="w-25">Price</th>
+      <td class="w-25" :class="{'text-success': count < 0, 'text-warning': count > 0}">{{credits|abs|R|csn}} c</td>
 
-  <row>
-    <cell size="3" class="font-weight-bold">Dock</cell><cell size="3" class="text-warning">{{dock|csn}}</cell>
-    <cell size="3" class="font-weight-bold">Hold</cell><cell size="3" class="text-success">{{hold|csn}}</cell>
-  </row>
+      <th scope="col" class="w-25">Count</th>
+      <td class="w-25" :class="{'text-success': count < 0, 'text-warning': count > 0}">{{count|abs|csn}} cu</td>
+    </tr>
 
-  <slider minmax=true :value.sync="tx_hold" min=0 :max="max" step=1 @update:value="updateState" class="my-3" />
+    <tr>
+      <th scope="col" class="w-25">Sell</th>
+      <td class="w-25">{{sell|csn}} c</td>
 
-  <div>
-    <btn block=1 @click="complete" :disabled="count == 0">Complete transaction</btn>
-    <btn block=1 @click="report=true">Market report</btn>
-    <btn block=1 @click="close_trade">Cancel</btn>
-  </div>
+      <th scope="col" class="w-25">Ship</th>
+      <td class="w-25">{{hold|csn}}</td>
+    </tr>
 
-  <modal v-if="report" @close="report=false" close="Close" xclose=true :title="'System market report for ' + item">
-    <resource-report :item="item" />
-  </modal>
+    <tr>
+      <th scope="col" class="w-25">Buy</th>
+      <td class="w-25">{{buy|csn}} c</td>
+
+      <th scope="col" class="w-25">Dock</th>
+      <td class="w-25">{{dock|csn}}</td>
+    </tr>
+
+    <tr>
+      <td colspan=4>
+        <slider minmax=true :value.sync="tx_hold" min=0 :max="max" step=1 @update:value="updateState" />
+      </td>
+    </tr>
+
+    <tr>
+      <td colspan=4>
+        <btn block=1 @click="report=true" class="d-none d-sm-block">Market report</btn>
+        <btn block=1 @click="complete" :disabled="count == 0">Complete transaction</btn>
+      </td>
+    </tr>
+  </table>
 
   <ok v-if="busted" @ok="close_trade">
     As you complete your exchange, {{faction.abbrev}} agents in powered armor
@@ -251,7 +278,7 @@ define(function(require, exports, module) {
     You ended the local supply shortage of {{item}}!
     Your standing with the local faction has increased.
   </ok>
-</div>
+</card>
     `,
   });
 

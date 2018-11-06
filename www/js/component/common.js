@@ -17,7 +17,8 @@ define(function(require, exports, module) {
   Vue.filter('caps',  function(value) { return value.toString().replace(/\b([a-z])/g, function(str) { return str.toUpperCase() }) });
   Vue.filter('lower', function(value) { return value.toString().replace(/\b([A-Z])/g, function(str) { return str.toLowerCase() }) });
   Vue.filter('AU',    function(value) { return value / Physics.AU });
-  Vue.filter('yn',    function(value) { return value ? 'yes' : 'no' }),
+  Vue.filter('yn',    function(value) { return value ? 'yes' : 'no' });
+  Vue.filter('abs',   function(value) { return Math.abs(value || 0) });
 
   Vue.component('caps', { template: '<span class="text-capitalize"><slot /></span>' });
   Vue.component('lc',   { template: '<span class="text-lowercase"><slot /></span>'  });
@@ -101,7 +102,7 @@ define(function(require, exports, module) {
   Vue.component('ok', {
     props: ['title'],
     template: `
-<modal :title="title" close="OK" @close="$emit('ok')">
+<modal :title="title" close="OK" xclose=1 @close="$emit('ok')">
   <p><slot/></p>
 </modal>
     `,

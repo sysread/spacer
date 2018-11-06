@@ -78,11 +78,13 @@ define(function(require, exports, module) {
 
   Vue.component('exchange', {
     props: ['store'],
+
     data() {
       return {
         resources: new model.Store,
       };
     },
+
     mounted() {
       for (const item of this.game.player.ship.cargo.keys) {
         this.resources.inc(item, this.game.player.ship.cargo.count(item));
@@ -92,12 +94,14 @@ define(function(require, exports, module) {
         this.resources.inc(item, this.store.count(item));
       }
     },
+
     computed: {
-      cargo() {return this.game.player.ship.cargo},
-      cargoSpace() {return this.game.player.ship.cargoSpace},
-      cargoUsed() {return this.game.player.ship.cargoUsed},
-      cargoLeft() {return this.game.player.ship.cargoLeft},
+      cargo()      { return this.game.player.ship.cargo      },
+      cargoSpace() { return this.game.player.ship.cargoSpace },
+      cargoUsed()  { return this.game.player.ship.cargoUsed  },
+      cargoLeft()  { return this.game.player.ship.cargoLeft  },
     },
+
     methods: {
       update(item, amt) {
         const change = amt - this.cargo.get(item);
@@ -111,6 +115,7 @@ define(function(require, exports, module) {
         this.game.refresh();
       },
     },
+
     template: `
 <div>
   <def brkpt="sm" term="Cargo"><span slot="def">{{cargoUsed}} / {{cargoSpace}}</span></def>
