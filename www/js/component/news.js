@@ -174,7 +174,7 @@ define(function(require, exports, module) {
               When asked why the {{cond.name}} continues unabated if the situation is contained, the same officials declined to comment.
             </p>
 
-            <p>Officials are asking for any available shipping to assist with deliveries of {{cond.need.join(', ')}}.</p>
+            <p v-if="cond.need.length">Officials are asking for any available shipping to assist with deliveries of {{cond.need.join(', ')}}.</p>
           </div>
 
           <div v-if="hasShortages" class="my-2">
