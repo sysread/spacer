@@ -8,6 +8,7 @@ define(function(require, exports, module) {
   require('component/card');
   require('component/modal');
   require('component/row');
+  require('component/status');
 
   Vue.component('person-status', {
     props: ['person'],
@@ -41,12 +42,19 @@ define(function(require, exports, module) {
     },
 
     template: `
-<card :title="name">
-  <def term="Name" :def="name" />
-  <def term="Money" :def="money|csn|unit('c')" />
-  <def term="Home" :def="home|caps" />
-  <def term="Faction" :def="faction|caps" />
-  <def term="Thrust endurance" :def="accel|R(2)|unit('G')" />
+<card>
+  <card-title>
+    {{name}}
+    <Flag :width="100" :faction="person.faction.abbrev" class="float-right d-inline" />
+  </card-title>
+
+  <div class="col-10">
+    <def term="Name" :def="name" />
+    <def term="Money" :def="money|csn|unit('c')" />
+    <def term="Home" :def="home|caps" />
+    <def term="Faction" :def="faction|caps" />
+    <def term="Thrust endurance" :def="accel|R(2)|unit('G')" />
+  </div>
 
   <btn @click="newGameConfirm" class="float-right">New Game</btn>
 
@@ -77,12 +85,14 @@ define(function(require, exports, module) {
     },
     template: `
 <card title="Politics">
-  <def v-for="faction of factions" :key="faction" caps="true" :term="faction">
-    <span slot="def">
-      {{label(faction)}}
-      <span class="badge badge-pill ml-2">{{standing(faction)|R}}</span>
-    </span>
-  </def>
+  <div class="col-10">
+    <def v-for="faction of factions" :key="faction" caps="true" :term="faction">
+      <span slot="def">
+        {{label(faction)}}
+        <span class="badge badge-pill ml-2">{{standing(faction)|R}}</span>
+      </span>
+    </def>
+  </div>
 </card>
     `,
   });
@@ -133,42 +143,46 @@ define(function(require, exports, module) {
     template: `
 <card :title="ship.type|caps">
   <card class="my-3">
-    <def term="Cargo" info="Cargo is measured in cargo units (cu), each enough to hold a standard-sized container of material. Mass for one cu varies by material.">
-      <div slot="def">
-        {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
-        <div v-if="ship.cargoUsed" v-for="item in cargo" :key="item.name">
-          {{item.amount|csn}} units of {{item.name}} ({{item.mass|csn}} tonnes)
+    <div class="col-10">
+      <def term="Cargo" info="Cargo is measured in cargo units (cu), each enough to hold a standard-sized container of material. Mass for one cu varies by material.">
+        <div slot="def">
+          {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
+          <div v-if="ship.cargoUsed" v-for="item in cargo" :key="item.name">
+            {{item.amount|csn}} units of {{item.name}} ({{item.mass|csn}} tonnes)
+          </div>
         </div>
-      </div>
-    </def>
+      </def>
 
-    <def term="Mass" :def="mass|unit('tonnes')" />
-    <def term="Thrust" :def="thrust|unit('kN')" />
-    <def term="Max Acc." :def="acc|unit('G')" />
-    <def term="Fuel" :def="tank|unit('tonnes')" />
-    <def term="Drive" :def="ship.drives|unit(ship.drive.name)" />
-    <def term="Range" :def="burn|unit('hours at max thrust')" />
-    <def term="Fuel rate" :def="fuelRate|R(4)|unit('tonnes/hr at max thrust')" />
+      <def term="Mass" :def="mass|unit('tonnes')" />
+      <def term="Thrust" :def="thrust|unit('kN')" />
+      <def term="Max Acc." :def="acc|unit('G')" />
+      <def term="Fuel" :def="tank|unit('tonnes')" />
+      <def term="Drive" :def="ship.drives|unit(ship.drive.name)" />
+      <def term="Range" :def="burn|unit('hours at max thrust')" />
+      <def term="Fuel rate" :def="fuelRate|R(4)|unit('tonnes/hr at max thrust')" />
+    </div>
   </card>
 
   <card class="my-3">
-    <def term="Hull">{{ship.hull|R(2)}} / {{ship.fullHull}}</def>
-    <def term="Armor">{{ship.armor|R(2)}} / {{ship.fullArmor}}</def>
-    <def term="Hard points">{{ship.hardpoints - ship.availableHardPoints()}} / {{ship.hardpoints}}</def>
-    <def term="Stealth" :def="stealth + '%'" info="Reduction in the chance of being noticed by patrols and pirates while en route" />
-    <def term="Intercept" :def="intercept + '%'" info="The chance of intercepting a missile attack with defensive armaments" />
-    <def term="Evasion" :def="dodge + '%'" info="The chance of dodging an attack based on the mass to thrust ratio of the ship" />
+    <div class="col-10">
+      <def term="Hull">{{ship.hull|R(2)}} / {{ship.fullHull}}</def>
+      <def term="Armor">{{ship.armor|R(2)}} / {{ship.fullArmor}}</def>
+      <def term="Hard points">{{ship.hardpoints - ship.availableHardPoints()}} / {{ship.hardpoints}}</def>
+      <def term="Stealth" :def="stealth + '%'" info="Reduction in the chance of being noticed by patrols and pirates while en route" />
+      <def term="Intercept" :def="intercept + '%'" info="The chance of intercepting a missile attack with defensive armaments" />
+      <def term="Evasion" :def="dodge + '%'" info="The chance of dodging an attack based on the mass to thrust ratio of the ship" />
 
-    <def term="Upgrades">
-      <div slot="def" v-if="ship.addons.length > 0">
-        <btn v-for="(addon, idx) of addons" :key="idx" block=1 @click="toggleAddOn(addon)">{{addOnName(addon)|caps}}</btn>
-        <modal v-if="showAddOn" @close="toggleAddOn(showAddOn)" close="Close" :title="addOnName(showAddOn)">
-          <def v-for="(value, key) of addOnData" v-if="key != 'price' && key != 'markets'" :key="key" :term="key|caps|name" :def="value" />
-          <def term="Price" :def="addOnData.price|csn" />
-        </modal>
-      </div>
-      <span slot="def" v-else>None</span>
-    </def>
+      <def term="Upgrades">
+        <div slot="def" v-if="ship.addons.length > 0">
+          <btn v-for="(addon, idx) of addons" :key="idx" block=1 @click="toggleAddOn(addon)">{{addOnName(addon)|caps}}</btn>
+          <modal v-if="showAddOn" @close="toggleAddOn(showAddOn)" close="Close" :title="addOnName(showAddOn)">
+            <def v-for="(value, key) of addOnData" v-if="key != 'price' && key != 'markets'" :key="key" :term="key|caps|name" :def="value" />
+            <def term="Price" :def="addOnData.price|csn" />
+          </modal>
+        </div>
+        <span slot="def" v-else>None</span>
+      </def>
+    </div>
   </card>
 </card>
     `,

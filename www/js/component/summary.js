@@ -10,6 +10,37 @@ define(function(require, exports, module) {
 
 
   Vue.component('Flag', {
+    props: ['faction', 'width'],
+
+    computed: {
+      path() { return 'img/flag-' + this.faction.toLowerCase() + '.png' },
+
+      border() {
+        switch (this.faction) {
+          case 'UN':     return 'black';
+          case 'MC':     return 'red';
+          case 'CERES':  return 'black';
+          case 'JFT':    return 'yellow';
+          case 'TRANSA': return 'grey';
+          default: return '';
+        }
+      },
+
+      css() {
+        return {
+          'width': this.width + 'px',
+          'border': '1px solid ' + this.border,
+        };
+      },
+    },
+
+    template: `
+      <img :src="path" :style="css" />
+    `,
+  });
+
+
+  Vue.component('Flag-Bg', {
     props: ['faction', 'top', 'right', 'width'],
 
     computed: {
@@ -54,7 +85,7 @@ define(function(require, exports, module) {
         <card-title>
           {{planet.name}}
           <img v-if="is_home" src="img/home.png" class="circle-thingy circle-thingy-big mx-2 float-right" />
-          <Flag :faction="planet.faction.abbrev" :top="20" :width="50" />
+          <Flag-Bg :faction="planet.faction.abbrev" :top="20" :width="50" />
         </card-title>
 
         <planet-summary :planet="planet" />

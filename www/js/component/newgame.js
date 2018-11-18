@@ -9,6 +9,7 @@ define(function(require, exports, module) {
   require('component/common');
   require('component/card');
   require('component/row');
+  require('component/summary');
 
   Vue.component('new-game', {
     data: function() {
@@ -107,7 +108,11 @@ define(function(require, exports, module) {
         </card-text>
       </card>
 
-      <card :title="faction.full_name" class="my-3">
+      <card class="my-3">
+        <card-title class="text-center">{{faction.full_name}}</card-title>
+
+        <Flag :faction="body.faction" :width="200" style="margin-left: auto; margin-right: auto; display: block" class="my-3" />
+
         <card-text v-for="line of factionDesc" :key="line" class="font-italic">
           {{line}}
         </card-text>
