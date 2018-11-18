@@ -8,6 +8,44 @@ define(function(require, exports, module) {
   require('component/row');
   require('component/news');
 
+
+  Vue.component('Flag', {
+    props: ['faction', 'top', 'right'],
+
+    computed: {
+      path() {
+        return 'img/flag-' + this.faction.toLowerCase() + '.png';
+      },
+
+      css() {
+        const top = 47 // status bar is 47.62px
+                  + 15 // outer padding of card
+                  + this.top || 0;
+
+        const right = 35 + (this.right || 0);
+
+        return `
+          background-image:    url("${this.path}");
+          background-repeat:   no-repeat;
+          background-position: center;
+          background-size:     100px 62.5px;
+          width:               102px;
+          height:              64.5px;
+          opacity:             1.0;
+          background-color:    #333;
+          position:            fixed;
+          top:                 82px;
+          right:               35px;
+        `
+      },
+    },
+
+    template: `
+      <div :style="css"></div>
+    `,
+  });
+
+
   Vue.component('SummaryPage', {
     computed: {
       planet()  { return this.game.here },
@@ -19,6 +57,7 @@ define(function(require, exports, module) {
         <card-title>
           {{planet.name}}
           <img v-if="is_home" src="img/home.png" class="circle-thingy circle-thingy-big mx-2 float-right" />
+          <Flag :faction="planet.faction.abbrev" top=20 />
         </card-title>
 
         <planet-summary :planet="planet" />
@@ -55,8 +94,8 @@ define(function(require, exports, module) {
           opacity:             0.5;
           color:               black;
           position:            fixed;
-          top:                 auto;
-          right:               54px;
+          top:                 160px;
+          right:               35px;
         `
       },
 
