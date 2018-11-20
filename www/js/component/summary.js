@@ -15,21 +15,10 @@ define(function(require, exports, module) {
     computed: {
       path() { return 'img/flag-' + this.faction.toLowerCase() + '.png' },
 
-      border() {
-        switch (this.faction) {
-          case 'UN':     return 'black';
-          case 'MC':     return 'red';
-          case 'CERES':  return 'black';
-          case 'JFT':    return 'yellow';
-          case 'TRANSA': return 'grey';
-          default: return '';
-        }
-      },
-
       css() {
         return {
           'width': this.width + 'px',
-          'border': '1px solid ' + this.border,
+          'border': '1px solid #333',
         };
       },
     },
@@ -83,9 +72,9 @@ define(function(require, exports, module) {
     template: `
       <card>
         <card-title>
+          <Flag :faction="planet.faction.abbrev" :width="50" class="m-1" />
           {{planet.name}}
           <img v-if="is_home" src="img/home.png" class="circle-thingy circle-thingy-big mx-2 float-right" />
-          <Flag-Bg :faction="planet.faction.abbrev" :top="20" :width="50" />
         </card-title>
 
         <planet-summary :planet="planet" />
@@ -116,13 +105,13 @@ define(function(require, exports, module) {
           background-image:    url("${this.img}");
           background-repeat:   no-repeat;
           background-position: top right;
-          background-size:     100px 100px;
-          height:              100px;
-          width:               100px;
+          background-size:     200px 200px;
+          height:              200px;
+          width:               200px;
           opacity:             0.5;
           color:               black;
           position:            fixed;
-          top:                 150px;
+          top:                 120px;
           right:               60px;
         `
       },

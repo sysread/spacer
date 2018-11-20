@@ -472,12 +472,14 @@ define(function(require, exports, module) {
 
     'template': `
       <Opt :val="body" final=1 :disabled="is_here" :class="color">
-        {{name}}
+        <Flag :width="35" :faction="faction" class="m-1 d-none d-sm-inline" />
+
+        <span class="d-inline d-sm-none">{{body|caps}}</span>
+        <span class="d-none d-sm-inline">{{name}}</span>
 
         <slot />
 
         <badge right=1 class="ml-1">{{dist}}</badge>
-        <badge right=1 class="ml-1 d-none d-sm-inline">{{faction}}</badge>
         <badge right=1 v-if="is_moon" class="ml-1">{{kind}}</badge>
       </Opt>
     `,

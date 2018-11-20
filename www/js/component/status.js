@@ -44,8 +44,8 @@ define(function(require, exports, module) {
     template: `
 <card>
   <card-title>
+    <Flag :width="50" :faction="person.faction.abbrev" class="m-1" />
     {{name}}
-    <Flag :width="100" :faction="person.faction.abbrev" class="float-right d-inline" />
   </card-title>
 
   <div class="col-10">
