@@ -260,10 +260,10 @@ define(function(require, exports, module) {
 
     <tr>
       <td colspan=2>
-        <btn block=1 @click="report=true" class="d-none d-sm-block">Market report</btn>
+        <btn block=1 @click="complete" :disabled="count == 0">Complete transaction</btn>
       </td>
       <td colspan=2>
-        <btn block=1 @click="complete" :disabled="count == 0">Complete transaction</btn>
+        <btn block=1 @click="report=true" class="d-none d-sm-block">Market report</btn>
       </td>
     </tr>
   </table>
