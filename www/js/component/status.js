@@ -46,6 +46,7 @@ define(function(require, exports, module) {
   <card-title>
     <Flag :width="50" :faction="person.faction.abbrev" class="m-1" />
     {{name}}
+    <btn @click="newGameConfirm" class="float-right">New Game</btn>
   </card-title>
 
   <div class="col-10">
@@ -55,8 +56,6 @@ define(function(require, exports, module) {
     <def term="Faction" :def="faction|caps" />
     <def term="Thrust endurance" :def="accel|R(2)|unit('G')" />
   </div>
-
-  <btn @click="newGameConfirm" class="float-right">New Game</btn>
 
   <confirm v-if="show_confirm" yes="Yes" no="No" @confirm="newGame">
     Delete this game and begin a new game? This cannot be undone.
