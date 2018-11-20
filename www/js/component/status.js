@@ -49,7 +49,7 @@ define(function(require, exports, module) {
     <btn @click="newGameConfirm" class="float-right">New Game</btn>
   </card-title>
 
-  <div class="col-10">
+  <div>
     <def term="Name" :def="name" />
     <def term="Money" :def="money|csn|unit('c')" />
     <def term="Home" :def="home|caps" />
@@ -84,7 +84,7 @@ define(function(require, exports, module) {
     },
     template: `
 <card title="Politics">
-  <div class="col-10">
+  <div>
     <def v-for="faction of factions" :key="faction" caps="true" :term="faction">
       <span slot="def">
         {{label(faction)}}
@@ -142,7 +142,7 @@ define(function(require, exports, module) {
     template: `
 <card :title="ship.type|caps">
   <card class="my-3">
-    <div class="col-10">
+    <div>
       <def term="Cargo" info="Cargo is measured in cargo units (cu), each enough to hold a standard-sized container of material. Mass for one cu varies by material.">
         <div slot="def">
           {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
@@ -163,7 +163,7 @@ define(function(require, exports, module) {
   </card>
 
   <card class="my-3">
-    <div class="col-10">
+    <div>
       <def term="Hull">{{ship.hull|R(2)}} / {{ship.fullHull}}</def>
       <def term="Armor">{{ship.armor|R(2)}} / {{ship.fullArmor}}</def>
       <def term="Hard points">{{ship.hardpoints - ship.availableHardPoints()}} / {{ship.hardpoints}}</def>
