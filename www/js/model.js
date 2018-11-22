@@ -366,6 +366,11 @@ define(function(require, exports, module) {
       return Math.max(1, Math.ceil(turns));
     }
 
+    hasFabricationResources(item, count=1) {
+      const resource = resources[item];
+      return this.fab_health - (count * resource.craftTurns) >= 0;
+    }
+
     fabricationFee(item, count=1, player) {
       const resource = resources[item];
       const rate = data.craft_fee * this.sellPrice(item);

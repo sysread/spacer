@@ -120,7 +120,7 @@ define(function(require, exports, module) {
 
   Vue.component('confirm', {
     props: ['yes', 'no'],
-    methods: { trigger: function(choice) { this.$emit('confirm', choice === 'Y') } },
+    methods: { trigger(choice) { this.$emit('confirm', choice === 'Y') } },
     template: `<ask :choices="{Y: yes, N: no}" @pick="trigger"><slot /></ask>`,
   });
 

@@ -21,6 +21,7 @@ define(function(require, exports, module) {
       this.completed = 0;
       this.result    = null;
       this.success   = null;
+      this.ignore_fab_health = false;
     }
 
     /*
@@ -80,6 +81,14 @@ define(function(require, exports, module) {
     }
 
     /*
+     * Returns true if fabricator health is sufficient to fully cover the
+     * fabrication of the batch.
+     */
+    get has_fab_resources() {
+      return this.planet.hasFabricationResources(this.item, this.goal);
+    }
+
+    /*
      * Fabricates the next item in the queue. Removes the items required for
      * crafting the item from the player's ship, debits the fee from the
      * player's wallet, places the crafted item in the player's cargo hold,
@@ -87,6 +96,12 @@ define(function(require, exports, module) {
      * status bar.
      */
     fabricate() {
+      if (!this.ignore_fab_health && !this.has_fab_resources) {
+        this.result = 'Fabricator availability is temporarily depleted. You may continue, but it will cost more and take longer.';
+        this.success = false;
+        return false;
+      }
+
       if (!this.has_materials) {
         this.result  = 'Materials required for fabrication have been exhausted.';
         this.success = false;
@@ -138,6 +153,7 @@ define(function(require, exports, module) {
 
     data() {
       return {
+        show_confirm: false,
         running: false,
         queue:   new FabricationQueue({item: this.item}),
       };
@@ -160,6 +176,24 @@ define(function(require, exports, module) {
     },
 
     methods: {
+      confirm() {
+        if (this.queue.has_fab_resources) {
+          this.start();
+        }
+        else {
+          this.show_confirm = true;
+        }
+      },
+
+      confirm_start(confirmed) {
+        this.show_confirm = false;
+
+        if (confirmed) {
+          this.queue.ignore_fab_health = true;
+          this.start();
+        }
+      },
+
       start() {
         this.game.freeze();
         this.running = true;
@@ -216,9 +250,17 @@ define(function(require, exports, module) {
               As cybernetics become available in the market, they may be used to replenish the fabricators.
             </card-text>
 
+            <template v-if="show_confirm">
+              <confirm yes="Confirm" no="Cancel" @confirm="confirm_start">
+                The fabricators are too low on resources to complete the full batch. Unless replenished,
+                they will need to be supplemented with more traditional, less efficient techniques, resulting
+                in higher fees and a longer fabrication time.
+              </confirm>
+            </template>
+
             <template v-if="!running">
               <slider class="my-3" :value.sync="queue.goal" min=1 :max="amount" minmax=1 step=1 />
-              <btn block=1 @click="start" class="my-3">Push the big red button</btn>
+              <btn block=1 @click="confirm" class="my-3">Push the big red button</btn>
             </template>
 
             <template v-else>
