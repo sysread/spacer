@@ -844,12 +844,13 @@ define(function(require, exports, module) {
         <div class="plot-root-bg" :style="bg_css()"></div>
 
         <SvgPlot v-if="layout" :layout="layout">
-          <text style="fill:red;font:12px monospace" x=5 y=17>FoV:&nbsp;&nbsp;{{layout.fov_au|R(4)|unit('AU')}}</text>
+          <text style="fill:red;font:12px monospace" x=5 y=17>FoV:&nbsp;&nbsp;{{layout.fov_au * 2|R(4)|unit('AU')}}</text>
           <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=34>Dest.&nbsp;{{transit.dest|caps}}</text>
-          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=51>&Delta;V:&nbsp;&nbsp;&nbsp;{{transit.accel_g|R(3)|unit('G')}}</text>
-          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=68>MaxV:&nbsp;{{(transit.maxVelocity/1000)|R|csn|unit('km/s')}}</text>
-          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=85>Fuel:&nbsp;{{transit.fuel|R(2)}}</text>
-          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=102>Time:&nbsp;{{transit.str_arrival}}</text>
+          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=51>Dist.&nbsp;{{transit.segment_au|R(4)|unit('AU')}}</text>
+          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=68>&Delta;V:&nbsp;&nbsp;&nbsp;{{transit.accel_g|R(3)|unit('G')}}</text>
+          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=85>MaxV:&nbsp;{{(transit.maxVelocity/1000)|R|csn|unit('km/s')}}</text>
+          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=102>Fuel:&nbsp;{{transit.fuel|R(2)}}</text>
+          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=119>Time:&nbsp;{{transit.str_arrival}}</text>
 
           <slot name="svg" />
         </SvgPlot>
