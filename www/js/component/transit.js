@@ -531,7 +531,7 @@ define(function(require, exports, module) {
               &tridot;
             </text>
 
-            <text style="fill:red;font:12px monospace" x=5 y=17>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{layout.fov_au|R(4)|unit('AU')}}</text>
+            <text style="fill:red;font:12px monospace" x=5 y=17>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{layout.fov_au * 2|R(4)|unit('AU')}}</text>
             <text style="fill:red;font:12px monospace" x=5 y=34>Patrol:&nbsp;{{patrolRate|pct(2)}}</text>
             <text style="fill:red;font:12px monospace" x=5 y=51>Piracy:&nbsp;{{piracyRate|pct(2)}}</text>
           </SvgPlot>
