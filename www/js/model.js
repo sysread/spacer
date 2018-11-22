@@ -526,6 +526,23 @@ define(function(require, exports, module) {
       return markup * d / s;
     }
 
+    getScarcityMarkup(item) {
+      let markup = 1;
+
+      if (data.necessity[item]) {
+        markup += data.scarcity_markup;
+      }
+
+      for (const condition of this.conditions) {
+        const consumption = this.scale(condition.consumes.get(item));
+        const production  = this.scale(condition.produces.get(item));
+        const amount      = consumption - production; // production is generally a malus
+        markup += amount;
+      }
+
+      return markup;
+    }
+
     price(item) {
       if (!resources.hasOwnProperty(item)) {
         throw new Error(`unrecognized resource: ${item}`);
@@ -541,7 +558,7 @@ define(function(require, exports, module) {
 
       if (!this._price.hasOwnProperty(item)) {
         const value  = resources[item].value;
-        const markup = data.necessity[item] ? 1 + data.scarcity_markup : 1;
+        const markup = this.getScarcityMarkup(item);
         const need   = this.getNeed(item);
 
         if (need > 1) {
