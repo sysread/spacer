@@ -18,19 +18,26 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      planet:    function() { return this.game.here },
-      player:    function() { return this.game.player },
-      resources: function() { return Object.keys(this.data.resources) },
+      planet()    { return this.game.here },
+      player()    { return this.game.player },
+      resources() { return Object.keys(this.data.resources) },
+      title()     { return this.trade || 'Commerce' },
     },
     methods: {
-      dock:          function(item) { return this.planet.getStock(item) },
-      hold:          function(item) { return this.player.ship.cargo.count(item) },
-      buy:           function(item) { return this.planet.buyPrice(item, this.player) },
-      sell:          function(item) { return this.planet.sellPrice(item) },
-      is_contraband: function(item) { return this.data.resources[item].contraband },
+      dock(item)          { return this.planet.getStock(item) },
+      hold(item)          { return this.player.ship.cargo.count(item) },
+      buy(item)           { return this.planet.buyPrice(item, this.player) },
+      sell(item)          { return this.planet.sellPrice(item) },
+      is_contraband(item) { return this.data.resources[item].contraband },
     },
     template: `
-<card title="Commerce">
+<card>
+  <card-title>
+    <span v-if="trade" class="d-none d-sm-inline">Exchange of</span>
+    {{title|caps}}
+    <btn v-if="trade" class="float-right" @click="trade=null">Exchange</btn>
+  </card-title>
+
   <card-text v-show="!trade">
     There are endless warehouses along the docks. As you approach the resource
     exchange, you are approached by several warehouse managers and sales people
@@ -201,31 +208,14 @@ define(function(require, exports, module) {
         this.standing = false;
         this.$emit('update:item', null);
       },
-
-      back: function() {
-        if (this.report) {
-          this.report = false;
-        }
-        else {
-          this.busted = false;
-          this.standing = false;
-          this.$emit('update:item', null);
-        }
-      },
     },
     template: `
-<card>
-  <card-title>
-    {{item|caps}}
-    <a href="#" class="info d-inline d-sm-none px-2" @click="report=true">i</a>
-    <btn class="float-right" @click="back">Back</btn>
-  </card-title>
-
+<div>
   <p v-if="contraband" class="text-warning font-italic">
     Trade in contraband goods may result in fines and loss of standing.
   </p>
 
-  <resource-report v-if="report" :item="item" class="p-3" />
+  <resource-report v-if="report" :item="item" @close="report=false" class="p-3" />
 
   <table v-else class="table table-sm table-mini table-noborder">
     <tr>
@@ -253,15 +243,15 @@ define(function(require, exports, module) {
     </tr>
 
     <tr>
-      <td colspan=4>
+      <td colspan=4 class="py-3">
         <slider minmax=true :value.sync="tx_hold" min=0 :max="max" step=1 @update:value="updateState" />
       </td>
     </tr>
 
     <tr>
       <td colspan=4>
-        <btn block=1 @click="report=true" class="my-2">Market report</btn>
-        <btn block=1 @click="complete" :disabled="count == 0" class="my-2">Complete transaction</btn>
+        <btn block=1 @click="complete" highlight=1 :disabled="count == 0">Confirm exchange</btn>
+        <btn block=1 @click="report=true" class="my-3">Market report</btn>
       </td>
     </tr>
   </table>
@@ -278,7 +268,7 @@ define(function(require, exports, module) {
     You ended the local supply shortage of {{item}}!
     Your standing with the local faction has increased.
   </ok>
-</card>
+</div>
     `,
   });
 
@@ -318,7 +308,7 @@ define(function(require, exports, module) {
       },
     },
     template: `
-<div>
+<modal xclose=true :title="item|caps" @close="$emit('close')">
   <div class="button-group row justify-content-end">
     <btn class="col" @click="show_routes=false;relprices=false" :disabled="!show_routes && !relprices">Absolute Prices</btn>
     <btn class="col" @click="show_routes=false;relprices=true" :disabled="!show_routes && relprices">Relative Prices</btn>
@@ -360,7 +350,7 @@ define(function(require, exports, module) {
       </tr>
     </tbody>
   </table>
-</div>
+</modal>
     `
   });
 

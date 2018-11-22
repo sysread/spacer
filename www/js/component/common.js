@@ -64,7 +64,8 @@ define(function(require, exports, module) {
 
 
   Vue.component('btn', {
-    props: ['disabled', 'muted', 'block', 'close'],
+    props: ['disabled', 'muted', 'highlight', 'block', 'close'],
+
     methods: {
       activate: function() {
         if (!this.disabled) {
@@ -72,16 +73,25 @@ define(function(require, exports, module) {
         }
       }
     },
+
+    computed: {
+      classes() {
+        return {
+          'btn':           true,
+          'btn-dark':      true,
+          'btn-highlight': !this.disabled && this.highlight,
+          'btn-secondary': this.muted,
+          'disabled':      this.disabled,
+          'btn-block':     this.block,
+          'text-muted':    this.muted,
+        };
+      },
+    },
+
     template: `
-<button
-    type="button"
-    class="btn btn-dark"
-    :class="{'btn-secondary': muted, 'disabled': disabled, 'btn-block': block, 'text-muted': muted}"
-    :data-dismiss="close ? 'modal' : ''"
-    :disabled="disabled"
-    @click="activate()" >
-  <slot />
-</button>
+      <button type="button" :class="classes" :data-dismiss="close ? 'modal' : ''" :disabled="disabled" @click="activate()" >
+        <slot />
+      </button>
     `,
   });
 

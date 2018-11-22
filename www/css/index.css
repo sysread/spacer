@@ -117,6 +117,11 @@ body {
   color: #888;
 }
 
+.btn-highlight {
+  border: 1px solid #323232;
+  border-bottom: 1px solid #ffc107;
+}
+
 .circle-thingy {
   color: #101010;
   background-color: rgb(200, 140, 50);
