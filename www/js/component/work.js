@@ -74,7 +74,7 @@ define(function(require, exports, module) {
               this.result = reward.items;
 
               // Working increases standing no higher than "Respected"
-              if (!this.player.hasStanding('Admired')) {
+              if (!this.player.hasStanding(this.planet.faction.abbrev, 'Admired')) {
                 this.player.incStanding(this.planet.faction.abbrev, 1);
               }
 
