@@ -35,7 +35,7 @@ define(function(require, exports, module) {
   <card-title>
     <span v-if="trade" class="d-none d-sm-inline">Exchange of</span>
     {{title|caps}}
-    <btn v-if="trade" class="float-right" @click="trade=null">Exchange</btn>
+    <btn v-if="trade" class="float-right" @click="trade=null">Back</btn>
   </card-title>
 
   <card-text v-show="!trade">
