@@ -112,7 +112,7 @@ define(function(require, exports, module) {
   Vue.component('ok', {
     props: ['title'],
     template: `
-<modal :title="title" close="OK" xclose=1 @close="$emit('ok')">
+<modal :title="title" close="OK" :xclose="!!title" @close="$emit('ok')">
   <p><slot/></p>
 </modal>
     `,
