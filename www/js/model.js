@@ -348,6 +348,16 @@ define(function(require, exports, module) {
       return Math.ceil(Math.min(100, this.fab_health / this.max_fab_health * 100));
     }
 
+    fabricationReductionRate() {
+      if (this.hasTrait('manufacturing hub'))
+        return 0.35;
+
+      if (this.hasTrait('tech hub'))
+        return 0.5;
+
+      return 0.65;
+    }
+
     fabricationTime(item, count=1) {
       const resource = resources[item];
 
@@ -355,33 +365,52 @@ define(function(require, exports, module) {
         throw new Error(`${item} is not craftable`);
       }
 
+      const reduction = this.fabricationReductionRate();
       let health = this.fab_health;
-      let turns = resource.craftTurns * count;
+      let turns  = 0;
 
-      for (let i = 0; i < count && health > 0; ++i) {
-        turns  -= resource.craftTurns / 2;
-        health -= resource.craftTurns;
+      while (count > 0 && health > 0) {
+        turns  += resource.craftTurns * reduction;
+        health -= resource.craftTurns * reduction;
+        --count;
       }
+
+      turns += count * resource.craftTurns;
 
       return Math.max(1, Math.ceil(turns));
     }
 
     hasFabricationResources(item, count=1) {
       const resource = resources[item];
-      return this.fab_health - (count * resource.craftTurns) >= 0;
+
+      if (!resource.isCraftable) {
+        throw new Error(`${item} is not craftable`);
+      }
+
+      const reduction = this.fabricationReductionRate();
+      let health = this.fab_health;
+
+      for (let i = 0; i < count && health > 0; ++i) {
+        health -= resource.craftTurns * reduction;
+
+        if (health == 0) {
+          return false;
+        }
+      }
+
+      return true;
     }
 
     fabricationFee(item, count=1, player) {
       const resource = resources[item];
       const rate = data.craft_fee * this.sellPrice(item);
+      const reduction = this.fabricationReductionRate();
 
       let health = this.fab_health;
-      let turns = resource.craftTurns * count;
       let fee = 5 * rate * count;
 
       for (let i = 0; i < count && health > 0; ++i) {
-        turns  -= resource.craftTurns / 2;
-        health -= resource.craftTurns;
+        health -= resource.craftTurns * reduction;
         fee    -= rate * 4;
       }
 
@@ -392,10 +421,25 @@ define(function(require, exports, module) {
     }
 
     fabricate(item) {
-      const adjusted = this.fabricationTime(item);
-      if (adjusted === null) return;
-      this.fab_health = Math.max(0, this.fab_health - resources[item].craftTurns);
-      return adjusted;
+      const resource = resources[item];
+
+      if (!resource.isCraftable) {
+        throw new Error(`${item} is not craftable`);
+      }
+
+      const reduction = this.fabricationReductionRate();
+      let health = this.fab_health;
+      let turns  = 0;
+
+      if (this.fab_health > 0) {
+        turns += resource.craftTurns * reduction;
+        this.fab_health -= resource.craftTurns * reduction;
+      }
+      else {
+        turns += resource.craftTurns;
+      }
+
+      const turns_taken = Math.max(1, Math.ceil(turns));
     }
 
     replenishFabricators() {
