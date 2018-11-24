@@ -453,6 +453,10 @@ define(function(require, exports, module) {
     /*
      * Work
      */
+    hasPicketLine() {
+      return this.hasCondition("workers' strike");
+    }
+
     payRate(player, task) {
       let rate = this.scale(task.pay);
       rate += rate * player.getStandingPriceAdjustment(this.faction.abbrev);

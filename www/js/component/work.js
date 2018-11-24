@@ -22,15 +22,16 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      player:     function() { return this.game.player },
-      raise:      function() { return this.player.getStandingPriceAdjustment(this.planet.faction.abbrev) },
-      planet:     function() { return this.game.here },
-      tasks:      function() { return this.planet.work_tasks },
-      payRate:    function() { if (this.task) return this.getPayRate(this.task) },
-      pay:        function() { if (this.task) return this.payRate * this.days },
-      turns:      function() { return this.days * (24 / this.data.hours_per_turn) },
-      percent:    function() { return Math.min(100, Math.ceil(this.turnsWorked / this.turns * 100)) },
-      timeSpent:  function() { return Math.floor(this.turnsWorked / (24 / this.data.hours_per_turn)) },
+      player()        { return this.game.player },
+      raise()         { return this.player.getStandingPriceAdjustment(this.planet.faction.abbrev) },
+      planet()        { return this.game.here },
+      tasks()         { return this.planet.work_tasks },
+      payRate()       { if (this.task) return this.getPayRate(this.task) },
+      pay()           { if (this.task) return this.payRate * this.days },
+      turns()         { return this.days * (24 / this.data.hours_per_turn) },
+      percent()       { return Math.min(100, Math.ceil(this.turnsWorked / this.turns * 100)) },
+      timeSpent()     { return Math.floor(this.turnsWorked / (24 / this.data.hours_per_turn)) },
+      hasPicketLine() { return this.planet.hasPicketLine() },
     },
     methods: {
       getPayRate: function(task) {
@@ -105,7 +106,16 @@ define(function(require, exports, module) {
     harvested over the daily quota.</p>
   </card-text>
 
-  <card-text v-if="tasks.length > 0">
+  <card-text v-if="hasPicketLine" class="font-italic text-warning">
+    Preventing access to the terminal, a sizable group of local workers are
+    lined up to form a physical barrier. A few security personal are in
+    evidence, hanging around the edges and ensuring that the protests do not
+    get out of hand. Being a union member yourself, you do not feel that you
+    can cross the picket line. If you want work, you will have to find it
+    elsewhere.
+  </card-text>
+
+  <card-text v-else-if="tasks.length > 0">
     <btn v-for="t in tasks" :key="t.name" @click="setTask(t)" block=1>
       {{t.name}} <badge right=1>{{getPayRate(t)}}c</badge>
     </btn>
