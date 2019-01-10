@@ -1,7 +1,7 @@
 define(function(require, exports, module) {
   const data = require('data');
   const Physics = require('physics');
-  const SolarSystem = require('vendor/solaris-model/dist/solaris-model.min');
+  const SolarSystem = require('vendor/solaris-model.min');
 
   const System = class {
     constructor() {
