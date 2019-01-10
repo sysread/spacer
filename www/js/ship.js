@@ -2,7 +2,7 @@ define(function(require, exports, module) {
   const data    = require('data');
   const util    = require('util');
   const Physics = require('physics');
-  const model   = require('model');
+  const Store   = require('store');
 
   return class {
     constructor(init) {
@@ -16,7 +16,7 @@ define(function(require, exports, module) {
       this.addons = init.addons || [];
       this.damage = init.damage || {hull: 0, armor: 0};
       this.fuel   = init.fuel   || this.tank;
-      this.cargo  = new model.Store(init.cargo);
+      this.cargo  = new Store(init.cargo);
     }
 
     get shipclass()      { return data.shipclass[this.type] }

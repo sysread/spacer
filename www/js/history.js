@@ -28,7 +28,7 @@ define(function(require, exports, module) {
   };
 
   History.prototype.dec = function(item, n) {
-    this.daily.dec(item, n);
+    this.daily.inc(item, -n);
   };
 
   History.prototype.nth = function(item, n) {

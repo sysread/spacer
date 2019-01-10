@@ -1,6 +1,6 @@
 define(function(require, exports, module) {
-  const model = require('model');
   const util  = require('util');
+  const Store = require('store');
   const Vue   = require('vendor/vue');
 
   require('component/global');
@@ -81,7 +81,7 @@ define(function(require, exports, module) {
 
     data() {
       return {
-        resources: new model.Store,
+        resources: new Store,
       };
     },
 

@@ -858,7 +858,10 @@ define(function(require, exports, module) {
 
     consume() {
       for (const item of this.consumes.keys()) {
-        this.buy(item, this.consumption(item));
+        const amt = this.consumption(item);
+        if (amt > 0) {
+          this.buy(item, this.consumption(item));
+        }
       }
     }
 

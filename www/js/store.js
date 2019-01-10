@@ -44,21 +44,15 @@ define(function(require, exports, module) {
   };
 
   Store.prototype.sum = function() {
-    let n = 0;
-
-    for (const v of Object.values(this.store)) {
-      n += v;
-    }
-
-    return n;
+    return Object.values(this.store).reduce((a, b) => a + b, 0);
   };
 
   Store.prototype.dec = function(item, amount=0) {
-    this.inc(item, -amount);
+    this.store[item] = Math.max(0, this.store[item] - amount);
   };
 
   Store.prototype.inc = function(item, amount=0) {
-    this.store[item] = Math.max(0, this.store[item] + amount);
+    this.store[item] = this.store[item] + amount;
   };
 
   return Store;

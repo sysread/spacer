@@ -1,7 +1,7 @@
 define(function(require, exports, module) {
   const data  = require('data');
   const util  = require('util');
-  const model = require('model');
+  const Store = require('store');
   const Npc   = require('npc');
 
   const Action = class {
@@ -241,7 +241,7 @@ define(function(require, exports, module) {
     get salvage() {
       if (this.opponent.isDestroyed || this.opponentSurrendered) {
         if (!this._salvage) {
-          this._salvage = new model.Store;
+          this._salvage = new Store;
 
           for (const item of this.opponent.ship.cargo.keys()) {
             let amount = this.opponent.ship.cargo.count(item);
