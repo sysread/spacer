@@ -118,7 +118,7 @@ define(function(require, exports, module) {
 
       cargo:     function() {
         const cargo = [];
-        for (const item of this.ship.cargo.keys) {
+        for (const item of this.ship.cargo.keys()) {
           const amt = this.ship.cargo.get(item);
           if (amt === 0) continue;
           cargo.push({name: item, amount: amt, mass: this.data.resources[item].mass * amt});

@@ -6,7 +6,9 @@ define(function(require, exports, module) {
   const system    = require('system');
   const util      = require('util');
   const Physics   = require('physics');
-  const resources = [];
+  const Store     = require('store');
+  const History   = require('history');
+  const resources = {};
 
   const Resource = class {
     constructor(name) {
@@ -105,108 +107,6 @@ define(function(require, exports, module) {
   };
 
 
-  const Store = class {
-    constructor(init) {
-      if (init && init.hasOwnProperty('store')) {
-        this.store = init.store;
-      }
-      else if (init) {
-        this.store = init;
-      }
-      else {
-        this.store = {};
-        for (const item of Object.keys(resources)) {
-          this.store[item] = 0;
-        }
-      }
-    }
-
-    item(item)     { return resources[item] }
-    get keys()     { return Object.keys(this.store) }
-    set(item, amt) { this.store[item] = amt }
-    get(item)      { return this.store[item] }
-    count(item)    { return Math.floor(this.store[item]) }
-
-    sum() {
-      let n = 0;
-      for (const k of Object.keys(this.store))
-        n += this.store[k];
-      return n;
-    }
-
-    dec(item, amount) {
-      this.inc(item, -amount);
-    }
-
-    inc(item, amount=0) {
-      if (!this.store.hasOwnProperty(item)) {
-        throw new Error('not found: ' + item);
-      }
-
-      this.store[item] = this.store[item] + amount;
-
-      if (this.store[item] < 0) {
-        this.store[item] = 0;
-      }
-    }
-  };
-
-
-  const History = class {
-    constructor(length, init) {
-      init = init || {};
-      this.length  = length;
-      this.history = init.history;
-      this.sum     = new Store(init.sum);
-      this.daily   = new Store(init.daily);
-
-      if (!this.history) {
-        this.history = {};
-        for (const item of Object.keys(resources)) {
-          this.history[item] = [];
-        }
-      }
-    }
-
-    inc(item, n) { return this.daily.inc(item, n) }
-    dec(item, n) { return this.daily.dec(item, n) }
-    nth(item, n) { return this.history[item][n] }
-    get keys()   { return this.sum.keys }
-    item(item)   { return this.sum.item(item) }
-    get(item)    { return this.sum.get(item) }
-    count(item)  { return this.sum.count(item) }
-
-    avg(item) {
-      if (this.history[item].length === 0) {
-        return 0;
-      }
-
-      return this.sum.get(item) / this.history[item].length;
-    }
-
-    add(item, amount) {
-      if (!this.history.hasOwnProperty(item)) {
-        throw new Error('not found: ' + item);
-      }
-
-      this.history[item].unshift(amount);
-      this.sum.inc(item, amount);
-
-      while (this.history[item].length > this.length) {
-        this.sum.dec(item, this.history[item].pop());
-      }
-    }
-
-    rollup() {
-      for (const item of Object.keys(resources)) {
-        this.add(item, this.daily.get(item));
-      }
-
-      this.daily = new Store;
-    }
-  };
-
-
   const Planet = class {
     constructor(body, init) {
       init = init || {};
@@ -256,9 +156,9 @@ define(function(require, exports, module) {
        * Economics
        */
       this.stock   = new Store(init.stock);
-      this.supply  = new History(data.market_history, init.supply);
-      this.demand  = new History(data.market_history, init.demand);
-      this.need    = new History(data.market_history, init.need);
+      this.supply  = new History({length: data.market_history, init: init.supply});
+      this.demand  = new History({length: data.market_history, init: init.demand});
+      this.need    = new History({length: data.market_history, init: init.need});
       this.pending = new Store(init.pending);
       this.queue   = init.queue || [];
       this.cycle   = init.cycle || {};
@@ -280,7 +180,15 @@ define(function(require, exports, module) {
         this.cycle[item] = util.getRandomInt(3, 10);
       }
 
-      this.clearMemos();
+      // Assign directly in constructor rather than in clearMemos for
+      // performance reasons. V8's jit will produce more optimized classes by
+      // avoiding dynamic assignment in the constructor.
+      this._isNetExporter = {};
+      this._getDemand     = {};
+      this._getSupply     = {};
+      this._getNeed       = {};
+      this._getShortage   = {};
+      this._getSurplus    = {};
     }
 
     get desc() { return data.bodies[this.body].desc }
@@ -493,17 +401,36 @@ define(function(require, exports, module) {
     scale(n=0)           { return data.scales[this.size] * n }
 
     getStock(item)       { return this.stock.count(item) }
-    getSupply(item)      { return this.supply.avg(item) }
-    getDemand(item)      { return this.demand.avg(item) }
 
     shortageFactor(item) { return this.isNetExporter(item) ? 4 : 6 }
-    hasShortage(item)    { return this.getNeed(item) >= this.shortageFactor(item) }
-
     surplusFactor(item)  { return this.isNetExporter(item) ? 0.2 : 0.8 }
-    hasSurplus(item)     { return this.getNeed(item) <= this.surplusFactor(item) }
 
     avgProduction(item)  { return this.getSupply(item) - this.consumption(item) }
     netProduction(item)  { return this.production(item) - this.consumption(item) }
+
+    getDemand(item) {
+      if (!this._getDemand.hasOwnProperty(item))
+        this._getDemand[item] = this.demand.avg(item);
+      return this._getDemand[item];
+    }
+
+    getSupply(item) {
+      if (!this._getSupply.hasOwnProperty(item))
+        this._getSupply[item] = this.supply.avg(item);
+      return this._getSupply[item];
+    }
+
+    hasShortage(item) {
+      if (!this._getShortage.hasOwnProperty(item))
+        this._getShortage[item] = this.getNeed(item) >= this.shortageFactor(item);
+      return this._getShortage[item];
+    }
+
+    hasSurplus(item) {
+      if (!this._getSurplus.hasOwnProperty(item))
+        this._getSurplus[item] = this.getNeed(item) <= this.surplusFactor(item);
+      return this._getSurplus[item];
+    }
 
     production(item) {
       let amount = this.produces.get(item) / data.turns_per_day;
@@ -568,15 +495,29 @@ define(function(require, exports, module) {
 
     // TODO include distance and delivery time from nearest source
     getNeed(item) {
-      const markup = data.necessity[item] ? 1 + data.scarcity_markup : 1;
+      if (!this._getNeed.hasOwnProperty(item)) {
+        let result;
+        const markup = data.necessity[item] ? 1 + data.scarcity_markup : 1;
 
-      const d = this.getDemand(item);
-      if (d === 0) return markup * this.getDemand(item) / this.surplusFactor(item);
+        const d = this.getDemand(item);
+        if (d === 0) {
+          result = markup * d / this.surplusFactor(item);
+        }
+        else {
+          const s = (this.getStock(item) + this.getSupply(item)) / 2;
 
-      const s = (this.getStock(item) + this.getSupply(item)) / 2;
-      if (s === 0) return markup * this.getDemand(item) * this.shortageFactor(item);
+          if (s === 0) {
+            result = markup * d * this.shortageFactor(item);
+          }
+          else {
+            result = markup * d / s;
+          }
+        }
 
-      return markup * d / s;
+        this._getNeed[item] = result;
+      }
+
+      return this._getNeed[item];
     }
 
     getScarcityMarkup(item) {
@@ -615,7 +556,6 @@ define(function(require, exports, module) {
         const need   = this.getNeed(item);
 
         if (need > 1) {
-          //this._price[item] = Math.ceil(markup * Math.min(value * 3, value * (1 + (need / (need + 5)))));
           this._price[item] = Math.ceil(markup * Math.min(value * 2, value + (value * Math.log10(need))));
         } else if (need < 1) {
           this._price[item] = Math.ceil(markup * Math.max(value / 2, value * need));
@@ -626,9 +566,7 @@ define(function(require, exports, module) {
 
       // Special cases for market classifications
       for (const trait of this.traits) {
-        if (trait.hasOwnProperty('price')
-         && trait.price.hasOwnProperty(item))
-        {
+        if (trait.hasOwnProperty('price') && trait.price.hasOwnProperty(item)) {
           this._price[item] -= this._price[item] * trait.price[item];
         }
       }
@@ -716,8 +654,8 @@ define(function(require, exports, module) {
     }
 
     neededResourceAmount(item) {
-      const amount = Math.ceil(this.getDemand(item.name) - this.getStock(item.name) - this.pending.get(item.name));
-      return amount > 0 ? amount : 0;
+      const amount = this.getDemand(item.name) - this.getStock(item.name) - this.pending.get(item.name);
+      return Math.max(Math.ceil(amount), 0);
     }
 
     neededResources() {
@@ -725,12 +663,21 @@ define(function(require, exports, module) {
       const amounts = {};
       for (const item of Object.values(resources)) {
         const amount = this.neededResourceAmount(item);
-        if (amount > 0) amounts[item.name] = amount;
+
+        if (amount > 0) {
+          amounts[item.name] = amount;
+        }
+      }
+
+      // Pre-calculate each item's need
+      const need = {};
+      for (const item of Object.keys(amounts)) {
+        need[item] = this.getNeed(item);
       }
 
       // Sort the greatest needs to the front of the list
       const prioritized = Object.keys(amounts).sort((a, b) => {
-        const diff = this.getNeed(a) - this.getNeed(b);
+        const diff = need[a] - need[b];
         return diff > 0 ? -1
              : diff < 0 ?  1
              : 0;
@@ -901,7 +848,7 @@ define(function(require, exports, module) {
     }
 
     produce() {
-      for (const item of this.produces.keys) {
+      for (const item of this.produces.keys()) {
         const amount = this.production(item);
         if (amount > 0 && !this.hasSurplus(item)) {
           this.sell(item, amount);
@@ -910,21 +857,21 @@ define(function(require, exports, module) {
     }
 
     consume() {
-      for (const item of this.consumes.keys) {
+      for (const item of this.consumes.keys()) {
         this.buy(item, this.consumption(item));
       }
     }
 
     rollups() {
       if (window.game.turns % (24 / data.hours_per_turn) === 0) {
-        for (const item of this.stock.keys) {
+        for (const item of this.stock.keys()) {
           this.incSupply(item, this.getStock(item));
         }
 
         this.supply.rollup();
         this.demand.rollup();
 
-        for (const item of this.need.keys) {
+        for (const item of this.need.keys()) {
           this.need.inc(item, this.getNeed(item));
         }
 
@@ -978,6 +925,11 @@ define(function(require, exports, module) {
 
     clearMemos() {
       this._isNetExporter = {};
+      this._getDemand     = {};
+      this._getSupply     = {};
+      this._getNeed       = {};
+      this._getShortage   = {};
+      this._getSurplus    = {};
     }
 
     turn() {

@@ -80,13 +80,14 @@ define(function(require, exports, module) {
               left -= batch;
 
               for (let i = 0; i < batch; ++i) {
-                this.game.turn(batch);
+                this.game.turn(batch, true);
               }
             }
             else {
               window.clearInterval(intvl);
               intvl = null;
               console.log(turns, 'turns complete');
+              this.game.save_game();
             }
 
             this.$forceUpdate();

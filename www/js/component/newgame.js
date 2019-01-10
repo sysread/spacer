@@ -40,9 +40,10 @@ define(function(require, exports, module) {
           if (this.turnsComplete < this.startTurns) {
             const count = Math.min(this.startTurns - this.turnsComplete, this.step);
             this.turnsComplete += count;
-            this.game.turn(count);
+            this.game.turn(count, true);
           }
           else {
+            this.game.save_game();
             this.game.unfreeze();
             this.game.refresh();
             this.$nextTick(() => this.$emit('open', 'summary'));

@@ -143,7 +143,7 @@ define(function(require, exports, module) {
 
     cargoMass() {
       let mass = 0;
-      for (const item of this.cargo.keys) {
+      for (const item of this.cargo.keys()) {
         mass += data.resources[item].mass * this.cargo.get(item);
       }
 
@@ -220,7 +220,7 @@ define(function(require, exports, module) {
 
     cargoValue() {
       let price = 0;
-      for (const item of this.cargo.keys) {
+      for (const item of this.cargo.keys()) {
         price += this.cargo.count(item) * game.here.sellPrice(item);
       }
 

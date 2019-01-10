@@ -105,6 +105,7 @@ define(function(require, exports, module) {
       }
 
       if (!no_save) {
+console.log('turn -> save_game', n, no_save);
         this.save_game();
       }
     }

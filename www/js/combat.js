@@ -243,7 +243,7 @@ define(function(require, exports, module) {
         if (!this._salvage) {
           this._salvage = new model.Store;
 
-          for (const item of this.opponent.ship.cargo.keys) {
+          for (const item of this.opponent.ship.cargo.keys()) {
             let amount = this.opponent.ship.cargo.count(item);
 
             // Randomize the remaining cargo amounts that survived the encounter
