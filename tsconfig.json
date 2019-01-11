@@ -3,6 +3,7 @@
     "target": "ES5",
     "module": "AMD",
     "outDir": "./www/js",
+    "allowJs": true,
     "esModuleInterop": true,
     "strict": true,
     "declaration": false,

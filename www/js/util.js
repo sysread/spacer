@@ -1,222 +1,108 @@
-"use strict"
-
-define(function(require, exports, module) {
-  const data = require('data');
-  const util = {};
-
-  util.shuffle = function(arr) {
-    return arr.sort((a, b) => {
-      return Math.random() > Math.random() ? 1 : -1;
-    });
-  };
-
-  util.csn = function(num) {
-    const sign = num < 0 ? '-' : '';
-
-    num = Math.abs(num);
-
-    const parts = [];
-    const three = new RegExp(/(\d{3})$/);
-    let [integer, decimal] = `${num}`.split('.', 2);
-
-    while (three.test(integer)) {
-      integer = integer.replace(three, (match) => {parts.unshift(match); return ''});
+define(["require", "exports", "./common"], function (require, exports, common_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function shuffle(arr) {
+        return arr.sort(function (a, b) {
+            return Math.random() > Math.random() ? 1 : -1;
+        });
     }
-
-    if (integer) {
-      parts.unshift(integer);
+    exports.shuffle = shuffle;
+    function csn(num) {
+        var sign = num < 0 ? '-' : '';
+        num = Math.abs(num);
+        var parts = [];
+        var three = new RegExp(/(\d{3})$/);
+        var _a = ("" + num).split('.', 2), integer = _a[0], decimal = _a[1];
+        while (three.test(integer)) {
+            integer = integer.replace(three, function (match) { parts.unshift(match); return ''; });
+        }
+        if (integer) {
+            parts.unshift(integer);
+        }
+        integer = parts.join(',');
+        return decimal ? "" + sign + integer + "." + decimal : "" + sign + integer;
     }
-
-    integer = parts.join(',');
-
-    return decimal ? `${sign}${integer}.${decimal}` : `${sign}${integer}`;
-  };
-
-  util.pct = function(fraction, places) {
-    const pct = util.R(fraction * 100, places);
-    return sprintf('%0.2f%%', pct);
-  };
-
-  util.uniq = function(items, sep=' ') {
-    if (!(items instanceof Array))
-      items = `${items}`.split(sep).filter((s) => {return s != ''});
-    let set = new Set(items);
-    let arr = [];
-    set.forEach((val) => {arr.push(val)});
-    return arr.join(sep);
-  };
-
-  /*
-   * Rounds `n` to `places` decimal places.
-   */
-  util.R = function(n, places) {
-    if (places === undefined) {
-      return Math.round(n);
+    exports.csn = csn;
+    function pct(fraction, places) {
+        var pct = R(fraction * 100, places);
+        return pct + '%';
     }
-
-    if (n === undefined) {
-      n = 0;
+    exports.pct = pct;
+    function uniq(items, sep) {
+        if (sep === void 0) { sep = ' '; }
+        if (!(items instanceof Array)) {
+            items = ("" + items).split(sep).filter(function (s) { return s != ''; });
+        }
+        var set = new Set(items);
+        var arr = [];
+        set.forEach(function (val) { arr.push(val); });
+        return arr.join(sep);
     }
-
-    const factor = Math.pow(10, places);
-    return Math.round(n * factor) / factor;
-  };
-
-  /*
-   * Force n to be no less than min and no more than max.
-   */
-  util.clamp = function(n, min, max) {
-    if (min !== undefined) n = Math.max(min, n);
-    if (max !== undefined) n = Math.min(max, n);
-    return n;
-  };
-
-  /*
-   * Returns a random float between min and max.
-   */
-  util.getRandomNum = function(min, max) {
-    return (Math.random() * (max - min)) + min;
-  };
-
-  /*
-   * Returns a random integer no lower than min and lower than max.
-   *
-   * Direct copy pasta from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
-   */
-  util.getRandomInt = function(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min)) + min;
-  };
-
-  util.chance = function(pct) {
-    if (pct === 0) return false;
-    const rand = util.getRandomNum(0, Math.ceil(pct));
-    return rand <= pct;
-  };
-
-  /*
-   * Returns a random element from an array.
-   */
-  util.oneOf = function(options) {
-    return options[util.getRandomInt(0, options.length - 1)];
-  };
-
-  util.resourceMap = function(dflt=0, entries) {
-    entries = entries || {};
-
-    for (const item of Object.keys(data.resources)) {
-      if (!(item in entries)) {
-        entries[item] = dflt;
-      }
+    exports.uniq = uniq;
+    /*
+     * Rounds `n` to `places` decimal places.
+     */
+    function R(n, places) {
+        if (places === undefined) {
+            return Math.round(n);
+        }
+        var factor = Math.pow(10, places);
+        return Math.round(n * factor) / factor;
     }
-
-    return entries;
-  };
-
-  util.DefaultMap = class {
-    constructor(dflt) {
-      this.dflt = dflt;
-      this.data = util.resourceMap(dflt);
+    exports.R = R;
+    /*
+     * Force n to be no less than min and no more than max.
+     */
+    function clamp(n, min, max) {
+        if (min !== undefined)
+            n = Math.max(min, n);
+        if (max !== undefined)
+            n = Math.min(max, n);
+        return n;
     }
-
-    load(obj) {
-      this.dflt = obj.dflt;
-      this.data = util.resourceMap(obj.dflt, obj.data);
+    exports.clamp = clamp;
+    /*
+     * Returns a random float between min and max.
+     */
+    function getRandomNum(min, max) {
+        return (Math.random() * (max - min)) + min;
     }
-
-    save()        {return {dflt: this.dflt, data: this.data}}
-    has(key)      {return key in this.data}
-    get(key)      {return this.data[key]}
-    set(key, val) {this.data[key] = val}
-    clear()       {this.data = util.resourceMap(this.dflt)}
-    each(f)       {for (let key of this.keys()) f(key, this.data[key])}
-    keys()        {return Object.keys(this.data)}
-    *values()     {for (let key of this.keys()) yield this.data[key]}
-    *entries()    {for (let key of this.keys()) yield [key, this.data[key]]}
-  };
-
-  util.ResourceCounter = class extends util.DefaultMap {
-    constructor(min) {
-      super(0);
-      this.min = min;
+    exports.getRandomNum = getRandomNum;
+    /*
+     * Returns a random integer no lower than min and lower than max.
+     *
+     * Direct copy pasta from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+     */
+    function getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min)) + min;
     }
-
-    save() {
-      let me = super.save();
-      me.min = this.min;
-      return me;
+    exports.getRandomInt = getRandomInt;
+    function chance(pct) {
+        if (pct === 0)
+            return false;
+        var rand = getRandomNum(0, Math.ceil(pct));
+        return rand <= pct;
     }
-
-    load(obj) {
-      super.load(obj);
-      this.min = obj.min;
+    exports.chance = chance;
+    /*
+     * Returns a random element from an array.
+     */
+    function oneOf(options) {
+        return options[getRandomInt(0, options.length - 1)];
     }
-
-    inc(key, amount=1) {
-      let n = this.get(key) + amount;
-      this.set(key, n);
-
-      if (this.min !== undefined && n < this.min) {
-        this.set(key, this.min);
-      }
+    exports.oneOf = oneOf;
+    function resourceMap(dflt, entries) {
+        if (dflt === void 0) { dflt = 0; }
+        entries = entries || {};
+        for (var _i = 0, resources_1 = common_1.resources; _i < resources_1.length; _i++) {
+            var item = resources_1[_i];
+            if (!(item in entries)) {
+                entries[item] = dflt;
+            }
+        }
+        return entries;
     }
-
-    dec(key, amount) {
-      this.inc(key, -amount);
-    }
-
-    sum() {
-      let n = 0;
-      for (let amount of this.values()) n += amount;
-      return n;
-    }
-  };
-
-  util.ResourceTracker = class {
-    constructor(len) {
-      this.len = len;
-      this.history = {};
-      this.summed = new util.ResourceCounter;
-      Object.keys(data.resources).forEach((k) => {this.history[k] = []});
-    }
-
-    save() {
-      let me = {};
-      me.len = this.len;
-      me.history = this.history;
-      me.summed = this.summed.save();
-      return me;
-    }
-
-    load(obj) {
-      this.len = obj.len;
-      this.history = obj.history;
-      this.summed.load(obj.summed);
-    }
-
-    length(resource) {
-      return this.history[resource].length;
-    }
-
-    add(resource, amount) {
-      this.history[resource].unshift(amount);
-      this.summed.inc(resource, amount);
-      while (this.history[resource].length > this.len) {
-        this.summed.dec(resource, this.history[resource].pop());
-      }
-    }
-
-    sum(resource) {
-      return this.summed.get(resource);
-    }
-
-    avg(resource) {
-      const sum   = this.sum(resource);
-      const count = this.length(resource);
-      return (sum > 0) ? Math.ceil(sum / count) : 0;
-    }
-  };
-
-  return util;
+    exports.resourceMap = resourceMap;
 });
