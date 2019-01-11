@@ -32,7 +32,7 @@ define(function(require, exports, module) {
       homeDesc:    function() { return this.body.desc.split('|') },
       factionDesc: function() { return this.faction.desc.split('|') },
       startTurns:  function() { return this.data.initial_days * 24 / this.data.hours_per_turn },
-      step:        function() { return Math.ceil(this.startTurns / 50) },
+      step:        function() { return Math.ceil(this.startTurns / 20) },
       percent:     function() { return Math.min(100, Math.floor((this.turnsComplete / this.startTurns) * 100)) },
     },
 

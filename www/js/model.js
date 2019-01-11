@@ -158,9 +158,9 @@ define(function(require, exports, module) {
        * Economics
        */
       this.stock   = new Store(init.stock);
-      this.supply  = new History({length: data.market_history, init: init.supply});
-      this.demand  = new History({length: data.market_history, init: init.demand});
-      this.need    = new History({length: data.market_history, init: init.need});
+      this.supply  = new History(data.market_history, init.supply);
+      this.demand  = new History(data.market_history, init.demand);
+      this.need    = new History(data.market_history, init.need);
       this.pending = new Store(init.pending);
       this.queue   = init.queue || [];
       this.cycle   = init.cycle || {};

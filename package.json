@@ -27,5 +27,7 @@
             "cordova-plugin-statusbar": {}
         }
     },
-    "devDependencies": {}
+    "devDependencies": {
+        "typescript": "^3.2.2"
+    }
 }

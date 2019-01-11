@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "AMD",
+    "outDir": "./www/js",
+    "esModuleInterop": true,
+    "strict": true,
+    "declaration": false,
+    "lib": ["ES5", "ES6"]
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
