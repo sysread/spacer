@@ -1,326 +1,402 @@
-"use strict"
-
-define(function(require, exports, module) {
-  const data    = require('data');
-  const util    = require('util');
-  const Physics = require('physics');
-  const Store   = require('store');
-
-  return class {
-    constructor(init) {
-      init = init || {'type': 'shuttle'};
-
-      if (!data.shipclass.hasOwnProperty(init.type)) {
-        throw new Error(`Ship type not recognized: ${init.type}`);
-      }
-
-      this.type   = init.type;
-      this.addons = init.addons || [];
-      this.damage = init.damage || {hull: 0, armor: 0};
-      this.fuel   = init.fuel   || this.tank;
-      this.cargo  = new Store(init.cargo);
-    }
-
-    get shipclass()      { return data.shipclass[this.type] }
-    get hardpoints()     { return this.shipclass.hardpoints }
-    get drive()          { return data.drives[this.shipclass.drive] }
-    get drives()         { return this.shipclass.drives }
-    get driveMass()      { return this.drives * this.drive.mass }
-    get mass()           { return this.shipclass.mass + this.driveMass }
-    get restricted()     { return this.shipclass.restricted }
-    get faction()        { return this.shipclass.faction }
-    get thrust()         { return this.drives * this.drive.thrust + Math.max(0, this.attr('thrust', true)) }
-    get fuelrate()       { return Math.max(0.001, this.drives * this.drive.burn_rate + this.attr('burn_rate', true)) }
-    get acceleration()   { return Physics.deltav(this.thrust, this.mass) }
-    get tank()           { return Math.max(0,    this.attr('tank', true)) }
-    get fullHull()       { return Math.max(0,    this.attr('hull', true)) }
-    get fullArmor()      { return Math.max(0,    this.attr('armor', true)) }
-    get hull()           { return Math.max(0,    this.attr('hull')) }
-    get armor()          { return Math.max(0,    this.attr('armor')) }
-    get stealth()        { return Math.min(0.5,  this.attr('stealth')) }
-    get cargoSpace()     { return Math.max(0,    this.attr('cargo')) }
-    get intercept()      { return Math.min(0.35, this.attr('intercept')) }
-    get powerMassRatio() { return this.thrust / this.mass }
-
-    /*
-     * Base dodge chance based on power-mass ratio
-     */
-    get rawDodge() {
-      const ratio = this.powerMassRatio;
-      return ratio / 100;
-    }
-
-    /*
-     * Dodge chance accounting for upgrades
-     */
-    get dodge() {
-      return Math.min(0.7, this.rawDodge + this.attr('dodge'));
-    }
-
-    /*
-     * Calculated properties of the ship itself
-     */
-    get cargoUsed()   { return this.cargo.sum() }
-    get cargoLeft()   { return this.cargoSpace - this.cargoUsed }
-    get holdIsFull()  { return this.cargoLeft === 0 }
-    get holdIsEmpty() { return this.cargoUsed === 0 }
-
-    get hasContraband() {
-      for (let [item, amt] of this.cargo.entries()) {
-        if (amt > 0 && data.resources[item].contraband) {
-          return true;
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+define(["require", "exports", "./data", "./physics", "./store", "./common"], function (require, exports, data_1, physics_1, store_1, t) {
+    "use strict";
+    data_1 = __importDefault(data_1);
+    physics_1 = __importDefault(physics_1);
+    store_1 = __importDefault(store_1);
+    t = __importStar(t);
+    var Ship = /** @class */ (function () {
+        function Ship(init) {
+            init = init || { 'type': 'shuttle' };
+            if (!data_1.default.shipclass.hasOwnProperty(init.type)) {
+                throw new Error("Ship type not recognized: " + init.type);
+            }
+            this.type = init.type;
+            this.addons = init.addons || [];
+            this.damage = init.damage || { hull: 0, armor: 0 };
+            this.fuel = init.fuel || this.tank;
+            this.cargo = new store_1.default(init.cargo);
         }
-      }
-
-      return false;
-    }
-
-    get isDestroyed() {
-      return this.armor === 0
-          && this.hull  === 0;
-    }
-
-    /*
-     * Methods
-     */
-    isPlayerShipType()  { return this.type === game.player.ship.type }
-    playerHasStanding() { return !this.restricted || game.player.hasStanding(game.here.faction, this.restricted) }
-
-    attr(name, nominal=false) {
-      let value = 0;
-
-      if (this.shipclass.hasOwnProperty(name)) {
-        value += this.shipclass[name];
-      }
-
-      for (const addon of this.addons) {
-        if (data.addons[addon].hasOwnProperty(name)) {
-          value += data.addons[addon][name];
-        }
-      }
-
-      if (!nominal) {
-        if (this.damage.hasOwnProperty(name)) {
-          value -= this.damage[name];
-        }
-      }
-
-      return value;
-    }
-
-    thrustRatio(deltav, mass) {
-      if (mass === undefined) mass = this.currentMass();
-
-      // Calculate thrust required to accelerate our mass at deltav
-      let thrust = Physics.force(mass, deltav);
-
-      // Calculate fraction of full thrust required
-      return thrust / this.thrust;
-    }
-
-    burnRate(deltav, mass) {
-      // Calculate fraction of full thrust required
-      const thrustRatio = this.thrustRatio(deltav, mass);
-
-      // Reduce burn rate by the fraction of thrust being used
-      return Math.max(0.001, this.fuelrate * thrustRatio);
-    }
-
-    maxBurnTime(accel, nominal=false, extra_mass=0) {
-      let mass, fuel;
-
-      if (nominal) {
-        fuel = this.tank;
-        mass = this.nominalMass(true) + extra_mass;
-        if (accel === undefined) accel = Physics.deltav(this.thrust, mass);
-      }
-      else {
-        fuel = this.fuel;
-        mass = this.currentMass() + extra_mass;
-        if (accel === undefined) accel = this.currentAcceleration(extra_mass);
-      }
-
-      return Math.floor(fuel / this.burnRate(accel, mass));
-    }
-
-    cargoMass() {
-      let mass = 0;
-      for (const item of this.cargo.keys()) {
-        mass += data.resources[item].mass * this.cargo.get(item);
-      }
-
-      return mass;
-    }
-
-    addOnMass() {
-      return this.addons.reduce((a, b) => {return a + data.addons[b].mass}, 0);
-    }
-
-    nominalMass(full_tank=false) {
-      let m = this.mass;
-      if (full_tank) m += this.tank;
-      return m;
-    }
-
-    currentMass() {
-      return this.mass + this.cargoMass() + this.addOnMass() + this.fuel;
-    }
-
-    currentAcceleration(extra_mass=0) {
-      return Physics.deltav(this.thrust, this.currentMass() + extra_mass);
-    }
-
-    accelerationWithMass(mass) {
-      return Physics.deltav(this.thrust, this.currentMass() + mass);
-    }
-
-    refuelUnits() {return Math.ceil(this.tank - this.fuel)}
-    tankIsFull()  {return Math.floor(this.fuel) >= this.tank}
-    tankIsEmpty() {return this.fuel === 0}
-
-    refuel(units) {
-      this.fuel = Math.min(this.tank, this.fuel + units);
-    }
-
-    burn(deltav) {
-      this.fuel = Math.max(0, this.fuel - this.burnRate(deltav, this.currentMass()));
-      return this.fuel;
-    }
-
-    loadCargo(resource, amount) {
-      if (this.cargoLeft < amount)
-        throw new Error('no room left in the hold');
-      this.cargo.inc(resource, amount);
-    }
-
-    unloadCargo(resource, amount) {
-      if (this.cargo.get(resource) < amount)
-        throw new Error('you do not have that many units available');
-      this.cargo.dec(resource, amount);
-    }
-
-    shipValue() {
-      const sc       = this.shipclass;
-      const market   = game.here;
-      const metal    = market.sellPrice('metal');
-      const ceramics = market.sellPrice('ceramics');
-
-      let price
-        = (sc.hull       / sc.mass * metal * 5000)
-        + (sc.armor      * 5 * ceramics)
-        + (sc.tank       * 1000)
-        + (sc.cargo      * 2000)
-        + (sc.drives     * data.drives[sc.drive].value)
-        + (sc.hardpoints * 20000);
-
-      if (sc.restricted) {
-        price *= 1.5;
-      }
-
-      return Math.ceil(price);
-    }
-
-    cargoValue() {
-      let price = 0;
-      for (const item of this.cargo.keys()) {
-        price += this.cargo.count(item) * game.here.sellPrice(item);
-      }
-
-      return price;
-    }
-
-    fuelValue() {
-      return game.here.sellPrice('fuel') * Math.floor(this.fuel);
-    }
-
-    addOnValue() {
-      let price = 0;
-      for (const addon of this.addons) {
-        price += data.addons[addon].price;
-      }
-
-      return price;
-    }
-
-    damageValue() {
-      let price = 0;
-
-      if (this.hasDamage()) {
-        price -= this.damage.hull  * data.ship.hull.repair;
-        price -= this.damage.armor * data.ship.armor.repair;
-      }
-
-      return price;
-    }
-
-    price(tradein) {
-      const cargo = this.cargoValue();
-      const fuel  = this.fuelValue();
-      const dmg   = this.damageValue();
-
-      let ship = this.shipValue() + this.addOnValue();
-
-      if (tradein)
-        ship = Math.ceil(ship * 0.7);
-
-      return ship + cargo + fuel + dmg;
-    }
-
-    numAddOns() {
-      return this.addons.length;
-    }
-
-    availableHardPoints() {
-      return this.hardpoints - this.numAddOns();
-    }
-
-    installAddOn(addon) {
-      this.addons.push(addon);
-    }
-
-    hasAddOn(addon) {
-      let count = 0;
-      for (let a of this.addons) {
-        if (a === addon) {
-          ++count;
-        }
-      }
-
-      return count;
-    }
-
-    removeAddOn(addon) {
-      this.addons = this.addons.filter(x => {return x !== addon});
-    }
-
-    damageMalus() {
-      return this.damage.hull / this.hull / 2;
-    }
-
-    hasDamage() {
-      return this.damage.hull > 0
-          || this.damage.armor > 0;
-    }
-
-    repairDamage(hull=0, armor=0) {
-      this.damage.hull = Math.max(this.damage.hull - hull, 0);
-      this.damage.armor = Math.max(this.damage.armor - armor, 0);
-    }
-
-    applyDamage(dmg) {
-      const armor = this.armor;
-      const hull  = this.hull;
-
-      const armor_dmg = Math.min(this.armor, dmg);
-      this.damage.armor += armor_dmg;
-      dmg -= armor_dmg;
-
-      const hull_dmg = Math.min(this.hull, dmg);
-      this.damage.hull += hull_dmg;
-      dmg -= hull_dmg;
-
-      // Return true if the ship is destroyed
-      return this.isDestroyed;
-    }
-  };
+        Object.defineProperty(Ship.prototype, "shipclass", {
+            get: function () { return data_1.default.shipclass[this.type]; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "drive", {
+            get: function () { return data_1.default.drives[this.shipclass.drive]; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "hardpoints", {
+            get: function () { return this.shipclass.hardpoints; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "drives", {
+            get: function () { return this.shipclass.drives; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "driveMass", {
+            get: function () { return this.drives * this.drive.mass; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "mass", {
+            get: function () { return this.shipclass.mass + this.driveMass; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "restricted", {
+            get: function () { return this.shipclass.restricted; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "faction", {
+            get: function () { return this.shipclass.faction; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "thrust", {
+            get: function () { return this.drives * this.drive.thrust + Math.max(0, this.attr('thrust', true)); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "fuelrate", {
+            get: function () { return Math.max(0.001, this.drives * this.drive.burn_rate + this.attr('burn_rate', true)); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "acceleration", {
+            get: function () { return physics_1.default.deltav(this.thrust, this.mass); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "tank", {
+            get: function () { return Math.max(0, this.attr('tank', true)); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "fullHull", {
+            get: function () { return Math.max(0, this.attr('hull', true)); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "fullArmor", {
+            get: function () { return Math.max(0, this.attr('armor', true)); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "hull", {
+            get: function () { return Math.max(0, this.attr('hull')); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "armor", {
+            get: function () { return Math.max(0, this.attr('armor')); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "stealth", {
+            get: function () { return Math.min(0.5, this.attr('stealth')); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "cargoSpace", {
+            get: function () { return Math.max(0, this.attr('cargo')); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "intercept", {
+            get: function () { return Math.min(0.35, this.attr('intercept')); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "powerMassRatio", {
+            get: function () { return this.thrust / this.mass; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "rawDodge", {
+            /*
+             * Base dodge chance based on power-mass ratio
+             */
+            get: function () {
+                var ratio = this.powerMassRatio;
+                return ratio / 100;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "dodge", {
+            /*
+             * Dodge chance accounting for upgrades
+             */
+            get: function () {
+                return Math.min(0.7, this.rawDodge + this.attr('dodge'));
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "cargoUsed", {
+            /*
+             * Calculated properties of the ship itself
+             */
+            get: function () { return this.cargo.sum(); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "cargoLeft", {
+            get: function () { return this.cargoSpace - this.cargoUsed; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "holdIsFull", {
+            get: function () { return this.cargoLeft === 0; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "holdIsEmpty", {
+            get: function () { return this.cargoUsed === 0; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "hasContraband", {
+            get: function () {
+                for (var _i = 0, _a = t.resources; _i < _a.length; _i++) {
+                    var item = _a[_i];
+                    var amt = this.cargo.get(item);
+                    if (amt == 0)
+                        continue;
+                    if (amt > 0 && data_1.default.resources[item].contraband) {
+                        return true;
+                    }
+                }
+                return false;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "isDestroyed", {
+            get: function () {
+                return this.armor === 0
+                    && this.hull === 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /*
+         * Methods
+         */
+        Ship.prototype.attr = function (name, nominal) {
+            if (nominal === void 0) { nominal = false; }
+            var value = 0;
+            if (typeof this.shipclass[name] === 'number') {
+                value += this.shipclass[name];
+            }
+            else {
+                for (var _i = 0, _a = this.addons; _i < _a.length; _i++) {
+                    var addon = _a[_i];
+                    if (typeof data_1.default.addons[addon][name] === 'number') {
+                        value += data_1.default.addons[addon][name];
+                    }
+                }
+            }
+            if (!nominal) {
+                if (typeof this.damage[name] == 'number') {
+                    value -= this.damage[name];
+                }
+            }
+            return value;
+        };
+        Ship.prototype.thrustRatio = function (deltav, mass) {
+            if (mass === undefined)
+                mass = this.currentMass();
+            // Calculate thrust required to accelerate our mass at deltav
+            var thrust = physics_1.default.force(mass, deltav);
+            // Calculate fraction of full thrust required
+            return thrust / this.thrust;
+        };
+        Ship.prototype.burnRate = function (deltav, mass) {
+            // Calculate fraction of full thrust required
+            var thrustRatio = this.thrustRatio(deltav, mass);
+            // Reduce burn rate by the fraction of thrust being used
+            return Math.max(0.001, this.fuelrate * thrustRatio);
+        };
+        Ship.prototype.maxBurnTime = function (accel, nominal, extra_mass) {
+            if (nominal === void 0) { nominal = false; }
+            if (extra_mass === void 0) { extra_mass = 0; }
+            var mass, fuel;
+            if (nominal) {
+                fuel = this.tank;
+                mass = this.nominalMass(true) + extra_mass;
+                if (accel === undefined)
+                    accel = physics_1.default.deltav(this.thrust, mass);
+            }
+            else {
+                fuel = this.fuel;
+                mass = this.currentMass() + extra_mass;
+                if (accel === undefined)
+                    accel = this.currentAcceleration(extra_mass);
+            }
+            return Math.floor(fuel / this.burnRate(accel, mass));
+        };
+        Ship.prototype.cargoMass = function () {
+            var mass = 0;
+            for (var _i = 0, _a = this.cargo.keys(); _i < _a.length; _i++) {
+                var item = _a[_i];
+                mass += data_1.default.resources[item].mass * this.cargo.get(item);
+            }
+            return mass;
+        };
+        Ship.prototype.addOnMass = function () {
+            return this.addons.reduce(function (a, b) { return a + data_1.default.addons[b].mass; }, 0);
+        };
+        Ship.prototype.nominalMass = function (full_tank) {
+            if (full_tank === void 0) { full_tank = false; }
+            var m = this.mass;
+            if (full_tank)
+                m += this.tank;
+            return m;
+        };
+        Ship.prototype.currentMass = function () {
+            return this.mass + this.cargoMass() + this.addOnMass() + this.fuel;
+        };
+        Ship.prototype.currentAcceleration = function (extra_mass) {
+            if (extra_mass === void 0) { extra_mass = 0; }
+            return physics_1.default.deltav(this.thrust, this.currentMass() + extra_mass);
+        };
+        Ship.prototype.accelerationWithMass = function (mass) {
+            return physics_1.default.deltav(this.thrust, this.currentMass() + mass);
+        };
+        Ship.prototype.refuelUnits = function () { return Math.ceil(this.tank - this.fuel); };
+        Ship.prototype.tankIsFull = function () { return Math.floor(this.fuel) >= this.tank; };
+        Ship.prototype.tankIsEmpty = function () { return this.fuel === 0; };
+        Ship.prototype.refuel = function (units) {
+            this.fuel = Math.min(this.tank, this.fuel + units);
+        };
+        Ship.prototype.burn = function (deltav) {
+            this.fuel = Math.max(0, this.fuel - this.burnRate(deltav, this.currentMass()));
+            return this.fuel;
+        };
+        Ship.prototype.loadCargo = function (resource, amount) {
+            if (this.cargoLeft < amount)
+                throw new Error('no room left in the hold');
+            this.cargo.inc(resource, amount);
+        };
+        Ship.prototype.unloadCargo = function (resource, amount) {
+            if (this.cargo.get(resource) < amount)
+                throw new Error('you do not have that many units available');
+            this.cargo.dec(resource, amount);
+        };
+        Ship.prototype.shipValue = function (market) {
+            var sc = this.shipclass;
+            var metal = market.sellPrice('metal');
+            var ceramics = market.sellPrice('ceramics');
+            var price = (sc.hull / sc.mass * metal * 5000)
+                + (sc.armor * 5 * ceramics)
+                + (sc.tank * 1000)
+                + (sc.cargo * 2000)
+                + (sc.drives * data_1.default.drives[sc.drive].value)
+                + (sc.hardpoints * 20000);
+            if (sc.restricted) {
+                price *= 1.5;
+            }
+            return Math.ceil(price);
+        };
+        Ship.prototype.cargoValue = function (market) {
+            var price = 0;
+            for (var _i = 0, _a = this.cargo.keys(); _i < _a.length; _i++) {
+                var item = _a[_i];
+                price += this.cargo.count(item) * market.sellPrice(item);
+            }
+            return price;
+        };
+        Ship.prototype.fuelValue = function (market) {
+            return market.sellPrice('fuel') * Math.floor(this.fuel);
+        };
+        Ship.prototype.addOnValue = function () {
+            var price = 0;
+            for (var _i = 0, _a = this.addons; _i < _a.length; _i++) {
+                var addon = _a[_i];
+                price += data_1.default.addons[addon].price;
+            }
+            return price;
+        };
+        Ship.prototype.damageValue = function () {
+            var price = 0;
+            if (this.hasDamage()) {
+                price -= this.damage.hull * data_1.default.ship.hull.repair;
+                price -= this.damage.armor * data_1.default.ship.armor.repair;
+            }
+            return price;
+        };
+        Ship.prototype.price = function (tradein, market) {
+            var cargo = this.cargoValue(market);
+            var fuel = this.fuelValue(market);
+            var dmg = this.damageValue();
+            var ship = this.shipValue(market) + this.addOnValue();
+            if (tradein)
+                ship = Math.ceil(ship * 0.7);
+            return ship + cargo + fuel + dmg;
+        };
+        Ship.prototype.numAddOns = function () {
+            return this.addons.length;
+        };
+        Ship.prototype.availableHardPoints = function () {
+            return this.hardpoints - this.numAddOns();
+        };
+        Ship.prototype.installAddOn = function (addon) {
+            this.addons.push(addon);
+        };
+        Ship.prototype.hasAddOn = function (addon) {
+            var count = 0;
+            for (var _i = 0, _a = this.addons; _i < _a.length; _i++) {
+                var a = _a[_i];
+                if (a === addon) {
+                    ++count;
+                }
+            }
+            return count;
+        };
+        Ship.prototype.removeAddOn = function (addon) {
+            this.addons = this.addons.filter(function (x) { return x !== addon; });
+        };
+        Ship.prototype.damageMalus = function () {
+            return this.damage.hull / this.hull / 2;
+        };
+        Ship.prototype.hasDamage = function () {
+            return this.damage.hull > 0
+                || this.damage.armor > 0;
+        };
+        Ship.prototype.repairDamage = function (hull, armor) {
+            if (hull === void 0) { hull = 0; }
+            if (armor === void 0) { armor = 0; }
+            this.damage.hull = Math.max(this.damage.hull - hull, 0);
+            this.damage.armor = Math.max(this.damage.armor - armor, 0);
+        };
+        Ship.prototype.applyDamage = function (dmg) {
+            var armor = this.armor;
+            var hull = this.hull;
+            var armor_dmg = Math.min(this.armor, dmg);
+            this.damage.armor += armor_dmg;
+            dmg -= armor_dmg;
+            var hull_dmg = Math.min(this.hull, dmg);
+            this.damage.hull += hull_dmg;
+            dmg -= hull_dmg;
+            // Return true if the ship is destroyed
+            return this.isDestroyed;
+        };
+        return Ship;
+    }());
+    return Ship;
 });

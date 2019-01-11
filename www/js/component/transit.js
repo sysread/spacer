@@ -167,7 +167,7 @@ define(function(require, exports, module) {
       },
 
       piracyEvasionMalusCargo() {
-        const cargo = this.game.player.ship.cargoValue();
+        const cargo = this.game.player.ship.cargoValue(this.game.here);
         if (cargo >= 1) {
           return Math.log10(cargo) / 100;
         } else {
@@ -744,7 +744,7 @@ define(function(require, exports, module) {
         },
       });
 
-      const ship_value = npc.ship.shipValue() + npc.ship.addOnValue();
+      const ship_value = npc.ship.shipValue(this.game.here) + npc.ship.addOnValue();
       const bounty = Math.ceil(ship_value / 20);
 
       return {

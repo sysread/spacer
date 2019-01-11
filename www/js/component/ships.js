@@ -79,15 +79,24 @@ define(function(require, exports, module) {
       name:            function() { return this.type.replace('_', '-') },
       planet:          function() { return this.game.here },
       player:          function() { return this.game.player },
-      playerShipValue: function() { return this.player.ship.price(true) },
+      playerShipValue: function() { return this.player.ship.price(true, this.game.here) },
       tradeIn:         function() { return this.price - this.playerShipValue },
       shipClass:       function() { return this.data.shipclass[this.type] },
       ship:            function() { return new Ship({type: this.type}) },
-      isPlayerShip:    function() { return this.ship.isPlayerShipType() },
+      isPlayerShip:    function() { return this.ship.type == game.player.ship.type },
       isNonFaction:    function() { return this.ship.faction && this.planet.faction.abbrev != this.ship.faction },
-      isRestricted:    function() { return !this.ship.playerHasStanding() },
       canAfford:       function() { return this.player.money >= this.tradeIn },
       isAvailable:     function() { return !this.isPlayerShip && !this.isNonFaction && !this.isRestricted && this.canAfford && this.hasShip },
+
+      isRestricted() {
+        if (!this.ship.restricted)
+          return false;
+
+        if (this.game.player.hasStanding(game.here.faction, this.ship.restricted))
+          return false;
+
+        return true;
+      },
 
       hasShip() {
         if (this.shipClass.hasOwnProperty('markets')) {
@@ -104,7 +113,7 @@ define(function(require, exports, module) {
       },
 
       price: function() {
-        let price = this.ship.price();
+        let price = this.ship.price(false, this.game.here);
         price *= 1 + this.player.getStandingPriceAdjustment(this.planet.faction);
         price *= 1 + this.planet.faction.sales_tax;
         return Math.ceil(price);
