@@ -1,3 +1,5 @@
+"use strict"
+
 var physics;
 
 define(function(require, exports, module) {

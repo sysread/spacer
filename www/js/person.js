@@ -1,3 +1,5 @@
+"use strict"
+
 /*
  * Special case: must use window.game to avoid circular reference with game.js
  */

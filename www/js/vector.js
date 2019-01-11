@@ -1,3 +1,5 @@
+"use strict"
+
 define(function(require, exports, module) {
   const Vector = class {
     constructor(x=0, y=0, z=0) {

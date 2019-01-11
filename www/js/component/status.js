@@ -1,3 +1,5 @@
+"use strict"
+
 define(function(require, exports, module) {
   const util    = require('util');
   const Physics = require('physics');

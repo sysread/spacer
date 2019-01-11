@@ -1,3 +1,5 @@
+"use strict"
+
 define(function(require, exports, module) {
   const game        = require('game');
   const data        = require('data');

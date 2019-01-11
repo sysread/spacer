@@ -1,3 +1,5 @@
+"use strict"
+
 define(function() {
   /*
    * Masses in metric tonnes (t)

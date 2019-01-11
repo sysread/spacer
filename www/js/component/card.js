@@ -1,3 +1,5 @@
+"use strict"
+
 define(function(require, exports, module) {
   const Vue = require('vendor/vue');
 

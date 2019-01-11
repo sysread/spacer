@@ -1,3 +1,5 @@
+"use strict"
+
 define(function(require, exports, module) {
   const Person = require('person');
   const Ship   = require('ship');
