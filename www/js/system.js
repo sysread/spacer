@@ -1,285 +1,238 @@
-"use strict"
-
-define(function(require, exports, module) {
-  const data = require('data');
-  const Physics = require('physics');
-  const SolarSystem = require('vendor/solaris-model.min');
-
-  const System = class {
-    constructor() {
-      this.system = new SolarSystem;
-      this.cache  = {}; // orbit cache
-      this.pos    = {}; // position cache
-    }
-
-    get_date() {
-      return this.system.time.getDate();
-    }
-
-    set_date(date) {
-      const dt = new Date(date + ' 00:00:00');
-      const ts = dt.valueOf();
-
-      if (dt.getDate() !== this.get_date()) {
-        this.cache = {};
-
-        for (const key of Object.keys(this.pos)) {
-          if (key < ts)
-            delete this.pos[key];
+/// <reference types="./vendor/solaris-model" />
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], function (require, exports, data_1, physics_1, solaris_model_1) {
+    "use strict";
+    data_1 = __importDefault(data_1);
+    physics_1 = __importDefault(physics_1);
+    solaris_model_1 = __importDefault(solaris_model_1);
+    var System = /** @class */ (function () {
+        function System() {
+            this.system = new solaris_model_1.default;
+            this.cache = {};
+            this.pos = {};
         }
-      }
-
-      this.system.setTime(date);
-    }
-
-    bodies() {
-      return Object.keys(data.bodies);
-    }
-
-    forEach(fn) {
-      this.bodies().forEach((name) => {fn(name, this.body(name))});
-    }
-
-    body(name) {
-      if (name == 'trojans') {
-        const jupiter = this.system.bodies.jupiter;
-        return {
-          name:    'Trojans',
-          type:    'asteroids',
-          central: this.system.bodies.sun,
-          kind:    'Asteroid field',
-          gravity: 0.01,
-          radius:  jupiter.radius,
-
-          getPositionAtTime: (date) => {
-            const p = jupiter.getPositionAtTime(date);
-            const r = Physics.distance(p, [0, 0, 0]);
-            const t = -1.0472; // 60 degrees in radians
-            const x = (p[0] * Math.cos(t)) - (p[1] * Math.sin(t));
-            const y = (p[0] * Math.sin(t)) + (p[1] * Math.cos(t));
-            return [x, y, 0];
-          },
+        System.prototype.set_date = function (date) {
+            var dt = new Date(date + ' 00:00:00');
+            var ts = dt.valueOf();
+            if (dt.getDate() !== this.system.time.getDate()) {
+                this.cache = {};
+                for (var _i = 0, _a = Object.keys(this.pos); _i < _a.length; _i++) {
+                    var key = _a[_i];
+                    if (parseInt(key, 10) < ts) {
+                        delete this.pos[key];
+                    }
+                }
+            }
+            this.system.setTime(date);
         };
-      }
-
-      return this.system.bodies[name];
-    }
-
-    short_name(name) {
-      if (name === 'moon') return 'Luna';
-      return this.body(name).name;
-    }
-
-    name(name) {
-      if (data.bodies.hasOwnProperty(name))
-        return data.bodies[name].name;
-      return this.body(name).name;
-    }
-
-    faction(name) {
-      return data.bodies[name].faction;
-    }
-
-    type(name) {
-      const type = this.body(name).type;
-      if (type === 'dwarfPlanet') return 'dwarf';
-      return type;
-    }
-
-    central(name) {
-      let body = this.body(name);
-      if (body.central) return body.central.key;
-      return;
-    }
-
-    kind(name) {
-      let body = this.body(name);
-      let type = this.type(name);
-
-      if (type == 'dwarf') {
-        type = 'Dwarf';
-      }
-      else if (body.central && body.central.name != 'The Sun') {
-        type = body.central.name;
-      }
-      else {
-        type = 'Planet';
-      }
-
-      return type;
-    }
-
-    gravity(name) {
-      // Artificial gravity (spun up, orbital)
-      if (data.bodies.hasOwnProperty(name) && data.bodies[name].hasOwnProperty('gravity')) {
-        return data.bodies[name].gravity;
-      }
-
-      const grav   = 6.67e-11;
-      const body   = this.body(name);
-      const mass   = body.mass;
-      const radius = body.radius;
-      return (grav * mass) / Math.pow(radius, 2) / Physics.G;
-    }
-
-    ranges(point) {
-      const ranges = {};
-
-      for (const body of this.bodies()) {
-        ranges[body] = Physics.distance(point, this.position(body));
-      }
-
-      return ranges;
-    }
-
-    closestBodyToPoint(point) {
-      let dist, closest;
-
-      for (const body of this.bodies()) {
-        const d = Physics.distance(point, this.position(body));
-        if (dist === undefined || d < dist) {
-          dist = d;
-          closest = body;
-        }
-      }
-
-      return [closest, dist];
-    }
-
-    addPoints(p1, p2) {
-      const [x0, y0, z0] = p1;
-      const [x1, y1, z1] = p2;
-      return [x1 + x0, y1 + y0, z1 + z0];
-    }
-
-    position(name, date) {
-      if (name == 'sun') {
-        return [0, 0, 0];
-      }
-
-      date = date || this.system.time;
-      const key = date.valueOf();
-
-      if (!this.pos.hasOwnProperty(key))
-        this.pos[key] = {};
-
-      if (!this.pos[key].hasOwnProperty(name)) {
-        const body = this.body(name);
-        let pos = body.getPositionAtTime(date);
-
-        if (body.central.key !== 'sun') {
-          pos = this.addPoints(pos, body.central.getPositionAtTime(date));
-        }
-
-        this.pos[key][name] = pos;
-      }
-
-      return this.pos[key][name];
-    }
-
-    orbit(name) {
-      const key = `${name}.orbit`;
-
-      if (!this.cache.hasOwnProperty(key)) {
-        const date  = new Date(this.system.time);
-        const orbit = [this.position(name)];
-
-        for (let day = 1; day < 365; ++day) {
-          date.setDate(date.getDate() + 1);
-          orbit.push(this.position(name, date));
-        }
-
-        this.cache[key] = orbit;
-      }
-
-      return this.cache[key];
-    }
-
-    orbit_by_turns(name) {
-      const key = `${name}.orbit.byturns`;
-
-      if (!this.cache.hasOwnProperty(key)) {
-        const tpd = 24 / data.hours_per_turn;
-        const orbit = this.orbit(name);
-
-        let point = orbit[0];
-        const path = [point];
-
-        for (let day = 1; day < orbit.length; ++day) {
-          const next = orbit[day];
-          const dx = Math.ceil((next[0] - point[0]) / tpd);
-          const dy = Math.ceil((next[1] - point[1]) / tpd);
-          const dz = Math.ceil((next[2] - point[2]) / tpd);
-
-          for (let i = 1; i <= tpd; ++i) {
-            path.push([
-              point[0] + (i * dx),
-              point[1] + (i * dy),
-              point[2] + (i * dz),
-            ]);
-          }
-
-          point = next;
-        }
-
-        this.cache[key] = path;
-      }
-
-      return this.cache[key];
-    }
-
-    distance(origin, destination) {
-      return Physics.distance(
-        this.position(origin),
-        this.position(destination)
-      );
-    }
-
-    plot() {
-      let abs    = Math.abs;
-      let ceil   = Math.ceil;
-      let floor  = Math.floor;
-      let max    = Math.max;
-      let min    = Math.min;
-      let round  = Math.round;
-      let bodies = this.bodies();
-      let pos    = {};
-
-      // Get coordinates and hypot for each body, scaled down
-      for (let name of bodies) {
-        let [x, y, z] = this.position(name);
-        x = ceil(x / 1000);
-        y = ceil(y / 1000);
-        pos[name] = {x:x, y:y};
-      }
-
-      // Calculate max values for x and y
-      let max_x = Math.ceil(1.2 * Object.values(pos).reduce((acc, val) => {return max(acc, abs(val.x))}, 0));
-      let max_y = Math.ceil(1.2 * Object.values(pos).reduce((acc, val) => {return max(acc, abs(val.y))}, 0));
-
-      // Calculate scaled coordinates
-      let plot   = [['sun', 0, 0]];
-      let points = {'sun': [0, 0]};
-
-      for (let name of bodies) {
-        let p = pos[name];
-        let pct_x = 0;
-        let pct_y = 0;
-
-        if (p.x !== 0) pct_x = p.x / max_x * 100;
-        if (p.y !== 0) pct_y = p.y / max_y * 100;
-
-        points[name] = [pct_x, pct_y];
-        plot.push([name, pct_x, pct_y]);
-      }
-
-      return {
-        max_x  : max_x,
-        max_y  : max_y,
-        points : points
-      };
-    }
-  };
-
-  return new System;
+        System.prototype.bodies = function () {
+            return Object.keys(data_1.default.bodies);
+        };
+        System.prototype.body = function (name) {
+            var _this = this;
+            if (name == 'trojans') {
+                return {
+                    key: 'trojans',
+                    central: this.system.bodies.sun,
+                    name: 'Trojans',
+                    type: 'asteroids',
+                    radius: this.system.bodies.jupiter.radius,
+                    mass: 0,
+                    satellites: {},
+                    getPositionAtTime: function (date) {
+                        var p = _this.system.bodies.jupiter.getPositionAtTime(date);
+                        var r = physics_1.default.distance(p, [0, 0, 0]);
+                        var t = -1.0472; // 60 degrees in radians
+                        var x = (p[0] * Math.cos(t)) - (p[1] * Math.sin(t));
+                        var y = (p[0] * Math.sin(t)) + (p[1] * Math.cos(t));
+                        return [x, y, p[2]];
+                    },
+                };
+            }
+            return this.system.bodies[name];
+        };
+        System.prototype.short_name = function (name) {
+            if (name === 'moon')
+                return 'Luna';
+            return this.body(name).name;
+        };
+        System.prototype.name = function (name) {
+            if (data_1.default.bodies.hasOwnProperty(name)) {
+                return data_1.default.bodies[name].name;
+            }
+            return this.body(name).name;
+        };
+        System.prototype.faction = function (name) {
+            return data_1.default.bodies[name].faction;
+        };
+        System.prototype.type = function (name) {
+            var type = this.body(name).type;
+            if (type === 'dwarfPlanet')
+                return 'dwarf';
+            return type;
+        };
+        System.prototype.central = function (name) {
+            var body = this.body(name);
+            if (body.central) {
+                return body.central.key;
+            }
+            return;
+        };
+        System.prototype.kind = function (name) {
+            var body = this.body(name);
+            var type = this.type(name);
+            if (type == 'dwarf') {
+                type = 'Dwarf';
+            }
+            else if (body.central && body.central.name != 'The Sun') {
+                type = body.central.name;
+            }
+            else {
+                type = 'Planet';
+            }
+            return type;
+        };
+        System.prototype.gravity = function (name) {
+            // Artificial gravity (spun up, orbital)
+            if (data_1.default.bodies.hasOwnProperty(name) && data_1.default.bodies[name].hasOwnProperty('gravity')) {
+                return data_1.default.bodies[name].gravity;
+            }
+            var grav = 6.67e-11;
+            var body = this.body(name);
+            var mass = body.mass;
+            var radius = body.radius;
+            return (grav * mass) / Math.pow(radius, 2) / physics_1.default.G;
+        };
+        System.prototype.ranges = function (point) {
+            var ranges = {};
+            for (var _i = 0, _a = this.bodies(); _i < _a.length; _i++) {
+                var body = _a[_i];
+                ranges[body] = physics_1.default.distance(point, this.position(body));
+            }
+            return ranges;
+        };
+        System.prototype.closestBodyToPoint = function (point) {
+            var dist, closest;
+            for (var _i = 0, _a = this.bodies(); _i < _a.length; _i++) {
+                var body = _a[_i];
+                var d = physics_1.default.distance(point, this.position(body));
+                if (dist === undefined || d < dist) {
+                    dist = d;
+                    closest = body;
+                }
+            }
+            return [closest, dist];
+        };
+        System.prototype.addPoints = function (p1, p2) {
+            var x0 = p1[0], y0 = p1[1], z0 = p1[2];
+            var x1 = p2[0], y1 = p2[1], z1 = p2[2];
+            return [x1 + x0, y1 + y0, z1 + z0];
+        };
+        System.prototype.position = function (name, date) {
+            if (name == 'sun') {
+                return [0, 0, 0];
+            }
+            date = date || this.system.time;
+            var key = date.valueOf();
+            if (!this.pos.hasOwnProperty(key))
+                this.pos[key] = {};
+            if (!this.pos[key].hasOwnProperty(name)) {
+                var body = this.body(name);
+                var pos = body.getPositionAtTime(date);
+                if (body.central.key !== 'sun') {
+                    pos = this.addPoints(pos, body.central.getPositionAtTime(date));
+                }
+                this.pos[key][name] = pos;
+            }
+            return this.pos[key][name];
+        };
+        System.prototype.orbit = function (name) {
+            var key = name + ".orbit";
+            if (!this.cache.hasOwnProperty(key)) {
+                var date = new Date(this.system.time);
+                var orbit = [this.position(name)];
+                for (var day = 1; day < 365; ++day) {
+                    date.setDate(date.getDate() + 1);
+                    orbit.push(this.position(name, date));
+                }
+                this.cache[key] = orbit;
+            }
+            return this.cache[key];
+        };
+        System.prototype.orbit_by_turns = function (name) {
+            var key = name + ".orbit.byturns";
+            if (!this.cache.hasOwnProperty(key)) {
+                var tpd = 24 / data_1.default.hours_per_turn;
+                var orbit = this.orbit(name);
+                var point = orbit[0];
+                var path = [point];
+                for (var day = 1; day < orbit.length; ++day) {
+                    var next = orbit[day];
+                    var dx = Math.ceil((next[0] - point[0]) / tpd);
+                    var dy = Math.ceil((next[1] - point[1]) / tpd);
+                    var dz = Math.ceil((next[2] - point[2]) / tpd);
+                    for (var i = 1; i <= tpd; ++i) {
+                        path.push([
+                            point[0] + (i * dx),
+                            point[1] + (i * dy),
+                            point[2] + (i * dz),
+                        ]);
+                    }
+                    point = next;
+                }
+                this.cache[key] = path;
+            }
+            return this.cache[key];
+        };
+        System.prototype.distance = function (origin, destination) {
+            return physics_1.default.distance(this.position(origin), this.position(destination));
+        };
+        System.prototype.plot = function () {
+            var abs = Math.abs;
+            var ceil = Math.ceil;
+            var floor = Math.floor;
+            var max = Math.max;
+            var min = Math.min;
+            var round = Math.round;
+            var bodies = this.bodies();
+            var pos = {};
+            // Get coordinates and hypot for each body, scaled down
+            for (var _i = 0, bodies_1 = bodies; _i < bodies_1.length; _i++) {
+                var name = bodies_1[_i];
+                var _a = this.position(name), x = _a[0], y = _a[1], z = _a[2];
+                x = ceil(x / 1000);
+                y = ceil(y / 1000);
+                pos[name] = { x: x, y: y };
+            }
+            // Calculate max values for x and y
+            var max_x = Math.ceil(1.2 * Object.values(pos).reduce(function (acc, val) { return max(acc, abs(val.x)); }, 0));
+            var max_y = Math.ceil(1.2 * Object.values(pos).reduce(function (acc, val) { return max(acc, abs(val.y)); }, 0));
+            // Calculate scaled coordinates
+            var plot = [['sun', 0, 0]];
+            var points = {
+                'sun': [0, 0],
+            };
+            for (var _b = 0, bodies_2 = bodies; _b < bodies_2.length; _b++) {
+                var name = bodies_2[_b];
+                var p = pos[name];
+                var pct_x = 0;
+                var pct_y = 0;
+                if (p.x !== 0)
+                    pct_x = p.x / max_x * 100;
+                if (p.y !== 0)
+                    pct_y = p.y / max_y * 100;
+                points[name] = [pct_x, pct_y];
+                plot.push([name, pct_x, pct_y]);
+            }
+            return {
+                max_x: max_x,
+                max_y: max_y,
+                points: points
+            };
+        };
+        return System;
+    }());
+    return new System;
 });

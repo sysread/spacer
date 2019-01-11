@@ -1,3 +1,9 @@
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+	typeof define === 'function' && define.amd ? define(factory) :
+	(global.SolarSystem = factory());
+}(this, (function () { 'use strict';
+
 var publicize;
 var slice = [].slice;
 
@@ -2102,4 +2108,6 @@ var index = SolarSystem = (function(superClass) {
   methods: ['setTime']
 }));
 
-export default index;
+return index;
+
+})));

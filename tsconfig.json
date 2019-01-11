@@ -7,7 +7,7 @@
     "strict": true,
     "esModuleInterop": true,
     "declaration": false,
-    "lib": ["ES5", "ES6"]
+    "lib": ["ES5", "ES6", "ES2017.Object"]
   },
   "include": [
     "src"
