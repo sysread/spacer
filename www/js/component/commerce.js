@@ -152,7 +152,7 @@ define(function(require, exports, module) {
       },
 
       fine: function() {
-        const base = this.planet.inspectionFine();
+        const base = this.planet.inspectionFine(this.player);
         return Math.min(this.player.money, base * Math.abs(this.count));
       },
     },
@@ -172,7 +172,7 @@ define(function(require, exports, module) {
       },
 
       complete: function() {
-        if (this.contraband && Math.random() < this.planet.inspectionRate()) {
+        if (this.contraband && Math.random() < this.planet.inspectionRate(this.player)) {
           this.player.debit(this.fine);
           this.player.decStanding(this.faction.abbrev, this.contraband);
 

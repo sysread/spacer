@@ -1,6 +1,6 @@
-"use strict"
-
 define(function(require, exports, module) {
+  "use strict"
+
   const Vue     = require('vendor/vue');
   const Physics = require('physics');
 
@@ -184,7 +184,7 @@ define(function(require, exports, module) {
             <ul>
               <li v-for="item of shortages[body]" class="text-warning">
                 {{item|caps}}
-                <span v-if="shipments[item][body]" class="mx-1 font-italic text-muted">
+                <span v-if="shipments[item] && shipments[item][body]" class="mx-1 font-italic text-muted">
                   &mdash; relief arriving in {{shipments[item][body]|csn}} days
                 </span>
               </li>

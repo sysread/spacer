@@ -6,6 +6,7 @@ define(function(require, exports, module) {
   const util   = require('util');
   const model  = require('model');
   const Person = require('person');
+  const common = require('common');
 
   const Game = class {
     constructor() {
@@ -135,6 +136,7 @@ console.log('turn -> save_game', n, no_save);
 
     trade_routes() {
       const trade = {};
+
       for (const planet of Object.values(this.planets)) {
         for (const task of planet.queue) {
           if (task.type === 'import') {

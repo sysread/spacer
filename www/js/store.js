@@ -29,6 +29,9 @@ define(["require", "exports"], function (require, exports) {
             }
         };
         Store.prototype.set = function (item, amt) {
+            if (isNaN(amt)) {
+                throw new Error('not a number');
+            }
             this.store[item] = Math.max(0, amt);
         };
         Store.prototype.get = function (item) {

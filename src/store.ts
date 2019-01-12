@@ -38,6 +38,10 @@ class Store {
   }
 
   set(item: resource, amt: number) {
+    if (isNaN(amt)) {
+      throw new Error('not a number');
+    }
+
     this.store[item] = Math.max(0, amt);
   }
 

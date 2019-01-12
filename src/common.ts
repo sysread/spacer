@@ -77,33 +77,69 @@ export type shipdmg =
   'armor'
 | 'hull';
 
+export type body =
+  'mercury'
+| 'earth'
+| 'moon'
+| 'venus'
+| 'mars'
+| 'phobos'
+| 'ceres'
+| 'europa'
+| 'callisto'
+| 'ganymede'
+| 'trojans'
+| 'enceladus'
+| 'rhea'
+| 'titan'
+| 'triton'
+| 'titania'
+| 'pluto';
+
+export interface Counter {
+  [key: string]: number;
+}
+
 export interface Mining {
+  [key: string]: any;
   tics:  number;
   value: number;
 }
 
 export interface Recipe {
+  [key: string]: any;
   tics:      number;
   materials: { [key: string]: number };
 }
 
-export interface Resource {
+export interface Raw {
+  [key: string]: any;
   mass:        number;
   contraband?: number;
-  mine?:       Mining;
-  recipe?:     Recipe;
+  mine:        Mining;
 }
 
+export interface Craft {
+  [key: string]: any;
+  mass:        number;
+  contraband?: number;
+  recipe:      Recipe;
+}
+
+type Resource = Raw | Craft;
+
 export interface Faction {
+  [key: string]: any;
+
   full_name:  string;
   capital:    string;
   sales_tax:  number;
   patrol:     number;
   inspection: number;
   desc?:      string;
-  produces:   { [key: string]: number },
-  consumes:   { [key: string]: number },
-  standing:   { [key: string]: number },
+  produces:   Counter;
+  consumes:   Counter;
+  standing:   Counter;
 }
 
 export interface ShipDamage {
@@ -166,12 +202,50 @@ export interface Addon {
   dodge?:         number;
 }
 
+export interface Trait {
+  produces?: Counter;
+  consumes?: Counter;
+  price?:    Counter;
+}
+
+export interface Condition {
+  days:     [number, number];
+  consumes: Counter;
+  produces: Counter;
+  triggers: {
+    shortage:  Counter;
+    surplus:   Counter;
+    condition: Counter;
+  };
+}
+
+export interface Body {
+  name:     string;
+  size:     string;
+  traits:   string[];
+  faction:  faction;
+  gravity?: number;
+  desc:     string;
+}
+
+export interface Work {
+  name:    string;
+  avail:   string[];
+  rewards: resource[];
+  pay:     number;
+  desc:    string;
+}
+
 export interface GameData {
   [key: string]: any;
 
-  resources: { [key: string]: Resource };
-  factions:  { [key: string]: Faction };
-  drives:    { [key: string]: Drive };
-  shipclass: { [key: string]: ShipClass };
-  addons:    { [key: string]: Addon };
+  resources:  { [key: string]: Resource };
+  factions:   { [key: string]: Faction };
+  drives:     { [key: string]: Drive };
+  shipclass:  { [key: string]: ShipClass };
+  addons:     { [key: string]: Addon };
+  traits:     { [key: string]: Trait };
+  conditions: { [key: string]: Condition };
+  bodies:     { [key: string]: Body };
+  work:       Work[];
 }

@@ -462,7 +462,7 @@ define(function(require, exports, module) {
           if (patrol > 0) {
             // Encountered a patrol
             if (util.chance(patrol)) {
-              let inspection = this.game.planets[body].inspectionRate();
+              let inspection = this.game.planets[body].inspectionRate(this.game.player);
 
               if (this.plan.velocity > 1000) {
                 inspection -= Math.log(this.plan.velocity / 1000) / 300;
@@ -622,7 +622,7 @@ define(function(require, exports, module) {
         for (const item of this.game.player.ship.cargo.keys) {
           const amt = this.game.player.ship.cargo.count(item);
           if (this.data.resources[item].contraband) {
-            fine += amt * this.planet.inspectionFine();
+            fine += amt * this.planet.inspectionFine(this.game.player);
           }
         }
 

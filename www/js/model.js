@@ -1,1015 +1,975 @@
-"use strict"
-
-/*
- * Special case: must use window.game to avoid circular reference with game.js
- */
-define(function(require, exports, module) {
-  const data      = require('data');
-  const system    = require('system');
-  const util      = require('util');
-  const Physics   = require('physics');
-  const Store     = require('store');
-  const History   = require('history');
-  const resources = {};
-
-  const Resource = class {
-    constructor(name) {
-      this.name        = name;
-      this.mass        = data.resources[name].mass;
-      this.contraband  = data.resources[name].contraband;
-      this.isMinable   = data.resources[name].mine !== undefined;
-      this.isCraftable = data.resources[name].recipe !== undefined;
-      this.mineTurns   = this.isMinable ? data.resources[name].mine.tics : null;
-      this.craftTurns  = this.isCraftable ? data.resources[name].recipe.tics : null;
-      this.recipe      = this.isCraftable ? data.resources[name].recipe.materials : null;
-      this.ingredients = this.isCraftable ? Object.keys(this.recipe) : [];
-      this.value       = this.calculateBaseValue();
-    }
-
-    calculateBaseValue() {
-      let value = 0;
-
-      if (this.isMinable) {
-        value = data.resources[this.name].mine.value;
-      }
-      else if (this.isCraftable) {
-        for (const mat of Object.keys(this.recipe)) {
-          value += this.recipe[mat] * resources[mat].calculateBaseValue();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+define(["require", "exports", "./data", "./system", "./physics", "./store", "./history", "./common", "./util"], function (require, exports, data_1, system_1, physics_1, store_1, history_1, t, util) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    data_1 = __importDefault(data_1);
+    system_1 = __importDefault(system_1);
+    physics_1 = __importDefault(physics_1);
+    store_1 = __importDefault(store_1);
+    history_1 = __importDefault(history_1);
+    t = __importStar(t);
+    util = __importStar(util);
+    exports.resources = {};
+    function getResource(item) {
+        if (!exports.resources[item]) {
+            exports.resources[item] = new Resource(item);
         }
-
-        value += Math.max(1, util.R(data.craft_fee * value, 2));
-
-        for (let i = 0; i < this.craftTurns; ++i) {
-          value *= 1.5;
+        return exports.resources[item];
+    }
+    exports.getResource = getResource;
+    var Resource = /** @class */ (function () {
+        function Resource(name) {
+            this.name = name;
+            this.mass = data_1.default.resources[name].mass;
+            this.contraband = data_1.default.resources[name].contraband;
+            this.mine = data_1.default.resources[name].mine;
+            this.recipe = data_1.default.resources[name].recipe;
+            this.value = this.calculateBaseValue();
         }
-      }
-
-      return value;
-    }
-  };
-
-
-  const Faction = class {
-    constructor(abbrev) {
-      // Faction instance rather than abbrev string
-      if (abbrev.hasOwnProperty('abbrev')) {
-        abbrev = abbrev.abbrev;
-      }
-
-      this.abbrev    = abbrev;
-      this.full_name = data.factions[abbrev].full_name;
-      this.capital   = data.factions[abbrev].capital;
-      this.sales_tax = data.factions[abbrev].sales_tax;
-      this.patrol    = data.factions[abbrev].patrol;
-      this.patrol    = data.factions[abbrev].patrol;
-      this.produces  = new Store(data.factions[abbrev].produces);
-      this.consumes  = new Store(data.factions[abbrev].consumes);
-    }
-
-    get desc() { return data.factions[abbrev].desc }
-    toString() { return this.abbrev }
-  };
-
-
-  const Trait = class {
-    constructor(name) {
-      this.name     = name;
-      this.produces = new Store(this.data.produces);
-      this.consumes = new Store(this.data.consumes);
-    }
-
-    get data() { return data.traits[this.name] }
-  };
-
-
-  const Condition = class extends Trait {
-    constructor(name, init) {
-      super(name);
-
-      if (init) {
-        this.turns_total = init.turns_total;
-        this.turns_done  = init.turns_done;
-      }
-      else {
-        this.turns_total = data.turns_per_day * util.getRandomInt(this.data.days[0], this.data.days[1]);
-        this.turns_done  = 0;
-      }
-    }
-
-    get data()         { return data.conditions[this.name] }
-    get triggers()     { return this.data.triggers }
-    get on_shortage()  { return this.triggers.shortage  || {} }
-    get on_surplus()   { return this.triggers.surplus   || {} }
-    get on_condition() { return this.triggers.condition || {} }
-
-    get turns_left()   { return this.turns_total - this.turns_done }
-    get is_over()      { return this.turns_done >= this.turns_total }
-
-    inc_turns()        { ++this.turns_done }
-  };
-
-
-  const Planet = class {
-    constructor(body, init) {
-      init = init || {};
-
-      /*
-       * Physical and faction
-       */
-      this.body    = body;
-      this.name    = data.bodies[body].name;
-      this.size    = data.bodies[body].size;
-      this.faction = new Faction(data.bodies[body].faction);
-      this.radius  = system.body(body).radius;
-      this.traits  = data.bodies[body].traits.map((t) => {return new Trait(t)});
-
-      /*
-       * Temporary conditions
-       */
-      if (init.conditions) {
-        this.conditions = init.conditions.map(c => new Condition(c.name, c));
-      } else {
-        this.conditions = [];
-      }
-
-      /*
-       * Fabrication
-       */
-      this.max_fab_units  = Math.ceil(this.scale(data.fabricators));
-      this.max_fab_health = this.max_fab_units * data.fab_health;
-      this.fab_health     = this.max_fab_units * data.fab_health;
-
-      /*
-       * Work
-       */
-      this.work_tasks = [];
-      TASK:for (const task of data.work) {
-        for (const req of task.avail) {
-          for (const trait of this.traits) {
-            if (req === trait.name) {
-              this.work_tasks.push(task);
-              continue TASK;
+        Object.defineProperty(Resource.prototype, "isMinable", {
+            get: function () { return !!this.mine; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Resource.prototype, "isCraftable", {
+            get: function () { return !!this.recipe; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Resource.prototype, "mineTurns", {
+            get: function () { return this.mine ? this.mine.tics : 0; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Resource.prototype, "craftTurns", {
+            get: function () { return this.recipe ? this.recipe.tics : 0; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Resource.prototype, "ingredients", {
+            get: function () {
+                return this.recipe
+                    ? Object.keys(this.recipe.materials)
+                    : [];
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Resource.prototype.calculateBaseValue = function () {
+            var value = 0;
+            if (this.mine) {
+                value = this.mine.value;
             }
-          }
-        }
-      }
-
-      /*
-       * Economics
-       */
-      this.stock   = new Store(init.stock);
-      this.supply  = new History(data.market_history, init.supply);
-      this.demand  = new History(data.market_history, init.demand);
-      this.need    = new History(data.market_history, init.need);
-      this.pending = new Store(init.pending);
-      this.queue   = init.queue || [];
-      this.cycle   = init.cycle || {};
-
-      this.produces = new Store;
-      this.consumes = new Store;
-      for (const item of Object.keys(resources)) {
-        this.produces.inc(item, this.scale(data.market.produces[item]));
-        this.consumes.inc(item, this.scale(data.market.consumes[item]));
-
-        this.produces.inc(item, this.scale(this.faction.produces.get(item)));
-        this.consumes.inc(item, this.scale(this.faction.consumes.get(item)));
-
-        for (const trait of this.traits) {
-          this.produces.inc(item, this.scale(trait.produces.get(item)));
-          this.consumes.inc(item, this.scale(trait.consumes.get(item)));
-        }
-
-        this.cycle[item] = util.getRandomInt(3, 10);
-      }
-
-      // Assign directly in constructor rather than in clearMemos for
-      // performance reasons. V8's jit will produce more optimized classes by
-      // avoiding dynamic assignment in the constructor.
-      this._isNetExporter = {};
-      this._getDemand     = {};
-      this._getSupply     = {};
-      this._getNeed       = {};
-      this._getShortage   = {};
-      this._getSurplus    = {};
-    }
-
-    get desc() { return data.bodies[this.body].desc }
-
-    /*
-     * Physical
-     */
-    get kind()       { return system.kind(this.body) }
-    get central()    { return system.central(this.body) }
-    get gravity()    { return system.gravity(this.body) }
-    get position()   { return system.position(this.body) }
-    distance(toBody) { return system.distance(this.body, toBody) }
-
-    hasTrait(trait) {
-      for (const t of this.traits) {
-        if (t.name == trait) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-    hasCondition(condition) {
-      for (const c of this.conditions) {
-        if (c.name == condition) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-    /*
-     * Patrols and inspections
-     */
-    patrolRate(distance=0) {
-      const rate = this.scale(this.faction.patrol);
-
-      const invsq = distance > data.jurisdiction
-        ? rate * Math.pow(data.jurisdiction, 2) / Math.pow(distance, 2)
-        : rate;
-
-      return Math.max(0, invsq);
-    }
-
-    inspectionRate(ignore_standing=false) {
-      if (ignore_standing) {
-        return this.scale(this.faction.inspection);
-      }
-      else {
-        const standing = 1 - (window.game.player.getStanding(this.faction.abbrev) / data.max_abs_standing);
-        return this.scale(this.faction.inspection) * standing;
-      }
-    }
-
-    inspectionFine() {
-      return Math.max(10, data.max_abs_standing - window.game.player.getStanding(this.faction));
-    }
-
-    /*
-     * Fabrication
-     */
-    fabricationAvailability() {
-      return Math.ceil(Math.min(100, this.fab_health / this.max_fab_health * 100));
-    }
-
-    fabricationReductionRate() {
-      if (this.hasTrait('manufacturing hub'))
-        return 0.35;
-
-      if (this.hasTrait('tech hub'))
-        return 0.5;
-
-      return 0.65;
-    }
-
-    fabricationTime(item, count=1) {
-      const resource = resources[item];
-
-      if (!resource.isCraftable) {
-        throw new Error(`${item} is not craftable`);
-      }
-
-      const reduction = this.fabricationReductionRate();
-      let health = this.fab_health;
-      let turns  = 0;
-
-      while (count > 0 && health > 0) {
-        turns  += resource.craftTurns * reduction;
-        health -= resource.craftTurns * reduction;
-        --count;
-      }
-
-      turns += count * resource.craftTurns;
-
-      return Math.max(1, Math.ceil(turns));
-    }
-
-    hasFabricationResources(item, count=1) {
-      const resource = resources[item];
-
-      if (!resource.isCraftable) {
-        throw new Error(`${item} is not craftable`);
-      }
-
-      const reduction = this.fabricationReductionRate();
-      let health = this.fab_health;
-
-      for (let i = 0; i < count && health > 0; ++i) {
-        health -= resource.craftTurns * reduction;
-
-        if (health == 0) {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    fabricationFee(item, count=1, player) {
-      const resource = resources[item];
-      const rate = data.craft_fee * this.sellPrice(item);
-      const reduction = this.fabricationReductionRate();
-
-      let health = this.fab_health;
-      let fee = 5 * rate * count;
-
-      for (let i = 0; i < count && health > 0; ++i) {
-        health -= resource.craftTurns * reduction;
-        fee    -= rate * 4;
-      }
-
-      fee -= fee * player.getStandingPriceAdjustment(this.faction.abbrev);
-      fee += fee * this.faction.sales_tax;
-
-      return Math.max(1, Math.ceil(fee));
-    }
-
-    fabricate(item) {
-      const resource = resources[item];
-
-      if (!resource.isCraftable) {
-        throw new Error(`${item} is not craftable`);
-      }
-
-      const reduction = this.fabricationReductionRate();
-      let health = this.fab_health;
-      let turns  = 0;
-
-      if (this.fab_health > 0) {
-        turns += resource.craftTurns * reduction;
-        this.fab_health -= resource.craftTurns * reduction;
-      }
-      else {
-        turns += resource.craftTurns;
-      }
-
-      const turns_taken = Math.max(1, Math.ceil(turns));
-    }
-
-    replenishFabricators() {
-      if (this.fab_health < this.max_fab_health / 2) {
-        const want = Math.ceil((this.max_fab_health - this.fab_health) / data.fab_health);
-        const [bought, price] = this.buy('cybernetics', want);
-        this.fab_health += bought * data.fab_health;
-      }
-    }
-
-    /*
-     * Work
-     */
-    hasPicketLine() {
-      return this.hasCondition("workers' strike");
-    }
-
-    payRate(player, task) {
-      let rate = this.scale(task.pay);
-      rate += rate * player.getStandingPriceAdjustment(this.faction.abbrev);
-      rate -= rate * this.faction.sales_tax;
-      return Math.ceil(rate);
-    }
-
-    work(player, task, days) {
-      const pay       = this.payRate(player, task) * days
-      const turns     = days * 24 / data.hours_per_turn;
-      const rewards   = task.rewards;
-      const collected = new Store;
-
-      for (let turn = 0; turn < turns; ++turn) {
-        for (const item of rewards) {
-          collected.inc(item, this.mine(item));
-        }
-      }
-
-      return {pay: pay, items: collected};
-    }
-
-    mine(item) {
-      if (this.production(item) > 0 && Math.random() <= data.market.minability) {
-        return Math.min(1, this.production(item));
-      }
-
-      return 0;
-    }
-
-    /*
-     * Economics
-     */
-    scale(n=0)           { return data.scales[this.size] * n }
-
-    getStock(item)       { return this.stock.count(item) }
-
-    shortageFactor(item) { return this.isNetExporter(item) ? 4 : 6 }
-    surplusFactor(item)  { return this.isNetExporter(item) ? 0.2 : 0.8 }
-
-    avgProduction(item)  { return this.getSupply(item) - this.consumption(item) }
-    netProduction(item)  { return this.production(item) - this.consumption(item) }
-
-    getDemand(item) {
-      if (!this._getDemand.hasOwnProperty(item))
-        this._getDemand[item] = this.demand.avg(item);
-      return this._getDemand[item];
-    }
-
-    getSupply(item) {
-      if (!this._getSupply.hasOwnProperty(item))
-        this._getSupply[item] = this.supply.avg(item);
-      return this._getSupply[item];
-    }
-
-    hasShortage(item) {
-      if (!this._getShortage.hasOwnProperty(item))
-        this._getShortage[item] = this.getNeed(item) >= this.shortageFactor(item);
-      return this._getShortage[item];
-    }
-
-    hasSurplus(item) {
-      if (!this._getSurplus.hasOwnProperty(item))
-        this._getSurplus[item] = this.getNeed(item) <= this.surplusFactor(item);
-      return this._getSurplus[item];
-    }
-
-    production(item) {
-      let amount = this.produces.get(item) / data.turns_per_day;
-
-      for (const condition of this.conditions) {
-        amount += this.scale(condition.produces.get(item));
-      }
-
-      return amount;
-    }
-
-    consumption(item) {
-      let amount = this.consumes.get(item) / data.turns_per_day;
-
-      for (const condition of this.conditions) {
-        amount += this.scale(condition.consumes.get(item));
-      }
-
-      return amount;
-    }
-
-    incDemand(item, amount) {
-      this.demand.inc(item, amount);
-
-      if (resources[item].isCraftable && this.hasShortage(item)) {
-        for (const mat of resources[item].ingredients) {
-          this.incDemand(mat, resources[item].recipe[mat]);
-        }
-      }
-    }
-
-    incSupply(item, amount) {
-      this.supply.inc(item, amount);
-    }
-
-    isNetExporter(item) {
-      if (!this._isNetExporter.hasOwnProperty(item)) {
-        let isExporter = false;
-
-        if (resources[item].isMinable) {
-          const net = this.netProduction(item);
-          isExporter = net >= this.scale(1);
-        }
-
-        if (!isExporter && resources[item].isCraftable) {
-          let matExporter = true;
-          for (const mat of resources[item].ingredients) {
-            if (!this.isNetExporter(mat)) {
-              matExporter = false;
-              break;
+            else if (this.recipe) {
+                for (var _i = 0, _a = this.ingredients; _i < _a.length; _i++) {
+                    var mat = _a[_i];
+                    value += this.recipe.materials[mat] * getResource(mat).calculateBaseValue();
+                }
+                value += Math.max(1, util.R(data_1.default.craft_fee * value, 2));
+                for (var i = 0; i < this.recipe.tics; ++i) {
+                    value *= 1.5;
+                }
             }
-          }
-
-          isExporter = matExporter;
-        }
-
-        this._isNetExporter[item] = isExporter;
-      }
-
-      return this._isNetExporter[item];
-    }
-
-    // TODO include distance and delivery time from nearest source
-    getNeed(item) {
-      if (!this._getNeed.hasOwnProperty(item)) {
-        let result;
-        const markup = data.necessity[item] ? 1 + data.scarcity_markup : 1;
-
-        const d = this.getDemand(item);
-        if (d === 0) {
-          result = markup * d / this.surplusFactor(item);
-        }
-        else {
-          const s = (this.getStock(item) + this.getSupply(item)) / 2;
-
-          if (s === 0) {
-            result = markup * d * this.shortageFactor(item);
-          }
-          else {
-            result = markup * d / s;
-          }
-        }
-
-        this._getNeed[item] = result;
-      }
-
-      return this._getNeed[item];
-    }
-
-    getScarcityMarkup(item) {
-      let markup = 1;
-
-      if (data.necessity[item]) {
-        markup += data.scarcity_markup;
-      }
-
-      for (const condition of this.conditions) {
-        const consumption = this.scale(condition.consumes.get(item));
-        const production  = this.scale(condition.produces.get(item));
-        const amount      = consumption - production; // production is generally a malus
-        markup += amount;
-      }
-
-      return markup;
-    }
-
-    price(item) {
-      if (!resources.hasOwnProperty(item)) {
-        throw new Error(`unrecognized resource: ${item}`);
-      }
-
-      if (!this.hasOwnProperty('_price')) {
-        this._price = {};
-      }
-
-      if (window.game.turns % (this.cycle[item] % 24 / data.hours_per_turn) === 0) {
-        delete this._price[item];
-      }
-
-      if (!this._price.hasOwnProperty(item)) {
-        const value  = resources[item].value;
-        const markup = this.getScarcityMarkup(item);
-        const need   = this.getNeed(item);
-
-        if (need > 1) {
-          this._price[item] = Math.ceil(markup * Math.min(value * 2, value + (value * Math.log10(need))));
-        } else if (need < 1) {
-          this._price[item] = Math.ceil(markup * Math.max(value / 2, value * need));
-        } else {
-          this._price[item] = Math.ceil(markup * value);
-        }
-      }
-
-      // Special cases for market classifications
-      for (const trait of this.traits) {
-        if (trait.hasOwnProperty('price') && trait.price.hasOwnProperty(item)) {
-          this._price[item] -= this._price[item] * trait.price[item];
-        }
-      }
-
-      return this._price[item];
-    }
-
-    sellPrice(item) {
-      return this.price(item);
-    }
-
-    buyPrice(item, player) {
-      const base  = this.price(item);
-      const price = base + (base * this.faction.sales_tax);
-
-      return player
-        ? util.R(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
-        : util.R(price);
-    }
-
-    buy(item, amount, player) {
-      const bought = Math.min(amount, this.getStock(item));
-      const price  = bought * this.buyPrice(item, player);
-
-      this.incDemand(item, amount);
-      this.stock.dec(item, bought);
-
-      if (player && bought) {
-        player.debit(price);
-        player.ship.loadCargo(item, bought);
-      }
-
-      return [bought, price];
-    }
-
-    sell(item, amount, player) {
-      const hadShortage = this.hasShortage(item);
-      const price = amount * this.sellPrice(item);
-      this.stock.inc(item, amount);
-
-      let standing = 0;
-
-      if (player) {
-        player.ship.unloadCargo(item, amount);
-        player.credit(price);
-
-        if (hadShortage && !resources[item].contraband) {
-          // Player ended a shortage. Increase their standing with our faction.
-          if (!this.hasShortage(item)) {
-            standing = util.getRandomNum(1, 5);
-            player.incStanding(this.faction.abbrev, standing);
-          }
-          // Player contributed toward ending a shortage. Increase their
-          // standing with our faction slightly.
-          else {
-            player.incStanding(this.faction.abbrev, 1);
-            standing = 1;
-          }
-        }
-      }
-
-      return [amount, price, standing];
-    }
-
-    schedule(task) {
-      this.pending.inc(task.item, task.count);
-      this.queue.push(task);
-    }
-
-    processQueue() {
-      // NOTE: this method of regenerating the queue is *much* faster than
-      // Array.prototype.filter().
-      const queue = this.queue;
-      this.queue = [];
-
-      for (const task of queue) {
-        if (--task.turns > 0) {
-          this.queue.push(task);
-        }
-        else {
-          this.sell(task.item, task.count);
-          this.pending.dec(task.item, task.count);
-        }
-      }
-    }
-
-    neededResourceAmount(item) {
-      const amount = this.getDemand(item.name) - this.getStock(item.name) - this.pending.get(item.name);
-      return Math.max(Math.ceil(amount), 0);
-    }
-
-    neededResources() {
-      // Calculate how many of each item we want
-      const amounts = {};
-      for (const item of Object.values(resources)) {
-        const amount = this.neededResourceAmount(item);
-
-        if (amount > 0) {
-          amounts[item.name] = amount;
-        }
-      }
-
-      // Pre-calculate each item's need
-      const need = {};
-      for (const item of Object.keys(amounts)) {
-        need[item] = this.getNeed(item);
-      }
-
-      // Sort the greatest needs to the front of the list
-      const prioritized = Object.keys(amounts).sort((a, b) => {
-        const diff = need[a] - need[b];
-        return diff > 0 ? -1
-             : diff < 0 ?  1
-             : 0;
-      });
-
-      return {'prioritized': prioritized, 'amounts': amounts};
-    }
-
-    exporters(item) {
-      return Object.keys(window.game.planets).filter(name => {
-        const p = window.game.planets[name];
-        return p.body !== this.body
-            && !p.hasShortage(item)
-            && p.getStock(item) >= 1
-            && (p.hasSurplus(item) || p.isNetExporter(item));
-      });
-    }
-
-    selectExporter(item, amount) {
-      const exporters = this.exporters(item);
-
-      if (exporters.length === 0)
-        return;
-
-      // Calculate a rating based on difference from average distance, price, stock
-      const dist  = {}, price = {}, stock = {};
-      for (const body of exporters) {
-        dist[body]  = this.distance(body) / Physics.AU * window.game.planets[body].buyPrice('fuel');
-        price[body] = window.game.planets[body].buyPrice(item);
-        stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
-      }
-
-      const avgDist
-        = Object.values(dist).reduce((a, b) => {return a + b}, 0)
-        / Object.values(dist).length;
-
-      const avgPrice
-        = Object.values(price).reduce((a, b) => {return a + b}, 0)
-        / Object.values(price).length;
-
-      const avgStock
-        = Object.values(stock).reduce((a, b) => {return a + b}, 0)
-        / Object.values(stock).length;
-
-      const distRating  = {}, priceRating = {}, stockRating = {};
-      for (const body of exporters) {
-        distRating[body]  = avgDist / dist[body];
-        priceRating[body] = avgPrice / price[body];
-        stockRating[body] = stock[body] / avgStock;
-      }
-
-      // Calculate a rating by comparing distance, price, and number of
-      // available units
-      let bestRating = 0, bestPlanet = null;
-      for (const body of exporters) {
-        const rating = priceRating[body] * stockRating[body] * distRating[body];
-        if (rating > bestRating) {
-          bestRating = rating;
-          bestPlanet = body;
-        }
-      }
-
-      return bestPlanet;
-    }
-
-    manufacture() {
-      const need = this.neededResources();
-      const want = need.amounts;
-      const list = [];
-
-      for (const i of need.prioritized) {
-        let canCraft = true;
-
-        // Not craftable or we do not need it
-        if (!resources[i].isCraftable || this.getNeed(i) < 0.25) {
-          canCraft = false;
-        }
-
-        // Cache so we don't recalculate these over and over
-        const mat_stock = {};
-        const mat_short = {};
-
-        for (const mat of resources[i].ingredients) {
-          for (const mat of resources[i].ingredients) {
-            if (!mat_stock[mat]) mat_stock[mat] = this.getStock(mat);
-            if (!mat_short[mat]) mat_short[mat] = this.hasShortage(mat);
-
-            if (mat_stock[mat] < resources[i].recipe[mat] || mat_short[mat]) {
-              this.incDemand(mat, resources[i].recipe[mat]);
-              canCraft = false;
+            return value;
+        };
+        return Resource;
+    }());
+    exports.Resource = Resource;
+    var Faction = /** @class */ (function () {
+        function Faction(abbrev) {
+            if (typeof abbrev == 'object') {
+                abbrev = abbrev.abbrev;
             }
-          }
+            this.abbrev = abbrev;
+            this.full_name = data_1.default.factions[abbrev].full_name;
+            this.capital = data_1.default.factions[abbrev].capital;
+            this.sales_tax = data_1.default.factions[abbrev].sales_tax;
+            this.patrol = data_1.default.factions[abbrev].patrol;
+            this.inspection = data_1.default.factions[abbrev].inspection;
+            this.consumes = new store_1.default(data_1.default.factions[abbrev].consumes);
+            this.produces = new store_1.default(data_1.default.factions[abbrev].produces);
+            this.standing = data_1.default.factions[abbrev].standing;
         }
-
-        if (canCraft) {
-          list.push(i);
-        } else {
-          delete want[i];
+        Object.defineProperty(Faction.prototype, "desc", {
+            get: function () { return data_1.default.factions[this.abbrev].desc; },
+            enumerable: true,
+            configurable: true
+        });
+        Faction.prototype.toString = function () { return this.abbrev; };
+        return Faction;
+    }());
+    exports.Faction = Faction;
+    var Trait = /** @class */ (function () {
+        function Trait(name) {
+            this.name = name;
+            this.produces = data_1.default.traits[name].produces || {};
+            this.consumes = data_1.default.traits[name].consumes || {};
+            this.price = data_1.default.traits[name].price || {};
         }
-      }
-
-      while (Object.keys(want).length > 0) {
-        const items = list
-          .filter(i => want[i])
-          .map(i => resources[i]);
-
-        for (const item of items) {
-          for (const mat of item.ingredients) {
-            this.buy(mat, item.recipe[mat]);
-          }
-
-          if (--want[item.name] === 0) {
-            delete want[item.name];
-          }
-
-          const turns = this.fabricate(item.name);
-
-          this.schedule({
-            type:  'craft',
-            turns: turns,
-            item:  item.name,
-            count: 1,
-          });
-        }
-      }
-    }
-
-    imports() {
-      if (this.queue.length > 10)
-        return;
-
-      const need = this.neededResources();
-      const want = need.amounts;
-
-      const list = need.prioritized.filter(i => {
-        if (this.isNetExporter(i) && !this.hasShortage(i)) {
-          // Remove items that we ourselves export or that we aren't short of
-          delete want[i];
-          return false;
-        }
-
-        return true;
-      });
-
-      ITEM: for (const item of list) {
-        // Import amounts should be between 5-20 units
-        const amount = util.clamp(want[item] * (data.necessity[item] ? 2 : 1), 5, 20);
-        const planet = this.selectExporter(item, amount);
-        if (!planet) continue;
-
-        const [bought, price] = window.game.planets[planet].buy(item, amount);
-
-        if (bought > 0) {
-          const distance = this.distance(planet) / Physics.AU;
-          const turns = Math.ceil(distance * (24 / data.hours_per_turn) * 5); // 5 days per AU
-          window.game.planets[planet].buy('fuel', distance);
-
-          this.schedule({
-            type:  'import',
-            item:  item,
-            count: bought,
-            from:  planet,
-            to:    this.body,
-            turns: turns,
-          });
-        }
-      }
-    }
-
-    produce() {
-      for (const item of this.produces.keys()) {
-        const amount = this.production(item);
-        if (amount > 0 && !this.hasSurplus(item)) {
-          this.sell(item, amount);
-        }
-      }
-    }
-
-    consume() {
-      for (const item of this.consumes.keys()) {
-        const amt = this.consumption(item);
-        if (amt > 0) {
-          this.buy(item, this.consumption(item));
-        }
-      }
-    }
-
-    rollups() {
-      if (window.game.turns % (24 / data.hours_per_turn) === 0) {
-        for (const item of this.stock.keys()) {
-          this.incSupply(item, this.getStock(item));
-        }
-
-        this.supply.rollup();
-        this.demand.rollup();
-
-        for (const item of this.need.keys()) {
-          this.need.inc(item, this.getNeed(item));
-        }
-
-        this.need.rollup();
-      }
-    }
-
-    apply_conditions() {
-      // Increment turns on each condition and filter out those which are no
-      // longer active.
-      this.conditions = this.conditions.filter(c => {
-        c.inc_turns();
-        return !c.is_over;
-      });
-
-      // Test for chance of new conditions
-      for (const c of Object.keys(data.conditions)) {
-        // Skip conditions that are already active
-        if (this.hasCondition(c)) {
-          continue;
-        }
-
-        // Shortages
-        for (const item of Object.keys(data.conditions[c].triggers.shortage)) {
-          if (this.hasShortage(item)) {
-            if (util.chance( data.conditions[c].triggers.shortage[item] )) {
-              this.conditions.push(new Condition(c));
+        return Trait;
+    }());
+    exports.Trait = Trait;
+    ;
+    var Condition = /** @class */ (function () {
+        function Condition(name, init) {
+            this.name = name;
+            this.produces = new store_1.default;
+            this.consumes = new store_1.default;
+            if (init) {
+                this.turns_total = init.turns_total;
+                this.turns_done = init.turns_done;
             }
-          }
-        }
-
-        // Surpluses
-        for (const item of Object.keys(data.conditions[c].triggers.surplus)) {
-          if (this.hasSurplus(item)) {
-            if (util.chance( data.conditions[c].triggers.surplus[item] )) {
-              this.conditions.push(new Condition(c));
+            else {
+                this.turns_total = data_1.default.turns_per_day * util.getRandomInt(this.data.days[0], this.data.days[1]);
+                this.turns_done = 0;
             }
-          }
         }
-
-        // Conditions
-        for (const cond of Object.keys(data.conditions[c].triggers.condition)) {
-          if (this.hasCondition(cond) || this.hasTrait(cond)) {
-            if (util.chance( data.conditions[c].triggers.condition[cond] )) {
-              this.conditions.push(new Condition(c));
+        Object.defineProperty(Condition.prototype, "data", {
+            get: function () { return data_1.default.conditions[this.name]; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Condition.prototype, "triggers", {
+            get: function () { return this.data.triggers; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Condition.prototype, "on_shortage", {
+            get: function () { return this.triggers.shortage || {}; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Condition.prototype, "on_surplus", {
+            get: function () { return this.triggers.surplus || {}; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Condition.prototype, "on_condition", {
+            get: function () { return this.triggers.condition || {}; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Condition.prototype, "turns_left", {
+            get: function () { return this.turns_total - this.turns_done; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Condition.prototype, "is_over", {
+            get: function () { return this.turns_done >= this.turns_total; },
+            enumerable: true,
+            configurable: true
+        });
+        Condition.prototype.inc_turns = function () { ++this.turns_done; };
+        return Condition;
+    }());
+    exports.Condition = Condition;
+    ;
+    var Planet = /** @class */ (function () {
+        function Planet(body, init) {
+            init = init || {};
+            /*
+             * Physical and faction
+             */
+            this.body = body;
+            this.name = data_1.default.bodies[body].name;
+            this.size = data_1.default.bodies[body].size;
+            this.faction = new Faction(data_1.default.bodies[body].faction);
+            this.radius = system_1.default.body(body).radius;
+            this.traits = data_1.default.bodies[body].traits.map(function (t) { return new Trait(t); });
+            /*
+             * Temporary conditions
+             */
+            if (init.conditions) {
+                this.conditions = init.conditions.map(function (c) { return new Condition(c.name, c); });
             }
-          }
+            else {
+                this.conditions = [];
+            }
+            /*
+             * Fabrication
+             */
+            this.max_fab_units = Math.ceil(this.scale(data_1.default.fabricators));
+            this.max_fab_health = this.max_fab_units * data_1.default.fab_health;
+            this.fab_health = this.max_fab_units * data_1.default.fab_health;
+            /*
+             * Work
+             */
+            this.work_tasks = [];
+            TASK: for (var _i = 0, _a = data_1.default.work; _i < _a.length; _i++) {
+                var task = _a[_i];
+                for (var _b = 0, _c = task.avail; _b < _c.length; _b++) {
+                    var req = _c[_b];
+                    for (var _d = 0, _e = this.traits; _d < _e.length; _d++) {
+                        var trait = _e[_d];
+                        if (req === trait.name) {
+                            this.work_tasks.push(task);
+                            continue TASK;
+                        }
+                    }
+                }
+            }
+            /*
+             * Economics
+             */
+            this.stock = new store_1.default(init.stock);
+            this.supply = new history_1.default(data_1.default.market_history, init.supply);
+            this.demand = new history_1.default(data_1.default.market_history, init.demand);
+            this.need = new history_1.default(data_1.default.market_history, init.need);
+            this.pending = new store_1.default(init.pending);
+            this.queue = init.queue || [];
+            this.cycle = init.cycle || {};
+            this.produces = new store_1.default;
+            this.consumes = new store_1.default;
+            for (var _f = 0, _g = t.resources; _f < _g.length; _f++) {
+                var item = _g[_f];
+                this.produces.inc(item, this.scale(data_1.default.market.produces[item]));
+                this.consumes.inc(item, this.scale(data_1.default.market.consumes[item]));
+                this.produces.inc(item, this.scale(this.faction.produces.get(item)));
+                this.consumes.inc(item, this.scale(this.faction.consumes.get(item)));
+                for (var _h = 0, _j = this.traits; _h < _j.length; _h++) {
+                    var trait = _j[_h];
+                    this.produces.inc(item, this.scale(trait.produces[item]));
+                    this.consumes.inc(item, this.scale(trait.consumes[item]));
+                }
+                this.cycle[item] = util.getRandomInt(3, 10);
+            }
+            // Assign directly in constructor rather than in clearMemos for
+            // performance reasons. V8's jit will produce more optimized classes by
+            // avoiding dynamic assignment in the constructor.
+            this._isNetExporter = {};
+            this._getDemand = {};
+            this._getSupply = {};
+            this._getNeed = {};
+            this._getShortage = {};
+            this._getSurplus = {};
+            this._price = {};
         }
-      }
-    }
-
-    clearMemos() {
-      this._isNetExporter = {};
-      this._getDemand     = {};
-      this._getSupply     = {};
-      this._getNeed       = {};
-      this._getShortage   = {};
-      this._getSurplus    = {};
-    }
-
-    turn() {
-      this.clearMemos();
-      this.produce();
-      this.consume();
-      this.processQueue();
-      this.manufacture();
-      this.replenishFabricators();
-      this.imports();
-      this.apply_conditions();
-      this.rollups();
-    }
-
-    /*
-     * Misc
-     */
-    addonPrice(addon, player) {
-      const base     = data.addons[addon].price;
-      const standing = base * player.getStandingPriceAdjustment(this.faction.abbrev);
-      const tax      = base * this.faction.sales_tax;
-
-      let price = base - standing + tax;
-
-      for (const trait of this.traits) {
-        if (trait.hasOwnProperty('price') && trait.price.hasOwnProperty('addons')) {
-          price -= base * traits.price.addons;
-        }
-      }
-
-      return price;
-    }
-
-    resourceDependencyPriceAdjustment(resource) {
-      if (this.hasShortage(resource)) {
-        return this.getNeed(resource);
-      } else if (this.hasSurplus(resource)) {
-        return 1 / this.getNeed(resource);
-      } else {
-        return 1;
-      }
-    }
-
-    hasRepairs() {
-      return this.resourceDependencyPriceAdjustment('metal') < 10;
-    }
-
-    hullRepairPrice(player) {
-      const base     = data.ship.hull.repair;
-      const tax      = this.faction.sales_tax;
-      const standing = player.getStandingPriceAdjustment(this.faction.abbrev);
-      const scarcity = this.resourceDependencyPriceAdjustment('metal');
-      return (base + (base * tax) - (base * standing)) * scarcity;
-    }
-
-    armorRepairPrice(player) {
-      const base     = data.ship.armor.repair;
-      const tax      = this.faction.sales_tax;
-      const standing = player.getStandingPriceAdjustment(this.faction.abbrev);
-      const scarcity = this.resourceDependencyPriceAdjustment('metal');
-      return (base + (base * tax) - (base * standing)) * scarcity;
-    }
-  };
-
-
-  for (const name of Object.keys(data.resources))
-    resources[name] = new Resource(name);
-
-
-  exports.resources = resources;
-  exports.Resource  = Resource;
-  exports.Store     = Store;
-  exports.Faction   = Faction;
-  exports.Trait     = Trait;
-  exports.Condition = Condition;
-  exports.History   = History;
-  exports.Planet    = Planet;
+        Object.defineProperty(Planet.prototype, "desc", {
+            get: function () { return data_1.default.bodies[this.body].desc; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Planet.prototype, "kind", {
+            /*
+             * Physical
+             */
+            get: function () { return system_1.default.kind(this.body); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Planet.prototype, "central", {
+            get: function () { return system_1.default.central(this.body); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Planet.prototype, "gravity", {
+            get: function () { return system_1.default.gravity(this.body); },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Planet.prototype, "position", {
+            get: function () { return system_1.default.position(this.body); },
+            enumerable: true,
+            configurable: true
+        });
+        Planet.prototype.distance = function (toBody) {
+            return system_1.default.distance(this.body, toBody);
+        };
+        Planet.prototype.hasTrait = function (trait) {
+            for (var _i = 0, _a = this.traits; _i < _a.length; _i++) {
+                var t_1 = _a[_i];
+                if (t_1.name == trait) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        Planet.prototype.hasCondition = function (condition) {
+            for (var _i = 0, _a = this.conditions; _i < _a.length; _i++) {
+                var c = _a[_i];
+                if (c.name == condition) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        /*
+         * Patrols and inspections
+         */
+        Planet.prototype.patrolRate = function (distance) {
+            if (distance === void 0) { distance = 0; }
+            var rate = this.scale(this.faction.patrol);
+            var invsq = distance > data_1.default.jurisdiction
+                ? rate * Math.pow(data_1.default.jurisdiction, 2) / Math.pow(distance, 2)
+                : rate;
+            return Math.max(0, invsq);
+        };
+        Planet.prototype.inspectionRate = function (player) {
+            var standing = 1 - (player.getStanding(this.faction.abbrev) / data_1.default.max_abs_standing);
+            return this.scale(this.faction.inspection) * standing;
+        };
+        Planet.prototype.inspectionFine = function (player) {
+            return Math.max(10, data_1.default.max_abs_standing - player.getStanding(this.faction));
+        };
+        /*
+         * Fabrication
+         */
+        Planet.prototype.fabricationAvailability = function () {
+            return Math.ceil(Math.min(100, this.fab_health / this.max_fab_health * 100));
+        };
+        Planet.prototype.fabricationReductionRate = function () {
+            if (this.hasTrait('manufacturing hub'))
+                return 0.35;
+            if (this.hasTrait('tech hub'))
+                return 0.5;
+            return 0.65;
+        };
+        Planet.prototype.fabricationTime = function (item, count) {
+            if (count === void 0) { count = 1; }
+            var resource = getResource(item);
+            if (!resource.isCraftable) {
+                throw new Error(item + " is not craftable");
+            }
+            var reduction = this.fabricationReductionRate();
+            var health = this.fab_health;
+            var turns = 0;
+            while (count > 0 && health > 0) {
+                turns += resource.craftTurns * reduction;
+                health -= resource.craftTurns * reduction;
+                --count;
+            }
+            turns += count * resource.craftTurns;
+            return Math.max(1, Math.ceil(turns));
+        };
+        Planet.prototype.hasFabricationResources = function (item, count) {
+            if (count === void 0) { count = 1; }
+            var resource = getResource(item);
+            if (!resource.isCraftable) {
+                throw new Error(item + " is not craftable");
+            }
+            var reduction = this.fabricationReductionRate();
+            var health = this.fab_health;
+            for (var i = 0; i < count && health > 0; ++i) {
+                health -= resource.craftTurns * reduction;
+                if (health == 0) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        Planet.prototype.fabricationFee = function (item, count, player) {
+            if (count === void 0) { count = 1; }
+            var resource = getResource(item);
+            var rate = data_1.default.craft_fee * this.sellPrice(item);
+            var reduction = this.fabricationReductionRate();
+            var health = this.fab_health;
+            var fee = 5 * rate * count;
+            for (var i = 0; i < count && health > 0; ++i) {
+                health -= resource.craftTurns * reduction;
+                fee -= rate * 4;
+            }
+            fee -= fee * player.getStandingPriceAdjustment(this.faction.abbrev);
+            fee += fee * this.faction.sales_tax;
+            return Math.max(1, Math.ceil(fee));
+        };
+        Planet.prototype.fabricate = function (item) {
+            var resource = getResource(item);
+            if (!resource.isCraftable) {
+                throw new Error(item + " is not craftable");
+            }
+            var reduction = this.fabricationReductionRate();
+            var health = this.fab_health;
+            var turns = 0;
+            if (this.fab_health > 0) {
+                turns += resource.craftTurns * reduction;
+                this.fab_health -= resource.craftTurns * reduction;
+            }
+            else {
+                turns += resource.craftTurns;
+            }
+            var turns_taken = Math.max(1, Math.ceil(turns));
+            return turns_taken;
+        };
+        Planet.prototype.replenishFabricators = function () {
+            if (this.fab_health < this.max_fab_health / 2) {
+                var want = Math.ceil((this.max_fab_health - this.fab_health) / data_1.default.fab_health);
+                var _a = this.buy('cybernetics', want), bought = _a[0], price = _a[1];
+                this.fab_health += bought * data_1.default.fab_health;
+            }
+        };
+        /*
+         * Work
+         */
+        Planet.prototype.hasPicketLine = function () {
+            return this.hasCondition("workers' strike");
+        };
+        Planet.prototype.payRate = function (player, task) {
+            var rate = this.scale(task.pay);
+            rate += rate * player.getStandingPriceAdjustment(this.faction.abbrev);
+            rate -= rate * this.faction.sales_tax;
+            return Math.ceil(rate);
+        };
+        Planet.prototype.work = function (player, task, days) {
+            var pay = this.payRate(player, task) * days;
+            var turns = days * 24 / data_1.default.hours_per_turn;
+            var rewards = task.rewards;
+            var collected = new store_1.default;
+            for (var turn = 0; turn < turns; ++turn) {
+                for (var _i = 0, rewards_1 = rewards; _i < rewards_1.length; _i++) {
+                    var item = rewards_1[_i];
+                    collected.inc(item, this.mine(item));
+                }
+            }
+            return { pay: pay, items: collected };
+        };
+        Planet.prototype.mine = function (item) {
+            if (this.production(item) > 0 && Math.random() <= data_1.default.market.minability) {
+                return Math.min(1, this.production(item));
+            }
+            return 0;
+        };
+        /*
+         * Economics
+         */
+        Planet.prototype.scale = function (n) {
+            if (n === void 0) { n = 0; }
+            return data_1.default.scales[this.size] * n;
+        };
+        Planet.prototype.getStock = function (item) { return this.stock.count(item); };
+        Planet.prototype.shortageFactor = function (item) { return this.isNetExporter(item) ? 4 : 6; };
+        Planet.prototype.surplusFactor = function (item) { return this.isNetExporter(item) ? 0.2 : 0.8; };
+        Planet.prototype.avgProduction = function (item) { return this.getSupply(item) - this.consumption(item); };
+        Planet.prototype.netProduction = function (item) { return this.production(item) - this.consumption(item); };
+        Planet.prototype.getDemand = function (item) {
+            if (!this._getDemand.hasOwnProperty(item))
+                this._getDemand[item] = this.demand.avg(item);
+            return this._getDemand[item];
+        };
+        Planet.prototype.getSupply = function (item) {
+            if (!this._getSupply.hasOwnProperty(item))
+                this._getSupply[item] = this.supply.avg(item);
+            return this._getSupply[item];
+        };
+        Planet.prototype.hasShortage = function (item) {
+            if (!this._getShortage.hasOwnProperty(item))
+                this._getShortage[item] = this.getNeed(item) >= this.shortageFactor(item);
+            return this._getShortage[item];
+        };
+        Planet.prototype.hasSurplus = function (item) {
+            if (!this._getSurplus.hasOwnProperty(item))
+                this._getSurplus[item] = this.getNeed(item) <= this.surplusFactor(item);
+            return this._getSurplus[item];
+        };
+        Planet.prototype.production = function (item) {
+            var amount = this.produces.get(item) / data_1.default.turns_per_day;
+            for (var _i = 0, _a = this.conditions; _i < _a.length; _i++) {
+                var condition = _a[_i];
+                amount += this.scale(condition.produces.get(item));
+            }
+            return amount;
+        };
+        Planet.prototype.consumption = function (item) {
+            var amount = this.consumes.get(item) / data_1.default.turns_per_day;
+            for (var _i = 0, _a = this.conditions; _i < _a.length; _i++) {
+                var condition = _a[_i];
+                amount += this.scale(condition.consumes.get(item));
+            }
+            return amount;
+        };
+        Planet.prototype.incDemand = function (item, amount) {
+            this.demand.inc(item, amount);
+            var res = getResource(item);
+            if (res.recipe && this.hasShortage(item)) {
+                for (var _i = 0, _a = res.ingredients; _i < _a.length; _i++) {
+                    var mat = _a[_i];
+                    this.incDemand(mat, res.recipe.materials[mat]);
+                }
+            }
+        };
+        Planet.prototype.incSupply = function (item, amount) {
+            this.supply.inc(item, amount);
+        };
+        Planet.prototype.isNetExporter = function (item) {
+            if (!this._isNetExporter.hasOwnProperty(item)) {
+                var isExporter = false;
+                var res = getResource(item);
+                if (res.isMinable) {
+                    var net = this.netProduction(item);
+                    isExporter = net >= this.scale(1);
+                }
+                if (!isExporter && res.isCraftable) {
+                    var matExporter = true;
+                    for (var _i = 0, _a = res.ingredients; _i < _a.length; _i++) {
+                        var mat = _a[_i];
+                        if (!this.isNetExporter(mat)) {
+                            matExporter = false;
+                            break;
+                        }
+                    }
+                    isExporter = matExporter;
+                }
+                this._isNetExporter[item] = isExporter;
+            }
+            return this._isNetExporter[item];
+        };
+        // TODO include distance and delivery time from nearest source
+        Planet.prototype.getNeed = function (item) {
+            if (!this._getNeed.hasOwnProperty(item)) {
+                var result = void 0;
+                var markup = data_1.default.necessity[item] ? 1 + data_1.default.scarcity_markup : 1;
+                var d = this.getDemand(item);
+                if (d === 0) {
+                    result = markup * d / this.surplusFactor(item);
+                }
+                else {
+                    var s = (this.getStock(item) + this.getSupply(item)) / 2;
+                    if (s === 0) {
+                        result = markup * d * this.shortageFactor(item);
+                    }
+                    else {
+                        result = markup * d / s;
+                    }
+                }
+                this._getNeed[item] = result;
+            }
+            return this._getNeed[item];
+        };
+        Planet.prototype.getScarcityMarkup = function (item) {
+            var markup = 1;
+            if (data_1.default.necessity[item]) {
+                markup += data_1.default.scarcity_markup;
+            }
+            for (var _i = 0, _a = this.conditions; _i < _a.length; _i++) {
+                var condition = _a[_i];
+                var consumption = this.scale(condition.consumes.get(item));
+                var production = this.scale(condition.produces.get(item));
+                var amount = consumption - production; // production is generally a malus
+                markup += amount;
+            }
+            return markup;
+        };
+        Planet.prototype.price = function (item) {
+            var res = getResource(item);
+            if (!this.hasOwnProperty('_price')) {
+                this._price = {};
+            }
+            if (window.game.turns % (this.cycle[item] % 24 / data_1.default.hours_per_turn) === 0) {
+                delete this._price[item];
+            }
+            if (!this._price.hasOwnProperty(item)) {
+                var value = res.value;
+                var markup = this.getScarcityMarkup(item);
+                var need = this.getNeed(item);
+                if (need > 1) {
+                    this._price[item] = Math.ceil(markup * Math.min(value * 2, value + (value * Math.log(need))));
+                }
+                else if (need < 1) {
+                    this._price[item] = Math.ceil(markup * Math.max(value / 2, value * need));
+                }
+                else {
+                    this._price[item] = Math.ceil(markup * value);
+                }
+                // Special cases for market classifications
+                for (var _i = 0, _a = this.traits; _i < _a.length; _i++) {
+                    var trait = _a[_i];
+                    if (trait.hasOwnProperty('price') && trait.price.hasOwnProperty(item)) {
+                        this._price[item] -= this._price[item] * trait.price[item];
+                    }
+                }
+                this._price[item] = Math.ceil(this._price[item]);
+            }
+            return this._price[item];
+        };
+        Planet.prototype.sellPrice = function (item) {
+            return this.price(item);
+        };
+        Planet.prototype.buyPrice = function (item, player) {
+            var base = this.price(item);
+            var price = base + (base * this.faction.sales_tax);
+            return player
+                ? util.R(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
+                : util.R(price);
+        };
+        Planet.prototype.buy = function (item, amount, player) {
+            var bought = Math.min(amount, this.getStock(item));
+            var price = bought * this.buyPrice(item, player);
+            this.incDemand(item, amount);
+            this.stock.dec(item, bought);
+            if (player && bought) {
+                player.debit(price);
+                player.ship.loadCargo(item, bought);
+            }
+            return [bought, price];
+        };
+        Planet.prototype.sell = function (item, amount, player) {
+            var hadShortage = this.hasShortage(item);
+            var price = amount * this.sellPrice(item);
+            this.stock.inc(item, amount);
+            var standing = 0;
+            if (player) {
+                player.ship.unloadCargo(item, amount);
+                player.credit(price);
+                if (hadShortage && !getResource(item).contraband) {
+                    // Player ended a shortage. Increase their standing with our faction.
+                    if (!this.hasShortage(item)) {
+                        standing = util.getRandomNum(1, 5);
+                        player.incStanding(this.faction.abbrev, standing);
+                    }
+                    // Player contributed toward ending a shortage. Increase their
+                    // standing with our faction slightly.
+                    else {
+                        player.incStanding(this.faction.abbrev, 1);
+                        standing = 1;
+                    }
+                }
+            }
+            return [amount, price, standing];
+        };
+        Planet.prototype.schedule = function (task) {
+            this.pending.inc(task.item, task.count);
+            this.queue.push(task);
+        };
+        Planet.prototype.processQueue = function () {
+            // NOTE: this method of regenerating the queue is *much* faster than
+            // Array.prototype.filter().
+            var queue = this.queue;
+            this.queue = [];
+            for (var _i = 0, queue_1 = queue; _i < queue_1.length; _i++) {
+                var task = queue_1[_i];
+                if (--task.turns > 0) {
+                    this.queue.push(task);
+                }
+                else {
+                    this.sell(task.item, task.count);
+                    this.pending.dec(task.item, task.count);
+                }
+            }
+        };
+        Planet.prototype.neededResourceAmount = function (item) {
+            var amount = this.getDemand(item.name) - this.getStock(item.name) - this.pending.get(item.name);
+            return Math.max(Math.ceil(amount), 0);
+        };
+        Planet.prototype.neededResources = function () {
+            // Calculate how many of each item we want
+            var amounts = {};
+            for (var _i = 0, _a = t.resources; _i < _a.length; _i++) {
+                var item = _a[_i];
+                var amount = this.neededResourceAmount(getResource(item));
+                if (amount > 0) {
+                    amounts[item] = amount;
+                }
+            }
+            // Pre-calculate each item's need
+            var need = {};
+            for (var _b = 0, _c = Object.keys(amounts); _b < _c.length; _b++) {
+                var item = _c[_b];
+                need[item] = this.getNeed(item);
+            }
+            // Sort the greatest needs to the front of the list
+            var prioritized = Object.keys(amounts).sort(function (a, b) {
+                var diff = need[a] - need[b];
+                return diff > 0 ? -1
+                    : diff < 0 ? 1
+                        : 0;
+            });
+            return {
+                'prioritized': prioritized,
+                'amounts': amounts,
+            };
+        };
+        Planet.prototype.exporters = function (item) {
+            var _this = this;
+            var bodies = Object.keys(window.game.planets);
+            return bodies.filter(function (name) {
+                var p = window.game.planets[name];
+                return p.body !== _this.body
+                    && !p.hasShortage(item)
+                    && p.getStock(item) >= 1
+                    && (p.hasSurplus(item) || p.isNetExporter(item));
+            });
+        };
+        Planet.prototype.selectExporter = function (item, amount) {
+            var exporters = this.exporters(item);
+            if (exporters.length === 0)
+                return;
+            // Calculate a rating based on difference from average distance, price, stock
+            var dist = {};
+            var price = {};
+            var stock = {};
+            for (var _i = 0, exporters_1 = exporters; _i < exporters_1.length; _i++) {
+                var body = exporters_1[_i];
+                dist[body] = this.distance(body) / physics_1.default.AU * window.game.planets[body].buyPrice('fuel');
+                price[body] = window.game.planets[body].buyPrice(item);
+                stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
+            }
+            var avgDist = Object.values(dist).reduce(function (a, b) { return a + b; }, 0)
+                / Object.values(dist).length;
+            var avgPrice = Object.values(price).reduce(function (a, b) { return a + b; }, 0)
+                / Object.values(price).length;
+            var avgStock = Object.values(stock).reduce(function (a, b) { return a + b; }, 0)
+                / Object.values(stock).length;
+            var distRating = {};
+            var priceRating = {};
+            var stockRating = {};
+            for (var _a = 0, exporters_2 = exporters; _a < exporters_2.length; _a++) {
+                var body = exporters_2[_a];
+                distRating[body] = avgDist / dist[body];
+                priceRating[body] = avgPrice / price[body];
+                stockRating[body] = stock[body] / avgStock;
+            }
+            // Calculate a rating by comparing distance, price, and number of
+            // available units
+            var bestPlanet;
+            var bestRating = 0;
+            for (var _b = 0, exporters_3 = exporters; _b < exporters_3.length; _b++) {
+                var body = exporters_3[_b];
+                var rating = priceRating[body] * stockRating[body] * distRating[body];
+                if (rating > bestRating) {
+                    bestRating = rating;
+                    bestPlanet = body;
+                }
+            }
+            return bestPlanet;
+        };
+        Planet.prototype.manufacture = function () {
+            var need = this.neededResources();
+            var want = need.amounts;
+            var list = [];
+            for (var _i = 0, _a = need.prioritized; _i < _a.length; _i++) {
+                var i = _a[_i];
+                var res = getResource(i);
+                // Not craftable or we do not need it
+                if (!res.recipe || this.getNeed(i) < 0.25) {
+                    delete want[i];
+                }
+                else {
+                    // Cache so we don't recalculate these over and over
+                    var mat_stock = {};
+                    var mat_short = {};
+                    for (var _b = 0, _c = res.ingredients; _b < _c.length; _b++) {
+                        var mat = _c[_b];
+                        if (!mat_stock[mat])
+                            mat_stock[mat] = this.getStock(mat);
+                        if (!mat_short[mat])
+                            mat_short[mat] = this.hasShortage(mat);
+                        if (mat_stock[mat] < res.recipe.materials[mat] || mat_short[mat]) {
+                            this.incDemand(mat, res.recipe.materials[mat]);
+                        }
+                    }
+                    list.push(i);
+                }
+            }
+            while (Object.keys(want).length > 0) {
+                var items = list
+                    .filter(function (i) { return want[i]; })
+                    .map(function (i) { return getResource(i); });
+                for (var _d = 0, items_1 = items; _d < items_1.length; _d++) {
+                    var item = items_1[_d];
+                    if (item.recipe) {
+                        for (var _e = 0, _f = item.ingredients; _e < _f.length; _e++) {
+                            var mat = _f[_e];
+                            this.buy(mat, item.recipe.materials[mat]);
+                        }
+                    }
+                    if (--want[item.name] === 0) {
+                        delete want[item.name];
+                    }
+                    this.schedule({
+                        type: 'craft',
+                        turns: this.fabricate(item.name),
+                        item: item.name,
+                        count: 1,
+                    });
+                }
+            }
+        };
+        Planet.prototype.imports = function () {
+            var _this = this;
+            if (this.queue.length > 10)
+                return;
+            var need = this.neededResources();
+            var want = need.amounts;
+            var list = need.prioritized.filter(function (i) {
+                if (_this.isNetExporter(i) && !_this.hasShortage(i)) {
+                    // Remove items that we ourselves export or that we aren't short of
+                    delete want[i];
+                    return false;
+                }
+                return true;
+            });
+            ITEM: for (var _i = 0, list_1 = list; _i < list_1.length; _i++) {
+                var item = list_1[_i];
+                // Import amounts should be between 5-20 units
+                var amount = util.clamp(want[item] * (data_1.default.necessity[item] ? 2 : 1), 5, 20);
+                var planet = this.selectExporter(item, amount);
+                if (!planet) {
+                    continue;
+                }
+                var _a = window.game.planets[planet].buy(item, amount), bought = _a[0], price = _a[1];
+                if (bought > 0) {
+                    var distance = this.distance(planet) / physics_1.default.AU;
+                    var turns = Math.ceil(distance * (24 / data_1.default.hours_per_turn) * 5); // 5 days per AU
+                    window.game.planets[planet].buy('fuel', distance);
+                    this.schedule({
+                        type: 'import',
+                        item: item,
+                        count: bought,
+                        from: planet,
+                        to: this.body,
+                        turns: turns,
+                    });
+                }
+            }
+        };
+        Planet.prototype.produce = function () {
+            for (var _i = 0, _a = this.produces.keys(); _i < _a.length; _i++) {
+                var item = _a[_i];
+                var amount = this.production(item);
+                if (amount > 0 && !this.hasSurplus(item)) {
+                    this.sell(item, amount);
+                }
+            }
+        };
+        Planet.prototype.consume = function () {
+            for (var _i = 0, _a = this.consumes.keys(); _i < _a.length; _i++) {
+                var item = _a[_i];
+                var amt = this.consumption(item);
+                if (amt > 0) {
+                    this.buy(item, this.consumption(item));
+                }
+            }
+        };
+        Planet.prototype.rollups = function () {
+            if (window.game.turns % (24 / data_1.default.hours_per_turn) === 0) {
+                for (var _i = 0, _a = this.stock.keys(); _i < _a.length; _i++) {
+                    var item = _a[_i];
+                    this.incSupply(item, this.getStock(item));
+                }
+                this.supply.rollup();
+                this.demand.rollup();
+                for (var _b = 0, _c = this.need.keys(); _b < _c.length; _b++) {
+                    var item = _c[_b];
+                    this.need.inc(item, this.getNeed(item));
+                }
+                this.need.rollup();
+            }
+        };
+        Planet.prototype.apply_conditions = function () {
+            // Increment turns on each condition and filter out those which are no
+            // longer active.
+            this.conditions = this.conditions.filter(function (c) {
+                c.inc_turns();
+                return !c.is_over;
+            });
+            // Test for chance of new conditions
+            for (var _i = 0, _a = Object.keys(data_1.default.conditions); _i < _a.length; _i++) {
+                var c = _a[_i];
+                // Skip conditions that are already active
+                if (this.hasCondition(c)) {
+                    continue;
+                }
+                // Shortages
+                for (var _b = 0, _c = Object.keys(data_1.default.conditions[c].triggers.shortage); _b < _c.length; _b++) {
+                    var item = _c[_b];
+                    if (this.hasShortage(item)) {
+                        if (util.chance(data_1.default.conditions[c].triggers.shortage[item])) {
+                            this.conditions.push(new Condition(c));
+                        }
+                    }
+                }
+                // Surpluses
+                for (var _d = 0, _e = Object.keys(data_1.default.conditions[c].triggers.surplus); _d < _e.length; _d++) {
+                    var item = _e[_d];
+                    if (this.hasSurplus(item)) {
+                        if (util.chance(data_1.default.conditions[c].triggers.surplus[item])) {
+                            this.conditions.push(new Condition(c));
+                        }
+                    }
+                }
+                // Conditions
+                for (var _f = 0, _g = Object.keys(data_1.default.conditions[c].triggers.condition); _f < _g.length; _f++) {
+                    var cond = _g[_f];
+                    if (this.hasCondition(cond) || this.hasTrait(cond)) {
+                        if (util.chance(data_1.default.conditions[c].triggers.condition[cond])) {
+                            this.conditions.push(new Condition(c));
+                        }
+                    }
+                }
+            }
+        };
+        Planet.prototype.clearMemos = function () {
+            this._isNetExporter = {};
+            this._getDemand = {};
+            this._getSupply = {};
+            this._getNeed = {};
+            this._getShortage = {};
+            this._getSurplus = {};
+        };
+        Planet.prototype.turn = function () {
+            this.clearMemos();
+            this.produce();
+            this.consume();
+            this.processQueue();
+            this.manufacture();
+            this.replenishFabricators();
+            this.imports();
+            this.apply_conditions();
+            this.rollups();
+        };
+        /*
+         * Misc
+         */
+        Planet.prototype.addonPrice = function (addon, player) {
+            var base = data_1.default.addons[addon].price;
+            var standing = base * player.getStandingPriceAdjustment(this.faction.abbrev);
+            var tax = base * this.faction.sales_tax;
+            var price = base - standing + tax;
+            for (var _i = 0, _a = this.traits; _i < _a.length; _i++) {
+                var trait = _a[_i];
+                if ('price' in trait && 'addons' in trait.price) {
+                    price -= base * trait.price.addons;
+                }
+            }
+            return price;
+        };
+        Planet.prototype.resourceDependencyPriceAdjustment = function (resource) {
+            if (this.hasShortage(resource)) {
+                return this.getNeed(resource);
+            }
+            else if (this.hasSurplus(resource)) {
+                return 1 / this.getNeed(resource);
+            }
+            else {
+                return 1;
+            }
+        };
+        Planet.prototype.hasRepairs = function () {
+            return this.resourceDependencyPriceAdjustment('metal') < 10;
+        };
+        Planet.prototype.hullRepairPrice = function (player) {
+            var base = data_1.default.ship.hull.repair;
+            var tax = this.faction.sales_tax;
+            var standing = player.getStandingPriceAdjustment(this.faction.abbrev);
+            var scarcity = this.resourceDependencyPriceAdjustment('metal');
+            return (base + (base * tax) - (base * standing)) * scarcity;
+        };
+        Planet.prototype.armorRepairPrice = function (player) {
+            var base = data_1.default.ship.armor.repair;
+            var tax = this.faction.sales_tax;
+            var standing = player.getStandingPriceAdjustment(this.faction.abbrev);
+            var scarcity = this.resourceDependencyPriceAdjustment('metal');
+            return (base + (base * tax) - (base * standing)) * scarcity;
+        };
+        return Planet;
+    }());
+    exports.Planet = Planet;
 });
