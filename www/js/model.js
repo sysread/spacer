@@ -1,3 +1,16 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -18,72 +31,108 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
     history_1 = __importDefault(history_1);
     t = __importStar(t);
     util = __importStar(util);
+    /*
+     * Global storage of resource objects
+     */
     exports.resources = {};
     function getResource(item) {
         if (!exports.resources[item]) {
-            exports.resources[item] = new Resource(item);
+            if (t.isCraft(data_1.default.resources[item])) {
+                exports.resources[item] = new Craft(item);
+            }
+            else if (t.isRaw(data_1.default.resources[item])) {
+                exports.resources[item] = new Raw(item);
+            }
         }
         return exports.resources[item];
     }
     exports.getResource = getResource;
+    function isRaw(res) {
+        return res.mine !== undefined;
+    }
+    exports.isRaw = isRaw;
+    function isCraft(res) {
+        return res.recipe !== undefined;
+    }
+    exports.isCraft = isCraft;
     var Resource = /** @class */ (function () {
         function Resource(name) {
             this.name = name;
             this.mass = data_1.default.resources[name].mass;
             this.contraband = data_1.default.resources[name].contraband;
-            this.mine = data_1.default.resources[name].mine;
-            this.recipe = data_1.default.resources[name].recipe;
-            this.value = this.calculateBaseValue();
         }
-        Object.defineProperty(Resource.prototype, "isMinable", {
-            get: function () { return !!this.mine; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Resource.prototype, "isCraftable", {
-            get: function () { return !!this.recipe; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Resource.prototype, "mineTurns", {
-            get: function () { return this.mine ? this.mine.tics : 0; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Resource.prototype, "craftTurns", {
-            get: function () { return this.recipe ? this.recipe.tics : 0; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Resource.prototype, "ingredients", {
+        Object.defineProperty(Resource.prototype, "value", {
             get: function () {
-                return this.recipe
-                    ? Object.keys(this.recipe.materials)
-                    : [];
+                if (this._value == null) {
+                    this._value = this.calculateBaseValue();
+                }
+                return this._value;
             },
             enumerable: true,
             configurable: true
         });
-        Resource.prototype.calculateBaseValue = function () {
-            var value = 0;
-            if (this.mine) {
-                value = this.mine.value;
+        return Resource;
+    }());
+    var Raw = /** @class */ (function (_super) {
+        __extends(Raw, _super);
+        function Raw(name) {
+            var _this = _super.call(this, name) || this;
+            var res = data_1.default.resources[name];
+            if (!t.isRaw(res)) {
+                throw new Error("not a raw material: " + name);
             }
-            else if (this.recipe) {
-                for (var _i = 0, _a = this.ingredients; _i < _a.length; _i++) {
-                    var mat = _a[_i];
-                    value += this.recipe.materials[mat] * getResource(mat).calculateBaseValue();
-                }
-                value += Math.max(1, util.R(data_1.default.craft_fee * value, 2));
-                for (var i = 0; i < this.recipe.tics; ++i) {
-                    value *= 1.5;
-                }
+            _this.mine = res.mine;
+            return _this;
+        }
+        Object.defineProperty(Raw.prototype, "mineTurns", {
+            get: function () { return this.mine.tics; },
+            enumerable: true,
+            configurable: true
+        });
+        Raw.prototype.calculateBaseValue = function () {
+            return this.mine.value;
+        };
+        return Raw;
+    }(Resource));
+    exports.Raw = Raw;
+    var Craft = /** @class */ (function (_super) {
+        __extends(Craft, _super);
+        function Craft(name) {
+            var _this = _super.call(this, name) || this;
+            var res = data_1.default.resources[name];
+            if (!t.isCraft(res)) {
+                throw new Error("not a craftable resource: " + name);
+            }
+            _this.recipe = res.recipe;
+            return _this;
+        }
+        Object.defineProperty(Craft.prototype, "craftTurns", {
+            get: function () { return this.recipe.tics; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Craft.prototype, "ingredients", {
+            get: function () { return Object.keys(this.recipe.materials); },
+            enumerable: true,
+            configurable: true
+        });
+        Craft.prototype.calculateBaseValue = function () {
+            var value = 0;
+            for (var _i = 0, _a = this.ingredients; _i < _a.length; _i++) {
+                var mat = _a[_i];
+                var amt = this.recipe.materials[mat] || 0;
+                var val = getResource(mat).calculateBaseValue();
+                value += amt * val;
+            }
+            value += Math.max(1, util.R(data_1.default.craft_fee * value, 2));
+            for (var i = 0; i < this.recipe.tics; ++i) {
+                value *= 1.5;
             }
             return value;
         };
-        return Resource;
-    }());
-    exports.Resource = Resource;
+        return Craft;
+    }(Resource));
+    exports.Craft = Craft;
     var Faction = /** @class */ (function () {
         function Faction(abbrev) {
             if (typeof abbrev == 'object') {
@@ -336,7 +385,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.fabricationTime = function (item, count) {
             if (count === void 0) { count = 1; }
             var resource = getResource(item);
-            if (!resource.isCraftable) {
+            if (!isCraft(resource)) {
                 throw new Error(item + " is not craftable");
             }
             var reduction = this.fabricationReductionRate();
@@ -353,7 +402,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.hasFabricationResources = function (item, count) {
             if (count === void 0) { count = 1; }
             var resource = getResource(item);
-            if (!resource.isCraftable) {
+            if (!isCraft(resource)) {
                 throw new Error(item + " is not craftable");
             }
             var reduction = this.fabricationReductionRate();
@@ -369,6 +418,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.fabricationFee = function (item, count, player) {
             if (count === void 0) { count = 1; }
             var resource = getResource(item);
+            if (!isCraft(resource)) {
+                throw new Error(item + " is not craftable");
+            }
             var rate = data_1.default.craft_fee * this.sellPrice(item);
             var reduction = this.fabricationReductionRate();
             var health = this.fab_health;
@@ -383,7 +435,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.fabricate = function (item) {
             var resource = getResource(item);
-            if (!resource.isCraftable) {
+            if (!isCraft(resource)) {
                 throw new Error(item + " is not craftable");
             }
             var reduction = this.fabricationReductionRate();
@@ -488,10 +540,10 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.incDemand = function (item, amount) {
             this.demand.inc(item, amount);
             var res = getResource(item);
-            if (res.recipe && this.hasShortage(item)) {
+            if (isCraft(res) && this.hasShortage(item)) {
                 for (var _i = 0, _a = res.ingredients; _i < _a.length; _i++) {
                     var mat = _a[_i];
-                    this.incDemand(mat, res.recipe.materials[mat]);
+                    this.incDemand(mat, res.recipe.materials[mat] || 0);
                 }
             }
         };
@@ -502,11 +554,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             if (!this._isNetExporter.hasOwnProperty(item)) {
                 var isExporter = false;
                 var res = getResource(item);
-                if (res.isMinable) {
+                if (isRaw(res)) {
                     var net = this.netProduction(item);
                     isExporter = net >= this.scale(1);
                 }
-                if (!isExporter && res.isCraftable) {
+                if (!isExporter && isCraft(res)) {
                     var matExporter = true;
                     for (var _i = 0, _a = res.ingredients; _i < _a.length; _i++) {
                         var mat = _a[_i];
@@ -559,9 +611,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.price = function (item) {
             var res = getResource(item);
-            if (!this.hasOwnProperty('_price')) {
-                this._price = {};
-            }
             if (window.game.turns % (this.cycle[item] % 24 / data_1.default.hours_per_turn) === 0) {
                 delete this._price[item];
             }
@@ -569,23 +618,24 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 var value = res.value;
                 var markup = this.getScarcityMarkup(item);
                 var need = this.getNeed(item);
+                var price = 0;
                 if (need > 1) {
-                    this._price[item] = Math.ceil(markup * Math.min(value * 2, value + (value * Math.log(need))));
+                    price = Math.ceil(markup * Math.min(value * 3, value + (value * Math.log(need))));
                 }
                 else if (need < 1) {
-                    this._price[item] = Math.ceil(markup * Math.max(value / 2, value * need));
+                    price = Math.ceil(markup * Math.max(value / 3, value * need));
                 }
                 else {
-                    this._price[item] = Math.ceil(markup * value);
+                    price = Math.ceil(markup * value);
                 }
                 // Special cases for market classifications
                 for (var _i = 0, _a = this.traits; _i < _a.length; _i++) {
                     var trait = _a[_i];
                     if (trait.hasOwnProperty('price') && trait.price.hasOwnProperty(item)) {
-                        this._price[item] -= this._price[item] * trait.price[item];
+                        price -= price * trait.price[item];
                     }
                 }
-                this._price[item] = Math.ceil(this._price[item]);
+                this._price[item] = Math.ceil(price);
             }
             return this._price[item];
         };
@@ -748,7 +798,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 var i = _a[_i];
                 var res = getResource(i);
                 // Not craftable or we do not need it
-                if (!res.recipe || this.getNeed(i) < 0.25) {
+                if (!isCraft(res) || this.getNeed(i) < 0.25) {
                     delete want[i];
                 }
                 else {
@@ -757,12 +807,15 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     var mat_short = {};
                     for (var _b = 0, _c = res.ingredients; _b < _c.length; _b++) {
                         var mat = _c[_b];
-                        if (!mat_stock[mat])
+                        if (!mat_stock[mat]) {
                             mat_stock[mat] = this.getStock(mat);
-                        if (!mat_short[mat])
+                        }
+                        if (!mat_short[mat]) {
                             mat_short[mat] = this.hasShortage(mat);
-                        if (mat_stock[mat] < res.recipe.materials[mat] || mat_short[mat]) {
-                            this.incDemand(mat, res.recipe.materials[mat]);
+                        }
+                        var amt = res.recipe.materials[mat] || 0;
+                        if (mat_stock[mat] < amt || mat_short[mat]) {
+                            this.incDemand(mat, amt);
                         }
                     }
                     list.push(i);
@@ -774,10 +827,10 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     .map(function (i) { return getResource(i); });
                 for (var _d = 0, items_1 = items; _d < items_1.length; _d++) {
                     var item = items_1[_d];
-                    if (item.recipe) {
+                    if (isCraft(item)) {
                         for (var _e = 0, _f = item.ingredients; _e < _f.length; _e++) {
                             var mat = _f[_e];
-                            this.buy(mat, item.recipe.materials[mat]);
+                            this.buy(mat, item.recipe.materials[mat] || 0);
                         }
                     }
                     if (--want[item.name] === 0) {

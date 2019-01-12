@@ -7,6 +7,9 @@ import History from './history';
 import * as t from './common';
 import * as util from './util';
 
+/*
+ * Shims for global browser objects
+ */
 declare var window: {
   game: any;
 }
@@ -14,61 +17,109 @@ declare var window: {
 declare var console: any;
 
 
+/*
+ * Global storage of resource objects
+ */
 export const resources: { [key: string]: Resource } = {};
 
 export function getResource(item: t.resource): Resource {
   if (!resources[item]) {
-    resources[item] = new Resource(item);
+    if (t.isCraft(data.resources[item])) {
+      resources[item] = new Craft(item);
+    } else if (t.isRaw(data.resources[item])) {
+      resources[item] = new Raw(item);
+    }
   }
 
   return resources[item];
 }
 
+export function isRaw(res: Resource): res is Raw {
+  return (<Raw>res).mine !== undefined;
+}
 
-export class Resource {
+export function isCraft(res: Resource): res is Craft {
+  return (<Craft>res).recipe !== undefined;
+}
+
+
+
+abstract class Resource {
   name:        t.resource;
   mass:        number;
   contraband?: number;
-  mine?:       t.Mining;
-  recipe?:     t.Recipe;
-  value:       number;
+  _value?:     number;
 
   constructor(name: t.resource) {
     this.name       = name;
     this.mass       = data.resources[name].mass;
     this.contraband = data.resources[name].contraband;
-    this.mine       = data.resources[name].mine;
-    this.recipe     = data.resources[name].recipe;
-    this.value      = this.calculateBaseValue();
   }
 
-  get isMinable()   { return !!this.mine }
-  get isCraftable() { return !!this.recipe }
-  get mineTurns()   { return this.mine ? this.mine.tics : 0 }
-  get craftTurns()  { return this.recipe ? this.recipe.tics : 0 }
+  abstract calculateBaseValue(): number;
 
-  get ingredients(): t.resource[] {
-    return this.recipe
-      ? (<t.resource[]>Object.keys(this.recipe.materials))
-      : [];
+  get value(): number {
+    if (this._value == null) {
+      this._value = this.calculateBaseValue();
+    }
+
+    return this._value;
+  }
+}
+
+export class Raw extends Resource {
+  mine: t.Mining;
+
+  constructor(name: t.resource) {
+    super(name);
+
+    const res = data.resources[name];
+
+    if (!t.isRaw(res)) {
+      throw new Error(`not a raw material: ${name}`);
+    }
+
+    this.mine = res.mine;
   }
 
-  calculateBaseValue() {
+  get mineTurns(): number { return this.mine.tics }
+
+  calculateBaseValue(): number {
+    return this.mine.value;
+  }
+}
+
+export class Craft extends Resource {
+  recipe: t.Recipe;
+
+  constructor(name: t.resource) {
+    super(name);
+
+    const res = data.resources[name];
+
+    if (!t.isCraft(res)) {
+      throw new Error(`not a craftable resource: ${name}`);
+    }
+
+    this.recipe = res.recipe;
+  }
+
+  get craftTurns():  number       { return this.recipe.tics }
+  get ingredients(): t.resource[] { return Object.keys(this.recipe.materials) as t.resource[] }
+
+  calculateBaseValue(): number {
     let value = 0;
 
-    if (this.mine) {
-      value = this.mine.value;
+    for (const mat of this.ingredients) {
+      const amt: number = this.recipe.materials[mat as t.resource] || 0;
+      const val: number = getResource(mat as t.resource).calculateBaseValue();
+      value += amt * val;
     }
-    else if (this.recipe) {
-      for (const mat of this.ingredients) {
-        value += this.recipe.materials[mat] * getResource(mat).calculateBaseValue();
-      }
 
-      value += Math.max(1, util.R(data.craft_fee * value, 2));
+    value += Math.max(1, util.R(data.craft_fee * value, 2));
 
-      for (let i = 0; i < this.recipe.tics; ++i) {
-        value *= 1.5;
-      }
+    for (let i = 0; i < this.recipe.tics; ++i) {
+      value *= 1.5;
     }
 
     return value;
@@ -389,7 +440,7 @@ export class Planet {
   fabricationTime(item: t.resource, count=1) {
     const resource = getResource(item);
 
-    if (!resource.isCraftable) {
+    if (!isCraft(resource)) {
       throw new Error(`${item} is not craftable`);
     }
 
@@ -411,7 +462,7 @@ export class Planet {
   hasFabricationResources(item: t.resource, count=1) {
     const resource = getResource(item);
 
-    if (!resource.isCraftable) {
+    if (!isCraft(resource)) {
       throw new Error(`${item} is not craftable`);
     }
 
@@ -431,6 +482,11 @@ export class Planet {
 
   fabricationFee(item: t.resource, count=1, player: any) {
     const resource = getResource(item);
+
+    if (!isCraft(resource)) {
+      throw new Error(`${item} is not craftable`);
+    }
+
     const rate = data.craft_fee * this.sellPrice(item);
     const reduction = this.fabricationReductionRate();
 
@@ -451,7 +507,7 @@ export class Planet {
   fabricate(item: t.resource) {
     const resource = getResource(item);
 
-    if (!resource.isCraftable) {
+    if (!isCraft(resource)) {
       throw new Error(`${item} is not craftable`);
     }
 
@@ -574,9 +630,10 @@ export class Planet {
     this.demand.inc(item, amount);
 
     const res = getResource(item);
-    if (res.recipe && this.hasShortage(item)) {
+
+    if (isCraft(res) && this.hasShortage(item)) {
       for (const mat of res.ingredients) {
-        this.incDemand(mat, res.recipe.materials[mat]);
+        this.incDemand(mat, res.recipe.materials[mat] || 0);
       }
     }
   }
@@ -591,12 +648,12 @@ export class Planet {
 
       const res = getResource(item);
 
-      if (res.isMinable) {
+      if (isRaw(res)) {
         const net = this.netProduction(item);
         isExporter = net >= this.scale(1);
       }
 
-      if (!isExporter && res.isCraftable) {
+      if (!isExporter && isCraft(res)) {
         let matExporter = true;
         for (const mat of res.ingredients) {
           if (!this.isNetExporter(mat)) {
@@ -661,10 +718,6 @@ export class Planet {
   price(item: t.resource) {
     const res = getResource(item);
 
-    if (!this.hasOwnProperty('_price')) {
-      this._price = {};
-    }
-
     if (window.game.turns % (this.cycle[item] % 24 / data.hours_per_turn) === 0) {
       delete this._price[item];
     }
@@ -674,22 +727,24 @@ export class Planet {
       const markup = this.getScarcityMarkup(item);
       const need   = this.getNeed(item);
 
+      let price = 0;
+
       if (need > 1) {
-        this._price[item] = Math.ceil(markup * Math.min(value * 2, value + (value * Math.log(need))));
+        price = Math.ceil(markup * Math.min(value * 3, value + (value * Math.log(need))));
       } else if (need < 1) {
-        this._price[item] = Math.ceil(markup * Math.max(value / 2, value * need));
+        price = Math.ceil(markup * Math.max(value / 3, value * need));
       } else {
-        this._price[item] = Math.ceil(markup * value);
+        price = Math.ceil(markup * value);
       }
 
       // Special cases for market classifications
       for (const trait of this.traits) {
         if (trait.hasOwnProperty('price') && trait.price.hasOwnProperty(item)) {
-          this._price[item] -= this._price[item] * trait.price[item];
+          price -= price * trait.price[item];
         }
       }
 
-      this._price[item] = Math.ceil(this._price[item]);
+      this._price[item] = Math.ceil(price);
     }
 
     return this._price[item];
@@ -883,7 +938,7 @@ export class Planet {
       const res = getResource(i);
 
       // Not craftable or we do not need it
-      if (!res.recipe || this.getNeed(i) < 0.25) {
+      if (!isCraft(res) || this.getNeed(i) < 0.25) {
         delete want[i];
       }
       else {
@@ -892,11 +947,18 @@ export class Planet {
         const mat_short: { [key: string]: boolean } = {};
 
         for (const mat of res.ingredients) {
-          if (!mat_stock[mat]) mat_stock[mat] = this.getStock(mat);
-          if (!mat_short[mat]) mat_short[mat] = this.hasShortage(mat);
+          if (!mat_stock[mat]) {
+            mat_stock[mat] = this.getStock(mat);
+          }
 
-          if (mat_stock[mat] < res.recipe.materials[mat] || mat_short[mat]) {
-            this.incDemand(mat, res.recipe.materials[mat]);
+          if (!mat_short[mat]) {
+            mat_short[mat] = this.hasShortage(mat);
+          }
+
+          const amt = res.recipe.materials[mat] || 0;
+
+          if (mat_stock[mat] < amt || mat_short[mat]) {
+            this.incDemand(mat, amt);
           }
         }
 
@@ -910,9 +972,9 @@ export class Planet {
         .map(i => getResource(i));
 
       for (const item of items) {
-        if (item.recipe) {
+        if (isCraft(item)) {
           for (const mat of item.ingredients) {
-            this.buy(mat, item.recipe.materials[mat]);
+            this.buy(mat, item.recipe.materials[mat] || 0);
           }
         }
 

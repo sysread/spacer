@@ -1,132 +1,152 @@
-export const resources = [
-  'water',
-  'ore',
-  'minerals',
-  'hydrocarbons',
-  'food',
-  'fuel',
-  'metal',
-  'ceramics',
-  'medicine',
-  'machines',
-  'electronics',
-  'cybernetics',
-  'narcotics',
-  'weapons',
-] as resource[];
+const _resource = {
+  water:        true,
+  ore:          true,
+  minerals:     true,
+  hydrocarbons: true,
+  food:         true,
+  fuel:         true,
+  metal:        true,
+  ceramics:     true,
+  medicine:     true,
+  machines:     true,
+  electronics:  true,
+  cybernetics:  true,
+  narcotics:    true,
+  weapons:      true,
+};
 
-export type resource =
-  'water'
-| 'ore'
-| 'minerals'
-| 'hydrocarbons'
-| 'food'
-| 'fuel'
-| 'metal'
-| 'ceramics'
-| 'medicine'
-| 'machines'
-| 'electronics'
-| 'cybernetics'
-| 'narcotics'
-| 'weapons';
+const _faction = {
+  UN:     true,
+  MC:     true,
+  CERES:  true,
+  JFT:    true,
+  TRANSA: true,
+};
 
-export type faction =
-  'UN'
-| 'MC'
-| 'CERES'
-| 'JFT'
-| 'TRANSA';
+const _body = {
+  mercury:   true,
+  earth:     true,
+  moon:      true,
+  venus:     true,
+  mars:      true,
+  phobos:    true,
+  ceres:     true,
+  europa:    true,
+  callisto:  true,
+  ganymede:  true,
+  trojans:   true,
+  enceladus: true,
+  rhea:      true,
+  titan:     true,
+  triton:    true,
+  titania:   true,
+  pluto:     true,
+};
 
-export type drive =
-  'ion'
-| 'fusion';
+const _drive = {
+  ion:    true,
+  fusion: true,
+};
 
-export type addon =
-  'cargo_pod'
-| 'fuel_tank'
-| 'liquid_schwartz'
-| 'ion'
-| 'fusion'
-| 'armor'
-| 'advanced_armor'
-| 'railgun_turret'
-| 'railgun_cannon'
-| 'light_torpedo'
-| 'medium_torpedo'
-| 'heavy_torpedo'
-| 'pds'
-| 'ecm'
-| 'stealthPlating';
+const _shipdmg = {
+  armor: true,
+  hull:  true,
+};
 
-export type shiptype =
-  'shuttle'
-| 'schooner'
-| 'hauler'
-| 'merchantman'
-| 'freighter'
-| 'corvette'
-| 'cruiser'
-| 'battleship'
-| 'fortuna'
-| 'neptune'
-| 'barsoom'
-| 'rock-hopper';
+const _shiptype = {
+  shuttle:       true,
+  schooner:      true,
+  hauler:        true,
+  merchantman:   true,
+  freighter:     true,
+  corvette:      true,
+  cruiser:       true,
+  battleship:    true,
+  fortuna:       true,
+  neptune:       true,
+  barsoom:       true,
+  'rock-hopper': true,
+};
 
-export type shipdmg =
-  'armor'
-| 'hull';
+const _addon = {
+  cargo_pod:       true,
+  fuel_tank:       true,
+  liquid_schwartz: true,
+  ion:             true,
+  fusion:          true,
+  armor:           true,
+  advanced_armor:  true,
+  railgun_turret:  true,
+  railgun_cannon:  true,
+  light_torpedo:   true,
+  medium_torpedo:  true,
+  heavy_torpedo:   true,
+  pds:             true,
+  ecm:             true,
+  stealthPlating:  true,
+};
 
-export type body =
-  'mercury'
-| 'earth'
-| 'moon'
-| 'venus'
-| 'mars'
-| 'phobos'
-| 'ceres'
-| 'europa'
-| 'callisto'
-| 'ganymede'
-| 'trojans'
-| 'enceladus'
-| 'rhea'
-| 'titan'
-| 'triton'
-| 'titania'
-| 'pluto';
+
+export type resource = keyof typeof _resource;
+export const resources = Object.keys(_resource) as resource[];
+
+export type faction = keyof typeof _faction;
+export const factions = Object.keys(_faction) as faction[];
+
+export type body = keyof typeof _body;
+export const bodies = Object.keys(_body) as body[];
+
+export type drive = keyof typeof _drive;
+export const drives = Object.keys(_drive) as drive[];
+
+export type shipdmg = keyof typeof _shipdmg;
+export const shipdmgs = Object.keys(_shipdmg) as shipdmg[];
+
+export type shiptype = keyof typeof _shiptype;
+export const shiptypes = Object.keys(_shiptype) as shiptype[];
+
+export type addon = keyof typeof _addon;
+export const addons = Object.keys(_addon) as addon[];
+
 
 export interface Counter {
   [key: string]: number;
 }
 
 export interface Mining {
-  [key: string]: any;
   tics:  number;
   value: number;
 }
 
 export interface Recipe {
-  [key: string]: any;
   tics:      number;
-  materials: { [key: string]: number };
+  materials: {
+    [key in resource]?: number;
+  };
 }
 
 export interface Raw {
-  [key: string]: any;
   mass:        number;
   contraband?: number;
   mine:        Mining;
 }
 
 export interface Craft {
-  [key: string]: any;
   mass:        number;
   contraband?: number;
   recipe:      Recipe;
 }
 
-type Resource = Raw | Craft;
+export type Resource = Raw | Craft;
+
+export function isRaw(res: Resource): res is Raw {
+  return (<Raw>res).mine !== undefined;
+}
+
+export function isCraft(res: Resource): res is Craft {
+  return (<Craft>res).recipe !== undefined;
+}
+
 
 export interface Faction {
   [key: string]: any;
