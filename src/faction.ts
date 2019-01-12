@@ -4,14 +4,14 @@ import * as t from './common';
 export class Faction implements t.Faction {
   abbrev:     t.faction;
   full_name:  string;
-  capital:    string;
+  capital:    t.body;
   sales_tax:  number;
   patrol:     number;
   inspection: number;
   desc?:      string;
   produces:   t.ResourceCounter;
   consumes:   t.ResourceCounter;
-  standing:   t.Counter;
+  standing:   t.StandingCounter;
 
   constructor(abbrev: t.faction | Faction) {
     if (typeof abbrev == 'object') {

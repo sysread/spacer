@@ -1,84 +1,100 @@
-"use strict"
-
-define(function(require, exports, module) {
-  const data   = require('data');
-  const util   = require('util');
-  const Ship   = require('ship');
-  const Person = require('person');
-
-  return class extends Person {
-    constructor(opt) {
-      if (opt.options) {
-        /*
-         * Random ship selection; override by explicitly setting opt.ship.
-         * Otherwise, randomly selects one of opt.options.shipclass; if that is
-         * not specified, defaults to all ship classes, excluding those that
-         * are both restricted and are not a faction ship for the NPC's
-         * faction.
-         */
-        if (!opt.ship) {
-          const ships
-              = opt.options.ship
-                  .filter(s => !data.shipclass[s].faction                 // either not a faction ship
-                            || data.shipclass[s].faction == opt.faction)  // ...or of the npc's faction
-             || Object.keys(data.shipclass)
-                  .filter(s => !data.shipclass[s].restricted              // either unrestricted
-                            || data.shipclass[s].faction == opt.faction); // ...or of the npc's faction
-
-          opt.ship = new Ship({ type: util.oneOf(opt.options.ship) });
-        }
-
-        /*
-         * Randomly select addons from opt.options.addons, if specified. Will
-         * install between 0 and opt.ship.hardpoints addons; the least number
-         * of addons to install may be specified using opt.options.min_addons.
-         *
-         * TODO Need some way to ensure that the add on mix has at least some
-         * offensive capability.
-         */
-        if (opt.options.addons) {
-          if (opt.options.always_addons) {
-            for (const addon of opt.options.always_addons) {
-              opt.ship.installAddOn(addon);
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+define(["require", "exports", "./data", "./ship", "./person", "./util"], function (require, exports, data_1, ship_1, person_1, util) {
+    "use strict";
+    data_1 = __importDefault(data_1);
+    ship_1 = __importDefault(ship_1);
+    person_1 = __importDefault(person_1);
+    util = __importStar(util);
+    var NPC = /** @class */ (function (_super) {
+        __extends(NPC, _super);
+        function NPC(opt) {
+            var _this = this;
+            /*
+             * Random ship selection; override by explicitly setting opt.ship.
+             * Otherwise, randomly selects one of opt.options.shipclass; if that is
+             * not specified, defaults to all ship classes, excluding those that
+             * are both restricted and are not a faction ship for the NPC's
+             * faction.
+             */
+            var ship = new ship_1.default({ type: util.oneOf(opt.ship) });
+            /*
+             * Randomly select addons from opt.options.addons, if specified. Will
+             * install between 0 and opt.ship.hardpoints addons; the least number
+             * of addons to install may be specified using opt.options.min_addons.
+             *
+             * TODO Need some way to ensure that the add on mix has at least some
+             * offensive capability.
+             */
+            if (opt.addons) {
+                if (opt.always_addons) {
+                    for (var _i = 0, _a = opt.always_addons; _i < _a.length; _i++) {
+                        var addon = _a[_i];
+                        ship.installAddOn(addon);
+                    }
+                }
+                var min_addons = Math.min(opt.min_addons || 0, ship.availableHardPoints());
+                var amt_addons = util.getRandomInt(min_addons, ship.availableHardPoints());
+                var addons = opt.addons;
+                for (var i = 0; i < amt_addons; ++i) {
+                    var addon = util.oneOf(addons);
+                    if (addon) {
+                        ship.installAddOn(addon);
+                    }
+                }
+                /*
+                 * Randomly select cargo from opt.options.cargo, defaulting to all
+                 * non-contraband cargo (with the exception of TRANSA, which may be
+                 * carrying contraband). A minimum count may be specified with
+                 * opt.options.min_cargo (default is 0).
+                 */
+                var min_cargo = Math.min(opt.min_cargo || 0, ship.cargoLeft);
+                var amt_cargo = util.getRandomInt(min_cargo, Math.floor(ship.cargoLeft / 2));
+                var items = opt.cargo || Object.keys(data_1.default.resources);
+                while (ship.cargoUsed < amt_cargo) {
+                    var item = util.oneOf(items);
+                    if (data_1.default.resources[item].contraband && opt.faction !== 'TRANSA')
+                        continue;
+                    ship.loadCargo(item, 1);
+                }
             }
-          }
-
-          const min    = Math.min(opt.options.min_addons || 0, opt.ship.availableHardPoints());
-          const count  = util.getRandomInt(min, opt.ship.availableHardPoints());
-          const addons = opt.options.addons;
-
-          for (let i = 0; i < count; ++i) {
-            const addon = util.oneOf(addons);
-
-            if (addon) {
-              opt.ship.installAddOn(addon);
-            }
-          }
+            var init = {
+                name: opt.name,
+                faction: opt.faction,
+                home: data_1.default.factions[opt.faction].capital,
+                standing: {},
+                money: 0,
+                ship: {
+                    type: ship.type,
+                    addons: ship.addons,
+                    cargo: ship.cargo.store,
+                },
+            };
+            _this = _super.call(this, init) || this;
+            return _this;
         }
-
-        /*
-         * Randomly select cargo from opt.options.cargo, defaulting to all
-         * non-contraband cargo (with the exception of TRANSA, which may be
-         * carrying contraband). A minimum count may be specified with
-         * opt.options.min_cargo (default is 0).
-         */
-        if (opt.ship.holdIsEmpty) {
-          const min   = Math.min(opt.options.min_cargo || 0, opt.ship.cargoLeft);
-          const count = util.getRandomInt(min, Math.floor(opt.ship.cargoLeft / 2));
-          const items = opt.options.cargo || Object.keys(data.resources);
-
-          while (opt.ship.cargoUsed < count) {
-            const item = util.oneOf(items);
-
-            if (data.resources[item].contraband && opt.faction !== 'TRANSA')
-              continue;
-
-            opt.ship.loadCargo(item, 1);
-          }
-        }
-      }
-
-      super(opt);
-    }
-  };
+        return NPC;
+    }(person_1.default));
+    return NPC;
 });

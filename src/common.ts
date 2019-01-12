@@ -86,6 +86,18 @@ const _addon = {
   stealthPlating:  true,
 };
 
+export const Standing = {
+  Criminal:   [-100, -50],
+  Untrusted:  [-49,  -30],
+  Suspicious: [-29,  -20],
+  Dubious:    [-19,  -10],
+  Neutral:    [-9,     9],
+  Friendly:   [10,    19],
+  Respected:  [20,    29],
+  Trusted:    [30,    49],
+  Admired:    [50,   100],
+};
+
 
 export type resource = keyof typeof _resource;
 export const resources = Object.keys(_resource) as resource[];
@@ -108,6 +120,9 @@ export const shiptypes = Object.keys(_shiptype) as shiptype[];
 export type addon = keyof typeof _addon;
 export const addons = Object.keys(_addon) as addon[];
 
+export type standing = keyof typeof Standing;
+export const standings = Object.keys(Standing) as standing[];
+
 
 export interface Counter {
   [key: string]: number;
@@ -119,6 +134,10 @@ export type ResourceCounter = {
 
 export type PriceAdjustmentCounter = {
   [key in resource | 'addons']?: number;
+};
+
+export type StandingCounter = {
+  [key in faction]?: number;
 };
 
 export interface Mining {
@@ -158,14 +177,14 @@ export interface Faction {
   [key: string]: any;
 
   full_name:  string;
-  capital:    string;
+  capital:    body;
   sales_tax:  number;
   patrol:     number;
   inspection: number;
   desc?:      string;
   produces:   ResourceCounter;
   consumes:   ResourceCounter;
-  standing:   Counter;
+  standing:   StandingCounter;
 }
 
 export interface ShipDamage {

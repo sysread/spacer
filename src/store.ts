@@ -5,7 +5,7 @@ interface SavedCounter {
 }
 
 class Store {
-  protected store: ResourceCounter = {};
+  store: ResourceCounter = {};
 
   constructor(init?: ResourceCounter | SavedCounter) {
     if (init == null) {

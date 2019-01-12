@@ -13,9 +13,7 @@ import { Faction } from './faction';
 import { Condition, SavedCondition } from './condition';
 
 
-/*
- * Shims for global browser objects
- */
+// Shims for global browser objects
 declare var window: { game: any; }
 declare var console: any;
 

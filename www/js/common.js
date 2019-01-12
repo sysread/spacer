@@ -82,6 +82,17 @@ define(["require", "exports"], function (require, exports) {
         ecm: true,
         stealthPlating: true,
     };
+    exports.Standing = {
+        Criminal: [-100, -50],
+        Untrusted: [-49, -30],
+        Suspicious: [-29, -20],
+        Dubious: [-19, -10],
+        Neutral: [-9, 9],
+        Friendly: [10, 19],
+        Respected: [20, 29],
+        Trusted: [30, 49],
+        Admired: [50, 100],
+    };
     exports.resources = Object.keys(_resource);
     exports.factions = Object.keys(_faction);
     exports.bodies = Object.keys(_body);
@@ -89,6 +100,7 @@ define(["require", "exports"], function (require, exports) {
     exports.shipdmgs = Object.keys(_shipdmg);
     exports.shiptypes = Object.keys(_shiptype);
     exports.addons = Object.keys(_addon);
+    exports.standings = Object.keys(exports.Standing);
     function isRaw(res) {
         return res.mine !== undefined;
     }

@@ -16,10 +16,10 @@ interface Saved {
 }
 
 class History {
-  protected length:  number;
-  protected history: EntryList;
-  protected sum:     Store;
-  protected daily:   Store;
+  length:  number;
+  history: EntryList;
+  sum:     Store;
+  daily:   Store;
 
   constructor(length: number, init?: Saved) {
     this.length = length;

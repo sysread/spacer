@@ -569,14 +569,12 @@ define(function(require, exports, module) {
         fine: 0,
 
         npc: new NPC({
-          name:    'Police Patrol',
-          faction: this.faction,
-          options: {
-            ship:          ['schooner', 'corvette', 'cruiser', 'battleship', 'barsoom', 'neptune'],
-            addons:        ['armor', 'railgun_turret', 'light_torpedo', 'medium_torpedo', 'ecm'],
-            always_addons: ['pds'],
-            min_addons:    3,
-          },
+          name:          'Police Patrol',
+          faction:       this.faction,
+          ship:          ['schooner', 'corvette', 'cruiser', 'battleship', 'barsoom', 'neptune'],
+          addons:        ['armor', 'railgun_turret', 'light_torpedo', 'medium_torpedo', 'ecm'],
+          always_addons: ['pds'],
+          min_addons:    3,
         }),
       };
     },
@@ -734,14 +732,12 @@ define(function(require, exports, module) {
       const faction = util.oneOf(['UN', 'MC', 'CERES', 'JFT', 'TRANSA']);
 
       const npc = new NPC({
-        name:    'Pirate',
-        faction: faction,
-        options: {
-          ship: ['schooner', 'corvette', 'neptune'],
-          always_addons: ['pds'],
-          addons: ['railgun_turret', 'light_torpedo', 'ecm', 'armor'],
-          min_addons: 2,
-        },
+        name:          'Pirate',
+        faction:       faction,
+        ship:          ['schooner', 'corvette', 'neptune'],
+        always_addons: ['pds'],
+        addons:        ['railgun_turret', 'light_torpedo', 'ecm', 'armor'],
+        min_addons:    2,
       });
 
       const ship_value = npc.ship.shipValue(this.game.here) + npc.ship.addOnValue();

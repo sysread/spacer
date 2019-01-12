@@ -8,12 +8,12 @@ interface MarketShim {
   sellPrice(item: t.resource): number;
 }
 
-interface Saved {
+interface SavedShip {
   type:    t.shiptype;
   addons?: string[];
   damage?: t.ShipDamage;
   fuel?:   number;
-  cargo?:  { [key: string]: number };
+  cargo?:  t.ResourceCounter;
 }
 
 class Ship {
@@ -23,7 +23,7 @@ class Ship {
   fuel:   number;
   cargo:  Store;
 
-  constructor(init: Saved) {
+  constructor(init: SavedShip) {
     init = init || {'type': 'shuttle'};
 
     if (!data.shipclass.hasOwnProperty(init.type)) {

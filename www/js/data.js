@@ -152,7 +152,7 @@ define(["require", "exports"], function (require, exports) {
         factions: {
             'UN': {
                 full_name: 'United Nations',
-                capital: 'Earth',
+                capital: 'earth',
                 sales_tax: 0.105,
                 patrol: 0.2,
                 inspection: 0.075,
@@ -163,7 +163,7 @@ define(["require", "exports"], function (require, exports) {
             },
             'MC': {
                 full_name: 'Martian Commonwealth',
-                capital: 'Mars',
+                capital: 'mars',
                 sales_tax: 0.085,
                 patrol: 0.35,
                 inspection: 0.1,
@@ -174,7 +174,7 @@ define(["require", "exports"], function (require, exports) {
             },
             'CERES': {
                 full_name: 'The Most Serene Republic of Ceres',
-                capital: 'Ceres',
+                capital: 'ceres',
                 sales_tax: 0.04,
                 patrol: 0.2,
                 inspection: 0.05,
@@ -185,7 +185,7 @@ define(["require", "exports"], function (require, exports) {
             },
             'JFT': {
                 full_name: 'Jovian Free Traders',
-                capital: 'Ganymede',
+                capital: 'ganymede',
                 sales_tax: 0.065,
                 patrol: 0.15,
                 inspection: 0.025,
@@ -196,7 +196,7 @@ define(["require", "exports"], function (require, exports) {
             },
             'TRANSA': {
                 full_name: 'Trans-Neptunian Authority',
-                capital: 'Pluto',
+                capital: 'pluto',
                 sales_tax: 0.0175,
                 patrol: 0.1,
                 inspection: 0.005,
