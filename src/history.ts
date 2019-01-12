@@ -1,4 +1,4 @@
-import { resource, resources } from './common';
+import { resource, resources, ResourceCounter } from './common';
 import Store from './store';
 
 interface Counter {
@@ -11,8 +11,8 @@ interface EntryList {
 
 interface Saved {
   history: EntryList;
-  sum:     Counter;
-  daily:   Counter;
+  sum:     ResourceCounter;
+  daily:   ResourceCounter;
 }
 
 class History {

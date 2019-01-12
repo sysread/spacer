@@ -44,7 +44,7 @@ define(["require", "exports"], function (require, exports) {
             var n = 0;
             for (var _i = 0, _a = this.keys(); _i < _a.length; _i++) {
                 var item = _a[_i];
-                n += this.store[item];
+                n += this.store[item] || 0;
             }
             return n;
         };

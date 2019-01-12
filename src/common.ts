@@ -113,6 +113,14 @@ export interface Counter {
   [key: string]: number;
 }
 
+export type ResourceCounter = {
+  [key in resource]?: number;
+};
+
+export type PriceAdjustmentCounter = {
+  [key in resource | 'addons']?: number;
+};
+
 export interface Mining {
   tics:  number;
   value: number;
@@ -120,9 +128,7 @@ export interface Mining {
 
 export interface Recipe {
   tics:      number;
-  materials: {
-    [key in resource]?: number;
-  };
+  materials: ResourceCounter;
 }
 
 export interface Raw {
@@ -157,8 +163,8 @@ export interface Faction {
   patrol:     number;
   inspection: number;
   desc?:      string;
-  produces:   Counter;
-  consumes:   Counter;
+  produces:   ResourceCounter;
+  consumes:   ResourceCounter;
   standing:   Counter;
 }
 
@@ -223,15 +229,15 @@ export interface Addon {
 }
 
 export interface Trait {
-  produces?: Counter;
-  consumes?: Counter;
-  price?:    Counter;
+  produces?: ResourceCounter;
+  consumes?: ResourceCounter;
+  price?:    PriceAdjustmentCounter;
 }
 
 export interface Condition {
   days:     [number, number];
-  consumes: Counter;
-  produces: Counter;
+  consumes: ResourceCounter;
+  produces: ResourceCounter;
   triggers: {
     shortage:  Counter;
     surplus:   Counter;

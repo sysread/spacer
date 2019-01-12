@@ -1,28 +1,24 @@
-import { resource, resources } from './common';
-
-interface Counter {
-  [key: string]: number;
-}
+import { resource, resources, ResourceCounter } from './common';
 
 interface SavedCounter {
-  store: Counter;
+  store: ResourceCounter;
 }
 
 class Store {
-  protected store: Counter = {};
+  protected store: ResourceCounter = {};
 
-  constructor(init?: Counter | SavedCounter) {
+  constructor(init?: ResourceCounter | SavedCounter) {
     if (init == null) {
       return;
     }
-    else if (init.store !== undefined) {
-      for (const elt of Object.keys(init.store)) {
-        this.store[ (<resource>elt) ] = (<SavedCounter>init).store[elt];
+    else if ((<SavedCounter>init).store !== undefined) {
+      for (const elt of Object.keys((<SavedCounter>init).store)) {
+        this.store[ (<resource>elt) ] = (<SavedCounter>init).store[elt as resource];
       }
     }
     else {
       for (const elt of Object.keys(init)) {
-        this.store[ (<resource>elt) ] = (<Counter>init)[elt];
+        this.store[ (<resource>elt) ] = (<ResourceCounter>init)[elt as resource];
       }
     }
   }
@@ -57,7 +53,7 @@ class Store {
     let n = 0;
 
     for (const item of this.keys()) {
-      n += this.store[item];
+      n += this.store[item] || 0;
     }
 
     return n;

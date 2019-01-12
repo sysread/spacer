@@ -7,212 +7,23 @@ import History from './history';
 import * as t from './common';
 import * as util from './util';
 
+import { Resource, Raw, Craft, isRaw, isCraft, getResource } from './resource';
+import { Trait } from './trait';
+import { Faction } from './faction';
+import { Condition, SavedCondition } from './condition';
+
+// Re-exports
+export { getResource } from './resource';
+export { Trait } from './trait';
+export { Faction } from './faction';
+export { Condition } from './condition';
+
+
 /*
  * Shims for global browser objects
  */
-declare var window: {
-  game: any;
-}
-
+declare var window: { game: any; }
 declare var console: any;
-
-
-/*
- * Global storage of resource objects
- */
-export const resources: { [key: string]: Resource } = {};
-
-export function getResource(item: t.resource): Resource {
-  if (!resources[item]) {
-    if (t.isCraft(data.resources[item])) {
-      resources[item] = new Craft(item);
-    } else if (t.isRaw(data.resources[item])) {
-      resources[item] = new Raw(item);
-    }
-  }
-
-  return resources[item];
-}
-
-export function isRaw(res: Resource): res is Raw {
-  return (<Raw>res).mine !== undefined;
-}
-
-export function isCraft(res: Resource): res is Craft {
-  return (<Craft>res).recipe !== undefined;
-}
-
-
-
-abstract class Resource {
-  name:        t.resource;
-  mass:        number;
-  contraband?: number;
-  _value?:     number;
-
-  constructor(name: t.resource) {
-    this.name       = name;
-    this.mass       = data.resources[name].mass;
-    this.contraband = data.resources[name].contraband;
-  }
-
-  abstract calculateBaseValue(): number;
-
-  get value(): number {
-    if (this._value == null) {
-      this._value = this.calculateBaseValue();
-    }
-
-    return this._value;
-  }
-}
-
-export class Raw extends Resource {
-  mine: t.Mining;
-
-  constructor(name: t.resource) {
-    super(name);
-
-    const res = data.resources[name];
-
-    if (!t.isRaw(res)) {
-      throw new Error(`not a raw material: ${name}`);
-    }
-
-    this.mine = res.mine;
-  }
-
-  get mineTurns(): number { return this.mine.tics }
-
-  calculateBaseValue(): number {
-    return this.mine.value;
-  }
-}
-
-export class Craft extends Resource {
-  recipe: t.Recipe;
-
-  constructor(name: t.resource) {
-    super(name);
-
-    const res = data.resources[name];
-
-    if (!t.isCraft(res)) {
-      throw new Error(`not a craftable resource: ${name}`);
-    }
-
-    this.recipe = res.recipe;
-  }
-
-  get craftTurns():  number       { return this.recipe.tics }
-  get ingredients(): t.resource[] { return Object.keys(this.recipe.materials) as t.resource[] }
-
-  calculateBaseValue(): number {
-    let value = 0;
-
-    for (const mat of this.ingredients) {
-      const amt: number = this.recipe.materials[mat as t.resource] || 0;
-      const val: number = getResource(mat as t.resource).calculateBaseValue();
-      value += amt * val;
-    }
-
-    value += Math.max(1, util.R(data.craft_fee * value, 2));
-
-    for (let i = 0; i < this.recipe.tics; ++i) {
-      value *= 1.5;
-    }
-
-    return value;
-  }
-}
-
-
-export class Faction {
-  abbrev:     t.faction;
-  full_name:  string;
-  capital:    string;
-  sales_tax:  number;
-  patrol:     number;
-  inspection: number;
-  produces:   Store;
-  consumes:   Store;
-  standing:   { [key: string]: number };
-
-  constructor(abbrev: t.faction | Faction) {
-    if (typeof abbrev == 'object') {
-      abbrev = abbrev.abbrev;
-    }
-
-    this.abbrev     = abbrev;
-    this.full_name  = data.factions[abbrev].full_name;
-    this.capital    = data.factions[abbrev].capital;
-    this.sales_tax  = data.factions[abbrev].sales_tax;
-    this.patrol     = data.factions[abbrev].patrol;
-    this.inspection = data.factions[abbrev].inspection;
-    this.consumes   = new Store(data.factions[abbrev].consumes);
-    this.produces   = new Store(data.factions[abbrev].produces);
-    this.standing   = data.factions[abbrev].standing;
-  }
-
-  get desc() { return data.factions[this.abbrev].desc }
-  toString() { return this.abbrev }
-}
-
-
-export class Trait implements t.Trait {
-  name:     string;
-  produces: t.Counter;
-  consumes: t.Counter;
-  price:    t.Counter;
-
-  constructor(name: string) {
-    this.name     = name;
-    this.produces = data.traits[name].produces || {};
-    this.consumes = data.traits[name].consumes || {};
-    this.price    = data.traits[name].price    || {};
-  }
-};
-
-
-interface SavedCondition {
-  name:        string;
-  turns_total: number;
-  turns_done:  number;
-}
-
-export class Condition {
-  name:        string;
-  turns_total: number;
-  turns_done:  number;
-  produces:    Store;
-  consumes:    Store;
-
-  constructor(name: string, init?: SavedCondition) {
-    this.name     = name;
-    this.produces = new Store;
-    this.consumes = new Store;
-
-    if (init) {
-      this.turns_total = init.turns_total;
-      this.turns_done  = init.turns_done;
-    }
-    else {
-      this.turns_total = data.turns_per_day * util.getRandomInt(this.data.days[0], this.data.days[1]);
-      this.turns_done  = 0;
-    }
-  }
-
-  get data()         { return data.conditions[this.name] }
-  get triggers()     { return this.data.triggers }
-  get on_shortage()  { return this.triggers.shortage  || {} }
-  get on_surplus()   { return this.triggers.surplus   || {} }
-  get on_condition() { return this.triggers.condition || {} }
-
-  get turns_left()   { return this.turns_total - this.turns_done }
-  get is_over()      { return this.turns_done >= this.turns_total }
-
-  inc_turns()        { ++this.turns_done }
-};
 
 
 interface ImportTask {
@@ -231,9 +42,8 @@ interface CraftTask {
   count: number;
 }
 
-type EconTask =
-  ImportTask
-| CraftTask;
+type EconTask = ImportTask | CraftTask;
+
 
 interface SavedPlanet {
   conditions?: SavedCondition[];
@@ -248,9 +58,6 @@ interface SavedPlanet {
 
 export class Planet {
   body:           t.body;
-  name:           string;
-  size:           string;
-  radius:         number;
   faction:        Faction;
   traits:         Trait[];
   conditions:     Condition[];
@@ -287,11 +94,8 @@ export class Planet {
      * Physical and faction
      */
     this.body    = body;
-    this.name    = data.bodies[body].name;
-    this.size    = data.bodies[body].size;
     this.faction = new Faction(data.bodies[body].faction);
-    this.radius  = system.body(body).radius;
-    this.traits  = data.bodies[body].traits.map((t) => {return new Trait(t)});
+    this.traits  = data.bodies[body].traits.map(t => new Trait(t));
 
     /*
      * Temporary conditions
@@ -341,8 +145,8 @@ export class Planet {
       this.produces.inc(item, this.scale(data.market.produces[item]));
       this.consumes.inc(item, this.scale(data.market.consumes[item]));
 
-      this.produces.inc(item, this.scale(this.faction.produces.get(item)));
-      this.consumes.inc(item, this.scale(this.faction.consumes.get(item)));
+      this.produces.inc(item, this.scale(this.faction.produces[item] || 0));
+      this.consumes.inc(item, this.scale(this.faction.consumes[item] || 0));
 
       for (const trait of this.traits) {
         this.produces.inc(item, this.scale(trait.produces[item]));
@@ -364,11 +168,10 @@ export class Planet {
     this._price         = {};
   }
 
-  get desc() { return data.bodies[this.body].desc }
-
-  /*
-   * Physical
-   */
+  get name()     { return data.bodies[this.body].name }
+  get size()     { return data.bodies[this.body].size }
+  get desc()     { return data.bodies[this.body].desc }
+  get radius()   { return system.body(this.body).radius }
   get kind()     { return system.kind(this.body) }
   get central()  { return system.central(this.body) }
   get gravity()  { return system.gravity(this.body) }
@@ -610,7 +413,7 @@ export class Planet {
     let amount = this.produces.get(item) / data.turns_per_day;
 
     for (const condition of this.conditions) {
-      amount += this.scale(condition.produces.get(item));
+      amount += this.scale(condition.produces[item] || 0);
     }
 
     return amount;
@@ -620,7 +423,7 @@ export class Planet {
     let amount = this.consumes.get(item) / data.turns_per_day;
 
     for (const condition of this.conditions) {
-      amount += this.scale(condition.consumes.get(item));
+      amount += this.scale(condition.consumes[item] || 0);
     }
 
     return amount;
@@ -706,8 +509,8 @@ export class Planet {
     }
 
     for (const condition of this.conditions) {
-      const consumption = this.scale(condition.consumes.get(item));
-      const production  = this.scale(condition.produces.get(item));
+      const consumption = this.scale(condition.consumes[item] || 0);
+      const production  = this.scale(condition.produces[item] || 0);
       const amount      = consumption - production; // production is generally a malus
       markup += amount;
     }
@@ -739,9 +542,7 @@ export class Planet {
 
       // Special cases for market classifications
       for (const trait of this.traits) {
-        if (trait.hasOwnProperty('price') && trait.price.hasOwnProperty(item)) {
-          price -= price * trait.price[item];
-        }
+        price -= price * trait.priceOf(item);
       }
 
       this._price[item] = Math.ceil(price);
@@ -1149,7 +950,7 @@ export class Planet {
 
     for (const trait of this.traits) {
       if ('price' in trait && 'addons' in trait.price) {
-        price -= base * trait.price.addons;
+        price -= base * trait.priceOf('addons');
       }
     }
 

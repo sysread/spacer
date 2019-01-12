@@ -1,16 +1,3 @@
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -21,7 +8,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./physics", "./store", "./history", "./common", "./util"], function (require, exports, data_1, system_1, physics_1, store_1, history_1, t, util) {
+define(["require", "exports", "./data", "./system", "./physics", "./store", "./history", "./common", "./util", "./resource", "./trait", "./faction", "./condition", "./resource", "./trait", "./faction", "./condition"], function (require, exports, data_1, system_1, physics_1, store_1, history_1, t, util, resource_1, trait_1, faction_1, condition_1, resource_2, trait_2, faction_2, condition_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
@@ -31,197 +18,10 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
     history_1 = __importDefault(history_1);
     t = __importStar(t);
     util = __importStar(util);
-    /*
-     * Global storage of resource objects
-     */
-    exports.resources = {};
-    function getResource(item) {
-        if (!exports.resources[item]) {
-            if (t.isCraft(data_1.default.resources[item])) {
-                exports.resources[item] = new Craft(item);
-            }
-            else if (t.isRaw(data_1.default.resources[item])) {
-                exports.resources[item] = new Raw(item);
-            }
-        }
-        return exports.resources[item];
-    }
-    exports.getResource = getResource;
-    function isRaw(res) {
-        return res.mine !== undefined;
-    }
-    exports.isRaw = isRaw;
-    function isCraft(res) {
-        return res.recipe !== undefined;
-    }
-    exports.isCraft = isCraft;
-    var Resource = /** @class */ (function () {
-        function Resource(name) {
-            this.name = name;
-            this.mass = data_1.default.resources[name].mass;
-            this.contraband = data_1.default.resources[name].contraband;
-        }
-        Object.defineProperty(Resource.prototype, "value", {
-            get: function () {
-                if (this._value == null) {
-                    this._value = this.calculateBaseValue();
-                }
-                return this._value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return Resource;
-    }());
-    var Raw = /** @class */ (function (_super) {
-        __extends(Raw, _super);
-        function Raw(name) {
-            var _this = _super.call(this, name) || this;
-            var res = data_1.default.resources[name];
-            if (!t.isRaw(res)) {
-                throw new Error("not a raw material: " + name);
-            }
-            _this.mine = res.mine;
-            return _this;
-        }
-        Object.defineProperty(Raw.prototype, "mineTurns", {
-            get: function () { return this.mine.tics; },
-            enumerable: true,
-            configurable: true
-        });
-        Raw.prototype.calculateBaseValue = function () {
-            return this.mine.value;
-        };
-        return Raw;
-    }(Resource));
-    exports.Raw = Raw;
-    var Craft = /** @class */ (function (_super) {
-        __extends(Craft, _super);
-        function Craft(name) {
-            var _this = _super.call(this, name) || this;
-            var res = data_1.default.resources[name];
-            if (!t.isCraft(res)) {
-                throw new Error("not a craftable resource: " + name);
-            }
-            _this.recipe = res.recipe;
-            return _this;
-        }
-        Object.defineProperty(Craft.prototype, "craftTurns", {
-            get: function () { return this.recipe.tics; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Craft.prototype, "ingredients", {
-            get: function () { return Object.keys(this.recipe.materials); },
-            enumerable: true,
-            configurable: true
-        });
-        Craft.prototype.calculateBaseValue = function () {
-            var value = 0;
-            for (var _i = 0, _a = this.ingredients; _i < _a.length; _i++) {
-                var mat = _a[_i];
-                var amt = this.recipe.materials[mat] || 0;
-                var val = getResource(mat).calculateBaseValue();
-                value += amt * val;
-            }
-            value += Math.max(1, util.R(data_1.default.craft_fee * value, 2));
-            for (var i = 0; i < this.recipe.tics; ++i) {
-                value *= 1.5;
-            }
-            return value;
-        };
-        return Craft;
-    }(Resource));
-    exports.Craft = Craft;
-    var Faction = /** @class */ (function () {
-        function Faction(abbrev) {
-            if (typeof abbrev == 'object') {
-                abbrev = abbrev.abbrev;
-            }
-            this.abbrev = abbrev;
-            this.full_name = data_1.default.factions[abbrev].full_name;
-            this.capital = data_1.default.factions[abbrev].capital;
-            this.sales_tax = data_1.default.factions[abbrev].sales_tax;
-            this.patrol = data_1.default.factions[abbrev].patrol;
-            this.inspection = data_1.default.factions[abbrev].inspection;
-            this.consumes = new store_1.default(data_1.default.factions[abbrev].consumes);
-            this.produces = new store_1.default(data_1.default.factions[abbrev].produces);
-            this.standing = data_1.default.factions[abbrev].standing;
-        }
-        Object.defineProperty(Faction.prototype, "desc", {
-            get: function () { return data_1.default.factions[this.abbrev].desc; },
-            enumerable: true,
-            configurable: true
-        });
-        Faction.prototype.toString = function () { return this.abbrev; };
-        return Faction;
-    }());
-    exports.Faction = Faction;
-    var Trait = /** @class */ (function () {
-        function Trait(name) {
-            this.name = name;
-            this.produces = data_1.default.traits[name].produces || {};
-            this.consumes = data_1.default.traits[name].consumes || {};
-            this.price = data_1.default.traits[name].price || {};
-        }
-        return Trait;
-    }());
-    exports.Trait = Trait;
-    ;
-    var Condition = /** @class */ (function () {
-        function Condition(name, init) {
-            this.name = name;
-            this.produces = new store_1.default;
-            this.consumes = new store_1.default;
-            if (init) {
-                this.turns_total = init.turns_total;
-                this.turns_done = init.turns_done;
-            }
-            else {
-                this.turns_total = data_1.default.turns_per_day * util.getRandomInt(this.data.days[0], this.data.days[1]);
-                this.turns_done = 0;
-            }
-        }
-        Object.defineProperty(Condition.prototype, "data", {
-            get: function () { return data_1.default.conditions[this.name]; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Condition.prototype, "triggers", {
-            get: function () { return this.data.triggers; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Condition.prototype, "on_shortage", {
-            get: function () { return this.triggers.shortage || {}; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Condition.prototype, "on_surplus", {
-            get: function () { return this.triggers.surplus || {}; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Condition.prototype, "on_condition", {
-            get: function () { return this.triggers.condition || {}; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Condition.prototype, "turns_left", {
-            get: function () { return this.turns_total - this.turns_done; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Condition.prototype, "is_over", {
-            get: function () { return this.turns_done >= this.turns_total; },
-            enumerable: true,
-            configurable: true
-        });
-        Condition.prototype.inc_turns = function () { ++this.turns_done; };
-        return Condition;
-    }());
-    exports.Condition = Condition;
-    ;
+    exports.getResource = resource_2.getResource;
+    exports.Trait = trait_2.Trait;
+    exports.Faction = faction_2.Faction;
+    exports.Condition = condition_2.Condition;
     var Planet = /** @class */ (function () {
         function Planet(body, init) {
             init = init || {};
@@ -229,16 +29,13 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
              * Physical and faction
              */
             this.body = body;
-            this.name = data_1.default.bodies[body].name;
-            this.size = data_1.default.bodies[body].size;
-            this.faction = new Faction(data_1.default.bodies[body].faction);
-            this.radius = system_1.default.body(body).radius;
-            this.traits = data_1.default.bodies[body].traits.map(function (t) { return new Trait(t); });
+            this.faction = new faction_1.Faction(data_1.default.bodies[body].faction);
+            this.traits = data_1.default.bodies[body].traits.map(function (t) { return new trait_1.Trait(t); });
             /*
              * Temporary conditions
              */
             if (init.conditions) {
-                this.conditions = init.conditions.map(function (c) { return new Condition(c.name, c); });
+                this.conditions = init.conditions.map(function (c) { return new condition_1.Condition(c.name, c); });
             }
             else {
                 this.conditions = [];
@@ -282,8 +79,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 var item = _g[_f];
                 this.produces.inc(item, this.scale(data_1.default.market.produces[item]));
                 this.consumes.inc(item, this.scale(data_1.default.market.consumes[item]));
-                this.produces.inc(item, this.scale(this.faction.produces.get(item)));
-                this.consumes.inc(item, this.scale(this.faction.consumes.get(item)));
+                this.produces.inc(item, this.scale(this.faction.produces[item] || 0));
+                this.consumes.inc(item, this.scale(this.faction.consumes[item] || 0));
                 for (var _h = 0, _j = this.traits; _h < _j.length; _h++) {
                     var trait = _j[_h];
                     this.produces.inc(item, this.scale(trait.produces[item]));
@@ -302,15 +99,27 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this._getSurplus = {};
             this._price = {};
         }
+        Object.defineProperty(Planet.prototype, "name", {
+            get: function () { return data_1.default.bodies[this.body].name; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Planet.prototype, "size", {
+            get: function () { return data_1.default.bodies[this.body].size; },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Planet.prototype, "desc", {
             get: function () { return data_1.default.bodies[this.body].desc; },
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Planet.prototype, "radius", {
+            get: function () { return system_1.default.body(this.body).radius; },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Planet.prototype, "kind", {
-            /*
-             * Physical
-             */
             get: function () { return system_1.default.kind(this.body); },
             enumerable: true,
             configurable: true
@@ -384,8 +193,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.fabricationTime = function (item, count) {
             if (count === void 0) { count = 1; }
-            var resource = getResource(item);
-            if (!isCraft(resource)) {
+            var resource = resource_1.getResource(item);
+            if (!resource_1.isCraft(resource)) {
                 throw new Error(item + " is not craftable");
             }
             var reduction = this.fabricationReductionRate();
@@ -401,8 +210,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.hasFabricationResources = function (item, count) {
             if (count === void 0) { count = 1; }
-            var resource = getResource(item);
-            if (!isCraft(resource)) {
+            var resource = resource_1.getResource(item);
+            if (!resource_1.isCraft(resource)) {
                 throw new Error(item + " is not craftable");
             }
             var reduction = this.fabricationReductionRate();
@@ -417,8 +226,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.fabricationFee = function (item, count, player) {
             if (count === void 0) { count = 1; }
-            var resource = getResource(item);
-            if (!isCraft(resource)) {
+            var resource = resource_1.getResource(item);
+            if (!resource_1.isCraft(resource)) {
                 throw new Error(item + " is not craftable");
             }
             var rate = data_1.default.craft_fee * this.sellPrice(item);
@@ -434,8 +243,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return Math.max(1, Math.ceil(fee));
         };
         Planet.prototype.fabricate = function (item) {
-            var resource = getResource(item);
-            if (!isCraft(resource)) {
+            var resource = resource_1.getResource(item);
+            if (!resource_1.isCraft(resource)) {
                 throw new Error(item + " is not craftable");
             }
             var reduction = this.fabricationReductionRate();
@@ -525,7 +334,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             var amount = this.produces.get(item) / data_1.default.turns_per_day;
             for (var _i = 0, _a = this.conditions; _i < _a.length; _i++) {
                 var condition = _a[_i];
-                amount += this.scale(condition.produces.get(item));
+                amount += this.scale(condition.produces[item] || 0);
             }
             return amount;
         };
@@ -533,14 +342,14 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             var amount = this.consumes.get(item) / data_1.default.turns_per_day;
             for (var _i = 0, _a = this.conditions; _i < _a.length; _i++) {
                 var condition = _a[_i];
-                amount += this.scale(condition.consumes.get(item));
+                amount += this.scale(condition.consumes[item] || 0);
             }
             return amount;
         };
         Planet.prototype.incDemand = function (item, amount) {
             this.demand.inc(item, amount);
-            var res = getResource(item);
-            if (isCraft(res) && this.hasShortage(item)) {
+            var res = resource_1.getResource(item);
+            if (resource_1.isCraft(res) && this.hasShortage(item)) {
                 for (var _i = 0, _a = res.ingredients; _i < _a.length; _i++) {
                     var mat = _a[_i];
                     this.incDemand(mat, res.recipe.materials[mat] || 0);
@@ -553,12 +362,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.isNetExporter = function (item) {
             if (!this._isNetExporter.hasOwnProperty(item)) {
                 var isExporter = false;
-                var res = getResource(item);
-                if (isRaw(res)) {
+                var res = resource_1.getResource(item);
+                if (resource_1.isRaw(res)) {
                     var net = this.netProduction(item);
                     isExporter = net >= this.scale(1);
                 }
-                if (!isExporter && isCraft(res)) {
+                if (!isExporter && resource_1.isCraft(res)) {
                     var matExporter = true;
                     for (var _i = 0, _a = res.ingredients; _i < _a.length; _i++) {
                         var mat = _a[_i];
@@ -602,15 +411,15 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
             for (var _i = 0, _a = this.conditions; _i < _a.length; _i++) {
                 var condition = _a[_i];
-                var consumption = this.scale(condition.consumes.get(item));
-                var production = this.scale(condition.produces.get(item));
+                var consumption = this.scale(condition.consumes[item] || 0);
+                var production = this.scale(condition.produces[item] || 0);
                 var amount = consumption - production; // production is generally a malus
                 markup += amount;
             }
             return markup;
         };
         Planet.prototype.price = function (item) {
-            var res = getResource(item);
+            var res = resource_1.getResource(item);
             if (window.game.turns % (this.cycle[item] % 24 / data_1.default.hours_per_turn) === 0) {
                 delete this._price[item];
             }
@@ -631,9 +440,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 // Special cases for market classifications
                 for (var _i = 0, _a = this.traits; _i < _a.length; _i++) {
                     var trait = _a[_i];
-                    if (trait.hasOwnProperty('price') && trait.price.hasOwnProperty(item)) {
-                        price -= price * trait.price[item];
-                    }
+                    price -= price * trait.priceOf(item);
                 }
                 this._price[item] = Math.ceil(price);
             }
@@ -668,7 +475,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             if (player) {
                 player.ship.unloadCargo(item, amount);
                 player.credit(price);
-                if (hadShortage && !getResource(item).contraband) {
+                if (hadShortage && !resource_1.getResource(item).contraband) {
                     // Player ended a shortage. Increase their standing with our faction.
                     if (!this.hasShortage(item)) {
                         standing = util.getRandomNum(1, 5);
@@ -713,7 +520,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             var amounts = {};
             for (var _i = 0, _a = t.resources; _i < _a.length; _i++) {
                 var item = _a[_i];
-                var amount = this.neededResourceAmount(getResource(item));
+                var amount = this.neededResourceAmount(resource_1.getResource(item));
                 if (amount > 0) {
                     amounts[item] = amount;
                 }
@@ -796,9 +603,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             var list = [];
             for (var _i = 0, _a = need.prioritized; _i < _a.length; _i++) {
                 var i = _a[_i];
-                var res = getResource(i);
+                var res = resource_1.getResource(i);
                 // Not craftable or we do not need it
-                if (!isCraft(res) || this.getNeed(i) < 0.25) {
+                if (!resource_1.isCraft(res) || this.getNeed(i) < 0.25) {
                     delete want[i];
                 }
                 else {
@@ -824,10 +631,10 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             while (Object.keys(want).length > 0) {
                 var items = list
                     .filter(function (i) { return want[i]; })
-                    .map(function (i) { return getResource(i); });
+                    .map(function (i) { return resource_1.getResource(i); });
                 for (var _d = 0, items_1 = items; _d < items_1.length; _d++) {
                     var item = items_1[_d];
-                    if (isCraft(item)) {
+                    if (resource_1.isCraft(item)) {
                         for (var _e = 0, _f = item.ingredients; _e < _f.length; _e++) {
                             var mat = _f[_e];
                             this.buy(mat, item.recipe.materials[mat] || 0);
@@ -935,7 +742,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     var item = _c[_b];
                     if (this.hasShortage(item)) {
                         if (util.chance(data_1.default.conditions[c].triggers.shortage[item])) {
-                            this.conditions.push(new Condition(c));
+                            this.conditions.push(new condition_1.Condition(c));
                         }
                     }
                 }
@@ -944,7 +751,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     var item = _e[_d];
                     if (this.hasSurplus(item)) {
                         if (util.chance(data_1.default.conditions[c].triggers.surplus[item])) {
-                            this.conditions.push(new Condition(c));
+                            this.conditions.push(new condition_1.Condition(c));
                         }
                     }
                 }
@@ -953,7 +760,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     var cond = _g[_f];
                     if (this.hasCondition(cond) || this.hasTrait(cond)) {
                         if (util.chance(data_1.default.conditions[c].triggers.condition[cond])) {
-                            this.conditions.push(new Condition(c));
+                            this.conditions.push(new condition_1.Condition(c));
                         }
                     }
                 }
@@ -989,7 +796,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             for (var _i = 0, _a = this.traits; _i < _a.length; _i++) {
                 var trait = _a[_i];
                 if ('price' in trait && 'addons' in trait.price) {
-                    price -= base * trait.price.addons;
+                    price -= base * trait.priceOf('addons');
                 }
             }
             return price;

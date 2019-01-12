@@ -70,8 +70,8 @@ define(function(require, exports, module) {
       resources() { return Object.keys(this.data.resources)  },
       name()      { return this.game.planets[this.body].name },
 
-      hasShortages()  { return this.shortages[this.body]  && this.shortages[this.body].length > 0  },
-      hasSurpluses()  { return this.surpluses[this.body]  && this.surpluses[this.body].length > 0  },
+      hasShortages()  { return this.shortages[this.body]  && this.shortages[this.body].length  > 0 },
+      hasSurpluses()  { return this.surpluses[this.body]  && this.surpluses[this.body].length  > 0 },
       hasConditions() { return this.conditions[this.body] && this.conditions[this.body].length > 0 },
 
       hasNews() {
@@ -79,7 +79,6 @@ define(function(require, exports, module) {
             || this.hasSurpluses
             || this.hasConditions;
       },
-
 
       shipments() {
         const data = {};
@@ -154,8 +153,8 @@ define(function(require, exports, module) {
           data[body] = this.game.planets[body].conditions.map(c => {
             return {
               name: c.name,
-              left: Math.floor(c.turns_left / this.turns_per_day),
-              need: c.consumes.keys,
+              left: Math.floor(c.turns_left / this.data.turns_per_day),
+              need: Object.keys(c.consumes),
             };
           });
         }
