@@ -281,22 +281,22 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.avgProduction = function (item) { return this.getSupply(item) - this.consumption(item); };
         Planet.prototype.netProduction = function (item) { return this.production(item) - this.consumption(item); };
         Planet.prototype.getDemand = function (item) {
-            if (!this._getDemand.hasOwnProperty(item))
+            if (this._getDemand[item] == undefined)
                 this._getDemand[item] = this.demand.avg(item);
             return this._getDemand[item];
         };
         Planet.prototype.getSupply = function (item) {
-            if (!this._getSupply.hasOwnProperty(item))
+            if (this._getSupply[item] == undefined)
                 this._getSupply[item] = this.supply.avg(item);
             return this._getSupply[item];
         };
         Planet.prototype.hasShortage = function (item) {
-            if (!this._getShortage.hasOwnProperty(item))
+            if (this._getShortage[item] == undefined)
                 this._getShortage[item] = this.getNeed(item) >= this.shortageFactor(item);
             return this._getShortage[item];
         };
         Planet.prototype.hasSurplus = function (item) {
-            if (!this._getSurplus.hasOwnProperty(item))
+            if (this._getSurplus[item] == undefined)
                 this._getSurplus[item] = this.getNeed(item) <= this.surplusFactor(item);
             return this._getSurplus[item];
         };
@@ -316,13 +316,20 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
             return amount;
         };
-        Planet.prototype.incDemand = function (item, amount) {
-            this.demand.inc(item, amount);
-            var res = resource_1.getResource(item);
-            if (resource_1.isCraft(res) && this.hasShortage(item)) {
-                for (var _i = 0, _a = res.ingredients; _i < _a.length; _i++) {
-                    var mat = _a[_i];
-                    this.incDemand(mat, res.recipe.materials[mat] || 0);
+        Planet.prototype.incDemand = function (item, amt) {
+            var queue = [[item, amt]];
+            while (queue.length > 0) {
+                var elt = queue.shift();
+                if (elt != undefined) {
+                    var item_1 = elt[0], amt_1 = elt[1];
+                    this.demand.inc(item_1, amt_1);
+                    var res = resource_1.getResource(item_1);
+                    if (resource_1.isCraft(res) && this.hasShortage(item_1)) {
+                        for (var _i = 0, _a = res.ingredients; _i < _a.length; _i++) {
+                            var mat = _a[_i];
+                            queue.push([mat, (res.recipe.materials[mat] || 0) * amt_1]);
+                        }
+                    }
                 }
             }
         };
@@ -354,9 +361,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         // TODO include distance and delivery time from nearest source
         Planet.prototype.getNeed = function (item) {
-            if (!this._getNeed.hasOwnProperty(item)) {
-                var result = void 0;
+            if (this._getNeed[item] == undefined) {
                 var markup = data_1.default.necessity[item] ? 1 + data_1.default.scarcity_markup : 1;
+                var result = void 0;
                 var d = this.getDemand(item);
                 if (d === 0) {
                     result = markup * d / this.surplusFactor(item);

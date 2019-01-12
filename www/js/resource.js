@@ -57,11 +57,11 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
      */
     exports.resources = {};
     function getResource(item) {
-        if (!exports.resources[item]) {
-            if (t.isCraft(data_1.default.resources[item])) {
+        if (exports.resources[item] == undefined) {
+            if (data_1.default.resources[item].recipe) {
                 exports.resources[item] = new Craft(item);
             }
-            else if (t.isRaw(data_1.default.resources[item])) {
+            else if (data_1.default.resources[item].mine) {
                 exports.resources[item] = new Raw(item);
             }
         }

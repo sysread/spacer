@@ -36,10 +36,10 @@ function resourceValue(item: t.Resource): number {
 export const resources: { [key: string]: Resource } = {};
 
 export function getResource(item: t.resource): Resource {
-  if (!resources[item]) {
-    if (t.isCraft(data.resources[item])) {
+  if (resources[item] == undefined) {
+    if ((<Craft>data.resources[item]).recipe) {
       resources[item] = new Craft(item);
-    } else if (t.isRaw(data.resources[item])) {
+    } else if ((<Raw>data.resources[item]).mine) {
       resources[item] = new Raw(item);
     }
   }

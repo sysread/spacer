@@ -387,25 +387,25 @@ export class Planet {
   netProduction(item: t.resource)  { return this.production(item) - this.consumption(item) }
 
   getDemand(item: t.resource) {
-    if (!this._getDemand.hasOwnProperty(item))
+    if (this._getDemand[item] == undefined)
       this._getDemand[item] = this.demand.avg(item);
     return this._getDemand[item];
   }
 
   getSupply(item: t.resource) {
-    if (!this._getSupply.hasOwnProperty(item))
+    if (this._getSupply[item] == undefined)
       this._getSupply[item] = this.supply.avg(item);
     return this._getSupply[item];
   }
 
   hasShortage(item: t.resource) {
-    if (!this._getShortage.hasOwnProperty(item))
+    if (this._getShortage[item] == undefined)
       this._getShortage[item] = this.getNeed(item) >= this.shortageFactor(item);
     return this._getShortage[item];
   }
 
   hasSurplus(item: t.resource) {
-    if (!this._getSurplus.hasOwnProperty(item))
+    if (this._getSurplus[item] == undefined)
       this._getSurplus[item] = this.getNeed(item) <= this.surplusFactor(item);
     return this._getSurplus[item];
   }
@@ -430,14 +430,23 @@ export class Planet {
     return amount;
   }
 
-  incDemand(item: t.resource, amount: number) {
-    this.demand.inc(item, amount);
+  incDemand(item: t.resource, amt: number) {
+    const queue: [t.resource, number][] = [[item, amt]];
 
-    const res = getResource(item);
+    while (queue.length > 0) {
+      const elt = queue.shift();
 
-    if (isCraft(res) && this.hasShortage(item)) {
-      for (const mat of res.ingredients) {
-        this.incDemand(mat, res.recipe.materials[mat] || 0);
+      if (elt != undefined) {
+        const [item, amt] = elt;
+        this.demand.inc(item, amt);
+
+        const res = getResource(item);
+
+        if (isCraft(res) && this.hasShortage(item)) {
+          for (const mat of res.ingredients) {
+            queue.push([ mat, (res.recipe.materials[mat] || 0) * amt ]);
+          }
+        }
       }
     }
   }
@@ -477,9 +486,9 @@ export class Planet {
 
   // TODO include distance and delivery time from nearest source
   getNeed(item: t.resource) {
-    if (!this._getNeed.hasOwnProperty(item)) {
-      let result;
+    if (this._getNeed[item] == undefined) {
       const markup = data.necessity[item] ? 1 + data.scarcity_markup : 1;
+      let result;
 
       const d = this.getDemand(item);
       if (d === 0) {
@@ -490,8 +499,7 @@ export class Planet {
 
         if (s === 0) {
           result = markup * d * this.shortageFactor(item);
-        }
-        else {
+        } else {
           result = markup * d / s;
         }
       }
