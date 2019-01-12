@@ -78,7 +78,7 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
             if (body.central) {
                 return body.central.key;
             }
-            return;
+            return 'sun';
         };
         System.prototype.kind = function (name) {
             var body = this.body(name);
@@ -96,8 +96,9 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
         };
         System.prototype.gravity = function (name) {
             // Artificial gravity (spun up, orbital)
-            if (data_1.default.bodies.hasOwnProperty(name) && data_1.default.bodies[name].hasOwnProperty('gravity')) {
-                return data_1.default.bodies[name].gravity;
+            var artificial = data_1.default.bodies[name].gravity;
+            if (artificial != undefined) {
+                return artificial;
             }
             var grav = 6.67e-11;
             var body = this.body(name);

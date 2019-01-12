@@ -102,14 +102,14 @@ class System {
     return type;
   }
 
-  central(name: string) {
+  central(name: string): string {
     let body = this.body(name);
 
     if (body.central) {
       return body.central.key;
     }
 
-    return;
+    return 'sun';
   }
 
   kind(name: string) {
@@ -129,10 +129,11 @@ class System {
     return type;
   }
 
-  gravity(name: string) {
+  gravity(name: string): number {
     // Artificial gravity (spun up, orbital)
-    if (data.bodies.hasOwnProperty(name) && data.bodies[name].hasOwnProperty('gravity')) {
-      return data.bodies[name].gravity;
+    const artificial = data.bodies[name].gravity;
+    if (artificial != undefined) {
+      return artificial;
     }
 
     const grav   = 6.67e-11;

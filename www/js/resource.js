@@ -27,6 +27,31 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
     data_1 = __importDefault(data_1);
     t = __importStar(t);
     util = __importStar(util);
+    function craftValue(item) {
+        var value = 0;
+        for (var _i = 0, _a = Object.keys(item.recipe.materials); _i < _a.length; _i++) {
+            var mat = _a[_i];
+            var amt = item.recipe.materials[mat] || 0;
+            var val = resourceValue(data_1.default.resources[mat]);
+            value += amt * val;
+        }
+        value += Math.max(1, util.R(data_1.default.craft_fee * value, 2));
+        for (var i = 0; i < item.recipe.tics; ++i) {
+            value *= 1.5;
+        }
+        return value;
+    }
+    function resourceValue(item) {
+        if (t.isCraft(item)) {
+            return craftValue(item);
+        }
+        else if (t.isRaw(item)) {
+            return item.mine.value;
+        }
+        else {
+            return 0;
+        }
+    }
     /*
      * Global storage of resource objects
      */
@@ -56,17 +81,8 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
             this.name = name;
             this.mass = data_1.default.resources[name].mass;
             this.contraband = data_1.default.resources[name].contraband;
+            this.value = resourceValue(data_1.default.resources[name]);
         }
-        Object.defineProperty(Resource.prototype, "value", {
-            get: function () {
-                if (this._value == null) {
-                    this._value = this.calculateBaseValue();
-                }
-                return this._value;
-            },
-            enumerable: true,
-            configurable: true
-        });
         return Resource;
     }());
     exports.Resource = Resource;
@@ -79,16 +95,9 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
                 throw new Error("not a raw material: " + name);
             }
             _this.mine = res.mine;
+            _this.mineTurns = _this.mine.tics;
             return _this;
         }
-        Object.defineProperty(Raw.prototype, "mineTurns", {
-            get: function () { return this.mine.tics; },
-            enumerable: true,
-            configurable: true
-        });
-        Raw.prototype.calculateBaseValue = function () {
-            return this.mine.value;
-        };
         return Raw;
     }(Resource));
     exports.Raw = Raw;
@@ -101,32 +110,10 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
                 throw new Error("not a craftable resource: " + name);
             }
             _this.recipe = res.recipe;
+            _this.craftTurns = _this.recipe.tics;
+            _this.ingredients = Object.keys(_this.recipe.materials);
             return _this;
         }
-        Object.defineProperty(Craft.prototype, "craftTurns", {
-            get: function () { return this.recipe.tics; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Craft.prototype, "ingredients", {
-            get: function () { return Object.keys(this.recipe.materials); },
-            enumerable: true,
-            configurable: true
-        });
-        Craft.prototype.calculateBaseValue = function () {
-            var value = 0;
-            for (var _i = 0, _a = this.ingredients; _i < _a.length; _i++) {
-                var mat = _a[_i];
-                var amt = this.recipe.materials[mat] || 0;
-                var val = getResource(mat).calculateBaseValue();
-                value += amt * val;
-            }
-            value += Math.max(1, util.R(data_1.default.craft_fee * value, 2));
-            for (var i = 0; i < this.recipe.tics; ++i) {
-                value *= 1.5;
-            }
-            return value;
-        };
         return Craft;
     }(Resource));
     exports.Craft = Craft;

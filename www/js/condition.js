@@ -16,6 +16,9 @@ define(["require", "exports", "./data", "./util"], function (require, exports, d
     var Condition = /** @class */ (function () {
         function Condition(name, init) {
             this.name = name;
+            this.produces = data_1.default.conditions[this.name].produces || {};
+            this.consumes = data_1.default.conditions[this.name].consumes || {};
+            this.triggers = data_1.default.conditions[this.name].triggers || {};
             if (init) {
                 this.turns_total = init.turns_total;
                 this.turns_done = init.turns_done;
@@ -32,21 +35,6 @@ define(["require", "exports", "./data", "./util"], function (require, exports, d
         });
         Object.defineProperty(Condition.prototype, "max_days", {
             get: function () { return data_1.default.conditions[this.name].days[1]; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Condition.prototype, "produces", {
-            get: function () { return data_1.default.conditions[this.name].produces || {}; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Condition.prototype, "consumes", {
-            get: function () { return data_1.default.conditions[this.name].consumes || {}; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Condition.prototype, "triggers", {
-            get: function () { return data_1.default.conditions[this.name].triggers; },
             enumerable: true,
             configurable: true
         });

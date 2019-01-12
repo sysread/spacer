@@ -234,15 +234,17 @@ export interface Trait {
   price?:    PriceAdjustmentCounter;
 }
 
+export interface ConditionTriggers {
+  shortage:  Counter;
+  surplus:   Counter;
+  condition: Counter;
+}
+
 export interface Condition {
   days:     [number, number];
   consumes: ResourceCounter;
   produces: ResourceCounter;
-  triggers: {
-    shortage:  Counter;
-    surplus:   Counter;
-    condition: Counter;
-  };
+  triggers: ConditionTriggers;
 }
 
 export interface Body {

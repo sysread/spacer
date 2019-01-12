@@ -11,52 +11,16 @@ define(["require", "exports", "./data"], function (require, exports, data_1) {
                 abbrev = abbrev.abbrev;
             }
             this.abbrev = abbrev;
+            this.desc = data_1.default.factions[this.abbrev].desc;
+            this.full_name = data_1.default.factions[this.abbrev].full_name;
+            this.capital = data_1.default.factions[this.abbrev].capital;
+            this.sales_tax = data_1.default.factions[this.abbrev].sales_tax;
+            this.patrol = data_1.default.factions[this.abbrev].patrol;
+            this.inspection = data_1.default.factions[this.abbrev].inspection;
+            this.standing = data_1.default.factions[this.abbrev].standing;
+            this.consumes = data_1.default.factions[this.abbrev].consumes;
+            this.produces = data_1.default.factions[this.abbrev].produces;
         }
-        Object.defineProperty(Faction.prototype, "desc", {
-            get: function () { return data_1.default.factions[this.abbrev].desc; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Faction.prototype, "full_name", {
-            get: function () { return data_1.default.factions[this.abbrev].full_name; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Faction.prototype, "capital", {
-            get: function () { return data_1.default.factions[this.abbrev].capital; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Faction.prototype, "sales_tax", {
-            get: function () { return data_1.default.factions[this.abbrev].sales_tax; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Faction.prototype, "patrol", {
-            get: function () { return data_1.default.factions[this.abbrev].patrol; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Faction.prototype, "inspection", {
-            get: function () { return data_1.default.factions[this.abbrev].inspection; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Faction.prototype, "standing", {
-            get: function () { return data_1.default.factions[this.abbrev].standing; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Faction.prototype, "consumes", {
-            get: function () { return data_1.default.factions[this.abbrev].consumes; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Faction.prototype, "produces", {
-            get: function () { return data_1.default.factions[this.abbrev].produces; },
-            enumerable: true,
-            configurable: true
-        });
         Faction.prototype.toString = function () { return this.abbrev; };
         return Faction;
     }());

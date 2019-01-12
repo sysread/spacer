@@ -1,26 +1,34 @@
 import data from './data';
 import * as t from './common';
 
-export class Faction {
-  abbrev: t.faction;
+export class Faction implements t.Faction {
+  abbrev:     t.faction;
+  full_name:  string;
+  capital:    string;
+  sales_tax:  number;
+  patrol:     number;
+  inspection: number;
+  desc?:      string;
+  produces:   t.ResourceCounter;
+  consumes:   t.ResourceCounter;
+  standing:   t.Counter;
 
   constructor(abbrev: t.faction | Faction) {
     if (typeof abbrev == 'object') {
       abbrev = abbrev.abbrev;
     }
 
-    this.abbrev = abbrev;
+    this.abbrev     = abbrev;
+    this.desc       = data.factions[this.abbrev].desc;
+    this.full_name  = data.factions[this.abbrev].full_name;
+    this.capital    = data.factions[this.abbrev].capital;
+    this.sales_tax  = data.factions[this.abbrev].sales_tax;
+    this.patrol     = data.factions[this.abbrev].patrol;
+    this.inspection = data.factions[this.abbrev].inspection;
+    this.standing   = data.factions[this.abbrev].standing;
+    this.consumes   = data.factions[this.abbrev].consumes;
+    this.produces   = data.factions[this.abbrev].produces;
   }
-
-  get desc()       { return data.factions[this.abbrev].desc }
-  get full_name()  { return data.factions[this.abbrev].full_name }
-  get capital()    { return data.factions[this.abbrev].capital }
-  get sales_tax()  { return data.factions[this.abbrev].sales_tax }
-  get patrol()     { return data.factions[this.abbrev].patrol }
-  get inspection() { return data.factions[this.abbrev].inspection }
-  get standing()   { return data.factions[this.abbrev].standing }
-  get consumes()   { return data.factions[this.abbrev].consumes }
-  get produces()   { return data.factions[this.abbrev].produces }
 
   toString() { return this.abbrev }
 }
