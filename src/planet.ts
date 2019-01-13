@@ -945,7 +945,7 @@ export class Planet {
     this.processQueue();
 
     // Only do the really expensive stuff once per day
-    if (window.game.turn % data.turns_per_day == 0) {
+    if (window.game.turns % data.turns_per_day == 0) {
       this.manufacture();
       this.replenishFabricators();
       this.imports();

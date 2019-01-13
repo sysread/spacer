@@ -285,23 +285,25 @@ define(function(require, exports, module) {
         const info = this.game.trade_routes()[this.item];
         const routes = [];
 
-        for (const to of Object.keys(info).sort()) {
-          for (const from of Object.keys(info[to]).sort()) {
-            const distance = util.R(this.system.distance(from, to) / Physics.AU, 2);
+        if (info) {
+          for (const to of Object.keys(info).sort()) {
+            for (const from of Object.keys(info[to]).sort()) {
+              const distance = util.R(this.system.distance(from, to) / Physics.AU, 2);
 
-            for (const shipment of info[to][from]) {
-              const days  = util.csn(Math.floor(shipment.hours / 24));
-              const hours = util.csn(Math.floor(shipment.hours % 24));
+              for (const shipment of info[to][from]) {
+                const days  = util.csn(Math.floor(shipment.hours / 24));
+                const hours = util.csn(Math.floor(shipment.hours % 24));
 
-              let arrives = [];
-              if (days  > 0) arrives.push(days  + 'd');
-              if (hours > 0) arrives.push(hours + 'h');
+                let arrives = [];
+                if (days  > 0) arrives.push(days  + 'd');
+                if (hours > 0) arrives.push(hours + 'h');
 
-              shipment.arrives  = arrives.join(', ');
-              shipment.distance = distance;
-              shipment.warning  = (shipment.hours / 24) < distance;
+                shipment.arrives  = arrives.join(', ');
+                shipment.distance = distance;
+                shipment.warning  = (shipment.hours / 24) < distance;
 
-              routes.push([ from, to, shipment ]);
+                routes.push([ from, to, shipment ]);
+              }
             }
           }
         }

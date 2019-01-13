@@ -759,7 +759,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.consume();
             this.processQueue();
             // Only do the really expensive stuff once per day
-            if (window.game.turn % data_1.default.turns_per_day == 0) {
+            if (window.game.turns % data_1.default.turns_per_day == 0) {
                 this.manufacture();
                 this.replenishFabricators();
                 this.imports();
