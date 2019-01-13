@@ -36,7 +36,7 @@ define(["require", "exports"], function (require, exports) {
             return this.store[item] || 0;
         };
         Store.prototype.count = function (item) {
-            return Math.floor(this.store[item] || 0);
+            return Math.floor(this.get(item));
         };
         Store.prototype.sum = function () {
             var n = 0;

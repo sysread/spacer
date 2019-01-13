@@ -1,9 +1,8 @@
-"use strict"
-
 define(function(require, exports, module) {
-  const util  = require('util');
-  const Store = require('store');
-  const Vue   = require('vendor/vue');
+  "use strict"
+
+  const Vue = require('vendor/vue');
+  const t = require('common');
 
   require('component/global');
   require('component/common');
@@ -82,18 +81,23 @@ define(function(require, exports, module) {
     props: ['store'],
 
     data() {
+      // build pre-populated object because Vue cannot see new keys added
+      const obj = {};
+      for (const res of t.resources)
+        obj[res] = 0;
+
       return {
-        resources: new Store,
+        resources: obj,
       };
     },
 
     mounted() {
-      for (const item of this.game.player.ship.cargo.keys) {
-        this.resources.inc(item, this.game.player.ship.cargo.count(item));
+      for (const item of this.game.player.ship.cargo.keys()) {
+        this.resources[item] += this.game.player.ship.cargo.get(item);
       }
 
-      for (const item of this.store.keys) {
-        this.resources.inc(item, this.store.count(item));
+      for (const item of this.store.keys()) {
+        this.resources[item] += this.store.get(item);
       }
     },
 
@@ -102,6 +106,7 @@ define(function(require, exports, module) {
       cargoSpace() { return this.game.player.ship.cargoSpace },
       cargoUsed()  { return this.game.player.ship.cargoUsed  },
       cargoLeft()  { return this.game.player.ship.cargoLeft  },
+      items()      { return Object.keys(this.resources)      },
     },
 
     methods: {
@@ -112,7 +117,7 @@ define(function(require, exports, module) {
           amt = this.cargo.get(item) + this.cargoLeft;
         }
 
-        this.store.set(item, this.resources.get(item) - amt);
+        this.store.set(item, this.resources[item] - amt);
         this.cargo.set(item, amt);
         this.game.refresh();
       },
@@ -121,11 +126,11 @@ define(function(require, exports, module) {
     template: `
 <div>
   <def brkpt="sm" term="Cargo"><span slot="def">{{cargoUsed}} / {{cargoSpace}}</span></def>
-  <def v-for="item of resources.keys" :key="item" brkpt="sm" v-if="resources.count(item) > 0">
+  <def v-for="item in items" :key="item" brkpt="sm" v-if="resources[item] > 0">
     <span slot="term" class="text-capitalize">{{item}}</span>
-    <slider slot="def" @update:value="amt => update(item, amt)" minmax=true :value="cargo.get(item)" min=0 :max="resources.get(item)">
-      <span class="btn btn-dark" slot="pre">{{store.count(item)}}</span>
-      <span class="btn btn-dark" slot="post">{{cargo.count(item)}}</span>
+    <slider slot="def" @update:value="amt => update(item, amt)" minmax=true :value="cargo.get(item)" min=0 :max="resources[item]">
+      <span class="btn btn-dark" slot="pre">{{store.get(item)}}</span>
+      <span class="btn btn-dark" slot="post">{{cargo.get(item)}}</span>
     </slider>
   </def>
 </div>

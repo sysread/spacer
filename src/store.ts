@@ -42,7 +42,7 @@ class Store {
   }
 
   count(item: resource): number {
-    return Math.floor(this.store[item] || 0);
+    return Math.floor(this.get(item));
   }
 
   sum(): number {

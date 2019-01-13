@@ -617,7 +617,7 @@ define(function(require, exports, module) {
 
       submit() {
         let fine = 0;
-        for (const item of this.game.player.ship.cargo.keys) {
+        for (const item of this.game.player.ship.cargo.keys()) {
           const amt = this.game.player.ship.cargo.count(item);
           if (this.data.resources[item].contraband) {
             fine += amt * this.planet.inspectionFine(this.game.player);
@@ -777,7 +777,7 @@ define(function(require, exports, module) {
         const took   = {};
 
         while (!npc.holdIsFull && !player.holdIsEmpty) {
-          const items = player.cargo.keys.filter(a => player.cargo.get(a) > 0);
+          const items = player.cargo.keys().filter(a => player.cargo.get(a) > 0);
 
           items.sort((a, b) => {
             const va = value(a);
