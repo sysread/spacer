@@ -11,6 +11,16 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __values = (this && this.__values) || function (o) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+    if (m) return m.call(o);
+    return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -30,6 +40,7 @@ define(["require", "exports", "./data", "./ship", "./person", "./util"], functio
     var NPC = /** @class */ (function (_super) {
         __extends(NPC, _super);
         function NPC(opt) {
+            var e_1, _a;
             var _this = this;
             /*
              * Random ship selection; override by explicitly setting opt.ship.
@@ -49,9 +60,18 @@ define(["require", "exports", "./data", "./ship", "./person", "./util"], functio
              */
             if (opt.addons) {
                 if (opt.always_addons) {
-                    for (var _i = 0, _a = opt.always_addons; _i < _a.length; _i++) {
-                        var addon = _a[_i];
-                        ship.installAddOn(addon);
+                    try {
+                        for (var _b = __values(opt.always_addons), _c = _b.next(); !_c.done; _c = _b.next()) {
+                            var addon = _c.value;
+                            ship.installAddOn(addon);
+                        }
+                    }
+                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                    finally {
+                        try {
+                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                        }
+                        finally { if (e_1) throw e_1.error; }
                     }
                 }
                 var min_addons = Math.min(opt.min_addons || 0, ship.availableHardPoints());

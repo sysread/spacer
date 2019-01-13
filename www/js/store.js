@@ -1,19 +1,48 @@
+var __values = (this && this.__values) || function (o) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+    if (m) return m.call(o);
+    return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+};
 define(["require", "exports"], function (require, exports) {
     "use strict";
     var Store = /** @class */ (function () {
         function Store(init) {
+            var e_1, _a, e_2, _b;
             this.store = {};
             if (init != null) {
                 if (init.store !== undefined) {
-                    for (var _i = 0, _a = Object.keys(init.store); _i < _a.length; _i++) {
-                        var elt = _a[_i];
-                        this.store[elt] = init.store[elt];
+                    try {
+                        for (var _c = __values(Object.keys(init.store)), _d = _c.next(); !_d.done; _d = _c.next()) {
+                            var elt = _d.value;
+                            this.store[elt] = init.store[elt];
+                        }
+                    }
+                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                    finally {
+                        try {
+                            if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                        }
+                        finally { if (e_1) throw e_1.error; }
                     }
                 }
                 else {
-                    for (var _b = 0, _c = Object.keys(init); _b < _c.length; _b++) {
-                        var elt = _c[_b];
-                        this.store[elt] = init[elt];
+                    try {
+                        for (var _e = __values(Object.keys(init)), _f = _e.next(); !_f.done; _f = _e.next()) {
+                            var elt = _f.value;
+                            this.store[elt] = init[elt];
+                        }
+                    }
+                    catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                    finally {
+                        try {
+                            if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                        }
+                        finally { if (e_2) throw e_2.error; }
                     }
                 }
             }
@@ -22,9 +51,19 @@ define(["require", "exports"], function (require, exports) {
             return Object.keys(this.store);
         };
         Store.prototype.clear = function () {
-            for (var _i = 0, _a = this.keys(); _i < _a.length; _i++) {
-                var item = _a[_i];
-                this.store[item] = 0;
+            var e_3, _a;
+            try {
+                for (var _b = __values(this.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var item = _c.value;
+                    this.store[item] = 0;
+                }
+            }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_3) throw e_3.error; }
             }
         };
         Store.prototype.set = function (item, amt) {
@@ -39,10 +78,20 @@ define(["require", "exports"], function (require, exports) {
             return Math.floor(this.get(item));
         };
         Store.prototype.sum = function () {
+            var e_4, _a;
             var n = 0;
-            for (var _i = 0, _a = this.keys(); _i < _a.length; _i++) {
-                var item = _a[_i];
-                n += this.store[item] || 0;
+            try {
+                for (var _b = __values(this.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var item = _c.value;
+                    n += this.store[item] || 0;
+                }
+            }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_4) throw e_4.error; }
             }
             return n;
         };

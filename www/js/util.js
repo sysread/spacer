@@ -1,3 +1,29 @@
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __values = (this && this.__values) || function (o) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+    if (m) return m.call(o);
+    return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+};
 define(["require", "exports", "./common"], function (require, exports, common_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -12,7 +38,7 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
         num = Math.abs(num);
         var parts = [];
         var three = new RegExp(/(\d{3})$/);
-        var _a = ("" + num).split('.', 2), integer = _a[0], decimal = _a[1];
+        var _a = __read(("" + num).split('.', 2), 2), integer = _a[0], decimal = _a[1];
         while (three.test(integer)) {
             integer = integer.replace(three, function (match) { parts.unshift(match); return ''; });
         }
@@ -107,12 +133,22 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
     exports.oneOf = oneOf;
     function resourceMap(dflt, entries) {
         if (dflt === void 0) { dflt = 0; }
+        var e_1, _a;
         entries = entries || {};
-        for (var _i = 0, resources_1 = common_1.resources; _i < resources_1.length; _i++) {
-            var item = resources_1[_i];
-            if (!(item in entries)) {
-                entries[item] = dflt;
+        try {
+            for (var resources_1 = __values(common_1.resources), resources_1_1 = resources_1.next(); !resources_1_1.done; resources_1_1 = resources_1.next()) {
+                var item = resources_1_1.value;
+                if (!(item in entries)) {
+                    entries[item] = dflt;
+                }
             }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (resources_1_1 && !resources_1_1.done && (_a = resources_1.return)) _a.call(resources_1);
+            }
+            finally { if (e_1) throw e_1.error; }
         }
         return entries;
     }

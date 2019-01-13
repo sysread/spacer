@@ -1,3 +1,19 @@
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
 define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -130,7 +146,7 @@ define(["require", "exports"], function (require, exports) {
     exports.Vector = Vector;
     function vec(p) {
         if (p instanceof Array) {
-            var x = p[0], y = p[1], z = p[2];
+            var _a = __read(p, 3), x = _a[0], y = _a[1], z = _a[2];
             return new Vector(x, y, z);
         }
         else if (p instanceof Object) {

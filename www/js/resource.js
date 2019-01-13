@@ -11,6 +11,16 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __values = (this && this.__values) || function (o) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+    if (m) return m.call(o);
+    return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -27,13 +37,24 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
     data_1 = __importDefault(data_1);
     t = __importStar(t);
     util = __importStar(util);
+    var e_1, _a;
     function craftValue(item) {
+        var e_2, _a;
         var value = 0;
-        for (var _i = 0, _a = Object.keys(item.recipe.materials); _i < _a.length; _i++) {
-            var mat = _a[_i];
-            var amt = item.recipe.materials[mat] || 0;
-            var val = resourceValue(data_1.default.resources[mat]);
-            value += amt * val;
+        try {
+            for (var _b = __values(Object.keys(item.recipe.materials)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var mat = _c.value;
+                var amt = item.recipe.materials[mat] || 0;
+                var val = resourceValue(data_1.default.resources[mat]);
+                value += amt * val;
+            }
+        }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_2) throw e_2.error; }
         }
         value += Math.max(1, util.R(data_1.default.craft_fee * value, 2));
         for (var i = 0; i < item.recipe.tics; ++i) {
@@ -105,13 +126,22 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
     }(Resource));
     exports.Craft = Craft;
     exports.resources = {};
-    for (var _i = 0, _a = t.resources; _i < _a.length; _i++) {
-        var item = _a[_i];
-        if (data_1.default.resources[item].recipe) {
-            exports.resources[item] = new Craft(item);
+    try {
+        for (var _b = __values(t.resources), _c = _b.next(); !_c.done; _c = _b.next()) {
+            var item = _c.value;
+            if (data_1.default.resources[item].recipe) {
+                exports.resources[item] = new Craft(item);
+            }
+            else if (data_1.default.resources[item].mine) {
+                exports.resources[item] = new Raw(item);
+            }
         }
-        else if (data_1.default.resources[item].mine) {
-            exports.resources[item] = new Raw(item);
+    }
+    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+    finally {
+        try {
+            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
         }
+        finally { if (e_1) throw e_1.error; }
     }
 });

@@ -1,3 +1,19 @@
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -115,7 +131,7 @@ define(["require", "exports", "./data", "./physics", "./util"], function (requir
         });
         Object.defineProperty(TransitPlan.prototype, "str_arrival", {
             get: function () {
-                var _a = this.days_hours, d = _a[0], h = _a[1];
+                var _a = __read(this.days_hours, 2), d = _a[0], h = _a[1];
                 return d + " days, " + h + " hours";
             },
             enumerable: true,

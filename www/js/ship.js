@@ -1,3 +1,13 @@
+var __values = (this && this.__values) || function (o) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+    if (m) return m.call(o);
+    return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -172,14 +182,24 @@ define(["require", "exports", "./data", "./physics", "./store", "./common"], fun
         });
         Object.defineProperty(Ship.prototype, "hasContraband", {
             get: function () {
-                for (var _i = 0, _a = t.resources; _i < _a.length; _i++) {
-                    var item = _a[_i];
-                    var amt = this.cargo.get(item);
-                    if (amt == 0)
-                        continue;
-                    if (amt > 0 && data_1.default.resources[item].contraband) {
-                        return true;
+                var e_1, _a;
+                try {
+                    for (var _b = __values(t.resources), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var item = _c.value;
+                        var amt = this.cargo.get(item);
+                        if (amt == 0)
+                            continue;
+                        if (amt > 0 && data_1.default.resources[item].contraband) {
+                            return true;
+                        }
                     }
+                }
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    }
+                    finally { if (e_1) throw e_1.error; }
                 }
                 return false;
             },
@@ -199,16 +219,26 @@ define(["require", "exports", "./data", "./physics", "./store", "./common"], fun
          */
         Ship.prototype.attr = function (name, nominal) {
             if (nominal === void 0) { nominal = false; }
+            var e_2, _a;
             var value = 0;
             if (typeof this.shipclass[name] === 'number') {
                 value += this.shipclass[name];
             }
             else {
-                for (var _i = 0, _a = this.addons; _i < _a.length; _i++) {
-                    var addon = _a[_i];
-                    if (typeof data_1.default.addons[addon][name] === 'number') {
-                        value += data_1.default.addons[addon][name];
+                try {
+                    for (var _b = __values(this.addons), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var addon = _c.value;
+                        if (typeof data_1.default.addons[addon][name] === 'number') {
+                            value += data_1.default.addons[addon][name];
+                        }
                     }
+                }
+                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    }
+                    finally { if (e_2) throw e_2.error; }
                 }
             }
             if (!nominal) {
@@ -251,10 +281,20 @@ define(["require", "exports", "./data", "./physics", "./store", "./common"], fun
             return Math.floor(fuel / this.burnRate(accel, mass));
         };
         Ship.prototype.cargoMass = function () {
+            var e_3, _a;
             var mass = 0;
-            for (var _i = 0, _a = this.cargo.keys(); _i < _a.length; _i++) {
-                var item = _a[_i];
-                mass += data_1.default.resources[item].mass * this.cargo.get(item);
+            try {
+                for (var _b = __values(this.cargo.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var item = _c.value;
+                    mass += data_1.default.resources[item].mass * this.cargo.get(item);
+                }
+            }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_3) throw e_3.error; }
             }
             return mass;
         };
@@ -314,10 +354,20 @@ define(["require", "exports", "./data", "./physics", "./store", "./common"], fun
             return Math.ceil(price);
         };
         Ship.prototype.cargoValue = function (market) {
+            var e_4, _a;
             var price = 0;
-            for (var _i = 0, _a = this.cargo.keys(); _i < _a.length; _i++) {
-                var item = _a[_i];
-                price += this.cargo.count(item) * market.sellPrice(item);
+            try {
+                for (var _b = __values(this.cargo.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var item = _c.value;
+                    price += this.cargo.count(item) * market.sellPrice(item);
+                }
+            }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_4) throw e_4.error; }
             }
             return price;
         };
@@ -325,10 +375,20 @@ define(["require", "exports", "./data", "./physics", "./store", "./common"], fun
             return market.sellPrice('fuel') * Math.floor(this.fuel);
         };
         Ship.prototype.addOnValue = function () {
+            var e_5, _a;
             var price = 0;
-            for (var _i = 0, _a = this.addons; _i < _a.length; _i++) {
-                var addon = _a[_i];
-                price += data_1.default.addons[addon].price;
+            try {
+                for (var _b = __values(this.addons), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var addon = _c.value;
+                    price += data_1.default.addons[addon].price;
+                }
+            }
+            catch (e_5_1) { e_5 = { error: e_5_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_5) throw e_5.error; }
             }
             return price;
         };
@@ -359,12 +419,22 @@ define(["require", "exports", "./data", "./physics", "./store", "./common"], fun
             this.addons.push(addon);
         };
         Ship.prototype.hasAddOn = function (addon) {
+            var e_6, _a;
             var count = 0;
-            for (var _i = 0, _a = this.addons; _i < _a.length; _i++) {
-                var a = _a[_i];
-                if (a === addon) {
-                    ++count;
+            try {
+                for (var _b = __values(this.addons), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var a = _c.value;
+                    if (a === addon) {
+                        ++count;
+                    }
                 }
+            }
+            catch (e_6_1) { e_6 = { error: e_6_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_6) throw e_6.error; }
             }
             return count;
         };

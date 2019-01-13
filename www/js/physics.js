@@ -1,3 +1,19 @@
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
 define(["require", "exports"], function (require, exports) {
     "use strict";
     var Physics = /** @class */ (function () {
@@ -67,8 +83,8 @@ define(["require", "exports"], function (require, exports) {
          * Finds a point [x,y,z] at distance d1 along line p1, p2.
          */
         Physics.segment = function (p0, p1, d1) {
-            var x0 = p0[0], y0 = p0[1], z0 = p0[2];
-            var x1 = p1[0], y1 = p1[1], z1 = p1[2];
+            var _a = __read(p0, 3), x0 = _a[0], y0 = _a[1], z0 = _a[2];
+            var _b = __read(p1, 3), x1 = _b[0], y1 = _b[1], z1 = _b[2];
             var d = Physics.distance(p0, p1);
             var t = d1 / d;
             return [

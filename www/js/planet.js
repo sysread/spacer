@@ -1,3 +1,29 @@
+var __values = (this && this.__values) || function (o) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+    if (m) return m.call(o);
+    return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+};
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -20,6 +46,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
     util = __importStar(util);
     var Planet = /** @class */ (function () {
         function Planet(body, init) {
+            var e_1, _a, e_2, _b, e_3, _c, e_4, _d, e_5, _e, e_6, _f;
             init = init || {};
             /*
              * Physical and faction
@@ -53,18 +80,45 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
              * Work
              */
             this.work_tasks = [];
-            TASK: for (var _i = 0, _a = data_1.default.work; _i < _a.length; _i++) {
-                var task = _a[_i];
-                for (var _b = 0, _c = task.avail; _b < _c.length; _b++) {
-                    var req = _c[_b];
-                    for (var _d = 0, _e = this.traits; _d < _e.length; _d++) {
-                        var trait = _e[_d];
-                        if (req === trait.name) {
-                            this.work_tasks.push(task);
-                            continue TASK;
+            try {
+                TASK: for (var _g = __values(data_1.default.work), _h = _g.next(); !_h.done; _h = _g.next()) {
+                    var task = _h.value;
+                    try {
+                        for (var _j = __values(task.avail), _k = _j.next(); !_k.done; _k = _j.next()) {
+                            var req = _k.value;
+                            try {
+                                for (var _l = __values(this.traits), _m = _l.next(); !_m.done; _m = _l.next()) {
+                                    var trait = _m.value;
+                                    if (req === trait.name) {
+                                        this.work_tasks.push(task);
+                                        continue TASK;
+                                    }
+                                }
+                            }
+                            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                            finally {
+                                try {
+                                    if (_m && !_m.done && (_c = _l.return)) _c.call(_l);
+                                }
+                                finally { if (e_3) throw e_3.error; }
+                            }
                         }
                     }
+                    catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                    finally {
+                        try {
+                            if (_k && !_k.done && (_b = _j.return)) _b.call(_j);
+                        }
+                        finally { if (e_2) throw e_2.error; }
+                    }
                 }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_h && !_h.done && (_a = _g.return)) _a.call(_g);
+                }
+                finally { if (e_1) throw e_1.error; }
             }
             /*
              * Economics
@@ -77,17 +131,35 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.queue = init.queue || [];
             this.produces = new store_1.default;
             this.consumes = new store_1.default;
-            for (var _f = 0, _g = t.resources; _f < _g.length; _f++) {
-                var item = _g[_f];
-                this.produces.inc(item, this.scale(data_1.default.market.produces[item]));
-                this.consumes.inc(item, this.scale(data_1.default.market.consumes[item]));
-                this.produces.inc(item, this.scale(this.faction.produces[item] || 0));
-                this.consumes.inc(item, this.scale(this.faction.consumes[item] || 0));
-                for (var _h = 0, _j = this.traits; _h < _j.length; _h++) {
-                    var trait = _j[_h];
-                    this.produces.inc(item, this.scale(trait.produces[item]));
-                    this.consumes.inc(item, this.scale(trait.consumes[item]));
+            try {
+                for (var _o = __values(t.resources), _p = _o.next(); !_p.done; _p = _o.next()) {
+                    var item = _p.value;
+                    this.produces.inc(item, this.scale(data_1.default.market.produces[item]));
+                    this.consumes.inc(item, this.scale(data_1.default.market.consumes[item]));
+                    this.produces.inc(item, this.scale(this.faction.produces[item] || 0));
+                    this.consumes.inc(item, this.scale(this.faction.consumes[item] || 0));
+                    try {
+                        for (var _q = __values(this.traits), _r = _q.next(); !_r.done; _r = _q.next()) {
+                            var trait = _r.value;
+                            this.produces.inc(item, this.scale(trait.produces[item]));
+                            this.consumes.inc(item, this.scale(trait.consumes[item]));
+                        }
+                    }
+                    catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                    finally {
+                        try {
+                            if (_r && !_r.done && (_e = _q.return)) _e.call(_q);
+                        }
+                        finally { if (e_5) throw e_5.error; }
+                    }
                 }
+            }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            finally {
+                try {
+                    if (_p && !_p.done && (_d = _o.return)) _d.call(_o);
+                }
+                finally { if (e_4) throw e_4.error; }
             }
             // Assign directly in constructor rather than in clearMemos for
             // performance reasons. V8's jit will produce more optimized classes by
@@ -100,9 +172,18 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this._getSurplus = {};
             this._price = {};
             this._cycle = {};
-            for (var _k = 0, _l = t.resources; _k < _l.length; _k++) {
-                var item = _l[_k];
-                this._cycle[item] = util.getRandomInt(2, 6) * data_1.default.turns_per_day;
+            try {
+                for (var _s = __values(t.resources), _t = _s.next(); !_t.done; _t = _s.next()) {
+                    var item = _t.value;
+                    this._cycle[item] = util.getRandomInt(2, 6) * data_1.default.turns_per_day;
+                }
+            }
+            catch (e_6_1) { e_6 = { error: e_6_1 }; }
+            finally {
+                try {
+                    if (_t && !_t.done && (_f = _s.return)) _f.call(_s);
+                }
+                finally { if (e_6) throw e_6.error; }
             }
         }
         Object.defineProperty(Planet.prototype, "position", {
@@ -116,20 +197,40 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return system_1.default.distance(this.body, toBody);
         };
         Planet.prototype.hasTrait = function (trait) {
-            for (var _i = 0, _a = this.traits; _i < _a.length; _i++) {
-                var t_1 = _a[_i];
-                if (t_1.name == trait) {
-                    return true;
+            var e_7, _a;
+            try {
+                for (var _b = __values(this.traits), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var t_1 = _c.value;
+                    if (t_1.name == trait) {
+                        return true;
+                    }
                 }
+            }
+            catch (e_7_1) { e_7 = { error: e_7_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_7) throw e_7.error; }
             }
             return false;
         };
         Planet.prototype.hasCondition = function (condition) {
-            for (var _i = 0, _a = this.conditions; _i < _a.length; _i++) {
-                var c = _a[_i];
-                if (c.name == condition) {
-                    return true;
+            var e_8, _a;
+            try {
+                for (var _b = __values(this.conditions), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var c = _c.value;
+                    if (c.name == condition) {
+                        return true;
+                    }
                 }
+            }
+            catch (e_8_1) { e_8 = { error: e_8_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_8) throw e_8.error; }
             }
             return false;
         };
@@ -236,7 +337,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.replenishFabricators = function () {
             if (this.fab_health < this.max_fab_health / 2) {
                 var want = Math.ceil((this.max_fab_health - this.fab_health) / data_1.default.fab_health);
-                var _a = this.buy('cybernetics', want), bought = _a[0], price = _a[1];
+                var _a = __read(this.buy('cybernetics', want), 2), bought = _a[0], price = _a[1];
                 this.fab_health += bought * data_1.default.fab_health;
             }
         };
@@ -253,14 +354,24 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return Math.ceil(rate);
         };
         Planet.prototype.work = function (player, task, days) {
+            var e_9, _a;
             var pay = this.payRate(player, task) * days;
             var turns = days * 24 / data_1.default.hours_per_turn;
             var rewards = task.rewards;
             var collected = new store_1.default;
             for (var turn = 0; turn < turns; ++turn) {
-                for (var _i = 0, rewards_1 = rewards; _i < rewards_1.length; _i++) {
-                    var item = rewards_1[_i];
-                    collected.inc(item, this.mine(item));
+                try {
+                    for (var rewards_1 = __values(rewards), rewards_1_1 = rewards_1.next(); !rewards_1_1.done; rewards_1_1 = rewards_1.next()) {
+                        var item = rewards_1_1.value;
+                        collected.inc(item, this.mine(item));
+                    }
+                }
+                catch (e_9_1) { e_9 = { error: e_9_1 }; }
+                finally {
+                    try {
+                        if (rewards_1_1 && !rewards_1_1.done && (_a = rewards_1.return)) _a.call(rewards_1);
+                    }
+                    finally { if (e_9) throw e_9.error; }
                 }
             }
             return { pay: pay, items: collected };
@@ -305,33 +416,63 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return this._getSurplus[item];
         };
         Planet.prototype.production = function (item) {
+            var e_10, _a;
             var amount = this.produces.get(item) / data_1.default.turns_per_day;
-            for (var _i = 0, _a = this.conditions; _i < _a.length; _i++) {
-                var condition = _a[_i];
-                amount += this.scale(condition.produces[item] || 0);
+            try {
+                for (var _b = __values(this.conditions), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var condition = _c.value;
+                    amount += this.scale(condition.produces[item] || 0);
+                }
+            }
+            catch (e_10_1) { e_10 = { error: e_10_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_10) throw e_10.error; }
             }
             return amount;
         };
         Planet.prototype.consumption = function (item) {
+            var e_11, _a;
             var amount = this.consumes.get(item) / data_1.default.turns_per_day;
-            for (var _i = 0, _a = this.conditions; _i < _a.length; _i++) {
-                var condition = _a[_i];
-                amount += this.scale(condition.consumes[item] || 0);
+            try {
+                for (var _b = __values(this.conditions), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var condition = _c.value;
+                    amount += this.scale(condition.consumes[item] || 0);
+                }
+            }
+            catch (e_11_1) { e_11 = { error: e_11_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_11) throw e_11.error; }
             }
             return amount;
         };
         Planet.prototype.incDemand = function (item, amt) {
+            var e_12, _a;
             var queue = [[item, amt]];
             while (queue.length > 0) {
                 var elt = queue.shift();
                 if (elt != undefined) {
-                    var item_1 = elt[0], amt_1 = elt[1];
+                    var _b = __read(elt, 2), item_1 = _b[0], amt_1 = _b[1];
                     this.demand.inc(item_1, amt_1);
                     var res = data_1.default.resources[item_1];
                     if (t.isCraft(res) && this.hasShortage(item_1)) {
-                        for (var _i = 0, _a = Object.keys(res.recipe.materials); _i < _a.length; _i++) {
-                            var mat = _a[_i];
-                            queue.push([mat, (res.recipe.materials[mat] || 0) * amt_1]);
+                        try {
+                            for (var _c = __values(Object.keys(res.recipe.materials)), _d = _c.next(); !_d.done; _d = _c.next()) {
+                                var mat = _d.value;
+                                queue.push([mat, (res.recipe.materials[mat] || 0) * amt_1]);
+                            }
+                        }
+                        catch (e_12_1) { e_12 = { error: e_12_1 }; }
+                        finally {
+                            try {
+                                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                            }
+                            finally { if (e_12) throw e_12.error; }
                         }
                     }
                 }
@@ -341,6 +482,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.supply.inc(item, amount);
         };
         Planet.prototype.isNetExporter = function (item) {
+            var e_13, _a;
             if (!this._isNetExporter.hasOwnProperty(item)) {
                 var isExporter = false;
                 var res = resource_1.resources[item];
@@ -350,12 +492,21 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 }
                 if (!isExporter && resource_1.isCraft(res)) {
                     var matExporter = true;
-                    for (var _i = 0, _a = res.ingredients; _i < _a.length; _i++) {
-                        var mat = _a[_i];
-                        if (!this.isNetExporter(mat)) {
-                            matExporter = false;
-                            break;
+                    try {
+                        for (var _b = __values(res.ingredients), _c = _b.next(); !_c.done; _c = _b.next()) {
+                            var mat = _c.value;
+                            if (!this.isNetExporter(mat)) {
+                                matExporter = false;
+                                break;
+                            }
                         }
+                    }
+                    catch (e_13_1) { e_13 = { error: e_13_1 }; }
+                    finally {
+                        try {
+                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                        }
+                        finally { if (e_13) throw e_13.error; }
                     }
                     isExporter = matExporter;
                 }
@@ -386,20 +537,31 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return this._getNeed[item];
         };
         Planet.prototype.getScarcityMarkup = function (item) {
+            var e_14, _a;
             var markup = 1;
             if (data_1.default.necessity[item]) {
                 markup += data_1.default.scarcity_markup;
             }
-            for (var _i = 0, _a = this.conditions; _i < _a.length; _i++) {
-                var condition = _a[_i];
-                var consumption = this.scale(condition.consumes[item] || 0);
-                var production = this.scale(condition.produces[item] || 0);
-                var amount = consumption - production; // production is generally a malus
-                markup += amount;
+            try {
+                for (var _b = __values(this.conditions), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var condition = _c.value;
+                    var consumption = this.scale(condition.consumes[item] || 0);
+                    var production = this.scale(condition.produces[item] || 0);
+                    var amount = consumption - production; // production is generally a malus
+                    markup += amount;
+                }
+            }
+            catch (e_14_1) { e_14 = { error: e_14_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_14) throw e_14.error; }
             }
             return markup;
         };
         Planet.prototype.price = function (item) {
+            var e_15, _a;
             if (window.game.turns % this._cycle[item] == 0) {
                 delete this._price[item];
             }
@@ -417,10 +579,19 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 else {
                     price = markup * value;
                 }
-                // Special cases for market classifications
-                for (var _i = 0, _a = this.traits; _i < _a.length; _i++) {
-                    var trait = _a[_i];
-                    price -= price * (trait.price[item] || 0);
+                try {
+                    // Special cases for market classifications
+                    for (var _b = __values(this.traits), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var trait = _c.value;
+                        price -= price * (trait.price[item] || 0);
+                    }
+                }
+                catch (e_15_1) { e_15 = { error: e_15_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    }
+                    finally { if (e_15) throw e_15.error; }
                 }
                 // Set upper and lower boundary, allowing for a little more inflation
                 // than price crashing.
@@ -481,19 +652,29 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.queue.push(task);
         };
         Planet.prototype.processQueue = function () {
+            var e_16, _a;
             // NOTE: this method of regenerating the queue is *much* faster than
             // Array.prototype.filter().
             var queue = this.queue;
             this.queue = [];
-            for (var _i = 0, queue_1 = queue; _i < queue_1.length; _i++) {
-                var task = queue_1[_i];
-                if (--task.turns > 0) {
-                    this.queue.push(task);
+            try {
+                for (var queue_1 = __values(queue), queue_1_1 = queue_1.next(); !queue_1_1.done; queue_1_1 = queue_1.next()) {
+                    var task = queue_1_1.value;
+                    if (--task.turns > 0) {
+                        this.queue.push(task);
+                    }
+                    else {
+                        this.sell(task.item, task.count);
+                        this.pending.dec(task.item, task.count);
+                    }
                 }
-                else {
-                    this.sell(task.item, task.count);
-                    this.pending.dec(task.item, task.count);
+            }
+            catch (e_16_1) { e_16 = { error: e_16_1 }; }
+            finally {
+                try {
+                    if (queue_1_1 && !queue_1_1.done && (_a = queue_1.return)) _a.call(queue_1);
                 }
+                finally { if (e_16) throw e_16.error; }
             }
         };
         Planet.prototype.neededResourceAmount = function (item) {
@@ -501,15 +682,25 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return Math.max(Math.ceil(amount), 0);
         };
         Planet.prototype.neededResources = function () {
+            var e_17, _a;
             var amounts = {}; // Calculate how many of each item we want
             var need = {}; // Pre-calculate each item's need
-            for (var _i = 0, _a = t.resources; _i < _a.length; _i++) {
-                var item = _a[_i];
-                var amount = this.neededResourceAmount(resource_1.resources[item]);
-                if (amount > 0) {
-                    amounts[item] = amount;
-                    need[item] = this.getNeed(item);
+            try {
+                for (var _b = __values(t.resources), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var item = _c.value;
+                    var amount = this.neededResourceAmount(resource_1.resources[item]);
+                    if (amount > 0) {
+                        amounts[item] = amount;
+                        need[item] = this.getNeed(item);
+                    }
                 }
+            }
+            catch (e_17_1) { e_17 = { error: e_17_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_17) throw e_17.error; }
             }
             // Sort the greatest needs to the front of the list
             var prioritized = Object.keys(amounts).sort(function (a, b) {
@@ -535,6 +726,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             });
         };
         Planet.prototype.selectExporter = function (item, amount) {
+            var e_18, _a, e_19, _b, e_20, _c;
             var exporters = this.exporters(item);
             if (exporters.length === 0)
                 return;
@@ -542,11 +734,20 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             var dist = {};
             var price = {};
             var stock = {};
-            for (var _i = 0, exporters_1 = exporters; _i < exporters_1.length; _i++) {
-                var body = exporters_1[_i];
-                dist[body] = this.distance(body) / physics_1.default.AU * window.game.planets[body].buyPrice('fuel');
-                price[body] = window.game.planets[body].buyPrice(item);
-                stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
+            try {
+                for (var exporters_1 = __values(exporters), exporters_1_1 = exporters_1.next(); !exporters_1_1.done; exporters_1_1 = exporters_1.next()) {
+                    var body = exporters_1_1.value;
+                    dist[body] = this.distance(body) / physics_1.default.AU * window.game.planets[body].buyPrice('fuel');
+                    price[body] = window.game.planets[body].buyPrice(item);
+                    stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
+                }
+            }
+            catch (e_18_1) { e_18 = { error: e_18_1 }; }
+            finally {
+                try {
+                    if (exporters_1_1 && !exporters_1_1.done && (_a = exporters_1.return)) _a.call(exporters_1);
+                }
+                finally { if (e_18) throw e_18.error; }
             }
             var avgDist = Object.values(dist).reduce(function (a, b) { return a + b; }, 0)
                 / Object.values(dist).length;
@@ -557,83 +758,139 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             var distRating = {};
             var priceRating = {};
             var stockRating = {};
-            for (var _a = 0, exporters_2 = exporters; _a < exporters_2.length; _a++) {
-                var body = exporters_2[_a];
-                distRating[body] = avgDist / dist[body];
-                priceRating[body] = avgPrice / price[body];
-                stockRating[body] = stock[body] / avgStock;
+            try {
+                for (var exporters_2 = __values(exporters), exporters_2_1 = exporters_2.next(); !exporters_2_1.done; exporters_2_1 = exporters_2.next()) {
+                    var body = exporters_2_1.value;
+                    distRating[body] = avgDist / dist[body];
+                    priceRating[body] = avgPrice / price[body];
+                    stockRating[body] = stock[body] / avgStock;
+                }
+            }
+            catch (e_19_1) { e_19 = { error: e_19_1 }; }
+            finally {
+                try {
+                    if (exporters_2_1 && !exporters_2_1.done && (_b = exporters_2.return)) _b.call(exporters_2);
+                }
+                finally { if (e_19) throw e_19.error; }
             }
             // Calculate a rating by comparing distance, price, and number of
             // available units
             var bestPlanet;
             var bestRating = 0;
-            for (var _b = 0, exporters_3 = exporters; _b < exporters_3.length; _b++) {
-                var body = exporters_3[_b];
-                var rating = priceRating[body] * stockRating[body] * distRating[body];
-                if (rating > bestRating) {
-                    bestRating = rating;
-                    bestPlanet = body;
+            try {
+                for (var exporters_3 = __values(exporters), exporters_3_1 = exporters_3.next(); !exporters_3_1.done; exporters_3_1 = exporters_3.next()) {
+                    var body = exporters_3_1.value;
+                    var rating = priceRating[body] * stockRating[body] * distRating[body];
+                    if (rating > bestRating) {
+                        bestRating = rating;
+                        bestPlanet = body;
+                    }
                 }
+            }
+            catch (e_20_1) { e_20 = { error: e_20_1 }; }
+            finally {
+                try {
+                    if (exporters_3_1 && !exporters_3_1.done && (_c = exporters_3.return)) _c.call(exporters_3);
+                }
+                finally { if (e_20) throw e_20.error; }
             }
             return bestPlanet;
         };
         Planet.prototype.manufacture = function () {
+            var e_21, _a, e_22, _b, e_23, _c, e_24, _d;
             var need = this.neededResources();
             var want = need.amounts;
             var list = [];
-            for (var _i = 0, _a = need.prioritized; _i < _a.length; _i++) {
-                var i = _a[_i];
-                var res = resource_1.resources[i];
-                // Not craftable or we do not need it
-                if (!resource_1.isCraft(res) || this.getNeed(i) < 0.25) {
-                    delete want[i];
-                }
-                else {
-                    // Cache so we don't recalculate these over and over
-                    var has_stock = {};
-                    var is_short = {};
-                    for (var _b = 0, _c = res.ingredients; _b < _c.length; _b++) {
-                        var mat = _c[_b];
-                        if (has_stock[mat] == undefined) {
-                            has_stock[mat] = this.getStock(mat);
-                        }
-                        if (is_short[mat] == undefined) {
-                            is_short[mat] = this.hasShortage(mat);
-                        }
-                        var amt = res.recipe.materials[mat] || 0;
-                        if (has_stock[mat] < amt || is_short[mat]) {
-                            this.incDemand(mat, amt);
-                        }
+            try {
+                for (var _e = __values(need.prioritized), _f = _e.next(); !_f.done; _f = _e.next()) {
+                    var i = _f.value;
+                    var res = resource_1.resources[i];
+                    // Not craftable or we do not need it
+                    if (!resource_1.isCraft(res) || this.getNeed(i) < 0.25) {
+                        delete want[i];
                     }
-                    list.push(i);
+                    else {
+                        // Cache so we don't recalculate these over and over
+                        var has_stock = {};
+                        var is_short = {};
+                        try {
+                            for (var _g = __values(res.ingredients), _h = _g.next(); !_h.done; _h = _g.next()) {
+                                var mat = _h.value;
+                                if (has_stock[mat] == undefined) {
+                                    has_stock[mat] = this.getStock(mat);
+                                }
+                                if (is_short[mat] == undefined) {
+                                    is_short[mat] = this.hasShortage(mat);
+                                }
+                                var amt = res.recipe.materials[mat] || 0;
+                                if (has_stock[mat] < amt || is_short[mat]) {
+                                    this.incDemand(mat, amt);
+                                }
+                            }
+                        }
+                        catch (e_22_1) { e_22 = { error: e_22_1 }; }
+                        finally {
+                            try {
+                                if (_h && !_h.done && (_b = _g.return)) _b.call(_g);
+                            }
+                            finally { if (e_22) throw e_22.error; }
+                        }
+                        list.push(i);
+                    }
                 }
+            }
+            catch (e_21_1) { e_21 = { error: e_21_1 }; }
+            finally {
+                try {
+                    if (_f && !_f.done && (_a = _e.return)) _a.call(_e);
+                }
+                finally { if (e_21) throw e_21.error; }
             }
             while (Object.keys(want).length > 0) {
                 var items = list
                     .filter(function (i) { return want[i]; })
                     .map(function (i) { return resource_1.resources[i]; });
-                for (var _d = 0, items_1 = items; _d < items_1.length; _d++) {
-                    var item = items_1[_d];
-                    if (resource_1.isCraft(item)) {
-                        for (var _e = 0, _f = item.ingredients; _e < _f.length; _e++) {
-                            var mat = _f[_e];
-                            this.buy(mat, item.recipe.materials[mat] || 0);
+                try {
+                    for (var items_1 = __values(items), items_1_1 = items_1.next(); !items_1_1.done; items_1_1 = items_1.next()) {
+                        var item = items_1_1.value;
+                        if (resource_1.isCraft(item)) {
+                            try {
+                                for (var _j = __values(item.ingredients), _k = _j.next(); !_k.done; _k = _j.next()) {
+                                    var mat = _k.value;
+                                    this.buy(mat, item.recipe.materials[mat] || 0);
+                                }
+                            }
+                            catch (e_24_1) { e_24 = { error: e_24_1 }; }
+                            finally {
+                                try {
+                                    if (_k && !_k.done && (_d = _j.return)) _d.call(_j);
+                                }
+                                finally { if (e_24) throw e_24.error; }
+                            }
                         }
+                        if (--want[item.name] === 0) {
+                            delete want[item.name];
+                        }
+                        this.schedule({
+                            type: 'craft',
+                            turns: this.fabricate(item.name),
+                            item: item.name,
+                            count: 1,
+                        });
                     }
-                    if (--want[item.name] === 0) {
-                        delete want[item.name];
+                }
+                catch (e_23_1) { e_23 = { error: e_23_1 }; }
+                finally {
+                    try {
+                        if (items_1_1 && !items_1_1.done && (_c = items_1.return)) _c.call(items_1);
                     }
-                    this.schedule({
-                        type: 'craft',
-                        turns: this.fabricate(item.name),
-                        item: item.name,
-                        count: 1,
-                    });
+                    finally { if (e_23) throw e_23.error; }
                 }
             }
         };
         Planet.prototype.imports = function () {
             var _this = this;
+            var e_25, _a;
             if (this.queue.length >= 10)
                 return;
             var need = this.neededResources();
@@ -647,104 +904,189 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 return true;
             });
             var turns_per_au = data_1.default.turns_per_day * data_1.default.import_days_per_au;
-            ITEM: for (var _i = 0, list_1 = list; _i < list_1.length; _i++) {
-                var item = list_1[_i];
-                // Import amounts should be between 5-20 units
-                var amount = util.clamp(want[item] * (data_1.default.necessity[item] ? 2 : 1), 5, 20);
-                var planet = this.selectExporter(item, amount);
-                if (!planet) {
-                    continue;
+            try {
+                ITEM: for (var list_1 = __values(list), list_1_1 = list_1.next(); !list_1_1.done; list_1_1 = list_1.next()) {
+                    var item = list_1_1.value;
+                    // Import amounts should be between 5-20 units
+                    var amount = util.clamp(want[item] * (data_1.default.necessity[item] ? 2 : 1), 5, 20);
+                    var planet = this.selectExporter(item, amount);
+                    if (!planet) {
+                        continue;
+                    }
+                    var _b = __read(window.game.planets[planet].buy(item, amount), 2), bought = _b[0], price = _b[1];
+                    if (bought > 0) {
+                        var distance = this.distance(planet) / physics_1.default.AU;
+                        var turns = Math.ceil(distance * turns_per_au);
+                        window.game.planets[planet].buy('fuel', distance);
+                        this.schedule({
+                            type: 'import',
+                            item: item,
+                            count: bought,
+                            from: planet,
+                            to: this.body,
+                            turns: turns,
+                        });
+                    }
                 }
-                var _a = window.game.planets[planet].buy(item, amount), bought = _a[0], price = _a[1];
-                if (bought > 0) {
-                    var distance = this.distance(planet) / physics_1.default.AU;
-                    var turns = Math.ceil(distance * turns_per_au);
-                    window.game.planets[planet].buy('fuel', distance);
-                    this.schedule({
-                        type: 'import',
-                        item: item,
-                        count: bought,
-                        from: planet,
-                        to: this.body,
-                        turns: turns,
-                    });
+            }
+            catch (e_25_1) { e_25 = { error: e_25_1 }; }
+            finally {
+                try {
+                    if (list_1_1 && !list_1_1.done && (_a = list_1.return)) _a.call(list_1);
                 }
+                finally { if (e_25) throw e_25.error; }
             }
         };
         Planet.prototype.produce = function () {
-            for (var _i = 0, _a = this.produces.keys(); _i < _a.length; _i++) {
-                var item = _a[_i];
-                var amount = this.production(item);
-                if (amount > 0 && !this.hasSurplus(item)) {
-                    this.sell(item, amount);
+            var e_26, _a;
+            try {
+                for (var _b = __values(this.produces.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var item = _c.value;
+                    var amount = this.production(item);
+                    if (amount > 0 && !this.hasSurplus(item)) {
+                        this.sell(item, amount);
+                    }
                 }
+            }
+            catch (e_26_1) { e_26 = { error: e_26_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_26) throw e_26.error; }
             }
         };
         Planet.prototype.consume = function () {
-            for (var _i = 0, _a = this.consumes.keys(); _i < _a.length; _i++) {
-                var item = _a[_i];
-                var amt = this.consumption(item);
-                if (amt > 0) {
-                    this.buy(item, this.consumption(item));
+            var e_27, _a;
+            try {
+                for (var _b = __values(this.consumes.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var item = _c.value;
+                    var amt = this.consumption(item);
+                    if (amt > 0) {
+                        this.buy(item, this.consumption(item));
+                    }
                 }
+            }
+            catch (e_27_1) { e_27 = { error: e_27_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_27) throw e_27.error; }
             }
         };
         Planet.prototype.rollups = function () {
+            var e_28, _a, e_29, _b;
             if (window.game.turns % (24 / data_1.default.hours_per_turn) === 0) {
-                for (var _i = 0, _a = this.stock.keys(); _i < _a.length; _i++) {
-                    var item = _a[_i];
-                    this.incSupply(item, this.getStock(item));
+                try {
+                    for (var _c = __values(this.stock.keys()), _d = _c.next(); !_d.done; _d = _c.next()) {
+                        var item = _d.value;
+                        this.incSupply(item, this.getStock(item));
+                    }
+                }
+                catch (e_28_1) { e_28 = { error: e_28_1 }; }
+                finally {
+                    try {
+                        if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                    }
+                    finally { if (e_28) throw e_28.error; }
                 }
                 this.supply.rollup();
                 this.demand.rollup();
-                for (var _b = 0, _c = this.need.keys(); _b < _c.length; _b++) {
-                    var item = _c[_b];
-                    this.need.inc(item, this.getNeed(item));
+                try {
+                    for (var _e = __values(this.need.keys()), _f = _e.next(); !_f.done; _f = _e.next()) {
+                        var item = _f.value;
+                        this.need.inc(item, this.getNeed(item));
+                    }
+                }
+                catch (e_29_1) { e_29 = { error: e_29_1 }; }
+                finally {
+                    try {
+                        if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                    }
+                    finally { if (e_29) throw e_29.error; }
                 }
                 this.need.rollup();
             }
         };
         Planet.prototype.apply_conditions = function () {
+            var e_30, _a, e_31, _b, e_32, _c, e_33, _d;
             // Increment turns on each condition and filter out those which are no
             // longer active.
             this.conditions = this.conditions.filter(function (c) {
                 c.inc_turns();
                 return !c.is_over;
             });
-            // Test for chance of new conditions
-            for (var _i = 0, _a = Object.keys(data_1.default.conditions); _i < _a.length; _i++) {
-                var c = _a[_i];
-                // Skip conditions that are already active
-                if (this.hasCondition(c)) {
-                    continue;
-                }
-                // Shortages
-                for (var _b = 0, _c = Object.keys(data_1.default.conditions[c].triggers.shortage); _b < _c.length; _b++) {
-                    var item = _c[_b];
-                    if (this.hasShortage(item)) {
-                        if (util.chance(data_1.default.conditions[c].triggers.shortage[item])) {
-                            this.conditions.push(new condition_1.Condition(c));
+            try {
+                // Test for chance of new conditions
+                for (var _e = __values(Object.keys(data_1.default.conditions)), _f = _e.next(); !_f.done; _f = _e.next()) {
+                    var c = _f.value;
+                    // Skip conditions that are already active
+                    if (this.hasCondition(c)) {
+                        continue;
+                    }
+                    try {
+                        // Shortages
+                        for (var _g = __values(Object.keys(data_1.default.conditions[c].triggers.shortage)), _h = _g.next(); !_h.done; _h = _g.next()) {
+                            var item = _h.value;
+                            if (this.hasShortage(item)) {
+                                if (util.chance(data_1.default.conditions[c].triggers.shortage[item])) {
+                                    this.conditions.push(new condition_1.Condition(c));
+                                }
+                            }
                         }
                     }
-                }
-                // Surpluses
-                for (var _d = 0, _e = Object.keys(data_1.default.conditions[c].triggers.surplus); _d < _e.length; _d++) {
-                    var item = _e[_d];
-                    if (this.hasSurplus(item)) {
-                        if (util.chance(data_1.default.conditions[c].triggers.surplus[item])) {
-                            this.conditions.push(new condition_1.Condition(c));
+                    catch (e_31_1) { e_31 = { error: e_31_1 }; }
+                    finally {
+                        try {
+                            if (_h && !_h.done && (_b = _g.return)) _b.call(_g);
+                        }
+                        finally { if (e_31) throw e_31.error; }
+                    }
+                    try {
+                        // Surpluses
+                        for (var _j = __values(Object.keys(data_1.default.conditions[c].triggers.surplus)), _k = _j.next(); !_k.done; _k = _j.next()) {
+                            var item = _k.value;
+                            if (this.hasSurplus(item)) {
+                                if (util.chance(data_1.default.conditions[c].triggers.surplus[item])) {
+                                    this.conditions.push(new condition_1.Condition(c));
+                                }
+                            }
                         }
                     }
-                }
-                // Conditions
-                for (var _f = 0, _g = Object.keys(data_1.default.conditions[c].triggers.condition); _f < _g.length; _f++) {
-                    var cond = _g[_f];
-                    if (this.hasCondition(cond) || this.hasTrait(cond)) {
-                        if (util.chance(data_1.default.conditions[c].triggers.condition[cond])) {
-                            this.conditions.push(new condition_1.Condition(c));
+                    catch (e_32_1) { e_32 = { error: e_32_1 }; }
+                    finally {
+                        try {
+                            if (_k && !_k.done && (_c = _j.return)) _c.call(_j);
+                        }
+                        finally { if (e_32) throw e_32.error; }
+                    }
+                    try {
+                        // Conditions
+                        for (var _l = __values(Object.keys(data_1.default.conditions[c].triggers.condition)), _m = _l.next(); !_m.done; _m = _l.next()) {
+                            var cond = _m.value;
+                            if (this.hasCondition(cond) || this.hasTrait(cond)) {
+                                if (util.chance(data_1.default.conditions[c].triggers.condition[cond])) {
+                                    this.conditions.push(new condition_1.Condition(c));
+                                }
+                            }
                         }
                     }
+                    catch (e_33_1) { e_33 = { error: e_33_1 }; }
+                    finally {
+                        try {
+                            if (_m && !_m.done && (_d = _l.return)) _d.call(_l);
+                        }
+                        finally { if (e_33) throw e_33.error; }
+                    }
                 }
+            }
+            catch (e_30_1) { e_30 = { error: e_30_1 }; }
+            finally {
+                try {
+                    if (_f && !_f.done && (_a = _e.return)) _a.call(_e);
+                }
+                finally { if (e_30) throw e_30.error; }
             }
         };
         Planet.prototype.clearMemos = function () {
@@ -774,15 +1116,25 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * Misc
          */
         Planet.prototype.addonPrice = function (addon, player) {
+            var e_34, _a;
             var base = data_1.default.addons[addon].price;
             var standing = base * player.getStandingPriceAdjustment(this.faction.abbrev);
             var tax = base * this.faction.sales_tax;
             var price = base - standing + tax;
-            for (var _i = 0, _a = this.traits; _i < _a.length; _i++) {
-                var trait = _a[_i];
-                if ('price' in trait && 'addons' in trait.price) {
-                    price -= base * (trait.price['addons'] || 0);
+            try {
+                for (var _b = __values(this.traits), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var trait = _c.value;
+                    if ('price' in trait && 'addons' in trait.price) {
+                        price -= base * (trait.price['addons'] || 0);
+                    }
                 }
+            }
+            catch (e_34_1) { e_34 = { error: e_34_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_34) throw e_34.error; }
             }
             return price;
         };

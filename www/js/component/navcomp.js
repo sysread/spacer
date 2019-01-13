@@ -94,7 +94,7 @@ define(function(require, exports, module) {
      * navbar's height was at the time.
      */
     mounted() {
-      this.navcomp = new NavComp(undefined, undefined, this.game);
+      this.navcomp = new NavComp(this.game.player, game.locus);
 
       if ($('#spacer-nav').hasClass('collapsing')) {
         $('#spacer-nav').one('hidden.bs.collapse', () => {

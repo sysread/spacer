@@ -1,4 +1,30 @@
 /// <reference types="./vendor/solaris-model" />
+var __values = (this && this.__values) || function (o) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+    if (m) return m.call(o);
+    return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+};
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -14,15 +40,25 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
             this.pos = {};
         }
         System.prototype.set_date = function (date) {
+            var e_1, _a;
             var dt = new Date(date + ' 00:00:00');
             var ts = dt.valueOf();
             if (dt.getDate() !== this.system.time.getDate()) {
                 this.cache = {};
-                for (var _i = 0, _a = Object.keys(this.pos); _i < _a.length; _i++) {
-                    var key = _a[_i];
-                    if (parseInt(key, 10) < ts) {
-                        delete this.pos[key];
+                try {
+                    for (var _b = __values(Object.keys(this.pos)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var key = _c.value;
+                        if (parseInt(key, 10) < ts) {
+                            delete this.pos[key];
+                        }
                     }
+                }
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    }
+                    finally { if (e_1) throw e_1.error; }
                 }
             }
             this.system.setTime(date);
@@ -107,28 +143,48 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
             return (grav * mass) / Math.pow(radius, 2) / physics_1.default.G;
         };
         System.prototype.ranges = function (point) {
+            var e_2, _a;
             var ranges = {};
-            for (var _i = 0, _a = this.bodies(); _i < _a.length; _i++) {
-                var body = _a[_i];
-                ranges[body] = physics_1.default.distance(point, this.position(body));
+            try {
+                for (var _b = __values(this.bodies()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var body = _c.value;
+                    ranges[body] = physics_1.default.distance(point, this.position(body));
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_2) throw e_2.error; }
             }
             return ranges;
         };
         System.prototype.closestBodyToPoint = function (point) {
+            var e_3, _a;
             var dist, closest;
-            for (var _i = 0, _a = this.bodies(); _i < _a.length; _i++) {
-                var body = _a[_i];
-                var d = physics_1.default.distance(point, this.position(body));
-                if (dist === undefined || d < dist) {
-                    dist = d;
-                    closest = body;
+            try {
+                for (var _b = __values(this.bodies()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var body = _c.value;
+                    var d = physics_1.default.distance(point, this.position(body));
+                    if (dist === undefined || d < dist) {
+                        dist = d;
+                        closest = body;
+                    }
                 }
+            }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_3) throw e_3.error; }
             }
             return [closest, dist];
         };
         System.prototype.addPoints = function (p1, p2) {
-            var x0 = p1[0], y0 = p1[1], z0 = p1[2];
-            var x1 = p2[0], y1 = p2[1], z1 = p2[2];
+            var _a = __read(p1, 3), x0 = _a[0], y0 = _a[1], z0 = _a[2];
+            var _b = __read(p2, 3), x1 = _b[0], y1 = _b[1], z1 = _b[2];
             return [x1 + x0, y1 + y0, z1 + z0];
         };
         System.prototype.position = function (name, date) {
@@ -191,6 +247,7 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
             return physics_1.default.distance(this.position(origin), this.position(destination));
         };
         System.prototype.plot = function () {
+            var e_4, _a, e_5, _b;
             var abs = Math.abs;
             var ceil = Math.ceil;
             var floor = Math.floor;
@@ -199,13 +256,22 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
             var round = Math.round;
             var bodies = this.bodies();
             var pos = {};
-            // Get coordinates and hypot for each body, scaled down
-            for (var _i = 0, bodies_1 = bodies; _i < bodies_1.length; _i++) {
-                var name = bodies_1[_i];
-                var _a = this.position(name), x = _a[0], y = _a[1], z = _a[2];
-                x = ceil(x / 1000);
-                y = ceil(y / 1000);
-                pos[name] = { x: x, y: y };
+            try {
+                // Get coordinates and hypot for each body, scaled down
+                for (var bodies_1 = __values(bodies), bodies_1_1 = bodies_1.next(); !bodies_1_1.done; bodies_1_1 = bodies_1.next()) {
+                    var name = bodies_1_1.value;
+                    var _c = __read(this.position(name), 3), x = _c[0], y = _c[1], z = _c[2];
+                    x = ceil(x / 1000);
+                    y = ceil(y / 1000);
+                    pos[name] = { x: x, y: y };
+                }
+            }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            finally {
+                try {
+                    if (bodies_1_1 && !bodies_1_1.done && (_a = bodies_1.return)) _a.call(bodies_1);
+                }
+                finally { if (e_4) throw e_4.error; }
             }
             // Calculate max values for x and y
             var max_x = Math.ceil(1.2 * Object.values(pos).reduce(function (acc, val) { return max(acc, abs(val.x)); }, 0));
@@ -215,17 +281,26 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
             var points = {
                 'sun': [0, 0],
             };
-            for (var _b = 0, bodies_2 = bodies; _b < bodies_2.length; _b++) {
-                var name = bodies_2[_b];
-                var p = pos[name];
-                var pct_x = 0;
-                var pct_y = 0;
-                if (p.x !== 0)
-                    pct_x = p.x / max_x * 100;
-                if (p.y !== 0)
-                    pct_y = p.y / max_y * 100;
-                points[name] = [pct_x, pct_y];
-                plot.push([name, pct_x, pct_y]);
+            try {
+                for (var bodies_2 = __values(bodies), bodies_2_1 = bodies_2.next(); !bodies_2_1.done; bodies_2_1 = bodies_2.next()) {
+                    var name = bodies_2_1.value;
+                    var p = pos[name];
+                    var pct_x = 0;
+                    var pct_y = 0;
+                    if (p.x !== 0)
+                        pct_x = p.x / max_x * 100;
+                    if (p.y !== 0)
+                        pct_y = p.y / max_y * 100;
+                    points[name] = [pct_x, pct_y];
+                    plot.push([name, pct_x, pct_y]);
+                }
+            }
+            catch (e_5_1) { e_5 = { error: e_5_1 }; }
+            finally {
+                try {
+                    if (bodies_2_1 && !bodies_2_1.done && (_b = bodies_2.return)) _b.call(bodies_2);
+                }
+                finally { if (e_5) throw e_5.error; }
             }
             return {
                 max_x: max_x,
