@@ -60,7 +60,7 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
             configurable: true
         });
         Person.prototype.canCraft = function (item) {
-            var res = model.getResource(item);
+            var res = resource_1.resources[item];
             if (resource_1.isCraft(res)) {
                 var counts = [];
                 var recipe = res.recipe;

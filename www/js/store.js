@@ -3,19 +3,18 @@ define(["require", "exports"], function (require, exports) {
     var Store = /** @class */ (function () {
         function Store(init) {
             this.store = {};
-            if (init == null) {
-                return;
-            }
-            else if (init.store !== undefined) {
-                for (var _i = 0, _a = Object.keys(init.store); _i < _a.length; _i++) {
-                    var elt = _a[_i];
-                    this.store[elt] = init.store[elt];
+            if (init != null) {
+                if (init.store !== undefined) {
+                    for (var _i = 0, _a = Object.keys(init.store); _i < _a.length; _i++) {
+                        var elt = _a[_i];
+                        this.store[elt] = init.store[elt];
+                    }
                 }
-            }
-            else {
-                for (var _b = 0, _c = Object.keys(init); _b < _c.length; _b++) {
-                    var elt = _c[_b];
-                    this.store[elt] = init[elt];
+                else {
+                    for (var _b = 0, _c = Object.keys(init); _b < _c.length; _b++) {
+                        var elt = _c[_b];
+                        this.store[elt] = init[elt];
+                    }
                 }
             }
         }
@@ -29,10 +28,9 @@ define(["require", "exports"], function (require, exports) {
             }
         };
         Store.prototype.set = function (item, amt) {
-            if (isNaN(amt)) {
+            if (isNaN(amt))
                 throw new Error('not a number');
-            }
-            this.store[item] = Math.max(0, amt);
+            this.store[item] = amt < 0 ? 0 : amt;
         };
         Store.prototype.get = function (item) {
             return this.store[item] || 0;
@@ -50,11 +48,15 @@ define(["require", "exports"], function (require, exports) {
         };
         Store.prototype.dec = function (item, amt) {
             if (amt === void 0) { amt = 0; }
-            this.set(item, (this.store[item] || 0) - amt);
+            if (isNaN(amt))
+                throw new Error('not a number');
+            this.store[item] = this.get(item) - amt;
         };
         Store.prototype.inc = function (item, amt) {
             if (amt === void 0) { amt = 0; }
-            this.set(item, (this.store[item] || 0) + amt);
+            if (isNaN(amt))
+                throw new Error('not a number');
+            this.store[item] = this.get(item) + amt;
         };
         return Store;
     }());

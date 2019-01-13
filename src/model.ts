@@ -1,4 +1,4 @@
-export { getResource } from './resource';
+export { resources } from './resource';
 export { Trait } from './trait';
 export { Faction } from './faction';
 export { Condition } from './condition';

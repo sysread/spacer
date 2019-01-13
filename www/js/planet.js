@@ -75,7 +75,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.need = new history_1.default(data_1.default.market_history, init.need);
             this.pending = new store_1.default(init.pending);
             this.queue = init.queue || [];
-            this.cycle = init.cycle || {};
             this.produces = new store_1.default;
             this.consumes = new store_1.default;
             for (var _f = 0, _g = t.resources; _f < _g.length; _f++) {
@@ -89,7 +88,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     this.produces.inc(item, this.scale(trait.produces[item]));
                     this.consumes.inc(item, this.scale(trait.consumes[item]));
                 }
-                this.cycle[item] = util.getRandomInt(3, 10);
             }
             // Assign directly in constructor rather than in clearMemos for
             // performance reasons. V8's jit will produce more optimized classes by
@@ -163,7 +161,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.fabricationTime = function (item, count) {
             if (count === void 0) { count = 1; }
-            var resource = resource_1.getResource(item);
+            var resource = resource_1.resources[item];
             if (!resource_1.isCraft(resource)) {
                 throw new Error(item + " is not craftable");
             }
@@ -180,7 +178,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.hasFabricationResources = function (item, count) {
             if (count === void 0) { count = 1; }
-            var resource = resource_1.getResource(item);
+            var resource = resource_1.resources[item];
             if (!resource_1.isCraft(resource)) {
                 throw new Error(item + " is not craftable");
             }
@@ -196,7 +194,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.fabricationFee = function (item, count, player) {
             if (count === void 0) { count = 1; }
-            var resource = resource_1.getResource(item);
+            var resource = resource_1.resources[item];
             if (!resource_1.isCraft(resource)) {
                 throw new Error(item + " is not craftable");
             }
@@ -213,7 +211,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return Math.max(1, Math.ceil(fee));
         };
         Planet.prototype.fabricate = function (item) {
-            var resource = resource_1.getResource(item);
+            var resource = resource_1.resources[item];
             if (!resource_1.isCraft(resource)) {
                 throw new Error(item + " is not craftable");
             }
@@ -323,9 +321,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 if (elt != undefined) {
                     var item_1 = elt[0], amt_1 = elt[1];
                     this.demand.inc(item_1, amt_1);
-                    var res = resource_1.getResource(item_1);
-                    if (resource_1.isCraft(res) && this.hasShortage(item_1)) {
-                        for (var _i = 0, _a = res.ingredients; _i < _a.length; _i++) {
+                    var res = data_1.default.resources[item_1];
+                    if (t.isCraft(res) && this.hasShortage(item_1)) {
+                        for (var _i = 0, _a = Object.keys(res.recipe.materials); _i < _a.length; _i++) {
                             var mat = _a[_i];
                             queue.push([mat, (res.recipe.materials[mat] || 0) * amt_1]);
                         }
@@ -339,7 +337,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.isNetExporter = function (item) {
             if (!this._isNetExporter.hasOwnProperty(item)) {
                 var isExporter = false;
-                var res = resource_1.getResource(item);
+                var res = resource_1.resources[item];
                 if (resource_1.isRaw(res)) {
                     var net = this.netProduction(item);
                     isExporter = net >= this.scale(1);
@@ -396,11 +394,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return markup;
         };
         Planet.prototype.price = function (item) {
-            if (window.game.turns % (this.cycle[item] % 24 / data_1.default.hours_per_turn) === 0) {
+            if (window.game.turns % 6 == 0) {
                 delete this._price[item];
             }
             if (this._price[item] == undefined) {
-                var value = resource_1.getResource(item).value;
+                var value = resource_1.resources[item].value;
                 var markup = this.getScarcityMarkup(item);
                 var need = this.getNeed(item);
                 var price = 0;
@@ -451,7 +449,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             if (player) {
                 player.ship.unloadCargo(item, amount);
                 player.credit(price);
-                if (hadShortage && !resource_1.getResource(item).contraband) {
+                if (hadShortage && !resource_1.resources[item].contraband) {
                     // Player ended a shortage. Increase their standing with our faction.
                     if (!this.hasShortage(item)) {
                         standing = util.getRandomNum(1, 5);
@@ -492,20 +490,15 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return Math.max(Math.ceil(amount), 0);
         };
         Planet.prototype.neededResources = function () {
-            // Calculate how many of each item we want
-            var amounts = {};
+            var amounts = {}; // Calculate how many of each item we want
+            var need = {}; // Pre-calculate each item's need
             for (var _i = 0, _a = t.resources; _i < _a.length; _i++) {
                 var item = _a[_i];
-                var amount = this.neededResourceAmount(resource_1.getResource(item));
+                var amount = this.neededResourceAmount(resource_1.resources[item]);
                 if (amount > 0) {
                     amounts[item] = amount;
+                    need[item] = this.getNeed(item);
                 }
-            }
-            // Pre-calculate each item's need
-            var need = {};
-            for (var _b = 0, _c = Object.keys(amounts); _b < _c.length; _b++) {
-                var item = _c[_b];
-                need[item] = this.getNeed(item);
             }
             // Sort the greatest needs to the front of the list
             var prioritized = Object.keys(amounts).sort(function (a, b) {
@@ -579,25 +572,25 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             var list = [];
             for (var _i = 0, _a = need.prioritized; _i < _a.length; _i++) {
                 var i = _a[_i];
-                var res = resource_1.getResource(i);
+                var res = resource_1.resources[i];
                 // Not craftable or we do not need it
                 if (!resource_1.isCraft(res) || this.getNeed(i) < 0.25) {
                     delete want[i];
                 }
                 else {
                     // Cache so we don't recalculate these over and over
-                    var mat_stock = {};
-                    var mat_short = {};
+                    var has_stock = {};
+                    var is_short = {};
                     for (var _b = 0, _c = res.ingredients; _b < _c.length; _b++) {
                         var mat = _c[_b];
-                        if (!mat_stock[mat]) {
-                            mat_stock[mat] = this.getStock(mat);
+                        if (has_stock[mat] == undefined) {
+                            has_stock[mat] = this.getStock(mat);
                         }
-                        if (!mat_short[mat]) {
-                            mat_short[mat] = this.hasShortage(mat);
+                        if (is_short[mat] == undefined) {
+                            is_short[mat] = this.hasShortage(mat);
                         }
                         var amt = res.recipe.materials[mat] || 0;
-                        if (mat_stock[mat] < amt || mat_short[mat]) {
+                        if (has_stock[mat] < amt || is_short[mat]) {
                             this.incDemand(mat, amt);
                         }
                     }
@@ -607,7 +600,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             while (Object.keys(want).length > 0) {
                 var items = list
                     .filter(function (i) { return want[i]; })
-                    .map(function (i) { return resource_1.getResource(i); });
+                    .map(function (i) { return resource_1.resources[i]; });
                 for (var _d = 0, items_1 = items; _d < items_1.length; _d++) {
                     var item = items_1[_d];
                     if (resource_1.isCraft(item)) {
@@ -630,7 +623,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.imports = function () {
             var _this = this;
-            if (this.queue.length > 10)
+            if (this.queue.length >= 10)
                 return;
             var need = this.neededResources();
             var want = need.amounts;
@@ -749,17 +742,21 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this._getNeed = {};
             this._getShortage = {};
             this._getSurplus = {};
+            // this._price cleared in price() on its own schedule
         };
         Planet.prototype.turn = function () {
-            this.clearMemos();
             this.produce();
             this.consume();
             this.processQueue();
-            this.manufacture();
-            this.replenishFabricators();
-            this.imports();
-            this.apply_conditions();
+            // Only do the really expensive stuff once per day
+            if (window.game.turn % data_1.default.turns_per_day == 0) {
+                this.manufacture();
+                this.replenishFabricators();
+                this.imports();
+                this.apply_conditions();
+            }
             this.rollups();
+            this.clearMemos();
         };
         /*
          * Misc

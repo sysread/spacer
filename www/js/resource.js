@@ -42,10 +42,10 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
         return value;
     }
     function resourceValue(item) {
-        if (t.isCraft(item)) {
+        if (item.recipe) {
             return craftValue(item);
         }
-        else if (t.isRaw(item)) {
+        else if (item.mine) {
             return item.mine.value;
         }
         else {
@@ -55,19 +55,6 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
     /*
      * Global storage of resource objects
      */
-    exports.resources = {};
-    function getResource(item) {
-        if (exports.resources[item] == undefined) {
-            if (data_1.default.resources[item].recipe) {
-                exports.resources[item] = new Craft(item);
-            }
-            else if (data_1.default.resources[item].mine) {
-                exports.resources[item] = new Raw(item);
-            }
-        }
-        return exports.resources[item];
-    }
-    exports.getResource = getResource;
     function isRaw(res) {
         return res.mine !== undefined;
     }
@@ -117,4 +104,14 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
         return Craft;
     }(Resource));
     exports.Craft = Craft;
+    exports.resources = {};
+    for (var _i = 0, _a = t.resources; _i < _a.length; _i++) {
+        var item = _a[_i];
+        if (data_1.default.resources[item].recipe) {
+            exports.resources[item] = new Craft(item);
+        }
+        else if (data_1.default.resources[item].mine) {
+            exports.resources[item] = new Raw(item);
+        }
+    }
 });

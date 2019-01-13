@@ -21,11 +21,13 @@ function craftValue(item: t.Craft): number {
 }
 
 function resourceValue(item: t.Resource): number {
-  if (t.isCraft(item)) {
-    return craftValue(item);
-  } else if (t.isRaw(item)) {
-    return item.mine.value;
-  } else {
+  if ((<t.Craft>item).recipe) {
+    return craftValue((<t.Craft>item));
+  }
+  else if ((<t.Raw>item).mine) {
+    return (<t.Raw>item).mine.value;
+  }
+  else {
     return 0;
   }
 }
@@ -33,20 +35,6 @@ function resourceValue(item: t.Resource): number {
 /*
  * Global storage of resource objects
  */
-export const resources: { [key: string]: Resource } = {};
-
-export function getResource(item: t.resource): Resource {
-  if (resources[item] == undefined) {
-    if ((<Craft>data.resources[item]).recipe) {
-      resources[item] = new Craft(item);
-    } else if ((<Raw>data.resources[item]).mine) {
-      resources[item] = new Raw(item);
-    }
-  }
-
-  return resources[item];
-}
-
 export function isRaw(res: Resource): res is Raw {
   return (<Raw>res).mine !== undefined;
 }
@@ -105,5 +93,16 @@ export class Craft extends Resource {
     this.recipe      = res.recipe;
     this.craftTurns  = this.recipe.tics;
     this.ingredients = Object.keys(this.recipe.materials) as t.resource[];
+  }
+}
+
+
+export const resources: { [key: string]: Resource } = {};
+
+for (const item of t.resources) {
+  if ((<t.Craft>data.resources[item]).recipe) {
+    resources[item] = new Craft(item);
+  } else if ((<t.Raw>data.resources[item]).mine) {
+    resources[item] = new Raw(item);
   }
 }

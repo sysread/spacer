@@ -7,7 +7,7 @@ import History from './history';
 import * as t from './common';
 import * as util from './util';
 
-import { Resource, Raw, Craft, isRaw, isCraft, getResource } from './resource';
+import { Resource, Raw, Craft, isRaw, isCraft, resources } from './resource';
 import { Trait } from './trait';
 import { Faction } from './faction';
 import { Condition, SavedCondition } from './condition';
@@ -45,7 +45,6 @@ interface SavedPlanet {
   need?:       any;
   pending?:    any;
   queue?:      any;
-  cycle?:      any;
 }
 
 export class Planet {
@@ -76,7 +75,6 @@ export class Planet {
   need:              History;
   pending:           Store;
   queue:             EconTask[];
-  cycle:             t.Counter;
 
   _isNetExporter:    {[key: string]: boolean};
   _getShortage:      {[key: string]: boolean};
@@ -143,7 +141,6 @@ export class Planet {
     this.need    = new History(data.market_history, init.need);
     this.pending = new Store(init.pending);
     this.queue   = init.queue || [];
-    this.cycle   = init.cycle || {};
 
     this.produces = new Store;
     this.consumes = new Store;
@@ -158,8 +155,6 @@ export class Planet {
         this.produces.inc(item, this.scale(trait.produces[item]));
         this.consumes.inc(item, this.scale(trait.consumes[item]));
       }
-
-      this.cycle[item] = util.getRandomInt(3, 10);
     }
 
     // Assign directly in constructor rather than in clearMemos for
@@ -242,7 +237,7 @@ export class Planet {
   }
 
   fabricationTime(item: t.resource, count=1) {
-    const resource = getResource(item);
+    const resource = resources[item];
 
     if (!isCraft(resource)) {
       throw new Error(`${item} is not craftable`);
@@ -264,7 +259,7 @@ export class Planet {
   }
 
   hasFabricationResources(item: t.resource, count=1) {
-    const resource = getResource(item);
+    const resource = resources[item];
 
     if (!isCraft(resource)) {
       throw new Error(`${item} is not craftable`);
@@ -285,7 +280,7 @@ export class Planet {
   }
 
   fabricationFee(item: t.resource, count=1, player: any) {
-    const resource = getResource(item);
+    const resource = resources[item];
 
     if (!isCraft(resource)) {
       throw new Error(`${item} is not craftable`);
@@ -309,7 +304,7 @@ export class Planet {
   }
 
   fabricate(item: t.resource) {
-    const resource = getResource(item);
+    const resource = resources[item];
 
     if (!isCraft(resource)) {
       throw new Error(`${item} is not craftable`);
@@ -438,12 +433,13 @@ export class Planet {
 
       if (elt != undefined) {
         const [item, amt] = elt;
+
         this.demand.inc(item, amt);
 
-        const res = getResource(item);
+        const res = data.resources[item];
 
-        if (isCraft(res) && this.hasShortage(item)) {
-          for (const mat of res.ingredients) {
+        if (t.isCraft(res) && this.hasShortage(item)) {
+          for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
             queue.push([ mat, (res.recipe.materials[mat] || 0) * amt ]);
           }
         }
@@ -459,7 +455,7 @@ export class Planet {
     if (!this._isNetExporter.hasOwnProperty(item)) {
       let isExporter = false;
 
-      const res = getResource(item);
+      const res = resources[item];
 
       if (isRaw(res)) {
         const net = this.netProduction(item);
@@ -528,12 +524,12 @@ export class Planet {
   }
 
   price(item: t.resource) {
-    if (window.game.turns % (this.cycle[item] % 24 / data.hours_per_turn) === 0) {
+    if (window.game.turns % 6 == 0) {
       delete this._price[item];
     }
 
     if (this._price[item] == undefined) {
-      const value  = getResource(item).value;
+      const value  = resources[item].value;
       const markup = this.getScarcityMarkup(item);
       const need   = this.getNeed(item);
 
@@ -597,7 +593,7 @@ export class Planet {
       player.ship.unloadCargo(item, amount);
       player.credit(price);
 
-      if (hadShortage && !getResource(item).contraband) {
+      if (hadShortage && !resources[item].contraband) {
         // Player ended a shortage. Increase their standing with our faction.
         if (!this.hasShortage(item)) {
           standing = util.getRandomNum(1, 5);
@@ -643,20 +639,16 @@ export class Planet {
   }
 
   neededResources() {
-    // Calculate how many of each item we want
-    const amounts: { [key: string]: number } = {};
+    const amounts: { [key: string]: number } = {}; // Calculate how many of each item we want
+    const need:    { [key: string]: number } = {}; // Pre-calculate each item's need
+
     for (const item of t.resources) {
-      const amount = this.neededResourceAmount(getResource(item));
+      const amount = this.neededResourceAmount(resources[item]);
 
       if (amount > 0) {
         amounts[item] = amount;
+        need[item] = this.getNeed(item);
       }
-    }
-
-    // Pre-calculate each item's need
-    const need: { [key: string]: number } = {};
-    for (const item of Object.keys(amounts)) {
-      need[item] = this.getNeed(item as t.resource);
     }
 
     // Sort the greatest needs to the front of the list
@@ -743,7 +735,7 @@ export class Planet {
     const list: t.resource[] = [];
 
     for (const i of (<t.resource[]>need.prioritized)) {
-      const res = getResource(i);
+      const res = resources[i];
 
       // Not craftable or we do not need it
       if (!isCraft(res) || this.getNeed(i) < 0.25) {
@@ -751,21 +743,21 @@ export class Planet {
       }
       else {
         // Cache so we don't recalculate these over and over
-        const mat_stock: t.Counter = {};
-        const mat_short: { [key: string]: boolean } = {};
+        const has_stock: t.Counter = {};
+        const is_short: { [key: string]: boolean } = {};
 
         for (const mat of res.ingredients) {
-          if (!mat_stock[mat]) {
-            mat_stock[mat] = this.getStock(mat);
+          if (has_stock[mat] == undefined) {
+            has_stock[mat] = this.getStock(mat);
           }
 
-          if (!mat_short[mat]) {
-            mat_short[mat] = this.hasShortage(mat);
+          if (is_short[mat] == undefined) {
+            is_short[mat] = this.hasShortage(mat);
           }
 
           const amt = res.recipe.materials[mat] || 0;
 
-          if (mat_stock[mat] < amt || mat_short[mat]) {
+          if (has_stock[mat] < amt || is_short[mat]) {
             this.incDemand(mat, amt);
           }
         }
@@ -777,7 +769,7 @@ export class Planet {
     while (Object.keys(want).length > 0) {
       const items = list
         .filter(i => want[i])
-        .map(i => getResource(i));
+        .map(i => resources[i]);
 
       for (const item of items) {
         if (isCraft(item)) {
@@ -801,7 +793,7 @@ export class Planet {
   }
 
   imports() {
-    if (this.queue.length > 10)
+    if (this.queue.length >= 10)
       return;
 
     const need = this.neededResources();
@@ -931,18 +923,24 @@ export class Planet {
     this._getNeed       = {};
     this._getShortage   = {};
     this._getSurplus    = {};
+    // this._price cleared in price() on its own schedule
   }
 
   turn() {
-    this.clearMemos();
     this.produce();
     this.consume();
     this.processQueue();
-    this.manufacture();
-    this.replenishFabricators();
-    this.imports();
-    this.apply_conditions();
+
+    // Only do the really expensive stuff once per day
+    if (window.game.turn % data.turns_per_day == 0) {
+      this.manufacture();
+      this.replenishFabricators();
+      this.imports();
+      this.apply_conditions();
+    }
+
     this.rollups();
+    this.clearMemos();
   }
 
   /*

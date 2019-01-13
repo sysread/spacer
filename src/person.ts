@@ -5,7 +5,7 @@ import Physics from './physics';
 
 import * as t from './common';
 import * as model from './model';
-import { getResource, isCraft, isRaw } from './resource';
+import { resources, isCraft, isRaw } from './resource';
 
 
 // Shims for global browser objects
@@ -82,7 +82,7 @@ class Person {
   }
 
   canCraft(item: t.resource) {
-    const res = model.getResource(item);
+    const res = resources[item];
 
     if (isCraft(res)) {
       const counts = [];

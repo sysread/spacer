@@ -8,17 +8,16 @@ class Store {
   store: ResourceCounter = {};
 
   constructor(init?: ResourceCounter | SavedCounter) {
-    if (init == null) {
-      return;
-    }
-    else if ((<SavedCounter>init).store !== undefined) {
-      for (const elt of Object.keys((<SavedCounter>init).store)) {
-        this.store[ (<resource>elt) ] = (<SavedCounter>init).store[elt as resource];
+    if (init != null) {
+      if ((<SavedCounter>init).store !== undefined) {
+        for (const elt of Object.keys((<SavedCounter>init).store)) {
+          this.store[ (<resource>elt) ] = (<SavedCounter>init).store[elt as resource];
+        }
       }
-    }
-    else {
-      for (const elt of Object.keys(init)) {
-        this.store[ (<resource>elt) ] = (<ResourceCounter>init)[elt as resource];
+      else {
+        for (const elt of Object.keys(init)) {
+          this.store[ (<resource>elt) ] = (<ResourceCounter>init)[elt as resource];
+        }
       }
     }
   }
@@ -34,11 +33,8 @@ class Store {
   }
 
   set(item: resource, amt: number) {
-    if (isNaN(amt)) {
-      throw new Error('not a number');
-    }
-
-    this.store[item] = Math.max(0, amt);
+    if (isNaN(amt)) throw new Error('not a number');
+    this.store[item] = amt < 0 ? 0 : amt;
   }
 
   get(item: resource): number {
@@ -60,11 +56,13 @@ class Store {
   }
 
   dec(item: resource, amt: number = 0) {
-    this.set(item, (this.store[item] || 0) - amt);
+    if (isNaN(amt)) throw new Error('not a number');
+    this.store[item] = this.get(item) - amt;
   }
 
   inc(item: resource, amt: number = 0) {
-    this.set(item, (this.store[item] || 0) + amt);
+    if (isNaN(amt)) throw new Error('not a number');
+    this.store[item] = this.get(item) + amt;
   }
 }
 

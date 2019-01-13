@@ -63,7 +63,7 @@ define(function(require, exports, module) {
         resources: function() { return Object.keys(this.data.resources) },
         bodies:    function() { return Object.keys(this.game.planets) },
         places:    function() { return Object.values(this.game.planets) },
-        resource:  function() { return model.getResource(this.item) },
+        resource:  function() { return model.resources[this.item] },
 
         value: function() {
           if (this.resource) return Math.floor(this.resource.value);
