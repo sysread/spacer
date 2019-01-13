@@ -740,15 +740,15 @@ define(function(require, exports, module) {
         min_addons:    2,
       });
 
-      const ship_value = npc.ship.shipValue(this.game.here) + npc.ship.addOnValue();
+      const ship_value = npc.ship.shipValue(window.game.here) + npc.ship.addOnValue();
       const bounty = Math.ceil(ship_value / 20);
 
       return {
-        choice: 'ready',
-        took: null,
+        choice:    'ready',
+        took:      null,
         init_flee: false,
-        bounty: bounty,
-        npc: npc,
+        bounty:    bounty,
+        npc:       npc,
       };
     },
 

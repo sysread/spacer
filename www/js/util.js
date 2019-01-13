@@ -79,13 +79,23 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
         return Math.floor(Math.random() * (max - min)) + min;
     }
     exports.getRandomInt = getRandomInt;
+    /*
+     * Returns true or false for a given decimal chance between 0 and 1.
+     */
     function chance(pct) {
         if (pct === 0)
             return false;
-        var rand = getRandomNum(0, Math.ceil(pct));
+        var rand = Math.random();
         return rand <= pct;
     }
     exports.chance = chance;
+    function fuzz(n, pct) {
+        var low = n - (n * pct);
+        var high = n + (n * pct);
+        console.log('fuzz', n, 'by', pct, 'from', low, 'to', high);
+        return getRandomNum(low, high);
+    }
+    exports.fuzz = fuzz;
     /*
      * Returns a random element from an array.
      */

@@ -99,6 +99,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this._getShortage = {};
             this._getSurplus = {};
             this._price = {};
+            this._cycle = {};
+            for (var _k = 0, _l = t.resources; _k < _l.length; _k++) {
+                var item = _l[_k];
+                this._cycle[item] = util.getRandomInt(2, 6) * data_1.default.turns_per_day;
+            }
         }
         Object.defineProperty(Planet.prototype, "position", {
             get: function () {
@@ -394,7 +399,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return markup;
         };
         Planet.prototype.price = function (item) {
-            if (window.game.turns % 6 == 0) {
+            if (window.game.turns % this._cycle[item] == 0) {
                 delete this._price[item];
             }
             if (this._price[item] == undefined) {
@@ -416,7 +421,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     var trait = _a[_i];
                     price -= price * (trait.price[item] || 0);
                 }
-                this._price[item] = Math.ceil(Math.max(Math.min(price, value * 3), value / 3));
+                // Set upper and lower boundary, allowing for a little more inflation
+                // than price crashing.
+                price = util.clamp(price, value / 2, value * 3);
+                // Add a bit of "unaccounted for local influences"
+                price = util.fuzz(price, 0.2);
+                this._price[item] = util.R(price);
             }
             return this._price[item];
         };

@@ -83,6 +83,7 @@ export class Planet {
   _getSupply:        t.Counter;
   _getNeed:          t.Counter;
   _price:            t.Counter;
+  _cycle:            t.Counter;
 
   constructor(body: t.body, init?: SavedPlanet) {
     init = init || {};
@@ -167,6 +168,11 @@ export class Planet {
     this._getShortage   = {};
     this._getSurplus    = {};
     this._price         = {};
+    this._cycle         = {};
+
+    for (const item of t.resources) {
+      this._cycle[item] = util.getRandomInt(2, 6) * data.turns_per_day;
+    }
   }
 
   get position() {
@@ -524,7 +530,7 @@ export class Planet {
   }
 
   price(item: t.resource) {
-    if (window.game.turns % 6 == 0) {
+    if (window.game.turns % this._cycle[item] == 0) {
       delete this._price[item];
     }
 
@@ -548,7 +554,14 @@ export class Planet {
         price -= price * (trait.price[item] || 0);
       }
 
-      this._price[item] = Math.ceil( Math.max( Math.min(price, value * 3), value / 3 ) );
+      // Set upper and lower boundary, allowing for a little more inflation
+      // than price crashing.
+      price = util.clamp(price, value / 2, value * 3);
+
+      // Add a bit of "unaccounted for local influences"
+      price = util.fuzz(price, 0.2);
+
+      this._price[item] = util.R(price);
     }
 
     return this._price[item];

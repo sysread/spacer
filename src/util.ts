@@ -1,5 +1,7 @@
 import { resources } from './common';
 
+declare var console: any;
+
 interface Counter {
   [key: string]: number;
 }
@@ -87,10 +89,20 @@ export function getRandomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
+/*
+ * Returns true or false for a given decimal chance between 0 and 1.
+ */
 export function chance(pct: number): boolean {
   if (pct === 0) return false;
-  const rand = getRandomNum(0, Math.ceil(pct));
+  const rand = Math.random();
   return rand <= pct;
+}
+
+export function fuzz(n: number, pct: number): number {
+  const low  = n - (n * pct);
+  const high = n + (n * pct);
+console.log('fuzz', n, 'by', pct, 'from', low, 'to', high);
+  return getRandomNum(low, high);
 }
 
 /*
