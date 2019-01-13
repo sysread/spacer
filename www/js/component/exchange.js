@@ -121,14 +121,18 @@ define(function(require, exports, module) {
         this.cargo.set(item, amt);
         this.game.refresh();
       },
+
+      count(item) {
+        return Math.floor(this.resources[item]);
+      },
     },
 
     template: `
 <div>
   <def brkpt="sm" term="Cargo"><span slot="def">{{cargoUsed}} / {{cargoSpace}}</span></def>
-  <def v-for="item in items" :key="item" brkpt="sm" v-if="resources[item] > 0">
+  <def v-for="item in items" :key="item" brkpt="sm" v-if="count(item) > 0">
     <span slot="term" class="text-capitalize">{{item}}</span>
-    <slider slot="def" @update:value="amt => update(item, amt)" minmax=true :value="cargo.get(item)" min=0 :max="resources[item]">
+    <slider slot="def" @update:value="amt => update(item, amt)" minmax=true :value="cargo.get(item)" min=0 :max="count(item)">
       <span class="btn btn-dark" slot="pre">{{store.get(item)}}</span>
       <span class="btn btn-dark" slot="post">{{cargo.get(item)}}</span>
     </slider>
