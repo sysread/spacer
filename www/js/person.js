@@ -59,20 +59,26 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
             enumerable: true,
             configurable: true
         });
+        // Returns the number of item that the player has the resources to craft
         Person.prototype.canCraft = function (item) {
             var res = resource_1.resources[item];
             if (resource_1.isCraft(res)) {
-                var counts = [];
-                var recipe = res.recipe;
+                var max = void 0;
                 for (var _i = 0, _a = Object.keys(res.recipe.materials); _i < _a.length; _i++) {
                     var mat = _a[_i];
-                    var amt = recipe.materials[mat] || 0;
-                    if (this.ship.cargo.get(mat) < amt) {
-                        return false;
+                    var have = this.ship.cargo.count(mat);
+                    var need = res.recipe.materials[mat] || 0;
+                    if (have < need) {
+                        return 0;
+                    }
+                    var count = Math.floor(have / need);
+                    if (max == undefined || max > count) {
+                        max = count;
                     }
                 }
+                return max || 0;
             }
-            return true;
+            return 0;
         };
         Person.prototype.maxAcceleration = function () {
             return physics_1.default.G * this.homeGravity * data_1.default.grav_deltav_factor;

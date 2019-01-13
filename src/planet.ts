@@ -822,6 +822,8 @@ export class Planet {
       return true;
     });
 
+    const turns_per_au = data.turns_per_day * data.import_days_per_au;
+
     ITEM: for (const item of list) {
       // Import amounts should be between 5-20 units
       const amount = util.clamp(want[item] * (data.necessity[item] ? 2 : 1), 5, 20);
@@ -835,7 +837,7 @@ export class Planet {
 
       if (bought > 0) {
         const distance = this.distance(planet) / Physics.AU;
-        const turns = Math.ceil(distance * (24 / data.hours_per_turn) * 5); // 5 days per AU
+        const turns = Math.ceil(distance * turns_per_au);
         window.game.planets[planet].buy('fuel', distance);
 
         this.schedule({

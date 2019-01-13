@@ -9,7 +9,7 @@ define(function(require, exports, module) {
   const vec         = require('vector').vec;
 
   const SPT = data.hours_per_turn * 3600; // seconds per turn
-  const DT  = 1000;                       // frames per turn for euler integration
+  const DT  = 2000;                       // frames per turn for euler integration
   const TI  = SPT / DT;                   // seconds per frame
 
 

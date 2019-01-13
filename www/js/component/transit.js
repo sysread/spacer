@@ -176,8 +176,8 @@ define(function(require, exports, module) {
       },
 
       piracyEvasionBonusSpeed() {
-        if (this.plan.velocity > 1000) {
-          return Math.log(this.plan.velocity / 1000) / 200;
+        if (this.plan.velocity > this.data.piracy_max_velocity) {
+          return Math.log(this.plan.velocity / this.data.piracy_max_velocity) / 200;
         } else {
           return 0;
         }

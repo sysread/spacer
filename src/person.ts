@@ -81,22 +81,32 @@ class Person {
     return this.getStandingLabel(window.game.here.faction);
   }
 
-  canCraft(item: t.resource) {
+  // Returns the number of item that the player has the resources to craft
+  canCraft(item: t.resource): number {
     const res = resources[item];
 
     if (isCraft(res)) {
-      const counts = [];
-      const recipe = res.recipe;
+      let max;
 
       for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
-        const amt = recipe.materials[mat] || 0;
-        if (this.ship.cargo.get(mat) < amt) {
-          return false;
+        const have = this.ship.cargo.count(mat);
+        const need = res.recipe.materials[mat] || 0;
+
+        if (have < need) {
+          return 0;
+        }
+
+        const count = Math.floor(have / need);
+
+        if (max == undefined || max > count) {
+          max = count;
         }
       }
+
+      return max || 0;
     }
 
-    return true;
+    return 0;
   }
 
   maxAcceleration() {

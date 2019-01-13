@@ -645,6 +645,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 }
                 return true;
             });
+            var turns_per_au = data_1.default.turns_per_day * data_1.default.import_days_per_au;
             ITEM: for (var _i = 0, list_1 = list; _i < list_1.length; _i++) {
                 var item = list_1[_i];
                 // Import amounts should be between 5-20 units
@@ -656,7 +657,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 var _a = window.game.planets[planet].buy(item, amount), bought = _a[0], price = _a[1];
                 if (bought > 0) {
                     var distance = this.distance(planet) / physics_1.default.AU;
-                    var turns = Math.ceil(distance * (24 / data_1.default.hours_per_turn) * 5); // 5 days per AU
+                    var turns = Math.ceil(distance * turns_per_au);
                     window.game.planets[planet].buy('fuel', distance);
                     this.schedule({
                         type: 'import',
