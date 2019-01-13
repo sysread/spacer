@@ -96,7 +96,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this._getDemand = {};
             this._getSupply = {};
             this._getNeed = {};
-            this._getShortage = {};
+            this._hasShortage = {};
             this._getSurplus = {};
             this._price = {};
             this._cycle = {};
@@ -293,10 +293,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 this._getSupply[item] = this.supply.avg(item);
             return this._getSupply[item];
         };
-        Planet.prototype.hasShortage = function (item) {
-            if (this._getShortage[item] == undefined)
-                this._getShortage[item] = this.getNeed(item) >= this.shortageFactor(item);
-            return this._getShortage[item];
+        Planet.prototype.hasShortage = function (item, nocache) {
+            if (nocache === void 0) { nocache = false; }
+            if (this._hasShortage[item] == undefined || nocache)
+                this._hasShortage[item] = this.getNeed(item) >= this.shortageFactor(item);
+            return this._hasShortage[item];
         };
         Planet.prototype.hasSurplus = function (item) {
             if (this._getSurplus[item] == undefined)
@@ -461,15 +462,15 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 player.credit(price);
                 if (hadShortage && !resource_1.resources[item].contraband) {
                     // Player ended a shortage. Increase their standing with our faction.
-                    if (!this.hasShortage(item)) {
-                        standing = util.getRandomNum(1, 5);
+                    if (!this.hasShortage(item, true)) {
+                        standing = util.getRandomNum(3, 8);
                         player.incStanding(this.faction.abbrev, standing);
                     }
                     // Player contributed toward ending a shortage. Increase their
                     // standing with our faction slightly.
                     else {
-                        player.incStanding(this.faction.abbrev, 1);
-                        standing = 1;
+                        standing = util.getRandomNum(1, 3);
+                        player.incStanding(this.faction.abbrev, standing);
                     }
                 }
             }
@@ -751,7 +752,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this._getDemand = {};
             this._getSupply = {};
             this._getNeed = {};
-            this._getShortage = {};
+            this._hasShortage = {};
             this._getSurplus = {};
             // this._price cleared in price() on its own schedule
         };
