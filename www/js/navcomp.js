@@ -1,7 +1,6 @@
 "use strict"
 
 define(function(require, exports, module) {
-  const game        = require('game');
   const data        = require('data');
   const system      = require('system');
   const Physics     = require('physics');
@@ -103,12 +102,13 @@ define(function(require, exports, module) {
 
 
   const NavComp = class {
-    constructor(fuel_target, show_all) {
+    constructor(fuel_target, show_all, game) {
       this.fuel_target = fuel_target || game.player.ship.fuel;
       this.show_all    = show_all || false;
-      this.max         = game.player.maxAcceleration();
-      this.ship        = game.player.ship;
-      this.orig        = game.here.body;
+      this.game        = game;
+      this.max         = this.game.player.maxAcceleration();
+      this.ship        = this.game.player.ship;
+      this.orig        = this.game.here.body;
     }
 
     getTransitsTo(dest) {
@@ -134,10 +134,10 @@ define(function(require, exports, module) {
       const dest     = system.orbit_by_turns(destination);
       const startPos = vec(orig[0]);
       const vInit    = vec(orig[1]).sub( vec(orig[0]) ).div_scalar(SPT);
-      const bestAcc  = Math.min(game.player.maxAcceleration(), game.player.shipAcceleration());
-      const mass     = game.player.ship.currentMass();
-      const fuelrate = game.player.ship.fuelrate;
-      const thrust   = game.player.ship.thrust;
+      const bestAcc  = Math.min(this.game.player.maxAcceleration(), this.game.player.shipAcceleration());
+      const mass     = this.game.player.ship.currentMass();
+      const fuelrate = this.game.player.ship.fuelrate;
+      const thrust   = this.game.player.ship.thrust;
       const fuel     = this.fuel_target;
 
       let prevFuelUsed;

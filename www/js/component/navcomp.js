@@ -76,7 +76,7 @@ define(function(require, exports, module) {
         show:    'map',
         dest:    null,
         rel:     true,
-        navcomp: new NavComp,
+        navcomp: null,
         transit: null,
         confirm: false,
         layout_target_id: 'navcomp-map-root',
@@ -94,6 +94,8 @@ define(function(require, exports, module) {
      * navbar's height was at the time.
      */
     mounted() {
+      this.navcomp = new NavComp(undefined, undefined, this.game);
+
       if ($('#spacer-nav').hasClass('collapsing')) {
         $('#spacer-nav').one('hidden.bs.collapse', () => {
           this.is_ready = true;
