@@ -8,7 +8,7 @@
     "esModuleInterop": true,
     "declaration": false,
     "downlevelIteration": true,
-    "lib": ["ES5", "ES6", "ES2017.Object"]
+    "lib": ["DOM", "ES5", "ES6", "ES2017.Object"]
   },
   "include": [
     "src"
@@ -16,5 +16,8 @@
   "exclude": [
     "node_modules",
     "dist"
+  ],
+  "types": [
+    "jquery"
   ]
 }

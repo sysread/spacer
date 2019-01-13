@@ -259,11 +259,11 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
             try {
                 // Get coordinates and hypot for each body, scaled down
                 for (var bodies_1 = __values(bodies), bodies_1_1 = bodies_1.next(); !bodies_1_1.done; bodies_1_1 = bodies_1.next()) {
-                    var name = bodies_1_1.value;
-                    var _c = __read(this.position(name), 3), x = _c[0], y = _c[1], z = _c[2];
+                    var name_1 = bodies_1_1.value;
+                    var _c = __read(this.position(name_1), 3), x = _c[0], y = _c[1], z = _c[2];
                     x = ceil(x / 1000);
                     y = ceil(y / 1000);
-                    pos[name] = { x: x, y: y };
+                    pos[name_1] = { x: x, y: y };
                 }
             }
             catch (e_4_1) { e_4 = { error: e_4_1 }; }
@@ -283,16 +283,16 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
             };
             try {
                 for (var bodies_2 = __values(bodies), bodies_2_1 = bodies_2.next(); !bodies_2_1.done; bodies_2_1 = bodies_2.next()) {
-                    var name = bodies_2_1.value;
-                    var p = pos[name];
+                    var name_2 = bodies_2_1.value;
+                    var p = pos[name_2];
                     var pct_x = 0;
                     var pct_y = 0;
                     if (p.x !== 0)
                         pct_x = p.x / max_x * 100;
                     if (p.y !== 0)
                         pct_y = p.y / max_y * 100;
-                    points[name] = [pct_x, pct_y];
-                    plot.push([name, pct_x, pct_y]);
+                    points[name_2] = [pct_x, pct_y];
+                    plot.push([name_2, pct_x, pct_y]);
                 }
             }
             catch (e_5_1) { e_5 = { error: e_5_1 }; }
