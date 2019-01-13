@@ -1,14 +1,14 @@
-"use strict"
-
 define(function(require, exports, module) {
+  "use strict"
+
   const Physics = require('physics');
   const util    = require('util');
   const system  = require('system');
 
   const Layout = class {
     static get SCALE_DEFAULT_AU() { return 2       }
-    static get SCALE_MIN_AU()     { return 0.00001 };
-    static get SCALE_MAX_AU()     { return 35      };
+    static get SCALE_MIN_AU()     { return 0.00001 }; // 1/2 true value which is per quadrant
+    static get SCALE_MAX_AU()     { return 35      }; // 1/2 true value which is per quadrant
 
     constructor(id, on_scale, on_pan, on_resize) {
       this.id        = id;

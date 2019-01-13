@@ -198,7 +198,7 @@ define(function(require, exports, module) {
 
         const central  = this.system.central(this.game.locus);
         const distance = this.system.distance(this.game.locus, central);
-        return distance / Physics.AU * 1.2;
+        return distance / Physics.AU * 1.5;
       },
 
       map_fov_au_transit() {
@@ -424,7 +424,6 @@ define(function(require, exports, module) {
             <NavBodies :layout="layout" :focus="dest || game.locus" @click="set_dest" />
             <SvgTransitPath v-if="transit" :layout="layout" :transit="transit" />
             <SvgDestinationPath v-if="transit" :layout="layout" :transit="transit" :body="transit.dest" :turns="transit.left+1" />
-            <SvgDestinationPath v-if="transit && is_moon(transit.dest)" :layout="layout" :transit="transit" :body="is_moon_of(transit.dest)" :turns="transit.left+1" color="#4C4C4C" />
           </template>
         </NavPlot>
 
@@ -589,8 +588,8 @@ define(function(require, exports, module) {
              + this.layout.height_px;
       },
     },
-    //<image xlink:href="img/milkyway.jpg" x="0" y="0" :width="layout.width_px" :height="layout.height_px" />
 
+    //<image xlink:href="img/milkyway.jpg" x="0" y="0" :width="layout.width_px" :height="layout.height_px" />
     'template': `
       <svg :viewBox="view_box"
            fill="none"

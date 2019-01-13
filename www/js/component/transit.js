@@ -10,7 +10,7 @@ define(function(require, exports, module) {
   const model   = require('model');
   const Layout  = require('component/layout');
 
-  const intvl   = 0.3;
+  const intvl   = 0.2;
   const turns_per_day = 24 / data.hours_per_turn;
 
   require('component/global');

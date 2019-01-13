@@ -382,7 +382,7 @@ const data = {
   drives: {
     ion: {
       name:      'Ion',
-      thrust:    200,
+      thrust:    160,
       mass:      10,
       desc:      'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
       burn_rate: 0.005,
@@ -390,7 +390,7 @@ const data = {
     },
     fusion: {
       name:      'Fusion',
-      thrust:    800,
+      thrust:    600,
       mass:      40,
       desc:      'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
       burn_rate: .073,
@@ -466,17 +466,17 @@ const data = {
       name:       'Ion drive',
       desc:       'Adds an additional pair of ion drives to the hull, increasing thrust. Care must be taken not to unbalance the ship, however.',
       mass:       20,
-      thrust:     1600,
+      thrust:     80,
       burn_rate:  0.01,
-      price:      8000,
+      price:      6000,
     },
     fusion: {
       name:       'Fusion drive',
       desc:       'Somewhat reduced in efficiency when installed as a set of external pods, adding a fusion drive to an existing craft can drastically increase thrust and manuevering.',
       mass:       80,
-      thrust:     7200,
+      thrust:     380,
       burn_rate:  0.088,
-      price:      70000,
+      price:      25000,
       restricted: 'Trusted',
     },
     armor: {

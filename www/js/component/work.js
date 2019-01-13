@@ -83,7 +83,7 @@ define(function(require, exports, module) {
 
               this.game.turn(this.turns);
             }
-          }, 500);
+          }, 350);
         }
       },
 
