@@ -89,10 +89,12 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
         return rand <= pct;
     }
     exports.chance = chance;
+    /*
+     * "Fuzzes" a number, randomizing it by +/- pct%.
+     */
     function fuzz(n, pct) {
         var low = n - (n * pct);
         var high = n + (n * pct);
-        console.log('fuzz', n, 'by', pct, 'from', low, 'to', high);
         return getRandomNum(low, high);
     }
     exports.fuzz = fuzz;

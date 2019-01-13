@@ -64,7 +64,7 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
             if (resource_1.isCraft(res)) {
                 var counts = [];
                 var recipe = res.recipe;
-                for (var _i = 0, _a = Object.keys(res.recipe); _i < _a.length; _i++) {
+                for (var _i = 0, _a = Object.keys(res.recipe.materials); _i < _a.length; _i++) {
                     var mat = _a[_i];
                     var amt = recipe.materials[mat] || 0;
                     if (this.ship.cargo.get(mat) < amt) {

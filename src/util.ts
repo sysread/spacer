@@ -98,10 +98,12 @@ export function chance(pct: number): boolean {
   return rand <= pct;
 }
 
+/*
+ * "Fuzzes" a number, randomizing it by +/- pct%.
+ */
 export function fuzz(n: number, pct: number): number {
   const low  = n - (n * pct);
   const high = n + (n * pct);
-console.log('fuzz', n, 'by', pct, 'from', low, 'to', high);
   return getRandomNum(low, high);
 }
 

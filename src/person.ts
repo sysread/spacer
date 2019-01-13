@@ -88,7 +88,7 @@ class Person {
       const counts = [];
       const recipe = res.recipe;
 
-      for (const mat of Object.keys(res.recipe) as t.resource[]) {
+      for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
         const amt = recipe.materials[mat] || 0;
         if (this.ship.cargo.get(mat) < amt) {
           return false;
