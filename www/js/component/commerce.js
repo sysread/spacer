@@ -219,7 +219,7 @@ define(function(require, exports, module) {
 
   <resource-report v-if="report" :item="item" @close="report=false" class="p-3" />
 
-  <table v-else class="table table-sm table-mini table-noborder">
+  <table class="table table-sm table-mini table-noborder">
     <tr>
       <th scope="col" class="w-25">Price</th>
       <td class="w-25" :class="{'text-success': count < 0, 'text-warning': count > 0}">{{credits|abs|R|csn}} c</td>
