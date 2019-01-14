@@ -35,7 +35,6 @@ define(["require", "exports", "./data", "./ship", "./person", "./util"], functio
     "use strict";
     data_1 = __importDefault(data_1);
     ship_1 = __importDefault(ship_1);
-    person_1 = __importDefault(person_1);
     util = __importStar(util);
     var NPC = /** @class */ (function (_super) {
         __extends(NPC, _super);
@@ -115,6 +114,6 @@ define(["require", "exports", "./data", "./ship", "./person", "./util"], functio
             return _this;
         }
         return NPC;
-    }(person_1.default));
+    }(person_1.Person));
     return NPC;
 });

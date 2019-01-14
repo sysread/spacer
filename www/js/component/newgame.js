@@ -1,7 +1,7 @@
 "use strict"
 
 define(function(require, exports, module) {
-  const Person = require('person');
+  const Person = require('person').Person;
   const Ship   = require('ship');
   const Vue    = require('vendor/vue');
   const util   = require('util');

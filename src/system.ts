@@ -16,7 +16,7 @@ interface PositionCache {
   };
 }
 
-interface CelestialBody {
+/*interface CelestialBody {
   key:        string;
   central:    CelestialBody;
   name:       string;
@@ -26,14 +26,14 @@ interface CelestialBody {
   satellites: { [key: string]: CelestialBody };
 
   getPositionAtTime(date: Date): point;
-}
+}*/
 
 class System {
   protected system: SolarSystem   = new SolarSystem;
   protected cache:  OrbitCache    = {};
   protected pos:    PositionCache = {};
 
-  set_date(date: Date) {
+  set_date(date: string) {
     const dt = new Date(date + ' 00:00:00');
     const ts = dt.valueOf();
 
@@ -54,7 +54,7 @@ class System {
     return Object.keys(data.bodies);
   }
 
-  body(name: string): CelestialBody {
+  body(name: string) {
     if (name == 'trojans') {
       return {
         key:        'trojans',
@@ -65,7 +65,7 @@ class System {
         mass:       0,
         satellites: {},
 
-        getPositionAtTime: (date: Date) => {
+        getPositionAtTime: (date: Date): point => {
           const p = this.system.bodies.jupiter.getPositionAtTime(date);
           const r = Physics.distance(p, [0, 0, 0]);
           const t = -1.0472; // 60 degrees in radians

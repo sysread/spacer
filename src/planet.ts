@@ -36,8 +36,16 @@ interface CraftTask {
 
 type EconTask = ImportTask | CraftTask;
 
+export function isImportTask(task: EconTask): task is ImportTask {
+  return (<ImportTask>task).type == 'import';
+}
 
-interface SavedPlanet {
+export function isCraftTask(task: EconTask): task is ImportTask {
+  return (<CraftTask>task).type == 'craft';;
+}
+
+
+export interface SavedPlanet {
   conditions?: SavedCondition[];
   stock?:      any;
   supply?:     any;

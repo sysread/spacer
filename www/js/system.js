@@ -33,6 +33,17 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
     data_1 = __importDefault(data_1);
     physics_1 = __importDefault(physics_1);
     solaris_model_1 = __importDefault(solaris_model_1);
+    /*interface CelestialBody {
+      key:        string;
+      central:    CelestialBody;
+      name:       string;
+      type:       string;
+      radius:     number;
+      mass:       number;
+      satellites: { [key: string]: CelestialBody };
+    
+      getPositionAtTime(date: Date): point;
+    }*/
     var System = /** @class */ (function () {
         function System() {
             this.system = new solaris_model_1.default;

@@ -44,6 +44,15 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
     history_1 = __importDefault(history_1);
     t = __importStar(t);
     util = __importStar(util);
+    function isImportTask(task) {
+        return task.type == 'import';
+    }
+    exports.isImportTask = isImportTask;
+    function isCraftTask(task) {
+        return task.type == 'craft';
+        ;
+    }
+    exports.isCraftTask = isCraftTask;
     var Planet = /** @class */ (function () {
         function Planet(body, init) {
             var e_1, _a, e_2, _b, e_3, _c, e_4, _d, e_5, _e, e_6, _f;

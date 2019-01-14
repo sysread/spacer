@@ -1,6 +1,6 @@
 import data from './data';
 import Ship from './ship';
-import Person from './person';
+import { Person } from './person';
 import * as t from './common';
 import * as util from './util';
 

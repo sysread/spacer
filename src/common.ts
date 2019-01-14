@@ -27,7 +27,6 @@ const _body = {
   mercury:   true,
   earth:     true,
   moon:      true,
-  venus:     true,
   mars:      true,
   phobos:    true,
   ceres:     true,

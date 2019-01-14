@@ -28,7 +28,6 @@ define(["require", "exports"], function (require, exports) {
         mercury: true,
         earth: true,
         moon: true,
-        venus: true,
         mars: true,
         phobos: true,
         ceres: true,

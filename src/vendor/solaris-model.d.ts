@@ -16,7 +16,7 @@ declare class SolarSystem {
   time: Date;
   bodies: { [key: string]: CelestialBody };
 
-  setTime(input: Date): void;
+  setTime(input: Date|string): void;
 }
 
 export = SolarSystem;

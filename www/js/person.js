@@ -36,6 +36,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 define(["require", "exports", "./data", "./system", "./ship", "./physics", "./common", "./model", "./resource"], function (require, exports, data_1, system_1, ship_1, physics_1, t, model, resource_1) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
     ship_1 = __importDefault(ship_1);
@@ -198,5 +199,5 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
         };
         return Person;
     }());
-    return Person;
+    exports.Person = Person;
 });

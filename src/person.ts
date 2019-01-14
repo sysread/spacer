@@ -24,7 +24,7 @@ interface SavedShip {
   cargo?:  t.ResourceCounter;
 }
 
-interface SavedPerson {
+export interface SavedPerson {
   name:     string;
   ship:     SavedShip;
   faction:  t.faction;
@@ -34,7 +34,7 @@ interface SavedPerson {
 };
 
 
-class Person {
+export class Person {
   name:        string;
   ship:        Ship;
   faction:     model.Faction;
@@ -187,5 +187,3 @@ class Person {
     return this.getStanding(faction) / 1000;
   }
 }
-
-export = Person;
