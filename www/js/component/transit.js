@@ -1,6 +1,6 @@
-"use strict"
-
 define(function(require, exports, module) {
+  "use strict"
+
   const NPC     = require('npc');
   const Ship    = require('ship');
   const Physics = require('physics');

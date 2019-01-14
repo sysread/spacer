@@ -40,7 +40,6 @@ define(function(require, exports, module) {
     },
 
     computed: {
-      logEntries()  { return this.combat.log                  },
       isOver()      { return this.combat.isOver               },
       escaped()     { return this.combat.escaped              },
       surrendered() { return this.combat.surrendered          },
