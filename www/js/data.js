@@ -75,10 +75,10 @@ define(["require", "exports"], function (require, exports) {
             'subterranean': { produces: { food: 0.25, hydrocarbons: 0.25 }, consumes: { metal: 0.6, fuel: 0.3, electronics: 0.5, machines: 0.5, water: 0.3, hydrocarbons: 0.75, weapons: 0.35 } },
             'orbital': { produces: { food: 0.1, hydrocarbons: 0.1 }, consumes: { metal: 1, fuel: 1.5, electronics: 0.75, machines: 0.75, water: 0.15, hydrocarbons: 0.25, weapons: 0.2 } },
             'black market': { produces: { narcotics: 0.5, weapons: 0.5 }, price: { narcotics: 0.5, weapons: 0.7 } },
-            'tech hub': { produces: { electronics: 0.5 }, price: { machines: 0.9, electronics: 0.65, cybernetics: 0.8, addons: 0.7 } },
+            'tech hub': { produces: { electronics: 0.5 }, price: { machines: 0.9, electronics: 0.65, cybernetics: 0.8, addons: 0.9 } },
             'manufacturing hub': { produces: { machines: 0.5 }, price: { machines: 0.7, cybernetics: 0.9, addons: 0.8 } },
             'capital': { produces: { medicine: 0.25 }, consumes: { weapons: 0.1 }, price: { addons: 0.9 } },
-            'military': { produces: {}, consumes: { weapons: 1, machines: 0.5, electronics: 0.5, medicine: 0.5 }, price: { addons: 0.7 } },
+            'military': { produces: {}, consumes: { weapons: 1, machines: 0.5, electronics: 0.5, medicine: 0.5 }, price: { addons: 0.75 } },
         },
         conditions: {
             'plague': {
@@ -336,15 +336,15 @@ define(["require", "exports"], function (require, exports) {
                 mass: 10,
                 desc: 'Ion thrusters are commodity, inexpensive, and efficient. Bolted on by the dozen, they are the work horse of the cargo fleet.',
                 burn_rate: 0.005,
-                value: 900,
+                value: 1200,
             },
             fusion: {
                 name: 'Fusion',
                 thrust: 600,
                 mass: 40,
                 desc: 'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
-                burn_rate: .073,
-                value: 75000,
+                burn_rate: .03,
+                value: 30000,
             }
         },
         shipclass: {
@@ -357,7 +357,7 @@ define(["require", "exports"], function (require, exports) {
             freighter: { hull: 8, armor: 6, cargo: 50, hardpoints: 3, mass: 900, tank: 8, drives: 10, drive: 'ion', restricted: false, desc: '' },
             /* Military */
             corvette: { hull: 10, armor: 10, cargo: 10, hardpoints: 4, mass: 450, tank: 4, drives: 1, drive: 'fusion', restricted: 'Trusted', markets: ['capital', 'military'], desc: '' },
-            cruiser: { hull: 20, armor: 15, cargo: 15, hardpoints: 8, mass: 900, tank: 12, drives: 4, drive: 'fusion', restricted: 'Admired', markets: ['capital', 'military'], desc: '' },
+            cruiser: { hull: 20, armor: 15, cargo: 15, hardpoints: 8, mass: 900, tank: 12, drives: 3, drive: 'fusion', restricted: 'Admired', markets: ['capital', 'military'], desc: '' },
             battleship: { hull: 30, armor: 20, cargo: 20, hardpoints: 10, mass: 1200, tank: 14, drives: 6, drive: 'fusion', restricted: 'Admired', markets: ['capital', 'military'], desc: '' },
             /* Faction ships */
             fortuna: { hull: 8, armor: 6, cargo: 60, hardpoints: 2, mass: 1000, tank: 8, drives: 14, drive: 'ion', restricted: 'Friendly', faction: 'JFT', desc: '' },
@@ -412,7 +412,7 @@ define(["require", "exports"], function (require, exports) {
                 mass: 20,
                 thrust: 80,
                 burn_rate: 0.01,
-                price: 6000,
+                price: 3000,
             },
             fusion: {
                 name: 'Fusion drive',

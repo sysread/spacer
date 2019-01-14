@@ -1134,7 +1134,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 for (var _b = __values(this.traits), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var trait = _c.value;
                     if ('price' in trait && 'addons' in trait.price) {
-                        price -= base * (trait.price['addons'] || 0);
+                        price *= trait.price['addons'] || 1;
                     }
                 }
             }

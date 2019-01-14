@@ -978,7 +978,7 @@ export class Planet {
 
     for (const trait of this.traits) {
       if ('price' in trait && 'addons' in trait.price) {
-        price -= base * (trait.price['addons'] || 0);
+        price *= trait.price['addons'] || 1;
       }
     }
 

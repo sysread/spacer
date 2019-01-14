@@ -1,6 +1,6 @@
-"use strict"
-
 define(function(require, exports, module) {
+  "use strict"
+
   const Physics = require('physics');
   const Ship    = require('ship');
   const Vue     = require('vendor/vue');
@@ -117,9 +117,15 @@ define(function(require, exports, module) {
 
     template: `
 <div>
-  <button @click="detail=!detail" type="button" class="btn btn-block my-3" :class="{'text-success': hasUpgrade, 'text-secondary': !hasUpgrade && !isAvailable, 'btn-dark': detail, 'btn-secondary': !detail}">
-    {{info.name|caps}}
-    <span class="badge badge-pill float-right">{{price|csn}}</span>
+  <button @click="detail=!detail" type="button" class="btn btn-block my-3"
+    :class="{
+      'text-success': hasUpgrade,
+      'text-secondary': !hasUpgrade && !isAvailable,
+      'btn-dark': detail,
+      'btn-secondary': !detail
+    }">
+      {{info.name|caps}}
+      <span class="badge badge-pill float-right">{{price|csn}}</span>
   </button>
 
   <card v-if="detail" class="my-3" :title="info.name|caps">
