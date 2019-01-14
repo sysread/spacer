@@ -186,9 +186,12 @@ define(function(require, exports, module) {
           bodies.push(this.system.position(this.game.locus));
         }
 
-        bodies.push(this.transit.flip_point);
-        bodies.push(this.transit.start);
-        bodies.push(this.transit.end);
+        // Figure in transit
+        if (this.transit) {
+          bodies.push(this.transit.flip_point);
+          bodies.push(this.transit.start);
+          bodies.push(this.transit.end);
+        }
 
         return Physics.centroid(...bodies);
       },
@@ -236,8 +239,8 @@ define(function(require, exports, module) {
         }
         // Cross system path
         else {
-          points.push(this.transit.end);
-          points.push(this.transit.start);
+          points.push(this.system.position(this.game.locus));
+          points.push(this.system.position(this.dest));
         }
 
         const max = Math.max(...points.map(p => Physics.distance(p, center)));
@@ -301,6 +304,7 @@ define(function(require, exports, module) {
 
         if (!this.is_here(dest)) {
           this.dest = dest;
+          this.transit = null;
 
           // Select the first transit path for that destination
           const transits = this.navcomp.getTransitsTo(this.dest);
