@@ -1,8 +1,9 @@
-/// <reference types="./vendor/solaris-model" />
+/* /// <reference types="./vendor/solaris-model" />
+import Solaris from './vendor/solaris-model'; */
 
 import data from './data';
 import Physics from './physics';
-import SolarSystem from './vendor/solaris-model';
+import SolarSystem from './system/SolarSystem';
 
 type point = [number, number, number];
 
@@ -16,28 +17,22 @@ interface PositionCache {
   };
 }
 
-/*interface CelestialBody {
-  key:        string;
-  central:    CelestialBody;
-  name:       string;
-  type:       string;
-  radius:     number;
-  mass:       number;
-  satellites: { [key: string]: CelestialBody };
-
-  getPositionAtTime(date: Date): point;
-}*/
+class OutsideOfTime extends Error {
+  constructor() {
+    super("set_date() must be called before positional information is available");
+  }
+}
 
 class System {
-  protected system: SolarSystem   = new SolarSystem;
-  protected cache:  OrbitCache    = {};
-  protected pos:    PositionCache = {};
+  system:  SolarSystem   = new SolarSystem;
+  cache:   OrbitCache    = {};
+  pos:     PositionCache = {};
 
   set_date(date: string) {
     const dt = new Date(date + ' 00:00:00');
     const ts = dt.valueOf();
 
-    if (dt.getDate() !== this.system.time.getDate()) {
+    if (!this.system.time || dt.getDate() !== this.system.time.getDate()) {
       this.cache = {};
 
       for (const key of Object.keys(this.pos)) {
@@ -179,17 +174,26 @@ class System {
     }
 
     date = date || this.system.time;
+
+    if (!date) {
+      throw new OutsideOfTime;
+    }
+
     const key = date.valueOf();
 
-    if (!this.pos.hasOwnProperty(key))
+    if (this.pos[key] == undefined) {
       this.pos[key] = {};
+    }
 
-    if (!this.pos[key].hasOwnProperty(name)) {
+    if (this.pos[key][name] == undefined) {
       const body = this.body(name);
-      let pos: point = body.getPositionAtTime(date);
+      let pos = body.getPositionAtTime(date);
 
-      if (body.central.key !== 'sun') {
-        pos = this.addPoints(pos, body.central.getPositionAtTime(date));
+      // Positions are relative to the central body; in the case of the sun,
+      // that requires no adjustment. Moons, however, must be added to the host
+      // planet's position.
+      if (body.central && body.central.key !== 'sun') {
+        pos = this.addPoints(pos, this.position(body.central.key, date));
       }
 
       this.pos[key][name] = pos;
@@ -199,9 +203,13 @@ class System {
   }
 
   orbit(name: string) {
+    if (!this.system.time) {
+      throw new OutsideOfTime;
+    }
+
     const key = `${name}.orbit`;
 
-    if (!this.cache.hasOwnProperty(key)) {
+    if (this.cache[key] == undefined) {
       const date  = new Date(this.system.time);
       const orbit = [this.position(name)];
 
@@ -219,7 +227,7 @@ class System {
   orbit_by_turns(name: string) {
     const key = `${name}.orbit.byturns`;
 
-    if (!this.cache.hasOwnProperty(key)) {
+    if (this.cache[key] == undefined) {
       const tpd = 24 / data.hours_per_turn;
       const orbit = this.orbit(name);
 

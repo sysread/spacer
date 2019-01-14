@@ -1,4 +1,16 @@
-/// <reference types="./vendor/solaris-model" />
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __values = (this && this.__values) || function (o) {
     var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
     if (m) return m.call(o);
@@ -28,25 +40,23 @@ var __read = (this && this.__read) || function (o, n) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], function (require, exports, data_1, physics_1, solaris_model_1) {
+define(["require", "exports", "./vendor/solaris-model", "./data", "./physics", "./system/index"], function (require, exports, solaris_model_1, data_1, physics_1, index_1) {
     "use strict";
+    solaris_model_1 = __importDefault(solaris_model_1);
     data_1 = __importDefault(data_1);
     physics_1 = __importDefault(physics_1);
-    solaris_model_1 = __importDefault(solaris_model_1);
-    /*interface CelestialBody {
-      key:        string;
-      central:    CelestialBody;
-      name:       string;
-      type:       string;
-      radius:     number;
-      mass:       number;
-      satellites: { [key: string]: CelestialBody };
-    
-      getPositionAtTime(date: Date): point;
-    }*/
+    index_1 = __importDefault(index_1);
+    var OutsideOfTime = /** @class */ (function (_super) {
+        __extends(OutsideOfTime, _super);
+        function OutsideOfTime() {
+            return _super.call(this, "set_date() must be called before positional information is available") || this;
+        }
+        return OutsideOfTime;
+    }(Error));
     var System = /** @class */ (function () {
         function System() {
-            this.system = new solaris_model_1.default;
+            this.system = new index_1.default;
+            this.altsys = new solaris_model_1.default;
             this.cache = {};
             this.pos = {};
         }
@@ -54,7 +64,7 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
             var e_1, _a;
             var dt = new Date(date + ' 00:00:00');
             var ts = dt.valueOf();
-            if (dt.getDate() !== this.system.time.getDate()) {
+            if (!this.system.time || dt.getDate() !== this.system.time.getDate()) {
                 this.cache = {};
                 try {
                     for (var _b = __values(Object.keys(this.pos)), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -73,6 +83,7 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
                 }
             }
             this.system.setTime(date);
+            this.altsys.setTime(date);
         };
         System.prototype.bodies = function () {
             return Object.keys(data_1.default.bodies);
@@ -203,22 +214,33 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
                 return [0, 0, 0];
             }
             date = date || this.system.time;
+            if (!date) {
+                throw new OutsideOfTime;
+            }
             var key = date.valueOf();
-            if (!this.pos.hasOwnProperty(key))
+            if (this.pos[key] == undefined) {
                 this.pos[key] = {};
-            if (!this.pos[key].hasOwnProperty(name)) {
+            }
+            if (this.pos[key][name] == undefined) {
                 var body = this.body(name);
                 var pos = body.getPositionAtTime(date);
-                if (body.central.key !== 'sun') {
-                    pos = this.addPoints(pos, body.central.getPositionAtTime(date));
+                // Positions are relative to the central body; in the case of the sun,
+                // that requires no adjustment. Moons, however, must be added to the host
+                // planet's position.
+                if (body.central && body.central.key !== 'sun') {
+                    pos = this.addPoints(pos, this.position(body.central.key, date));
+                    //pos = this.addPoints(pos, body.central.getPositionAtTime(date));
                 }
                 this.pos[key][name] = pos;
             }
             return this.pos[key][name];
         };
         System.prototype.orbit = function (name) {
+            if (!this.system.time) {
+                throw new OutsideOfTime;
+            }
             var key = name + ".orbit";
-            if (!this.cache.hasOwnProperty(key)) {
+            if (this.cache[key] == undefined) {
                 var date = new Date(this.system.time);
                 var orbit = [this.position(name)];
                 for (var day = 1; day < 365; ++day) {
@@ -231,7 +253,7 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
         };
         System.prototype.orbit_by_turns = function (name) {
             var key = name + ".orbit.byturns";
-            if (!this.cache.hasOwnProperty(key)) {
+            if (this.cache[key] == undefined) {
                 var tpd = 24 / data_1.default.hours_per_turn;
                 var orbit = this.orbit(name);
                 var point = orbit[0];
@@ -321,5 +343,7 @@ define(["require", "exports", "./data", "./physics", "./vendor/solaris-model"], 
         };
         return System;
     }());
-    return new System;
+    var system = new System;
+    console.log(system);
+    return system;
 });
