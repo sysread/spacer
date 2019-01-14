@@ -104,14 +104,12 @@ define(function(require, exports, module) {
         this.player.debit(this.price);
         this.player.ship.installAddOn(this.type);
         this.game.save_game();
-        this.game.refresh();
       },
 
       sellAddOn() {
         this.player.ship.removeAddOn(this.type);
         this.player.credit(this.sellPrice);
         this.game.save_game();
-        this.game.refresh();
       },
     },
 

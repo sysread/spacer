@@ -21,26 +21,18 @@
     <title>Spacer</title>
   </head>
   <body id="spacer">
-    <!-- Header -->
-    <nav id="spacer-status" class="spacer-header fixed-top navbar navbar-dark">
-      <span class="navbar-text text-capitalize" id="spacer-location"></span>
-      <span class="navbar-text" id="spacer-credits"></span>
-      <span class="navbar-text" id="spacer-cargo"></span>
-      <span class="navbar-text" id="spacer-fuel"></span>
-      <span class="navbar-text" id="spacer-turn"></span>
-    </nav>
-
     <!-- Content window -->
     <div id="content" />
 
     <script>
       require(
         [
-          'vendor/vue',        // base framework
-          'game',              // game state
-          'component/global',  // global state
-          'component/navbar',  // nav bar
-          'component/content', // content div
+          'vendor/vue',          // base framework
+          'game',                // game state
+          'component/global',    // global state
+          'component/navbar',    // nav bar
+          'component/content',   // content div
+          'component/statusbar', // top status bar
         ],
 
         function(Vue, game) {
@@ -91,6 +83,7 @@
 
             template: `
               <div>
+                <StatusBar />
                 <Content @open="open" :page="page" />
                 <NavBar  @open="open" :page="page" :disabled="nav_disabled" />
               </div>

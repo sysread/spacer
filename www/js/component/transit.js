@@ -267,7 +267,6 @@ define(function(require, exports, module) {
                 this.game.arrive();
                 this.game.unfreeze();
                 this.game.save_game();
-                this.game.refresh();
                 this.$emit('open', 'summary');
               });
             },

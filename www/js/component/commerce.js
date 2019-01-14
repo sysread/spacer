@@ -198,7 +198,6 @@ define(function(require, exports, module) {
         }
 
         this.game.save_game();
-        this.game.refresh();
 
         if (!this.busted && !this.standing) {
           this.close_trade();

@@ -100,7 +100,6 @@ define(function(require, exports, module) {
           this.game.player.ship.damage.hull = this.game.player.ship.damage.armor = 0;
           this.game.player.ship.fuel = this.game.player.ship.tank;
           this.game.save_game();
-          this.game.refresh();
         },
       },
 

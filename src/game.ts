@@ -72,8 +72,6 @@ class Game {
         this.reset_date();
       }
     }
-
-    this.refresh();
   }
 
 
@@ -137,21 +135,6 @@ class Game {
     window.localStorage.removeItem('game');
   }
 
-
-  refresh() {
-    if (this.locus != null) {
-      $('#spacer-location').text(this.locus);
-    }
-
-    if (this.player != null) {
-      $('#spacer-credits').text(`${util.csn(Math.floor(this.player.money))} c`);
-      $('#spacer-cargo').text(`${this.player.ship.cargoUsed}/${this.player.ship.cargoSpace} cu`);
-      $('#spacer-fuel').text('Fuel ' + util.R(100 * this.player.ship.fuel / this.player.ship.tank) + '%');
-      $('#spacer-turn').text(`${this.status_date()}`);
-    }
-  }
-
-
   turn(n=1, no_save=false) {
     for (let i = 0; i < n; ++i) {
       ++this.turns;
@@ -161,8 +144,6 @@ class Game {
       for (const p of util.shuffle(Object.values(this.planets))) {
         p.turn();
       }
-
-      this.refresh();
     }
 
     if (!no_save) {

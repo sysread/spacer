@@ -203,7 +203,6 @@ define(function(require, exports, module) {
       },
 
       finish() {
-        this.game.refresh();
         this.game.save_game();
         this.running = false;
         this.game.unfreeze();
@@ -213,8 +212,6 @@ define(function(require, exports, module) {
         this.running = this.queue.fabricate();
         if (!this.running) {
           this.finish();
-        } else {
-          this.game.refresh();
         }
       },
 

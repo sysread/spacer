@@ -112,7 +112,6 @@ define(function(require, exports, module) {
       completeTask: function() {
         this.clearTask();
         this.game.save_game();
-        this.game.refresh();
       },
     },
     template: `

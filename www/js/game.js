@@ -56,7 +56,6 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./c
                     this.reset_date();
                 }
             }
-            this.refresh();
         }
         Object.defineProperty(Game.prototype, "here", {
             get: function () {
@@ -126,17 +125,6 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./c
         Game.prototype.delete_game = function () {
             window.localStorage.removeItem('game');
         };
-        Game.prototype.refresh = function () {
-            if (this.locus != null) {
-                $('#spacer-location').text(this.locus);
-            }
-            if (this.player != null) {
-                $('#spacer-credits').text(util.csn(Math.floor(this.player.money)) + " c");
-                $('#spacer-cargo').text(this.player.ship.cargoUsed + "/" + this.player.ship.cargoSpace + " cu");
-                $('#spacer-fuel').text('Fuel ' + util.R(100 * this.player.ship.fuel / this.player.ship.tank) + '%');
-                $('#spacer-turn').text("" + this.status_date());
-            }
-        };
         Game.prototype.turn = function (n, no_save) {
             if (n === void 0) { n = 1; }
             if (no_save === void 0) { no_save = false; }
@@ -158,7 +146,6 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./c
                     }
                     finally { if (e_2) throw e_2.error; }
                 }
-                this.refresh();
             }
             if (!no_save) {
                 this.save_game();

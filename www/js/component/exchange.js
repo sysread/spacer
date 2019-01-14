@@ -119,7 +119,6 @@ define(function(require, exports, module) {
 
         this.store.set(item, this.resources[item] - amt);
         this.cargo.set(item, amt);
-        this.game.refresh();
       },
 
       count(item) {
