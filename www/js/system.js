@@ -1,3 +1,5 @@
+/* /// <reference types="./vendor/solaris-model" />
+import Solaris from './vendor/solaris-model'; */
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -40,12 +42,11 @@ var __read = (this && this.__read) || function (o, n) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-define(["require", "exports", "./vendor/solaris-model", "./data", "./physics", "./system/index"], function (require, exports, solaris_model_1, data_1, physics_1, index_1) {
+define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], function (require, exports, data_1, physics_1, SolarSystem_1) {
     "use strict";
-    solaris_model_1 = __importDefault(solaris_model_1);
     data_1 = __importDefault(data_1);
     physics_1 = __importDefault(physics_1);
-    index_1 = __importDefault(index_1);
+    SolarSystem_1 = __importDefault(SolarSystem_1);
     var OutsideOfTime = /** @class */ (function (_super) {
         __extends(OutsideOfTime, _super);
         function OutsideOfTime() {
@@ -55,8 +56,7 @@ define(["require", "exports", "./vendor/solaris-model", "./data", "./physics", "
     }(Error));
     var System = /** @class */ (function () {
         function System() {
-            this.system = new index_1.default;
-            this.altsys = new solaris_model_1.default;
+            this.system = new SolarSystem_1.default;
             this.cache = {};
             this.pos = {};
         }
@@ -83,7 +83,6 @@ define(["require", "exports", "./vendor/solaris-model", "./data", "./physics", "
                 }
             }
             this.system.setTime(date);
-            this.altsys.setTime(date);
         };
         System.prototype.bodies = function () {
             return Object.keys(data_1.default.bodies);
@@ -229,7 +228,6 @@ define(["require", "exports", "./vendor/solaris-model", "./data", "./physics", "
                 // planet's position.
                 if (body.central && body.central.key !== 'sun') {
                     pos = this.addPoints(pos, this.position(body.central.key, date));
-                    //pos = this.addPoints(pos, body.central.getPositionAtTime(date));
                 }
                 this.pos[key][name] = pos;
             }
@@ -343,7 +341,5 @@ define(["require", "exports", "./vendor/solaris-model", "./data", "./physics", "
         };
         return System;
     }());
-    var system = new System;
-    console.log(system);
-    return system;
+    return new System;
 });
