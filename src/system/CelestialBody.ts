@@ -1,6 +1,6 @@
 /// <reference types="../vendor/quaternion" />
-
 import Quaternion from '../vendor/quaternion';
+
 import { Body, Elements, ElementsBase, Satellites, Rings, body_type, position } from './data/body';
 
 import * as units     from './helpers/units';
