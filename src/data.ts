@@ -26,8 +26,8 @@ const data = {
   initial_ship:        'schooner',
   initial_money:       1000,
   max_abs_standing:    100,
-  jurisdiction:        0.25, // au from body
-  default_piracy_rate: 0.06,
+  jurisdiction:        0.28, // au from body
+  default_piracy_rate: 0.08,
   piracy_max_velocity: 500,
 
   scales: {

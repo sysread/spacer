@@ -27,11 +27,12 @@ define(function(require, exports, module) {
     data() {
       return {
         layout_target_id: 'transit-plot-root',
-        timeline:  null,
-        building:  false,
-        paused:    false,
-        stoppedBy: {'pirate': 0, 'police': 0},
-        encounter: null,
+        timeline:         null,
+        building:         false,
+        paused:           false,
+        stoppedBy:        {'pirate': 0, 'police': 0},
+        encounter:        null,
+        piracyFuzz:       0,
       };
     },
 
@@ -148,16 +149,8 @@ define(function(require, exports, module) {
       },
 
       piracyRate() {
-        let chance = this.data.default_piracy_rate;
-        const ranges = this.nearby();
-
-        for (const body of Object.keys(ranges)) {
-          const au = ranges[body] / Physics.AU;
-          const rate = this.game.planets[body].patrolRate(au);
-          chance -= rate;
-        }
-
-        return Math.max(chance, 0);
+        const rate = this.piracyFuzz + this.data.default_piracy_rate - (this.patrolRate / 2);
+        return util.clamp(rate, 0, 1);
       },
 
       piracyEvasionMalusCargo() {
@@ -190,7 +183,7 @@ define(function(require, exports, module) {
         // Reduce chances for each encounter
         chance /= 1 + this.stoppedBy.pirate;
 
-        return Math.max(0, chance);
+        return util.clamp(chance, 0, 1);
       },
 
       nearest() {
@@ -421,6 +414,8 @@ define(function(require, exports, module) {
         if (this.encounter) {
           return;
         }
+
+        this.piracyFuzz = util.getRandomNum(0, 0.03);
 
         if (this.current_turn % 3 == 0) {
           if (this.inspectionChance()) {

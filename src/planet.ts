@@ -217,9 +217,9 @@ export class Planet {
   patrolRadius() {
     const radius = this.scale(data.jurisdiction);
     if (this.hasTrait('military')) {
-      return radius * 1.5;
+      return radius * 1.3;
     } else if (this.hasTrait('military')) {
-      return radius * 1.15;
+      return radius * 1.1;
     } else {
       return radius;
     }
