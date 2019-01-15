@@ -4,7 +4,7 @@ import Ship    from './ship';
 import Physics from './physics';
 
 import * as t from './common';
-import * as model from './model';
+import { Faction } from './faction';
 import { resources, isCraft, isRaw } from './resource';
 
 
@@ -13,7 +13,7 @@ declare var window: { game: any; }
 declare var console: any;
 
 
-type factionesque = model.Faction | t.faction;
+type factionesque = Faction | t.faction;
 
 
 interface SavedShip {
@@ -37,7 +37,7 @@ export interface SavedPerson {
 export class Person {
   name:        string;
   ship:        Ship;
-  faction:     model.Faction;
+  faction:     Faction;
   home:        t.body;
   money:       number;
   standing:    t.StandingCounter;
@@ -47,14 +47,14 @@ export class Person {
     if (init == undefined) {
       this.name     = 'Marco Solo';
       this.ship     = new Ship({type: data.initial_ship});
-      this.faction  = new model.Faction('MC');
+      this.faction  = new Faction('MC');
       this.home     = 'mars';
       this.money    = data.initial_money;
     }
     else {
       this.name     = init.name;
       this.ship     = new Ship(init.ship);
-      this.faction  = new model.Faction(init.faction);
+      this.faction  = new Faction(init.faction);
       this.home     = init.home;
       this.money    = Math.floor(init.money);
     }
@@ -132,7 +132,7 @@ export class Person {
   getStanding(faction: factionesque): number {
     faction = faction || this.faction;
 
-    if (faction instanceof model.Faction) {
+    if (faction instanceof Faction) {
       faction = faction.abbrev;
     }
 

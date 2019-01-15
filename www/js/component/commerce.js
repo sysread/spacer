@@ -3,8 +3,8 @@
 define(function(require, exports, module) {
   const Vue     = require('vendor/vue');
   const util    = require('util');
-  const model   = require('model');
   const Physics = require('physics');
+  const t       = require('common');
 
   require('component/global');
   require('component/common');
@@ -396,7 +396,7 @@ define(function(require, exports, module) {
     props: ['body', 'relprices'],
     computed: {
       planet:    function() { return this.game.planets[this.body] },
-      resources: function() { return Object.keys(model.resources) },
+      resources: function() { return Object.keys(t.resources) },
     },
     template: `
 <div>

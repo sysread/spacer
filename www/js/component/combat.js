@@ -4,7 +4,6 @@ define(function(require, exports, module) {
   const Vue    = require('vendor/vue');
   const data   = require('data');
   const util   = require('util');
-  const model  = require('model');
   const Npc    = require('npc');
   const Combat = require('combat');
 

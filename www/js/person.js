@@ -34,7 +34,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./ship", "./physics", "./common", "./model", "./resource"], function (require, exports, data_1, system_1, ship_1, physics_1, t, model, resource_1) {
+define(["require", "exports", "./data", "./system", "./ship", "./physics", "./common", "./faction", "./resource"], function (require, exports, data_1, system_1, ship_1, physics_1, t, faction_1, resource_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
@@ -42,7 +42,6 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
     ship_1 = __importDefault(ship_1);
     physics_1 = __importDefault(physics_1);
     t = __importStar(t);
-    model = __importStar(model);
     ;
     var Person = /** @class */ (function () {
         function Person(init) {
@@ -50,14 +49,14 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
             if (init == undefined) {
                 this.name = 'Marco Solo';
                 this.ship = new ship_1.default({ type: data_1.default.initial_ship });
-                this.faction = new model.Faction('MC');
+                this.faction = new faction_1.Faction('MC');
                 this.home = 'mars';
                 this.money = data_1.default.initial_money;
             }
             else {
                 this.name = init.name;
                 this.ship = new ship_1.default(init.ship);
-                this.faction = new model.Faction(init.faction);
+                this.faction = new faction_1.Faction(init.faction);
                 this.home = init.home;
                 this.money = Math.floor(init.money);
             }
@@ -144,7 +143,7 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
         };
         Person.prototype.getStanding = function (faction) {
             faction = faction || this.faction;
-            if (faction instanceof model.Faction) {
+            if (faction instanceof faction_1.Faction) {
                 faction = faction.abbrev;
             }
             if (this.standing[faction] == undefined) {

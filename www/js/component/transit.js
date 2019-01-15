@@ -7,7 +7,7 @@ define(function(require, exports, module) {
   const Vue     = require('vendor/vue');
   const data    = require('data');
   const util    = require('util');
-  const model   = require('model');
+  const t       = require('common');
   const Layout  = require('component/layout');
 
   const intvl   = 0.3;
@@ -770,7 +770,7 @@ define(function(require, exports, module) {
       },
 
       plunder() {
-        const value  = (item) => model.resources[item].value;
+        const value  = (item) => t.resources[item].value;
         const player = this.game.player.ship;
         const npc    = this.npc.ship;
         const took   = {};

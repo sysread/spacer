@@ -1,6 +1,3 @@
-/* /// <reference types="./vendor/solaris-model" />
-import Solaris from './vendor/solaris-model'; */
-
 import data from './data';
 import Physics from './physics';
 import SolarSystem from './system/SolarSystem';
