@@ -15,7 +15,6 @@
         "cordova-browser": "^5.0.4",
         "cordova-plugin-statusbar": "^2.4.2",
         "npm": "^6.4.1",
-        "quaternion": "^1.0.5",
         "sprintf-js": "^1.1.1",
         "statusbar": "^0.2.0"
     },
