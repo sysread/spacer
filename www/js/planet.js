@@ -246,11 +246,24 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         /*
          * Patrols and inspections
          */
+        Planet.prototype.patrolRadius = function () {
+            var radius = this.scale(data_1.default.jurisdiction);
+            if (this.hasTrait('military')) {
+                return radius * 1.5;
+            }
+            else if (this.hasTrait('military')) {
+                return radius * 1.15;
+            }
+            else {
+                return radius;
+            }
+        };
         Planet.prototype.patrolRate = function (distance) {
             if (distance === void 0) { distance = 0; }
             var rate = this.scale(this.faction.patrol);
-            var invsq = distance > data_1.default.jurisdiction
-                ? rate * Math.pow(data_1.default.jurisdiction, 2) / Math.pow(distance, 2)
+            var radius = this.patrolRadius();
+            var invsq = distance > radius
+                ? rate * Math.pow(radius, 2) / Math.pow(distance, 2)
                 : rate;
             return Math.max(0, invsq);
         };

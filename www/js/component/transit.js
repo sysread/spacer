@@ -139,18 +139,12 @@ define(function(require, exports, module) {
         let count = 0;
 
         for (const body of Object.keys(ranges)) {
-          const faction = this.data.bodies[body].faction;
           const au = ranges[body] / Physics.AU;
-
-          if (au > this.data.jurisdiction * 2) {
-            continue;
-          }
-
           total += this.game.planets[body].patrolRate(au);
           ++count;
         }
 
-        return total / count;
+        return util.clamp(total, 0, 1);
       },
 
       piracyRate() {
@@ -258,6 +252,7 @@ define(function(require, exports, module) {
         this.layout.set_fov_au(this.fov);
 
         const timeline = new TimelineLite;
+        timeline.smoothChildTimeing = true;
 
         const timelines = {
           sun:  new TimelineLite,
@@ -310,6 +305,19 @@ define(function(require, exports, module) {
                 height: d,
                 width:  d,
                 ease:   Power0.easeNone,
+                // For whatever reason, TweenLite doesn't seem to be able to
+                // maintain the same animation rate for svg circles, causing
+                // them to jitter back and forth at each mark. This makes them
+                // jerk without animation, but alongside the smoother planetary
+                // animations, this serendipitously results in kind of a neat
+                // effect.
+                onComplete: () => {
+                  const c = document.getElementById(body + '_patrol');
+                  if (c) {
+                    c.setAttribute("cx", x);
+                    c.setAttribute("cy", y);
+                  }
+                },
               }, mark);
 
               timelines[body].to(this.$refs[body + '_label'], time * turns_per_day, {
@@ -387,6 +395,14 @@ define(function(require, exports, module) {
         return this.system.name(body);
       },
 
+      patrol_radius(body) {
+        if (this.game.planets[body]) {
+          return this.layout.scale_length(this.game.planets[body].patrolRadius() * Physics.AU);
+        } else {
+          return;
+        }
+      },
+
       pause() {
         this.paused = true;
         this.timeline.pause();
@@ -451,6 +467,8 @@ define(function(require, exports, module) {
           const faction = this.data.bodies[body].faction;
           const au = ranges[body] / Physics.AU;
 
+          // No inspections outside of jurisdiction, even if there are patrols
+          // out that far to keep down pirates.
           if (au > this.data.jurisdiction) {
             continue;
           }
@@ -522,7 +540,16 @@ define(function(require, exports, module) {
             <image ref="sun" xlink:href="img/sun.png" />
 
             <g v-for="body of bodies" :key="body">
+              <circle v-show="game.planets[body] != undefined"
+                :id="body + '_patrol'"
+                :r="patrol_radius(body)"
+                stroke="green"
+                stroke-width="0.25"
+                fill="green"
+                fill-opacity="0.025"/>
+
               <image :ref="body" :xlink:href="'img/' + body + '.png'" />
+
               <text :ref="body + '_label'" v-show="show_label(body)" style="font:12px monospace; fill:#EEEEEE;">
                 {{name(body)}}
               </text>

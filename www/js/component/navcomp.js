@@ -1,6 +1,6 @@
-"use strict"
-
 define(function(require, exports, module) {
+  "use strict"
+
   const Vue     = require('vendor/vue');
   const Physics = require('physics');
   const util    = require('util');
@@ -770,6 +770,7 @@ define(function(require, exports, module) {
             point:    p_sun,
             diameter: d_sun,
             label:    false,
+            patrol:   0,
           };
 
           for (const body of this.bodies) {
@@ -778,10 +779,15 @@ define(function(require, exports, module) {
             p[0] -= d / 2;
             p[1] -= d / 2;
 
+            const patrol_radius = this.game.planets[body]
+              ? this.game.planets[body].patrolRadius() * Physics.AU
+              : 0;
+
             bodies[body] = {
               point:    p,
               diameter: d,
               label:    this.show_label(body) ? this.system.name(body) : '',
+              patrol:   this.layout.scale_length(patrol_radius),
             };
           }
 
@@ -819,6 +825,18 @@ define(function(require, exports, module) {
 
     template: `
       <g>
+        <circle
+          v-for="(info, body) of plot_points"
+          v-if="info.patrol > 0"
+          :key="body + '_patrol_radius'"
+          :cx="info.point[0]"
+          :cy="info.point[1]"
+          :r="info.patrol"
+          stroke="green"
+          stroke-width="0.25"
+          fill="green"
+          fill-opacity="0.025" />
+
         <SvgPlotPoint
           v-for="(info, body) of plot_points"
           :key="body"

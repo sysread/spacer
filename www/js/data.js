@@ -25,8 +25,8 @@ define(["require", "exports"], function (require, exports) {
         initial_ship: 'schooner',
         initial_money: 1000,
         max_abs_standing: 100,
-        jurisdiction: 0.5,
-        default_piracy_rate: 0.08,
+        jurisdiction: 0.25,
+        default_piracy_rate: 0.06,
         piracy_max_velocity: 500,
         scales: {
             tiny: 0.6,

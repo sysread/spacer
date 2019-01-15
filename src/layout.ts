@@ -169,6 +169,12 @@ class Layout {
     return path;
   }
 
+  scale_length(meters: number): number {
+    const fov_m    = this.fov_au * Physics.AU;
+    const px_per_m = this.scale_px / fov_m;
+    return meters * px_per_m;
+  }
+
   scale_body_diameter(body: t.body) {
     const fov_m    = this.fov_au * Physics.AU;
     const px_per_m = this.scale_px / fov_m;

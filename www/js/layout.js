@@ -173,6 +173,11 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
             }
             return path;
         };
+        Layout.prototype.scale_length = function (meters) {
+            var fov_m = this.fov_au * physics_1.default.AU;
+            var px_per_m = this.scale_px / fov_m;
+            return meters * px_per_m;
+        };
         Layout.prototype.scale_body_diameter = function (body) {
             var fov_m = this.fov_au * physics_1.default.AU;
             var px_per_m = this.scale_px / fov_m;

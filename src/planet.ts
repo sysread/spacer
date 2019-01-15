@@ -214,11 +214,23 @@ export class Planet {
   /*
    * Patrols and inspections
    */
-  patrolRate(distance=0) {
-    const rate = this.scale(this.faction.patrol);
+  patrolRadius() {
+    const radius = this.scale(data.jurisdiction);
+    if (this.hasTrait('military')) {
+      return radius * 1.5;
+    } else if (this.hasTrait('military')) {
+      return radius * 1.15;
+    } else {
+      return radius;
+    }
+  }
 
-    const invsq = distance > data.jurisdiction
-      ? rate * Math.pow(data.jurisdiction, 2) / Math.pow(distance, 2)
+  patrolRate(distance=0) {
+    const rate   = this.scale(this.faction.patrol);
+    const radius = this.patrolRadius();
+
+    const invsq = distance > radius
+      ? rate * Math.pow(radius, 2) / Math.pow(distance, 2)
       : rate;
 
     return Math.max(0, invsq);
