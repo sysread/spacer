@@ -8,6 +8,12 @@ class Store {
   store: ResourceCounter = {};
 
   constructor(init?: ResourceCounter | SavedCounter) {
+    // The store must be initialized with a complete set of keys for each
+    // resource so that Vue.js watchers can proxy changes to them.
+    for (const item of resources) {
+      this.store[item] = 0;
+    }
+
     if (init != null) {
       if ((<SavedCounter>init).store !== undefined) {
         for (const elt of Object.keys((<SavedCounter>init).store)) {

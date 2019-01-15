@@ -93,11 +93,11 @@ define(function(require, exports, module) {
 
     mounted() {
       for (const item of this.game.player.ship.cargo.keys()) {
-        this.resources[item] += this.game.player.ship.cargo.get(item);
+        this.resources[item] += this.game.player.ship.cargo.count(item);
       }
 
       for (const item of this.store.keys()) {
-        this.resources[item] += this.store.get(item);
+        this.resources[item] += this.store.count(item);
       }
     },
 
@@ -111,10 +111,10 @@ define(function(require, exports, module) {
 
     methods: {
       update(item, amt) {
-        const change = amt - this.cargo.get(item);
+        const change = amt - this.cargo.count(item);
 
         if (change > this.cargoLeft) {
-          amt = this.cargo.get(item) + this.cargoLeft;
+          amt = this.cargo.count(item) + this.cargoLeft;
         }
 
         this.store.set(item, this.resources[item] - amt);

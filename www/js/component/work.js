@@ -32,30 +32,8 @@ define(function(require, exports, module) {
       pay()           { if (this.task) return this.payRate * this.days },
       turns()         { return this.days * (24 / this.data.hours_per_turn) },
       percent()       { return Math.min(100, Math.ceil(this.turnsWorked / this.turns * 100)) },
+      timeSpent()     { return Math.floor(this.turnsWorked / this.data.turns_per_day) },
       hasPicketLine() { return this.planet.hasPicketLine() },
-
-      timeSpent() {
-        let days  = 0;
-        let hours = 0;
-        let turns = this.turnsWorked;
-
-        while (turns >= this.data.turns_per_day) {
-          turns -= this.data.turns_per_day;
-          ++days;
-        }
-
-        hours = turns * this.data.hours_per_turn;
-
-        if (days > 0) {
-          if (hours > 0) {
-            return `${days} days, ${hours} hours`;
-          } else {
-            return `${days} days`;
-          }
-        } else {
-          return `${hours} hours`;
-        }
-      }
     },
     methods: {
       getPayRate: function(task) {
@@ -168,7 +146,7 @@ define(function(require, exports, module) {
 
     <div v-else-if="!isFinished && !isReady">
       <progress-bar :percent="percent" width=100 hide_pct=1>
-        {{timeSpent}}
+        {{timeSpent}} days
       </progress-bar>
     </div>
 
