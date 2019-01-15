@@ -1,6 +1,6 @@
-"use strict"
-
 define(function(require, exports, module) {
+  "use strict"
+
   const util = require('util');
   const Vue  = require('vendor/vue');
 
@@ -39,7 +39,7 @@ define(function(require, exports, module) {
         let hours = 0;
         let turns = this.turnsWorked;
 
-        while (turns > this.data.turns_per_day) {
+        while (turns >= this.data.turns_per_day) {
           turns -= this.data.turns_per_day;
           ++days;
         }

@@ -131,9 +131,9 @@ define(function(require, exports, module) {
   <def brkpt="sm" term="Cargo"><span slot="def">{{cargoUsed}} / {{cargoSpace}}</span></def>
   <def v-for="item in items" :key="item" brkpt="sm" v-if="count(item) > 0">
     <span slot="term" class="text-capitalize">{{item}}</span>
-    <slider slot="def" @update:value="amt => update(item, amt)" minmax=true :value="cargo.get(item)" min=0 :max="count(item)">
-      <span class="btn btn-dark" slot="pre">{{store.get(item)}}</span>
-      <span class="btn btn-dark" slot="post">{{cargo.get(item)}}</span>
+    <slider slot="def" @update:value="amt => update(item, amt)" minmax=true :value="cargo.count(item)" min=0 :max="count(item)" step=1>
+      <span class="btn btn-dark" slot="pre">{{store.count(item)}}</span>
+      <span class="btn btn-dark" slot="post">{{cargo.count(item)}}</span>
     </slider>
   </def>
 </div>
