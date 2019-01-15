@@ -390,7 +390,7 @@ export class Planet {
    */
   scale(n=0)                       { return data.scales[this.size] * n }
   getStock(item: t.resource)       { return this.stock.count(item) }
-  shortageFactor(item: t.resource) { return this.isNetExporter(item) ? 4 : 6 }
+  shortageFactor(item: t.resource) { return this.isNetExporter(item) ? 40 : 60 }
   surplusFactor(item: t.resource)  { return this.isNetExporter(item) ? 0.2 : 0.8 }
   avgProduction(item: t.resource)  { return this.getSupply(item) - this.consumption(item) }
   netProduction(item: t.resource)  { return this.production(item) - this.consumption(item) }
@@ -604,7 +604,7 @@ export class Planet {
   }
 
   sell(item: t.resource, amount: number, player?: any) {
-    const hadShortage = this.hasShortage(item);
+    const hadShortage = this.hasShortage(item, true);
     const price = amount * this.sellPrice(item);
     this.stock.inc(item, amount);
 

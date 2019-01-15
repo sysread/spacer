@@ -399,7 +399,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return data_1.default.scales[this.size] * n;
         };
         Planet.prototype.getStock = function (item) { return this.stock.count(item); };
-        Planet.prototype.shortageFactor = function (item) { return this.isNetExporter(item) ? 4 : 6; };
+        Planet.prototype.shortageFactor = function (item) { return this.isNetExporter(item) ? 40 : 60; };
         Planet.prototype.surplusFactor = function (item) { return this.isNetExporter(item) ? 0.2 : 0.8; };
         Planet.prototype.avgProduction = function (item) { return this.getSupply(item) - this.consumption(item); };
         Planet.prototype.netProduction = function (item) { return this.production(item) - this.consumption(item); };
@@ -633,7 +633,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return [bought, price];
         };
         Planet.prototype.sell = function (item, amount, player) {
-            var hadShortage = this.hasShortage(item);
+            var hadShortage = this.hasShortage(item, true);
             var price = amount * this.sellPrice(item);
             this.stock.inc(item, amount);
             var standing = 0;

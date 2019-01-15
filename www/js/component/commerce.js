@@ -191,7 +191,7 @@ define(function(require, exports, module) {
           }
           else {
             const [bought, price, standing] = this.game.here.sell(this.item, -this.count, this.player);
-            if (standing > 1) {
+            if (standing > 3) {
               this.standing = true;
             }
           }
