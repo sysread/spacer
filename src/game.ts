@@ -138,6 +138,7 @@ class Game {
   turn(n=1, no_save=false) {
     for (let i = 0; i < n; ++i) {
       ++this.turns;
+
       this.date.setHours(this.date.getHours() + data.hours_per_turn);
       system.set_date(this.strdate());
 

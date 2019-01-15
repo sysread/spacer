@@ -15,7 +15,16 @@ define(function(require, exports, module) {
       cargoUsed()  { return this.game.player.ship.cargoUsed },
       cargoSpace() { return this.game.player.ship.cargoSpace },
       fuelPct()    { return util.R(100 * this.game.player.ship.fuel / this.game.player.ship.tank) },
-      date()       { return this.game.status_date() },
+
+      // Re-calculate date from start date using game.turns so that the
+      // reactive setter has something to watch since game.date is updated
+      // incrementally with setHours rather than by updating the date property
+      // on game each turn.
+      date() {
+        const dt = new Date(this.data.start_date);
+        dt.setHours(dt.getHours() + this.game.turns * this.data.hours_per_turn);
+        return this.game.strdate(dt).replace(/-/g, '.');
+      },
     },
 
     template: `
