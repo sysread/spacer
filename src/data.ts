@@ -23,7 +23,7 @@ const data = {
   fab_health:          30, // number of tics each fabricator can handle before needing to be replaced. be sure to make this higher than the total tics needed to craft a cybernetics unit.
   grav_deltav_factor:  1.2,  // factor by which native gravity is multiplied to get player's sustained deltav tolerance
   initial_ship:        'schooner',
-  initial_money:       1000,
+  initial_money:       500,
   max_abs_standing:    100,
   jurisdiction:        0.28, // au from body
   default_piracy_rate: 0.08,
@@ -38,11 +38,11 @@ const data = {
   },
 
   resources: {
-    water:        {mass:  20, mine: {tics: 1, value: 10}},
-    ore:          {mass:  40, mine: {tics: 2, value: 10}},
-    minerals:     {mass:  30, mine: {tics: 2, value: 20}},
-    hydrocarbons: {mass:  10, mine: {tics: 2, value: 25}},
-    food:         {mass:  10, mine: {tics: 2, value: 35}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 2}}},
+    water:        {mass:  20, mine: {tics: 1, value: 13}},
+    ore:          {mass:  40, mine: {tics: 2, value: 17}},
+    minerals:     {mass:  30, mine: {tics: 2, value: 22}},
+    hydrocarbons: {mass:  10, mine: {tics: 2, value: 28}},
+    food:         {mass:  10, mine: {tics: 2, value: 36}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 2}}},
     fuel:         {mass:   1, recipe: {tics: 1, materials: {ore: 1, water: 1}}},
     metal:        {mass:  60, recipe: {tics: 2, materials: {ore: 3}}},
     ceramics:     {mass:  30, recipe: {tics: 2, materials: {minerals: 3}}},

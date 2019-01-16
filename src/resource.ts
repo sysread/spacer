@@ -56,33 +56,29 @@ export abstract class Resource {
     this.name       = name;
     this.mass       = data.resources[name].mass;
     this.contraband = data.resources[name].contraband;
-    this.value      = resourceValue(data.resources[name]);
-    this.minPrice   = this.calcMinPrice();
-    this.maxPrice   = this.calcMaxPrice();
+    this.value      = Math.ceil(resourceValue(data.resources[name]));
+    this.minPrice   = Math.ceil(this.calcMinPrice());
+    this.maxPrice   = Math.ceil(this.calcMaxPrice());
   }
 
   calcMaxPrice() {
-    let value  = this.value;
-    let factor = 9;
+    let factor = 6;
 
-    while (value > 10) {
-      value  /= 10;
-      factor /= 2;
+    for (let i = 10; i < this.value; i *= 10) {
+      factor /= 1.8;
     }
 
-    return Math.ceil(this.value * Math.max(1.5, factor));
+    return this.value * Math.max(1.2, factor);
   }
 
   calcMinPrice() {
-    let value  = this.value;
-    let factor = 9;
+    let factor = 3;
 
-    while (value > 10) {
-      value  /= 10;
-      factor /= 2;
+    for (let i = 10; i < this.value; i *= 10) {
+      factor /= 1.8;
     }
 
-    return Math.ceil(this.value / Math.max(1.5, factor));
+    return this.value / Math.max(1.2, factor);
   }
 
   clampPrice(price: number) {

@@ -89,27 +89,23 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
             this.name = name;
             this.mass = data_1.default.resources[name].mass;
             this.contraband = data_1.default.resources[name].contraband;
-            this.value = resourceValue(data_1.default.resources[name]);
-            this.minPrice = this.calcMinPrice();
-            this.maxPrice = this.calcMaxPrice();
+            this.value = Math.ceil(resourceValue(data_1.default.resources[name]));
+            this.minPrice = Math.ceil(this.calcMinPrice());
+            this.maxPrice = Math.ceil(this.calcMaxPrice());
         }
         Resource.prototype.calcMaxPrice = function () {
-            var value = this.value;
-            var factor = 9;
-            while (value > 10) {
-                value /= 10;
-                factor /= 2;
+            var factor = 6;
+            for (var i = 10; i < this.value; i *= 10) {
+                factor /= 1.8;
             }
-            return Math.ceil(this.value * Math.max(1.5, factor));
+            return this.value * Math.max(1.2, factor);
         };
         Resource.prototype.calcMinPrice = function () {
-            var value = this.value;
-            var factor = 9;
-            while (value > 10) {
-                value /= 10;
-                factor /= 2;
+            var factor = 3;
+            for (var i = 10; i < this.value; i *= 10) {
+                factor /= 1.8;
             }
-            return Math.ceil(this.value / Math.max(1.5, factor));
+            return this.value / Math.max(1.2, factor);
         };
         Resource.prototype.clampPrice = function (price) {
             return Math.ceil(util.clamp(price, this.minPrice, this.maxPrice));
