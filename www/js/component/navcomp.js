@@ -383,10 +383,10 @@ define(function(require, exports, module) {
           <div class="btn-group">
             <NavBtn :active="show_map" name="compass"  @click="go_map" />
             <NavBtn :active="show_dest_menu" name="planet"  @click="go_dest_menu" />
-            <NavBtn :active="show_routes" name="target" @click="go_routes" />
-            <NavBtn :active="show_info" name="summary" @click="go_info" />
-            <NavBtn :active="show_market" name="market"  @click="go_market" />
-            <NavBtn :active="confirm" name="launch"  @click="confirm=true" :disabled="!transit" />
+            <NavBtn :disabled="!dest" :active="show_routes" name="target" @click="go_routes" />
+            <NavBtn :disabled="!dest" :active="show_info" name="summary" @click="go_info" />
+            <NavBtn :disabled="!dest" :active="show_market" name="market"  @click="go_market" />
+            <NavBtn :disabled="!transit" :active="confirm" name="launch"  @click="confirm=true" />
           </div>
         </div>
 
