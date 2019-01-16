@@ -49,12 +49,44 @@ export abstract class Resource {
   readonly mass:        number;
   readonly contraband?: number;
   readonly value:       number;
+  readonly minPrice:    number;
+  readonly maxPrice:    number;
 
   constructor(name: t.resource) {
     this.name       = name;
     this.mass       = data.resources[name].mass;
     this.contraband = data.resources[name].contraband;
     this.value      = resourceValue(data.resources[name]);
+    this.minPrice   = this.calcMinPrice();
+    this.maxPrice   = this.calcMaxPrice();
+  }
+
+  calcMaxPrice() {
+    let value  = this.value;
+    let factor = 9;
+
+    while (value > 10) {
+      value  /= 10;
+      factor /= 2;
+    }
+
+    return Math.ceil(this.value * Math.max(1.5, factor));
+  }
+
+  calcMinPrice() {
+    let value  = this.value;
+    let factor = 9;
+
+    while (value > 10) {
+      value  /= 10;
+      factor /= 2;
+    }
+
+    return Math.ceil(this.value / Math.max(1.5, factor));
+  }
+
+  clampPrice(price: number) {
+    return Math.ceil(util.clamp(price, this.minPrice, this.maxPrice));
   }
 }
 

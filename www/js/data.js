@@ -17,7 +17,6 @@ define(["require", "exports"], function (require, exports) {
         update_prices: 10,
         scarcity_markup: 0.25,
         necessity: { water: true, food: true, medicine: true, fuel: true },
-        import_days_per_au: 10,
         craft_fee: 0.2,
         fabricators: 10,
         fab_health: 30,
