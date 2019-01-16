@@ -396,7 +396,7 @@ define(function(require, exports, module) {
     props: ['body', 'relprices'],
     computed: {
       planet:    function() { return this.game.planets[this.body] },
-      resources: function() { return Object.keys(t.resources) },
+      resources: function() { return t.resources },
     },
     template: `
 <div>
