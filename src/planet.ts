@@ -545,13 +545,13 @@ export class Planet {
 
       // Competing market malus
       if (data.bodies[nearest].faction != data.bodies[this.body].faction) {
-        markup += 0.2;
+        markup += 0.1;
       }
 
       // Distance malus: compound 10% markup for each AU
       const au = Math.ceil(distance / Physics.AU);
       for (let i = 0; i < au; ++i) {
-        markup *= 1.1;
+        markup *= 1.05;
       }
 
       return markup;
@@ -604,12 +604,14 @@ export class Planet {
       }
 
       price *= this.getScarcityMarkup(item);
-      price *= this.getAvailabilityMarkup(item);
-      price *= 1 + (0.01 * resources[item].mass); // due to expense in reaction mass to move it
 
       // Set upper and lower boundary to prevent superheating or crashing
       // markets.
       price = resources[item].clampPrice(price);
+
+      // Post-clamp adjustments due to mass and distance
+      price *= this.getAvailabilityMarkup(item);
+      price *= 1 + (0.01 * resources[item].mass); // due to expense in reaction mass to move it
 
       // Add a bit of "unaccounted for local influences"
       price = util.fuzz(price, 0.2);
