@@ -170,21 +170,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 }
                 finally { if (e_4) throw e_4.error; }
             }
-            // Assign directly in constructor rather than in clearMemos for
-            // performance reasons. V8's jit will produce more optimized classes by
-            // avoiding dynamic assignment in the constructor.
-            this._isNetExporter = {};
-            this._getDemand = {};
-            this._getSupply = {};
-            this._getNeed = {};
-            this._hasShortage = {};
-            this._getSurplus = {};
-            this._price = {};
-            this._cycle = {};
+            this.isNetExporterOf = {};
             try {
                 for (var _s = __values(t.resources), _t = _s.next(); !_t.done; _t = _s.next()) {
                     var item = _t.value;
-                    this._cycle[item] = util.getRandomInt(2, 6) * data_1.default.turns_per_day;
+                    this.isNetExporterOf[item] = this.calculateIsNetExporter(item);
                 }
             }
             catch (e_6_1) { e_6 = { error: e_6_1 }; }
@@ -194,6 +184,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 }
                 finally { if (e_6) throw e_6.error; }
             }
+            // Assign directly in constructor rather than in clearMemos for
+            // performance reasons. V8's jit will produce more optimized classes by
+            // avoiding dynamic assignment in the constructor.
+            this._price = {};
+            this._cycle = {};
         }
         Object.defineProperty(Planet.prototype, "position", {
             get: function () {
@@ -249,10 +244,10 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.patrolRadius = function () {
             var radius = this.scale(data_1.default.jurisdiction);
             if (this.hasTrait('military')) {
-                return radius * 1.5;
+                return radius * 1.3;
             }
             else if (this.hasTrait('military')) {
-                return radius * 1.15;
+                return radius * 1.1;
             }
             else {
                 return radius;
@@ -417,25 +412,17 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.avgProduction = function (item) { return this.getSupply(item) - this.consumption(item); };
         Planet.prototype.netProduction = function (item) { return this.production(item) - this.consumption(item); };
         Planet.prototype.getDemand = function (item) {
-            if (this._getDemand[item] == undefined)
-                this._getDemand[item] = this.demand.avg(item);
-            return this._getDemand[item];
+            return this.demand.avg(item);
         };
         Planet.prototype.getSupply = function (item) {
-            if (this._getSupply[item] == undefined)
-                this._getSupply[item] = this.supply.avg(item);
-            return this._getSupply[item];
+            return this.supply.avg(item);
         };
         Planet.prototype.hasShortage = function (item, nocache) {
             if (nocache === void 0) { nocache = false; }
-            if (this._hasShortage[item] == undefined || nocache)
-                this._hasShortage[item] = this.getNeed(item) >= this.shortageFactor(item);
-            return this._hasShortage[item];
+            return this.getNeed(item) >= this.shortageFactor(item);
         };
         Planet.prototype.hasSurplus = function (item) {
-            if (this._getSurplus[item] == undefined)
-                this._getSurplus[item] = this.getNeed(item) <= this.surplusFactor(item);
-            return this._getSurplus[item];
+            return this.getNeed(item) <= this.surplusFactor(item);
         };
         Planet.prototype.production = function (item) {
             var e_10, _a;
@@ -504,59 +491,56 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.supply.inc(item, amount);
         };
         Planet.prototype.isNetExporter = function (item) {
+            return this.isNetExporterOf[item];
+        };
+        Planet.prototype.calculateIsNetExporter = function (item) {
             var e_13, _a;
-            if (!this._isNetExporter.hasOwnProperty(item)) {
-                var isExporter = false;
-                var res = resource_1.resources[item];
-                if (resource_1.isRaw(res)) {
-                    var net = this.netProduction(item);
-                    isExporter = net >= this.scale(1);
-                }
-                if (!isExporter && resource_1.isCraft(res)) {
-                    var matExporter = true;
-                    try {
-                        for (var _b = __values(res.ingredients), _c = _b.next(); !_c.done; _c = _b.next()) {
-                            var mat = _c.value;
-                            if (!this.isNetExporter(mat)) {
-                                matExporter = false;
-                                break;
-                            }
-                        }
-                    }
-                    catch (e_13_1) { e_13 = { error: e_13_1 }; }
-                    finally {
-                        try {
-                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                        }
-                        finally { if (e_13) throw e_13.error; }
-                    }
-                    isExporter = matExporter;
-                }
-                this._isNetExporter[item] = isExporter;
+            var isExporter = false;
+            var res = resource_1.resources[item];
+            if (resource_1.isRaw(res)) {
+                var net = this.netProduction(item);
+                isExporter = net >= this.scale(1);
             }
-            return this._isNetExporter[item];
+            if (!isExporter && resource_1.isCraft(res)) {
+                var matExporter = true;
+                try {
+                    for (var _b = __values(res.ingredients), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var mat = _c.value;
+                        if (!this.isNetExporter(mat)) {
+                            matExporter = false;
+                            break;
+                        }
+                    }
+                }
+                catch (e_13_1) { e_13 = { error: e_13_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    }
+                    finally { if (e_13) throw e_13.error; }
+                }
+                isExporter = matExporter;
+            }
+            return isExporter;
         };
         // TODO include distance and delivery time from nearest source
         Planet.prototype.getNeed = function (item) {
-            if (this._getNeed[item] == undefined) {
-                var markup = data_1.default.necessity[item] ? 1 + data_1.default.scarcity_markup : 1;
-                var result = void 0;
-                var d = this.getDemand(item);
-                if (d === 0) {
-                    result = markup * d / this.surplusFactor(item);
+            var markup = data_1.default.necessity[item] ? 1 + data_1.default.scarcity_markup : 1;
+            var result;
+            var d = this.getDemand(item);
+            if (d === 0) {
+                result = markup * d / this.surplusFactor(item);
+            }
+            else {
+                var s = (this.getStock(item) + this.getSupply(item)) / 2;
+                if (s === 0) {
+                    result = markup * d * this.shortageFactor(item);
                 }
                 else {
-                    var s = (this.getStock(item) + this.getSupply(item)) / 2;
-                    if (s === 0) {
-                        result = markup * d * this.shortageFactor(item);
-                    }
-                    else {
-                        result = markup * d / s;
-                    }
+                    result = markup * d / s;
                 }
-                this._getNeed[item] = result;
             }
-            return this._getNeed[item];
+            return result;
         };
         Planet.prototype.getScarcityMarkup = function (item) {
             var e_14, _a;
@@ -584,8 +568,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.price = function (item) {
             var e_15, _a;
-            if (window.game.turns % this._cycle[item] == 0) {
+            if (!this._cycle[item] || window.game.turns % this._cycle[item] == 0) {
                 delete this._price[item];
+                this._cycle[item] = util.getRandomInt(3, 12) * data_1.default.turns_per_day;
             }
             if (this._price[item] == undefined) {
                 var value = resource_1.resources[item].value;
@@ -628,11 +613,10 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return this.price(item);
         };
         Planet.prototype.buyPrice = function (item, player) {
-            var base = this.price(item);
-            var price = base + (base * this.faction.sales_tax);
+            var price = this.price(item) * (1 + this.faction.sales_tax);
             return player
-                ? util.R(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
-                : util.R(price);
+                ? Math.ceil(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
+                : Math.ceil(price);
         };
         Planet.prototype.buy = function (item, amount, player) {
             var bought = Math.min(amount, this.getStock(item));
@@ -646,14 +630,14 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return [bought, price];
         };
         Planet.prototype.sell = function (item, amount, player) {
-            var hadShortage = this.hasShortage(item, true);
+            var hasShortage = this.hasShortage(item, true);
             var price = amount * this.sellPrice(item);
             this.stock.inc(item, amount);
             var standing = 0;
             if (player) {
                 player.ship.unloadCargo(item, amount);
                 player.credit(price);
-                if (hadShortage && !resource_1.resources[item].contraband) {
+                if (hasShortage && !resource_1.resources[item].contraband) {
                     // Player ended a shortage. Increase their standing with our faction.
                     if (!this.hasShortage(item, true)) {
                         standing = util.getRandomNum(3, 8);
@@ -1111,15 +1095,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 finally { if (e_30) throw e_30.error; }
             }
         };
-        Planet.prototype.clearMemos = function () {
-            this._isNetExporter = {};
-            this._getDemand = {};
-            this._getSupply = {};
-            this._getNeed = {};
-            this._hasShortage = {};
-            this._getSurplus = {};
-            // this._price cleared in price() on its own schedule
-        };
         Planet.prototype.turn = function () {
             this.produce();
             this.consume();
@@ -1132,7 +1107,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 this.apply_conditions();
             }
             this.rollups();
-            this.clearMemos();
         };
         /*
          * Misc

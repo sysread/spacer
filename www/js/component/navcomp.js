@@ -201,8 +201,7 @@ define(function(require, exports, module) {
           return this.map_fov_au_transit;
         }
 
-        const central  = this.system.central(this.game.locus);
-        const distance = this.system.distance(this.game.locus, central);
+        const distance = this.system.distance(this.game.locus, 'sun');
         return distance / Physics.AU * 1.5;
       },
 

@@ -77,6 +77,7 @@ export class Planet {
   max_fab_health:    number;
   fab_health:        number;
 
+  isNetExporterOf:   {[key: string]: boolean};
   stock:             Store;
   supply:            History;
   demand:            History;
@@ -84,12 +85,6 @@ export class Planet {
   pending:           Store;
   queue:             EconTask[];
 
-  _isNetExporter:    {[key: string]: boolean};
-  _hasShortage:      {[key: string]: boolean};
-  _getSurplus:       {[key: string]: boolean};
-  _getDemand:        t.Counter;
-  _getSupply:        t.Counter;
-  _getNeed:          t.Counter;
   _price:            t.Counter;
   _cycle:            t.Counter;
 
@@ -166,21 +161,16 @@ export class Planet {
       }
     }
 
+    this.isNetExporterOf = {};
+    for (const item of t.resources) {
+      this.isNetExporterOf[item] = this.calculateIsNetExporter(item);
+    }
+
     // Assign directly in constructor rather than in clearMemos for
     // performance reasons. V8's jit will produce more optimized classes by
     // avoiding dynamic assignment in the constructor.
-    this._isNetExporter = {};
-    this._getDemand     = {};
-    this._getSupply     = {};
-    this._getNeed       = {};
-    this._hasShortage   = {};
-    this._getSurplus    = {};
-    this._price         = {};
-    this._cycle         = {};
-
-    for (const item of t.resources) {
-      this._cycle[item] = util.getRandomInt(2, 6) * data.turns_per_day;
-    }
+    this._price = {};
+    this._cycle = {};
   }
 
   get position() {
@@ -408,27 +398,19 @@ export class Planet {
   netProduction(item: t.resource)  { return this.production(item) - this.consumption(item) }
 
   getDemand(item: t.resource) {
-    if (this._getDemand[item] == undefined)
-      this._getDemand[item] = this.demand.avg(item);
-    return this._getDemand[item];
+    return this.demand.avg(item);
   }
 
   getSupply(item: t.resource) {
-    if (this._getSupply[item] == undefined)
-      this._getSupply[item] = this.supply.avg(item);
-    return this._getSupply[item];
+    return this.supply.avg(item);
   }
 
   hasShortage(item: t.resource, nocache: boolean = false) {
-    if (this._hasShortage[item] == undefined || nocache)
-      this._hasShortage[item] = this.getNeed(item) >= this.shortageFactor(item);
-    return this._hasShortage[item];
+    return this.getNeed(item) >= this.shortageFactor(item);
   }
 
   hasSurplus(item: t.resource) {
-    if (this._getSurplus[item] == undefined)
-      this._getSurplus[item] = this.getNeed(item) <= this.surplusFactor(item);
-    return this._getSurplus[item];
+    return this.getNeed(item) <= this.surplusFactor(item);
   }
 
   production(item: t.resource) {
@@ -477,59 +459,55 @@ export class Planet {
     this.supply.inc(item, amount);
   }
 
-  isNetExporter(item: t.resource) {
-    if (!this._isNetExporter.hasOwnProperty(item)) {
-      let isExporter = false;
+  isNetExporter(item: t.resource): boolean {
+    return this.isNetExporterOf[item];
+  }
 
-      const res = resources[item];
+  calculateIsNetExporter(item: t.resource): boolean {
+    let isExporter = false;
 
-      if (isRaw(res)) {
-        const net = this.netProduction(item);
-        isExporter = net >= this.scale(1);
-      }
+    const res = resources[item];
 
-      if (!isExporter && isCraft(res)) {
-        let matExporter = true;
-        for (const mat of res.ingredients) {
-          if (!this.isNetExporter(mat)) {
-            matExporter = false;
-            break;
-          }
-        }
-
-        isExporter = matExporter;
-      }
-
-      this._isNetExporter[item] = isExporter;
+    if (isRaw(res)) {
+      const net = this.netProduction(item);
+      isExporter = net >= this.scale(1);
     }
 
-    return this._isNetExporter[item];
+    if (!isExporter && isCraft(res)) {
+      let matExporter = true;
+      for (const mat of res.ingredients) {
+        if (!this.isNetExporter(mat)) {
+          matExporter = false;
+          break;
+        }
+      }
+
+      isExporter = matExporter;
+    }
+
+    return isExporter;
   }
 
   // TODO include distance and delivery time from nearest source
   getNeed(item: t.resource) {
-    if (this._getNeed[item] == undefined) {
-      const markup = data.necessity[item] ? 1 + data.scarcity_markup : 1;
-      let result;
+    const markup = data.necessity[item] ? 1 + data.scarcity_markup : 1;
+    let result;
 
-      const d = this.getDemand(item);
-      if (d === 0) {
-        result = markup * d / this.surplusFactor(item);
+    const d = this.getDemand(item);
+    if (d === 0) {
+      result = markup * d / this.surplusFactor(item);
+    }
+    else {
+      const s = (this.getStock(item) + this.getSupply(item)) / 2;
+
+      if (s === 0) {
+        result = markup * d * this.shortageFactor(item);
+      } else {
+        result = markup * d / s;
       }
-      else {
-        const s = (this.getStock(item) + this.getSupply(item)) / 2;
-
-        if (s === 0) {
-          result = markup * d * this.shortageFactor(item);
-        } else {
-          result = markup * d / s;
-        }
-      }
-
-      this._getNeed[item] = result;
     }
 
-    return this._getNeed[item];
+    return result;
   }
 
   getScarcityMarkup(item: t.resource) {
@@ -550,8 +528,9 @@ export class Planet {
   }
 
   price(item: t.resource) {
-    if (window.game.turns % this._cycle[item] == 0) {
+    if (!this._cycle[item] || window.game.turns % this._cycle[item] == 0) {
       delete this._price[item];
+      this._cycle[item] = util.getRandomInt(3, 12) * data.turns_per_day;
     }
 
     if (this._price[item] == undefined) {
@@ -592,12 +571,10 @@ export class Planet {
   }
 
   buyPrice(item: t.resource, player?: any): number {
-    const base  = this.price(item);
-    const price = base + (base * this.faction.sales_tax);
-
+    const price = this.price(item) * (1 + this.faction.sales_tax);
     return player
-      ? util.R(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
-      : util.R(price);
+      ? Math.ceil(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
+      : Math.ceil(price);
   }
 
   buy(item: t.resource, amount: number, player?: any) {
@@ -616,7 +593,7 @@ export class Planet {
   }
 
   sell(item: t.resource, amount: number, player?: any) {
-    const hadShortage = this.hasShortage(item, true);
+    const hasShortage = this.hasShortage(item, true);
     const price = amount * this.sellPrice(item);
     this.stock.inc(item, amount);
 
@@ -626,7 +603,7 @@ export class Planet {
       player.ship.unloadCargo(item, amount);
       player.credit(price);
 
-      if (hadShortage && !resources[item].contraband) {
+      if (hasShortage && !resources[item].contraband) {
         // Player ended a shortage. Increase their standing with our faction.
         if (!this.hasShortage(item, true)) {
           standing = util.getRandomNum(3, 8);
@@ -951,16 +928,6 @@ export class Planet {
     }
   }
 
-  clearMemos() {
-    this._isNetExporter = {};
-    this._getDemand     = {};
-    this._getSupply     = {};
-    this._getNeed       = {};
-    this._hasShortage   = {};
-    this._getSurplus    = {};
-    // this._price cleared in price() on its own schedule
-  }
-
   turn() {
     this.produce();
     this.consume();
@@ -975,7 +942,6 @@ export class Planet {
     }
 
     this.rollups();
-    this.clearMemos();
   }
 
   /*
