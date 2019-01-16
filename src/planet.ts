@@ -585,11 +585,8 @@ export class Planet {
     }
 
     if (this._price[item] == undefined) {
-      const value  = resources[item].value;
-      const scarce = this.getScarcityMarkup(item);
-      const avail  = this.getAvailabilityMarkup(item);
-      const need   = this.getNeed(item);
-      const markup = scarce + avail;
+      const value = resources[item].value;
+      const need  = this.getNeed(item);
 
       let price = 0;
 
@@ -608,6 +605,7 @@ export class Planet {
 
       price *= this.getScarcityMarkup(item);
       price *= this.getAvailabilityMarkup(item);
+      price *= 1 + (0.01 * resources[item].mass); // due to expense in reaction mass to move it
 
       // Set upper and lower boundary to prevent superheating or crashing
       // markets.

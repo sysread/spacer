@@ -625,10 +625,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
             if (this._price[item] == undefined) {
                 var value = resource_1.resources[item].value;
-                var scarce = this.getScarcityMarkup(item);
-                var avail = this.getAvailabilityMarkup(item);
                 var need = this.getNeed(item);
-                var markup = scarce + avail;
                 var price = 0;
                 if (need > 1) {
                     price = value + (value * Math.log(need));
@@ -655,6 +652,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 }
                 price *= this.getScarcityMarkup(item);
                 price *= this.getAvailabilityMarkup(item);
+                price *= 1 + (0.01 * resource_1.resources[item].mass); // due to expense in reaction mass to move it
                 // Set upper and lower boundary to prevent superheating or crashing
                 // markets.
                 price = resource_1.resources[item].clampPrice(price);
