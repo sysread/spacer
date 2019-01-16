@@ -1,14 +1,15 @@
 define(function(require, exports, module) {
   "use strict"
 
-  const NPC     = require('npc');
-  const Ship    = require('ship');
-  const Physics = require('physics');
-  const Vue     = require('vendor/vue');
-  const data    = require('data');
-  const util    = require('util');
-  const t       = require('common');
-  const Layout  = require('component/layout');
+  const NPC      = require('npc');
+  const Ship     = require('ship');
+  const Physics  = require('physics');
+  const Vue      = require('vendor/vue');
+  const data     = require('data');
+  const util     = require('util');
+  const t        = require('common');
+  const resource = require('resource');
+  const Layout   = require('component/layout');
 
   const intvl   = 0.3;
   const turns_per_day = 24 / data.hours_per_turn;
@@ -767,6 +768,7 @@ define(function(require, exports, module) {
       return {
         choice:    'ready',
         took:      null,
+        gave:      null,
         init_flee: false,
         bounty:    bounty,
         npc:       npc,
@@ -787,42 +789,84 @@ define(function(require, exports, module) {
         this.choice = choice || 'ready';
 
         if (this.choice == 'submit-yes') {
-          this.took = this.plunder();
+          const plunder = this.plunder();
+          this.took = plunder.took;
+          this.gave = plunder.gave;
         }
       },
 
       plunder() {
-        const value  = (item) => t.resources[item].value;
         const player = this.game.player.ship;
         const npc    = this.npc.ship;
+        const value  = item => resource.resources[item].value;
         const took   = {};
+        const gave   = {};
 
-        while (!npc.holdIsFull && !player.holdIsEmpty) {
-          const items = player.cargo.keys().filter(a => player.cargo.get(a) > 0);
-
-          items.sort((a, b) => {
-            const va = value(a);
-            const vb = value(b);
-            if (va > vb) {
-              return -1;
-            } else if (vb > va) {
-              return 1;
-            } else {
-              return 0;
-            }
-          });
-
-          player.unloadCargo(items[0], 1);
-          npc.loadCargo(items[0], 1);
-
-          if (!took[items[0]]) {
-            took[items[0]] = 0;
-          }
-
-          ++took[items[0]];
+        for (const item of t.resources) {
+          took[item] = 0;
+          gave[item] = 0;
         }
 
-        return took;
+        // List of items in player's hold, sorted by value from highest to
+        // lowest.
+        const avail = player.cargo.keys()
+          .filter(i => player.cargo.count(i) > 0)
+          .sort((a, b) => value(a) > value(b) ? -1 : 1);
+
+        for (const item of avail) {
+          let count = player.cargo.count(item);
+
+          // Load whatever there is room for on the npc's ship
+          while (count > 0 && !npc.holdIsFull) {
+            player.unloadCargo(item, 1);
+            npc.loadCargo(item, 1);
+            --count;
+            ++took[item];
+          }
+
+          // If the npc's hold is full but holds items of lesser value, swap
+          // them out for what is in the player's hold.
+          if (count > 0 && npc.holdIsFull) {
+            // List of items of lesser value in the npc's hold, sorted from
+            // lowest value to highest.
+            const has = npc.cargo.keys()
+              .filter(i => npc.cargo.count(i) > 0)
+              .filter(i => value(i) < value(item))
+              .sort((a, b) => value(a) < value(b) ? -1 : 1);
+
+            for (const npc_item of has) {
+              let npc_count = npc.cargo.count(npc_item);
+
+              while (npc_count > 0 && count > 0) {
+                // Replace the item on the player's ship with the item of
+                // lesser value from the npc's.
+                player.unloadCargo(item, 1);
+                player.loadCargo(npc_item, 1);
+
+                // Do the reverse for the npc.
+                npc.unloadCargo(npc_item, 1);
+                npc.loadCargo(item, 1);
+
+                --count;
+                --npc_count;
+
+                ++took[item];
+                ++gave[npc_item];
+              }
+            }
+          }
+        }
+
+        return {
+          took: {
+            count: Object.values(took).reduce((a, b) => a + b),
+            items: took,
+          },
+          gave: {
+            count: Object.values(gave).reduce((a, b) => a + b),
+            items: gave,
+          },
+        };
       },
 
       done(result) {
@@ -872,15 +916,41 @@ define(function(require, exports, module) {
         </ask>
 
         <ok v-if="choice=='submit-yes'" @ok="done">
-          Armed pirates board your ship, roughing you and your crew up while
-          they take anything of value they can fit aboard their ship. Forcing
-          you to help with the loading, the pirates plunder your ship's hold.
+          <p>
+            Armed pirates board your ship, roughing you and your crew up while
+            they take anything of value they can fit aboard their ship. Forcing
+            you to help with the loading, the pirates plunder your ship's hold.
+          </p>
 
-          <ul>
-            <li v-for="(count, item) of took">
-              {{count}} {{item}}
-            </li>
-          </ul>
+          <template v-if="took.count > 0">
+            <p>
+              The pirates plundered the following resources from your ship:
+            </p>
+            <ul>
+              <li v-for="(count, item) of took.items" v-if="count > 0">
+                {{count}} {{item}}
+              </li>
+            </ul>
+
+            <template v-if="gave.count > 0">
+              <p>
+                To make room for what was taken, the following lower value items
+                were put into your hold:
+              </p>
+              <ul>
+                <li v-for="(count, item) of gave.items" v-if="count > 0">
+                  {{count}} {{item}}
+                </li>
+              </ul>
+            </template>
+          </template>
+
+          <p v-else>
+            Disgusted at the lack of valuable goods in your hold, the pirates
+            merely raid the galley, taking the little fresh produce you were
+            able to acquire at your last stop as well as any booze they found
+            in the crew cabins.
+          </p>
         </ok>
 
         <ok v-if="choice=='bounty'" @ok="done">
