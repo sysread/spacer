@@ -5,16 +5,16 @@ import * as t from './common';
 import * as util from './util';
 
 interface NPC_Opt {
-  name:          string;
-  faction:       t.faction;
-  ship:          t.shiptype[];
+  name:           string;
+  faction:        t.faction;
+  ship:           t.shiptype[];
 
-  addons:        t.addon[];
-  always_addons: t.addon[];
-  min_addons:    number;
+  addons?:        t.addon[];
+  always_addons?: t.addon[];
+  min_addons?:    number;
 
-  cargo:         t.resource[];
-  min_cargo:     number;
+  cargo?:         t.resource[];
+  min_cargo?:     number;
 }
 
 class NPC extends Person {
@@ -54,25 +54,25 @@ class NPC extends Person {
           ship.installAddOn(addon);
         }
       }
+    }
 
-      /*
-       * Randomly select cargo from opt.options.cargo, defaulting to all
-       * non-contraband cargo (with the exception of TRANSA, which may be
-       * carrying contraband). A minimum count may be specified with
-       * opt.options.min_cargo (default is 0).
-       */
-      const min_cargo = Math.min(opt.min_cargo || 0, ship.cargoLeft);
-      const amt_cargo = util.getRandomInt(min_cargo, Math.floor(ship.cargoLeft / 2));
-      const items     = opt.cargo || Object.keys(data.resources);
+    /*
+     * Randomly select cargo from opt.options.cargo, defaulting to all
+     * non-contraband cargo (with the exception of TRANSA, which may be
+     * carrying contraband). A minimum count may be specified with
+     * opt.options.min_cargo (default is 0).
+     */
+    const min_cargo = Math.min(opt.min_cargo || 0, ship.cargoLeft);
+    const amt_cargo = util.getRandomInt(min_cargo, Math.floor(ship.cargoLeft / 2));
+    const items     = opt.cargo || t.resources;
 
-      while (ship.cargoUsed < amt_cargo) {
-        const item = util.oneOf(items);
+    while (ship.cargoUsed < amt_cargo) {
+      const item = util.oneOf(items);
 
-        if (data.resources[item].contraband && opt.faction !== 'TRANSA')
-          continue;
+      if (data.resources[item].contraband && opt.faction !== 'TRANSA')
+        continue;
 
-        ship.loadCargo(item, 1);
-      }
+      ship.loadCargo(item, 1);
     }
 
     const init = {

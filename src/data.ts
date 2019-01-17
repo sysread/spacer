@@ -41,7 +41,7 @@ const data = {
 
   resources: {
     water:        {mass:  20, mine: {tics: 1, value: 13}},
-    ore:          {mass:  40, mine: {tics: 2, value: 17}},
+    ore:          {mass:  35, mine: {tics: 2, value: 17}},
     minerals:     {mass:  30, mine: {tics: 2, value: 22}},
     hydrocarbons: {mass:  10, mine: {tics: 2, value: 28}},
     food:         {mass:  10, mine: {tics: 2, value: 36}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 2}}},

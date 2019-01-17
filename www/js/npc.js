@@ -31,10 +31,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./ship", "./person", "./util"], function (require, exports, data_1, ship_1, person_1, util) {
+define(["require", "exports", "./data", "./ship", "./person", "./common", "./util"], function (require, exports, data_1, ship_1, person_1, t, util) {
     "use strict";
     data_1 = __importDefault(data_1);
     ship_1 = __importDefault(ship_1);
+    t = __importStar(t);
     util = __importStar(util);
     var NPC = /** @class */ (function (_super) {
         __extends(NPC, _super);
@@ -82,21 +83,21 @@ define(["require", "exports", "./data", "./ship", "./person", "./util"], functio
                         ship.installAddOn(addon);
                     }
                 }
-                /*
-                 * Randomly select cargo from opt.options.cargo, defaulting to all
-                 * non-contraband cargo (with the exception of TRANSA, which may be
-                 * carrying contraband). A minimum count may be specified with
-                 * opt.options.min_cargo (default is 0).
-                 */
-                var min_cargo = Math.min(opt.min_cargo || 0, ship.cargoLeft);
-                var amt_cargo = util.getRandomInt(min_cargo, Math.floor(ship.cargoLeft / 2));
-                var items = opt.cargo || Object.keys(data_1.default.resources);
-                while (ship.cargoUsed < amt_cargo) {
-                    var item = util.oneOf(items);
-                    if (data_1.default.resources[item].contraband && opt.faction !== 'TRANSA')
-                        continue;
-                    ship.loadCargo(item, 1);
-                }
+            }
+            /*
+             * Randomly select cargo from opt.options.cargo, defaulting to all
+             * non-contraband cargo (with the exception of TRANSA, which may be
+             * carrying contraband). A minimum count may be specified with
+             * opt.options.min_cargo (default is 0).
+             */
+            var min_cargo = Math.min(opt.min_cargo || 0, ship.cargoLeft);
+            var amt_cargo = util.getRandomInt(min_cargo, Math.floor(ship.cargoLeft / 2));
+            var items = opt.cargo || t.resources;
+            while (ship.cargoUsed < amt_cargo) {
+                var item = util.oneOf(items);
+                if (data_1.default.resources[item].contraband && opt.faction !== 'TRANSA')
+                    continue;
+                ship.loadCargo(item, 1);
             }
             var init = {
                 name: opt.name,
