@@ -259,10 +259,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             var rate = this.scale(this.faction.patrol);
             var radius = this.patrolRadius();
             return Math.max(0, rate * Math.pow(radius, 2) / Math.pow(distance, 2));
-            var invsq = distance > radius
-                ? rate * Math.pow(radius, 2) / Math.pow(distance, 2)
-                : rate;
-            return Math.max(0, invsq);
+            /*const invsq = distance > radius
+              ? rate * Math.pow(radius, 2) / Math.pow(distance, 2)
+              : rate;
+        
+            return Math.max(0, invsq);*/
         };
         Planet.prototype.inspectionRate = function (player) {
             var standing = 1 - (player.getStanding(this.faction.abbrev) / data_1.default.max_abs_standing);

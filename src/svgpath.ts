@@ -1,4 +1,4 @@
-// Adopted (read: stolen) from:
+// Adopted (read: copy pasta) from:
 //   https://medium.com/@francoisromain/smooth-a-svg-path-with-cubic-bezier-curves-e37b49d46c74
 
 type point = [number, number];
