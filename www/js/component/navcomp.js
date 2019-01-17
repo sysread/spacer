@@ -6,6 +6,7 @@ define(function(require, exports, module) {
   const util    = require('util');
   const NavComp = require('navcomp');
   const Layout  = require('component/layout');
+  const svgpath = require('svgpath');
 
   require('component/global');
   require('component/common');
@@ -610,35 +611,14 @@ define(function(require, exports, module) {
   Vue.component('SvgPath', {
     'props': ['points', 'color'],
 
-    'methods': {
+    'computed': {
       svg_path() {
-        const path = this.points.map(p => p.map(n => Math.ceil(n)).join(' '));
-
-        let cmd = [ `M${path[0]}` ];
-
-        let i = 1;
-        for (i = 0; i + 1 < path.length; ++i) {
-          const p1 = path[i];
-          const p2 = path[i + 1];
-          cmd.push(`Q${p1}, ${p2}`);
-        }
-
-        if (i < path.length) {
-          for (i; i < path.length; ++i) {
-            cmd.push(`L${path[i]}`);
-          }
-        }
-
-        return cmd.join(' ');
-      },
-
+        return svgpath(this.points);
+      }
     },
 
     'template': `
-      <path fill="none"
-        :stroke="color"
-        stroke-width="0.5px"
-        :d="svg_path()" />
+      <path fill="none" :stroke="color" stroke-width="0.75px" :d="svg_path" />
     `,
   });
 
