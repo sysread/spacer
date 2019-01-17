@@ -750,6 +750,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         this.queue.push(task);
                     }
                     else {
+                        if (isImportTask(task)) {
+                            console.log(this.body, task.item, task.count, task.from);
+                        }
                         this.sell(task.item, task.count);
                         this.pending.dec(task.item, task.count);
                     }
@@ -882,8 +885,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
             return bestPlanet;
         };
-        Planet.prototype.manufacture = function (need) {
+        Planet.prototype.manufacture = function () {
             var e_22, _a, e_23, _b, e_24, _c, e_25, _d;
+            var need = this.neededResources();
             var want = need.amounts;
             var list = [];
             try {
@@ -973,11 +977,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 }
             }
         };
-        Planet.prototype.imports = function (need) {
+        Planet.prototype.imports = function () {
             var _this = this;
             var e_26, _a;
             if (this.queue.length >= data_1.default.max_deliveries)
                 return;
+            var need = this.neededResources();
             var want = need.amounts;
             var list = need.prioritized.filter(function (i) {
                 if (_this.isNetExporter(i) && !_this.hasShortage(i)) {
@@ -1180,9 +1185,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.processQueue();
             // Only do the really expensive stuff once per day
             if (window.game.turns % data_1.default.turns_per_day == 0) {
-                var needed = this.neededResources();
-                this.manufacture(needed);
-                this.imports(needed);
+                this.manufacture();
+                this.imports();
                 this.replenishFabricators();
                 this.apply_conditions();
             }

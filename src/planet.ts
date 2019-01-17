@@ -828,7 +828,8 @@ export class Planet {
     return bestPlanet;
   }
 
-  manufacture(need: NeededResources) {
+  manufacture() {
+    const need = this.neededResources();
     const want = need.amounts;
     const list: t.resource[] = [];
 
@@ -890,10 +891,11 @@ export class Planet {
     }
   }
 
-  imports(need: NeededResources) {
+  imports() {
     if (this.queue.length >= data.max_deliveries)
       return;
 
+    const need = this.neededResources();
     const want = need.amounts;
 
     const list = need.prioritized.filter(i => {
@@ -1022,9 +1024,8 @@ export class Planet {
 
     // Only do the really expensive stuff once per day
     if (window.game.turns % data.turns_per_day == 0) {
-      const needed = this.neededResources();
-      this.manufacture(needed);
-      this.imports(needed);
+      this.manufacture();
+      this.imports();
       this.replenishFabricators();
       this.apply_conditions();
     }
