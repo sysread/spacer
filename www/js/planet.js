@@ -543,6 +543,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 return d / s;
             }
         };
+        /**
+         * Returns a price adjustment which accounts for the distance to the nearest
+         * net exporter of the item. Returns a decimal percentage where 1.0 means no
+         * adjustment.
+         */
         Planet.prototype.getAvailabilityMarkup = function (item) {
             var e_14, _a;
             // If this planet is a net exporter of the item, easy access results in a
@@ -593,12 +598,29 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 return 1;
             }
         };
+        /**
+         * Percent adjustment to price due to an item being a necessity (see
+         * data.necessity). Returns a decimal percentage, where 1.0 means no
+         * adjustment:
+         *
+         *    price *= this.getScarcityMarkup(item));
+         */
         Planet.prototype.getScarcityMarkup = function (item) {
+            if (data_1.default.necessity[item]) {
+                return 1 + data_1.default.scarcity_markup;
+            }
+            else {
+                return 1;
+            }
+        };
+        /**
+         * Also factors in temporary deficits between production and consumption of
+         * the item due to Conditions. Returns a decimal percentage, where 1.0
+         * means no adjustment.
+         */
+        Planet.prototype.getConditionMarkup = function (item) {
             var e_15, _a;
             var markup = 1;
-            if (data_1.default.necessity[item]) {
-                markup += data_1.default.scarcity_markup;
-            }
             try {
                 for (var _b = __values(this.conditions), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var condition = _c.value;
@@ -637,7 +659,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     price = value;
                 }
                 try {
-                    // Special cases for market classifications
+                    // Linear adjustments for market classifications
                     for (var _b = __values(this.traits), _c = _b.next(); !_c.done; _c = _b.next()) {
                         var trait = _c.value;
                         price -= price * (trait.price[item] || 0);
@@ -650,13 +672,16 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                     finally { if (e_16) throw e_16.error; }
                 }
+                // Scarcity adjustment for items necessary to survival
                 price *= this.getScarcityMarkup(item);
+                // Scarcity adjustment due to temporary conditions affecting production
+                // and consumption of resources
+                price *= this.getConditionMarkup(item);
                 // Set upper and lower boundary to prevent superheating or crashing
                 // markets.
                 price = resource_1.resources[item].clampPrice(price);
-                // Post-clamp adjustments due to mass and distance
+                // Post-clamp adjustments due to distance
                 price *= this.getAvailabilityMarkup(item);
-                price *= 1 + (0.01 * resource_1.resources[item].mass); // due to expense in reaction mass to move it
                 // Add a bit of "unaccounted for local influences"
                 price = util.fuzz(price, 0.2);
                 this._price[item] = util.R(price);
@@ -997,11 +1022,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.produce = function () {
             var e_27, _a;
+            var min = this.scale(data_1.default.min_stock_count);
             try {
                 for (var _b = __values(this.produces.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var item = _c.value;
                     // allow some surplus to build
-                    if (!this.hasSuperSurplus(item)) {
+                    if (this.getStock(item) < min || !this.hasSuperSurplus(item)) {
                         var amount = this.production(item);
                         if (amount > 0) {
                             this.sell(item, amount);

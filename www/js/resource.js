@@ -63,15 +63,16 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
         return value;
     }
     function resourceValue(item) {
+        var value = 0;
         if (item.recipe) {
-            return craftValue(item);
+            value = craftValue(item);
         }
         else if (item.mine) {
-            return item.mine.value;
+            value = item.mine.value;
         }
-        else {
-            return 0;
-        }
+        // Adjust value due to expense in reaction mass to move it
+        value *= 0.01 * item.mass + 1;
+        return value;
     }
     /*
      * Global storage of resource objects

@@ -21,15 +21,18 @@ function craftValue(item: t.Craft): number {
 }
 
 function resourceValue(item: t.Resource): number {
+  let value = 0;
+
   if ((<t.Craft>item).recipe) {
-    return craftValue((<t.Craft>item));
+    value = craftValue((<t.Craft>item));
+  } else if ((<t.Raw>item).mine) {
+    value = (<t.Raw>item).mine.value;
   }
-  else if ((<t.Raw>item).mine) {
-    return (<t.Raw>item).mine.value;
-  }
-  else {
-    return 0;
-  }
+
+  // Adjust value due to expense in reaction mass to move it
+  value *= 0.01 * item.mass + 1;
+
+  return value;
 }
 
 /*

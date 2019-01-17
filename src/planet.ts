@@ -512,6 +512,11 @@ export class Planet {
     }
   }
 
+  /**
+   * Returns a price adjustment which accounts for the distance to the nearest
+   * net exporter of the item. Returns a decimal percentage where 1.0 means no
+   * adjustment.
+   */
   getAvailabilityMarkup(item: t.resource) {
     // If this planet is a net exporter of the item, easy access results in a
     // lower price.
@@ -561,12 +566,28 @@ export class Planet {
     }
   }
 
+  /**
+   * Percent adjustment to price due to an item being a necessity (see
+   * data.necessity). Returns a decimal percentage, where 1.0 means no
+   * adjustment:
+   *
+   *    price *= this.getScarcityMarkup(item));
+   */
   getScarcityMarkup(item: t.resource) {
-    let markup = 1;
-
     if (data.necessity[item]) {
-      markup += data.scarcity_markup;
+      return 1 + data.scarcity_markup;
+    } else {
+      return 1;
     }
+  }
+
+  /**
+   * Also factors in temporary deficits between production and consumption of
+   * the item due to Conditions. Returns a decimal percentage, where 1.0
+   * means no adjustment.
+   */
+  getConditionMarkup(item: t.resource) {
+    let markup = 1;
 
     for (const condition of this.conditions) {
       const consumption = this.scale(condition.consumes[item] || 0);
@@ -598,20 +619,24 @@ export class Planet {
         price = value;
       }
 
-      // Special cases for market classifications
+      // Linear adjustments for market classifications
       for (const trait of this.traits) {
         price -= price * (trait.price[item] || 0);
       }
 
+      // Scarcity adjustment for items necessary to survival
       price *= this.getScarcityMarkup(item);
+
+      // Scarcity adjustment due to temporary conditions affecting production
+      // and consumption of resources
+      price *= this.getConditionMarkup(item);
 
       // Set upper and lower boundary to prevent superheating or crashing
       // markets.
       price = resources[item].clampPrice(price);
 
-      // Post-clamp adjustments due to mass and distance
+      // Post-clamp adjustments due to distance
       price *= this.getAvailabilityMarkup(item);
-      price *= 1 + (0.01 * resources[item].mass); // due to expense in reaction mass to move it
 
       // Add a bit of "unaccounted for local influences"
       price = util.fuzz(price, 0.2);
@@ -903,9 +928,11 @@ export class Planet {
   }
 
   produce() {
+    const min = this.scale(data.min_stock_count);
+
     for (const item of this.produces.keys()) {
       // allow some surplus to build
-      if (!this.hasSuperSurplus(item)) {
+      if (this.getStock(item) < min || !this.hasSuperSurplus(item)) {
         const amount = this.production(item);
         if (amount > 0) {
           this.sell(item, amount);
