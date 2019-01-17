@@ -17,6 +17,7 @@ const data = {
   market_history:      10 * turnsPerDay,
   update_prices:       10, // days between price updates
   scarcity_markup:     0.25,
+  min_stock_count:     10,
   necessity:           {water: true, food: true, medicine: true, fuel: true},
   craft_fee:           0.2,
   fabricators:         10, // number of fabricators, each equates to 1 unit of cybernetics
