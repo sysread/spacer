@@ -258,6 +258,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             if (distance === void 0) { distance = 0; }
             var rate = this.scale(this.faction.patrol);
             var radius = this.patrolRadius();
+            return Math.max(0, rate * Math.pow(radius, 2) / Math.pow(distance, 2));
             var invsq = distance > radius
                 ? rate * Math.pow(radius, 2) / Math.pow(distance, 2)
                 : rate;

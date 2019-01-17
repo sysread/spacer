@@ -226,12 +226,12 @@ export class Planet {
   patrolRate(distance=0) {
     const rate   = this.scale(this.faction.patrol);
     const radius = this.patrolRadius();
-
-    const invsq = distance > radius
+    return Math.max(0, rate * Math.pow(radius, 2) / Math.pow(distance, 2));
+    /*const invsq = distance > radius
       ? rate * Math.pow(radius, 2) / Math.pow(distance, 2)
       : rate;
 
-    return Math.max(0, invsq);
+    return Math.max(0, invsq);*/
   }
 
   inspectionRate(player: any) {

@@ -11,7 +11,7 @@ define(function(require, exports, module) {
   const resource = require('resource');
   const Layout   = require('component/layout');
 
-  const intvl   = 0.3;
+  const intvl = 0.3;
   const turns_per_day = 24 / data.hours_per_turn;
 
   require('component/global');
@@ -33,7 +33,6 @@ define(function(require, exports, module) {
         paused:           false,
         stoppedBy:        {'pirate': 0, 'police': 0},
         encounter:        null,
-        piracyFuzz:       0,
       };
     },
 
@@ -150,14 +149,14 @@ define(function(require, exports, module) {
       },
 
       piracyRate() {
-        const rate = this.piracyFuzz + this.data.default_piracy_rate - (this.patrolRate / 2);
+        const rate = this.data.default_piracy_rate * (1 - this.patrolRate);
         return util.clamp(rate, 0, 1);
       },
 
       piracyEvasionMalusCargo() {
         const cargo = this.game.player.ship.cargoValue(this.game.here);
         if (cargo >= 1) {
-          return Math.log10(cargo) / 100;
+          return Math.log10(cargo) / 200;
         } else {
           return 0;
         }
@@ -182,7 +181,9 @@ define(function(require, exports, module) {
         chance -= this.piracyEvasionBonusSpeed;
 
         // Reduce chances for each encounter
-        chance /= 1 + this.stoppedBy.pirate;
+        for (let i = 0; i < this.stoppedBy.pirate; ++i) {
+          chance /= 2;
+        }
 
         return util.clamp(chance, 0, 1);
       },
@@ -415,8 +416,6 @@ define(function(require, exports, module) {
         if (this.encounter) {
           return;
         }
-
-        this.piracyFuzz = util.getRandomNum(0, 0.03);
 
         if (this.current_turn % 3 == 0) {
           if (this.inspectionChance()) {
