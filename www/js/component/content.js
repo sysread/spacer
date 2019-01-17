@@ -1,9 +1,10 @@
-"use strict"
-
 define(function(require, exports, module) {
-  const Vue   = require('vendor/vue');
-  const util  = require('util');
-  const t     = require('common');
+  "use strict"
+
+  const Vue       = require('vendor/vue');
+  const util      = require('util');
+  const t         = require('common');
+  const resources = require('resource').resources;
 
   require('component/global');
   require('component/common');
@@ -63,7 +64,7 @@ define(function(require, exports, module) {
         resources: function() { return Object.keys(this.data.resources) },
         bodies:    function() { return Object.keys(this.game.planets) },
         places:    function() { return Object.values(this.game.planets) },
-        resource:  function() { return t.resources[this.item] },
+        resource:  function() { return resources[this.item] },
 
         value: function() {
           if (this.resource) return Math.floor(this.resource.value);

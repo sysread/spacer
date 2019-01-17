@@ -746,7 +746,7 @@ export class Planet {
 
       if (amount > 0) {
         amounts[item] = amount;
-        need[item] = this.getNeed(item);
+        need[item] = Math.log(this.price(item)) * this.getNeed(item);
       }
     }
 
@@ -837,7 +837,13 @@ export class Planet {
     const counts: number[] = [];
 
     if (isCraft(res)) {
+      const need = this.getNeed(item);
+
       for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
+        if (this.getNeed(mat) > need) {
+          return 0;
+        }
+
         const avail = this.getStock(mat);
 
         if (avail == 0) {
@@ -882,7 +888,7 @@ export class Planet {
 
         if (gets < want) {
           for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
-            this.incDemand(mat, (want - gets) * (res.recipe.materials[mat] || 0));
+            this.incDemand(mat, res.recipe.materials[mat] || 0);
           }
         }
       }
@@ -890,7 +896,7 @@ export class Planet {
   }
 
   imports() {
-    if (this.queue.length >= data.max_deliveries)
+    if (this.queue.filter(t => isImportTask(t)).length >= data.max_deliveries)
       return;
 
     const need = this.neededResources();
@@ -936,7 +942,8 @@ export class Planet {
   produce() {
     for (const item of this.produces.keys()) {
       // allow some surplus to build
-      if (this.getStock(item) < this.min_stock || !this.hasSuperSurplus(item)) {
+      //if (this.getStock(item) < this.min_stock && !this.hasSuperSurplus(item)) {
+      if (!this.hasSuperSurplus(item) && this.price(item) >= resources[item].value * 0.6) {
         const amount = this.production(item);
         if (amount > 0) {
           this.sell(item, amount);

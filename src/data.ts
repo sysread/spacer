@@ -45,7 +45,6 @@ const data = {
     minerals:     {mass:  30, mine: {tics: 2, value: 22}},
     hydrocarbons: {mass:  10, mine: {tics: 2, value: 28}},
     food:         {mass:  10, mine: {tics: 2, value: 36}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 2}}},
-    luxuries:     {mass:   5, recipe: {tics: 3, materials: {water: 1, hydrocarbons: 1, ceramics: 1}}},
     fuel:         {mass:   1, recipe: {tics: 1, materials: {ore: 1, water: 1}}},
     metal:        {mass:  60, recipe: {tics: 2, materials: {ore: 3}}},
     ceramics:     {mass:  30, recipe: {tics: 2, materials: {minerals: 3}}},
@@ -62,7 +61,7 @@ const data = {
     fabricators: 10,
     minability:  0.1,
     produces:    {},
-    consumes:    {water: 2, food: 1.5, medicine: 1.5, narcotics: 0.3, weapons: 0.6, luxuries: 0.75},
+    consumes:    {water: 2, food: 1.5, medicine: 1.5, narcotics: 0.3, weapons: 0.6},
   },
 
   traits: {

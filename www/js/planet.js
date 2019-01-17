@@ -777,7 +777,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     var amount = this.neededResourceAmount(resource_1.resources[item]);
                     if (amount > 0) {
                         amounts[item] = amount;
-                        need[item] = this.getNeed(item);
+                        need[item] = Math.log(this.price(item)) * this.getNeed(item);
                     }
                 }
             }
@@ -891,9 +891,13 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             var res = resource_1.resources[item];
             var counts = [];
             if (resource_1.isCraft(res)) {
+                var need = this.getNeed(item);
                 try {
                     for (var _b = __values(Object.keys(res.recipe.materials)), _c = _b.next(); !_c.done; _c = _b.next()) {
                         var mat = _c.value;
+                        if (this.getNeed(mat) > need) {
+                            return 0;
+                        }
                         var avail = this.getStock(mat);
                         if (avail == 0) {
                             return 0;
@@ -953,7 +957,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                             try {
                                 for (var _h = __values(Object.keys(res.recipe.materials)), _j = _h.next(); !_j.done; _j = _h.next()) {
                                     var mat = _j.value;
-                                    this.incDemand(mat, (want - gets) * (res.recipe.materials[mat] || 0));
+                                    this.incDemand(mat, res.recipe.materials[mat] || 0);
                                 }
                             }
                             catch (e_25_1) { e_25 = { error: e_25_1 }; }
@@ -978,7 +982,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.imports = function () {
             var _this = this;
             var e_26, _a;
-            if (this.queue.length >= data_1.default.max_deliveries)
+            if (this.queue.filter(function (t) { return isImportTask(t); }).length >= data_1.default.max_deliveries)
                 return;
             var need = this.neededResources();
             var want = need.amounts;
@@ -1028,7 +1032,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 for (var _b = __values(this.produces.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var item = _c.value;
                     // allow some surplus to build
-                    if (this.getStock(item) < this.min_stock || !this.hasSuperSurplus(item)) {
+                    //if (this.getStock(item) < this.min_stock && !this.hasSuperSurplus(item)) {
+                    if (!this.hasSuperSurplus(item) && this.price(item) >= resource_1.resources[item].value * 0.6) {
                         var amount = this.production(item);
                         if (amount > 0) {
                             this.sell(item, amount);
