@@ -132,6 +132,14 @@ define(function(require, exports, module) {
         }
       },
 
+      mass() {
+        return this.count * this.data.resources[this.item].mass;
+      },
+
+      deltav() {
+        return this.player.ship.currentAcceleration(this.mass) / Physics.G;
+      },
+
       cargo: {
         get() {
           if (this.tx_cargo === null) this.tx_cargo = this.game.player.ship.cargoUsed;
@@ -220,11 +228,11 @@ define(function(require, exports, module) {
 
   <table class="table table-sm table-mini table-noborder">
     <tr>
-      <th scope="col" class="w-25">Price</th>
+      <th scope="col" class="w-25">Total</th>
       <td class="w-25" :class="{'text-success': count < 0, 'text-warning': count > 0}">{{credits|abs|R|csn}} c</td>
 
       <th scope="col" class="w-25">Count</th>
-      <td class="w-25" :class="{'text-success': count < 0, 'text-warning': count > 0}">{{count|abs|csn}} cu</td>
+      <td class="w-25" :class="{'text-success': count < 0, 'text-warning': count > 0}">{{count|abs|csn}} cu </td>
     </tr>
 
     <tr>
@@ -241,6 +249,14 @@ define(function(require, exports, module) {
 
       <th scope="col" class="w-25">Dock</th>
       <td class="w-25">{{dock|csn}}</td>
+    </tr>
+
+    <tr>
+      <th scope="col" class="w-25">Mass</th>
+      <td class="w-25">{{mass|csn}} tonnes</td>
+
+      <th scope="col" class="w-25">Acceleration</th>
+      <td class="w-25">{{ deltav|R(3) }} G</td>
     </tr>
 
     <tr>
