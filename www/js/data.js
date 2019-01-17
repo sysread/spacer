@@ -17,6 +17,7 @@ define(["require", "exports"], function (require, exports) {
         update_prices: 10,
         scarcity_markup: 0.25,
         min_stock_count: 10,
+        max_deliveries: 10,
         necessity: { water: true, food: true, medicine: true, fuel: true },
         craft_fee: 0.2,
         fabricators: 10,
@@ -50,13 +51,14 @@ define(["require", "exports"], function (require, exports) {
             cybernetics: { mass: 120, recipe: { tics: 4, materials: { machines: 2, electronics: 3 } } },
             narcotics: { mass: 10, recipe: { tics: 2, materials: { medicine: 1, hydrocarbons: 1, water: 1 } }, contraband: 5 },
             weapons: { mass: 20, recipe: { tics: 4, materials: { metal: 2, ceramics: 1 } }, contraband: 7 },
+            'luxury goods': { mass: 5, recipe: { tics: 3, materials: { water: 1, hydrocarbons: 1, ceramics: 1 } } },
         },
         market: {
             agents: 4,
             fabricators: 10,
             minability: 0.1,
             produces: {},
-            consumes: { water: 2, food: 1.5, medicine: 1.5, narcotics: 0.3, weapons: 0.6 },
+            consumes: { water: 2, food: 1.5, medicine: 1.5, narcotics: 0.3, weapons: 0.6, 'luxury goods': 0.5 },
         },
         traits: {
             'mineral rich': { produces: { ore: 5, minerals: 2 }, consumes: {} },

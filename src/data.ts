@@ -18,6 +18,7 @@ const data = {
   update_prices:       10, // days between price updates
   scarcity_markup:     0.25,
   min_stock_count:     10,
+  max_deliveries:      10,
   necessity:           {water: true, food: true, medicine: true, fuel: true},
   craft_fee:           0.2,
   fabricators:         10, // number of fabricators, each equates to 1 unit of cybernetics
@@ -39,20 +40,21 @@ const data = {
   },
 
   resources: {
-    water:        {mass:  20, mine: {tics: 1, value: 13}},
-    ore:          {mass:  40, mine: {tics: 2, value: 17}},
-    minerals:     {mass:  30, mine: {tics: 2, value: 22}},
-    hydrocarbons: {mass:  10, mine: {tics: 2, value: 28}},
-    food:         {mass:  10, mine: {tics: 2, value: 36}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 2}}},
-    fuel:         {mass:   1, recipe: {tics: 1, materials: {ore: 1, water: 1}}},
-    metal:        {mass:  60, recipe: {tics: 2, materials: {ore: 3}}},
-    ceramics:     {mass:  30, recipe: {tics: 2, materials: {minerals: 3}}},
-    medicine:     {mass:  10, recipe: {tics: 3, materials: {food: 2, hydrocarbons: 1}}},
-    machines:     {mass:  80, recipe: {tics: 3, materials: {metal: 3}}},
-    electronics:  {mass:  30, recipe: {tics: 3, materials: {ceramics: 3}}},
-    cybernetics:  {mass: 120, recipe: {tics: 4, materials: {machines: 2, electronics: 3}}},
-    narcotics:    {mass:  10, recipe: {tics: 2, materials: {medicine: 1, hydrocarbons: 1, water: 1}}, contraband: 5},
-    weapons:      {mass:  20, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}, contraband: 7},
+    water:          {mass:  20, mine: {tics: 1, value: 13}},
+    ore:            {mass:  40, mine: {tics: 2, value: 17}},
+    minerals:       {mass:  30, mine: {tics: 2, value: 22}},
+    hydrocarbons:   {mass:  10, mine: {tics: 2, value: 28}},
+    food:           {mass:  10, mine: {tics: 2, value: 36}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 2}}},
+    fuel:           {mass:   1, recipe: {tics: 1, materials: {ore: 1, water: 1}}},
+    metal:          {mass:  60, recipe: {tics: 2, materials: {ore: 3}}},
+    ceramics:       {mass:  30, recipe: {tics: 2, materials: {minerals: 3}}},
+    medicine:       {mass:  10, recipe: {tics: 3, materials: {food: 2, hydrocarbons: 1}}},
+    machines:       {mass:  80, recipe: {tics: 3, materials: {metal: 3}}},
+    electronics:    {mass:  30, recipe: {tics: 3, materials: {ceramics: 3}}},
+    cybernetics:    {mass: 120, recipe: {tics: 4, materials: {machines: 2, electronics: 3}}},
+    narcotics:      {mass:  10, recipe: {tics: 2, materials: {medicine: 1, hydrocarbons: 1, water: 1}}, contraband: 5},
+    weapons:        {mass:  20, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}, contraband: 7},
+    'luxury goods': {mass:   5, recipe: {tics: 3, materials: {water: 1, hydrocarbons: 1, ceramics: 1}}},
   },
 
   market: {
@@ -60,7 +62,7 @@ const data = {
     fabricators: 10,
     minability:  0.1,
     produces:    {},
-    consumes:    {water: 2, food: 1.5, medicine: 1.5, narcotics: 0.3, weapons: 0.6},
+    consumes:    {water: 2, food: 1.5, medicine: 1.5, narcotics: 0.3, weapons: 0.6, 'luxury goods': 0.5},
   },
 
   traits: {

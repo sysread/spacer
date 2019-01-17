@@ -18,6 +18,12 @@ declare var window: { game: any; }
 declare var console: any;
 
 
+interface NeededResources {
+  prioritized: t.resource[];
+  amounts:     { [key: string]: number };
+}
+
+
 interface ImportTask {
   type:  'import';
   turns: number;
@@ -56,37 +62,38 @@ export interface SavedPlanet {
 }
 
 export class Planet {
-  readonly body:     t.body;
-  readonly name:     string;
-  readonly size:     string;
-  readonly desc:     string;
-  readonly radius:   number;
-  readonly kind:     string;
-  readonly central:  string;
-  readonly gravity:  number;
-  readonly faction:  Faction;
-  readonly traits:   Trait[];
+  readonly body:      t.body;
+  readonly name:      string;
+  readonly size:      string;
+  readonly desc:      string;
+  readonly radius:    number;
+  readonly kind:      string;
+  readonly central:   string;
+  readonly gravity:   number;
+  readonly faction:   Faction;
+  readonly traits:    Trait[];
 
-  readonly produces: Store;
-  readonly consumes: Store;
+  readonly produces:  Store;
+  readonly consumes:  Store;
+  readonly min_stock: number;
 
-  conditions:        Condition[];
-  work_tasks:        t.Work[];
+  conditions:         Condition[];
+  work_tasks:         t.Work[];
 
-  max_fab_units:     number;
-  max_fab_health:    number;
-  fab_health:        number;
+  max_fab_units:      number;
+  max_fab_health:     number;
+  fab_health:         number;
 
-  isNetExporterOf:   {[key: string]: boolean};
-  stock:             Store;
-  supply:            History;
-  demand:            History;
-  need:              History;
-  pending:           Store;
-  queue:             EconTask[];
+  isNetExporterOf:    {[key: string]: boolean};
+  stock:              Store;
+  supply:             History;
+  demand:             History;
+  need:               History;
+  pending:            Store;
+  queue:              EconTask[];
 
-  _price:            t.Counter;
-  _cycle:            t.Counter;
+  _price:             t.Counter;
+  _cycle:             t.Counter;
 
   constructor(body: t.body, init?: SavedPlanet) {
     init = init || {};
@@ -139,12 +146,13 @@ export class Planet {
     /*
      * Economics
      */
-    this.stock   = new Store(init.stock);
-    this.supply  = new History(data.market_history, init.supply);
-    this.demand  = new History(data.market_history, init.demand);
-    this.need    = new History(data.market_history, init.need);
-    this.pending = new Store(init.pending);
-    this.queue   = init.queue || [];
+    this.stock     = new Store(init.stock);
+    this.supply    = new History(data.market_history, init.supply);
+    this.demand    = new History(data.market_history, init.demand);
+    this.need      = new History(data.market_history, init.need);
+    this.pending   = new Store(init.pending);
+    this.queue     = init.queue || [];
+    this.min_stock = this.scale(data.min_stock_count);
 
     this.produces = new Store;
     this.consumes = new Store;
@@ -729,7 +737,7 @@ export class Planet {
     return Math.max(Math.ceil(amount), 0);
   }
 
-  neededResources() {
+  neededResources(): NeededResources {
     const amounts: { [key: string]: number } = {}; // Calculate how many of each item we want
     const need:    { [key: string]: number } = {}; // Pre-calculate each item's need
 
@@ -743,7 +751,7 @@ export class Planet {
     }
 
     // Sort the greatest needs to the front of the list
-    const prioritized = (<t.resource[]>Object.keys(amounts)).sort((a, b) => {
+    const prioritized = (Object.keys(amounts) as t.resource[]).sort((a, b) => {
       const diff = need[a] - need[b];
       return diff > 0 ? -1
            : diff < 0 ?  1
@@ -820,8 +828,7 @@ export class Planet {
     return bestPlanet;
   }
 
-  manufacture() {
-    const need = this.neededResources();
+  manufacture(need: NeededResources) {
     const want = need.amounts;
     const list: t.resource[] = [];
 
@@ -883,11 +890,10 @@ export class Planet {
     }
   }
 
-  imports() {
-    if (this.queue.length >= 10)
+  imports(need: NeededResources) {
+    if (this.queue.length >= data.max_deliveries)
       return;
 
-    const need = this.neededResources();
     const want = need.amounts;
 
     const list = need.prioritized.filter(i => {
@@ -928,11 +934,9 @@ export class Planet {
   }
 
   produce() {
-    const min = this.scale(data.min_stock_count);
-
     for (const item of this.produces.keys()) {
       // allow some surplus to build
-      if (this.getStock(item) < min || !this.hasSuperSurplus(item)) {
+      if (this.getStock(item) < this.min_stock || !this.hasSuperSurplus(item)) {
         const amount = this.production(item);
         if (amount > 0) {
           this.sell(item, amount);
@@ -1018,9 +1022,10 @@ export class Planet {
 
     // Only do the really expensive stuff once per day
     if (window.game.turns % data.turns_per_day == 0) {
-      this.manufacture();
+      const needed = this.neededResources();
+      this.manufacture(needed);
+      this.imports(needed);
       this.replenishFabricators();
-      this.imports();
       this.apply_conditions();
     }
 

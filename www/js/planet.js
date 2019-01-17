@@ -138,6 +138,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.need = new history_1.default(data_1.default.market_history, init.need);
             this.pending = new store_1.default(init.pending);
             this.queue = init.queue || [];
+            this.min_stock = this.scale(data_1.default.min_stock_count);
             this.produces = new store_1.default;
             this.consumes = new store_1.default;
             try {
@@ -881,9 +882,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
             return bestPlanet;
         };
-        Planet.prototype.manufacture = function () {
+        Planet.prototype.manufacture = function (need) {
             var e_22, _a, e_23, _b, e_24, _c, e_25, _d;
-            var need = this.neededResources();
             var want = need.amounts;
             var list = [];
             try {
@@ -973,12 +973,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 }
             }
         };
-        Planet.prototype.imports = function () {
+        Planet.prototype.imports = function (need) {
             var _this = this;
             var e_26, _a;
-            if (this.queue.length >= 10)
+            if (this.queue.length >= data_1.default.max_deliveries)
                 return;
-            var need = this.neededResources();
             var want = need.amounts;
             var list = need.prioritized.filter(function (i) {
                 if (_this.isNetExporter(i) && !_this.hasShortage(i)) {
@@ -1022,12 +1021,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.produce = function () {
             var e_27, _a;
-            var min = this.scale(data_1.default.min_stock_count);
             try {
                 for (var _b = __values(this.produces.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var item = _c.value;
                     // allow some surplus to build
-                    if (this.getStock(item) < min || !this.hasSuperSurplus(item)) {
+                    if (this.getStock(item) < this.min_stock || !this.hasSuperSurplus(item)) {
                         var amount = this.production(item);
                         if (amount > 0) {
                             this.sell(item, amount);
@@ -1182,9 +1180,10 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.processQueue();
             // Only do the really expensive stuff once per day
             if (window.game.turns % data_1.default.turns_per_day == 0) {
-                this.manufacture();
+                var needed = this.neededResources();
+                this.manufacture(needed);
+                this.imports(needed);
                 this.replenishFabricators();
-                this.imports();
                 this.apply_conditions();
             }
             this.rollups();
