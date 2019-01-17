@@ -750,9 +750,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         this.queue.push(task);
                     }
                     else {
-                        if (isImportTask(task)) {
-                            console.log(this.body, task.item, task.count, task.from);
-                        }
                         this.sell(task.item, task.count);
                         this.pending.dec(task.item, task.count);
                     }
@@ -885,96 +882,97 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
             return bestPlanet;
         };
+        /**
+         * Returns the number of an item which can be crafted given the resources
+         * available in this market.
+         */
+        Planet.prototype.canManufacture = function (item) {
+            var e_22, _a;
+            var res = resource_1.resources[item];
+            var counts = [];
+            if (resource_1.isCraft(res)) {
+                try {
+                    for (var _b = __values(Object.keys(res.recipe.materials)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var mat = _c.value;
+                        var avail = this.getStock(mat);
+                        if (avail == 0) {
+                            return 0;
+                        }
+                        var amount = Math.floor(avail / (res.recipe.materials[mat] || 0));
+                        counts.push(amount);
+                    }
+                }
+                catch (e_22_1) { e_22 = { error: e_22_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    }
+                    finally { if (e_22) throw e_22.error; }
+                }
+            }
+            if (counts.length > 0) {
+                return counts.reduce(function (a, b) { return a < b ? a : b; });
+            }
+            else {
+                return 0;
+            }
+        };
         Planet.prototype.manufacture = function () {
-            var e_22, _a, e_23, _b, e_24, _c, e_25, _d;
-            var need = this.neededResources();
-            var want = need.amounts;
-            var list = [];
+            var e_23, _a, e_24, _b, e_25, _c;
+            var needed = this.neededResources();
             try {
-                for (var _e = __values(need.prioritized), _f = _e.next(); !_f.done; _f = _e.next()) {
-                    var i = _f.value;
-                    var res = resource_1.resources[i];
-                    // Not craftable or we do not need it
-                    if (!resource_1.isCraft(res) || this.getNeed(i) < 0.25) {
-                        delete want[i];
-                    }
-                    else {
-                        // Cache so we don't recalculate these over and over
-                        var has_stock = {};
-                        var is_short = {};
-                        try {
-                            for (var _g = __values(res.ingredients), _h = _g.next(); !_h.done; _h = _g.next()) {
-                                var mat = _h.value;
-                                if (has_stock[mat] == undefined) {
-                                    has_stock[mat] = this.getStock(mat);
-                                }
-                                if (is_short[mat] == undefined) {
-                                    is_short[mat] = this.hasShortage(mat);
-                                }
-                                var amt = res.recipe.materials[mat] || 0;
-                                if (has_stock[mat] < amt || is_short[mat]) {
-                                    this.incDemand(mat, amt);
+                for (var _d = __values(needed.prioritized), _e = _d.next(); !_e.done; _e = _d.next()) {
+                    var item = _e.value;
+                    var res = resource_1.resources[item];
+                    if (resource_1.isCraft(res)) {
+                        var want = needed.amounts[item];
+                        var avail = this.canManufacture(item);
+                        var gets = Math.min(want, avail);
+                        if (gets > 0) {
+                            try {
+                                for (var _f = __values(Object.keys(res.recipe.materials)), _g = _f.next(); !_g.done; _g = _f.next()) {
+                                    var mat = _g.value;
+                                    this.buy(mat, gets * (res.recipe.materials[mat] || 0));
                                 }
                             }
-                        }
-                        catch (e_23_1) { e_23 = { error: e_23_1 }; }
-                        finally {
-                            try {
-                                if (_h && !_h.done && (_b = _g.return)) _b.call(_g);
+                            catch (e_24_1) { e_24 = { error: e_24_1 }; }
+                            finally {
+                                try {
+                                    if (_g && !_g.done && (_b = _f.return)) _b.call(_f);
+                                }
+                                finally { if (e_24) throw e_24.error; }
                             }
-                            finally { if (e_23) throw e_23.error; }
+                            this.schedule({
+                                type: 'craft',
+                                turns: this.fabricate(item),
+                                item: item,
+                                count: gets,
+                            });
                         }
-                        list.push(i);
-                    }
-                }
-            }
-            catch (e_22_1) { e_22 = { error: e_22_1 }; }
-            finally {
-                try {
-                    if (_f && !_f.done && (_a = _e.return)) _a.call(_e);
-                }
-                finally { if (e_22) throw e_22.error; }
-            }
-            while (Object.keys(want).length > 0) {
-                var items = list
-                    .filter(function (i) { return want[i]; })
-                    .map(function (i) { return resource_1.resources[i]; });
-                try {
-                    for (var items_1 = __values(items), items_1_1 = items_1.next(); !items_1_1.done; items_1_1 = items_1.next()) {
-                        var item = items_1_1.value;
-                        if (resource_1.isCraft(item)) {
+                        if (gets < want) {
                             try {
-                                for (var _j = __values(item.ingredients), _k = _j.next(); !_k.done; _k = _j.next()) {
-                                    var mat = _k.value;
-                                    this.buy(mat, item.recipe.materials[mat] || 0);
+                                for (var _h = __values(Object.keys(res.recipe.materials)), _j = _h.next(); !_j.done; _j = _h.next()) {
+                                    var mat = _j.value;
+                                    this.incDemand(mat, (want - gets) * (res.recipe.materials[mat] || 0));
                                 }
                             }
                             catch (e_25_1) { e_25 = { error: e_25_1 }; }
                             finally {
                                 try {
-                                    if (_k && !_k.done && (_d = _j.return)) _d.call(_j);
+                                    if (_j && !_j.done && (_c = _h.return)) _c.call(_h);
                                 }
                                 finally { if (e_25) throw e_25.error; }
                             }
                         }
-                        if (--want[item.name] === 0) {
-                            delete want[item.name];
-                        }
-                        this.schedule({
-                            type: 'craft',
-                            turns: this.fabricate(item.name),
-                            item: item.name,
-                            count: 1,
-                        });
                     }
                 }
-                catch (e_24_1) { e_24 = { error: e_24_1 }; }
-                finally {
-                    try {
-                        if (items_1_1 && !items_1_1.done && (_c = items_1.return)) _c.call(items_1);
-                    }
-                    finally { if (e_24) throw e_24.error; }
+            }
+            catch (e_23_1) { e_23 = { error: e_23_1 }; }
+            finally {
+                try {
+                    if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
                 }
+                finally { if (e_23) throw e_23.error; }
             }
         };
         Planet.prototype.imports = function () {

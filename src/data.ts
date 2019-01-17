@@ -40,21 +40,21 @@ const data = {
   },
 
   resources: {
-    water:          {mass:  20, mine: {tics: 1, value: 13}},
-    ore:            {mass:  40, mine: {tics: 2, value: 17}},
-    minerals:       {mass:  30, mine: {tics: 2, value: 22}},
-    hydrocarbons:   {mass:  10, mine: {tics: 2, value: 28}},
-    food:           {mass:  10, mine: {tics: 2, value: 36}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 2}}},
-    fuel:           {mass:   1, recipe: {tics: 1, materials: {ore: 1, water: 1}}},
-    metal:          {mass:  60, recipe: {tics: 2, materials: {ore: 3}}},
-    ceramics:       {mass:  30, recipe: {tics: 2, materials: {minerals: 3}}},
-    medicine:       {mass:  10, recipe: {tics: 3, materials: {food: 2, hydrocarbons: 1}}},
-    machines:       {mass:  80, recipe: {tics: 3, materials: {metal: 3}}},
-    electronics:    {mass:  30, recipe: {tics: 3, materials: {ceramics: 3}}},
-    cybernetics:    {mass: 120, recipe: {tics: 4, materials: {machines: 2, electronics: 3}}},
-    narcotics:      {mass:  10, recipe: {tics: 2, materials: {medicine: 1, hydrocarbons: 1, water: 1}}, contraband: 5},
-    weapons:        {mass:  20, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}, contraband: 7},
-    'luxury goods': {mass:   5, recipe: {tics: 3, materials: {water: 1, hydrocarbons: 1, ceramics: 1}}},
+    water:        {mass:  20, mine: {tics: 1, value: 13}},
+    ore:          {mass:  40, mine: {tics: 2, value: 17}},
+    minerals:     {mass:  30, mine: {tics: 2, value: 22}},
+    hydrocarbons: {mass:  10, mine: {tics: 2, value: 28}},
+    food:         {mass:  10, mine: {tics: 2, value: 36}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 2}}},
+    luxuries:     {mass:   5, recipe: {tics: 3, materials: {water: 1, hydrocarbons: 1, ceramics: 1}}},
+    fuel:         {mass:   1, recipe: {tics: 1, materials: {ore: 1, water: 1}}},
+    metal:        {mass:  60, recipe: {tics: 2, materials: {ore: 3}}},
+    ceramics:     {mass:  30, recipe: {tics: 2, materials: {minerals: 3}}},
+    medicine:     {mass:  10, recipe: {tics: 3, materials: {food: 2, hydrocarbons: 1}}},
+    machines:     {mass:  80, recipe: {tics: 3, materials: {metal: 3}}},
+    electronics:  {mass:  30, recipe: {tics: 3, materials: {ceramics: 3}}},
+    cybernetics:  {mass: 120, recipe: {tics: 4, materials: {machines: 2, electronics: 3}}},
+    narcotics:    {mass:  10, recipe: {tics: 2, materials: {medicine: 1, hydrocarbons: 1, water: 1}}, contraband: 5},
+    weapons:      {mass:  20, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}, contraband: 7},
   },
 
   market: {
@@ -62,7 +62,7 @@ const data = {
     fabricators: 10,
     minability:  0.1,
     produces:    {},
-    consumes:    {water: 2, food: 1.5, medicine: 1.5, narcotics: 0.3, weapons: 0.6, 'luxury goods': 0.5},
+    consumes:    {water: 2, food: 1.5, medicine: 1.5, narcotics: 0.3, weapons: 0.6, luxuries: 0.75},
   },
 
   traits: {
@@ -88,9 +88,9 @@ const data = {
     'orbital':           {produces: {food: 0.1, hydrocarbons: 0.1}, consumes: {metal: 1, fuel: 1.5, electronics: 0.75, machines: 0.75, water: 0.15, hydrocarbons: 0.25, weapons: 0.2}},
 
     'black market':      {produces: {narcotics: 0.5, weapons: 0.5}, price: {narcotics: 0.5, weapons: 0.7}},
-    'tech hub':          {produces: {electronics: 0.5}, price: {machines: 0.9, electronics: 0.65, cybernetics: 0.8, addons: 0.9}},
-    'manufacturing hub': {produces: {machines: 0.5}, price: {machines: 0.7, cybernetics: 0.9, addons: 0.8}},
-    'capital':           {produces: {medicine: 0.25}, consumes: {weapons: 0.1}, price: {addons: 0.9}},
+    'tech hub':          {produces: {electronics: 0.5, luxuries: 0.25}, price: {machines: 0.9, electronics: 0.65, cybernetics: 0.8, addons: 0.9}},
+    'manufacturing hub': {produces: {machines: 0.5, luxuries: 0.5}, price: {machines: 0.7, cybernetics: 0.9, addons: 0.8}},
+    'capital':           {produces: {medicine: 0.25}, consumes: {weapons: 0.1, luxuries: 0.25}, price: {addons: 0.9}},
     'military':          {produces: {}, consumes: {weapons: 1, machines: 0.5, electronics: 0.5, medicine: 0.5}, price: {addons: 0.75}},
   },
 

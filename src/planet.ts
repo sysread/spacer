@@ -828,65 +828,63 @@ export class Planet {
     return bestPlanet;
   }
 
-  manufacture() {
-    const need = this.neededResources();
-    const want = need.amounts;
-    const list: t.resource[] = [];
+  /**
+   * Returns the number of an item which can be crafted given the resources
+   * available in this market.
+   */
+  canManufacture(item: t.resource): number {
+    const res = resources[item];
+    const counts: number[] = [];
 
-    for (const i of (<t.resource[]>need.prioritized)) {
-      const res = resources[i];
+    if (isCraft(res)) {
+      for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
+        const avail = this.getStock(mat);
 
-      // Not craftable or we do not need it
-      if (!isCraft(res) || this.getNeed(i) < 0.25) {
-        delete want[i];
-      }
-      else {
-        // Cache so we don't recalculate these over and over
-        const has_stock: t.Counter = {};
-        const is_short: { [key: string]: boolean } = {};
-
-        for (const mat of res.ingredients) {
-          if (has_stock[mat] == undefined) {
-            has_stock[mat] = this.getStock(mat);
-          }
-
-          if (is_short[mat] == undefined) {
-            is_short[mat] = this.hasShortage(mat);
-          }
-
-          const amt = res.recipe.materials[mat] || 0;
-
-          if (has_stock[mat] < amt || is_short[mat]) {
-            this.incDemand(mat, amt);
-          }
+        if (avail == 0) {
+          return 0;
         }
 
-        list.push(i);
+        const amount = Math.floor(avail / (res.recipe.materials[mat] || 0));
+        counts.push(amount);
       }
     }
 
-    while (Object.keys(want).length > 0) {
-      const items = list
-        .filter(i => want[i])
-        .map(i => resources[i]);
+    if (counts.length > 0) {
+      return counts.reduce((a, b) => a < b ? a : b);
+    } else {
+      return 0;
+    }
+  }
 
-      for (const item of items) {
-        if (isCraft(item)) {
-          for (const mat of item.ingredients) {
-            this.buy(mat, item.recipe.materials[mat] || 0);
+  manufacture() {
+    const needed = this.neededResources();
+
+    for (const item of needed.prioritized) {
+      const res = resources[item];
+
+      if (isCraft(res)) {
+        const want  = needed.amounts[item];
+        const avail = this.canManufacture(item);
+        const gets  = Math.min(want, avail);
+
+        if (gets > 0) {
+          for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
+            this.buy(mat, gets * (res.recipe.materials[mat] || 0));
+          }
+
+          this.schedule({
+            type:  'craft',
+            turns: this.fabricate(item),
+            item:  item,
+            count: gets,
+          });
+        }
+
+        if (gets < want) {
+          for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
+            this.incDemand(mat, (want - gets) * (res.recipe.materials[mat] || 0));
           }
         }
-
-        if (--want[item.name] === 0) {
-          delete want[item.name];
-        }
-
-        this.schedule({
-          type:  'craft',
-          turns: this.fabricate(item.name),
-          item:  item.name,
-          count: 1,
-        });
       }
     }
   }
