@@ -1,9 +1,10 @@
 import data  from './data';
 import system from './system';
 import Physics from './physics';
-import TransitPlan from './transitplan';
+import { TransitPlan } from './transitplan';
 import { Person } from './person';
-import { vec, Vector, PointArray, PointObject } from './vector';
+import { Point } from './vector';
+import * as Vec from './vector';
 import * as util from './util';
 import * as t from './common';
 
@@ -12,32 +13,36 @@ const DT  = 1000;                       // frames per turn for euler integration
 const TI  = SPT / DT;                   // seconds per frame
 
 
-class Body {
-  position: Vector;
-  velocity: Vector;
-
-  constructor(position: Vector, velocity: Vector) {
-    this.position = position.clone();
-    this.velocity = velocity.clone();
-  }
-
-  get pos() { return this.position.clone() }
-  get vel() { return this.velocity.clone() }
+export interface SavedCourse {
+  target:   Body;
+  agent:    Body;
+  accel:    Point;
+  maxAccel: number;
+  turns:    number;
 }
 
-interface PathSegment {
-  position: PointArray;
+export interface PathSegment {
+  position: Point;
   velocity: number;
 }
 
-class Course {
+export type Body = [
+  Point, // position
+  Point  // velocity
+];
+
+const POSITION = 0;
+const VELOCITY = 1;
+
+
+export class Course {
   target:   Body;
   agent:    Body;
-  accel:    Vector;
+  accel:    Point;
   maxAccel: number;
   turns:    number;
   tflip:    number;
-  _path:    null|PathSegment[];
+  _path:    null | PathSegment[];
 
   constructor(target: Body, agent: Body, maxAccel: number, turns: number) {
     this.target   = target;
@@ -49,39 +54,51 @@ class Course {
     this._path    = null;
   }
 
-  get acc() { return this.accel.clone() }
+  export(): SavedCourse {
+    return {
+      target:   this.target,
+      agent:    this.agent,
+      accel:    this.accel,
+      maxAccel: this.maxAccel,
+      turns:    this.turns,
+    };
+  }
+
+  static import(opt: SavedCourse): Course {
+    return new Course(opt.target, opt.agent, opt.maxAccel, opt.turns);
+  }
+
+  get acc(): Point { return Vec.clone(this.accel) }
 
   // a = (2s / t^2) - (2v / t)
-  calculateAcceleration() {
+  calculateAcceleration(): Point {
     // Calculate portion of target velocity to match by flip point
-    const dvf = this.target.vel
-      .mul_scalar(2 / this.tflip);
+    const dvf = Vec.mul_scalar(this.target[VELOCITY], 2 / this.tflip);
 
     // Calculate portion of total change in velocity to apply by flip point
-    const dvi = this.agent.vel
-      .sub(dvf)
-      .mul_scalar(2 / this.tflip);
+    const dvi = Vec.mul_scalar(Vec.sub(this.agent[VELOCITY], dvf), 2 / this.tflip);
 
-    return this.target.pos                  // change in position
-      .sub(this.agent.position)             // (2s / 2) for flip point
-      .div_scalar(this.tflip * this.tflip)  // t^2
-      .sub(dvi);                            // less the change in velocity
+    let acc = Vec.sub(this.target[POSITION], this.agent[POSITION]); // (2s / 2) for flip point
+    acc = Vec.div_scalar(acc, this.tflip * this.tflip);             // t^2
+    acc = Vec.sub(acc, dvi);                                        // less the change in velocity
+
+    return acc;
   }
 
-  maxVelocity() {
+  maxVelocity(): number {
     const t = this.tflip;
-    return this.accel.clone().mul_scalar(t).length;
+    return Vec.length( Vec.mul_scalar(this.accel, t) );
   }
 
-  path() {
+  path(): PathSegment[] {
     if (this._path != null) {
       return this._path;
     }
 
-    const p    = this.agent.pos;                   // initial position
-    const v    = this.agent.vel;                   // initial velocity
-    const vax  = this.acc.mul_scalar(TI);          // static portion of change in velocity each TI
-    const dax  = this.acc.mul_scalar(TI * TI / 2); // static portion of change in position each TI
+    let p      = this.agent[POSITION];                   // initial position
+    let v      = this.agent[VELOCITY];                   // initial velocity
+    const vax  = Vec.mul_scalar(this.acc, TI);           // static portion of change in velocity each TI
+    const dax  = Vec.mul_scalar(this.acc, TI * TI / 2);  // static portion of change in position each TI
     const path = [];
 
     let t = 0;
@@ -93,18 +110,18 @@ class Course {
         t += TI;
 
         if (t > this.tflip) {
-          v.sub(vax); // decelerate after flip
+          v = Vec.sub(v, vax); // decelerate after flip
         } else {
-          v.add(vax); // accelerate before flip
+          v = Vec.add(v, vax); // accelerate before flip
         }
 
         // Update position
-        p.add( v.clone().mul_scalar(TI).add(dax) );
+        p = Vec.add(p, Vec.add(Vec.mul_scalar(v, TI), dax));
       }
 
       const segment = {
-        position: p.clone().point,
-        velocity: v.clone().length,
+        position: p,
+        velocity: Vec.length(v),
       };
 
       path.push(segment);
@@ -116,7 +133,7 @@ class Course {
 }
 
 
-class NavComp {
+export class NavComp {
   player:      Person;
   orig:        t.body;
   show_all:    boolean;
@@ -128,7 +145,7 @@ class NavComp {
     this.player      = player;
     this.orig        = orig;
     this.fuel_target = fuel_target || player.ship.fuel;
-    this.show_all    = show_all || false;
+    this.show_all    = show_all    || false;
     this.max         = player.maxAcceleration();
   }
 
@@ -150,11 +167,17 @@ class NavComp {
     return this.data[dest];
   }
 
+  getFastestTransitTo(dest: t.body) {
+    const transits = this.astrogator(dest);
+    for (const transit of transits) {
+      return transit;
+    }
+  }
+
   *astrogator(destination: t.body) {
     const orig     = system.orbit_by_turns(this.orig);
     const dest     = system.orbit_by_turns(destination);
-    const startPos = vec(orig[0]);
-    const vInit    = vec(orig[1]).sub( vec(orig[0]) ).div_scalar(SPT);
+    const vInit    = Vec.div_scalar( Vec.sub(orig[1], orig[0]), SPT );
     const bestAcc  = Math.min(this.player.maxAcceleration(), this.player.shipAcceleration());
     const mass     = this.player.ship.currentMass();
     const fuelrate = this.player.ship.fuelrate;
@@ -169,12 +192,11 @@ class NavComp {
       const thrustPerTurn = thrust * fuelPerTurn / fuelrate;
       const availAcc      = thrustPerTurn / mass;
       const maxAccel      = Math.min(bestAcc, availAcc);
-      const targetPos     = vec(dest[turns]);
-      const vFinal        = targetPos.clone().sub(vec(dest[turns - 1])).div_scalar(SPT);
-      const target        = new Body(targetPos, vFinal);
-      const agent         = new Body(startPos, vInit);
+      const vFinal        = Vec.div_scalar( Vec.sub(dest[turns], dest[turns - 1]), SPT );
+      const target: Body  = [ dest[turns], vFinal ];
+      const agent: Body   = [ orig[0], vInit ];
       const course        = new Course(target, agent, maxAccel, turns);
-      const a             = course.accel.length;
+      const a             = Vec.length(course.accel);
 
       if (a > maxAccel)
         continue;
@@ -194,8 +216,8 @@ class NavComp {
       yield new TransitPlan({
         origin: this.orig,
         dest:   destination,
-        start:  startPos.point,
-        end:    targetPos.point,
+        start:  orig[0],
+        end:    dest[turns],
         dist:   distance,
         fuel:   fuelUsed,
         course: course,
@@ -203,5 +225,3 @@ class NavComp {
     }
   }
 }
-
-export = NavComp;

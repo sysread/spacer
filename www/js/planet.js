@@ -55,7 +55,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
     exports.isCraftTask = isCraftTask;
     var Planet = /** @class */ (function () {
         function Planet(body, init) {
-            var e_1, _a, e_2, _b, e_3, _c, e_4, _d, e_5, _e, e_6, _f;
+            var e_1, _a, e_2, _b, e_3, _c, e_4, _d, e_5, _e;
             init = init || {};
             /*
              * Physical and faction
@@ -90,14 +90,14 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
              */
             this.work_tasks = [];
             try {
-                TASK: for (var _g = __values(data_1.default.work), _h = _g.next(); !_h.done; _h = _g.next()) {
-                    var task = _h.value;
+                TASK: for (var _f = __values(data_1.default.work), _g = _f.next(); !_g.done; _g = _f.next()) {
+                    var task = _g.value;
                     try {
-                        for (var _j = __values(task.avail), _k = _j.next(); !_k.done; _k = _j.next()) {
-                            var req = _k.value;
+                        for (var _h = __values(task.avail), _j = _h.next(); !_j.done; _j = _h.next()) {
+                            var req = _j.value;
                             try {
-                                for (var _l = __values(this.traits), _m = _l.next(); !_m.done; _m = _l.next()) {
-                                    var trait = _m.value;
+                                for (var _k = __values(this.traits), _l = _k.next(); !_l.done; _l = _k.next()) {
+                                    var trait = _l.value;
                                     if (req === trait.name) {
                                         this.work_tasks.push(task);
                                         continue TASK;
@@ -107,7 +107,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                             catch (e_3_1) { e_3 = { error: e_3_1 }; }
                             finally {
                                 try {
-                                    if (_m && !_m.done && (_c = _l.return)) _c.call(_l);
+                                    if (_l && !_l.done && (_c = _k.return)) _c.call(_k);
                                 }
                                 finally { if (e_3) throw e_3.error; }
                             }
@@ -116,7 +116,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     catch (e_2_1) { e_2 = { error: e_2_1 }; }
                     finally {
                         try {
-                            if (_k && !_k.done && (_b = _j.return)) _b.call(_j);
+                            if (_j && !_j.done && (_b = _h.return)) _b.call(_h);
                         }
                         finally { if (e_2) throw e_2.error; }
                     }
@@ -125,7 +125,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
             finally {
                 try {
-                    if (_h && !_h.done && (_a = _g.return)) _a.call(_g);
+                    if (_g && !_g.done && (_a = _f.return)) _a.call(_f);
                 }
                 finally { if (e_1) throw e_1.error; }
             }
@@ -142,15 +142,15 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.produces = new store_1.default;
             this.consumes = new store_1.default;
             try {
-                for (var _o = __values(t.resources), _p = _o.next(); !_p.done; _p = _o.next()) {
-                    var item = _p.value;
+                for (var _m = __values(t.resources), _o = _m.next(); !_o.done; _o = _m.next()) {
+                    var item = _o.value;
                     this.produces.inc(item, this.scale(data_1.default.market.produces[item]));
                     this.consumes.inc(item, this.scale(data_1.default.market.consumes[item]));
                     this.produces.inc(item, this.scale(this.faction.produces[item] || 0));
                     this.consumes.inc(item, this.scale(this.faction.consumes[item] || 0));
                     try {
-                        for (var _q = __values(this.traits), _r = _q.next(); !_r.done; _r = _q.next()) {
-                            var trait = _r.value;
+                        for (var _p = __values(this.traits), _q = _p.next(); !_q.done; _q = _p.next()) {
+                            var trait = _q.value;
                             this.produces.inc(item, this.scale(trait.produces[item]));
                             this.consumes.inc(item, this.scale(trait.consumes[item]));
                         }
@@ -158,7 +158,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     catch (e_5_1) { e_5 = { error: e_5_1 }; }
                     finally {
                         try {
-                            if (_r && !_r.done && (_e = _q.return)) _e.call(_q);
+                            if (_q && !_q.done && (_e = _p.return)) _e.call(_p);
                         }
                         finally { if (e_5) throw e_5.error; }
                     }
@@ -167,23 +167,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             catch (e_4_1) { e_4 = { error: e_4_1 }; }
             finally {
                 try {
-                    if (_p && !_p.done && (_d = _o.return)) _d.call(_o);
+                    if (_o && !_o.done && (_d = _m.return)) _d.call(_m);
                 }
                 finally { if (e_4) throw e_4.error; }
-            }
-            this.isNetExporterOf = {};
-            try {
-                for (var _s = __values(t.resources), _t = _s.next(); !_t.done; _t = _s.next()) {
-                    var item = _t.value;
-                    this.isNetExporterOf[item] = this.calculateIsNetExporter(item);
-                }
-            }
-            catch (e_6_1) { e_6 = { error: e_6_1 }; }
-            finally {
-                try {
-                    if (_t && !_t.done && (_f = _s.return)) _f.call(_s);
-                }
-                finally { if (e_6) throw e_6.error; }
             }
             // Assign directly in constructor rather than in clearMemos for
             // performance reasons. V8's jit will produce more optimized classes by
@@ -202,11 +188,30 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return system_1.default.distance(this.body, toBody);
         };
         Planet.prototype.hasTrait = function (trait) {
-            var e_7, _a;
+            var e_6, _a;
             try {
                 for (var _b = __values(this.traits), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var t_1 = _c.value;
                     if (t_1.name == trait) {
+                        return true;
+                    }
+                }
+            }
+            catch (e_6_1) { e_6 = { error: e_6_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_6) throw e_6.error; }
+            }
+            return false;
+        };
+        Planet.prototype.hasCondition = function (condition) {
+            var e_7, _a;
+            try {
+                for (var _b = __values(this.conditions), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var c = _c.value;
+                    if (c.name == condition) {
                         return true;
                     }
                 }
@@ -217,25 +222,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_7) throw e_7.error; }
-            }
-            return false;
-        };
-        Planet.prototype.hasCondition = function (condition) {
-            var e_8, _a;
-            try {
-                for (var _b = __values(this.conditions), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var c = _c.value;
-                    if (c.name == condition) {
-                        return true;
-                    }
-                }
-            }
-            catch (e_8_1) { e_8 = { error: e_8_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_8) throw e_8.error; }
             }
             return false;
         };
@@ -374,7 +360,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return Math.ceil(rate);
         };
         Planet.prototype.work = function (player, task, days) {
-            var e_9, _a;
+            var e_8, _a;
             var pay = this.payRate(player, task) * days;
             var turns = days * 24 / data_1.default.hours_per_turn;
             var rewards = task.rewards;
@@ -386,12 +372,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         collected.inc(item, this.mine(item));
                     }
                 }
-                catch (e_9_1) { e_9 = { error: e_9_1 }; }
+                catch (e_8_1) { e_8 = { error: e_8_1 }; }
                 finally {
                     try {
                         if (rewards_1_1 && !rewards_1_1.done && (_a = rewards_1.return)) _a.call(rewards_1);
                     }
-                    finally { if (e_9) throw e_9.error; }
+                    finally { if (e_8) throw e_8.error; }
                 }
             }
             return { pay: pay, items: collected };
@@ -434,12 +420,30 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return this.getNeed(item) <= this.surplusFactor(item) / 2;
         };
         Planet.prototype.production = function (item) {
-            var e_10, _a;
+            var e_9, _a;
             var amount = this.produces.get(item) / data_1.default.turns_per_day;
             try {
                 for (var _b = __values(this.conditions), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var condition = _c.value;
                     amount += this.scale(condition.produces[item] || 0);
+                }
+            }
+            catch (e_9_1) { e_9 = { error: e_9_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_9) throw e_9.error; }
+            }
+            return amount;
+        };
+        Planet.prototype.consumption = function (item) {
+            var e_10, _a;
+            var amount = this.consumes.get(item) / data_1.default.turns_per_day;
+            try {
+                for (var _b = __values(this.conditions), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var condition = _c.value;
+                    amount += this.scale(condition.consumes[item] || 0);
                 }
             }
             catch (e_10_1) { e_10 = { error: e_10_1 }; }
@@ -451,26 +455,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
             return amount;
         };
-        Planet.prototype.consumption = function (item) {
-            var e_11, _a;
-            var amount = this.consumes.get(item) / data_1.default.turns_per_day;
-            try {
-                for (var _b = __values(this.conditions), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var condition = _c.value;
-                    amount += this.scale(condition.consumes[item] || 0);
-                }
-            }
-            catch (e_11_1) { e_11 = { error: e_11_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_11) throw e_11.error; }
-            }
-            return amount;
-        };
         Planet.prototype.incDemand = function (item, amt) {
-            var e_12, _a;
+            var e_11, _a;
             var queue = [[item, amt]];
             while (queue.length > 0) {
                 var elt = queue.shift();
@@ -485,12 +471,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                                 queue.push([mat, (res.recipe.materials[mat] || 0) * amt_1]);
                             }
                         }
-                        catch (e_12_1) { e_12 = { error: e_12_1 }; }
+                        catch (e_11_1) { e_11 = { error: e_11_1 }; }
                         finally {
                             try {
                                 if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                             }
-                            finally { if (e_12) throw e_12.error; }
+                            finally { if (e_11) throw e_11.error; }
                         }
                     }
                 }
@@ -500,37 +486,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.supply.inc(item, amount);
         };
         Planet.prototype.isNetExporter = function (item) {
-            return this.isNetExporterOf[item];
-        };
-        Planet.prototype.calculateIsNetExporter = function (item) {
-            var e_13, _a;
-            var isExporter = false;
-            var res = resource_1.resources[item];
-            if (resource_1.isRaw(res)) {
-                var net = this.netProduction(item);
-                isExporter = net >= this.scale(1);
-            }
-            if (!isExporter && resource_1.isCraft(res)) {
-                var matExporter = true;
-                try {
-                    for (var _b = __values(res.ingredients), _c = _b.next(); !_c.done; _c = _b.next()) {
-                        var mat = _c.value;
-                        if (!this.isNetExporter(mat)) {
-                            matExporter = false;
-                            break;
-                        }
-                    }
-                }
-                catch (e_13_1) { e_13 = { error: e_13_1 }; }
-                finally {
-                    try {
-                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                    }
-                    finally { if (e_13) throw e_13.error; }
-                }
-                isExporter = matExporter;
-            }
-            return isExporter;
+            var production = this.avgProduction(item);
+            var consumption = this.consumption(item);
+            return (production - consumption) > this.scale(1);
         };
         Planet.prototype.getNeed = function (item) {
             var d = this.getDemand(item);
@@ -552,7 +510,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * adjustment.
          */
         Planet.prototype.getAvailabilityMarkup = function (item) {
-            var e_14, _a;
+            var e_12, _a;
             // If this planet is a net exporter of the item, easy access results in a
             // lower price.
             if (this.isNetExporter(item)) {
@@ -577,12 +535,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_14_1) { e_14 = { error: e_14_1 }; }
+            catch (e_12_1) { e_12 = { error: e_12_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_14) throw e_14.error; }
+                finally { if (e_12) throw e_12.error; }
             }
             if (distance != undefined && nearest != undefined) {
                 var markup = 1;
@@ -622,7 +580,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * means no adjustment.
          */
         Planet.prototype.getConditionMarkup = function (item) {
-            var e_15, _a;
+            var e_13, _a;
             var markup = 1;
             try {
                 for (var _b = __values(this.conditions), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -633,17 +591,17 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     markup += amount;
                 }
             }
-            catch (e_15_1) { e_15 = { error: e_15_1 }; }
+            catch (e_13_1) { e_13 = { error: e_13_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_15) throw e_15.error; }
+                finally { if (e_13) throw e_13.error; }
             }
             return markup;
         };
         Planet.prototype.price = function (item) {
-            var e_16, _a;
+            var e_14, _a;
             if (!this._cycle[item] || window.game.turns % this._cycle[item] == 0) {
                 delete this._price[item];
                 this._cycle[item] = util.getRandomInt(3, 12) * data_1.default.turns_per_day;
@@ -668,12 +626,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         price -= price * (trait.price[item] || 0);
                     }
                 }
-                catch (e_16_1) { e_16 = { error: e_16_1 }; }
+                catch (e_14_1) { e_14 = { error: e_14_1 }; }
                 finally {
                     try {
                         if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
-                    finally { if (e_16) throw e_16.error; }
+                    finally { if (e_14) throw e_14.error; }
                 }
                 // Scarcity adjustment for items necessary to survival
                 price *= this.getScarcityMarkup(item);
@@ -740,7 +698,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.queue.push(task);
         };
         Planet.prototype.processQueue = function () {
-            var e_17, _a;
+            var e_15, _a;
             // NOTE: this method of regenerating the queue is *much* faster than
             // Array.prototype.filter().
             var queue = this.queue;
@@ -757,12 +715,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_17_1) { e_17 = { error: e_17_1 }; }
+            catch (e_15_1) { e_15 = { error: e_15_1 }; }
             finally {
                 try {
                     if (queue_1_1 && !queue_1_1.done && (_a = queue_1.return)) _a.call(queue_1);
                 }
-                finally { if (e_17) throw e_17.error; }
+                finally { if (e_15) throw e_15.error; }
             }
         };
         Planet.prototype.neededResourceAmount = function (item) {
@@ -770,7 +728,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return Math.max(Math.ceil(amount), 0);
         };
         Planet.prototype.neededResources = function () {
-            var e_18, _a;
+            var e_16, _a;
             var amounts = {}; // Calculate how many of each item we want
             var need = {}; // Pre-calculate each item's need
             try {
@@ -783,12 +741,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_18_1) { e_18 = { error: e_18_1 }; }
+            catch (e_16_1) { e_16 = { error: e_16_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_18) throw e_18.error; }
+                finally { if (e_16) throw e_16.error; }
             }
             // Sort the greatest needs to the front of the list
             var prioritized = Object.keys(amounts).sort(function (a, b) {
@@ -814,7 +772,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             });
         };
         Planet.prototype.selectExporter = function (item, amount) {
-            var e_19, _a, e_20, _b, e_21, _c;
+            var e_17, _a, e_18, _b, e_19, _c;
             var exporters = this.exporters(item);
             if (exporters.length === 0)
                 return;
@@ -830,12 +788,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
                 }
             }
-            catch (e_19_1) { e_19 = { error: e_19_1 }; }
+            catch (e_17_1) { e_17 = { error: e_17_1 }; }
             finally {
                 try {
                     if (exporters_1_1 && !exporters_1_1.done && (_a = exporters_1.return)) _a.call(exporters_1);
                 }
-                finally { if (e_19) throw e_19.error; }
+                finally { if (e_17) throw e_17.error; }
             }
             var avgDist = Object.values(dist).reduce(function (a, b) { return a + b; }, 0)
                 / Object.values(dist).length;
@@ -854,12 +812,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     stockRating[body] = stock[body] / avgStock;
                 }
             }
-            catch (e_20_1) { e_20 = { error: e_20_1 }; }
+            catch (e_18_1) { e_18 = { error: e_18_1 }; }
             finally {
                 try {
                     if (exporters_2_1 && !exporters_2_1.done && (_b = exporters_2.return)) _b.call(exporters_2);
                 }
-                finally { if (e_20) throw e_20.error; }
+                finally { if (e_18) throw e_18.error; }
             }
             // Calculate a rating by comparing distance, price, and number of
             // available units
@@ -875,12 +833,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_21_1) { e_21 = { error: e_21_1 }; }
+            catch (e_19_1) { e_19 = { error: e_19_1 }; }
             finally {
                 try {
                     if (exporters_3_1 && !exporters_3_1.done && (_c = exporters_3.return)) _c.call(exporters_3);
                 }
-                finally { if (e_21) throw e_21.error; }
+                finally { if (e_19) throw e_19.error; }
             }
             return bestPlanet;
         };
@@ -889,7 +847,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * available in this market.
          */
         Planet.prototype.canManufacture = function (item) {
-            var e_22, _a;
+            var e_20, _a;
             var res = resource_1.resources[item];
             var counts = [];
             if (resource_1.isCraft(res)) {
@@ -908,12 +866,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         counts.push(amount);
                     }
                 }
-                catch (e_22_1) { e_22 = { error: e_22_1 }; }
+                catch (e_20_1) { e_20 = { error: e_20_1 }; }
                 finally {
                     try {
                         if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
-                    finally { if (e_22) throw e_22.error; }
+                    finally { if (e_20) throw e_20.error; }
                 }
             }
             if (counts.length > 0) {
@@ -924,7 +882,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
         };
         Planet.prototype.manufacture = function () {
-            var e_23, _a, e_24, _b, e_25, _c;
+            var e_21, _a, e_22, _b, e_23, _c;
             var needed = this.neededResources();
             try {
                 for (var _d = __values(needed.prioritized), _e = _d.next(); !_e.done; _e = _d.next()) {
@@ -941,12 +899,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                                     this.buy(mat, gets * (res.recipe.materials[mat] || 0));
                                 }
                             }
-                            catch (e_24_1) { e_24 = { error: e_24_1 }; }
+                            catch (e_22_1) { e_22 = { error: e_22_1 }; }
                             finally {
                                 try {
                                     if (_g && !_g.done && (_b = _f.return)) _b.call(_f);
                                 }
-                                finally { if (e_24) throw e_24.error; }
+                                finally { if (e_22) throw e_22.error; }
                             }
                             this.schedule({
                                 type: 'craft',
@@ -962,28 +920,28 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                                     this.incDemand(mat, res.recipe.materials[mat] || 0);
                                 }
                             }
-                            catch (e_25_1) { e_25 = { error: e_25_1 }; }
+                            catch (e_23_1) { e_23 = { error: e_23_1 }; }
                             finally {
                                 try {
                                     if (_j && !_j.done && (_c = _h.return)) _c.call(_h);
                                 }
-                                finally { if (e_25) throw e_25.error; }
+                                finally { if (e_23) throw e_23.error; }
                             }
                         }
                     }
                 }
             }
-            catch (e_23_1) { e_23 = { error: e_23_1 }; }
+            catch (e_21_1) { e_21 = { error: e_21_1 }; }
             finally {
                 try {
                     if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
                 }
-                finally { if (e_23) throw e_23.error; }
+                finally { if (e_21) throw e_21.error; }
             }
         };
         Planet.prototype.imports = function () {
             var _this = this;
-            var e_26, _a;
+            var e_24, _a;
             if (this.queue.filter(function (t) { return isImportTask(t); }).length >= data_1.default.max_deliveries)
                 return;
             var need = this.neededResources();
@@ -1020,16 +978,16 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_26_1) { e_26 = { error: e_26_1 }; }
+            catch (e_24_1) { e_24 = { error: e_24_1 }; }
             finally {
                 try {
                     if (list_1_1 && !list_1_1.done && (_a = list_1.return)) _a.call(list_1);
                 }
-                finally { if (e_26) throw e_26.error; }
+                finally { if (e_24) throw e_24.error; }
             }
         };
         Planet.prototype.produce = function () {
-            var e_27, _a;
+            var e_25, _a;
             try {
                 for (var _b = __values(this.produces.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var item = _c.value;
@@ -1043,16 +1001,16 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_27_1) { e_27 = { error: e_27_1 }; }
+            catch (e_25_1) { e_25 = { error: e_25_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_27) throw e_27.error; }
+                finally { if (e_25) throw e_25.error; }
             }
         };
         Planet.prototype.consume = function () {
-            var e_28, _a;
+            var e_26, _a;
             try {
                 for (var _b = __values(this.consumes.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var item = _c.value;
@@ -1062,16 +1020,16 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_28_1) { e_28 = { error: e_28_1 }; }
+            catch (e_26_1) { e_26 = { error: e_26_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_28) throw e_28.error; }
+                finally { if (e_26) throw e_26.error; }
             }
         };
         Planet.prototype.rollups = function () {
-            var e_29, _a, e_30, _b;
+            var e_27, _a, e_28, _b;
             if (window.game.turns % (24 / data_1.default.hours_per_turn) === 0) {
                 try {
                     for (var _c = __values(this.stock.keys()), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -1079,12 +1037,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         this.incSupply(item, this.getStock(item));
                     }
                 }
-                catch (e_29_1) { e_29 = { error: e_29_1 }; }
+                catch (e_27_1) { e_27 = { error: e_27_1 }; }
                 finally {
                     try {
                         if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                     }
-                    finally { if (e_29) throw e_29.error; }
+                    finally { if (e_27) throw e_27.error; }
                 }
                 this.supply.rollup();
                 this.demand.rollup();
@@ -1094,18 +1052,18 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         this.need.inc(item, this.getNeed(item));
                     }
                 }
-                catch (e_30_1) { e_30 = { error: e_30_1 }; }
+                catch (e_28_1) { e_28 = { error: e_28_1 }; }
                 finally {
                     try {
                         if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
                     }
-                    finally { if (e_30) throw e_30.error; }
+                    finally { if (e_28) throw e_28.error; }
                 }
                 this.need.rollup();
             }
         };
         Planet.prototype.apply_conditions = function () {
-            var e_31, _a, e_32, _b, e_33, _c, e_34, _d;
+            var e_29, _a, e_30, _b, e_31, _c, e_32, _d;
             // Increment turns on each condition and filter out those which are no
             // longer active.
             this.conditions = this.conditions.filter(function (c) {
@@ -1131,12 +1089,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                             }
                         }
                     }
-                    catch (e_32_1) { e_32 = { error: e_32_1 }; }
+                    catch (e_30_1) { e_30 = { error: e_30_1 }; }
                     finally {
                         try {
                             if (_h && !_h.done && (_b = _g.return)) _b.call(_g);
                         }
-                        finally { if (e_32) throw e_32.error; }
+                        finally { if (e_30) throw e_30.error; }
                     }
                     try {
                         // Surpluses
@@ -1149,12 +1107,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                             }
                         }
                     }
-                    catch (e_33_1) { e_33 = { error: e_33_1 }; }
+                    catch (e_31_1) { e_31 = { error: e_31_1 }; }
                     finally {
                         try {
                             if (_k && !_k.done && (_c = _j.return)) _c.call(_j);
                         }
-                        finally { if (e_33) throw e_33.error; }
+                        finally { if (e_31) throw e_31.error; }
                     }
                     try {
                         // Conditions
@@ -1167,21 +1125,21 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                             }
                         }
                     }
-                    catch (e_34_1) { e_34 = { error: e_34_1 }; }
+                    catch (e_32_1) { e_32 = { error: e_32_1 }; }
                     finally {
                         try {
                             if (_m && !_m.done && (_d = _l.return)) _d.call(_l);
                         }
-                        finally { if (e_34) throw e_34.error; }
+                        finally { if (e_32) throw e_32.error; }
                     }
                 }
             }
-            catch (e_31_1) { e_31 = { error: e_31_1 }; }
+            catch (e_29_1) { e_29 = { error: e_29_1 }; }
             finally {
                 try {
                     if (_f && !_f.done && (_a = _e.return)) _a.call(_e);
                 }
-                finally { if (e_31) throw e_31.error; }
+                finally { if (e_29) throw e_29.error; }
             }
         };
         Planet.prototype.turn = function () {
@@ -1201,7 +1159,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * Misc
          */
         Planet.prototype.addonPrice = function (addon, player) {
-            var e_35, _a;
+            var e_33, _a;
             var base = data_1.default.addons[addon].price;
             var standing = base * player.getStandingPriceAdjustment(this.faction.abbrev);
             var tax = base * this.faction.sales_tax;
@@ -1214,12 +1172,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_35_1) { e_35 = { error: e_35_1 }; }
+            catch (e_33_1) { e_33 = { error: e_33_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_35) throw e_35.error; }
+                finally { if (e_33) throw e_33.error; }
             }
             return price;
         };

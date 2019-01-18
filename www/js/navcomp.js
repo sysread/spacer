@@ -38,32 +38,25 @@ var __values = (this && this.__values) || function (o) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-define(["require", "exports", "./data", "./system", "./physics", "./transitplan", "./vector"], function (require, exports, data_1, system_1, physics_1, transitplan_1, vector_1) {
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+define(["require", "exports", "./data", "./system", "./physics", "./transitplan", "./vector"], function (require, exports, data_1, system_1, physics_1, transitplan_1, Vec) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
     physics_1 = __importDefault(physics_1);
-    transitplan_1 = __importDefault(transitplan_1);
+    Vec = __importStar(Vec);
     var SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
     var DT = 1000; // frames per turn for euler integration
     var TI = SPT / DT; // seconds per frame
-    var Body = /** @class */ (function () {
-        function Body(position, velocity) {
-            this.position = position.clone();
-            this.velocity = velocity.clone();
-        }
-        Object.defineProperty(Body.prototype, "pos", {
-            get: function () { return this.position.clone(); },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Body.prototype, "vel", {
-            get: function () { return this.velocity.clone(); },
-            enumerable: true,
-            configurable: true
-        });
-        return Body;
-    }());
+    var POSITION = 0;
+    var VELOCITY = 1;
     var Course = /** @class */ (function () {
         function Course(target, agent, maxAccel, turns) {
             this.target = target;
@@ -74,37 +67,46 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             this.accel = this.calculateAcceleration();
             this._path = null;
         }
+        Course.prototype.export = function () {
+            return {
+                target: this.target,
+                agent: this.agent,
+                accel: this.accel,
+                maxAccel: this.maxAccel,
+                turns: this.turns,
+            };
+        };
+        Course.import = function (opt) {
+            return new Course(opt.target, opt.agent, opt.maxAccel, opt.turns);
+        };
         Object.defineProperty(Course.prototype, "acc", {
-            get: function () { return this.accel.clone(); },
+            get: function () { return Vec.clone(this.accel); },
             enumerable: true,
             configurable: true
         });
         // a = (2s / t^2) - (2v / t)
         Course.prototype.calculateAcceleration = function () {
             // Calculate portion of target velocity to match by flip point
-            var dvf = this.target.vel
-                .mul_scalar(2 / this.tflip);
+            var dvf = Vec.mul_scalar(this.target[VELOCITY], 2 / this.tflip);
             // Calculate portion of total change in velocity to apply by flip point
-            var dvi = this.agent.vel
-                .sub(dvf)
-                .mul_scalar(2 / this.tflip);
-            return this.target.pos // change in position
-                .sub(this.agent.position) // (2s / 2) for flip point
-                .div_scalar(this.tflip * this.tflip) // t^2
-                .sub(dvi); // less the change in velocity
+            var dvi = Vec.mul_scalar(Vec.sub(this.agent[VELOCITY], dvf), 2 / this.tflip);
+            var acc = Vec.sub(this.target[POSITION], this.agent[POSITION]); // (2s / 2) for flip point
+            acc = Vec.div_scalar(acc, this.tflip * this.tflip); // t^2
+            acc = Vec.sub(acc, dvi); // less the change in velocity
+            return acc;
         };
         Course.prototype.maxVelocity = function () {
             var t = this.tflip;
-            return this.accel.clone().mul_scalar(t).length;
+            return Vec.length(Vec.mul_scalar(this.accel, t));
         };
         Course.prototype.path = function () {
             if (this._path != null) {
                 return this._path;
             }
-            var p = this.agent.pos; // initial position
-            var v = this.agent.vel; // initial velocity
-            var vax = this.acc.mul_scalar(TI); // static portion of change in velocity each TI
-            var dax = this.acc.mul_scalar(TI * TI / 2); // static portion of change in position each TI
+            var p = this.agent[POSITION]; // initial position
+            var v = this.agent[VELOCITY]; // initial velocity
+            var vax = Vec.mul_scalar(this.acc, TI); // static portion of change in velocity each TI
+            var dax = Vec.mul_scalar(this.acc, TI * TI / 2); // static portion of change in position each TI
             var path = [];
             var t = 0;
             for (var turn = 0; turn < this.turns; ++turn) {
@@ -113,17 +115,17 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 for (var i = 0; i < DT; ++i) {
                     t += TI;
                     if (t > this.tflip) {
-                        v.sub(vax); // decelerate after flip
+                        v = Vec.sub(v, vax); // decelerate after flip
                     }
                     else {
-                        v.add(vax); // accelerate before flip
+                        v = Vec.add(v, vax); // accelerate before flip
                     }
                     // Update position
-                    p.add(v.clone().mul_scalar(TI).add(dax));
+                    p = Vec.add(p, Vec.add(Vec.mul_scalar(v, TI), dax));
                 }
                 var segment = {
-                    position: p.clone().point,
-                    velocity: v.clone().length,
+                    position: p,
+                    velocity: Vec.length(v),
                 };
                 path.push(segment);
             }
@@ -132,6 +134,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
         };
         return Course;
     }());
+    exports.Course = Course;
     var NavComp = /** @class */ (function () {
         function NavComp(player, orig, show_all, fuel_target) {
             this.player = player;
@@ -164,15 +167,31 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             }
             return this.data[dest];
         };
+        NavComp.prototype.getFastestTransitTo = function (dest) {
+            var e_2, _a;
+            var transits = this.astrogator(dest);
+            try {
+                for (var transits_2 = __values(transits), transits_2_1 = transits_2.next(); !transits_2_1.done; transits_2_1 = transits_2.next()) {
+                    var transit = transits_2_1.value;
+                    return transit;
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (transits_2_1 && !transits_2_1.done && (_a = transits_2.return)) _a.call(transits_2);
+                }
+                finally { if (e_2) throw e_2.error; }
+            }
+        };
         NavComp.prototype.astrogator = function (destination) {
-            var orig, dest, startPos, vInit, bestAcc, mass, fuelrate, thrust, fuel, prevFuelUsed, turns, distance, fuelPerTurn, thrustPerTurn, availAcc, maxAccel, targetPos, vFinal, target, agent, course, a, fuelUsed, fuelUsedPerTurn;
+            var orig, dest, vInit, bestAcc, mass, fuelrate, thrust, fuel, prevFuelUsed, turns, distance, fuelPerTurn, thrustPerTurn, availAcc, maxAccel, vFinal, target, agent, course, a, fuelUsed, fuelUsedPerTurn;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         orig = system_1.default.orbit_by_turns(this.orig);
                         dest = system_1.default.orbit_by_turns(destination);
-                        startPos = vector_1.vec(orig[0]);
-                        vInit = vector_1.vec(orig[1]).sub(vector_1.vec(orig[0])).div_scalar(SPT);
+                        vInit = Vec.div_scalar(Vec.sub(orig[1], orig[0]), SPT);
                         bestAcc = Math.min(this.player.maxAcceleration(), this.player.shipAcceleration());
                         mass = this.player.ship.currentMass();
                         fuelrate = this.player.ship.fuelrate;
@@ -187,12 +206,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                         thrustPerTurn = thrust * fuelPerTurn / fuelrate;
                         availAcc = thrustPerTurn / mass;
                         maxAccel = Math.min(bestAcc, availAcc);
-                        targetPos = vector_1.vec(dest[turns]);
-                        vFinal = targetPos.clone().sub(vector_1.vec(dest[turns - 1])).div_scalar(SPT);
-                        target = new Body(targetPos, vFinal);
-                        agent = new Body(startPos, vInit);
+                        vFinal = Vec.div_scalar(Vec.sub(dest[turns], dest[turns - 1]), SPT);
+                        target = [dest[turns], vFinal];
+                        agent = [orig[0], vInit];
                         course = new Course(target, agent, maxAccel, turns);
-                        a = course.accel.length;
+                        a = Vec.length(course.accel);
                         if (a > maxAccel)
                             return [3 /*break*/, 3];
                         fuelUsed = a / availAcc * fuelPerTurn * turns * 0.99;
@@ -205,11 +223,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                         else {
                             return [3 /*break*/, 3];
                         }
-                        return [4 /*yield*/, new transitplan_1.default({
+                        return [4 /*yield*/, new transitplan_1.TransitPlan({
                                 origin: this.orig,
                                 dest: destination,
-                                start: startPos.point,
-                                end: targetPos.point,
+                                start: orig[0],
+                                end: dest[turns],
                                 dist: distance,
                                 fuel: fuelUsed,
                                 course: course,
@@ -226,5 +244,5 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
         };
         return NavComp;
     }());
-    return NavComp;
+    exports.NavComp = NavComp;
 });

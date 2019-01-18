@@ -84,7 +84,6 @@ export class Planet {
   max_fab_health:     number;
   fab_health:         number;
 
-  isNetExporterOf:    {[key: string]: boolean};
   stock:              Store;
   supply:             History;
   demand:             History;
@@ -167,11 +166,6 @@ export class Planet {
         this.produces.inc(item, this.scale(trait.produces[item]));
         this.consumes.inc(item, this.scale(trait.consumes[item]));
       }
-    }
-
-    this.isNetExporterOf = {};
-    for (const item of t.resources) {
-      this.isNetExporterOf[item] = this.calculateIsNetExporter(item);
     }
 
     // Assign directly in constructor rather than in clearMemos for
@@ -478,32 +472,9 @@ export class Planet {
   }
 
   isNetExporter(item: t.resource): boolean {
-    return this.isNetExporterOf[item];
-  }
-
-  calculateIsNetExporter(item: t.resource): boolean {
-    let isExporter = false;
-
-    const res = resources[item];
-
-    if (isRaw(res)) {
-      const net = this.netProduction(item);
-      isExporter = net >= this.scale(1);
-    }
-
-    if (!isExporter && isCraft(res)) {
-      let matExporter = true;
-      for (const mat of res.ingredients) {
-        if (!this.isNetExporter(mat)) {
-          matExporter = false;
-          break;
-        }
-      }
-
-      isExporter = matExporter;
-    }
-
-    return isExporter;
+    const production  = this.avgProduction(item);
+    const consumption = this.consumption(item);
+    return (production - consumption) > this.scale(1);
   }
 
   getNeed(item: t.resource) {

@@ -18,7 +18,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./person", "./planet", "./common", "./util"], function (require, exports, data_1, system_1, person_1, planet_1, t, util) {
+define(["require", "exports", "./data", "./system", "./person", "./planet", "./agent", "./common", "./util"], function (require, exports, data_1, system_1, person_1, planet_1, agent_1, t, util) {
     "use strict";
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
@@ -34,6 +34,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./c
             this.planets = {};
             this.page = null;
             this.frozen = false;
+            this.agents = [];
             var saved = window.localStorage.getItem('game');
             var init = saved == null ? null : JSON.parse(saved);
             if (init) {
@@ -46,6 +47,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./c
                     console.log('setting system date', this.date);
                     system_1.default.set_date(this.strdate());
                     this.build_planets(init.planets);
+                    this.build_agents(init.agents);
                 }
                 catch (e) {
                     console.warn('initialization error; clearing data. error was:', e);
@@ -53,8 +55,17 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./c
                     this.turns = 0;
                     this.player = null;
                     this.build_planets();
+                    this.build_agents();
                     this.reset_date();
                 }
+            }
+            else {
+                this.locus = null;
+                this.turns = 0;
+                this.player = null;
+                this.build_planets();
+                this.build_agents();
+                this.reset_date();
             }
         }
         Object.defineProperty(Game.prototype, "here", {
@@ -111,6 +122,40 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./c
                 finally { if (e_1) throw e_1.error; }
             }
         };
+        Game.prototype.build_agents = function (init) {
+            var e_2, _a;
+            this.agents = [];
+            if (init && init.length > 0) {
+                try {
+                    for (var init_1 = __values(init), init_1_1 = init_1.next(); !init_1_1.done; init_1_1 = init_1.next()) {
+                        var opt = init_1_1.value;
+                        this.agents.push(new agent_1.Agent(opt));
+                    }
+                }
+                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                finally {
+                    try {
+                        if (init_1_1 && !init_1_1.done && (_a = init_1.return)) _a.call(init_1);
+                    }
+                    finally { if (e_2) throw e_2.error; }
+                }
+            }
+            else {
+                for (var i = 0; i < data_1.default.max_agents; ++i) {
+                    var body = util.oneOf(t.bodies);
+                    var faction = data_1.default.bodies[body].faction;
+                    var agent = new agent_1.Agent({
+                        name: 'Merchant from ' + data_1.default.bodies[body].name,
+                        ship: { type: 'schooner' },
+                        faction: faction,
+                        home: body,
+                        money: 1000,
+                        standing: data_1.default.factions[faction].standing,
+                    });
+                    this.agents.push(agent);
+                }
+            }
+        };
         Game.prototype.new_game = function (player, home) {
             window.localStorage.removeItem('game');
             this.player = player;
@@ -128,23 +173,36 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./c
         Game.prototype.turn = function (n, no_save) {
             if (n === void 0) { n = 1; }
             if (no_save === void 0) { no_save = false; }
-            var e_2, _a;
+            var e_3, _a, e_4, _b;
             for (var i = 0; i < n; ++i) {
                 ++this.turns;
                 this.date.setHours(this.date.getHours() + data_1.default.hours_per_turn);
                 system_1.default.set_date(this.strdate());
                 try {
-                    for (var _b = __values(util.shuffle(Object.values(this.planets))), _c = _b.next(); !_c.done; _c = _b.next()) {
-                        var p = _c.value;
+                    for (var _c = __values(util.shuffle(Object.values(this.planets))), _d = _c.next(); !_d.done; _d = _c.next()) {
+                        var p = _d.value;
                         p.turn();
                     }
                 }
-                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                catch (e_3_1) { e_3 = { error: e_3_1 }; }
                 finally {
                     try {
-                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                        if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                     }
-                    finally { if (e_2) throw e_2.error; }
+                    finally { if (e_3) throw e_3.error; }
+                }
+                try {
+                    for (var _e = __values(this.agents), _f = _e.next(); !_f.done; _f = _e.next()) {
+                        var a = _f.value;
+                        a.turn();
+                    }
+                }
+                catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                finally {
+                    try {
+                        if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                    }
+                    finally { if (e_4) throw e_4.error; }
                 }
             }
             if (!no_save) {
@@ -167,7 +225,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./c
             this.transit_plan = undefined;
         };
         Game.prototype.trade_routes = function () {
-            var e_3, _a, e_4, _b;
+            var e_5, _a, e_6, _b;
             var trade = {};
             try {
                 for (var _c = __values(Object.values(this.planets)), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -195,21 +253,21 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./c
                             }
                         }
                     }
-                    catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                    catch (e_6_1) { e_6 = { error: e_6_1 }; }
                     finally {
                         try {
                             if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
                         }
-                        finally { if (e_4) throw e_4.error; }
+                        finally { if (e_6) throw e_6.error; }
                     }
                 }
             }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            catch (e_5_1) { e_5 = { error: e_5_1 }; }
             finally {
                 try {
                     if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                 }
-                finally { if (e_3) throw e_3.error; }
+                finally { if (e_5) throw e_5.error; }
             }
             return trade;
         };

@@ -1,9 +1,10 @@
 import data from './data';
 import system from './system';
-import TransitPlan from './transitplan';
+import { TransitPlan } from './transitplan';
 
 import { Person, SavedPerson } from './person';
 import { Planet, SavedPlanet, isImportTask } from './planet';
+import { Agent, SavedAgent } from './agent';
 
 import * as t from './common';
 import * as util from './util';
@@ -45,6 +46,7 @@ class Game {
   page:          string | null = null;
   frozen:        boolean = false;
   transit_plan?: TransitPlan;
+  agents:        Agent[] = [];
 
   constructor() {
     const saved = window.localStorage.getItem('game');
@@ -62,6 +64,7 @@ class Game {
         system.set_date(this.strdate());
 
         this.build_planets(init.planets);
+        this.build_agents(init.agents);
       }
       catch (e) {
         console.warn('initialization error; clearing data. error was:', e);
@@ -69,8 +72,17 @@ class Game {
         this.turns  = 0;
         this.player = null;
         this.build_planets();
+        this.build_agents();
         this.reset_date();
       }
+    }
+    else {
+      this.locus  = null;
+      this.turns  = 0;
+      this.player = null;
+      this.build_planets();
+      this.build_agents();
+      this.reset_date();
     }
   }
 
@@ -117,6 +129,33 @@ class Game {
     }
   }
 
+  build_agents(init?: SavedAgent[]) {
+    this.agents = [];
+
+    if (init && init.length > 0) {
+      for (const opt of init) {
+        this.agents.push(new Agent(opt));
+      }
+    }
+    else {
+      for (let i = 0; i < data.max_agents; ++i) {
+        const body    = util.oneOf(t.bodies);
+        const faction = data.bodies[body].faction;
+
+        const agent = new Agent({
+          name:     'Merchant from ' + data.bodies[body].name,
+          ship:     { type: 'schooner' },
+          faction:  faction,
+          home:     body,
+          money:    1000,
+          standing: data.factions[faction].standing,
+        });
+
+        this.agents.push(agent);
+      }
+    }
+  }
+
 
   new_game(player: Person, home: t.body) {
     window.localStorage.removeItem('game');
@@ -144,6 +183,10 @@ class Game {
 
       for (const p of util.shuffle(Object.values(this.planets))) {
         p.turn();
+      }
+
+      for (const a of this.agents) {
+        a.turn();
       }
     }
 

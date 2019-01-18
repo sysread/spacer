@@ -1,6 +1,6 @@
 import Physics from './physics';
 import system from 'system';
-import { PointArray } from './vector';
+import { Point } from './vector';
 import * as util from './util';
 import * as t from './common';
 
@@ -102,7 +102,7 @@ class Layout {
     }
   }
 
-  set_center(point: PointArray) {
+  set_center(point: Point) {
     const [x, y]  = this.scale_point(point, true);
     this.offset_x = this.zero_x - x;
     this.offset_y = this.zero_y - y;
@@ -134,14 +134,14 @@ class Layout {
     return no_offset ? n_scaled : n_scaled + this.offset_y;
   }
 
-  scale_point(p: PointArray, no_offset: boolean=false) {
+  scale_point(p: Point, no_offset: boolean=false) {
     return [
       this.scale_x(p[0], no_offset),
       this.scale_y(p[1], no_offset),
     ];
   }
 
-  scale_path(points: PointArray[], max: number) {
+  scale_path(points: Point[], max: number) {
     if (max === undefined) {
       max = points.length;
     }
@@ -192,7 +192,7 @@ class Layout {
     return util.clamp(diameter * px_per_m * amount, min, this.scale_px);
   }
 
-  is_within_fov(target: PointArray, reference_point: PointArray) {
+  is_within_fov(target: Point, reference_point: Point) {
     const d = Physics.distance(target, reference_point) / Physics.AU;
     return d < 0.5 || d < this.fov_au;
   }

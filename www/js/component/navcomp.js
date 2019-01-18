@@ -4,7 +4,7 @@ define(function(require, exports, module) {
   const Vue     = require('vendor/vue');
   const Physics = require('physics');
   const util    = require('util');
-  const NavComp = require('navcomp');
+  const NavComp = require('navcomp').NavComp;
   const Layout  = require('component/layout');
   const svgpath = require('svgpath');
 

@@ -1,6 +1,8 @@
 import data from './data';
 import Physics from './physics';
 import SolarSystem from './system/SolarSystem';
+import * as t from './common';
+import * as V from './vector';
 
 type point = [number, number, number];
 
@@ -159,12 +161,6 @@ class System {
     return [closest, dist];
   }
 
-  addPoints(p1: point, p2: point): point {
-    const [x0, y0, z0] = p1;
-    const [x1, y1, z1] = p2;
-    return [x1 + x0, y1 + y0, z1 + z0];
-  }
-
   position(name: string, date?: Date): point {
     if (name == 'sun') {
       return [0, 0, 0];
@@ -190,7 +186,7 @@ class System {
       // that requires no adjustment. Moons, however, must be added to the host
       // planet's position.
       if (body.central && body.central.key !== 'sun') {
-        pos = this.addPoints(pos, this.position(body.central.key, date));
+        pos = V.add(pos, this.position(body.central.key, date));
       }
 
       this.pos[key][name] = pos;
@@ -225,27 +221,20 @@ class System {
     const key = `${name}.orbit.byturns`;
 
     if (this.cache[key] == undefined) {
-      const tpd = 24 / data.hours_per_turn;
+      const tpd   = data.turns_per_day;
       const orbit = this.orbit(name);
 
       let point = orbit[0];
       const path = [point];
 
       for (let day = 1; day < orbit.length; ++day) {
-        const next = orbit[day];
-        const dx = Math.ceil((next[0] - point[0]) / tpd);
-        const dy = Math.ceil((next[1] - point[1]) / tpd);
-        const dz = Math.ceil((next[2] - point[2]) / tpd);
+        const S = V.sub(orbit[day], point);
 
         for (let i = 1; i <= tpd; ++i) {
-          path.push([
-            point[0] + (i * dx),
-            point[1] + (i * dy),
-            point[2] + (i * dz),
-          ]);
+          path.push( V.add(point, V.mul_scalar(S, i)) );
         }
 
-        point = next;
+        point = orbit[day];
       }
 
       this.cache[key] = path;
@@ -259,55 +248,6 @@ class System {
       this.position(origin),
       this.position(destination)
     );
-  }
-
-  plot() {
-    let abs    = Math.abs;
-    let ceil   = Math.ceil;
-    let floor  = Math.floor;
-    let max    = Math.max;
-    let min    = Math.min;
-    let round  = Math.round;
-    let bodies = this.bodies();
-
-    let pos: { [key: string]: {x: number, y: number} } = {};
-
-    // Get coordinates and hypot for each body, scaled down
-    for (let name of bodies) {
-      let [x, y, z] = this.position(name);
-      x = ceil(x / 1000);
-      y = ceil(y / 1000);
-      pos[name] = {x:x, y:y};
-    }
-
-    // Calculate max values for x and y
-    let max_x = Math.ceil(1.2 * Object.values(pos).reduce((acc, val) => {return max(acc, abs(val.x))}, 0));
-    let max_y = Math.ceil(1.2 * Object.values(pos).reduce((acc, val) => {return max(acc, abs(val.y))}, 0));
-
-    // Calculate scaled coordinates
-    let plot = [['sun', 0, 0]];
-
-    let points: { [key: string]: [number, number] }  = {
-      'sun': [0, 0],
-    };
-
-    for (let name of bodies) {
-      let p = pos[name];
-      let pct_x = 0;
-      let pct_y = 0;
-
-      if (p.x !== 0) pct_x = p.x / max_x * 100;
-      if (p.y !== 0) pct_y = p.y / max_y * 100;
-
-      points[name] = [pct_x, pct_y];
-      plot.push([name, pct_x, pct_y]);
-    }
-
-    return {
-      max_x  : max_x,
-      max_y  : max_y,
-      points : points
-    };
   }
 }
 
