@@ -11,10 +11,12 @@ define(function(require, exports, module) {
 
     computed: {
       locus()      { return this.game.locus },
-      money()      { return Math.floor(this.game.player.money) },
-      cargoUsed()  { return this.game.player.ship.cargoUsed },
-      cargoSpace() { return this.game.player.ship.cargoSpace },
-      fuelPct()    { return util.R(100 * this.game.player.ship.fuel / this.game.player.ship.tank) },
+      money()      { return this.game.player ? Math.floor(this.game.player.money) : 0 },
+      cargoUsed()  { return this.game.player ? this.game.player.ship.cargoUsed : 0 },
+      cargoSpace() { return this.game.player ? this.game.player.ship.cargoSpace : 0 },
+      fuel()       { return this.game.player ? this.game.player.ship.fuel : 0 },
+      tank()       { return this.game.player ? this.game.player.ship.tank : 0 },
+      fuelPct()    { return this.game.player ? util.R(100 * (this.fuel / this.tank)) : 0 },
 
       // Re-calculate date from start date using game.turns so that the
       // reactive setter has something to watch since game.date is updated
