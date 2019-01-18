@@ -34,7 +34,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./physics", "./store", "./history", "./common", "./util", "./resource", "./trait", "./faction", "./condition"], function (require, exports, data_1, system_1, physics_1, store_1, history_1, t, util, resource_1, trait_1, faction_1, condition_1) {
+define(["require", "exports", "./data", "./system", "./physics", "./store", "./history", "./common", "./util", "./resource", "./trait", "./faction", "./condition", "./agent"], function (require, exports, data_1, system_1, physics_1, store_1, history_1, t, util, resource_1, trait_1, faction_1, condition_1, agent_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
@@ -185,6 +185,17 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 }
                 finally { if (e_6) throw e_6.error; }
             }
+            // Agent
+            this.agent = init.agent
+                ? new agent_1.Agent(init.agent)
+                : new agent_1.Agent({
+                    name: 'Joe Blow',
+                    ship: { type: 'schooner' },
+                    faction: this.faction.abbrev,
+                    home: this.body,
+                    money: 1000,
+                    standing: {},
+                });
             // Assign directly in constructor rather than in clearMemos for
             // performance reasons. V8's jit will produce more optimized classes by
             // avoiding dynamic assignment in the constructor.
@@ -1196,6 +1207,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 this.apply_conditions();
             }
             this.rollups();
+            this.agent.turn();
         };
         /*
          * Misc

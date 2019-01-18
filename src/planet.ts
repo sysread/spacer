@@ -11,6 +11,7 @@ import { Resource, Raw, Craft, isRaw, isCraft, resources } from './resource';
 import { Trait } from './trait';
 import { Faction } from './faction';
 import { Condition, SavedCondition } from './condition';
+import { Agent, SavedAgent } from './agent';
 
 
 // Shims for global browser objects
@@ -52,6 +53,7 @@ export function isCraftTask(task: EconTask): task is ImportTask {
 
 
 export interface SavedPlanet {
+  agent?:      SavedAgent;
   conditions?: SavedCondition[];
   stock?:      any;
   supply?:     any;
@@ -91,6 +93,8 @@ export class Planet {
   need:               History;
   pending:            Store;
   queue:              EconTask[];
+
+  agent:              Agent;
 
   _price:             t.Counter;
   _cycle:             t.Counter;
@@ -173,6 +177,19 @@ export class Planet {
     for (const item of t.resources) {
       this.isNetExporterOf[item] = this.calculateIsNetExporter(item);
     }
+
+    // Agent
+    this.agent = init.agent
+      ? new Agent(init.agent)
+      : new Agent({
+        name:     'Joe Blow',
+        ship:     { type: 'schooner' },
+        faction:  this.faction.abbrev,
+        home:     this.body,
+        money:    1000,
+        standing: {},
+      });
+
 
     // Assign directly in constructor rather than in clearMemos for
     // performance reasons. V8's jit will produce more optimized classes by
@@ -1036,6 +1053,8 @@ export class Planet {
     }
 
     this.rollups();
+
+    this.agent.turn();
   }
 
   /*

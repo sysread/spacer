@@ -26,9 +26,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 define(["require", "exports", "./data", "./physics", "./util"], function (require, exports, data_1, physics_1, util) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     physics_1 = __importDefault(physics_1);
     util = __importStar(util);
+    function isNewTransitPlan(opt) {
+        return opt.course != undefined;
+    }
+    function isSavedTransitPlan(opt) {
+        return opt.left != undefined;
+    }
     var TransitPlan = /** @class */ (function () {
         function TransitPlan(opt) {
             this.fuel = opt.fuel; // fuel used during trip
@@ -37,40 +44,33 @@ define(["require", "exports", "./data", "./physics", "./util"], function (requir
             this.origin = opt.origin; // origin body name
             this.dest = opt.dest; // destination body name
             this.dist = opt.dist; // trip distance in meters
-            this.course = opt.course; // NavComp.Course object
-            this.left = this.course.turns; // remaining turns in transit; updated by turn()
-            this.coords = this.start; // current position; updated by turn()
-            this.velocity = 0; // current ship velocity; updated by turn()
-            this.au = this.dist / physics_1.default.AU;
-            this.km = this.dist / 1000;
+            if (isSavedTransitPlan(opt)) {
+                this.turns = opt.turns;
+                this.accel = opt.accel;
+                this.maxVelocity = opt.maxVelocity;
+                this.path = opt.path;
+                this.left = opt.left;
+                this.coords = opt.coords;
+                this.velocity = opt.velocity;
+                this.au = opt.au;
+                this.km = opt.dist;
+            }
+            else if (isNewTransitPlan(opt)) {
+                this.turns = opt.course.turns;
+                this.accel = opt.course.accel.length;
+                this.maxVelocity = opt.course.maxVelocity();
+                this.path = opt.course.path();
+                this.left = opt.course.turns;
+                this.coords = this.start;
+                this.velocity = 0;
+                this.au = this.dist / physics_1.default.AU;
+                this.km = this.dist / 1000;
+            }
+            else {
+                throw new Error('invalid transit plan args');
+            }
+            this.accel_g = this.accel / physics_1.default.G;
         }
-        Object.defineProperty(TransitPlan.prototype, "turns", {
-            get: function () { return this.course.turns; } // turns
-            ,
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TransitPlan.prototype, "accel", {
-            get: function () { return this.course.accel.length; } // m/s/s
-            ,
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TransitPlan.prototype, "accel_g", {
-            get: function () { return this.course.accel.length / physics_1.default.G; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TransitPlan.prototype, "path", {
-            get: function () { return this.course.path(); },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(TransitPlan.prototype, "maxVelocity", {
-            get: function () { return this.course.maxVelocity(); },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(TransitPlan.prototype, "hours", {
             get: function () { return this.turns * data_1.default.hours_per_turn; } // hours
             ,
@@ -155,5 +155,5 @@ define(["require", "exports", "./data", "./physics", "./util"], function (requir
         };
         return TransitPlan;
     }());
-    return TransitPlan;
+    exports.TransitPlan = TransitPlan;
 });

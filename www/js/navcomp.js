@@ -43,7 +43,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
     physics_1 = __importDefault(physics_1);
-    transitplan_1 = __importDefault(transitplan_1);
     var SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
     var DT = 1000; // frames per turn for euler integration
     var TI = SPT / DT; // seconds per frame
@@ -205,7 +204,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                         else {
                             return [3 /*break*/, 3];
                         }
-                        return [4 /*yield*/, new transitplan_1.default({
+                        return [4 /*yield*/, new transitplan_1.TransitPlan({
                                 origin: this.orig,
                                 dest: destination,
                                 start: startPos.point,

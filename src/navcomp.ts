@@ -1,7 +1,7 @@
 import data  from './data';
 import system from './system';
 import Physics from './physics';
-import TransitPlan from './transitplan';
+import { TransitPlan } from './transitplan';
 import { Person } from './person';
 import { vec, Vector, PointArray, PointObject } from './vector';
 import * as util from './util';

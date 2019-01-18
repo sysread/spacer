@@ -10,59 +10,112 @@ interface PathSegment {
 }
 
 interface Course {
-  turns: number;
-  accel: Vector;
-  path(): PathSegment[];
+  turns:         number;
+  accel:         Vector;
+  path():        PathSegment[];
   maxVelocity(): number;
 }
 
-interface TransitPlanArgs {
-  fuel:   number;
-  start:  PointArray;
-  end:    PointArray;
-  origin: t.body;
-  dest:   t.body;
-  dist:   number;
-  course: Course;
+export interface NewTransitPlanArgs {
+  course:      Course;
+
+  fuel:        number;
+  start:       PointArray;
+  end:         PointArray;
+  origin:      t.body;
+  dest:        t.body;
+  dist:        number;
 }
 
-class TransitPlan {
-  fuel:     number;
-  start:    PointArray;
-  end:      PointArray;
-  origin:   t.body;
-  dest:     t.body;
-  dist:     number;
-  course:   any;
+export interface SavedTransitPlan {
+  fuel:        number;
+  start:       PointArray;
+  end:         PointArray;
+  origin:      t.body;
+  dest:        t.body;
+  dist:        number;
 
-  left:     number;
-  coords:   PointArray;
-  velocity: number;
-  au:       number;
-  km:       number;
+  turns:       number;
+  accel:       number;
+  accel_g:     number;
+  maxVelocity: number;
+  path:        PathSegment[];
+
+  left:        number;
+  coords:      PointArray;
+  velocity:    number;
+  au:          number;
+  km:          number;
+}
+
+type TransitPlanArgs = SavedTransitPlan | NewTransitPlanArgs;
+
+function isNewTransitPlan(opt: TransitPlanArgs): opt is NewTransitPlanArgs {
+  return (<NewTransitPlanArgs>opt).course != undefined;
+}
+
+function isSavedTransitPlan(opt: TransitPlanArgs): opt is SavedTransitPlan {
+  return (<SavedTransitPlan>opt).left != undefined;
+}
+
+export class TransitPlan {
+  fuel:        number;
+  start:       PointArray;
+  end:         PointArray;
+  origin:      t.body;
+  dest:        t.body;
+  dist:        number;
+
+  turns:       number;
+  accel:       number;
+  accel_g:     number;
+  maxVelocity: number;
+  path:        PathSegment[];
+
+  left:        number;     // remaining turns in transit; updated by turn()
+  coords:      PointArray; // current position; updated by turn()
+  velocity:    number;     // current ship velocity; updated by turn()
+  au:          number;
+  km:          number;
 
   constructor(opt: TransitPlanArgs) {
-    this.fuel     = opt.fuel;           // fuel used during trip
-    this.start    = opt.start;          // start point of transit
-    this.end      = opt.end;            // final point of transit
-    this.origin   = opt.origin;         // origin body name
-    this.dest     = opt.dest;           // destination body name
-    this.dist     = opt.dist;           // trip distance in meters
-    this.course   = opt.course;         // NavComp.Course object
+    this.fuel        = opt.fuel;   // fuel used during trip
+    this.start       = opt.start;  // start point of transit
+    this.end         = opt.end;    // final point of transit
+    this.origin      = opt.origin; // origin body name
+    this.dest        = opt.dest;   // destination body name
+    this.dist        = opt.dist;   // trip distance in meters
 
-    this.left     = this.course.turns;  // remaining turns in transit; updated by turn()
-    this.coords   = this.start;         // current position; updated by turn()
-    this.velocity = 0;                  // current ship velocity; updated by turn()
+    if (isSavedTransitPlan(opt)) {
+      this.turns       = opt.turns;
+      this.accel       = opt.accel;
+      this.maxVelocity = opt.maxVelocity;
+      this.path        = opt.path;
+      this.left        = opt.left;
+      this.coords      = opt.coords;
+      this.velocity    = opt.velocity;
+      this.au          = opt.au;
+      this.km          = opt.dist;
 
-    this.au = this.dist / Physics.AU;
-    this.km = this.dist / 1000;
+    }
+    else if (isNewTransitPlan(opt)) {
+      this.turns       = opt.course.turns;
+      this.accel       = opt.course.accel.length;
+      this.maxVelocity = opt.course.maxVelocity();
+      this.path        = opt.course.path();
+      this.left        = opt.course.turns;
+      this.coords      = this.start;
+      this.velocity    = 0;
+      this.au          = this.dist / Physics.AU;
+      this.km          = this.dist / 1000;
+    }
+    else {
+      throw new Error('invalid transit plan args');
+    }
+
+    this.accel_g     = this.accel / Physics.G;
   }
 
-  get turns()        { return this.course.turns                              } // turns
-  get accel()        { return this.course.accel.length                       } // m/s/s
-  get accel_g()      { return this.course.accel.length / Physics.G           }
-  get path()         { return this.course.path()                             }
-  get maxVelocity()  { return this.course.maxVelocity()                      }
   get hours()        { return this.turns * data.hours_per_turn               } // hours
   get currentTurn()  { return this.turns - this.left                         }
   get turnpct()      { return 100 / this.turns                               } // percent of trip per turn
@@ -105,5 +158,3 @@ class TransitPlan {
     return this.distanceRemaining() / Physics.AU;
   }
 }
-
-export = TransitPlan;

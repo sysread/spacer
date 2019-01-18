@@ -1,6 +1,6 @@
 import data from './data';
 import system from './system';
-import TransitPlan from './transitplan';
+import { TransitPlan } from './transitplan';
 
 import { Person, SavedPerson } from './person';
 import { Planet, SavedPlanet, isImportTask } from './planet';
