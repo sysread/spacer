@@ -139,19 +139,20 @@ class Game {
     }
     else {
       for (let i = 0; i < data.max_agents; ++i) {
-        const body    = util.oneOf(t.bodies);
-        const faction = data.bodies[body].faction;
+        for (const faction of t.factions) {
+          const body = data.factions[faction].capital;
 
-        const agent = new Agent({
-          name:     'Merchant from ' + data.bodies[body].name,
-          ship:     { type: 'schooner' },
-          faction:  faction,
-          home:     body,
-          money:    1000,
-          standing: data.factions[faction].standing,
-        });
+          const agent = new Agent({
+            name:     'Merchant from ' + data.bodies[body].name,
+            ship:     { type: 'schooner' },
+            faction:  faction,
+            home:     body,
+            money:    1000,
+            standing: data.factions[faction].standing,
+          });
 
-        this.agents.push(agent);
+          this.agents.push(agent);
+        }
       }
     }
   }
@@ -185,9 +186,9 @@ class Game {
         p.turn();
       }
 
-      /*for (const a of this.agents) {
+      for (const a of this.agents) {
         a.turn();
-      }*/
+      }
     }
 
     if (!no_save) {

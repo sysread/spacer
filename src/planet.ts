@@ -473,9 +473,7 @@ export class Planet {
   }
 
   isNetExporter(item: t.resource): boolean {
-    const production  = this.avgProduction(item);
-    const consumption = this.consumption(item);
-    return (production - consumption) > this.scale(1);
+    return this.netProduction(item) > this.scale(1);
   }
 
   getNeed(item: t.resource) {

@@ -136,13 +136,16 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     }());
     exports.Course = Course;
     var NavComp = /** @class */ (function () {
-        function NavComp(player, orig, show_all, fuel_target) {
+        function NavComp(player, orig, showAll, fuelTarget) {
             this.player = player;
             this.orig = orig;
-            this.fuel_target = fuel_target || player.ship.fuel;
-            this.show_all = show_all || false;
+            this.showAll = showAll || false;
+            this.fuelTarget = fuelTarget ? Math.min(fuelTarget, player.ship.fuel) : player.ship.fuel;
             this.max = player.maxAcceleration();
         }
+        NavComp.prototype.setFuelTarget = function (units) {
+            this.fuelTarget = Math.min(units, this.player.ship.fuel);
+        };
         NavComp.prototype.getTransitsTo = function (dest) {
             var e_1, _a;
             if (!this.data) {
@@ -196,7 +199,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                         mass = this.player.ship.currentMass();
                         fuelrate = this.player.ship.fuelrate;
                         thrust = this.player.ship.thrust;
-                        fuel = this.fuel_target;
+                        fuel = this.fuelTarget;
                         turns = 1;
                         _a.label = 1;
                     case 1:

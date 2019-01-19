@@ -8,6 +8,7 @@ define(["require", "exports"], function (require, exports) {
         hydrocarbons: true,
         food: true,
         fuel: true,
+        luxuries: true,
         metal: true,
         ceramics: true,
         medicine: true,

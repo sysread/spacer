@@ -5,6 +5,7 @@ const _resource = {
   hydrocarbons: true,
   food:         true,
   fuel:         true,
+  luxuries:     true,
   metal:        true,
   ceramics:     true,
   medicine:     true,

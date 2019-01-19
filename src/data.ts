@@ -17,13 +17,15 @@ const data = {
   market_history:      10 * turnsPerDay,
   scarcity_markup:     0.25,
   min_stock_count:     10,
-  max_deliveries:      8,
-  max_agents:          0,
+  max_deliveries:      8, // per market
+  max_agents:          1, // per faction
+  max_agent_money:     5000, // after which they buy luxuries
+  min_agent_profit:    100, // min credits net profit before a route is attractive
   necessity:           {water: true, food: true, medicine: true, fuel: true},
   craft_fee:           0.2,
   fabricators:         10, // number of fabricators, each equates to 1 unit of cybernetics
   fab_health:          30, // number of tics each fabricator can handle before needing to be replaced. be sure to make this higher than the total tics needed to craft a cybernetics unit.
-  grav_deltav_factor:  1.2,  // factor by which native gravity is multiplied to get player's sustained deltav tolerance
+  grav_deltav_factor:  1.2, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
   initial_ship:        'schooner',
   initial_money:       500,
   max_abs_standing:    100,
@@ -46,6 +48,7 @@ const data = {
     hydrocarbons: {mass:  10, mine: {tics: 2, value: 28}},
     food:         {mass:  10, mine: {tics: 2, value: 36}, recipe: {tics: 3, materials: {water: 2, hydrocarbons: 2}}},
     fuel:         {mass:   1, recipe: {tics: 1, materials: {ore: 1, water: 1}}},
+    luxuries:     {mass:  10, recipe: {tics: 8, materials: {water: 2, ore: 2, minerals: 2, hydrocarbons: 2}}},
     metal:        {mass:  40, recipe: {tics: 2, materials: {ore: 3}}},
     ceramics:     {mass:  25, recipe: {tics: 2, materials: {minerals: 3}}},
     medicine:     {mass:   5, recipe: {tics: 3, materials: {food: 2, hydrocarbons: 1}}},
@@ -57,7 +60,6 @@ const data = {
   },
 
   market: {
-    agents:      4,
     fabricators: 10,
     minability:  0.1,
     produces:    {},

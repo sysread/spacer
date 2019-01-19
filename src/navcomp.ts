@@ -134,19 +134,23 @@ export class Course {
 
 
 export class NavComp {
-  player:      Person;
-  orig:        t.body;
-  show_all:    boolean;
-  fuel_target: number;
-  max:         number;
-  data:        undefined | any;
+  player:     Person;
+  orig:       t.body;
+  showAll:    boolean;
+  fuelTarget: number;
+  max:        number;
+  data:       undefined | any;
 
-  constructor(player: Person, orig: t.body, show_all?: boolean, fuel_target?: number) {
-    this.player      = player;
-    this.orig        = orig;
-    this.fuel_target = fuel_target || player.ship.fuel;
-    this.show_all    = show_all    || false;
-    this.max         = player.maxAcceleration();
+  constructor(player: Person, orig: t.body, showAll?: boolean, fuelTarget?: number) {
+    this.player     = player;
+    this.orig       = orig;
+    this.showAll    = showAll || false;
+    this.fuelTarget = fuelTarget ? Math.min(fuelTarget, player.ship.fuel) : player.ship.fuel;
+    this.max        = player.maxAcceleration();
+  }
+
+  setFuelTarget(units: number) {
+    this.fuelTarget = Math.min(units, this.player.ship.fuel);
   }
 
   getTransitsTo(dest: t.body) {
@@ -182,7 +186,7 @@ export class NavComp {
     const mass     = this.player.ship.currentMass();
     const fuelrate = this.player.ship.fuelrate;
     const thrust   = this.player.ship.thrust;
-    const fuel     = this.fuel_target;
+    const fuel     = this.fuelTarget;
 
     let prevFuelUsed;
 

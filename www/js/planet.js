@@ -487,9 +487,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.supply.inc(item, amount);
         };
         Planet.prototype.isNetExporter = function (item) {
-            var production = this.avgProduction(item);
-            var consumption = this.consumption(item);
-            return (production - consumption) > this.scale(1);
+            return this.netProduction(item) > this.scale(1);
         };
         Planet.prototype.getNeed = function (item) {
             var d = this.getDemand(item);

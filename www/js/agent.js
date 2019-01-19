@@ -54,13 +54,13 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
     t = __importStar(t);
     util = __importStar(util);
     function isDocked(action) {
-        return typeof action == 'string';
+        return action.action == 'docked';
     }
     function isJob(action) {
-        return action.task != undefined;
+        return action.action == 'job';
     }
     function isRoute(action) {
-        return action.transit != undefined;
+        return action.action == 'route';
     }
     var Agent = /** @class */ (function (_super) {
         __extends(Agent, _super);
@@ -70,6 +70,7 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
             if (action != undefined) {
                 if (isRoute(action)) {
                     _this.action = {
+                        action: 'route',
                         dest: action.dest,
                         item: action.item,
                         profit: action.profit,
@@ -82,21 +83,24 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                 }
             }
             else {
-                _this.action = _this.home;
+                _this.action = _this.dock(_this.home);
             }
             return _this;
         }
         Agent.prototype.turn = function () {
             if (isDocked(this.action)) {
+                // Money to burn?
+                if (this.money > data_1.default.max_agent_money) {
+                    this.buyLuxuries();
+                }
                 // fully refueled!
                 if (this.refuel()) {
                     // select a route
                     var routes = this.profitableRoutes();
                     if (routes.length > 0) {
                         // buy the goods to transport
-                        var here = window.game.planets[this.action];
                         var _a = routes[0], item = _a.item, count = _a.count;
-                        var _b = __read(here.buy(item, count, this), 2), bought = _b[0], price = _b[1];
+                        var _b = __read(this.here.buy(item, count, this), 2), bought = _b[0], price = _b[1];
                         if (bought != routes[0].count) {
                             throw new Error(bought + " != " + count);
                         }
@@ -117,14 +121,32 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                 return;
             }
         };
+        // Returns a 'Docked' action for the given location
+        Agent.prototype.dock = function (here) {
+            return {
+                action: 'docked',
+                location: here,
+            };
+        };
+        Object.defineProperty(Agent.prototype, "here", {
+            get: function () {
+                if (isDocked(this.action) || isJob(this.action)) {
+                    return window.game.planets[this.action.location];
+                }
+                else {
+                    throw new Error('not docked');
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
         // Returns true if the ship was fully refueled
         Agent.prototype.refuel = function () {
             if (isDocked(this.action)) {
-                var planet = window.game.planets[this.action];
                 var fuelNeeded = this.ship.refuelUnits();
-                var price = planet.buyPrice('fuel', this);
+                var price = this.here.buyPrice('fuel', this);
                 if (fuelNeeded > 0 && this.money > (fuelNeeded * price)) {
-                    var _a = __read(planet.buy('fuel', fuelNeeded), 2), bought = _a[0], paid = _a[1];
+                    var _a = __read(this.here.buy('fuel', fuelNeeded), 2), bought = _a[0], paid = _a[1];
                     var need = fuelNeeded - bought;
                     var total = paid + (need * price);
                     this.debit(total);
@@ -138,13 +160,13 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
             // TODO what to do if there are no jobs?
             // TODO account for strikes
             if (isDocked(this.action)) {
-                var loc = window.game.planets[this.action];
-                var job = util.oneOf(loc.work_tasks);
+                var job = util.oneOf(this.here.work_tasks);
                 if (job) {
                     var days = 3;
                     var turns = days * data_1.default.turns_per_day;
                     this.action = {
-                        location: this.action,
+                        action: 'job',
+                        location: this.action.location,
                         task: job,
                         days: days,
                         turns: turns,
@@ -152,22 +174,30 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                 }
             }
         };
+        Agent.prototype.buyLuxuries = function () {
+            if (isDocked(this.action)) {
+                var here = window.game.planets[this.action.location];
+                var want = Math.ceil((this.money - 1000) / here.buyPrice('luxuries', this));
+                var _a = __read(here.buy('luxuries', want), 2), bought = _a[0], price = _a[1];
+                this.debit(price);
+                console.debug("agent: bought " + bought + " luxuries for " + price + " on " + this.here.name);
+            }
+        };
         // Returns true if any action was performed
-        // TODO sell acquired resources to market
         Agent.prototype.workTurn = function () {
             var e_1, _a;
             if (isJob(this.action)) {
                 if (--this.action.turns == 0) {
-                    var planet = window.game.planets[this.action.location];
-                    var result = planet.work(this, this.action.task, this.action.days);
+                    var result = this.here.work(this, this.action.task, this.action.days);
                     // Credit agent for the word completed
                     this.credit(result.pay);
+                    console.debug("agent: worked " + this.action.task.name + " for " + result.pay + " on " + this.here.name);
                     try {
                         // Sell any harvested resources to the market
                         for (var _b = __values(result.items.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
                             var item = _c.value;
-                            var _d = __read(planet.sell(item, result.items.count(item)), 3), amount = _d[0], price = _d[1], standing = _d[2];
-                            this.incStanding(planet.faction.abbrev, standing);
+                            var _d = __read(this.here.sell(item, result.items.count(item)), 3), amount = _d[0], price = _d[1], standing = _d[2];
+                            this.incStanding(this.here.faction.abbrev, standing);
                             this.credit(price);
                         }
                     }
@@ -178,8 +208,8 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                         }
                         finally { if (e_1) throw e_1.error; }
                     }
-                    // Restore "docked" action
-                    this.action = this.action.location;
+                    // Restore "Docked" action
+                    this.action = this.dock(this.action.location);
                 }
                 return true;
             }
@@ -193,11 +223,10 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                 if (this.action.transit.left == 0) {
                     var action = this.action;
                     // Arrive
-                    this.action = action.dest;
+                    this.action = this.dock(action.dest);
                     // Sell cargo
-                    var planet = window.game.planets[this.action];
-                    var result = planet.sell(action.item, action.count, this);
-                    //console.log(`${this.name} sold ${action.count} units of ${action.item} to ${action.dest}; money now ${this.money}`);
+                    var _a = __read(this.here.sell(action.item, action.count, this), 3), amt = _a[0], price = _a[1], standing = _a[2];
+                    console.debug("agent: sold " + action.count + " units of " + action.item + " for " + util.csn(price) + " on " + action.dest);
                 }
                 return true;
             }
@@ -208,8 +237,8 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
             var routes = [];
             if (isDocked(this.action)) {
                 var game = window.game;
-                var here = game.planets[this.action];
-                var navComp = new navcomp_1.NavComp(this, here.body);
+                var here = this.here;
+                var navComp = new navcomp_1.NavComp(this, this.here.body);
                 var cargoSpace = this.ship.cargoLeft;
                 try {
                     for (var _c = __values(t.resources), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -224,7 +253,6 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                             for (var _e = __values(t.bodies), _f = _e.next(); !_f.done; _f = _e.next()) {
                                 var dest = _f.value;
                                 var sellPrice = game.planets[dest].sellPrice(item);
-                                var fuelPrice = game.planets[dest].buyPrice('fuel', this);
                                 var profitPerUnit = sellPrice - buyPrice;
                                 if (profitPerUnit <= 0) {
                                     continue;
@@ -233,14 +261,17 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                                 if (transit == undefined) {
                                     continue;
                                 }
+                                var fuelPrice = game.planets[dest].buyPrice('fuel', this);
                                 var fuelCost = transit.fuel * fuelPrice;
-                                var profit = (profitPerUnit * canBuy - fuelCost) / transit.turns;
-                                if (profit > 0) {
+                                var grossProfit = profitPerUnit * canBuy;
+                                var netProfit = (grossProfit - fuelCost) / transit.turns;
+                                if (netProfit >= data_1.default.min_agent_profit) {
                                     routes.push({
+                                        action: 'route',
                                         dest: dest,
                                         item: item,
                                         count: canBuy,
-                                        profit: profit,
+                                        profit: netProfit,
                                         transit: transit,
                                     });
                                 }
