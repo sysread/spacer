@@ -1,7 +1,7 @@
 import data  from './data';
 import Physics from './physics';
 import { NavComp, Course, SavedCourse } from './navcomp';
-import { Point } from './vector';
+import { Point, length } from './vector';
 import * as util from './util';
 import * as t from './common';
 
@@ -88,8 +88,8 @@ export class TransitPlan {
   }
 
   get turns()        { return this.course.turns                              } // turns
-  get accel()        { return this.course.accel.length                       } // m/s/s
-  get accel_g()      { return this.course.accel.length / Physics.G           }
+  get accel()        { return length(this.course.accel)                      } // m/s/s
+  get accel_g()      { return this.accel / Physics.G                         }
   get path()         { return this.course.path()                             }
   get maxVelocity()  { return this.course.maxVelocity()                      }
   get hours()        { return this.turns * data.hours_per_turn               } // hours

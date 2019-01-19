@@ -24,7 +24,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./physics", "./navcomp", "./util"], function (require, exports, data_1, physics_1, navcomp_1, util) {
+define(["require", "exports", "./data", "./physics", "./navcomp", "./vector", "./util"], function (require, exports, data_1, physics_1, navcomp_1, vector_1, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
@@ -71,13 +71,13 @@ define(["require", "exports", "./data", "./physics", "./navcomp", "./util"], fun
             configurable: true
         });
         Object.defineProperty(TransitPlan.prototype, "accel", {
-            get: function () { return this.course.accel.length; } // m/s/s
+            get: function () { return vector_1.length(this.course.accel); } // m/s/s
             ,
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(TransitPlan.prototype, "accel_g", {
-            get: function () { return this.course.accel.length / physics_1.default.G; },
+            get: function () { return this.accel / physics_1.default.G; },
             enumerable: true,
             configurable: true
         });
