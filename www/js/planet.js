@@ -1172,16 +1172,31 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
         };
         Planet.prototype.turn = function () {
-            this.produce();
+            /*this.produce();
             this.consume();
-            this.processQueue();
+            this.processQueue();*/
             // Only do the really expensive stuff once per day
-            if (window.game.turns % data_1.default.turns_per_day == 0) {
-                this.manufacture();
-                this.imports();
-                this.replenishFabricators();
-                this.apply_conditions();
+            switch (window.game.turns % data_1.default.turns_per_day) {
+                // note fallthrough to ensure some actions happen every turn
+                case 0:
+                    this.manufacture();
+                case 1:
+                    this.imports();
+                case 2:
+                    this.replenishFabricators();
+                    this.apply_conditions();
+                default:
+                    this.produce();
+                    this.consume();
+                    this.processQueue();
+                    break;
             }
+            /*if (window.game.turns % data.turns_per_day == 0) {
+              this.manufacture();
+              this.imports();
+              this.replenishFabricators();
+              this.apply_conditions();
+            }*/
             this.rollups();
         };
         /*
