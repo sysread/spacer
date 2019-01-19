@@ -5,22 +5,24 @@ import * as util from './util';
 function craftValue(item: t.Craft): number {
   let value = 0;
 
-  for (const mat of Object.keys(item.recipe.materials)) {
+  for (const mat of Object.keys(item.recipe.materials) as t.resource[]) {
     const amt: number = item.recipe.materials[mat as t.resource] || 0;
-    const val: number = resourceValue(data.resources[mat]);
+    const val: number = resourceValue(mat);
     value += amt * val;
   }
 
-  value += Math.max(1, util.R(data.craft_fee * value, 2));
-
-  for (let i = 0; i < item.recipe.tics; ++i) {
-    value *= 1.5;
-  }
+  value += data.craft_fee * value;                  // craft fee
+  value += value * (1 + (0.05 * item.recipe.tics)); // time to craft
 
   return value;
 }
 
-function resourceValue(item: t.Resource): number {
+function resourceValue(name: t.resource): number {
+  if (resources[name] != undefined) {
+    return resources[name].value;
+  }
+
+  const item: t.Resource = data.resources[name];
   let value = 0;
 
   if ((<t.Craft>item).recipe) {
@@ -30,7 +32,7 @@ function resourceValue(item: t.Resource): number {
   }
 
   // Adjust value due to expense in reaction mass to move it
-  value *= 0.01 * item.mass + 1;
+  value += value * (0.01 * item.mass);
 
   return value;
 }
@@ -59,7 +61,7 @@ export abstract class Resource {
     this.name       = name;
     this.mass       = data.resources[name].mass;
     this.contraband = data.resources[name].contraband;
-    this.value      = Math.ceil(resourceValue(data.resources[name]));
+    this.value      = Math.ceil(resourceValue(name));
     this.minPrice   = Math.ceil(this.calcMinPrice());
     this.maxPrice   = Math.ceil(this.calcMaxPrice());
   }

@@ -383,8 +383,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return { pay: pay, items: collected };
         };
         Planet.prototype.mine = function (item) {
-            if (this.production(item) > 0 && Math.random() <= data_1.default.market.minability) {
-                return Math.min(1, this.production(item));
+            if (this.production(item) > 0 && util.chance(data_1.default.market.minability)) {
+                var amt = util.getRandomNum(0, this.production(item));
+                return Math.min(1, amt);
             }
             return 0;
         };

@@ -45,7 +45,7 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
             for (var _b = __values(Object.keys(item.recipe.materials)), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var mat = _c.value;
                 var amt = item.recipe.materials[mat] || 0;
-                var val = resourceValue(data_1.default.resources[mat]);
+                var val = resourceValue(mat);
                 value += amt * val;
             }
         }
@@ -56,13 +56,15 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
             }
             finally { if (e_2) throw e_2.error; }
         }
-        value += Math.max(1, util.R(data_1.default.craft_fee * value, 2));
-        for (var i = 0; i < item.recipe.tics; ++i) {
-            value *= 1.5;
-        }
+        value += data_1.default.craft_fee * value; // craft fee
+        value += value * (1 + (0.05 * item.recipe.tics)); // time to craft
         return value;
     }
-    function resourceValue(item) {
+    function resourceValue(name) {
+        if (exports.resources[name] != undefined) {
+            return exports.resources[name].value;
+        }
+        var item = data_1.default.resources[name];
         var value = 0;
         if (item.recipe) {
             value = craftValue(item);
@@ -71,7 +73,7 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
             value = item.mine.value;
         }
         // Adjust value due to expense in reaction mass to move it
-        value *= 0.01 * item.mass + 1;
+        value += value * (0.01 * item.mass);
         return value;
     }
     /*
@@ -90,7 +92,7 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
             this.name = name;
             this.mass = data_1.default.resources[name].mass;
             this.contraband = data_1.default.resources[name].contraband;
-            this.value = Math.ceil(resourceValue(data_1.default.resources[name]));
+            this.value = Math.ceil(resourceValue(name));
             this.minPrice = Math.ceil(this.calcMinPrice());
             this.maxPrice = Math.ceil(this.calcMaxPrice());
         }

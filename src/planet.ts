@@ -382,8 +382,9 @@ export class Planet {
   }
 
   mine(item: t.resource) {
-    if (this.production(item) > 0 && Math.random() <= data.market.minability) {
-      return Math.min(1, this.production(item));
+    if (this.production(item) > 0 && util.chance(data.market.minability)) {
+      const amt = util.getRandomNum(0, this.production(item));
+      return Math.min(1, amt);
     }
 
     return 0;

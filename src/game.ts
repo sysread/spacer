@@ -185,9 +185,9 @@ class Game {
         p.turn();
       }
 
-      for (const a of this.agents) {
+      /*for (const a of this.agents) {
         a.turn();
-      }
+      }*/
     }
 
     if (!no_save) {
