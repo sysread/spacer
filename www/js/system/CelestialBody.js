@@ -1,22 +1,3 @@
-var __read = (this && this.__read) || function (o, n) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator];
-    if (!m) return o;
-    var i = m.call(o), r, ar = [], e;
-    try {
-        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-    }
-    catch (error) { e = { error: error }; }
-    finally {
-        try {
-            if (r && !r.done && (m = i["return"])) m.call(i);
-        }
-        finally { if (e) throw e.error; }
-    }
-    return ar;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -24,9 +5,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "../vendor/quaternion", "./helpers/units", "./helpers/angles", "./helpers/time", "./data/constants"], function (require, exports, quaternion_1, units, angles, time, constants) {
+define(["require", "exports", "./helpers/units", "./helpers/angles", "./helpers/time", "./data/constants", "./helpers/quaternion"], function (require, exports, units, angles, time, constants, quaternion_1) {
     "use strict";
-    quaternion_1 = __importDefault(quaternion_1);
     units = __importStar(units);
     angles = __importStar(angles);
     time = __importStar(time);
@@ -73,8 +53,8 @@ define(["require", "exports", "../vendor/quaternion", "./helpers/units", "./help
             return data;
         };
         CelestialBody.prototype.setTime = function (time) {
+            this.time = time;
             if (this.elements) {
-                this.time = time;
                 this.position = this.getPositionAtTime(time);
             }
         };
@@ -98,11 +78,9 @@ define(["require", "exports", "../vendor/quaternion", "./helpers/units", "./help
             if (!this.elements) {
                 throw new Error("getElementAtTime called with no elements defined on " + this.name);
             }
-            var value = this.elements.base[name];
-            if (this.elements.cy) {
-                value += this.elements.cy[name] * time.centuriesBetween(t, time.J2000);
-            }
-            return value;
+            return this.elements.cy
+                ? this.elements.base[name] + this.elements.cy[name] * time.centuriesBetween(t, time.J2000)
+                : this.elements.base[name];
         };
         CelestialBody.prototype.getMeanAnomaly = function (L, lp, t) {
             var M = L - lp;
@@ -123,24 +101,25 @@ define(["require", "exports", "../vendor/quaternion", "./helpers/units", "./help
             return E;
         };
         CelestialBody.prototype.getPositionAtTime = function (t) {
-            var _a;
             if (!this.central) {
                 return [0, 0, 0];
             }
-            var _b = this.getElementsAtTime(t), a = _b.a, e = _b.e, i = _b.i, L = _b.L, lp = _b.lp, node = _b.node, w = _b.w, M = _b.M, E = _b.E;
-            _a = __read([i, node, w, M, E]
-                .map(function (v) { return angles.degreesToRadians(v); })
-                .map(function (v) { return angles.normalizeRadians(v); }), 5), i = _a[0], node = _a[1], w = _a[2], M = _a[3], E = _a[4];
+            var _a = this.getElementsAtTime(t), a = _a.a, e = _a.e, i = _a.i, L = _a.L, lp = _a.lp, node = _a.node, w = _a.w, M = _a.M, E = _a.E;
+            i = angles.normalizeRadians(angles.degreesToRadians(i));
+            node = angles.normalizeRadians(angles.degreesToRadians(node));
+            w = angles.normalizeRadians(angles.degreesToRadians(w));
+            M = angles.normalizeRadians(angles.degreesToRadians(M));
+            E = angles.normalizeRadians(angles.degreesToRadians(E));
             var x = a * (Math.cos(E) - e);
             var y = a * Math.sin(E) * Math.sqrt(1 - Math.pow(e, 2));
             var tilt = this.central && this.central.tilt
                 ? angles.degreesToRadians(-this.central.tilt)
                 : 0;
-            return quaternion_1.default
-                .fromEuler(node, tilt, 0, 'XYZ')
-                .mul(quaternion_1.default.fromEuler(w, i, 0, 'XYZ'))
-                .rotateVector([x, y, 0]);
+            var q = quaternion_1.quaternion_mul(quaternion_1.quaternion_from_euler(node, tilt, 0), quaternion_1.quaternion_from_euler(w, i, 0));
+            return quaternion_1.quaternion_rotate_vector(q, [x, y, 0]);
         };
+        // Array of 360 points, representing positions at each degree for the body's
+        // orbital period.
         CelestialBody.prototype.getOrbitPath = function () {
             if (!this.time) {
                 throw new Error('setTime must be called before getOrbitPath');
@@ -155,24 +134,14 @@ define(["require", "exports", "../vendor/quaternion", "./helpers/units", "./help
                 }
                 return points;
             }
-            var msPerPeriodsDegree = (period * 1000) / 360;
-            for (var i = 0; i < 359; ++i) {
-                var t = time.addMilliseconds(this.time, msPerPeriodsDegree * i);
-                points.push(this.getPositionAtTime(t));
-            }
-            // the final point is the same as the starting point
-            points.push(points[0].slice());
-            return points;
+            return this.getOrbitPathSegment(360, (period * 1000) / 360);
         };
         CelestialBody.prototype.getOrbitPathSegment = function (periods, msPerPeriod) {
             if (!this.time) {
                 throw new Error('setTime must be called before getOrbitPath');
             }
-            var period = this.getElementsAtTime(this.time).period;
             var points = [];
-            // Period is only undefined when the body is the sun, which has no
-            // central body in this context.
-            if (period == undefined) {
+            if (this.name == 'sun') {
                 for (var i = 0; i < periods; ++i) {
                     points.push([0, 0, 0]);
                 }

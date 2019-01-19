@@ -1,7 +1,7 @@
 // TODO: is the correct date January 1, 2000, 11:58:55.816 UTC?
 // https://en.wikipedia.org/wiki/Equinox_(celestial_coordinates)//J2000.0
-export const J2000 = new Date(Date.UTC(2000, 0, 1, 12, 0, 0));
-export const dayInSeconds = 86400;
+export const J2000             = new Date(Date.UTC(2000, 0, 1, 12, 0, 0));
+export const dayInSeconds      = 86400;
 export const averageYearInDays = 365.24;
 
 export function parse(str: string): Date {

@@ -250,7 +250,13 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
                 var tpd = data_1.default.turns_per_day;
                 var msPerTurn = data_1.default.hours_per_turn * 60 * 60 * 1000;
                 var body = this.body(name);
-                this.cache[key] = body.getOrbitPathSegment(365, msPerTurn);
+                var path = body.getOrbitPathSegment(365, msPerTurn);
+                var central = body.central || this.body('sun');
+                var cpath = central.getOrbitPathSegment(365, msPerTurn);
+                for (var i = 0; i < 365; ++i) {
+                    path[i] = V.add(path[i], cpath[i]);
+                }
+                this.cache[key] = path;
             }
             return this.cache[key];
         };

@@ -189,7 +189,7 @@ export class Agent extends Person {
       const want = Math.ceil((this.money - 1000) / here.buyPrice('luxuries', this));
       const [bought, price] = here.buy('luxuries', want);
       this.debit(price);
-      console.debug(`agent: bought ${bought} luxuries for ${price} on ${this.here.name}`);
+      //console.debug(`agent: bought ${bought} luxuries for ${price} on ${this.here.name}`);
     }
   }
 
@@ -201,7 +201,7 @@ export class Agent extends Person {
 
         // Credit agent for the word completed
         this.credit(result.pay);
-        console.debug(`agent: worked ${this.action.task.name} for ${result.pay} on ${this.here.name}`);
+        //console.debug(`agent: worked ${this.action.task.name} for ${result.pay} on ${this.here.name}`);
 
         // Sell any harvested resources to the market
         for (const item of result.items.keys()) {
@@ -234,7 +234,7 @@ export class Agent extends Person {
 
         // Sell cargo
         const [amt, price, standing] = this.here.sell(action.item, action.count, this);
-        console.debug(`agent: sold ${action.count} units of ${action.item} for ${util.csn(price)} on ${action.dest}`);
+        //console.debug(`agent: sold ${action.count} units of ${action.item} for ${util.csn(price)} on ${action.dest}`);
       }
 
       return true;

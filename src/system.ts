@@ -236,7 +236,15 @@ class System {
       const tpd       = data.turns_per_day;
       const msPerTurn = data.hours_per_turn * 60 * 60 * 1000;
       const body      = this.body(name);
-      this.cache[key] = body.getOrbitPathSegment(365, msPerTurn);
+      const path      = body.getOrbitPathSegment(365, msPerTurn);
+      const central   = body.central || this.body('sun');
+      const cpath     = central.getOrbitPathSegment(365, msPerTurn);
+
+      for (let i = 0; i < 365; ++i) {
+        path[i] = V.add(path[i], cpath[i]);
+      }
+
+      this.cache[key] = path;
     }
 
     return this.cache[key];

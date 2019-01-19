@@ -1,12 +1,31 @@
-/// <reference types="../vendor/quaternion" />
-import Quaternion from '../vendor/quaternion';
-
 import { Body, Elements, ElementsBase, Satellites, Rings, body_type, position } from './data/body';
-
 import * as units     from './helpers/units';
 import * as angles    from './helpers/angles';
 import * as time      from './helpers/time';
 import * as constants from './data/constants';
+
+import {
+  quaternion,
+  vector,
+  quaternion_from_euler,
+  quaternion_mul,
+  quaternion_rotate_vector,
+} from './helpers/quaternion';
+
+
+interface ElementsAtTime {
+  a:       number;
+  e:       number;
+  i:       number;
+  L:       number;
+  lp:      number;
+  node:    number;
+  w:       number;
+  M:       number;
+  E:       number;
+  period?: number;
+}
+
 
 class CelestialBody {
   key:        string;
@@ -72,13 +91,14 @@ class CelestialBody {
   }
 
   setTime(time: Date) {
+    this.time = time;
+
     if (this.elements) {
-      this.time = time;
       this.position = this.getPositionAtTime(time);
     }
   }
 
-  getElementsAtTime(t: Date) {
+  getElementsAtTime(t: Date): ElementsAtTime {
     const a    = this.getElementAtTime('a',    t);
     const e    = this.getElementAtTime('e',    t);
     const i    = this.getElementAtTime('e',    t);
@@ -102,13 +122,9 @@ class CelestialBody {
       throw new Error(`getElementAtTime called with no elements defined on ${this.name}`);
     }
 
-    let value = this.elements.base[name];
-
-    if (this.elements.cy) {
-      value += this.elements.cy[name] * time.centuriesBetween(t, time.J2000);
-    }
-
-    return value;
+    return this.elements.cy
+      ? this.elements.base[name] + this.elements.cy[name] * time.centuriesBetween(t, time.J2000)
+      : this.elements.base[name];
   }
 
   getMeanAnomaly(L: number, lp: number, t: Date): number {
@@ -142,10 +158,11 @@ class CelestialBody {
     }
 
     let {a, e, i, L, lp, node, w, M, E} = this.getElementsAtTime(t);
-
-    [i, node, w, M, E] = [i, node, w, M, E]
-      .map(v => angles.degreesToRadians(v))
-      .map(v => angles.normalizeRadians(v));
+    i    = angles.normalizeRadians(angles.degreesToRadians(i));
+    node = angles.normalizeRadians(angles.degreesToRadians(node));
+    w    = angles.normalizeRadians(angles.degreesToRadians(w));
+    M    = angles.normalizeRadians(angles.degreesToRadians(M));
+    E    = angles.normalizeRadians(angles.degreesToRadians(E));
 
     const x = a * (Math.cos(E) - e);
     const y = a * Math.sin(E) * Math.sqrt(1 - Math.pow(e, 2));
@@ -154,12 +171,16 @@ class CelestialBody {
       ? angles.degreesToRadians(-this.central.tilt)
       : 0;
 
-    return Quaternion
-      .fromEuler(node, tilt, 0, 'XYZ')
-      .mul(Quaternion.fromEuler(w, i, 0, 'XYZ'))
-      .rotateVector([x, y, 0])
+    const q = quaternion_mul(
+      quaternion_from_euler(node, tilt, 0),
+      quaternion_from_euler(w, i, 0),
+    );
+
+    return quaternion_rotate_vector(q, [x, y, 0]);
   }
 
+  // Array of 360 points, representing positions at each degree for the body's
+  // orbital period.
   getOrbitPath() {
     if (!this.time) {
       throw new Error('setTime must be called before getOrbitPath');
@@ -178,17 +199,7 @@ class CelestialBody {
       return points;
     }
 
-    const msPerPeriodsDegree = (period * 1000) / 360;
-
-    for (let i = 0; i < 359; ++i) {
-      const t = time.addMilliseconds(this.time, msPerPeriodsDegree * i);
-      points.push(this.getPositionAtTime(t));
-    }
-
-    // the final point is the same as the starting point
-    points.push( points[0].slice() as position );
-
-    return points;
+    return this.getOrbitPathSegment(360, (period * 1000) / 360);
   }
 
   getOrbitPathSegment(periods: number, msPerPeriod: number) {
@@ -196,12 +207,9 @@ class CelestialBody {
       throw new Error('setTime must be called before getOrbitPath');
     }
 
-    const {period} = this.getElementsAtTime(this.time);
     const points: position[] = [];
 
-    // Period is only undefined when the body is the sun, which has no
-    // central body in this context.
-    if (period == undefined) {
+    if (this.name == 'sun') {
       for (let i = 0; i < periods; ++i) {
         points.push([0, 0, 0]);
       }

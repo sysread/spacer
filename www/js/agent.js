@@ -180,7 +180,7 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                 var want = Math.ceil((this.money - 1000) / here.buyPrice('luxuries', this));
                 var _a = __read(here.buy('luxuries', want), 2), bought = _a[0], price = _a[1];
                 this.debit(price);
-                console.debug("agent: bought " + bought + " luxuries for " + price + " on " + this.here.name);
+                //console.debug(`agent: bought ${bought} luxuries for ${price} on ${this.here.name}`);
             }
         };
         // Returns true if any action was performed
@@ -191,8 +191,8 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                     var result = this.here.work(this, this.action.task, this.action.days);
                     // Credit agent for the word completed
                     this.credit(result.pay);
-                    console.debug("agent: worked " + this.action.task.name + " for " + result.pay + " on " + this.here.name);
                     try {
+                        //console.debug(`agent: worked ${this.action.task.name} for ${result.pay} on ${this.here.name}`);
                         // Sell any harvested resources to the market
                         for (var _b = __values(result.items.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
                             var item = _c.value;
@@ -226,7 +226,7 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                     this.action = this.dock(action.dest);
                     // Sell cargo
                     var _a = __read(this.here.sell(action.item, action.count, this), 3), amt = _a[0], price = _a[1], standing = _a[2];
-                    console.debug("agent: sold " + action.count + " units of " + action.item + " for " + util.csn(price) + " on " + action.dest);
+                    //console.debug(`agent: sold ${action.count} units of ${action.item} for ${util.csn(price)} on ${action.dest}`);
                 }
                 return true;
             }
