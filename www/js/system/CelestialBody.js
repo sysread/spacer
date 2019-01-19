@@ -74,6 +74,7 @@ define(["require", "exports", "../vendor/quaternion", "./helpers/units", "./help
         };
         CelestialBody.prototype.setTime = function (time) {
             if (this.elements) {
+                this.time = time;
                 this.position = this.getPositionAtTime(time);
             }
         };
@@ -161,6 +162,26 @@ define(["require", "exports", "../vendor/quaternion", "./helpers/units", "./help
             }
             // the final point is the same as the starting point
             points.push(points[0].slice());
+            return points;
+        };
+        CelestialBody.prototype.getOrbitPathSegment = function (periods, msPerPeriod) {
+            if (!this.time) {
+                throw new Error('setTime must be called before getOrbitPath');
+            }
+            var period = this.getElementsAtTime(this.time).period;
+            var points = [];
+            // Period is only undefined when the body is the sun, which has no
+            // central body in this context.
+            if (period == undefined) {
+                for (var i = 0; i < periods; ++i) {
+                    points.push([0, 0, 0]);
+                }
+                return points;
+            }
+            for (var i = 0; i < periods; ++i) {
+                var t = time.addMilliseconds(this.time, i * msPerPeriod);
+                points.push(this.getPositionAtTime(t));
+            }
             return points;
         };
         return CelestialBody;

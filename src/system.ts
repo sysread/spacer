@@ -4,15 +4,44 @@ import SolarSystem from './system/SolarSystem';
 import * as t from './common';
 import * as V from './vector';
 
-type point = [number, number, number];
+const system = new SolarSystem;
+
+const Trojans = {
+  key:        'trojans',
+  central:    system.bodies.sun,
+  name:       'Trojans',
+  type:       'asteroids',
+  radius:     system.bodies.jupiter.radius,
+  mass:       0,
+  satellites: {},
+
+  // Adjust a point from Jupiter's orbit to the corresponding L5 point
+  adjustPoint: function(p: V.Point): V.Point {
+    const r = Physics.distance(p, [0, 0, 0]);
+    const t = -1.0472; // 60 degrees in radians
+    const x = (p[0] * Math.cos(t)) - (p[1] * Math.sin(t));
+    const y = (p[0] * Math.sin(t)) + (p[1] * Math.cos(t));
+    return [x, y, p[2]];
+  },
+
+  getOrbitPathSegment: function(periods: number, msPerPeriod: number): V.Point[] {
+    return system.bodies.jupiter.getOrbitPathSegment(periods, msPerPeriod)
+      .map(p => this.adjustPoint(p));
+  },
+
+  getPositionAtTime: function(date: Date): V.Point {
+    const p = system.bodies.jupiter.getPositionAtTime(date);
+    return this.adjustPoint(p);
+  },
+};
 
 interface OrbitCache {
-  [key: string]: point[];
+  [key: string]: V.Point[];
 }
 
 interface PositionCache {
   [key: string]: {
-    [key: string]: point;
+    [key: string]: V.Point;
   };
 }
 
@@ -23,7 +52,7 @@ class OutsideOfTime extends Error {
 }
 
 class System {
-  system:  SolarSystem   = new SolarSystem;
+  system:  SolarSystem   = system;
   cache:   OrbitCache    = {};
   pos:     PositionCache = {};
 
@@ -50,24 +79,7 @@ class System {
 
   body(name: string) {
     if (name == 'trojans') {
-      return {
-        key:        'trojans',
-        central:    this.system.bodies.sun,
-        name:       'Trojans',
-        type:       'asteroids',
-        radius:     this.system.bodies.jupiter.radius,
-        mass:       0,
-        satellites: {},
-
-        getPositionAtTime: (date: Date): point => {
-          const p = this.system.bodies.jupiter.getPositionAtTime(date);
-          const r = Physics.distance(p, [0, 0, 0]);
-          const t = -1.0472; // 60 degrees in radians
-          const x = (p[0] * Math.cos(t)) - (p[1] * Math.sin(t));
-          const y = (p[0] * Math.sin(t)) + (p[1] * Math.cos(t));
-          return [x, y, p[2]];
-        },
-      };
+      return Trojans;
     }
 
     return this.system.bodies[name];
@@ -137,7 +149,7 @@ class System {
     return (grav * mass) / Math.pow(radius, 2) / Physics.G;
   }
 
-  ranges(point: point) {
+  ranges(point: V.Point) {
     const ranges: { [key: string]: number } = {};
 
     for (const body of this.bodies()) {
@@ -147,7 +159,7 @@ class System {
     return ranges;
   }
 
-  closestBodyToPoint(point: point) {
+  closestBodyToPoint(point: V.Point) {
     let dist, closest;
 
     for (const body of this.bodies()) {
@@ -161,7 +173,7 @@ class System {
     return [closest, dist];
   }
 
-  position(name: string, date?: Date): point {
+  position(name: string, date?: Date): V.Point {
     if (name == 'sun') {
       return [0, 0, 0];
     }
@@ -221,11 +233,24 @@ class System {
     const key = `${name}.orbit.byturns`;
 
     if (this.cache[key] == undefined) {
+      const tpd       = data.turns_per_day;
+      const msPerTurn = data.hours_per_turn * 60 * 60 * 1000;
+      const body      = this.body(name);
+      this.cache[key] = body.getOrbitPathSegment(365, msPerTurn);
+    }
+
+    return this.cache[key];
+  }
+
+  orbit_by_turns_old(name: string) {
+    const key = `${name}.orbit.byturns`;
+
+    if (this.cache[key] == undefined) {
       const tpd   = data.turns_per_day;
       const orbit = this.orbit(name);
+      const path  = [ orbit[0] ];
 
       let point = orbit[0];
-      const path = [point];
 
       for (let day = 1; day < orbit.length; ++day) {
         const S = V.sub(orbit[day], point);

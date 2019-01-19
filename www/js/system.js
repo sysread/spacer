@@ -37,6 +37,33 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
     physics_1 = __importDefault(physics_1);
     SolarSystem_1 = __importDefault(SolarSystem_1);
     V = __importStar(V);
+    var system = new SolarSystem_1.default;
+    var Trojans = {
+        key: 'trojans',
+        central: system.bodies.sun,
+        name: 'Trojans',
+        type: 'asteroids',
+        radius: system.bodies.jupiter.radius,
+        mass: 0,
+        satellites: {},
+        // Adjust a point from Jupiter's orbit to the corresponding L5 point
+        adjustPoint: function (p) {
+            var r = physics_1.default.distance(p, [0, 0, 0]);
+            var t = -1.0472; // 60 degrees in radians
+            var x = (p[0] * Math.cos(t)) - (p[1] * Math.sin(t));
+            var y = (p[0] * Math.sin(t)) + (p[1] * Math.cos(t));
+            return [x, y, p[2]];
+        },
+        getOrbitPathSegment: function (periods, msPerPeriod) {
+            var _this = this;
+            return system.bodies.jupiter.getOrbitPathSegment(periods, msPerPeriod)
+                .map(function (p) { return _this.adjustPoint(p); });
+        },
+        getPositionAtTime: function (date) {
+            var p = system.bodies.jupiter.getPositionAtTime(date);
+            return this.adjustPoint(p);
+        },
+    };
     var OutsideOfTime = /** @class */ (function (_super) {
         __extends(OutsideOfTime, _super);
         function OutsideOfTime() {
@@ -46,7 +73,7 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
     }(Error));
     var System = /** @class */ (function () {
         function System() {
-            this.system = new SolarSystem_1.default;
+            this.system = system;
             this.cache = {};
             this.pos = {};
         }
@@ -78,25 +105,8 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             return Object.keys(data_1.default.bodies);
         };
         System.prototype.body = function (name) {
-            var _this = this;
             if (name == 'trojans') {
-                return {
-                    key: 'trojans',
-                    central: this.system.bodies.sun,
-                    name: 'Trojans',
-                    type: 'asteroids',
-                    radius: this.system.bodies.jupiter.radius,
-                    mass: 0,
-                    satellites: {},
-                    getPositionAtTime: function (date) {
-                        var p = _this.system.bodies.jupiter.getPositionAtTime(date);
-                        var r = physics_1.default.distance(p, [0, 0, 0]);
-                        var t = -1.0472; // 60 degrees in radians
-                        var x = (p[0] * Math.cos(t)) - (p[1] * Math.sin(t));
-                        var y = (p[0] * Math.sin(t)) + (p[1] * Math.cos(t));
-                        return [x, y, p[2]];
-                    },
-                };
+                return Trojans;
             }
             return this.system.bodies[name];
         };
@@ -238,9 +248,19 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             var key = name + ".orbit.byturns";
             if (this.cache[key] == undefined) {
                 var tpd = data_1.default.turns_per_day;
+                var msPerTurn = data_1.default.hours_per_turn * 60 * 60 * 1000;
+                var body = this.body(name);
+                this.cache[key] = body.getOrbitPathSegment(365, msPerTurn);
+            }
+            return this.cache[key];
+        };
+        System.prototype.orbit_by_turns_old = function (name) {
+            var key = name + ".orbit.byturns";
+            if (this.cache[key] == undefined) {
+                var tpd = data_1.default.turns_per_day;
                 var orbit = this.orbit(name);
+                var path = [orbit[0]];
                 var point = orbit[0];
-                var path = [point];
                 for (var day = 1; day < orbit.length; ++day) {
                     var S = V.sub(orbit[day], point);
                     for (var i = 1; i <= tpd; ++i) {

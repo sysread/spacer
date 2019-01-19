@@ -73,6 +73,7 @@ class CelestialBody {
 
   setTime(time: Date) {
     if (this.elements) {
+      this.time = time;
       this.position = this.getPositionAtTime(time);
     }
   }
@@ -187,7 +188,33 @@ class CelestialBody {
     // the final point is the same as the starting point
     points.push( points[0].slice() as position );
 
-    return points
+    return points;
+  }
+
+  getOrbitPathSegment(periods: number, msPerPeriod: number) {
+    if (!this.time) {
+      throw new Error('setTime must be called before getOrbitPath');
+    }
+
+    const {period} = this.getElementsAtTime(this.time);
+    const points: position[] = [];
+
+    // Period is only undefined when the body is the sun, which has no
+    // central body in this context.
+    if (period == undefined) {
+      for (let i = 0; i < periods; ++i) {
+        points.push([0, 0, 0]);
+      }
+
+      return points;
+    }
+
+    for (let i = 0; i < periods; ++i) {
+      const t = time.addMilliseconds(this.time, i * msPerPeriod);
+      points.push(this.getPositionAtTime(t));
+    }
+
+    return points;
   }
 }
 

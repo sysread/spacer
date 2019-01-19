@@ -7,6 +7,7 @@ define(function(require, exports, module) {
   const resources = require('resource').resources;
 
   window.Physics = require('physics');
+  window.System  = require('system');
 
   require('component/global');
   require('component/common');
