@@ -134,32 +134,38 @@ define(function(require, exports, module) {
         return Object.keys(bodies);
       },
 
-      patrolRate() {
+      patrolRates() {
         const ranges = this.nearby();
-        let total = 0;
-        let count = 0;
+        const rates  = {};
 
         for (const body of Object.keys(ranges)) {
           const au = ranges[body] / Physics.AU;
-          total += this.game.planets[body].patrolRate(au);
-          ++count;
+          rates[body] = this.game.planets[body].patrolRate(au);
         }
 
-        return util.clamp(total, 0, 1);
+        return rates;
+      },
+
+      patrolRate() {
+        const rate = Object.values(this.patrolRates).reduce((a, b) => a + b, 0)
+                   / Object.keys(this.patrolRates).length;
+        return util.clamp(rate, 0, 1);
       },
 
       piracyRate() {
         const ranges = this.nearby();
         let total = 0;
-        let count = 0;
 
         for (const body of Object.keys(ranges)) {
           const au = ranges[body] / Physics.AU;
           total += this.game.planets[body].piracyRate(au);
-          ++count;
         }
 
-        total *= 1 - this.patrolRate;
+        const patrols = this.patrolRates;
+        for (const body of Object.keys(patrols)) {
+          total *= 1 - patrols[body];
+        }
+
         return util.clamp(total, 0, 1);
       },
 
@@ -181,16 +187,17 @@ define(function(require, exports, module) {
       },
 
       adjustedPiracyRate() {
-        let chance = this.piracyRate
-                   - this.game.player.ship.stealth;
+        const baseRate   = this.piracyRate;
+        const stealth    = this.game.player.ship.stealth;
+        const cargoMalus = this.piracyEvasionMalusCargo;
+        const speedBonus = this.piracyEvasionBonusSpeed;
 
-        // Increase chance of piracy if the ship has valuable cargo
-        chance += this.piracyEvasionMalusCargo;
+        let chance = baseRate
+          + cargoMalus // Increase chance of piracy if the ship has valuable cargo
+          - speedBonus // Reduce chance of an encounter at higher velocities
+          - stealth    // Reduce based on ship's own stealth rating;
 
-        // Reduce chance of an encounter at higher velocities
-        chance -= this.piracyEvasionBonusSpeed;
-
-        // Reduce chances for each encounter
+        // Reduce chances for each previous encounter this trip
         for (let i = 0; i < this.stoppedBy.pirate; ++i) {
           chance /= 2;
         }
@@ -427,13 +434,14 @@ define(function(require, exports, module) {
           return;
         }
 
-        if (this.current_turn % 3 == 0) {
-          if (this.inspectionChance()) {
-            return;
-          }
-          else if (this.piracyChance()) {
-            return;
-          }
+        if (this.current_turn % data.turns_per_day == 0
+          && this.inspectionChance())
+        {
+          return;
+        }
+
+        if (this.piracyChance()) {
+          return;
         }
 
         this.game.turn(1, true);
@@ -462,35 +470,34 @@ define(function(require, exports, module) {
       },
 
       inspectionChance() {
-        const ranges = this.nearby();
+        const patrols = this.patrolRates;
 
         if (this.current_turn == 0) {
           return false;
         }
 
-        for (const body of Object.keys(ranges)) {
+        for (const body of Object.keys(patrols)) {
           const faction = this.data.bodies[body].faction;
-          const au = ranges[body] / Physics.AU;
+          const pos     = this.system.position(body);
+          const range   = Physics.distance(this.plan.coords, pos) / Physics.AU;
 
           // No inspections outside of jurisdiction, even if there are patrols
           // out that far to keep down pirates.
-          if (au > this.data.jurisdiction) {
+          if (range > this.data.jurisdiction) {
             continue;
           }
 
-          let patrol = this.game.planets[body].patrolRate(au)
-                     - this.game.player.ship.stealth;
+          let rate = patrols[body];
+          rate -= this.game.player.ship.stealth;
 
-          if (patrol > 0) {
+          if (rate > 0) {
             // Encountered a patrol
-            if (util.chance(patrol)) {
+            if (util.chance(rate)) {
               let inspection = this.game.planets[body].inspectionRate(this.game.player);
 
-              if (this.plan.velocity > 1000) {
-                inspection -= Math.log(this.plan.velocity / 1000) / 300;
+              for (let i = 0; i < this.stoppedBy.police; ++i) {
+                inspection /= 2;
               }
-
-              inspection /= 1 + this.stoppedBy.police;
 
               if (util.chance(inspection)) {
                 ++this.stoppedBy.police;
