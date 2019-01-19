@@ -7,6 +7,7 @@ export class Faction implements t.Faction {
   capital:    t.body;
   sales_tax:  number;
   patrol:     number;
+  piracy:     number;
   inspection: number;
   desc?:      string;
   produces:   t.ResourceCounter;
@@ -24,6 +25,7 @@ export class Faction implements t.Faction {
     this.capital    = data.factions[this.abbrev].capital;
     this.sales_tax  = data.factions[this.abbrev].sales_tax;
     this.patrol     = data.factions[this.abbrev].patrol;
+    this.piracy     = data.factions[this.abbrev].piracy;
     this.inspection = data.factions[this.abbrev].inspection;
     this.standing   = data.factions[this.abbrev].standing;
     this.consumes   = data.factions[this.abbrev].consumes;

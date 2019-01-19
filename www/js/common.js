@@ -82,6 +82,28 @@ define(["require", "exports"], function (require, exports) {
         ecm: true,
         stealthPlating: true,
     };
+    var _trait = {
+        'mineral rich': true,
+        'mineral poor': true,
+        'water rich': true,
+        'water poor': true,
+        'hydrocarbon rich': true,
+        'hydrocarbon poor': true,
+        'rocky': true,
+        'icy': true,
+        'asteroids': true,
+        'ringed system': true,
+        'agricultural': true,
+        'habitable': true,
+        'domed': true,
+        'subterranean': true,
+        'orbital': true,
+        'black market': true,
+        'tech hub': true,
+        'manufacturing hub': true,
+        'capital': true,
+        'military': true,
+    };
     exports.Standing = {
         Criminal: [-100, -50],
         Untrusted: [-49, -30],
@@ -100,6 +122,7 @@ define(["require", "exports"], function (require, exports) {
     exports.shipdmgs = Object.keys(_shipdmg);
     exports.shiptypes = Object.keys(_shiptype);
     exports.addons = Object.keys(_addon);
+    exports.traits = Object.keys(_trait);
     exports.standings = Object.keys(exports.Standing);
     function isRaw(res) {
         return res.mine !== undefined;

@@ -812,7 +812,7 @@ define(function(require, exports, module) {
           :cy="info.point[1]"
           :r="info.patrol"
           stroke="green"
-          stroke-width="0.25"
+          stroke-width="0.5"
           fill="green"
           fill-opacity="0.025" />
 

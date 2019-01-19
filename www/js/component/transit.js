@@ -149,8 +149,18 @@ define(function(require, exports, module) {
       },
 
       piracyRate() {
-        const rate = this.data.default_piracy_rate * (1 - this.patrolRate);
-        return util.clamp(rate, 0, 1);
+        const ranges = this.nearby();
+        let total = 0;
+        let count = 0;
+
+        for (const body of Object.keys(ranges)) {
+          const au = ranges[body] / Physics.AU;
+          total += this.game.planets[body].piracyRate(au);
+          ++count;
+        }
+
+        total *= 1 - this.patrolRate;
+        return util.clamp(total, 0, 1);
       },
 
       piracyEvasionMalusCargo() {

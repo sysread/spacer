@@ -86,6 +86,29 @@ const _addon = {
   stealthPlating:  true,
 };
 
+const _trait = {
+  'mineral rich':      true,
+  'mineral poor':      true,
+  'water rich':        true,
+  'water poor':        true,
+  'hydrocarbon rich':  true,
+  'hydrocarbon poor':  true,
+  'rocky':             true,
+  'icy':               true,
+  'asteroids':         true,
+  'ringed system':     true,
+  'agricultural':      true,
+  'habitable':         true,
+  'domed':             true,
+  'subterranean':      true,
+  'orbital':           true,
+  'black market':      true,
+  'tech hub':          true,
+  'manufacturing hub': true,
+  'capital':           true,
+  'military':          true,
+}
+
 export const Standing = {
   Criminal:   [-100, -50],
   Untrusted:  [-49,  -30],
@@ -119,6 +142,9 @@ export const shiptypes = Object.keys(_shiptype) as shiptype[];
 
 export type addon = keyof typeof _addon;
 export const addons = Object.keys(_addon) as addon[];
+
+export type trait = keyof typeof _trait;
+export const traits = Object.keys(_trait) as trait[];
 
 export type standing = keyof typeof Standing;
 export const standings = Object.keys(Standing) as standing[];
@@ -180,6 +206,7 @@ export interface Faction {
   capital:    body;
   sales_tax:  number;
   patrol:     number;
+  piracy:     number;
   inspection: number;
   desc?:      string;
   produces:   ResourceCounter;

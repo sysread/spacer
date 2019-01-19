@@ -16,6 +16,7 @@ define(["require", "exports", "./data"], function (require, exports, data_1) {
             this.capital = data_1.default.factions[this.abbrev].capital;
             this.sales_tax = data_1.default.factions[this.abbrev].sales_tax;
             this.patrol = data_1.default.factions[this.abbrev].patrol;
+            this.piracy = data_1.default.factions[this.abbrev].piracy;
             this.inspection = data_1.default.factions[this.abbrev].inspection;
             this.standing = data_1.default.factions[this.abbrev].standing;
             this.consumes = data_1.default.factions[this.abbrev].consumes;

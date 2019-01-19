@@ -226,30 +226,60 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return false;
         };
         /*
+         * Piracy rates
+         */
+        Planet.prototype.piracyRadius = function () {
+            // jurisdiction is a good enough basis for operating range for now
+            var radius = this.scale(data_1.default.jurisdiction * 2);
+            if (this.hasTrait('black market'))
+                radius *= 2;
+            if (this.hasTrait('capital'))
+                radius *= 0.75;
+            if (this.hasTrait('military'))
+                radius *= 0.5;
+            return radius;
+        };
+        // Piracy obeys a similar approximation of the inverse square law, just as
+        // patrols do, but piracy rates peak at the limit of patrol ranges, where
+        // pirates are close enough to remain within operating range of their home
+        // base, but far enough away that patrols are not too problematic.
+        Planet.prototype.piracyRate = function (distance) {
+            if (distance === void 0) { distance = 0; }
+            var radius = this.piracyRadius();
+            distance = Math.abs(distance - radius);
+            var rate = this.scale(this.faction.piracy);
+            for (var i = 0; i < distance; i += 0.1) {
+                rate *= 0.75;
+            }
+            return Math.max(0, rate);
+        };
+        /*
          * Patrols and inspections
          */
         Planet.prototype.patrolRadius = function () {
             var radius = this.scale(data_1.default.jurisdiction);
-            if (this.hasTrait('military')) {
-                return radius * 1.3;
-            }
-            else if (this.hasTrait('military')) {
-                return radius * 1.1;
-            }
-            else {
-                return radius;
-            }
+            if (this.hasTrait('military'))
+                radius *= 1.75;
+            if (this.hasTrait('capital'))
+                radius *= 1.5;
+            if (this.hasTrait('black market'))
+                radius *= 0.5;
+            return radius;
         };
+        // Distance is in AU
         Planet.prototype.patrolRate = function (distance) {
             if (distance === void 0) { distance = 0; }
-            var rate = this.scale(this.faction.patrol);
             var radius = this.patrolRadius();
-            return Math.max(0, rate * Math.pow(radius, 2) / Math.pow(distance, 2));
-            /*const invsq = distance > radius
-              ? rate * Math.pow(radius, 2) / Math.pow(distance, 2)
-              : rate;
-        
-            return Math.max(0, invsq);*/
+            var patrol = this.scale(this.faction.patrol);
+            if (distance < radius) {
+                return patrol;
+            }
+            distance -= radius;
+            var rate = patrol;
+            for (var i = 0; i < distance; i += 0.1) {
+                rate /= 2;
+            }
+            return Math.max(0, rate);
         };
         Planet.prototype.inspectionRate = function (player) {
             var standing = 1 - (player.getStanding(this.faction.abbrev) / data_1.default.max_abs_standing);

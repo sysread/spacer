@@ -204,28 +204,62 @@ export class Planet {
   }
 
   /*
+   * Piracy rates
+   */
+  piracyRadius() {
+    // jurisdiction is a good enough basis for operating range for now
+    let radius = this.scale(data.jurisdiction * 2);
+    if (this.hasTrait('black market')) radius *= 2;
+    if (this.hasTrait('capital'))      radius *= 0.75;
+    if (this.hasTrait('military'))     radius *= 0.5;
+    return radius;
+  }
+
+  // Piracy obeys a similar approximation of the inverse square law, just as
+  // patrols do, but piracy rates peak at the limit of patrol ranges, where
+  // pirates are close enough to remain within operating range of their home
+  // base, but far enough away that patrols are not too problematic.
+  piracyRate(distance=0) {
+    const radius = this.piracyRadius();
+
+    distance = Math.abs(distance - radius);
+
+    let rate = this.scale(this.faction.piracy);
+    for (let i = 0; i < distance; i += 0.1) {
+      rate *= 0.75;
+    }
+
+    return Math.max(0, rate);
+  }
+
+  /*
    * Patrols and inspections
    */
   patrolRadius() {
-    const radius = this.scale(data.jurisdiction);
-    if (this.hasTrait('military')) {
-      return radius * 1.3;
-    } else if (this.hasTrait('military')) {
-      return radius * 1.1;
-    } else {
-      return radius;
-    }
+    let radius = this.scale(data.jurisdiction);
+    if (this.hasTrait('military'))     radius *= 1.75;
+    if (this.hasTrait('capital'))      radius *= 1.5;
+    if (this.hasTrait('black market')) radius *= 0.5;
+    return radius;
   }
 
+  // Distance is in AU
   patrolRate(distance=0) {
-    const rate   = this.scale(this.faction.patrol);
     const radius = this.patrolRadius();
-    return Math.max(0, rate * Math.pow(radius, 2) / Math.pow(distance, 2));
-    /*const invsq = distance > radius
-      ? rate * Math.pow(radius, 2) / Math.pow(distance, 2)
-      : rate;
+    let patrol = this.scale(this.faction.patrol);
 
-    return Math.max(0, invsq);*/
+    if (distance < radius) {
+      return patrol;
+    }
+
+    distance -= radius;
+
+    let rate = patrol;
+    for (let i = 0; i < distance; i += 0.1) {
+      rate /= 2;
+    }
+
+    return Math.max(0, rate);
   }
 
   inspectionRate(player: any) {

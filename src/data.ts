@@ -30,7 +30,6 @@ const data = {
   initial_money:       500,
   max_abs_standing:    100,
   jurisdiction:        0.28, // au from body
-  default_piracy_rate: 0.08,
   piracy_max_velocity: 500,
 
   scales: {
@@ -208,6 +207,7 @@ const data = {
       capital:    'earth',
       sales_tax:  0.105,
       patrol:     0.2,
+      piracy:     0.05,
       inspection: 0.075,
       produces:   {electronics: 0.3, cybernetics: 0.1, medicine: 0.5},
       consumes:   {},
@@ -219,6 +219,7 @@ const data = {
       capital:    'mars',
       sales_tax:  0.085,
       patrol:     0.35,
+      piracy:     0.03,
       inspection: 0.1,
       produces:   {machines: 0.2, electronics: 0.2, weapons: 0.2, metal: 0.2},
       consumes:   {},
@@ -230,6 +231,7 @@ const data = {
       capital:    'ceres',
       sales_tax:  0.04,
       patrol:     0.2,
+      piracy:     0.08,
       inspection: 0.05,
       produces:   {fuel: 0.3, machines: 0.2},
       consumes:   {},
@@ -241,6 +243,7 @@ const data = {
       capital:    'ganymede',
       sales_tax:  0.065,
       patrol:     0.15,
+      piracy:     0.06,
       inspection: 0.025,
       produces:   {fuel: 0.5, food: 0.25, metal: 0.1, ceramics: 0.1},
       consumes:   {},
@@ -252,6 +255,7 @@ const data = {
       capital:    'pluto',
       sales_tax:  0.0175,
       patrol:     0.1,
+      piracy:     0.1,
       inspection: 0.005,
       produces:   {fuel: 0.5, narcotics: 0.5, weapons: 0.5},
       consumes:   {},

@@ -6,6 +6,8 @@ define(function(require, exports, module) {
   const t         = require('common');
   const resources = require('resource').resources;
 
+  window.Physics = require('physics');
+
   require('component/global');
   require('component/common');
   require('component/card');
