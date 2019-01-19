@@ -82,6 +82,10 @@ class System {
       return Trojans;
     }
 
+    if (this.system.bodies[name] == undefined) {
+      throw new Error(`body not found: ${name}`);
+    }
+
     return this.system.bodies[name];
   }
 
@@ -242,32 +246,6 @@ class System {
 
       for (let i = 0; i < 365; ++i) {
         path[i] = V.add(path[i], cpath[i]);
-      }
-
-      this.cache[key] = path;
-    }
-
-    return this.cache[key];
-  }
-
-  orbit_by_turns_old(name: string) {
-    const key = `${name}.orbit.byturns`;
-
-    if (this.cache[key] == undefined) {
-      const tpd   = data.turns_per_day;
-      const orbit = this.orbit(name);
-      const path  = [ orbit[0] ];
-
-      let point = orbit[0];
-
-      for (let day = 1; day < orbit.length; ++day) {
-        const S = V.sub(orbit[day], point);
-
-        for (let i = 1; i <= tpd; ++i) {
-          path.push( V.add(point, V.mul_scalar(S, i)) );
-        }
-
-        point = orbit[day];
       }
 
       this.cache[key] = path;

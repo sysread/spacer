@@ -108,6 +108,9 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             if (name == 'trojans') {
                 return Trojans;
             }
+            if (this.system.bodies[name] == undefined) {
+                throw new Error("body not found: " + name);
+            }
             return this.system.bodies[name];
         };
         System.prototype.short_name = function (name) {
@@ -255,24 +258,6 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
                 var cpath = central.getOrbitPathSegment(365, msPerTurn);
                 for (var i = 0; i < 365; ++i) {
                     path[i] = V.add(path[i], cpath[i]);
-                }
-                this.cache[key] = path;
-            }
-            return this.cache[key];
-        };
-        System.prototype.orbit_by_turns_old = function (name) {
-            var key = name + ".orbit.byturns";
-            if (this.cache[key] == undefined) {
-                var tpd = data_1.default.turns_per_day;
-                var orbit = this.orbit(name);
-                var path = [orbit[0]];
-                var point = orbit[0];
-                for (var day = 1; day < orbit.length; ++day) {
-                    var S = V.sub(orbit[day], point);
-                    for (var i = 1; i <= tpd; ++i) {
-                        path.push(V.add(point, V.mul_scalar(S, i)));
-                    }
-                    point = orbit[day];
                 }
                 this.cache[key] = path;
             }

@@ -306,11 +306,13 @@ define(function(require, exports, module) {
           this.dest = dest;
           this.transit = null;
 
-          // Select the first transit path for that destination
-          const transits = this.navcomp.getTransitsTo(this.dest);
+          if (this.dest) {
+            // Select the first transit path for that destination
+            const transits = this.navcomp.getTransitsTo(this.dest);
 
-          if (transits.length > 0) {
-            this.transit = transits[0];
+            if (transits.length > 0) {
+              this.transit = transits[0];
+            }
           }
         }
       },
