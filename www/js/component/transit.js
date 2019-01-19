@@ -12,6 +12,7 @@ define(function(require, exports, module) {
   const Layout   = require('component/layout');
 
   const intvl = 0.3;
+  const intvl_ms = intvl * 1000;
   const turns_per_day = 24 / data.hours_per_turn;
 
   require('component/global');
@@ -284,6 +285,10 @@ define(function(require, exports, module) {
         for (const body of this.bodies) {
           orbits[body]= this.system.orbit_by_turns(body);
           timelines[body] = new TimelineLite;
+
+          // set initial position for patrol radii
+          const [x, y] = this.layout.scale_point(orbits[body][0]);
+          $('#' + body + '_patrol').attr({ cx: x, cy: y });
         }
 
         for (let turn = this.plan.currentTurn; turn < this.plan.turns; ++turn) {
@@ -320,16 +325,8 @@ define(function(require, exports, module) {
                 // For whatever reason, TweenLite doesn't seem to be able to
                 // maintain the same animation rate for svg circles, causing
                 // them to jitter back and forth at each mark. This makes them
-                // jerk without animation, but alongside the smoother planetary
-                // animations, this serendipitously results in kind of a neat
-                // effect.
-                onComplete: () => {
-                  const c = document.getElementById(body + '_patrol');
-                  if (c) {
-                    c.setAttribute("cx", x);
-                    c.setAttribute("cy", y);
-                  }
-                },
+                // jerk without animation, but it's the army we have.
+                onStart: () => $('#' + body + '_patrol').animate({ cx: x, cy: y }, 3 * intvl_ms, 'linear'),
               }, mark);
 
               timelines[body].to(this.$refs[body + '_label'], time * turns_per_day, {
@@ -440,7 +437,9 @@ define(function(require, exports, module) {
           return;
         }
 
-        if (this.piracyChance()) {
+        if (this.current_turn % data.turns_per_day == 0
+          && this.piracyChance())
+        {
           return;
         }
 
@@ -556,7 +555,7 @@ define(function(require, exports, module) {
                 :id="body + '_patrol'"
                 :r="patrol_radius(body)"
                 stroke="green"
-                stroke-width="0.25"
+                stroke-width="0.5"
                 fill="green"
                 fill-opacity="0.025"/>
 

@@ -17,7 +17,7 @@ define(["require", "exports"], function (require, exports) {
         scarcity_markup: 0.25,
         min_stock_count: 10,
         max_deliveries: 8,
-        max_agents: 1,
+        max_agents: 0,
         max_agent_money: 5000,
         min_agent_profit: 100,
         necessity: { water: true, food: true, medicine: true, fuel: true },

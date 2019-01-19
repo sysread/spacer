@@ -18,7 +18,7 @@ const data = {
   scarcity_markup:     0.25,
   min_stock_count:     10,
   max_deliveries:      8, // per market
-  max_agents:          1, // per faction
+  max_agents:          0, // per faction
   max_agent_money:     5000, // after which they buy luxuries
   min_agent_profit:    100, // min credits net profit before a route is attractive
   necessity:           {water: true, food: true, medicine: true, fuel: true},
