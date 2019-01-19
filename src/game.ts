@@ -186,8 +186,10 @@ class Game {
         p.turn();
       }
 
-      for (const a of this.agents) {
-        a.turn();
+      if (this.turns >= data.turns_per_day * data.initial_days) {
+        for (const a of this.agents) {
+          a.turn();
+        }
       }
     }
 

@@ -202,18 +202,20 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                     }
                     finally { if (e_4) throw e_4.error; }
                 }
-                try {
-                    for (var _e = __values(this.agents), _f = _e.next(); !_f.done; _f = _e.next()) {
-                        var a = _f.value;
-                        a.turn();
-                    }
-                }
-                catch (e_5_1) { e_5 = { error: e_5_1 }; }
-                finally {
+                if (this.turns >= data_1.default.turns_per_day * data_1.default.initial_days) {
                     try {
-                        if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                        for (var _e = __values(this.agents), _f = _e.next(); !_f.done; _f = _e.next()) {
+                            var a = _f.value;
+                            a.turn();
+                        }
                     }
-                    finally { if (e_5) throw e_5.error; }
+                    catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                    finally {
+                        try {
+                            if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                        }
+                        finally { if (e_5) throw e_5.error; }
+                    }
                 }
             }
             if (!no_save) {
