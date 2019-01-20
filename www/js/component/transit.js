@@ -578,9 +578,13 @@ define(function(require, exports, module) {
               &tridot;
             </text>
 
-            <text style="fill:red;font:12px monospace" x=5 y=17>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{layout.fov_au * 2|R(4)|unit('AU')}}</text>
-            <text style="fill:red;font:12px monospace" x=5 y=34>Patrol:&nbsp;{{patrolRate|pct(2)}}</text>
-            <text style="fill:red;font:12px monospace" x=5 y=51>Piracy:&nbsp;{{adjustedPiracyRate|pct(2)}}</text>
+            <line x1=130 y1=14 :x2="patrolRate * layout.width_px + 130" y2=14 stroke="green" stroke-width="14" />
+            <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{patrolRate|pct(2)}}</text>
+
+            <line x1=130 y1=31 :x2="adjustedPiracyRate * layout.width_px + 130" y2=31 stroke="red" stroke-width="14" />
+            <text style="fill:red; font:12px monospace" x=5 y=34>Piracy:&nbsp;{{adjustedPiracyRate|pct(2)}}</text>
+
+            <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{layout.fov_au * 2|R(4)|unit('AU')}}</text>
           </SvgPlot>
         </div>
 
