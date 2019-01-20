@@ -249,12 +249,30 @@ define(["require", "exports", "./data", "./store", "./util"], function (require,
         return Surrender;
     }(Action));
     exports.Surrender = Surrender;
+    var Pass = /** @class */ (function (_super) {
+        __extends(Pass, _super);
+        function Pass() {
+            var _this = _super.call(this) || this;
+            _this.name = 'Pass';
+            return _this;
+        }
+        Pass.prototype.use = function (from, to) {
+            return {
+                type: this.name,
+                source: from.name,
+                effect: 'pass',
+            };
+        };
+        return Pass;
+    }(Action));
+    exports.Pass = Pass;
     var Combatant = /** @class */ (function () {
         function Combatant(combatant) {
             var e_1, _a;
             this.combatant = combatant;
             this.flight = new Flight;
             this.surrender = new Surrender;
+            this.pass = new Pass;
             this._actions = {};
             try {
                 for (var _b = __values(this.ship.addons), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -343,19 +361,21 @@ define(["require", "exports", "./data", "./store", "./util"], function (require,
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Combatant.prototype, "dodge", {
-            get: function () { return Math.max(0, this.ship.dodge - this.ship.damageMalus()); },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(Combatant.prototype, "intercept", {
             get: function () { return Math.max(0, this.ship.intercept - this.ship.damageMalus()); },
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Combatant.prototype, "dodge", {
+            get: function () {
+                return Math.max(0, this.ship.dodge - this.ship.damageMalus());
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Combatant.prototype, "actions", {
             get: function () {
-                return __spread(Object.values(this._actions), [this.flight, this.surrender]);
+                return __spread(Object.values(this._actions), [this.flight, this.surrender, this.pass]);
             },
             enumerable: true,
             configurable: true

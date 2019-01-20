@@ -78,10 +78,11 @@ define(function(require, exports, module) {
           }
         }
         // Cross system path
-        else {
-          points.push(this.plan.end);
-          points.push(this.plan.start);
-        }
+        //else {
+        //}
+
+        points.push(this.plan.end);
+        points.push(this.plan.start);
 
         const max = Math.max(...points.map(p => Physics.distance(p, center)));
         return max / Physics.AU * 1.2;
@@ -269,16 +270,7 @@ define(function(require, exports, module) {
 
         const timelines = {
           sun:  new TimelineLite,
-          ship: new TimelineLite({
-            onComplete: () => {
-              this.$nextTick(() => {
-                this.game.arrive();
-                this.game.unfreeze();
-                this.game.save_game();
-                this.$emit('open', 'summary');
-              });
-            },
-          }),
+          ship: new TimelineLite,
         };
 
         const orbits = {};
@@ -353,7 +345,7 @@ define(function(require, exports, module) {
                 return;
               }
 
-              this.$nextTick(() => this.turn());
+              this.$nextTick(() => this.interval());
             },
           });
         }
@@ -419,12 +411,19 @@ define(function(require, exports, module) {
 
       resume() {
         this.paused = false;
-        this.timeline.resume();
+        this.$nextTick(() => {
+          this.turn();
+          this.timeline.resume();
+        });
       },
 
-      turn() {
+      interval() {
         if (this.game.player.ship.isDestroyed) {
           this.$emit('open', 'newgame');
+        }
+
+        if (this.paused) {
+          return;
         }
 
         if (this.encounter) {
@@ -434,26 +433,36 @@ define(function(require, exports, module) {
         if (this.current_turn % data.turns_per_day == 0
           && this.inspectionChance())
         {
+          this.pause();
           return;
         }
 
         if (this.current_turn % data.turns_per_day == 0
           && this.piracyChance())
         {
+          this.pause();
           return;
         }
 
+        this.turn();
+      },
+
+      turn() {
         this.game.turn(1, true);
         this.plan.turn(1);
         this.game.player.ship.burn(this.plan.accel);
+
+        if (this.plan.is_complete) {
+          this.game.arrive();
+          this.game.unfreeze();
+          this.game.save_game();
+          this.$emit('open', 'summary');
+        }
       },
 
       complete_encounter() {
         this.encounter = null;
-
-        if (!this.paused) {
-          this.resume();
-        }
+        this.resume();
       },
 
       nearby() {

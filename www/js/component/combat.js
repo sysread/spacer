@@ -270,7 +270,11 @@ define(function(require, exports, module) {
 
     template: `
 <card-btn @click="$emit('click')" :disabled="disabled || !action.isReady" class="btn-sm text-left" block=1>
-  {{action.name|caps}} [{{action.count}}]
+  {{action.name|caps}}
+
+  <template v-if="action.count">
+    [{{action.count}}]
+  </template>
 
   <badge right=1 v-if="action.isReloadable" class="mx-2">
     {{action.magazineRemaining}}/{{action.magazine}}

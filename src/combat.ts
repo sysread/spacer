@@ -21,7 +21,8 @@ export type effect =
   | 'destroyed'
   | 'flee'
   | 'chase'
-  | 'surrender';
+  | 'surrender'
+  | 'pass';
 
 interface ActionResult {
   type:    string;
@@ -193,17 +194,36 @@ export class Surrender extends Action {
   }
 }
 
+export class Pass extends Action {
+  public name: string;
+
+  constructor() {
+    super();
+    this.name = 'Pass';
+  }
+
+  use(from: Combatant, to: Combatant): ActionResult {
+    return {
+      type:   this.name,
+      source: from.name,
+      effect: 'pass',
+    };
+  }
+}
+
 
 export class Combatant {
   combatant: Person;
   flight:    Flight;
   surrender: Surrender;
+  pass:      Pass;
   _actions:  { [key: string]: Attack };
 
   constructor(combatant: Person) {
     this.combatant = combatant;
     this.flight    = new Flight;
     this.surrender = new Surrender;
+    this.pass      = new Pass;
     this._actions  = {};
 
     for (const addon of this.ship.addons) {
@@ -232,11 +252,14 @@ export class Combatant {
   get isDestroyed() { return this.ship.isDestroyed }
   get ready()       { return this.actions.filter(a => a.isReady) }
   get attacks()     { return Object.values(this._actions).filter(a => a.isReady) }
-  get dodge()       { return Math.max(0, this.ship.dodge - this.ship.damageMalus()) }
   get intercept()   { return Math.max(0, this.ship.intercept - this.ship.damageMalus()) }
 
+  get dodge() {
+    return Math.max(0, this.ship.dodge - this.ship.damageMalus());
+  }
+
   get actions(): Action[] {
-    return [...Object.values(this._actions), this.flight, this.surrender];
+    return [...Object.values(this._actions), this.flight, this.surrender, this.pass];
   };
 
   /*
