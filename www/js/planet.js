@@ -34,7 +34,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./physics", "./store", "./history", "./common", "./util", "./resource", "./trait", "./faction", "./condition"], function (require, exports, data_1, system_1, physics_1, store_1, history_1, t, util, resource_1, trait_1, faction_1, condition_1) {
+define(["require", "exports", "./data", "./system", "./physics", "./store", "./history", "./common", "./util", "./resource", "./trait", "./faction", "./condition", "./mission"], function (require, exports, data_1, system_1, physics_1, store_1, history_1, t, util, resource_1, trait_1, faction_1, condition_1, mission_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
@@ -725,6 +725,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             if (player && bought) {
                 player.debit(price);
                 player.ship.loadCargo(item, bought);
+                mission_1.Events.BoughtItems({ item: item, bought: bought, price: price });
             }
             return [bought, price];
         };
@@ -749,6 +750,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         player.incStanding(this.faction.abbrev, standing);
                     }
                 }
+                mission_1.Events.SoldItems({ item: item, amount: amount, price: price, standing: standing });
             }
             return [amount, price, standing];
         };

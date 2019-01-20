@@ -149,8 +149,7 @@ define(function(require, exports, module) {
       },
 
       patrolRate() {
-        const rate = Object.values(this.patrolRates).reduce((a, b) => a + b, 0)
-                   / Object.keys(this.patrolRates).length;
+        const rate = Object.values(this.patrolRates).reduce((a, b) => a + b, 0);
         return util.clamp(rate, 0, 1);
       },
 
@@ -581,7 +580,7 @@ define(function(require, exports, module) {
 
             <text style="fill:red;font:12px monospace" x=5 y=17>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{layout.fov_au * 2|R(4)|unit('AU')}}</text>
             <text style="fill:red;font:12px monospace" x=5 y=34>Patrol:&nbsp;{{patrolRate|pct(2)}}</text>
-            <text style="fill:red;font:12px monospace" x=5 y=51>Piracy:&nbsp;{{piracyRate|pct(2)}}</text>
+            <text style="fill:red;font:12px monospace" x=5 y=51>Piracy:&nbsp;{{adjustedPiracyRate|pct(2)}}</text>
           </SvgPlot>
         </div>
 

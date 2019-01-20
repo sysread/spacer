@@ -18,7 +18,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./person", "./planet", "./agent", "./common", "./util"], function (require, exports, data_1, system_1, person_1, planet_1, agent_1, t, util) {
+define(["require", "exports", "./data", "./system", "./person", "./planet", "./agent", "./mission", "./common", "./util"], function (require, exports, data_1, system_1, person_1, planet_1, agent_1, mission_1, t, util) {
     "use strict";
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
@@ -217,6 +217,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                         finally { if (e_5) throw e_5.error; }
                     }
                 }
+                mission_1.Events.Turn(this.turns);
             }
             if (!no_save) {
                 this.save_game();
@@ -236,6 +237,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                 return;
             this.locus = this.transit_plan.dest;
             this.transit_plan = undefined;
+            mission_1.Events.Arrived(this.locus);
         };
         Game.prototype.trade_routes = function () {
             var e_6, _a, e_7, _b;

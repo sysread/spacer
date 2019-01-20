@@ -67,7 +67,7 @@ const data = {
   },
 
   traits: {
-    'mineral rich':      {produces: {ore: 5, minerals: 2}, consumes: {}},
+    'mineral rich':      {produces: {ore: 3, minerals: 2}, consumes: {}},
     'mineral poor':      {produces: {ore: -3, minerals: -1}, consumes: {}},
 
     'water rich':        {produces: {water: 3}, consumes: {}},
@@ -76,10 +76,10 @@ const data = {
     'hydrocarbon rich':  {produces: {hydrocarbons: 4}, consumes: {}},
     'hydrocarbon poor':  {produces: {hydrocarbons: -2}, consumes: {}},
 
-    'rocky':             {produces: {ore: 6, minerals: 2} , consumes: {}},
+    'rocky':             {produces: {ore: 5, minerals: 2} , consumes: {}},
     'icy':               {produces: {water: 5, minerals: 1, hydrocarbons: 2}, consumes: {}},
 
-    'asteroids':         {produces: {ore: 12, minerals: 8}, consumes: {fuel: 1.5, electronics: 0.3, machines: 1, cybernetics: 0.3}},
+    'asteroids':         {produces: {ore: 8, minerals: 8}, consumes: {fuel: 1.5, electronics: 0.3, machines: 1, cybernetics: 0.3}},
     'ringed system':     {produces: {water: 8, minerals: 2, hydrocarbons: 3}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
 
     'agricultural':      {produces: {food: 4, hydrocarbons: 1}, consumes: {machines: 0.5, fuel: 0.5, water: 2, hydrocarbons: 2}},
@@ -305,7 +305,7 @@ const data = {
     ceres: {
       name:    'Ceres',
       size:    'large',
-      traits:  ['subterranean', 'rocky', 'asteroids', 'mineral rich', 'black market', 'capital'],
+      traits:  ['subterranean', 'rocky', 'asteroids', 'black market', 'capital'],
       faction: 'CERES',
       gravity: 0.3,
       desc:    '',
@@ -381,7 +381,7 @@ const data = {
     pluto: {
       name:    'Pluto',
       size:    'small',
-      traits:  ['subterranean', 'rocky', 'icy', 'mineral rich', 'black market', 'capital'],
+      traits:  ['subterranean', 'hydrocarbon rich', 'icy', 'black market', 'capital'],
       faction: 'TRANSA',
       desc:    '',
     }

@@ -5,6 +5,7 @@ import { TransitPlan } from './transitplan';
 import { Person, SavedPerson } from './person';
 import { Planet, SavedPlanet, isImportTask } from './planet';
 import { Agent, SavedAgent } from './agent';
+import { Events } from './mission';
 
 import * as t from './common';
 import * as util from './util';
@@ -191,6 +192,8 @@ class Game {
           a.turn();
         }
       }
+
+      Events.Turn(this.turns);
     }
 
     if (!no_save) {
@@ -217,6 +220,8 @@ class Game {
 
     this.locus = this.transit_plan.dest;
     this.transit_plan = undefined;
+
+    Events.Arrived(this.locus);
   }
 
 

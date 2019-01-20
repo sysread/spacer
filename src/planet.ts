@@ -11,6 +11,7 @@ import { Resource, Raw, Craft, isRaw, isCraft, resources } from './resource';
 import { Trait } from './trait';
 import { Faction } from './faction';
 import { Condition, SavedCondition } from './condition';
+import { Events } from './mission';
 
 
 // Shims for global browser objects
@@ -705,6 +706,7 @@ export class Planet {
     if (player && bought) {
       player.debit(price);
       player.ship.loadCargo(item, bought);
+      Events.BoughtItems({item, bought, price});
     }
 
     return [bought, price];
@@ -734,6 +736,8 @@ export class Planet {
           player.incStanding(this.faction.abbrev, standing);
         }
       }
+
+      Events.SoldItems({item, amount, price, standing});
     }
 
     return [amount, price, standing];
