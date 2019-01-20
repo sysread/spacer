@@ -427,10 +427,21 @@ export class Planet {
   /*
    * Economics
    */
-  scale(n=0) { return data.scales[this.size] * n }
-  getStock(item: t.resource) { return this.stock.count(item) }
-  avgProduction(item: t.resource) { return this.getSupply(item) - this.consumption(item) }
-  netProduction(item: t.resource) { return this.production(item) - this.consumption(item) }
+  scale(n=0) {
+    return data.scales[this.size] * n;
+  }
+
+  getStock(item: t.resource) {
+    return this.stock.count(item);
+  }
+
+  avgProduction(item: t.resource) {
+    return this.getSupply(item) - this.consumption(item);
+  }
+
+  netProduction(item: t.resource) {
+    return this.production(item) - this.consumption(item);
+  }
 
   getDemand(item: t.resource) {
     return this.demand.avg(item);
@@ -506,8 +517,22 @@ export class Planet {
     this.supply.inc(item, amount);
   }
 
-  isNetExporter(item: t.resource): boolean {
-    return this.netProduction(item) > this.scale(1);
+  isNetExporter(item: t.resource, count: number = 1): boolean {
+    const res = data.resources[item];
+
+    if (t.isCraft(res)) {
+      for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
+        const mat_count = res.recipe.materials[mat] || 0;
+        if (!this.isNetExporter(mat, count * mat_count)) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+    else {
+      return this.netProduction(item) > this.scale(count);
+    }
   }
 
   getNeed(item: t.resource) {
@@ -737,7 +762,7 @@ export class Planet {
   }
 
   neededResourceAmount(item: Resource) {
-    const amount = this.getDemand(item.name) - this.getStock(item.name) - this.pending.get(item.name);
+    const amount = this.getDemand(item.name) - this.getSupply(item.name) - this.pending.get(item.name);
     return Math.max(Math.ceil(amount), 0);
   }
 
@@ -866,7 +891,16 @@ export class Planet {
     }
   }
 
+  manufactureSlots() {
+    return data.max_crafts - this.queue.filter(t => isCraftTask(t)).length;
+  }
+
   manufacture() {
+    let slots = this.manufactureSlots();
+
+    if (slots <= 0)
+      return;
+
     const needed = this.neededResources();
 
     for (const item of needed.prioritized) {
@@ -896,11 +930,20 @@ export class Planet {
           }
         }
       }
+
+      if (--slots <= 0)
+        break;
     }
   }
 
+  importSlots(): number {
+    return data.max_imports - this.queue.filter(t => isImportTask(t)).length;
+  }
+
   imports() {
-    if (this.queue.filter(t => isImportTask(t)).length >= data.max_deliveries)
+    let slots = this.importSlots();
+
+    if (slots <= 0)
       return;
 
     const need = this.neededResources();
@@ -917,7 +960,9 @@ export class Planet {
     });
 
     ITEM: for (const item of list) {
-      const amount = want[item];
+      // clamp max amount to the size of a hauler's cargo bay, with a minimum
+      // of 10 units for deliveries
+      const amount = util.clamp(want[item], 10, data.shipclass.hauler.cargo);
       const planet = this.selectExporter(item, amount);
 
       if (!planet) {
@@ -940,14 +985,20 @@ export class Planet {
           turns: turns,
         });
       }
+
+      if (--slots <= 0)
+        break;
     }
+  }
+
+  luxuriate() {
+    this.buy('luxuries', this.scale(3));
   }
 
   produce() {
     for (const item of this.produces.keys()) {
       // allow some surplus to build
-      //if (this.getStock(item) < this.min_stock && !this.hasSuperSurplus(item)) {
-      if (!this.hasSuperSurplus(item) && this.price(item) >= resources[item].value * 0.6) {
+      if (this.getStock(item) < this.min_stock || !this.hasSuperSurplus(item)) {
         const amount = this.production(item);
         if (amount > 0) {
           this.sell(item, amount);
@@ -1027,15 +1078,12 @@ export class Planet {
   }
 
   turn() {
-    /*this.produce();
-    this.consume();
-    this.processQueue();*/
-
     // Only do the really expensive stuff once per day
     switch (window.game.turns % data.turns_per_day) {
-      // note fallthrough to ensure some actions happen every turn
+      // note fallthrough to ensure default actions happen every turn
       case 0:
         this.manufacture();
+        this.luxuriate();
       case 1:
         this.imports();
       case 2:
@@ -1045,17 +1093,9 @@ export class Planet {
         this.produce();
         this.consume();
         this.processQueue();
+        this.rollups();
         break;
     }
-
-    /*if (window.game.turns % data.turns_per_day == 0) {
-      this.manufacture();
-      this.imports();
-      this.replenishFabricators();
-      this.apply_conditions();
-    }*/
-
-    this.rollups();
   }
 
   /*

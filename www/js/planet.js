@@ -426,9 +426,15 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             if (n === void 0) { n = 0; }
             return data_1.default.scales[this.size] * n;
         };
-        Planet.prototype.getStock = function (item) { return this.stock.count(item); };
-        Planet.prototype.avgProduction = function (item) { return this.getSupply(item) - this.consumption(item); };
-        Planet.prototype.netProduction = function (item) { return this.production(item) - this.consumption(item); };
+        Planet.prototype.getStock = function (item) {
+            return this.stock.count(item);
+        };
+        Planet.prototype.avgProduction = function (item) {
+            return this.getSupply(item) - this.consumption(item);
+        };
+        Planet.prototype.netProduction = function (item) {
+            return this.production(item) - this.consumption(item);
+        };
         Planet.prototype.getDemand = function (item) {
             return this.demand.avg(item);
         };
@@ -516,8 +522,32 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.incSupply = function (item, amount) {
             this.supply.inc(item, amount);
         };
-        Planet.prototype.isNetExporter = function (item) {
-            return this.netProduction(item) > this.scale(1);
+        Planet.prototype.isNetExporter = function (item, count) {
+            if (count === void 0) { count = 1; }
+            var e_12, _a;
+            var res = data_1.default.resources[item];
+            if (t.isCraft(res)) {
+                try {
+                    for (var _b = __values(Object.keys(res.recipe.materials)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var mat = _c.value;
+                        var mat_count = res.recipe.materials[mat] || 0;
+                        if (!this.isNetExporter(mat, count * mat_count)) {
+                            return false;
+                        }
+                    }
+                }
+                catch (e_12_1) { e_12 = { error: e_12_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    }
+                    finally { if (e_12) throw e_12.error; }
+                }
+                return true;
+            }
+            else {
+                return this.netProduction(item) > this.scale(count);
+            }
         };
         Planet.prototype.getNeed = function (item) {
             var d = this.getDemand(item);
@@ -539,7 +569,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * adjustment.
          */
         Planet.prototype.getAvailabilityMarkup = function (item) {
-            var e_12, _a;
+            var e_13, _a;
             // If this planet is a net exporter of the item, easy access results in a
             // lower price.
             if (this.isNetExporter(item)) {
@@ -564,12 +594,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_12_1) { e_12 = { error: e_12_1 }; }
+            catch (e_13_1) { e_13 = { error: e_13_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_12) throw e_12.error; }
+                finally { if (e_13) throw e_13.error; }
             }
             if (distance != undefined && nearest != undefined) {
                 var markup = 1;
@@ -609,7 +639,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * means no adjustment.
          */
         Planet.prototype.getConditionMarkup = function (item) {
-            var e_13, _a;
+            var e_14, _a;
             var markup = 1;
             try {
                 for (var _b = __values(this.conditions), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -620,17 +650,17 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     markup += amount;
                 }
             }
-            catch (e_13_1) { e_13 = { error: e_13_1 }; }
+            catch (e_14_1) { e_14 = { error: e_14_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_13) throw e_13.error; }
+                finally { if (e_14) throw e_14.error; }
             }
             return markup;
         };
         Planet.prototype.price = function (item) {
-            var e_14, _a;
+            var e_15, _a;
             if (!this._cycle[item] || window.game.turns % this._cycle[item] == 0) {
                 delete this._price[item];
                 this._cycle[item] = util.getRandomInt(3, 12) * data_1.default.turns_per_day;
@@ -655,12 +685,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         price -= price * (trait.price[item] || 0);
                     }
                 }
-                catch (e_14_1) { e_14 = { error: e_14_1 }; }
+                catch (e_15_1) { e_15 = { error: e_15_1 }; }
                 finally {
                     try {
                         if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
-                    finally { if (e_14) throw e_14.error; }
+                    finally { if (e_15) throw e_15.error; }
                 }
                 // Scarcity adjustment for items necessary to survival
                 price *= this.getScarcityMarkup(item);
@@ -727,7 +757,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.queue.push(task);
         };
         Planet.prototype.processQueue = function () {
-            var e_15, _a;
+            var e_16, _a;
             // NOTE: this method of regenerating the queue is *much* faster than
             // Array.prototype.filter().
             var queue = this.queue;
@@ -744,20 +774,20 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_15_1) { e_15 = { error: e_15_1 }; }
+            catch (e_16_1) { e_16 = { error: e_16_1 }; }
             finally {
                 try {
                     if (queue_1_1 && !queue_1_1.done && (_a = queue_1.return)) _a.call(queue_1);
                 }
-                finally { if (e_15) throw e_15.error; }
+                finally { if (e_16) throw e_16.error; }
             }
         };
         Planet.prototype.neededResourceAmount = function (item) {
-            var amount = this.getDemand(item.name) - this.getStock(item.name) - this.pending.get(item.name);
+            var amount = this.getDemand(item.name) - this.getSupply(item.name) - this.pending.get(item.name);
             return Math.max(Math.ceil(amount), 0);
         };
         Planet.prototype.neededResources = function () {
-            var e_16, _a;
+            var e_17, _a;
             var amounts = {}; // Calculate how many of each item we want
             var need = {}; // Pre-calculate each item's need
             try {
@@ -770,12 +800,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_16_1) { e_16 = { error: e_16_1 }; }
+            catch (e_17_1) { e_17 = { error: e_17_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_16) throw e_16.error; }
+                finally { if (e_17) throw e_17.error; }
             }
             // Sort the greatest needs to the front of the list
             var prioritized = Object.keys(amounts).sort(function (a, b) {
@@ -801,7 +831,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             });
         };
         Planet.prototype.selectExporter = function (item, amount) {
-            var e_17, _a, e_18, _b, e_19, _c;
+            var e_18, _a, e_19, _b, e_20, _c;
             var exporters = this.exporters(item);
             if (exporters.length === 0)
                 return;
@@ -817,12 +847,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
                 }
             }
-            catch (e_17_1) { e_17 = { error: e_17_1 }; }
+            catch (e_18_1) { e_18 = { error: e_18_1 }; }
             finally {
                 try {
                     if (exporters_1_1 && !exporters_1_1.done && (_a = exporters_1.return)) _a.call(exporters_1);
                 }
-                finally { if (e_17) throw e_17.error; }
+                finally { if (e_18) throw e_18.error; }
             }
             var avgDist = Object.values(dist).reduce(function (a, b) { return a + b; }, 0)
                 / Object.values(dist).length;
@@ -841,12 +871,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     stockRating[body] = stock[body] / avgStock;
                 }
             }
-            catch (e_18_1) { e_18 = { error: e_18_1 }; }
+            catch (e_19_1) { e_19 = { error: e_19_1 }; }
             finally {
                 try {
                     if (exporters_2_1 && !exporters_2_1.done && (_b = exporters_2.return)) _b.call(exporters_2);
                 }
-                finally { if (e_18) throw e_18.error; }
+                finally { if (e_19) throw e_19.error; }
             }
             // Calculate a rating by comparing distance, price, and number of
             // available units
@@ -862,12 +892,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_19_1) { e_19 = { error: e_19_1 }; }
+            catch (e_20_1) { e_20 = { error: e_20_1 }; }
             finally {
                 try {
                     if (exporters_3_1 && !exporters_3_1.done && (_c = exporters_3.return)) _c.call(exporters_3);
                 }
-                finally { if (e_19) throw e_19.error; }
+                finally { if (e_20) throw e_20.error; }
             }
             return bestPlanet;
         };
@@ -876,7 +906,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * available in this market.
          */
         Planet.prototype.canManufacture = function (item) {
-            var e_20, _a;
+            var e_21, _a;
             var res = resource_1.resources[item];
             var counts = [];
             if (resource_1.isCraft(res)) {
@@ -895,12 +925,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         counts.push(amount);
                     }
                 }
-                catch (e_20_1) { e_20 = { error: e_20_1 }; }
+                catch (e_21_1) { e_21 = { error: e_21_1 }; }
                 finally {
                     try {
                         if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
-                    finally { if (e_20) throw e_20.error; }
+                    finally { if (e_21) throw e_21.error; }
                 }
             }
             if (counts.length > 0) {
@@ -910,8 +940,14 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 return 0;
             }
         };
+        Planet.prototype.manufactureSlots = function () {
+            return data_1.default.max_crafts - this.queue.filter(function (t) { return isCraftTask(t); }).length;
+        };
         Planet.prototype.manufacture = function () {
-            var e_21, _a, e_22, _b, e_23, _c;
+            var e_22, _a, e_23, _b, e_24, _c;
+            var slots = this.manufactureSlots();
+            if (slots <= 0)
+                return;
             var needed = this.neededResources();
             try {
                 for (var _d = __values(needed.prioritized), _e = _d.next(); !_e.done; _e = _d.next()) {
@@ -928,12 +964,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                                     this.buy(mat, gets * (res.recipe.materials[mat] || 0));
                                 }
                             }
-                            catch (e_22_1) { e_22 = { error: e_22_1 }; }
+                            catch (e_23_1) { e_23 = { error: e_23_1 }; }
                             finally {
                                 try {
                                     if (_g && !_g.done && (_b = _f.return)) _b.call(_f);
                                 }
-                                finally { if (e_22) throw e_22.error; }
+                                finally { if (e_23) throw e_23.error; }
                             }
                             this.schedule({
                                 type: 'craft',
@@ -949,29 +985,35 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                                     this.incDemand(mat, res.recipe.materials[mat] || 0);
                                 }
                             }
-                            catch (e_23_1) { e_23 = { error: e_23_1 }; }
+                            catch (e_24_1) { e_24 = { error: e_24_1 }; }
                             finally {
                                 try {
                                     if (_j && !_j.done && (_c = _h.return)) _c.call(_h);
                                 }
-                                finally { if (e_23) throw e_23.error; }
+                                finally { if (e_24) throw e_24.error; }
                             }
                         }
                     }
+                    if (--slots <= 0)
+                        break;
                 }
             }
-            catch (e_21_1) { e_21 = { error: e_21_1 }; }
+            catch (e_22_1) { e_22 = { error: e_22_1 }; }
             finally {
                 try {
                     if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
                 }
-                finally { if (e_21) throw e_21.error; }
+                finally { if (e_22) throw e_22.error; }
             }
+        };
+        Planet.prototype.importSlots = function () {
+            return data_1.default.max_imports - this.queue.filter(function (t) { return isImportTask(t); }).length;
         };
         Planet.prototype.imports = function () {
             var _this = this;
-            var e_24, _a;
-            if (this.queue.filter(function (t) { return isImportTask(t); }).length >= data_1.default.max_deliveries)
+            var e_25, _a;
+            var slots = this.importSlots();
+            if (slots <= 0)
                 return;
             var need = this.neededResources();
             var want = need.amounts;
@@ -986,7 +1028,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             try {
                 ITEM: for (var list_1 = __values(list), list_1_1 = list_1.next(); !list_1_1.done; list_1_1 = list_1.next()) {
                     var item = list_1_1.value;
-                    var amount = want[item];
+                    // clamp max amount to the size of a hauler's cargo bay, with a minimum
+                    // of 10 units for deliveries
+                    var amount = util.clamp(want[item], 10, data_1.default.shipclass.hauler.cargo);
                     var planet = this.selectExporter(item, amount);
                     if (!planet) {
                         continue;
@@ -1005,47 +1049,32 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                             turns: turns,
                         });
                     }
-                }
-            }
-            catch (e_24_1) { e_24 = { error: e_24_1 }; }
-            finally {
-                try {
-                    if (list_1_1 && !list_1_1.done && (_a = list_1.return)) _a.call(list_1);
-                }
-                finally { if (e_24) throw e_24.error; }
-            }
-        };
-        Planet.prototype.produce = function () {
-            var e_25, _a;
-            try {
-                for (var _b = __values(this.produces.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var item = _c.value;
-                    // allow some surplus to build
-                    //if (this.getStock(item) < this.min_stock && !this.hasSuperSurplus(item)) {
-                    if (!this.hasSuperSurplus(item) && this.price(item) >= resource_1.resources[item].value * 0.6) {
-                        var amount = this.production(item);
-                        if (amount > 0) {
-                            this.sell(item, amount);
-                        }
-                    }
+                    if (--slots <= 0)
+                        break;
                 }
             }
             catch (e_25_1) { e_25 = { error: e_25_1 }; }
             finally {
                 try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    if (list_1_1 && !list_1_1.done && (_a = list_1.return)) _a.call(list_1);
                 }
                 finally { if (e_25) throw e_25.error; }
             }
         };
-        Planet.prototype.consume = function () {
+        Planet.prototype.luxuriate = function () {
+            this.buy('luxuries', this.scale(3));
+        };
+        Planet.prototype.produce = function () {
             var e_26, _a;
             try {
-                for (var _b = __values(this.consumes.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                for (var _b = __values(this.produces.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var item = _c.value;
-                    var amt = this.consumption(item);
-                    if (amt > 0) {
-                        this.buy(item, this.consumption(item));
+                    // allow some surplus to build
+                    if (this.getStock(item) < this.min_stock || !this.hasSuperSurplus(item)) {
+                        var amount = this.production(item);
+                        if (amount > 0) {
+                            this.sell(item, amount);
+                        }
                     }
                 }
             }
@@ -1057,8 +1086,27 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 finally { if (e_26) throw e_26.error; }
             }
         };
+        Planet.prototype.consume = function () {
+            var e_27, _a;
+            try {
+                for (var _b = __values(this.consumes.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var item = _c.value;
+                    var amt = this.consumption(item);
+                    if (amt > 0) {
+                        this.buy(item, this.consumption(item));
+                    }
+                }
+            }
+            catch (e_27_1) { e_27 = { error: e_27_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_27) throw e_27.error; }
+            }
+        };
         Planet.prototype.rollups = function () {
-            var e_27, _a, e_28, _b;
+            var e_28, _a, e_29, _b;
             if (window.game.turns % (24 / data_1.default.hours_per_turn) === 0) {
                 try {
                     for (var _c = __values(this.stock.keys()), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -1066,12 +1114,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         this.incSupply(item, this.getStock(item));
                     }
                 }
-                catch (e_27_1) { e_27 = { error: e_27_1 }; }
+                catch (e_28_1) { e_28 = { error: e_28_1 }; }
                 finally {
                     try {
                         if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
                     }
-                    finally { if (e_27) throw e_27.error; }
+                    finally { if (e_28) throw e_28.error; }
                 }
                 this.supply.rollup();
                 this.demand.rollup();
@@ -1081,18 +1129,18 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         this.need.inc(item, this.getNeed(item));
                     }
                 }
-                catch (e_28_1) { e_28 = { error: e_28_1 }; }
+                catch (e_29_1) { e_29 = { error: e_29_1 }; }
                 finally {
                     try {
                         if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
                     }
-                    finally { if (e_28) throw e_28.error; }
+                    finally { if (e_29) throw e_29.error; }
                 }
                 this.need.rollup();
             }
         };
         Planet.prototype.apply_conditions = function () {
-            var e_29, _a, e_30, _b, e_31, _c, e_32, _d;
+            var e_30, _a, e_31, _b, e_32, _c, e_33, _d;
             // Increment turns on each condition and filter out those which are no
             // longer active.
             this.conditions = this.conditions.filter(function (c) {
@@ -1118,12 +1166,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                             }
                         }
                     }
-                    catch (e_30_1) { e_30 = { error: e_30_1 }; }
+                    catch (e_31_1) { e_31 = { error: e_31_1 }; }
                     finally {
                         try {
                             if (_h && !_h.done && (_b = _g.return)) _b.call(_g);
                         }
-                        finally { if (e_30) throw e_30.error; }
+                        finally { if (e_31) throw e_31.error; }
                     }
                     try {
                         // Surpluses
@@ -1136,12 +1184,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                             }
                         }
                     }
-                    catch (e_31_1) { e_31 = { error: e_31_1 }; }
+                    catch (e_32_1) { e_32 = { error: e_32_1 }; }
                     finally {
                         try {
                             if (_k && !_k.done && (_c = _j.return)) _c.call(_j);
                         }
-                        finally { if (e_31) throw e_31.error; }
+                        finally { if (e_32) throw e_32.error; }
                     }
                     try {
                         // Conditions
@@ -1154,32 +1202,30 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                             }
                         }
                     }
-                    catch (e_32_1) { e_32 = { error: e_32_1 }; }
+                    catch (e_33_1) { e_33 = { error: e_33_1 }; }
                     finally {
                         try {
                             if (_m && !_m.done && (_d = _l.return)) _d.call(_l);
                         }
-                        finally { if (e_32) throw e_32.error; }
+                        finally { if (e_33) throw e_33.error; }
                     }
                 }
             }
-            catch (e_29_1) { e_29 = { error: e_29_1 }; }
+            catch (e_30_1) { e_30 = { error: e_30_1 }; }
             finally {
                 try {
                     if (_f && !_f.done && (_a = _e.return)) _a.call(_e);
                 }
-                finally { if (e_29) throw e_29.error; }
+                finally { if (e_30) throw e_30.error; }
             }
         };
         Planet.prototype.turn = function () {
-            /*this.produce();
-            this.consume();
-            this.processQueue();*/
             // Only do the really expensive stuff once per day
             switch (window.game.turns % data_1.default.turns_per_day) {
-                // note fallthrough to ensure some actions happen every turn
+                // note fallthrough to ensure default actions happen every turn
                 case 0:
                     this.manufacture();
+                    this.luxuriate();
                 case 1:
                     this.imports();
                 case 2:
@@ -1189,21 +1235,15 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     this.produce();
                     this.consume();
                     this.processQueue();
+                    this.rollups();
                     break;
             }
-            /*if (window.game.turns % data.turns_per_day == 0) {
-              this.manufacture();
-              this.imports();
-              this.replenishFabricators();
-              this.apply_conditions();
-            }*/
-            this.rollups();
         };
         /*
          * Misc
          */
         Planet.prototype.addonPrice = function (addon, player) {
-            var e_33, _a;
+            var e_34, _a;
             var base = data_1.default.addons[addon].price;
             var standing = base * player.getStandingPriceAdjustment(this.faction.abbrev);
             var tax = base * this.faction.sales_tax;
@@ -1216,12 +1256,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_33_1) { e_33 = { error: e_33_1 }; }
+            catch (e_34_1) { e_34 = { error: e_34_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_33) throw e_33.error; }
+                finally { if (e_34) throw e_34.error; }
             }
             return price;
         };

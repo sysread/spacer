@@ -16,8 +16,9 @@ const data = {
   initial_stock:       20,
   market_history:      10 * turnsPerDay,
   scarcity_markup:     0.25,
-  min_stock_count:     10,
-  max_deliveries:      8, // per market
+  min_stock_count:     100,
+  max_imports:         4, // per market
+  max_crafts:          10, // per market
   max_agents:          0, // per faction
   max_agent_money:     5000, // after which they buy luxuries
   min_agent_profit:    100, // min credits net profit before a route is attractive

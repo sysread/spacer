@@ -59,6 +59,7 @@ define(function(require, exports, module) {
       data() {
         return {
           item: 'water',
+          slow: false,
         };
       },
 
@@ -82,11 +83,17 @@ define(function(require, exports, module) {
 
           intvl = window.setInterval(() => {
             if (left > 0) {
-              const batch = Math.min(3, left);
-              left -= batch;
+              if (this.slow) {
+                --left;
+                this.game.turn(1, true);
+              }
+              else {
+                const batch = Math.min(3, left);
+                left -= batch;
 
-              for (let i = 0; i < batch; ++i) {
-                this.game.turn(batch, true);
+                for (let i = 0; i < batch; ++i) {
+                  this.game.turn(batch, true);
+                }
               }
             }
             else {
@@ -97,7 +104,7 @@ define(function(require, exports, module) {
             }
 
             this.$forceUpdate();
-          }, 200);
+          }, this.slow ? 500 : 200);
         },
 
         fixMe: function() {
@@ -116,6 +123,9 @@ define(function(require, exports, module) {
     <btn @click="gameTurns(9)">9 turns</btn>
     <btn @click="gameTurns(30)">30 turns</btn>
     <btn @click="gameTurns(90)">90 turns</btn>
+
+    <btn v-if="slow" @click="slow=false">Slow</btn>
+    <btn v-else @click="slow=true">Fast</btn>
   </div>
 
   <div class="my-3 input-group">
