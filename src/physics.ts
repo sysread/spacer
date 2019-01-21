@@ -1,7 +1,5 @@
 type point = [number, number, number];
 
-declare var console: any;
-
 class Physics {
   static get C()  { return 299792458;    } // m/s
   static get G()  { return 9.80665;      } // m/s/s

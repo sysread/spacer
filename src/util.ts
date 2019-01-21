@@ -1,9 +1,5 @@
+import game from './game';
 import { resources } from './common';
-
-
-// Shims for global browser objects
-declare var window: { game: any; memo_stats: any; }
-declare var console: any;
 
 
 interface Counter {
@@ -129,43 +125,3 @@ export function resourceMap(dflt: number=0, entries?: Counter) {
 
   return entries;
 }
-
-
-interface MemoOpts {
-  turns?: number;
-  key?:   string;
-}
-
-window.memo_stats = {hit: 0, miss: 0, clear: 0};
-export function memoized(opt: MemoOpts) {
-  return function(target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
-    const orig    = descriptor.value;
-    const keyName = opt.key;
-    const getKey  = keyName == undefined
-      ? (obj: any) => obj.constructor.name
-      : (obj: any) => obj[keyName] || obj.constructor.name;
-
-    let memo: { [key: string]: any } = {};
-    let turns = opt.turns || getRandomInt(3, 12);
-
-    descriptor.value = function() {
-      if (window.game.turns % turns == 0) {
-        turns = opt.turns || getRandomInt(3, 12);
-        memo  = {};
-        ++window.memo_stats.clear;
-      }
-
-      const key = JSON.stringify([getKey(this), arguments]);
-      if (memo[key] == undefined) {
-        memo[key] = orig.apply(this, arguments);
-        ++window.memo_stats.miss;
-      } else {
-        ++window.memo_stats.hit;
-      }
-
-      return memo[key];
-    };
-
-    return descriptor;
-  }
-};

@@ -1,9 +1,5 @@
 import * as t from './common';
 
-// Shims for global browser objects
-declare var window: { game: any; }
-declare var console: any;
-
 type Event = 'Turn' | 'Arrived' | 'BoughtItems' | 'SoldItems';
 
 export class Events {

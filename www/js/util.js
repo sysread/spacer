@@ -153,35 +153,4 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
         return entries;
     }
     exports.resourceMap = resourceMap;
-    window.memo_stats = { hit: 0, miss: 0, clear: 0 };
-    function memoized(opt) {
-        return function (target, propertyKey, descriptor) {
-            var orig = descriptor.value;
-            var keyName = opt.key;
-            var getKey = keyName == undefined
-                ? function (obj) { return obj.constructor.name; }
-                : function (obj) { return obj[keyName] || obj.constructor.name; };
-            var memo = {};
-            var turns = opt.turns || getRandomInt(3, 12);
-            descriptor.value = function () {
-                if (window.game.turns % turns == 0) {
-                    turns = opt.turns || getRandomInt(3, 12);
-                    memo = {};
-                    ++window.memo_stats.clear;
-                }
-                var key = JSON.stringify([getKey(this), arguments]);
-                if (memo[key] == undefined) {
-                    memo[key] = orig.apply(this, arguments);
-                    ++window.memo_stats.miss;
-                }
-                else {
-                    ++window.memo_stats.hit;
-                }
-                return memo[key];
-            };
-            return descriptor;
-        };
-    }
-    exports.memoized = memoized;
-    ;
 });

@@ -1,3 +1,4 @@
+import game  from './game';
 import data  from './data';
 import Store from './store';
 import NPC   from './npc';
@@ -6,11 +7,6 @@ import { Person } from './person';
 
 import * as util from './util';
 import * as t from './common';
-
-
-// Shims for global browser objects
-declare var window: { game: any; }
-declare var console: any;
 
 
 export type effect =
@@ -316,7 +312,7 @@ export class Combat {
   _salvage?:   Store;
 
   constructor(opt: CombatOpt) {
-    this.player      = new Combatant(window.game.player);
+    this.player      = new Combatant(game.player);
     this.opponent    = new Combatant(opt.opponent);
     this.initiative  = util.oneOf(['player', 'opponent']);
     this.round       = 1;

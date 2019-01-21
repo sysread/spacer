@@ -1,3 +1,4 @@
+import game    from './game';
 import data    from './data';
 import system  from './system';
 import Physics from './physics';
@@ -12,11 +13,6 @@ import { Trait } from './trait';
 import { Faction } from './faction';
 import { Condition, SavedCondition } from './condition';
 import { Events } from './mission';
-
-
-// Shims for global browser objects
-declare var window: { game: any; }
-declare var console: any;
 
 
 interface NeededResources {
@@ -572,7 +568,7 @@ export class Planet {
         continue;
       }
 
-      if (!window.game.planets[body].isNetExporter(item)) {
+      if (!game.planets[body].isNetExporter(item)) {
         continue;
       }
 
@@ -639,7 +635,7 @@ export class Planet {
   }
 
   price(item: t.resource) {
-    if (!this._cycle[item] || window.game.turns % this._cycle[item] == 0) {
+    if (!this._cycle[item] || game.turns % this._cycle[item] == 0) {
       delete this._price[item];
       this._cycle[item] = util.getRandomInt(3, 12) * data.turns_per_day;
     }
@@ -799,9 +795,9 @@ export class Planet {
   }
 
   exporters(item: t.resource): t.body[] {
-    const bodies = (<t.body[]>Object.keys(window.game.planets));
+    const bodies = (<t.body[]>Object.keys(game.planets));
     return bodies.filter(name => {
-      const p = window.game.planets[name];
+      const p = game.planets[name];
       return p.body !== this.body
           && !p.hasShortage(item)
           && p.getStock(item) >= 1
@@ -820,9 +816,9 @@ export class Planet {
     const price: t.Counter = {};
     const stock: t.Counter = {};
     for (const body of exporters) {
-      dist[body]  = this.distance(body) / Physics.AU * window.game.planets[body].buyPrice('fuel');
-      price[body] = window.game.planets[body].buyPrice(item);
-      stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
+      dist[body]  = this.distance(body) / Physics.AU * game.planets[body].buyPrice('fuel');
+      price[body] = game.planets[body].buyPrice(item);
+      stock[body] = Math.min(amount, game.planets[body].getStock(item));
     }
 
     const avgDist
@@ -974,12 +970,12 @@ export class Planet {
         continue;
       }
 
-      const [bought, price] = window.game.planets[planet].buy(item, amount);
+      const [bought, price] = game.planets[planet].buy(item, amount);
 
       if (bought > 0) {
         const distance = this.distance(planet) / Physics.AU;
         const turns = Math.max(3, Math.ceil(Math.log(distance) * 2)) * data.turns_per_day;
-        window.game.planets[planet].buy('fuel', distance);
+        game.planets[planet].buy('fuel', distance);
 
         this.schedule({
           type:  'import',
@@ -1022,7 +1018,7 @@ export class Planet {
   }
 
   rollups() {
-    if (window.game.turns % (24 / data.hours_per_turn) === 0) {
+    if (game.turns % (24 / data.hours_per_turn) === 0) {
       for (const item of this.stock.keys()) {
         this.incSupply(item, this.getStock(item));
       }
@@ -1084,7 +1080,7 @@ export class Planet {
 
   turn() {
     // Only do the really expensive stuff once per day
-    switch (window.game.turns % data.turns_per_day) {
+    switch (game.turns % data.turns_per_day) {
       // note fallthrough to ensure default actions happen every turn
       case 0:
         this.manufacture();
