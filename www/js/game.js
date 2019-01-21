@@ -18,7 +18,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./person", "./planet", "./agent", "./mission", "./common", "./util"], function (require, exports, data_1, system_1, person_1, planet_1, agent_1, mission_1, t, util) {
+define(["require", "exports", "./data", "./system", "./data/initial", "./person", "./planet", "./agent", "./mission", "./common", "./util"], function (require, exports, data_1, system_1, initial_1, person_1, planet_1, agent_1, mission_1, t, util) {
     "use strict";
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
@@ -29,7 +29,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
         function Game() {
             this.turns = 0;
             this.date = new Date(data_1.default.start_date);
-            this.player = null;
+            this._player = null;
             this.locus = null;
             this.planets = {};
             this.page = null;
@@ -37,12 +37,13 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
             this.agents = [];
             var saved = window.localStorage.getItem('game');
             var init = saved == null ? null : JSON.parse(saved);
+            this.reset_date();
             if (init) {
                 try {
                     this.turns = init.turns;
                     this.locus = init.locus;
                     this.page = init.page;
-                    this.player = new person_1.Person(init.player);
+                    this._player = new person_1.Person(init.player);
                     this.date.setHours(this.date.getHours() + (this.turns * data_1.default.hours_per_turn));
                     console.log('setting system date', this.date);
                     system_1.default.set_date(this.strdate());
@@ -53,26 +54,35 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                     console.warn('initialization error; clearing data. error was:', e);
                     this.locus = null;
                     this.turns = 0;
-                    this.player = null;
+                    this._player = null;
                     this.build_planets();
                     this.build_agents();
-                    this.reset_date();
                 }
             }
             else {
                 this.locus = null;
                 this.turns = 0;
-                this.player = null;
+                this._player = null;
                 this.build_planets();
                 this.build_agents();
-                this.reset_date();
             }
         }
+        Object.defineProperty(Game.prototype, "player", {
+            get: function () {
+                if (!this._player) {
+                    throw new Error('player is not available before the game has started');
+                }
+                return this._player;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Game.prototype, "here", {
             get: function () {
-                if (this.locus != null) {
-                    return this.planets[this.locus];
+                if (!this.locus) {
+                    throw new Error('here is not available before the game has started');
                 }
+                return this.planets[this.locus];
             },
             enumerable: true,
             configurable: true
@@ -84,9 +94,13 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
             enumerable: true,
             configurable: true
         });
+        Game.prototype.start_date = function () {
+            var date = new Date(data_1.default.start_date);
+            date.setDate(this.date.getDate() - data_1.default.initial_days);
+            return date;
+        };
         Game.prototype.reset_date = function () {
-            this.date = new Date(data_1.default.start_date);
-            this.date.setDate(this.date.getDate() - data_1.default.initial_days);
+            this.date = this.start_date();
             console.log('resetting system date', this.date);
             system_1.default.set_date(this.strdate());
         };
@@ -169,17 +183,29 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
         };
         Game.prototype.new_game = function (player, home) {
             window.localStorage.removeItem('game');
-            this.player = player;
+            this.turns = initial_1.NewGameData.turns;
+            this.page = initial_1.NewGameData.page;
+            this.date.setHours(this.date.getHours() + (this.turns * data_1.default.hours_per_turn));
+            console.log('setting system date', this.date);
+            system_1.default.set_date(this.strdate());
+            this.build_planets(initial_1.NewGameData.planets);
+            this.build_agents(initial_1.NewGameData.agents);
+            this._player = player;
             this.locus = home;
-            this.turns = 0;
-            this.reset_date();
-            this.build_planets();
         };
         Game.prototype.save_game = function () {
             window.localStorage.setItem('game', JSON.stringify(this));
         };
         Game.prototype.delete_game = function () {
             window.localStorage.removeItem('game');
+        };
+        Game.prototype.build_new_game_data = function () {
+            this.turns = 0;
+            this.reset_date();
+            this.build_planets();
+            this.build_agents();
+            this.turn(data_1.default.initial_days * data_1.default.turns_per_day, true);
+            return JSON.stringify(this);
         };
         Game.prototype.turn = function (n, no_save) {
             if (n === void 0) { n = 1; }
@@ -290,8 +316,9 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
     }());
     ;
     console.log('Spacer is starting');
+    var game = window.game || new Game;
     if (!window.game) {
-        window.game = new Game;
+        window.game = game;
     }
-    return window.game;
+    return game;
 });

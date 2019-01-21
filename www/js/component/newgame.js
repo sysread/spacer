@@ -37,7 +37,7 @@ define(function(require, exports, module) {
     },
 
     methods: {
-      processBatch() {
+      /*processBatch() {
         this.$nextTick(function() {
           if (this.turnsComplete < this.startTurns) {
             const count = Math.min(this.startTurns - this.turnsComplete, this.step);
@@ -50,7 +50,7 @@ define(function(require, exports, module) {
             this.$nextTick(() => this.$emit('open', 'summary'));
           }
         });
-      },
+      },*/
 
       startGame() {
         this.starting = true;
@@ -67,7 +67,10 @@ define(function(require, exports, module) {
           this.home
         );
 
-        this.$nextTick(this.processBatch);
+        //this.$nextTick(this.processBatch);
+        this.game.save_game();
+        this.game.unfreeze();
+        this.$nextTick(() => this.$emit('open', 'summary'));
       },
     },
 

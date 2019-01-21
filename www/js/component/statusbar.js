@@ -23,7 +23,7 @@ define(function(require, exports, module) {
       // incrementally with setHours rather than by updating the date property
       // on game each turn.
       date() {
-        const dt = new Date(this.data.start_date);
+        const dt = this.game.start_date();
         dt.setHours(dt.getHours() + this.game.turns * this.data.hours_per_turn);
         return this.game.strdate(dt).replace(/-/g, '.');
       },

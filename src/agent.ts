@@ -18,7 +18,7 @@ export interface SavedAgent extends SavedPerson {
 
 
 interface Route {
-  readonly action:  'route',
+  readonly action:  'route';
   readonly dest:    t.body;
   readonly item:    t.resource;
   readonly profit:  number; // net profit per turn
@@ -27,7 +27,7 @@ interface Route {
 }
 
 interface Job {
-  readonly action:   'job',
+  readonly action:   'job';
   readonly location: t.body;
   readonly task:     t.Work;
   turns:             number;
@@ -35,7 +35,7 @@ interface Job {
 }
 
 interface Docked {
-  readonly action:   'docked',
+  readonly action:   'docked';
   readonly location: t.body;
 }
 
