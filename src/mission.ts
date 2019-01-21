@@ -138,7 +138,6 @@ export abstract class Mission {
 
     Events.watch(Ev.Turn, (event: Turn) => {
       if (this.turns_left == 0) {
-        this.setStatus(Status.Failure);
         this.complete();
       }
     });
@@ -153,6 +152,7 @@ export abstract class Mission {
       window.game.player.completeMission(this);
     }
     else {
+      this.setStatus(Status.Failure);
       window.game.player.decStanding(this.faction, this.standing / 2);
       window.game.player.completeMission(this);
     }

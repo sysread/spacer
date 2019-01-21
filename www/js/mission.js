@@ -137,7 +137,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
             this.deadline = window.game.turns + this.turns;
             Events.watch(Ev.Turn, function (event) {
                 if (_this.turns_left == 0) {
-                    _this.setStatus(Status.Failure);
                     _this.complete();
                 }
             });
@@ -151,6 +150,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
                 window.game.player.completeMission(this);
             }
             else {
+                this.setStatus(Status.Failure);
                 window.game.player.decStanding(this.faction, this.standing / 2);
                 window.game.player.completeMission(this);
             }
