@@ -43,7 +43,7 @@ define(["require", "exports", "./data", "./system", "./data/initial", "./person"
                     this.turns = init.turns;
                     this.locus = init.locus;
                     this.page = init.page;
-                    this._player = new person_1.Person(init.player);
+                    this._player = new person_1.Person(init._player);
                     this.date.setHours(this.date.getHours() + (this.turns * data_1.default.hours_per_turn));
                     console.log('setting system date', this.date);
                     system_1.default.set_date(this.strdate());
@@ -243,7 +243,7 @@ define(["require", "exports", "./data", "./system", "./data/initial", "./person"
                         finally { if (e_5) throw e_5.error; }
                     }
                 }
-                mission_1.Events.Turn(this.turns);
+                mission_1.Events.signal({ type: mission_1.Ev.Turn, turn: this.turns });
             }
             if (!no_save) {
                 this.save_game();
@@ -263,7 +263,7 @@ define(["require", "exports", "./data", "./system", "./data/initial", "./person"
                 return;
             this.locus = this.transit_plan.dest;
             this.transit_plan = undefined;
-            mission_1.Events.Arrived(this.locus);
+            mission_1.Events.signal({ type: mission_1.Ev.Arrived, dest: this.locus });
         };
         Game.prototype.trade_routes = function () {
             var e_6, _a, e_7, _b;

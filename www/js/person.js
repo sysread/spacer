@@ -34,7 +34,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./ship", "./physics", "./common", "./faction", "./resource"], function (require, exports, data_1, system_1, ship_1, physics_1, t, faction_1, resource_1) {
+define(["require", "exports", "./data", "./system", "./ship", "./physics", "./common", "./faction", "./resource", "./mission"], function (require, exports, data_1, system_1, ship_1, physics_1, t, faction_1, resource_1, mission_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
@@ -45,7 +45,8 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
     ;
     var Person = /** @class */ (function () {
         function Person(init) {
-            var e_1, _a;
+            var e_1, _a, e_2, _b;
+            this.contracts = [];
             if (init == undefined) {
                 this.name = 'Marco Solo';
                 this.ship = new ship_1.default({ type: data_1.default.initial_ship });
@@ -59,11 +60,26 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
                 this.faction = new faction_1.Faction(init.faction);
                 this.home = init.home;
                 this.money = Math.floor(init.money);
+                if (init.contracts) {
+                    try {
+                        for (var _c = __values(init.contracts), _d = _c.next(); !_d.done; _d = _c.next()) {
+                            var c = _d.value;
+                            this.contracts.push(new mission_1.Passengers(c));
+                        }
+                    }
+                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                    finally {
+                        try {
+                            if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                        }
+                        finally { if (e_1) throw e_1.error; }
+                    }
+                }
             }
             this.standing = {};
             try {
-                for (var _b = __values(Object.keys(data_1.default.factions)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var faction = _c.value;
+                for (var _e = __values(Object.keys(data_1.default.factions)), _f = _e.next(); !_f.done; _f = _e.next()) {
+                    var faction = _f.value;
                     if (init == undefined || init.standing == undefined || init.standing[faction] == undefined) {
                         this.standing[faction] = data_1.default.factions[this.faction.abbrev].standing[faction];
                     }
@@ -72,12 +88,12 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
                     }
                 }
             }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
                 }
-                finally { if (e_1) throw e_1.error; }
+                finally { if (e_2) throw e_2.error; }
             }
             this.homeGravity = system_1.default.gravity(this.home);
         }
@@ -97,7 +113,7 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
         });
         // Returns the number of item that the player has the resources to craft
         Person.prototype.canCraft = function (item) {
-            var e_2, _a;
+            var e_3, _a;
             var res = resource_1.resources[item];
             if (resource_1.isCraft(res)) {
                 var max = void 0;
@@ -115,12 +131,12 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
                         }
                     }
                 }
-                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                catch (e_3_1) { e_3 = { error: e_3_1 }; }
                 finally {
                     try {
                         if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                     }
-                    finally { if (e_2) throw e_2.error; }
+                    finally { if (e_3) throw e_3.error; }
                 }
                 return max || 0;
             }
@@ -165,7 +181,7 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
             return t.Standing[standing];
         };
         Person.prototype.getStandingLabel = function (faction) {
-            var e_3, _a;
+            var e_4, _a;
             var value = this.getStanding(faction);
             try {
                 for (var _b = __values(t.standings), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -176,12 +192,12 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
                     }
                 }
             }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_3) throw e_3.error; }
+                finally { if (e_4) throw e_4.error; }
             }
         };
         Person.prototype.incStanding = function (faction, amt) {
@@ -195,6 +211,13 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
         };
         Person.prototype.getStandingPriceAdjustment = function (faction) {
             return this.getStanding(faction) / 1000;
+        };
+        Person.prototype.acceptMission = function (mission) {
+            this.contracts.push(mission);
+            mission.accept();
+        };
+        Person.prototype.completeMission = function (mission) {
+            this.contracts = this.contracts.filter(function (c) { return c.title != mission.title; });
         };
         return Person;
     }());

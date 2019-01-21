@@ -77,7 +77,7 @@ define(function(require, exports, module) {
     template: `
 <div class="container container-fluid">
   <card v-if="starting" title="Starting game">
-    <progress-bar :percent="percent" width=100 @ready="processBatch" />
+    <progress-bar :percent="percent" width=100 @ready="/*processBatch*/" />
   </card>
 
   <card v-else>

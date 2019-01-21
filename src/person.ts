@@ -4,8 +4,10 @@ import Ship    from './ship';
 import Physics from './physics';
 
 import * as t from './common';
+import * as util from './util';
 import { Faction } from './faction';
 import { resources, isCraft, isRaw } from './resource';
+import { Mission, Passengers } from './mission';
 
 
 // Shims for global browser objects
@@ -25,12 +27,13 @@ interface SavedShip {
 }
 
 export interface SavedPerson {
-  name:     string;
-  ship:     SavedShip;
-  faction:  t.faction;
-  home:     t.body;
-  money:    number;
-  standing: t.StandingCounter;
+  name:       string;
+  ship:       SavedShip;
+  faction:    t.faction;
+  home:       t.body;
+  money:      number;
+  standing:   t.StandingCounter;
+  contracts?: Mission[];
 };
 
 
@@ -42,6 +45,7 @@ export class Person {
   money:       number;
   standing:    t.StandingCounter;
   homeGravity: number;
+  contracts:   Mission[] = [];
 
   constructor(init?: SavedPerson) {
     if (init == undefined) {
@@ -57,6 +61,12 @@ export class Person {
       this.faction  = new Faction(init.faction);
       this.home     = init.home;
       this.money    = Math.floor(init.money);
+
+      if (init.contracts) {
+        for (const c of init.contracts) {
+          this.contracts.push(new Passengers(c));
+        }
+      }
     }
 
     this.standing = {};
@@ -185,5 +195,14 @@ export class Person {
 
   getStandingPriceAdjustment(faction: factionesque) {
     return this.getStanding(faction) / 1000;
+  }
+
+  acceptMission(mission: Mission) {
+    this.contracts.push(mission);
+    mission.accept();
+  }
+
+  completeMission(mission: Mission) {
+    this.contracts = this.contracts.filter(c => c.title != mission.title);
   }
 }

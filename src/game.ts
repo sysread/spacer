@@ -6,7 +6,7 @@ import { NewGameData } from './data/initial';
 import { Person, SavedPerson } from './person';
 import { Planet, SavedPlanet, isImportTask } from './planet';
 import { Agent, SavedAgent } from './agent';
-import { Events } from './mission';
+import { Events, Ev } from './mission';
 
 import * as t from './common';
 import * as util from './util';
@@ -58,10 +58,10 @@ class Game {
 
     if (init) {
       try {
-        this.turns   = init.turns;
-        this.locus   = init.locus;
-        this.page    = init.page;
-        this._player = new Person(init.player);
+        this.turns = init.turns;
+        this.locus = init.locus;
+        this.page  = init.page;
+        this._player = new Person(init._player);
 
         this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
         console.log('setting system date', this.date);
@@ -72,16 +72,16 @@ class Game {
       }
       catch (e) {
         console.warn('initialization error; clearing data. error was:', e);
-        this.locus   = null;
-        this.turns   = 0;
+        this.locus = null;
+        this.turns = 0;
         this._player = null;
         this.build_planets();
         this.build_agents();
       }
     }
     else {
-      this.locus   = null;
-      this.turns   = 0;
+      this.locus = null;
+      this.turns = 0;
       this._player = null;
       this.build_planets();
       this.build_agents();
@@ -227,7 +227,7 @@ class Game {
         }
       }
 
-      Events.Turn(this.turns);
+      Events.signal({type: Ev.Turn, turn: this.turns});
     }
 
     if (!no_save) {
@@ -255,7 +255,7 @@ class Game {
     this.locus = this.transit_plan.dest;
     this.transit_plan = undefined;
 
-    Events.Arrived(this.locus);
+    Events.signal({type: Ev.Arrived, dest: this.locus});
   }
 
 

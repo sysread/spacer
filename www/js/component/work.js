@@ -21,6 +21,7 @@ define(function(require, exports, module) {
         isReady:     false,
         isFinished:  false,
         turnsWorked: 0,
+        contract:    null,
       };
     },
     computed: {
@@ -34,6 +35,7 @@ define(function(require, exports, module) {
       percent()       { return Math.min(100, Math.ceil(this.turnsWorked / this.turns * 100)) },
       timeSpent()     { return Math.floor(this.turnsWorked / this.data.turns_per_day) },
       hasPicketLine() { return this.planet.hasPicketLine() },
+      contracts()     { return this.planet.contracts },
     },
     methods: {
       getPayRate: function(task) {
@@ -91,6 +93,24 @@ define(function(require, exports, module) {
         this.clearTask();
         this.game.save_game();
       },
+
+      setContract: function(contract) {
+        this.contract = contract;
+      },
+
+      clearContract: function() {
+        this.contract = null;
+      },
+
+      acceptContract: function() {
+        if (this.contract) {
+          this.planet.acceptMission(this.contract.mission);
+          this.player.acceptMission(this.contract.mission);
+        }
+
+        this.clearContract();
+        this.game.save_game();
+      },
     },
     template: `
 <card title="Work crews">
@@ -120,6 +140,10 @@ define(function(require, exports, module) {
     <btn v-for="t in tasks" :key="t.name" @click="setTask(t)" block=1>
       {{t.name}} <badge right=1>{{getPayRate(t)}}c</badge>
     </btn>
+
+    <btn v-for="c in contracts" :key="c.mission.title" @click="setContract(c)" block=1>
+      {{c.mission.title}}
+    </btn>
   </card-text>
 
   <card-text v-else class="font-italic text-warning">
@@ -127,6 +151,13 @@ define(function(require, exports, module) {
     local council member assuring you that another soon-to-be-passed tax cut
     for job producers practically guarantees more jobs in the future.
   </card-text>
+
+  <modal v-if="contract" @close="clearContract()" footer=1 xclose=1 :title="contract.mission.title">
+    <div>Info about contract</div>
+
+    <btn slot="footer" @click="acceptContract" close=1>Accept contract</btn>
+    <btn slot="footer" @click="clearContract" close=1>No thank you</btn>
+  </modal>
 
   <modal v-if="task" @close="completeTask()" :xclose="isReady" :title="task.name" footer=1 :static="isReady">
     <div v-if="isReady">

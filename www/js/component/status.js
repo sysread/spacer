@@ -12,6 +12,7 @@ define(function(require, exports, module) {
   require('component/row');
   require('component/status');
 
+
   Vue.component('person-status', {
     props: ['person'],
 
@@ -22,11 +23,12 @@ define(function(require, exports, module) {
     },
 
     computed: {
-      name    : function() {return this.person.name},
-      money   : function() {return Math.floor(this.person.money)},
-      home    : function() {return this.data.bodies[this.person.home].name},
-      faction : function() {return this.person.faction.full_name},
-      accel   : function() {return this.person.maxAcceleration() / Physics.G },
+      name:      function() {return this.person.name},
+      money:     function() {return Math.floor(this.person.money)},
+      home:      function() {return this.data.bodies[this.person.home].name},
+      faction:   function() {return this.person.faction.full_name},
+      accel:     function() {return this.person.maxAcceleration() / Physics.G },
+      contracts: function() {return this.person.contracts },
     },
 
     methods: {
@@ -57,6 +59,14 @@ define(function(require, exports, module) {
     <def term="Home" :def="home|caps" />
     <def term="Faction" :def="faction|caps" />
     <def term="Thrust endurance" :def="accel|R(2)|unit('G')" />
+
+    <def term="Contracts">
+      <div slot="def">
+        <div v-for="contract of contracts">
+          {{contract.title}}
+        </div>
+      </div>
+    </def>
   </div>
 
   <confirm v-if="show_confirm" yes="Yes" no="No" @confirm="newGame">
@@ -97,6 +107,7 @@ define(function(require, exports, module) {
 </card>
     `,
   });
+
 
   Vue.component('ship-status', {
     props: ['ship'],
@@ -188,6 +199,7 @@ define(function(require, exports, module) {
 </card>
     `,
   });
+
 
   Vue.component('player-status', {
     computed: {

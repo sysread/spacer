@@ -4,14 +4,15 @@ import Physics from './physics';
 import Store   from './store';
 import History from './history';
 
-import * as t from './common';
-import * as util from './util';
-
 import { Resource, Raw, Craft, isRaw, isCraft, resources } from './resource';
 import { Trait } from './trait';
 import { Faction } from './faction';
 import { Condition, SavedCondition } from './condition';
-import { Events } from './mission';
+import { Events, Ev, Mission, Passengers } from './mission';
+import { Person } from './person';
+
+import * as t from './common';
+import * as util from './util';
 
 
 // Shims for global browser objects
@@ -52,6 +53,12 @@ export function isCraftTask(task: EconTask): task is ImportTask {
 }
 
 
+interface AvailableContract {
+  valid_until: number;  // game.turns after which offering expires
+  mission:     Mission; // offered mission
+}
+
+
 export interface SavedPlanet {
   conditions?: SavedCondition[];
   stock?:      any;
@@ -60,6 +67,7 @@ export interface SavedPlanet {
   need?:       any;
   pending?:    any;
   queue?:      any;
+  contracts?:  AvailableContract[];
 }
 
 export class Planet {
@@ -80,6 +88,7 @@ export class Planet {
 
   conditions:         Condition[];
   work_tasks:         t.Work[];
+  contracts:          AvailableContract[];
 
   max_fab_units:      number;
   max_fab_health:     number;
@@ -141,6 +150,19 @@ export class Planet {
           }
         }
       }
+    }
+
+    this.contracts = [];
+    if (init.contracts) {
+      for (const info of init.contracts) {
+        this.contracts.push({
+          valid_until: info.valid_until,
+          mission: new Passengers(info.mission),
+        });
+      }
+    }
+    else {
+      this.refreshContracts();
     }
 
     /*
@@ -264,12 +286,12 @@ export class Planet {
     return Math.max(0, rate);
   }
 
-  inspectionRate(player: any) {
+  inspectionRate(player: Person) {
     const standing = 1 - (player.getStanding(this.faction.abbrev) / data.max_abs_standing);
     return this.scale(this.faction.inspection) * standing;
   }
 
-  inspectionFine(player: any) {
+  inspectionFine(player: Person) {
     return Math.max(10, data.max_abs_standing - player.getStanding(this.faction));
   }
 
@@ -333,7 +355,7 @@ export class Planet {
     return true;
   }
 
-  fabricationFee(item: t.resource, count=1, player: any) {
+  fabricationFee(item: t.resource, count=1, player: Person) {
     const resource = resources[item];
 
     if (!isCraft(resource)) {
@@ -395,14 +417,14 @@ export class Planet {
     return this.hasCondition("workers' strike");
   }
 
-  payRate(player: any, task: t.Work) {
+  payRate(player: Person, task: t.Work) {
     let rate = this.scale(task.pay);
     rate += rate * player.getStandingPriceAdjustment(this.faction.abbrev);
     rate -= rate * this.faction.sales_tax;
     return Math.ceil(rate);
   }
 
-  work(player: any, task: t.Work, days: number) {
+  work(player: Person, task: t.Work, days: number) {
     const pay       = this.payRate(player, task) * days
     const turns     = days * 24 / data.hours_per_turn;
     const rewards   = task.rewards;
@@ -690,14 +712,14 @@ export class Planet {
     return this.price(item);
   }
 
-  buyPrice(item: t.resource, player?: any): number {
+  buyPrice(item: t.resource, player?: Person): number {
     const price = this.price(item) * (1 + this.faction.sales_tax);
     return player
       ? Math.ceil(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
       : Math.ceil(price);
   }
 
-  buy(item: t.resource, amount: number, player?: any) {
+  buy(item: t.resource, amount: number, player?: Person) {
     const bought = Math.min(amount, this.getStock(item));
     const price  = bought * this.buyPrice(item, player);
 
@@ -707,13 +729,15 @@ export class Planet {
     if (player && bought) {
       player.debit(price);
       player.ship.loadCargo(item, bought);
-      Events.BoughtItems({item, bought, price});
+
+      if (player === window.game.player)
+        Events.signal({type: Ev.ItemsBought, count: bought, item, price});
     }
 
     return [bought, price];
   }
 
-  sell(item: t.resource, amount: number, player?: any) {
+  sell(item: t.resource, amount: number, player?: Person) {
     const hasShortage = this.hasShortage(item);
     const price = amount * this.sellPrice(item);
     this.stock.inc(item, amount);
@@ -738,7 +762,8 @@ export class Planet {
         }
       }
 
-      Events.SoldItems({item, amount, price, standing});
+      if (player === window.game.player)
+        Events.signal({type: Ev.ItemsSold, count: amount, item, price, standing});
     }
 
     return [amount, price, standing];
@@ -1091,6 +1116,7 @@ export class Planet {
         this.luxuriate();
       case 1:
         this.imports();
+        this.refreshContracts();
       case 2:
         this.replenishFabricators();
         this.apply_conditions();
@@ -1104,9 +1130,35 @@ export class Planet {
   }
 
   /*
+   * Contracts
+   */
+  refreshContracts() {
+    this.contracts = this.contracts.filter(c => c.valid_until >= window.game.turns);
+    const want = util.getRandomInt(1, this.scale(5));
+
+    while (this.contracts.length < want) {
+      const dest = util.oneOf(t.bodies.filter(t => t != this.body));
+      const mission = new Passengers({issuer: this.body, dest: dest});
+
+      if (this.contracts.find(c => c.mission.title == mission.title)) {
+        continue;
+      }
+
+      this.contracts.push({
+        valid_until: util.getRandomInt(1, 30),
+        mission: mission,
+      });
+    }
+  }
+
+  acceptMission(mission: Mission) {
+    this.contracts = this.contracts.filter(c => c.mission.title != mission.title);
+  }
+
+  /*
    * Misc
    */
-  addonPrice(addon: t.addon, player: any) {
+  addonPrice(addon: t.addon, player: Person) {
     const base     = data.addons[addon].price;
     const standing = base * player.getStandingPriceAdjustment(this.faction.abbrev);
     const tax      = base * this.faction.sales_tax;
@@ -1136,7 +1188,7 @@ export class Planet {
     return this.resourceDependencyPriceAdjustment('metal') < 10;
   }
 
-  hullRepairPrice(player: any) {
+  hullRepairPrice(player: Person) {
     const base     = data.ship.hull.repair;
     const tax      = this.faction.sales_tax;
     const standing = player.getStandingPriceAdjustment(this.faction.abbrev);
@@ -1144,7 +1196,7 @@ export class Planet {
     return (base + (base * tax) - (base * standing)) * scarcity;
   }
 
-  armorRepairPrice(player: any) {
+  armorRepairPrice(player: Person) {
     const base     = data.ship.armor.repair;
     const tax      = this.faction.sales_tax;
     const standing = player.getStandingPriceAdjustment(this.faction.abbrev);
