@@ -224,22 +224,20 @@ define(["require", "exports", "./data", "./physics", "./store", "./common"], fun
             if (typeof this.shipclass[name] === 'number') {
                 value += this.shipclass[name];
             }
-            else {
+            try {
+                for (var _b = __values(this.addons), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var addon = _c.value;
+                    if (typeof data_1.default.addons[addon][name] === 'number') {
+                        value += data_1.default.addons[addon][name];
+                    }
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
                 try {
-                    for (var _b = __values(this.addons), _c = _b.next(); !_c.done; _c = _b.next()) {
-                        var addon = _c.value;
-                        if (typeof data_1.default.addons[addon][name] === 'number') {
-                            value += data_1.default.addons[addon][name];
-                        }
-                    }
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                catch (e_2_1) { e_2 = { error: e_2_1 }; }
-                finally {
-                    try {
-                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                    }
-                    finally { if (e_2) throw e_2.error; }
-                }
+                finally { if (e_2) throw e_2.error; }
             }
             if (!nominal) {
                 if (typeof this.damage[name] == 'number') {

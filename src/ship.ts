@@ -110,11 +110,10 @@ class Ship {
     if (typeof this.shipclass[name] === 'number') {
       value += this.shipclass[name];
     }
-    else {
-      for (const addon of this.addons) {
-        if (typeof data.addons[addon][name] === 'number') {
-          value += data.addons[addon][name];
-        }
+
+    for (const addon of this.addons) {
+      if (typeof data.addons[addon][name] === 'number') {
+        value += data.addons[addon][name];
       }
     }
 
