@@ -46,6 +46,16 @@ define(function(require, exports, module) {
       percent()      { return this.plan.pct_complete },
       distance()     { return util.R(this.plan.auRemaining()) },
 
+      displayFoV() {
+        const fov = this.layout.fov_au * 2;
+
+        if (fov < 1) {
+          return util.R(fov, 4) + ' AU';
+        } else {
+          return util.R(fov, 1) + ' AU';
+        }
+      },
+
       fov() {
         let center = this.center;
         const points = [];
@@ -578,13 +588,13 @@ define(function(require, exports, module) {
               &tridot;
             </text>
 
-            <line x1=130 y1=14 :x2="patrolRate * layout.width_px + 130" y2=14 stroke="green" stroke-width="14" />
+            <line x1=130 y1=13 :x2="patrolRate * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
             <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{patrolRate|pct(2)}}</text>
 
-            <line x1=130 y1=31 :x2="adjustedPiracyRate * layout.width_px + 130" y2=31 stroke="red" stroke-width="14" />
-            <text style="fill:red; font:12px monospace" x=5 y=34>Piracy:&nbsp;{{adjustedPiracyRate|pct(2)}}</text>
+            <line x1=130 y1=30 :x2="piracyRate * layout.width_px + 130" y2=30 stroke="red" stroke-width="14" />
+            <text style="fill:red; font:12px monospace" x=5 y=34>Piracy:&nbsp;{{piracyRate|pct(2)}}</text>
 
-            <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{layout.fov_au * 2|R(4)|unit('AU')}}</text>
+            <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{displayFoV}}</text>
           </SvgPlot>
         </div>
 

@@ -248,8 +248,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             var radius = this.piracyRadius();
             distance = Math.abs(distance - radius);
             var rate = this.scale(this.faction.piracy);
-            for (var i = 0; i < distance; i += 0.1) {
-                rate *= 0.75;
+            var intvl = radius / 10;
+            for (var i = 0; i < distance; i += intvl) {
+                rate *= 0.85;
             }
             return Math.max(0, rate);
         };

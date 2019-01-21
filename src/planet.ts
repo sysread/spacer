@@ -226,8 +226,9 @@ export class Planet {
     distance = Math.abs(distance - radius);
 
     let rate = this.scale(this.faction.piracy);
-    for (let i = 0; i < distance; i += 0.1) {
-      rate *= 0.75;
+    const intvl = radius / 10;
+    for (let i = 0; i < distance; i += intvl) {
+      rate *= 0.85;
     }
 
     return Math.max(0, rate);
