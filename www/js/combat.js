@@ -51,10 +51,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./game", "./data", "./store", "./util"], function (require, exports, game_1, data_1, store_1, util) {
+define(["require", "exports", "./data", "./store", "./util"], function (require, exports, data_1, store_1, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    game_1 = __importDefault(game_1);
     data_1 = __importDefault(data_1);
     store_1 = __importDefault(store_1);
     util = __importStar(util);
@@ -430,7 +429,7 @@ define(["require", "exports", "./game", "./data", "./store", "./util"], function
         function Combat(opt) {
             this.round = 1;
             this.log = [];
-            this.player = new Combatant(game_1.default.player);
+            this.player = new Combatant(window.game.player);
             this.opponent = new Combatant(opt.opponent);
             this.initiative = util.oneOf(['player', 'opponent']);
             this.round = 1;

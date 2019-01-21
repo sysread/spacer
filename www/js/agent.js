@@ -47,10 +47,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./game", "./data", "./navcomp", "./transitplan", "./person", "./common", "./util"], function (require, exports, game_1, data_1, navcomp_1, transitplan_1, person_1, t, util) {
+define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person", "./common", "./util"], function (require, exports, data_1, navcomp_1, transitplan_1, person_1, t, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    game_1 = __importDefault(game_1);
     data_1 = __importDefault(data_1);
     t = __importStar(t);
     util = __importStar(util);
@@ -132,7 +131,7 @@ define(["require", "exports", "./game", "./data", "./navcomp", "./transitplan", 
         Object.defineProperty(Agent.prototype, "here", {
             get: function () {
                 if (isDocked(this.action) || isJob(this.action)) {
-                    return game_1.default.planets[this.action.location];
+                    return window.game.planets[this.action.location];
                 }
                 else {
                     throw new Error('not docked');
@@ -177,7 +176,7 @@ define(["require", "exports", "./game", "./data", "./navcomp", "./transitplan", 
         };
         Agent.prototype.buyLuxuries = function () {
             if (isDocked(this.action)) {
-                var here = game_1.default.planets[this.action.location];
+                var here = window.game.planets[this.action.location];
                 var want = Math.ceil((this.money - 1000) / here.buyPrice('luxuries', this));
                 var _a = __read(here.buy('luxuries', want), 2), bought = _a[0], price = _a[1];
                 this.debit(price);
@@ -237,6 +236,7 @@ define(["require", "exports", "./game", "./data", "./navcomp", "./transitplan", 
             var e_2, _a, e_3, _b;
             var routes = [];
             if (isDocked(this.action)) {
+                var game = window.game;
                 var here = this.here;
                 var navComp = new navcomp_1.NavComp(this, this.here.body);
                 var cargoSpace = this.ship.cargoLeft;
@@ -252,7 +252,7 @@ define(["require", "exports", "./game", "./data", "./navcomp", "./transitplan", 
                         try {
                             for (var _e = __values(t.bodies), _f = _e.next(); !_f.done; _f = _e.next()) {
                                 var dest = _f.value;
-                                var sellPrice = game_1.default.planets[dest].sellPrice(item);
+                                var sellPrice = game.planets[dest].sellPrice(item);
                                 var profitPerUnit = sellPrice - buyPrice;
                                 if (profitPerUnit <= 0) {
                                     continue;
@@ -261,7 +261,7 @@ define(["require", "exports", "./game", "./data", "./navcomp", "./transitplan", 
                                 if (transit == undefined) {
                                     continue;
                                 }
-                                var fuelPrice = game_1.default.planets[dest].buyPrice('fuel', this);
+                                var fuelPrice = game.planets[dest].buyPrice('fuel', this);
                                 var fuelCost = transit.fuel * fuelPrice;
                                 var grossProfit = profitPerUnit * canBuy;
                                 var netProfit = (grossProfit - fuelCost) / transit.turns;

@@ -34,10 +34,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./game", "./data", "./system", "./ship", "./physics", "./common", "./faction", "./resource"], function (require, exports, game_1, data_1, system_1, ship_1, physics_1, t, faction_1, resource_1) {
+define(["require", "exports", "./data", "./system", "./ship", "./physics", "./common", "./faction", "./resource"], function (require, exports, data_1, system_1, ship_1, physics_1, t, faction_1, resource_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    game_1 = __importDefault(game_1);
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
     ship_1 = __importDefault(ship_1);
@@ -84,14 +83,14 @@ define(["require", "exports", "./game", "./data", "./system", "./ship", "./physi
         }
         Object.defineProperty(Person.prototype, "localStanding", {
             get: function () {
-                return this.getStanding(game_1.default.here.faction);
+                return this.getStanding(window.game.here.faction);
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Person.prototype, "localStandingLabel", {
             get: function () {
-                return this.getStandingLabel(game_1.default.here.faction);
+                return this.getStandingLabel(window.game.here.faction);
             },
             enumerable: true,
             configurable: true

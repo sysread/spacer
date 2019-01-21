@@ -1,4 +1,3 @@
-import game    from './game';
 import data    from './data';
 import system  from './system';
 import Ship    from './ship';
@@ -7,6 +6,11 @@ import Physics from './physics';
 import * as t from './common';
 import { Faction } from './faction';
 import { resources, isCraft, isRaw } from './resource';
+
+
+// Shims for global browser objects
+declare var window: { game: any; }
+declare var console: any;
 
 
 type factionesque = Faction | t.faction;
@@ -70,11 +74,11 @@ export class Person {
   }
 
   get localStanding() {
-    return this.getStanding(game.here.faction);
+    return this.getStanding(window.game.here.faction);
   }
 
   get localStandingLabel() {
-    return this.getStandingLabel(game.here.faction);
+    return this.getStandingLabel(window.game.here.faction);
   }
 
   // Returns the number of item that the player has the resources to craft

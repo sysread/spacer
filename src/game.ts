@@ -23,6 +23,8 @@ declare var window: {
   localStorage: localStorage;
 }
 
+declare var console: any;
+
 
 interface ImportReport {
   [key: string]: {

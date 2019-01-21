@@ -34,10 +34,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./game", "./data", "./system", "./physics", "./store", "./history", "./common", "./util", "./resource", "./trait", "./faction", "./condition", "./mission"], function (require, exports, game_1, data_1, system_1, physics_1, store_1, history_1, t, util, resource_1, trait_1, faction_1, condition_1, mission_1) {
+define(["require", "exports", "./data", "./system", "./physics", "./store", "./history", "./common", "./util", "./resource", "./trait", "./faction", "./condition", "./mission"], function (require, exports, data_1, system_1, physics_1, store_1, history_1, t, util, resource_1, trait_1, faction_1, condition_1, mission_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    game_1 = __importDefault(game_1);
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
     physics_1 = __importDefault(physics_1);
@@ -586,7 +585,7 @@ define(["require", "exports", "./game", "./data", "./system", "./physics", "./st
                     if (body == this.body) {
                         continue;
                     }
-                    if (!game_1.default.planets[body].isNetExporter(item)) {
+                    if (!window.game.planets[body].isNetExporter(item)) {
                         continue;
                     }
                     var d = system_1.default.distance(this.body, body);
@@ -663,7 +662,7 @@ define(["require", "exports", "./game", "./data", "./system", "./physics", "./st
         };
         Planet.prototype.price = function (item) {
             var e_15, _a;
-            if (!this._cycle[item] || game_1.default.turns % this._cycle[item] == 0) {
+            if (!this._cycle[item] || window.game.turns % this._cycle[item] == 0) {
                 delete this._price[item];
                 this._cycle[item] = util.getRandomInt(3, 12) * data_1.default.turns_per_day;
             }
@@ -825,9 +824,9 @@ define(["require", "exports", "./game", "./data", "./system", "./physics", "./st
         };
         Planet.prototype.exporters = function (item) {
             var _this = this;
-            var bodies = Object.keys(game_1.default.planets);
+            var bodies = Object.keys(window.game.planets);
             return bodies.filter(function (name) {
-                var p = game_1.default.planets[name];
+                var p = window.game.planets[name];
                 return p.body !== _this.body
                     && !p.hasShortage(item)
                     && p.getStock(item) >= 1
@@ -846,9 +845,9 @@ define(["require", "exports", "./game", "./data", "./system", "./physics", "./st
             try {
                 for (var exporters_1 = __values(exporters), exporters_1_1 = exporters_1.next(); !exporters_1_1.done; exporters_1_1 = exporters_1.next()) {
                     var body = exporters_1_1.value;
-                    dist[body] = this.distance(body) / physics_1.default.AU * game_1.default.planets[body].buyPrice('fuel');
-                    price[body] = game_1.default.planets[body].buyPrice(item);
-                    stock[body] = Math.min(amount, game_1.default.planets[body].getStock(item));
+                    dist[body] = this.distance(body) / physics_1.default.AU * window.game.planets[body].buyPrice('fuel');
+                    price[body] = window.game.planets[body].buyPrice(item);
+                    stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
                 }
             }
             catch (e_18_1) { e_18 = { error: e_18_1 }; }
@@ -1039,11 +1038,11 @@ define(["require", "exports", "./game", "./data", "./system", "./physics", "./st
                     if (!planet) {
                         continue;
                     }
-                    var _b = __read(game_1.default.planets[planet].buy(item, amount), 2), bought = _b[0], price = _b[1];
+                    var _b = __read(window.game.planets[planet].buy(item, amount), 2), bought = _b[0], price = _b[1];
                     if (bought > 0) {
                         var distance = this.distance(planet) / physics_1.default.AU;
                         var turns = Math.max(3, Math.ceil(Math.log(distance) * 2)) * data_1.default.turns_per_day;
-                        game_1.default.planets[planet].buy('fuel', distance);
+                        window.game.planets[planet].buy('fuel', distance);
                         this.schedule({
                             type: 'import',
                             item: item,
@@ -1111,7 +1110,7 @@ define(["require", "exports", "./game", "./data", "./system", "./physics", "./st
         };
         Planet.prototype.rollups = function () {
             var e_28, _a, e_29, _b;
-            if (game_1.default.turns % (24 / data_1.default.hours_per_turn) === 0) {
+            if (window.game.turns % (24 / data_1.default.hours_per_turn) === 0) {
                 try {
                     for (var _c = __values(this.stock.keys()), _d = _c.next(); !_d.done; _d = _c.next()) {
                         var item = _d.value;
@@ -1225,7 +1224,7 @@ define(["require", "exports", "./game", "./data", "./system", "./physics", "./st
         };
         Planet.prototype.turn = function () {
             // Only do the really expensive stuff once per day
-            switch (game_1.default.turns % data_1.default.turns_per_day) {
+            switch (window.game.turns % data_1.default.turns_per_day) {
                 // note fallthrough to ensure default actions happen every turn
                 case 0:
                     this.manufacture();

@@ -1,4 +1,3 @@
-import game from './game';
 import data from './data';
 import Ship from './ship';
 import { NavComp } from './navcomp';
@@ -6,6 +5,11 @@ import { TransitPlan, SavedTransitPlan } from './transitplan';
 import { Person, SavedPerson } from './person';
 import * as t from './common';
 import * as util from './util';
+
+
+// Shims for global browser objects
+declare var window: { game: any; }
+declare var console: any;
 
 
 export interface SavedAgent extends SavedPerson {
@@ -132,7 +136,7 @@ export class Agent extends Person {
 
   get here() {
     if (isDocked(this.action) || isJob(this.action)) {
-      return game.planets[this.action.location];
+      return window.game.planets[this.action.location];
     } else {
       throw new Error('not docked');
     }
@@ -181,7 +185,7 @@ export class Agent extends Person {
 
   buyLuxuries() {
     if (isDocked(this.action)) {
-      const here = game.planets[this.action.location];
+      const here = window.game.planets[this.action.location];
       const want = Math.ceil((this.money - 1000) / here.buyPrice('luxuries', this));
       const [bought, price] = here.buy('luxuries', want);
       this.debit(price);
@@ -243,6 +247,7 @@ export class Agent extends Person {
     const routes: Route[] = [];
 
     if (isDocked(this.action)) {
+      const game       = window.game;
       const here       = this.here;
       const navComp    = new NavComp(this, this.here.body);
       const cargoSpace = this.ship.cargoLeft;
