@@ -147,7 +147,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     finally { if (e_4) throw e_4.error; }
                 }
             }
-            this.refreshContracts();
             /*
              * Economics
              */

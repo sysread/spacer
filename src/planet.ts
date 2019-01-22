@@ -165,8 +165,6 @@ export class Planet {
       }
     }
 
-    this.refreshContracts();
-
     /*
      * Economics
      */
