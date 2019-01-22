@@ -9,7 +9,7 @@ import { Trait } from './trait';
 import { Faction } from './faction';
 import { Condition, SavedCondition } from './condition';
 import { Events, Ev } from './events';
-import { Mission, Passengers, SavedMissionData } from './mission';
+import { Mission, Passengers, MissionData } from './mission';
 import { Person } from './person';
 
 import * as t from './common';
@@ -61,7 +61,7 @@ interface Contract {
 
 interface SavedContract {
   valid_until: number;
-  mission:     SavedMissionData;
+  mission:     MissionData;
 }
 
 

@@ -22,7 +22,7 @@ export enum Status {
 }
 
 
-export interface SavedMissionData {
+export interface MissionData {
   [key: string]: any;
   status?:   number;
   deadline?: number;
@@ -42,7 +42,7 @@ export abstract class Mission {
   readonly reward:   number;
   readonly turns:    number;
 
-  constructor(opt: SavedMissionData) {
+  constructor(opt: MissionData) {
     this.status   = opt.status || Status.Ready;
     this.standing = opt.standing;
     this.reward   = opt.reward;
