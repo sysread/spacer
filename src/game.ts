@@ -177,6 +177,9 @@ class Game {
   new_game(player: Person, home: t.body) {
     window.localStorage.removeItem('game');
 
+    this._player = player;
+    this.locus = home;
+
     this.turns = NewGameData.turns;
     this.page = NewGameData.page;
 
@@ -187,8 +190,14 @@ class Game {
     this.build_planets(NewGameData.planets);
     this.build_agents(); // agents not part of initial data set
 
-    this._player = player;
-    this.locus = home;
+    // Work-around for chicken and egg problem with initializing contracts for
+    // newly created planets when doing so relies on the existence of
+    // window.game and window.game.player.
+    for (const p of Object.values(this.planets)) {
+      p.refreshContracts();
+    }
+
+    this.save_game();
   }
 
   save_game() {

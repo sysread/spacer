@@ -45,7 +45,6 @@ define(function(require, exports, module) {
             this.game.turn(count, true);
           }
           else {
-            this.game.save_game();
             this.game.unfreeze();
             this.$nextTick(() => this.$emit('open', 'summary'));
           }
@@ -68,7 +67,6 @@ define(function(require, exports, module) {
         );
 
         //this.$nextTick(this.processBatch);
-        this.game.save_game();
         this.game.unfreeze();
         this.$nextTick(() => this.$emit('open', 'summary'));
       },

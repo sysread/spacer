@@ -225,13 +225,25 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
         function Passengers(opt) {
             var _this = this;
             var dist = util.R(system_1.default.distance(opt.issuer, opt.dest) / physics_1.default.AU);
-            opt.turns = Math.max(data_1.default.turns_per_day * 3, data_1.default.turns_per_day * 7 * dist);
-            opt.reward = Math.max(500, dist * 500);
+            //opt.turns = Math.max(data.turns_per_day * 3, data.turns_per_day * 7 * dist);
+            // TODO race condition here; the orig and dest are moving so long as the
+            // contract is offered, which may make the deadline impossible after
+            // several days.
+            opt.turns = Math.max(data_1.default.turns_per_day * 3, Passengers.estimateTimeNeeded(opt.issuer, opt.dest));
+            opt.reward = Math.max(500, Math.ceil(Math.log(1 + opt.turns) * 2500));
             opt.standing = Math.ceil(Math.log10(opt.reward));
             _this = _super.call(this, opt) || this;
             _this.dest = opt.dest;
             return _this;
         }
+        Passengers.estimateTimeNeeded = function (orig, dest) {
+            var au = util.R(system_1.default.distance(orig, dest) / physics_1.default.AU);
+            var turns = 0;
+            for (var i = 0, inc = 15; i < au; ++i, inc *= 0.8) {
+                turns += inc * data_1.default.turns_per_day;
+            }
+            return Math.ceil(turns);
+        };
         Object.defineProperty(Passengers.prototype, "destination", {
             get: function () {
                 return data_1.default.bodies[this.dest].name;
