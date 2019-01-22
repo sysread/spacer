@@ -11,16 +11,6 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var __values = (this && this.__values) || function (o) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
-    if (m) return m.call(o);
-    return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -31,57 +21,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./physics", "./util"], function (require, exports, data_1, system_1, physics_1, util) {
+define(["require", "exports", "./data", "./system", "./physics", "./events", "./util"], function (require, exports, data_1, system_1, physics_1, events_1, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
     physics_1 = __importDefault(physics_1);
     util = __importStar(util);
-    var Ev;
-    (function (Ev) {
-        Ev["Turn"] = "Turn";
-        Ev["Arrived"] = "Arrived";
-        Ev["ItemsBought"] = "ItemsBought";
-        Ev["ItemsSold"] = "ItemsSold";
-    })(Ev = exports.Ev || (exports.Ev = {}));
-    ;
-    var Events = /** @class */ (function () {
-        function Events() {
-        }
-        Events.watch = function (ev, cb) {
-            if (!Events.watcher[ev]) {
-                Events.watcher[ev] = [];
-            }
-            Events.watcher[ev].push(cb);
-        };
-        Events.signal = function (event) {
-            var e_1, _a;
-            if (Events.watcher[event.type]) {
-                var retain = [];
-                try {
-                    for (var _b = __values(Events.watcher[event.type]), _c = _b.next(); !_c.done; _c = _b.next()) {
-                        var fn = _c.value;
-                        if (!fn(event)) {
-                            retain.push(fn);
-                        }
-                    }
-                }
-                catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                finally {
-                    try {
-                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                    }
-                    finally { if (e_1) throw e_1.error; }
-                }
-                Events.watcher[event.type] = retain;
-            }
-        };
-        Events.watcher = {};
-        return Events;
-    }());
-    exports.Events = Events;
-    window.Events = Events;
     var Status;
     (function (Status) {
         Status[Status["Ready"] = 0] = "Ready";
@@ -107,8 +53,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
             configurable: true
         });
         Object.defineProperty(Mission.prototype, "price", {
-            // TODO race condition: if player gains or loses standing during mission,
-            // the pay rate changes.
+            // TODO race condition: if player gains or loses standing during mission, the pay rate changes
             get: function () {
                 if (window.game && window.game.player) {
                     var bonus = window.game.player.getStandingPriceAdjustment(this.faction);
@@ -173,15 +118,14 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
         };
         Mission.prototype.accept = function () {
             var _this = this;
-            // If status is already set, this is a saved mission that is being
-            // reinitialized.
+            // If already set, this is a saved mission being reinitialized
             if (this.status < Status.Accepted) {
                 this.status = Status.Accepted;
                 this.deadline = window.game.turns + this.turns;
                 window.game.planets[this.issuer].acceptMission(this);
                 window.game.player.acceptMission(this);
             }
-            Events.watch(Ev.Turn, function (event) {
+            events_1.Events.watch(events_1.Ev.Turn, function (event) {
                 if (_this.turns_left <= 0) {
                     _this.complete();
                     return false;
@@ -286,7 +230,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
         Passengers.prototype.accept = function () {
             var _this = this;
             _super.prototype.accept.call(this);
-            Events.watch(Ev.Arrived, function (event) {
+            events_1.Events.watch(events_1.Ev.Arrived, function (event) {
                 if (_this.is_expired) {
                     return false;
                 }

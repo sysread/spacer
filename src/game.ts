@@ -6,7 +6,7 @@ import { NewGameData } from './data/initial';
 import { Person, SavedPerson } from './person';
 import { Planet, SavedPlanet, isImportTask } from './planet';
 import { Agent, SavedAgent } from './agent';
-import { Events, Ev } from './mission';
+import { Events, Ev } from './events';
 
 import * as t from './common';
 import * as util from './util';

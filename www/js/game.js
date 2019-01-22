@@ -18,7 +18,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./data/initial", "./person", "./planet", "./agent", "./mission", "./common", "./util"], function (require, exports, data_1, system_1, initial_1, person_1, planet_1, agent_1, mission_1, t, util) {
+define(["require", "exports", "./data", "./system", "./data/initial", "./person", "./planet", "./agent", "./events", "./common", "./util"], function (require, exports, data_1, system_1, initial_1, person_1, planet_1, agent_1, events_1, t, util) {
     "use strict";
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
@@ -277,7 +277,7 @@ define(["require", "exports", "./data", "./system", "./data/initial", "./person"
                         finally { if (e_7) throw e_7.error; }
                     }
                 }
-                mission_1.Events.signal({ type: mission_1.Ev.Turn, turn: this.turns });
+                events_1.Events.signal({ type: events_1.Ev.Turn, turn: this.turns });
             }
             if (!no_save) {
                 this.save_game();
@@ -298,7 +298,7 @@ define(["require", "exports", "./data", "./system", "./data/initial", "./person"
                 this.transit_plan = undefined;
             }
             if (this.locus) {
-                mission_1.Events.signal({ type: mission_1.Ev.Arrived, dest: this.locus });
+                events_1.Events.signal({ type: events_1.Ev.Arrived, dest: this.locus });
             }
         };
         Game.prototype.trade_routes = function () {

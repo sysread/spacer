@@ -1,86 +1,16 @@
 import data from './data';
 import system from './system';
 import Physics from './physics';
+
+import { Events, Ev, Turn, Arrived } from './events';
+
 import * as t from './common';
 import * as util from './util';
 
 
 // Shims for global browser objects
 declare var console: any;
-declare var window: {
-  game: any;
-  Events: Events;
-  setTimeout(cb: Function, intvl: number): any;
-}
-
-
-export enum Ev {
-  Turn        = 'Turn',
-  Arrived     = 'Arrived',
-  ItemsBought = 'ItemsBought',
-  ItemsSold   = 'ItemsSold',
-};
-
-
-interface Turn {
-  type: Ev.Turn;
-  turn: number;
-}
-
-interface Arrived {
-  type: Ev.Arrived;
-  dest: t.body;
-}
-
-interface ItemsBought {
-  type:  Ev.ItemsBought;
-  item:  t.resource;
-  count: number;
-  price: number;
-}
-
-interface ItemsSold {
-  type:     Ev.ItemsSold;
-  item:     t.resource;
-  count:    number;
-  price:    number;
-  standing: number;
-}
-
-type Event =
-  | Turn
-  | Arrived
-  | ItemsBought
-  | ItemsSold;
-
-
-export class Events {
-  static watcher: {[key: string]: Function[]} = {};
-
-  static watch(ev: Ev, cb: Function) {
-    if (!Events.watcher[ev]) {
-      Events.watcher[ev] = [];
-    }
-
-    Events.watcher[ev].push(cb);
-  }
-
-  static signal(event: Event) {
-    if (Events.watcher[event.type]) {
-      const retain: Function[] = [];
-
-      for (const fn of Events.watcher[event.type]) {
-        if (!fn(event)) {
-          retain.push(fn);
-        }
-      }
-
-      Events.watcher[event.type] = retain;
-    }
-  }
-}
-
-window.Events = Events;
+declare var window: { game: any; }
 
 
 export enum Status {
@@ -129,8 +59,7 @@ export abstract class Mission {
     return data.bodies[this.issuer].faction;
   }
 
-  // TODO race condition: if player gains or loses standing during mission,
-  // the pay rate changes.
+  // TODO race condition: if player gains or loses standing during mission, the pay rate changes
   get price(): number {
     if (window.game && window.game.player) {
       const bonus = window.game.player.getStandingPriceAdjustment(this.faction);
@@ -182,8 +111,7 @@ export abstract class Mission {
   }
 
   accept() {
-    // If status is already set, this is a saved mission that is being
-    // reinitialized.
+    // If already set, this is a saved mission being reinitialized
     if (this.status < Status.Accepted) {
       this.status = Status.Accepted;
       this.deadline = window.game.turns + this.turns;

@@ -34,7 +34,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./physics", "./store", "./history", "./resource", "./trait", "./faction", "./condition", "./mission", "./common", "./util"], function (require, exports, data_1, system_1, physics_1, store_1, history_1, resource_1, trait_1, faction_1, condition_1, mission_1, t, util) {
+define(["require", "exports", "./data", "./system", "./physics", "./store", "./history", "./resource", "./trait", "./faction", "./condition", "./events", "./mission", "./common", "./util"], function (require, exports, data_1, system_1, physics_1, store_1, history_1, resource_1, trait_1, faction_1, condition_1, events_1, mission_1, t, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
@@ -752,7 +752,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 player.debit(price);
                 player.ship.loadCargo(item, bought);
                 if (player === window.game.player)
-                    mission_1.Events.signal({ type: mission_1.Ev.ItemsBought, count: bought, item: item, price: price });
+                    events_1.Events.signal({ type: events_1.Ev.ItemsBought, count: bought, item: item, price: price });
             }
             return [bought, price];
         };
@@ -778,7 +778,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
                 if (player === window.game.player)
-                    mission_1.Events.signal({ type: mission_1.Ev.ItemsSold, count: amount, item: item, price: price, standing: standing });
+                    events_1.Events.signal({ type: events_1.Ev.ItemsSold, count: amount, item: item, price: price, standing: standing });
             }
             return [amount, price, standing];
         };
