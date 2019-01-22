@@ -91,7 +91,7 @@ export class Planet {
   readonly min_stock: number;
 
   conditions:         Condition[];
-  work_tasks:         t.Work[];
+  work_tasks:         string[];
   contracts:          Contract[];
 
   max_fab_units:      number;
@@ -148,7 +148,7 @@ export class Planet {
       for (const req of task.avail) {
         for (const trait of this.traits) {
           if (req === trait.name) {
-            this.work_tasks.push(task);
+            this.work_tasks.push(task.name);
             continue TASK;
           }
         }

@@ -98,7 +98,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                                 for (var _l = __values(this.traits), _m = _l.next(); !_m.done; _m = _l.next()) {
                                     var trait = _m.value;
                                     if (req === trait.name) {
-                                        this.work_tasks.push(task);
+                                        this.work_tasks.push(task.name);
                                         continue TASK;
                                     }
                                 }

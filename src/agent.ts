@@ -166,7 +166,8 @@ export class Agent extends Person {
     // TODO what to do if there are no jobs?
     // TODO account for strikes
     if (isDocked(this.action)) {
-      const job = util.oneOf(this.here.work_tasks) as t.Work;
+      const which = util.oneOf(this.here.work_tasks) as string;
+      const job   = data.work.find(w => w.name == which);
 
       if (job) {
         const days  = 3;

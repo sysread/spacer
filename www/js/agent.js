@@ -160,7 +160,8 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
             // TODO what to do if there are no jobs?
             // TODO account for strikes
             if (isDocked(this.action)) {
-                var job = util.oneOf(this.here.work_tasks);
+                var which_1 = util.oneOf(this.here.work_tasks);
+                var job = data_1.default.work.find(function (w) { return w.name == which_1; });
                 if (job) {
                     var days = 3;
                     var turns = days * data_1.default.turns_per_day;

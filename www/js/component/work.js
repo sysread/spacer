@@ -28,7 +28,7 @@ define(function(require, exports, module) {
       player()        { return this.game.player },
       raise()         { return this.player.getStandingPriceAdjustment(this.planet.faction.abbrev) },
       planet()        { return this.game.here },
-      tasks()         { return this.planet.work_tasks },
+      tasks()         { return this.planet.work_tasks.map(name => this.data.work.find(work => work.name == name)) },
       payRate()       { if (this.task) return this.getPayRate(this.task) },
       pay()           { if (this.task) return this.payRate * this.days },
       turns()         { return this.days * (24 / this.data.hours_per_turn) },
