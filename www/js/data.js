@@ -348,7 +348,7 @@ define(["require", "exports"], function (require, exports) {
             },
             fusion: {
                 name: 'Fusion',
-                thrust: 600,
+                thrust: 1200,
                 mass: 40,
                 desc: 'Condensed pellets of fuel, ignited by a laser or maser, produce vast amouts of plasma which is then directed by magnetic fields to produce thrust. Expensive enough to maintain and keep fueled to make it impractical for most hauler operations, it is the favored drive for military vessels.',
                 burn_rate: .03,

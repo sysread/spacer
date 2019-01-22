@@ -1,9 +1,5 @@
-import { resource, resources, ResourceCounter } from './common';
+import { resource, resources, ResourceCounter, Counter } from './common';
 import Store from './store';
-
-interface Counter {
-  [key: string]: number;
-}
 
 interface EntryList {
   [key: string]: number[];
@@ -20,6 +16,7 @@ class History {
   history: EntryList;
   sum:     Store;
   daily:   Store;
+  _avg:    Counter;
 
   constructor(length: number, init?: Saved) {
     this.length = length;
@@ -34,6 +31,8 @@ class History {
       this.sum     = new Store(init.sum);
       this.daily   = new Store(init.daily);
     }
+
+    this._avg = {};
   }
 
   keys(): resource[] {
@@ -42,10 +41,12 @@ class History {
 
   inc(item: resource, amt: number) {
     this.daily.inc(item, amt);
+    delete this._avg[item];
   }
 
   dec(item: resource, amt: number) {
     this.daily.dec(item, amt);
+    delete this._avg[item];
   }
 
   get(item: resource): number {
@@ -57,15 +58,15 @@ class History {
   }
 
   avg(item: resource): number {
-    if (!(item in this.history)) {
+    if (this.history[item] == undefined || this.history[item].length == 0) {
       return 0;
     }
 
-    if (this.history[item].length == 0) {
-      return 0;
+    if (this._avg[item] == undefined) {
+      this._avg[item] = this.sum.get(item) / this.history[item].length;
     }
 
-    return this.sum.get(item) / this.history[item].length;
+    return this._avg[item];
   }
 
   add(item: resource, amt: number) {
@@ -84,6 +85,7 @@ class History {
   rollup() {
     for (const item of resources) {
       this.add(item, this.daily.get(item));
+      delete this._avg[item];
     }
 
     this.daily.clear();

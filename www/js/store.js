@@ -63,7 +63,7 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
             }
         }
         Store.prototype.keys = function () {
-            return Object.keys(this.store);
+            return common_1.resources;
         };
         Store.prototype.clear = function () {
             var e_4, _a;
@@ -90,7 +90,7 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
             return this.store[item] || 0;
         };
         Store.prototype.count = function (item) {
-            return Math.floor(this.get(item));
+            return Math.floor(this.store[item] || 0);
         };
         Store.prototype.sum = function () {
             var e_5, _a;
@@ -114,13 +114,13 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
             if (amt === void 0) { amt = 0; }
             if (isNaN(amt))
                 throw new Error('not a number');
-            this.store[item] = this.get(item) - amt;
+            this.store[item] = (this.store[item] || 0) - amt;
         };
         Store.prototype.inc = function (item, amt) {
             if (amt === void 0) { amt = 0; }
             if (isNaN(amt))
                 throw new Error('not a number');
-            this.store[item] = this.get(item) + amt;
+            this.store[item] = (this.store[item] || 0) + amt;
         };
         return Store;
     }());

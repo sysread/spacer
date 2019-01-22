@@ -29,7 +29,7 @@ class Store {
   }
 
   keys(): resource[] {
-    return Object.keys(this.store) as resource[];
+    return resources;
   }
 
   clear(): void {
@@ -48,7 +48,7 @@ class Store {
   }
 
   count(item: resource): number {
-    return Math.floor(this.get(item));
+    return Math.floor(this.store[item] || 0);
   }
 
   sum(): number {
@@ -63,12 +63,12 @@ class Store {
 
   dec(item: resource, amt: number = 0) {
     if (isNaN(amt)) throw new Error('not a number');
-    this.store[item] = this.get(item) - amt;
+    this.store[item] = (this.store[item] || 0) - amt;
   }
 
   inc(item: resource, amt: number = 0) {
     if (isNaN(amt)) throw new Error('not a number');
-    this.store[item] = this.get(item) + amt;
+    this.store[item] = (this.store[item] || 0) + amt;
   }
 }
 
