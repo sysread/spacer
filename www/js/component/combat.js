@@ -103,13 +103,12 @@ define(function(require, exports, module) {
 
           if (this.combat.playerSurrendered) {
             this.$emit('complete', 'player-surrendered');
-          }
-          else if (this.combat.opponentSurrendered) {
+          } else if (this.combat.opponentSurrendered) {
             this.$emit('complete', 'opponent-surrendered');
-          }
-          else {
-            // TODO this is brittle as hell
-            this.$emit('complete', this.combat.opponent.isDestroyed ? 'won' : 'fled');
+          } else if (this.combat.opponentIsDestroyed) {
+            this.$emit('complete', 'won');
+          } else {
+            this.$emit('complete', 'fled'); // TODO this is brittle as hell
           }
         }
       },

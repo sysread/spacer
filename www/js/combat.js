@@ -461,6 +461,20 @@ define(["require", "exports", "./data", "./store", "./util"], function (require,
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Combat.prototype, "playerDestroyed", {
+            get: function () {
+                return this.player.isDestroyed;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Combat.prototype, "opponentDestroyed", {
+            get: function () {
+                return this.opponent.isDestroyed;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Combat.prototype, "salvage", {
             get: function () {
                 var e_3, _a;

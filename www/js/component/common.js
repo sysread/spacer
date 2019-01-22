@@ -16,7 +16,7 @@ define(function(require, exports, module) {
   Vue.filter('pct',   function(value, places) { return util.pct((value || 0).toString(), places) });
   Vue.filter('unit',  function(value, unit) { return (value || 0).toString() + ' ' + unit });
   Vue.filter('name',  function(value) { return value.toString().replace(/_/g, ' ') }),
-  Vue.filter('caps',  function(value) { return value.toString().replace(/\b([a-z])/g, function(str) { return str.toUpperCase() }) });
+  Vue.filter('caps',  function(value) { return util.ucfirst(value) }),
   Vue.filter('lower', function(value) { return value.toString().replace(/\b([A-Z])/g, function(str) { return str.toLowerCase() }) });
   Vue.filter('AU',    function(value) { return value / Physics.AU });
   Vue.filter('yn',    function(value) { return value ? 'yes' : 'no' });

@@ -7,7 +7,7 @@ import * as t from './common';
 import * as util from './util';
 import { Faction } from './faction';
 import { resources, isCraft, isRaw } from './resource';
-import { Mission, Passengers } from './mission';
+import { Mission, Passengers, Status } from './mission';
 
 
 // Shims for global browser objects
@@ -64,7 +64,11 @@ export class Person {
 
       if (init.contracts) {
         for (const c of init.contracts) {
-          this.contracts.push(new Passengers(c));
+          // TODO chicken and the egg problem: contract gets watchers assigned
+          // once accept() is called, but accept() needs game.turns, which is
+          // not yet defined while initializing the game.
+          const contract = new Passengers(c);
+          this.contracts.push(contract);
         }
       }
     }
@@ -199,7 +203,6 @@ export class Person {
 
   acceptMission(mission: Mission) {
     this.contracts.push(mission);
-    mission.accept();
   }
 
   completeMission(mission: Mission) {

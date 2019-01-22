@@ -340,6 +340,14 @@ export class Combat {
     return this.surrendered === this.opponent.name;
   }
 
+  get playerDestroyed() {
+    return this.player.isDestroyed;
+  }
+
+  get opponentDestroyed() {
+    return this.opponent.isDestroyed;
+  }
+
   get salvage() {
     if (this.opponent.isDestroyed || this.opponentSurrendered) {
       if (!this._salvage) {

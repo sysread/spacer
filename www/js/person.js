@@ -64,7 +64,11 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
                     try {
                         for (var _c = __values(init.contracts), _d = _c.next(); !_d.done; _d = _c.next()) {
                             var c = _d.value;
-                            this.contracts.push(new mission_1.Passengers(c));
+                            // TODO chicken and the egg problem: contract gets watchers assigned
+                            // once accept() is called, but accept() needs game.turns, which is
+                            // not yet defined while initializing the game.
+                            var contract = new mission_1.Passengers(c);
+                            this.contracts.push(contract);
                         }
                     }
                     catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -214,7 +218,6 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
         };
         Person.prototype.acceptMission = function (mission) {
             this.contracts.push(mission);
-            mission.accept();
         };
         Person.prototype.completeMission = function (mission) {
             this.contracts = this.contracts.filter(function (c) { return c.title != mission.title; });

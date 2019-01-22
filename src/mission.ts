@@ -77,7 +77,7 @@ export class Events {
 }
 
 
-enum Status {
+export enum Status {
   Ready    = 0,
   Accepted = 1,
   Complete = 2,
@@ -125,8 +125,10 @@ export abstract class Mission {
   }
 
   setStatus(status: Status) {
+    console.log('setStatus', this.status, '->', status);
     if (this.status >= status) {
-      throw new Error('invalid state transition');
+      const info = JSON.stringify(this);
+      throw new Error(`invalid state transition: ${this.status} to ${status}: ${info}`);
     }
 
     this.status = status;
@@ -136,9 +138,16 @@ export abstract class Mission {
     this.status = Status.Accepted;
     this.deadline = window.game.turns + this.turns;
 
+    window.game.planets[this.issuer].acceptMission(this);
+    window.game.player.acceptMission(this);
+
     Events.watch(Ev.Turn, (event: Turn) => {
+console.log('turns_left', this.turns_left);
       if (this.turns_left == 0) {
         this.complete();
+        return false;
+      } else {
+        return true;
       }
     });
   }
@@ -182,6 +191,12 @@ export class Passengers extends Mission {
     return `Passengers to ${dest} in ${days} days for ${reward} c`;
   }
 
+  get short_title(): string {
+    const dest = util.ucfirst(this.dest);
+    const reward = util.csn(this.reward);
+    return `Passengers to ${dest} (${reward} c)`;
+  }
+
   accept() {
     super.accept();
 
@@ -189,6 +204,9 @@ export class Passengers extends Mission {
       if (event.dest == this.dest) {
         this.setStatus(Status.Complete);
         this.complete();
+        return false;
+      } else {
+        return true;
       }
     });
   }

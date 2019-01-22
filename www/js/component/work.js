@@ -35,7 +35,8 @@ define(function(require, exports, module) {
       percent()       { return Math.min(100, Math.ceil(this.turnsWorked / this.turns * 100)) },
       timeSpent()     { return Math.floor(this.turnsWorked / this.data.turns_per_day) },
       hasPicketLine() { return this.planet.hasPicketLine() },
-      contracts()     { return this.planet.contracts },
+      //contracts()     { return this.planet.contracts },
+      contracts()     { return [] },
     },
     methods: {
       getPayRate: function(task) {
@@ -104,12 +105,11 @@ define(function(require, exports, module) {
 
       acceptContract: function() {
         if (this.contract) {
-          this.planet.acceptMission(this.contract.mission);
-          this.player.acceptMission(this.contract.mission);
+          this.contract.mission.accept();
+          this.game.save_game();
         }
 
         this.clearContract();
-        this.game.save_game();
       },
     },
     template: `
@@ -142,7 +142,7 @@ define(function(require, exports, module) {
     </btn>
 
     <btn v-for="c in contracts" :key="c.mission.title" @click="setContract(c)" block=1>
-      {{c.mission.title}}
+      {{c.mission.short_title}}
     </btn>
   </card-text>
 

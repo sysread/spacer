@@ -88,7 +88,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
         Status[Status["Complete"] = 2] = "Complete";
         Status[Status["Success"] = 3] = "Success";
         Status[Status["Failure"] = 4] = "Failure";
-    })(Status || (Status = {}));
+    })(Status = exports.Status || (exports.Status = {}));
     var Mission = /** @class */ (function () {
         function Mission(opt) {
             this.status = Status.Ready;
@@ -126,8 +126,10 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
             configurable: true
         });
         Mission.prototype.setStatus = function (status) {
+            console.log('setStatus', this.status, '->', status);
             if (this.status >= status) {
-                throw new Error('invalid state transition');
+                var info = JSON.stringify(this);
+                throw new Error("invalid state transition: " + this.status + " to " + status + ": " + info);
             }
             this.status = status;
         };
@@ -135,9 +137,16 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
             var _this = this;
             this.status = Status.Accepted;
             this.deadline = window.game.turns + this.turns;
+            window.game.planets[this.issuer].acceptMission(this);
+            window.game.player.acceptMission(this);
             Events.watch(Ev.Turn, function (event) {
+                console.log('turns_left', _this.turns_left);
                 if (_this.turns_left == 0) {
                     _this.complete();
+                    return false;
+                }
+                else {
+                    return true;
                 }
             });
         };
@@ -180,6 +189,15 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Passengers.prototype, "short_title", {
+            get: function () {
+                var dest = util.ucfirst(this.dest);
+                var reward = util.csn(this.reward);
+                return "Passengers to " + dest + " (" + reward + " c)";
+            },
+            enumerable: true,
+            configurable: true
+        });
         Passengers.prototype.accept = function () {
             var _this = this;
             _super.prototype.accept.call(this);
@@ -187,6 +205,10 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
                 if (event.dest == _this.dest) {
                     _this.setStatus(Status.Complete);
                     _this.complete();
+                    return false;
+                }
+                else {
+                    return true;
                 }
             });
         };

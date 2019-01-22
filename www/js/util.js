@@ -27,6 +27,10 @@ var __values = (this && this.__values) || function (o) {
 define(["require", "exports", "./common"], function (require, exports, common_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    function ucfirst(value) {
+        return value.toString().replace(/\b([a-z])/g, function (str) { return str.toUpperCase(); });
+    }
+    exports.ucfirst = ucfirst;
     function shuffle(arr) {
         return arr.sort(function (a, b) {
             return Math.random() > Math.random() ? 1 : -1;

@@ -10,6 +10,11 @@ interface Counter {
   [key: string]: number;
 }
 
+
+export function ucfirst(value: string): string {
+  return value.toString().replace(/\b([a-z])/g, (str) => str.toUpperCase())
+}
+
 export function shuffle(arr: Array<any>): Array<any> {
   return arr.sort((a, b) => {
     return Math.random() > Math.random() ? 1 : -1;
