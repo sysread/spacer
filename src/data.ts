@@ -19,7 +19,7 @@ const data = {
   min_stock_count:     100,
   max_imports:         4, // per market
   max_crafts:          10, // per market
-  max_agents:          1, // per faction
+  max_agents:          0, // per faction
   max_agent_money:     5000, // after which they buy luxuries
   min_agent_profit:    100, // min credits net profit before a route is attractive
   necessity:           {water: true, food: true, medicine: true, fuel: true},

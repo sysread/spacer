@@ -148,7 +148,7 @@ class Game {
   build_agents(init?: any[]) {
     this.agents = [];
 
-    if (init && init.length > 0) {
+    if (init && init.length > 0 && init.length == data.max_agents) {
       for (const opt of init) {
         this.agents.push(new Agent(opt));
       }

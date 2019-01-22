@@ -139,7 +139,7 @@ define(["require", "exports", "./data", "./system", "./data/initial", "./person"
         Game.prototype.build_agents = function (init) {
             var e_2, _a, e_3, _b;
             this.agents = [];
-            if (init && init.length > 0) {
+            if (init && init.length > 0 && init.length == data_1.default.max_agents) {
                 try {
                     for (var init_1 = __values(init), init_1_1 = init_1.next(); !init_1_1.done; init_1_1 = init_1.next()) {
                         var opt = init_1_1.value;
