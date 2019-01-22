@@ -69,6 +69,7 @@ export class Person {
           // not yet defined while initializing the game.
           const contract = new Passengers(c);
           this.contracts.push(contract);
+          contract.accept();
         }
       }
     }

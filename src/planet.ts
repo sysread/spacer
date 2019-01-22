@@ -8,7 +8,7 @@ import { Resource, Raw, Craft, isRaw, isCraft, resources } from './resource';
 import { Trait } from './trait';
 import { Faction } from './faction';
 import { Condition, SavedCondition } from './condition';
-import { Events, Ev, Mission, Passengers } from './mission';
+import { Events, Ev, Mission, Passengers, SavedMissionData } from './mission';
 import { Person } from './person';
 
 import * as t from './common';
@@ -53,9 +53,14 @@ export function isCraftTask(task: EconTask): task is ImportTask {
 }
 
 
-interface AvailableContract {
+interface Contract {
   valid_until: number;  // game.turns after which offering expires
   mission:     Mission; // offered mission
+}
+
+interface SavedContract {
+  valid_until: number;
+  mission:     SavedMissionData;
 }
 
 
@@ -67,14 +72,13 @@ export interface SavedPlanet {
   need?:       any;
   pending?:    any;
   queue?:      any;
-  contracts?:  AvailableContract[];
+  contracts?:  SavedContract[];
 }
 
 export class Planet {
   readonly body:      t.body;
   readonly name:      string;
   readonly size:      string;
-  readonly desc:      string;
   readonly radius:    number;
   readonly kind:      string;
   readonly central:   string;
@@ -88,7 +92,7 @@ export class Planet {
 
   conditions:         Condition[];
   work_tasks:         t.Work[];
-  contracts:          AvailableContract[];
+  contracts:          Contract[];
 
   max_fab_units:      number;
   max_fab_health:     number;
@@ -113,7 +117,6 @@ export class Planet {
     this.body    = body;
     this.name    = data.bodies[this.body].name;
     this.size    = data.bodies[this.body].size;
-    this.desc    = data.bodies[this.body].desc;
     this.radius  = system.body(this.body).radius;
     this.kind    = system.kind(this.body);
     this.central = system.central(this.body);
@@ -161,9 +164,8 @@ export class Planet {
         });
       }
     }
-    else {
-      this.refreshContracts();
-    }
+
+    this.refreshContracts();
 
     /*
      * Economics
@@ -196,6 +198,10 @@ export class Planet {
     // avoiding dynamic assignment in the constructor.
     this._price = {};
     this._cycle = {};
+  }
+
+  get desc() {
+    return data.bodies[this.body].desc;
   }
 
   get position() {
@@ -1133,7 +1139,10 @@ export class Planet {
    * Contracts
    */
   refreshContracts() {
-    this.contracts = this.contracts.filter(c => c.valid_until >= window.game.turns);
+    if (this.contracts.length > 0 && window.game) {
+      this.contracts = this.contracts.filter(c => c.valid_until >= window.game.turns);
+    }
+
     const want = util.getRandomInt(1, this.scale(5));
 
     while (this.contracts.length < want) {

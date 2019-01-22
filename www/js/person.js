@@ -69,6 +69,7 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
                             // not yet defined while initializing the game.
                             var contract = new mission_1.Passengers(c);
                             this.contracts.push(contract);
+                            contract.accept();
                         }
                     }
                     catch (e_1_1) { e_1 = { error: e_1_1 }; }

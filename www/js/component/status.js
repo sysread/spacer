@@ -23,12 +23,11 @@ define(function(require, exports, module) {
     },
 
     computed: {
-      name:      function() {return this.person.name},
-      money:     function() {return Math.floor(this.person.money)},
-      home:      function() {return this.data.bodies[this.person.home].name},
-      faction:   function() {return this.person.faction.full_name},
-      accel:     function() {return this.person.maxAcceleration() / Physics.G },
-      contracts: function() {return this.person.contracts },
+      name:    function() {return this.person.name},
+      money:   function() {return Math.floor(this.person.money)},
+      home:    function() {return this.data.bodies[this.person.home].name},
+      faction: function() {return this.person.faction.full_name},
+      accel:   function() {return this.person.maxAcceleration() / Physics.G },
     },
 
     methods: {
@@ -59,14 +58,6 @@ define(function(require, exports, module) {
     <def term="Home" :def="home|caps" />
     <def term="Faction" :def="faction|caps" />
     <def term="Thrust endurance" :def="accel|R(2)|unit('G')" />
-
-    <def term="Contracts">
-      <div slot="def">
-        <div v-for="contract of contracts">
-          {{contract.title}}
-        </div>
-      </div>
-    </def>
   </div>
 
   <confirm v-if="show_confirm" yes="Yes" no="No" @confirm="newGame">
@@ -75,6 +66,61 @@ define(function(require, exports, module) {
 </card>
     `,
   });
+
+
+  Vue.component('contract-status', {
+    props: ['person'],
+
+    data() {
+      return {
+        show_confirm: false,
+      };
+    },
+
+    computed: {
+      contracts() {
+        return this.person.contracts;
+      },
+    },
+
+    methods: {
+      cancel(contract, confirmed) {
+        if (this.show_confirm) {
+          if (confirmed) {
+            this.$nextTick(() => {
+              contract.cancel();
+            });
+          }
+
+          this.show_confirm = false;
+        }
+        else {
+          this.show_confirm = true;
+        }
+      }
+    },
+
+    template: `
+<card title="Contracts">
+  <div v-if="contracts.length > 0">
+    <card v-for="(contract, idx) of contracts" :key="idx" :title="contract.short_title">
+      <card-text>{{contract.description}}</card-text>
+      <btn @click="cancel(contract)" block=1 class="my-3">Cancel contract</btn>
+
+      <confirm v-if="show_confirm" yes="Yes" no="No" @confirm="cancel(contract, $event)">
+        <h5>{{contract.short_title}}</h5>
+        Breaking a contract may result in loss of standing or monetary penalties.
+        Are you sure you wish to cancel this contract?
+      </confirm>
+    </card>
+  </div>
+  <div v-else>
+    No active contracts.
+  </div>
+</card> 
+    `,
+  });
+
 
   Vue.component('faction-status', {
     props: ['person'],
@@ -218,6 +264,7 @@ define(function(require, exports, module) {
 <div>
   <person-status :person="person" class="my-3" @open="open" />
   <faction-status :person="person" class="my-3" />
+  <contract-status :person="person" class="my-3" />
   <ship-status :ship="person.ship" class="my-3" />
 </div>
     `,

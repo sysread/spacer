@@ -31,7 +31,7 @@ define(function(require, exports, module) {
   Vue.component('defn', {template: '<cell brkpt="sm" size=9 class="text-muted"><slot /></cell>'});
 
   Vue.component('def', {
-    props: ['term', 'def', 'caps', 'split', 'y', 'brkpt', 'info'],
+    props: ['term', 'def', 'caps', 'split', 'y', 'brkpt', 'info', 'show_info'],
     computed: {
       termSize: function() { return this.split || 4 },
       defnSize: function() { return 12 - this.termSize },
@@ -41,9 +41,17 @@ define(function(require, exports, module) {
   <cell :brkpt="brkpt" :size="termSize" :y="y" class="font-weight-bold" :class="{'text-capitalize': caps}">
     {{term}}
     <slot name="term" />
-    <info v-if="info" :title="term">{{info}}</info>
+    <info v-if="info || show_info" :title="term">
+      {{info}}
+      <slot name="info" />
+    </info>
   </cell>
-  <cell :brkpt="brkpt" :size="defnSize" :y="y" class="text-muted" :class="{'text-capitalize': caps}">{{def}}<slot name="def" /><slot /></cell>
+
+  <cell :brkpt="brkpt" :size="defnSize" :y="y" class="text-muted" :class="{'text-capitalize': caps}">
+    {{def}}
+    <slot name="def" />
+    <slot />
+  </cell>
 </row>
     `,
   });

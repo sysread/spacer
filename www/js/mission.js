@@ -81,6 +81,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
         return Events;
     }());
     exports.Events = Events;
+    window.Events = Events;
     var Status;
     (function (Status) {
         Status[Status["Ready"] = 0] = "Ready";
@@ -91,11 +92,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
     })(Status = exports.Status || (exports.Status = {}));
     var Mission = /** @class */ (function () {
         function Mission(opt) {
-            this.status = Status.Ready;
+            this.status = opt.status || Status.Ready;
             this.standing = opt.standing;
             this.reward = opt.reward;
             this.turns = opt.turns;
             this.issuer = opt.issuer;
+            this.deadline = opt.deadline;
         }
         Object.defineProperty(Mission.prototype, "faction", {
             get: function () {
@@ -104,16 +106,39 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Mission.prototype, "price", {
+            // TODO race condition: if player gains or loses standing during mission,
+            // the pay rate changes.
+            get: function () {
+                if (window.game && window.game.player) {
+                    var bonus = window.game.player.getStandingPriceAdjustment(this.faction);
+                    return Math.ceil(this.reward * (1 + bonus));
+                }
+                else {
+                    return this.reward;
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Mission.prototype, "turns_left", {
             get: function () {
                 var left = 0;
                 if (this.deadline) {
-                    left = this.deadline - window.game.turns;
+                    left = Math.max(0, this.deadline - window.game.turns);
                 }
                 else {
                     left = this.turns;
                 }
                 return Math.max(0, left);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Mission.prototype, "is_expired", {
+            get: function () {
+                return this.status != Status.Success
+                    && this.turns_left <= 0;
             },
             enumerable: true,
             configurable: true
@@ -125,8 +150,21 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Mission.prototype, "time_left", {
+            get: function () {
+                var days = util.csn(Math.floor(this.turns_left / data_1.default.turns_per_day));
+                var hours = Math.floor((this.turns_left % data_1.default.turns_per_day) * data_1.default.hours_per_turn);
+                if (hours) {
+                    return days + " days, " + hours + " hours";
+                }
+                else {
+                    return days + " days";
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
         Mission.prototype.setStatus = function (status) {
-            console.log('setStatus', this.status, '->', status);
             if (this.status >= status) {
                 var info = JSON.stringify(this);
                 throw new Error("invalid state transition: " + this.status + " to " + status + ": " + info);
@@ -135,13 +173,16 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
         };
         Mission.prototype.accept = function () {
             var _this = this;
-            this.status = Status.Accepted;
-            this.deadline = window.game.turns + this.turns;
-            window.game.planets[this.issuer].acceptMission(this);
-            window.game.player.acceptMission(this);
+            // If status is already set, this is a saved mission that is being
+            // reinitialized.
+            if (this.status < Status.Accepted) {
+                this.status = Status.Accepted;
+                this.deadline = window.game.turns + this.turns;
+                window.game.planets[this.issuer].acceptMission(this);
+                window.game.player.acceptMission(this);
+            }
             Events.watch(Ev.Turn, function (event) {
-                console.log('turns_left', _this.turns_left);
-                if (_this.turns_left == 0) {
+                if (_this.turns_left <= 0) {
                     _this.complete();
                     return false;
                 }
@@ -151,18 +192,30 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
             });
         };
         Mission.prototype.complete = function () {
+            // Mission was already completed
+            if (this.status > Status.Complete) {
+                return;
+            }
             // TODO notification system
-            if (this.turns_left > 0) {
-                this.setStatus(Status.Success);
-                window.game.player.credit(this.reward);
-                window.game.player.incStanding(this.faction, this.standing);
-                window.game.player.completeMission(this);
+            if (this.turns_left >= 0) {
+                this.finish();
             }
             else {
-                this.setStatus(Status.Failure);
-                window.game.player.decStanding(this.faction, this.standing / 2);
-                window.game.player.completeMission(this);
+                this.cancel();
             }
+        };
+        Mission.prototype.finish = function () {
+            this.setStatus(Status.Success);
+            window.game.player.credit(this.price); // this must happen first, as price is affected by standing
+            window.game.player.incStanding(this.faction, this.standing);
+            window.game.player.completeMission(this);
+            window.game.save_game();
+        };
+        Mission.prototype.cancel = function () {
+            this.setStatus(Status.Failure);
+            window.game.player.decStanding(this.faction, this.standing / 2);
+            window.game.player.completeMission(this);
+            window.game.save_game();
         };
         return Mission;
     }());
@@ -172,19 +225,24 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
         function Passengers(opt) {
             var _this = this;
             var dist = util.R(system_1.default.distance(opt.issuer, opt.dest) / physics_1.default.AU);
-            opt.turns = data_1.default.turns_per_day * 7 * dist;
+            opt.turns = Math.max(data_1.default.turns_per_day * 3, data_1.default.turns_per_day * 7 * dist);
             opt.reward = Math.max(500, dist * 500);
             opt.standing = Math.ceil(Math.log10(opt.reward));
             _this = _super.call(this, opt) || this;
             _this.dest = opt.dest;
             return _this;
         }
+        Object.defineProperty(Passengers.prototype, "destination", {
+            get: function () {
+                return data_1.default.bodies[this.dest].name;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Passengers.prototype, "title", {
             get: function () {
-                var dest = data_1.default.bodies[this.dest].name;
-                var days = util.csn(this.turns_left / data_1.default.turns_per_day);
-                var reward = util.csn(this.reward);
-                return "Passengers to " + dest + " in " + days + " days for " + reward + " c";
+                var reward = util.csn(this.price);
+                return "Passengers to " + this.destination + " in " + this.time_left + " for " + reward + "c";
             },
             enumerable: true,
             configurable: true
@@ -192,8 +250,23 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
         Object.defineProperty(Passengers.prototype, "short_title", {
             get: function () {
                 var dest = util.ucfirst(this.dest);
-                var reward = util.csn(this.reward);
-                return "Passengers to " + dest + " (" + reward + " c)";
+                return "Passengers to " + dest;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Passengers.prototype, "description", {
+            get: function () {
+                var reward = util.csn(this.price);
+                var faction = data_1.default.factions[data_1.default.bodies[this.issuer].faction].full_name;
+                if (!faction.startsWith('The '))
+                    faction = 'The ' + faction;
+                return [
+                    "Provide legal transport to these passengers to " + this.destination + ".",
+                    "They must arrive at their destination within " + this.time_left + "; you will receive " + reward + " credits on arrival.",
+                    "These passengers are legal citizens of " + faction + " and are protected by the laws of their government.",
+                    "Failure to complete the contract will result in a loss of standing and/or monetary penalties.",
+                ].join(' ');
             },
             enumerable: true,
             configurable: true
@@ -202,6 +275,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./util"], func
             var _this = this;
             _super.prototype.accept.call(this);
             Events.watch(Ev.Arrived, function (event) {
+                if (_this.is_expired) {
+                    return false;
+                }
                 if (event.dest == _this.dest) {
                     _this.setStatus(Status.Complete);
                     _this.complete();

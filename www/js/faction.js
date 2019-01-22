@@ -11,7 +11,6 @@ define(["require", "exports", "./data"], function (require, exports, data_1) {
                 abbrev = abbrev.abbrev;
             }
             this.abbrev = abbrev;
-            this.desc = data_1.default.factions[this.abbrev].desc;
             this.full_name = data_1.default.factions[this.abbrev].full_name;
             this.capital = data_1.default.factions[this.abbrev].capital;
             this.sales_tax = data_1.default.factions[this.abbrev].sales_tax;
@@ -22,6 +21,11 @@ define(["require", "exports", "./data"], function (require, exports, data_1) {
             this.consumes = data_1.default.factions[this.abbrev].consumes;
             this.produces = data_1.default.factions[this.abbrev].produces;
         }
+        Object.defineProperty(Faction.prototype, "desc", {
+            get: function () { return data_1.default.factions[this.abbrev].desc; },
+            enumerable: true,
+            configurable: true
+        });
         Faction.prototype.toString = function () { return this.abbrev; };
         return Faction;
     }());

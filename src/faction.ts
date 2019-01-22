@@ -9,7 +9,6 @@ export class Faction implements t.Faction {
   patrol:     number;
   piracy:     number;
   inspection: number;
-  desc?:      string;
   produces:   t.ResourceCounter;
   consumes:   t.ResourceCounter;
   standing:   t.StandingCounter;
@@ -20,7 +19,6 @@ export class Faction implements t.Faction {
     }
 
     this.abbrev     = abbrev;
-    this.desc       = data.factions[this.abbrev].desc;
     this.full_name  = data.factions[this.abbrev].full_name;
     this.capital    = data.factions[this.abbrev].capital;
     this.sales_tax  = data.factions[this.abbrev].sales_tax;
@@ -31,6 +29,8 @@ export class Faction implements t.Faction {
     this.consumes   = data.factions[this.abbrev].consumes;
     this.produces   = data.factions[this.abbrev].produces;
   }
+
+  get desc() { return data.factions[this.abbrev].desc }
 
   toString() { return this.abbrev }
 }

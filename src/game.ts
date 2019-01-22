@@ -71,7 +71,7 @@ class Game {
         this.build_agents(init.agents);
       }
       catch (e) {
-        console.warn('initialization error; clearing data. error was:', e);
+        console.warn('initialization error:', e);
         this.locus = null;
         this.turns = 0;
         this._player = null;
@@ -185,7 +185,7 @@ class Game {
     system.set_date(this.strdate());
 
     this.build_planets(NewGameData.planets);
-    this.build_agents(NewGameData.agents);
+    this.build_agents(); // agents not part of initial data set
 
     this._player = player;
     this.locus = home;
@@ -206,6 +206,13 @@ class Game {
     this.build_planets();
     this.build_agents();
     this.turn(data.initial_days * data.turns_per_day, true);
+
+    // clear bits we do not wish to include in the initial data set
+    this._player = null;
+    for (const p of Object.values(this.planets)) {
+      p.contracts = [];
+    }
+
     return JSON.stringify(this);
   }
 
@@ -249,13 +256,14 @@ class Game {
   }
 
   arrive() {
-    if (!this.transit_plan)
-      return;
+    if (this.transit_plan) {
+      this.locus = this.transit_plan.dest;
+      this.transit_plan = undefined;
+    }
 
-    this.locus = this.transit_plan.dest;
-    this.transit_plan = undefined;
-
-    Events.signal({type: Ev.Arrived, dest: this.locus});
+    if (this.locus) {
+      Events.signal({type: Ev.Arrived, dest: this.locus});
+    }
   }
 
 
@@ -299,6 +307,7 @@ var game: Game = window.game || new Game;
 
 if (!window.game) {
   window.game = game;
+  window.game.arrive();
 }
 
 export = game;

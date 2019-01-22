@@ -6,3 +6,4 @@ plugins/*
 platform
 run
 Session.vim
+*.bak

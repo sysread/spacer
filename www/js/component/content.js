@@ -90,10 +90,7 @@ define(function(require, exports, module) {
               else {
                 const batch = Math.min(3, left);
                 left -= batch;
-
-                for (let i = 0; i < batch; ++i) {
-                  this.game.turn(batch, true);
-                }
+                this.game.turn(batch, true);
               }
             }
             else {

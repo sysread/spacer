@@ -63,7 +63,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.body = body;
             this.name = data_1.default.bodies[this.body].name;
             this.size = data_1.default.bodies[this.body].size;
-            this.desc = data_1.default.bodies[this.body].desc;
             this.radius = system_1.default.body(this.body).radius;
             this.kind = system_1.default.kind(this.body);
             this.central = system_1.default.central(this.body);
@@ -148,9 +147,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     finally { if (e_4) throw e_4.error; }
                 }
             }
-            else {
-                this.refreshContracts();
-            }
+            this.refreshContracts();
             /*
              * Economics
              */
@@ -199,6 +196,13 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this._price = {};
             this._cycle = {};
         }
+        Object.defineProperty(Planet.prototype, "desc", {
+            get: function () {
+                return data_1.default.bodies[this.body].desc;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Planet.prototype, "position", {
             get: function () {
                 return system_1.default.position(this.body);
@@ -1272,7 +1276,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          */
         Planet.prototype.refreshContracts = function () {
             var _this = this;
-            this.contracts = this.contracts.filter(function (c) { return c.valid_until >= window.game.turns; });
+            if (this.contracts.length > 0 && window.game) {
+                this.contracts = this.contracts.filter(function (c) { return c.valid_until >= window.game.turns; });
+            }
             var want = util.getRandomInt(1, this.scale(5));
             var _loop_1 = function () {
                 var dest = util.oneOf(t.bodies.filter(function (t) { return t != _this.body; }));
