@@ -5,8 +5,8 @@ define(["require", "exports", "./data"], function (require, exports, data_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
-    var Faction = /** @class */ (function () {
-        function Faction(abbrev) {
+    class Faction {
+        constructor(abbrev) {
             if (typeof abbrev == 'object') {
                 abbrev = abbrev.abbrev;
             }
@@ -21,13 +21,8 @@ define(["require", "exports", "./data"], function (require, exports, data_1) {
             this.consumes = data_1.default.factions[this.abbrev].consumes;
             this.produces = data_1.default.factions[this.abbrev].produces;
         }
-        Object.defineProperty(Faction.prototype, "desc", {
-            get: function () { return data_1.default.factions[this.abbrev].desc; },
-            enumerable: true,
-            configurable: true
-        });
-        Faction.prototype.toString = function () { return this.abbrev; };
-        return Faction;
-    }());
+        get desc() { return data_1.default.factions[this.abbrev].desc; }
+        toString() { return this.abbrev; }
+    }
     exports.Faction = Faction;
 });

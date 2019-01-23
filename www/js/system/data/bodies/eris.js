@@ -1,6 +1,6 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    var eris = {
+    const eris = {
         name: 'Eris',
         type: 'dwarfPlanet',
         radius: 1163,

@@ -3,6 +3,7 @@ import Ship from './ship';
 import { NavComp } from './navcomp';
 import { TransitPlan, SavedTransitPlan } from './transitplan';
 import { Person, SavedPerson } from './person';
+import { TurnDetail } from './events';
 import * as t from './common';
 import * as util from './util';
 
@@ -81,6 +82,11 @@ export class Agent extends Person {
     else {
       this.action = this.dock(this.home);
     }
+
+    window.game.onTurn((ev: TurnDetail) => {
+      if (ev.detail.isNewDay)
+        this.turn()
+    });
   }
 
   turn() {

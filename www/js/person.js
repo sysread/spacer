@@ -1,29 +1,3 @@
-var __values = (this && this.__values) || function (o) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
-    if (m) return m.call(o);
-    return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-};
-var __read = (this && this.__read) || function (o, n) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator];
-    if (!m) return o;
-    var i = m.call(o), r, ar = [], e;
-    try {
-        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-    }
-    catch (error) { e = { error: error }; }
-    finally {
-        try {
-            if (r && !r.done && (m = i["return"])) m.call(i);
-        }
-        finally { if (e) throw e.error; }
-    }
-    return ar;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -43,9 +17,8 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
     physics_1 = __importDefault(physics_1);
     t = __importStar(t);
     ;
-    var Person = /** @class */ (function () {
-        function Person(init) {
-            var e_1, _a, e_2, _b;
+    class Person {
+        constructor(init) {
             this.contracts = [];
             if (init == undefined) {
                 this.name = 'Marco Solo';
@@ -61,108 +34,69 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
                 this.home = init.home;
                 this.money = Math.floor(init.money);
                 if (init.contracts) {
-                    try {
-                        for (var _c = __values(init.contracts), _d = _c.next(); !_d.done; _d = _c.next()) {
-                            var c = _d.value;
-                            // TODO chicken and the egg problem: contract gets watchers assigned
-                            // once accept() is called, but accept() needs game.turns, which is
-                            // not yet defined while initializing the game.
-                            var contract = new mission_1.Passengers(c);
-                            this.contracts.push(contract);
-                            contract.accept();
-                        }
-                    }
-                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                    finally {
-                        try {
-                            if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
-                        }
-                        finally { if (e_1) throw e_1.error; }
+                    for (const c of init.contracts) {
+                        // TODO chicken and the egg problem: contract gets watchers assigned
+                        // once accept() is called, but accept() needs game.turns, which is
+                        // not yet defined while initializing the game.
+                        const contract = new mission_1.Passengers(c);
+                        this.contracts.push(contract);
+                        contract.accept();
                     }
                 }
             }
             this.standing = {};
-            try {
-                for (var _e = __values(Object.keys(data_1.default.factions)), _f = _e.next(); !_f.done; _f = _e.next()) {
-                    var faction = _f.value;
-                    if (init == undefined || init.standing == undefined || init.standing[faction] == undefined) {
-                        this.standing[faction] = data_1.default.factions[this.faction.abbrev].standing[faction];
-                    }
-                    else {
-                        this.standing[faction] = init.standing[faction];
-                    }
+            for (const faction of Object.keys(data_1.default.factions)) {
+                if (init == undefined || init.standing == undefined || init.standing[faction] == undefined) {
+                    this.standing[faction] = data_1.default.factions[this.faction.abbrev].standing[faction];
                 }
-            }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                else {
+                    this.standing[faction] = init.standing[faction];
                 }
-                finally { if (e_2) throw e_2.error; }
             }
             this.homeGravity = system_1.default.gravity(this.home);
         }
-        Object.defineProperty(Person.prototype, "localStanding", {
-            get: function () {
-                return this.getStanding(window.game.here.faction);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Person.prototype, "localStandingLabel", {
-            get: function () {
-                return this.getStandingLabel(window.game.here.faction);
-            },
-            enumerable: true,
-            configurable: true
-        });
+        get localStanding() {
+            return this.getStanding(window.game.here.faction);
+        }
+        get localStandingLabel() {
+            return this.getStandingLabel(window.game.here.faction);
+        }
         // Returns the number of item that the player has the resources to craft
-        Person.prototype.canCraft = function (item) {
-            var e_3, _a;
-            var res = resource_1.resources[item];
+        canCraft(item) {
+            const res = resource_1.resources[item];
             if (resource_1.isCraft(res)) {
-                var max = void 0;
-                try {
-                    for (var _b = __values(Object.keys(res.recipe.materials)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                        var mat = _c.value;
-                        var have = this.ship.cargo.count(mat);
-                        var need = res.recipe.materials[mat] || 0;
-                        if (have < need) {
-                            return 0;
-                        }
-                        var count = Math.floor(have / need);
-                        if (max == undefined || max > count) {
-                            max = count;
-                        }
+                let max;
+                for (const mat of Object.keys(res.recipe.materials)) {
+                    const have = this.ship.cargo.count(mat);
+                    const need = res.recipe.materials[mat] || 0;
+                    if (have < need) {
+                        return 0;
                     }
-                }
-                catch (e_3_1) { e_3 = { error: e_3_1 }; }
-                finally {
-                    try {
-                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    const count = Math.floor(have / need);
+                    if (max == undefined || max > count) {
+                        max = count;
                     }
-                    finally { if (e_3) throw e_3.error; }
                 }
                 return max || 0;
             }
             return 0;
-        };
-        Person.prototype.maxAcceleration = function () {
+        }
+        maxAcceleration() {
             return physics_1.default.G * this.homeGravity * data_1.default.grav_deltav_factor;
-        };
-        Person.prototype.shipAcceleration = function () {
+        }
+        shipAcceleration() {
             return this.ship.currentAcceleration();
-        };
-        Person.prototype.bestAcceleration = function () {
+        }
+        bestAcceleration() {
             return Math.min(this.maxAcceleration(), this.shipAcceleration());
-        };
-        Person.prototype.credit = function (n) {
+        }
+        credit(n) {
             this.money += n;
-        };
-        Person.prototype.debit = function (n) {
+        }
+        debit(n) {
             this.money -= n;
-        };
-        Person.prototype.getStanding = function (faction) {
+        }
+        getStanding(faction) {
             faction = faction || this.faction;
             if (faction instanceof faction_1.Faction) {
                 faction = faction.abbrev;
@@ -173,57 +107,45 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
                 }
             }
             return Math.floor(this.standing[faction] || 0);
-        };
-        Person.prototype.hasStanding = function (faction, label) {
-            var _a = __read(this.standingRange(label), 2), min = _a[0], max = _a[1];
+        }
+        hasStanding(faction, label) {
+            const [min, max] = this.standingRange(label);
             return this.getStanding(faction) >= min;
-        };
-        Person.prototype.hasStandingOrLower = function (faction, label) {
-            var _a = __read(this.standingRange(label), 2), min = _a[0], max = _a[1];
+        }
+        hasStandingOrLower(faction, label) {
+            const [min, max] = this.standingRange(label);
             return this.getStanding(faction) <= max;
-        };
-        Person.prototype.standingRange = function (standing) {
+        }
+        standingRange(standing) {
             return t.Standing[standing];
-        };
-        Person.prototype.getStandingLabel = function (faction) {
-            var e_4, _a;
-            var value = this.getStanding(faction);
-            try {
-                for (var _b = __values(t.standings), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var standing = _c.value;
-                    var _d = __read(t.Standing[standing], 2), min = _d[0], max = _d[1];
-                    if (value >= min && value <= max) {
-                        return standing;
-                    }
+        }
+        getStandingLabel(faction) {
+            const value = this.getStanding(faction);
+            for (const standing of t.standings) {
+                const [min, max] = t.Standing[standing];
+                if (value >= min && value <= max) {
+                    return standing;
                 }
             }
-            catch (e_4_1) { e_4 = { error: e_4_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_4) throw e_4.error; }
-            }
-        };
-        Person.prototype.incStanding = function (faction, amt) {
+        }
+        incStanding(faction, amt) {
             this.standing[faction] = Math.min(data_1.default.max_abs_standing, this.getStanding(faction) + amt);
-        };
-        Person.prototype.decStanding = function (faction, amt) {
+        }
+        decStanding(faction, amt) {
             this.standing[faction] = Math.max(-data_1.default.max_abs_standing, this.getStanding(faction) - amt);
-        };
-        Person.prototype.setStanding = function (faction, amt) {
+        }
+        setStanding(faction, amt) {
             this.standing[faction] = Math.min(data_1.default.max_abs_standing, Math.max(-data_1.default.max_abs_standing, amt));
-        };
-        Person.prototype.getStandingPriceAdjustment = function (faction) {
+        }
+        getStandingPriceAdjustment(faction) {
             return this.getStanding(faction) / 1000;
-        };
-        Person.prototype.acceptMission = function (mission) {
+        }
+        acceptMission(mission) {
             this.contracts.push(mission);
-        };
-        Person.prototype.completeMission = function (mission) {
-            this.contracts = this.contracts.filter(function (c) { return c.title != mission.title; });
-        };
-        return Person;
-    }());
+        }
+        completeMission(mission) {
+            this.contracts = this.contracts.filter(c => c.title != mission.title);
+        }
+    }
     exports.Person = Person;
 });

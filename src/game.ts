@@ -6,7 +6,7 @@ import { NewGameData } from './data/initial';
 import { Person, SavedPerson } from './person';
 import { Planet, SavedPlanet, isImportTask } from './planet';
 import { Agent, SavedAgent } from './agent';
-import { Events, Ev } from './events';
+import { Events, Ev, TurnCallBack, TurnDetail } from './events';
 
 import * as t from './common';
 import * as util from './util';
@@ -22,6 +22,8 @@ interface localStorage {
 declare var window: {
   game: Game;
   localStorage: localStorage;
+  dispatchEvent(ev: Event): void;
+  addEventListener: (ev: string, cb: Function) => void;
 }
 
 declare var console: any;
@@ -40,6 +42,7 @@ interface ImportReport {
 
 
 class Game {
+  turnEvent:     Event;
   turns:         number = 0;
   date:          Date = new Date(data.start_date);
   _player:       Person | null = null;
@@ -51,10 +54,19 @@ class Game {
   agents:        Agent[] = [];
 
   constructor() {
+    this.reset_date();
+
+    this.turnEvent = new CustomEvent('turn', {
+      detail: {
+        get turn()     { return game.turns },
+        get isNewDay() { return game.turns % data.turns_per_day == 0 },
+      },
+    });
+  }
+
+  init() {
     const saved = window.localStorage.getItem('game');
     const init  = saved == null ? null : JSON.parse(saved);
-
-    this.reset_date();
 
     if (init) {
       try {
@@ -80,12 +92,13 @@ class Game {
       }
     }
     else {
-      this.locus = null;
-      this.turns = 0;
-      this._player = null;
       this.build_planets();
       this.build_agents();
     }
+  }
+
+  onTurn(cb: TurnCallBack) {
+    window.addEventListener('turn', cb);
   }
 
   get player() {
@@ -233,17 +246,8 @@ class Game {
       this.date.setHours(this.date.getHours() + data.hours_per_turn);
       system.set_date(this.strdate());
 
-      for (const p of util.shuffle(Object.values(this.planets))) {
-        p.turn();
-      }
-
-      if (this.turns >= data.turns_per_day * data.initial_days) {
-        for (const a of this.agents) {
-          a.turn();
-        }
-      }
-
       Events.signal({type: Ev.Turn, turn: this.turns});
+      window.dispatchEvent(this.turnEvent);
     }
 
     if (!no_save) {
@@ -312,11 +316,10 @@ class Game {
 
 console.log('Spacer is starting');
 
-var game: Game = window.game || new Game;
+var game: Game = new Game;
 
-if (!window.game) {
-  window.game = game;
-  window.game.arrive();
-}
+window.game = game;
+window.game.init();
+window.game.arrive();
 
 export = game;

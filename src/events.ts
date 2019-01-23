@@ -1,5 +1,8 @@
 import * as t from './common';
 
+export type TurnDetail   = {detail: {turn: number, isNewDay: boolean}};
+export type TurnCallBack = (ev: TurnDetail) => void;
+
 export enum Ev {
   Turn        = 'Turn',
   Arrived     = 'Arrived',

@@ -8,7 +8,7 @@ import { Resource, Raw, Craft, isRaw, isCraft, resources } from './resource';
 import { Trait } from './trait';
 import { Faction } from './faction';
 import { Condition, SavedCondition } from './condition';
-import { Events, Ev } from './events';
+import { Events, Ev, TurnCallBack, TurnDetail } from './events';
 import { Mission, Passengers, MissionData } from './mission';
 import { Person } from './person';
 
@@ -17,8 +17,8 @@ import * as util from './util';
 
 
 // Shims for global browser objects
-declare var window: { game: any; }
 declare var console: any;
+declare var window: { game: any; }
 
 
 interface NeededResources {
@@ -108,6 +108,8 @@ export class Planet {
 
   _price:             t.Counter;
   _cycle:             t.Counter;
+  _need:              t.Counter;
+  _exporter:          {[key:string]: boolean};
 
   constructor(body: t.body, init?: SavedPlanet) {
     init = init || {};
@@ -192,11 +194,62 @@ export class Planet {
       }
     }
 
-    // Assign directly in constructor rather than in clearMemos for
+    // Assign directly in constructor rather than in a method call for
     // performance reasons. V8's jit will produce more optimized classes by
     // avoiding dynamic assignment in the constructor.
-    this._price = {};
-    this._cycle = {};
+    this._price    = {};
+    this._cycle    = {};
+    this._need     = {};
+    this._exporter = {};
+
+    window.game.onTurn((ev: TurnDetail) => this.turn(ev.detail.turn));
+  }
+
+  turn(turn: number) {
+    // Only do the really expensive stuff once per day
+    switch (turn % data.turns_per_day) {
+      // note fallthrough to ensure default actions happen every turn
+      case 0:
+        this.manufacture();
+        this.luxuriate();
+
+        for (const item of this.stock.keys())
+          this.incSupply(item, this.getStock(item))
+
+        this.supply.rollup()
+        this.demand.rollup()
+
+        for (const item of this.need.keys())
+          this.need.inc(item, this.getNeed(item))
+
+        this.need.rollup()
+
+      case 1:
+        this.imports();
+        this.refreshContracts();
+
+      case 2:
+        this._exporter = {};
+        this._need = {};
+        this.replenishFabricators();
+        this.apply_conditions();
+
+      default:
+        this.produce();
+        this.consume();
+        this.processQueue();
+    }
+
+    // randomly cycle updates to price
+    for (const item of t.resources) {
+      if (turn % this._cycle[item]) {
+        // drop the saved price
+        delete this._price[item];
+
+        // set a new turn modulus for 3-12 days
+        this._cycle[item] = util.getRandomInt(3, 12) * data.turns_per_day;
+      }
+    }
   }
 
   get desc() {
@@ -546,36 +599,40 @@ export class Planet {
     this.supply.inc(item, amount);
   }
 
-  isNetExporter(item: t.resource, count: number = 1): boolean {
-    const res = data.resources[item];
+  isNetExporter(item: t.resource): boolean {
+    if (this._exporter[item] === undefined) {
+      const res = data.resources[item];
 
-    if (t.isCraft(res)) {
-      for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
-        const mat_count = res.recipe.materials[mat] || 0;
-        if (!this.isNetExporter(mat, count * mat_count)) {
-          return false;
+      if (t.isCraft(res)) {
+        this._exporter[item] = true;
+
+        for (const mat of Object.keys(res.recipe.materials)) {
+          if (!this.isNetExporter(mat as t.resource)) {
+            this._exporter[item] = false;
+            break;
+          }
         }
       }
+      else {
+        this._exporter[item] = this.netProduction(item) > this.scale(1);
+      }
+    }
 
-      return true;
-    }
-    else {
-      return this.netProduction(item) > this.scale(count);
-    }
+    return this._exporter[item];
   }
 
   getNeed(item: t.resource) {
-    const d = this.getDemand(item);
-    const s = (this.getStock(item) + this.getSupply(item)) / 2;
-    const n = d - s;
-
-    if (n === 0) {
-      return 1;
-    } else if (n > 0) {
-      return Math.log(1 + n);
-    } else {
-      return d / s;
+    if (this._need[item] === undefined) {
+      const d = this.getDemand(item);
+      const s = (this.getStock(item) + this.getSupply(item)) / 2;
+      const n = d - s;
+      this._need[item] =
+            n == 0 ? 1
+          : n > 0  ? Math.log(1 + n)
+                   : d / s;
     }
+
+    return this._need[item];
   }
 
   /**
@@ -666,11 +723,6 @@ export class Planet {
   }
 
   price(item: t.resource) {
-    if (!this._cycle[item] || window.game.turns % this._cycle[item] == 0) {
-      delete this._price[item];
-      this._cycle[item] = util.getRandomInt(3, 12) * data.turns_per_day;
-    }
-
     if (this._price[item] == undefined) {
       const value = resources[item].value;
       const need  = this.getNeed(item);
@@ -829,12 +881,11 @@ export class Planet {
   }
 
   exporters(item: t.resource): t.body[] {
-    const bodies = (<t.body[]>Object.keys(window.game.planets));
-    return bodies.filter(name => {
+    return t.bodies.filter(name => {
       const p = window.game.planets[name];
-      return p.body !== this.body
-          && !p.hasShortage(item)
+      return name !== this.body
           && p.getStock(item) >= 1
+          && !p.hasShortage(item)
           && (p.hasSurplus(item) || p.isNetExporter(item));
     });
   }
@@ -1051,23 +1102,6 @@ export class Planet {
     }
   }
 
-  rollups() {
-    if (window.game.turns % (24 / data.hours_per_turn) === 0) {
-      for (const item of this.stock.keys()) {
-        this.incSupply(item, this.getStock(item));
-      }
-
-      this.supply.rollup();
-      this.demand.rollup();
-
-      for (const item of this.need.keys()) {
-        this.need.inc(item, this.getNeed(item));
-      }
-
-      this.need.rollup();
-    }
-  }
-
   apply_conditions() {
     // Increment turns on each condition and filter out those which are no
     // longer active.
@@ -1109,28 +1143,6 @@ export class Planet {
           }
         }
       }
-    }
-  }
-
-  turn() {
-    // Only do the really expensive stuff once per day
-    switch (window.game.turns % data.turns_per_day) {
-      // note fallthrough to ensure default actions happen every turn
-      case 0:
-        this.manufacture();
-        this.luxuriate();
-      case 1:
-        this.imports();
-        this.refreshContracts();
-      case 2:
-        this.replenishFabricators();
-        this.apply_conditions();
-      default:
-        this.produce();
-        this.consume();
-        this.processQueue();
-        this.rollups();
-        break;
     }
   }
 

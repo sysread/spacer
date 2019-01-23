@@ -1,6 +1,6 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    var venus = {
+    const venus = {
         name: 'Venus',
         type: 'planet',
         radius: 6051.8,

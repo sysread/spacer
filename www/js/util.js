@@ -1,71 +1,44 @@
-var __read = (this && this.__read) || function (o, n) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator];
-    if (!m) return o;
-    var i = m.call(o), r, ar = [], e;
-    try {
-        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-    }
-    catch (error) { e = { error: error }; }
-    finally {
-        try {
-            if (r && !r.done && (m = i["return"])) m.call(i);
-        }
-        finally { if (e) throw e.error; }
-    }
-    return ar;
-};
-var __values = (this && this.__values) || function (o) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
-    if (m) return m.call(o);
-    return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-};
 define(["require", "exports", "./common"], function (require, exports, common_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function ucfirst(value) {
-        return value.toString().replace(/\b([a-z])/g, function (str) { return str.toUpperCase(); });
+        return value.toString().replace(/\b([a-z])/g, (str) => str.toUpperCase());
     }
     exports.ucfirst = ucfirst;
     function shuffle(arr) {
-        return arr.sort(function (a, b) {
+        return arr.sort((a, b) => {
             return Math.random() > Math.random() ? 1 : -1;
         });
     }
     exports.shuffle = shuffle;
     function csn(num) {
-        var sign = num < 0 ? '-' : '';
+        const sign = num < 0 ? '-' : '';
         num = Math.abs(num);
-        var parts = [];
-        var three = new RegExp(/(\d{3})$/);
-        var _a = __read(("" + num).split('.', 2), 2), integer = _a[0], decimal = _a[1];
+        const parts = [];
+        const three = new RegExp(/(\d{3})$/);
+        let [integer, decimal] = `${num}`.split('.', 2);
         while (three.test(integer)) {
-            integer = integer.replace(three, function (match) { parts.unshift(match); return ''; });
+            integer = integer.replace(three, (match) => { parts.unshift(match); return ''; });
         }
         if (integer) {
             parts.unshift(integer);
         }
         integer = parts.join(',');
-        return decimal ? "" + sign + integer + "." + decimal : "" + sign + integer;
+        return decimal ? `${sign}${integer}.${decimal}` : `${sign}${integer}`;
     }
     exports.csn = csn;
     function pct(fraction, places) {
-        var pct = R(fraction * 100, places);
+        const pct = R(fraction * 100, places);
         return pct + '%';
     }
     exports.pct = pct;
-    function uniq(items, sep) {
-        if (sep === void 0) { sep = ' '; }
+    function uniq(items, sep = ' ') {
         if (!(items instanceof Array)) {
-            items = ("" + items).split(sep).filter(function (s) { return s != ''; });
+            items = `${items}`.split(sep).filter((s) => { return s != ''; });
         }
-        var set = new Set(items);
-        var arr = [];
-        set.forEach(function (val) { arr.push(val); });
+        let set = new Set(items);
+        let arr = [];
+        set.forEach((val) => { arr.push(val); });
         return arr.join(sep);
     }
     exports.uniq = uniq;
@@ -76,7 +49,7 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
         if (places === undefined) {
             return Math.round(n);
         }
-        var factor = Math.pow(10, places);
+        const factor = Math.pow(10, places);
         return Math.round(n * factor) / factor;
     }
     exports.R = R;
@@ -115,7 +88,7 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
     function chance(pct) {
         if (pct === 0)
             return false;
-        var rand = Math.random();
+        const rand = Math.random();
         return rand <= pct;
     }
     exports.chance = chance;
@@ -123,8 +96,8 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
      * "Fuzzes" a number, randomizing it by +/- pct%.
      */
     function fuzz(n, pct) {
-        var low = n - (n * pct);
-        var high = n + (n * pct);
+        const low = n - (n * pct);
+        const high = n + (n * pct);
         return getRandomNum(low, high);
     }
     exports.fuzz = fuzz;
@@ -135,24 +108,12 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
         return options[getRandomInt(0, options.length - 1)];
     }
     exports.oneOf = oneOf;
-    function resourceMap(dflt, entries) {
-        if (dflt === void 0) { dflt = 0; }
-        var e_1, _a;
+    function resourceMap(dflt = 0, entries) {
         entries = entries || {};
-        try {
-            for (var resources_1 = __values(common_1.resources), resources_1_1 = resources_1.next(); !resources_1_1.done; resources_1_1 = resources_1.next()) {
-                var item = resources_1_1.value;
-                if (!(item in entries)) {
-                    entries[item] = dflt;
-                }
+        for (const item of common_1.resources) {
+            if (!(item in entries)) {
+                entries[item] = dflt;
             }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (resources_1_1 && !resources_1_1.done && (_a = resources_1.return)) _a.call(resources_1);
-            }
-            finally { if (e_1) throw e_1.error; }
         }
         return entries;
     }
@@ -160,20 +121,20 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
     window.memo_stats = { hit: 0, miss: 0, clear: 0 };
     function memoized(opt) {
         return function (target, propertyKey, descriptor) {
-            var orig = descriptor.value;
-            var keyName = opt.key;
-            var getKey = keyName == undefined
-                ? function (obj) { return obj.constructor.name; }
-                : function (obj) { return obj[keyName] || obj.constructor.name; };
-            var memo = {};
-            var turns = opt.turns || getRandomInt(3, 12);
+            const orig = descriptor.value;
+            const keyName = opt.key;
+            const getKey = keyName == undefined
+                ? (obj) => obj.constructor.name
+                : (obj) => obj[keyName] || obj.constructor.name;
+            let memo = {};
+            let turns = opt.turns || getRandomInt(3, 12);
             descriptor.value = function () {
                 if (window.game.turns % turns == 0) {
                     turns = opt.turns || getRandomInt(3, 12);
                     memo = {};
                     ++window.memo_stats.clear;
                 }
-                var key = JSON.stringify([getKey(this), arguments]);
+                const key = JSON.stringify([getKey(this), arguments]);
                 if (memo[key] == undefined) {
                     memo[key] = orig.apply(this, arguments);
                     ++window.memo_stats.miss;

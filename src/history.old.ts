@@ -17,6 +17,8 @@ class History {
   sum:     Store;
   daily:   Store;
   _avg:    Counter;
+  get:     (item: resource) => number;
+  count:   (item: resource) => number;
 
   constructor(length: number, init?: Saved) {
     this.length = length;
@@ -31,6 +33,10 @@ class History {
       this.sum     = new Store(init.sum);
       this.daily   = new Store(init.daily);
     }
+
+    // poor man's delegation to avoid the overhead of an extra funcall
+    this.get   = this.sum.get;
+    this.count = this.sum.count;
 
     this._avg = {};
   }
@@ -49,13 +55,13 @@ class History {
     delete this._avg[item];
   }
 
-  get(item: resource): number {
+  /*get(item: resource): number {
     return this.sum.get(item);
   }
 
   count(item: resource): number {
     return this.sum.count(item);
-  }
+  }*/
 
   avg(item: resource): number {
     if (this.history[item] == undefined || this.history[item].length == 0) {
