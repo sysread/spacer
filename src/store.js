@@ -33,8 +33,6 @@ export default class Store {
     return n
   }
 
-  //sum() { return Object.values(this.store).reduce((a, b) => a + b, 0) }
-
   keys() { return resources }
 
   get(item) { return this.store[item] || 0 }

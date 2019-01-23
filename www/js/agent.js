@@ -1,3 +1,42 @@
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __values = (this && this.__values) || function (o) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+    if (m) return m.call(o);
+    return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -23,13 +62,14 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
     function isRoute(action) {
         return action.action == 'route';
     }
-    class Agent extends person_1.Person {
-        constructor(opt) {
-            super(opt);
-            const action = opt.action;
+    var Agent = /** @class */ (function (_super) {
+        __extends(Agent, _super);
+        function Agent(opt) {
+            var _this = _super.call(this, opt) || this;
+            var action = opt.action;
             if (action != undefined) {
                 if (isRoute(action)) {
-                    this.action = {
+                    _this.action = {
                         action: 'route',
                         dest: action.dest,
                         item: action.item,
@@ -39,18 +79,19 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                     };
                 }
                 else {
-                    this.action = action;
+                    _this.action = action;
                 }
             }
             else {
-                this.action = this.dock(this.home);
+                _this.action = _this.dock(_this.home);
             }
-            window.game.onTurn((ev) => {
+            window.game.onTurn(function (ev) {
                 if (ev.detail.isNewDay)
-                    this.turn();
+                    _this.turn();
             });
+            return _this;
         }
-        turn() {
+        Agent.prototype.turn = function () {
             if (isDocked(this.action)) {
                 // Money to burn?
                 if (this.money > data_1.default.max_agent_money) {
@@ -59,13 +100,13 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                 // fully refueled!
                 if (this.refuel()) {
                     // select a route
-                    const routes = this.profitableRoutes();
+                    var routes = this.profitableRoutes();
                     if (routes.length > 0) {
                         // buy the goods to transport
-                        const { item, count } = routes[0];
-                        const [bought, price] = this.here.buy(item, count, this);
+                        var _a = routes[0], item = _a.item, count = _a.count;
+                        var _b = __read(this.here.buy(item, count, this), 2), bought = _b[0], price = _b[1];
                         if (bought != routes[0].count) {
-                            throw new Error(`${bought} != ${count}`);
+                            throw new Error(bought + " != " + count);
                         }
                         // switch to the new action
                         this.action = routes[0];
@@ -83,47 +124,51 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                 this.transitTurn();
                 return;
             }
-        }
+        };
         // Returns a 'Docked' action for the given location
-        dock(here) {
+        Agent.prototype.dock = function (here) {
             return {
                 action: 'docked',
                 location: here,
             };
-        }
-        get here() {
-            if (isDocked(this.action) || isJob(this.action)) {
-                return window.game.planets[this.action.location];
-            }
-            else {
-                throw new Error('not docked');
-            }
-        }
+        };
+        Object.defineProperty(Agent.prototype, "here", {
+            get: function () {
+                if (isDocked(this.action) || isJob(this.action)) {
+                    return window.game.planets[this.action.location];
+                }
+                else {
+                    throw new Error('not docked');
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
         // Returns true if the ship was fully refueled
-        refuel() {
+        Agent.prototype.refuel = function () {
             if (isDocked(this.action)) {
-                const fuelNeeded = this.ship.refuelUnits();
-                const price = this.here.buyPrice('fuel', this);
+                var fuelNeeded = this.ship.refuelUnits();
+                var price = this.here.buyPrice('fuel', this);
                 if (fuelNeeded > 0 && this.money > (fuelNeeded * price)) {
-                    const [bought, paid] = this.here.buy('fuel', fuelNeeded);
-                    const need = fuelNeeded - bought;
-                    const total = paid + (need * price);
+                    var _a = __read(this.here.buy('fuel', fuelNeeded), 2), bought = _a[0], paid = _a[1];
+                    var need = fuelNeeded - bought;
+                    var total = paid + (need * price);
                     this.debit(total);
                     this.ship.refuel(fuelNeeded);
                 }
             }
             return this.ship.refuelUnits() == 0;
-        }
-        findWork() {
+        };
+        Agent.prototype.findWork = function () {
             // If no job, attempt to find one
             // TODO what to do if there are no jobs?
             // TODO account for strikes
             if (isDocked(this.action)) {
-                const which = util.oneOf(this.here.work_tasks);
-                const job = data_1.default.work.find(w => w.name == which);
+                var which_1 = util.oneOf(this.here.work_tasks);
+                var job = data_1.default.work.find(function (w) { return w.name == which_1; });
                 if (job) {
-                    const days = 3;
-                    const turns = days * data_1.default.turns_per_day;
+                    var days = 3;
+                    var turns = days * data_1.default.turns_per_day;
                     this.action = {
                         action: 'job',
                         location: this.action.location,
@@ -133,29 +178,40 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                     };
                 }
             }
-        }
-        buyLuxuries() {
+        };
+        Agent.prototype.buyLuxuries = function () {
             if (isDocked(this.action)) {
-                const here = window.game.planets[this.action.location];
-                const want = Math.ceil((this.money - 1000) / here.buyPrice('luxuries', this));
-                const [bought, price] = here.buy('luxuries', want);
+                var here = window.game.planets[this.action.location];
+                var want = Math.ceil((this.money - 1000) / here.buyPrice('luxuries', this));
+                var _a = __read(here.buy('luxuries', want), 2), bought = _a[0], price = _a[1];
                 this.debit(price);
                 //console.debug(`agent: bought ${bought} luxuries for ${price} on ${this.here.name}`);
             }
-        }
+        };
         // Returns true if any action was performed
-        workTurn() {
+        Agent.prototype.workTurn = function () {
+            var e_1, _a;
             if (isJob(this.action)) {
                 if (--this.action.turns == 0) {
-                    const result = this.here.work(this, this.action.task, this.action.days);
+                    var result = this.here.work(this, this.action.task, this.action.days);
                     // Credit agent for the word completed
                     this.credit(result.pay);
-                    //console.debug(`agent: worked ${this.action.task.name} for ${result.pay} on ${this.here.name}`);
-                    // Sell any harvested resources to the market
-                    for (const item of result.items.keys()) {
-                        const [amount, price, standing] = this.here.sell(item, result.items.count(item));
-                        this.incStanding(this.here.faction.abbrev, standing);
-                        this.credit(price);
+                    try {
+                        //console.debug(`agent: worked ${this.action.task.name} for ${result.pay} on ${this.here.name}`);
+                        // Sell any harvested resources to the market
+                        for (var _b = __values(result.items.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                            var item = _c.value;
+                            var _d = __read(this.here.sell(item, result.items.count(item)), 3), amount = _d[0], price = _d[1], standing = _d[2];
+                            this.incStanding(this.here.faction.abbrev, standing);
+                            this.credit(price);
+                        }
+                    }
+                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                    finally {
+                        try {
+                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                        }
+                        finally { if (e_1) throw e_1.error; }
                     }
                     // Restore "Docked" action
                     this.action = this.dock(this.action.location);
@@ -163,67 +219,89 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                 return true;
             }
             return false;
-        }
+        };
         // Returns true if any action was performed
-        transitTurn() {
+        Agent.prototype.transitTurn = function () {
             if (isRoute(this.action)) {
                 this.action.transit.turn();
                 this.ship.burn(this.action.transit.accel);
                 if (this.action.transit.left == 0) {
-                    const action = this.action;
+                    var action = this.action;
                     // Arrive
                     this.action = this.dock(action.dest);
                     // Sell cargo
-                    const [amt, price, standing] = this.here.sell(action.item, action.count, this);
+                    var _a = __read(this.here.sell(action.item, action.count, this), 3), amt = _a[0], price = _a[1], standing = _a[2];
                     //console.debug(`agent: sold ${action.count} units of ${action.item} for ${util.csn(price)} on ${action.dest}`);
                 }
                 return true;
             }
             return false;
-        }
-        profitableRoutes() {
-            const routes = [];
+        };
+        Agent.prototype.profitableRoutes = function () {
+            var e_2, _a, e_3, _b;
+            var routes = [];
             if (isDocked(this.action)) {
-                const game = window.game;
-                const here = this.here;
-                const navComp = new navcomp_1.NavComp(this, this.here.body);
-                const cargoSpace = this.ship.cargoLeft;
-                for (const item of t.resources) {
-                    const stock = here.getStock(item);
-                    const buyPrice = here.buyPrice(item, this);
-                    const canBuy = Math.min(stock, cargoSpace, Math.floor(this.money / buyPrice));
-                    if (canBuy == 0) {
-                        continue;
-                    }
-                    for (const dest of t.bodies) {
-                        const sellPrice = game.planets[dest].sellPrice(item);
-                        const profitPerUnit = sellPrice - buyPrice;
-                        if (profitPerUnit <= 0) {
+                var game = window.game;
+                var here = this.here;
+                var navComp = new navcomp_1.NavComp(this, this.here.body);
+                var cargoSpace = this.ship.cargoLeft;
+                try {
+                    for (var _c = __values(t.resources), _d = _c.next(); !_d.done; _d = _c.next()) {
+                        var item = _d.value;
+                        var stock = here.getStock(item);
+                        var buyPrice = here.buyPrice(item, this);
+                        var canBuy = Math.min(stock, cargoSpace, Math.floor(this.money / buyPrice));
+                        if (canBuy == 0) {
                             continue;
                         }
-                        const transit = navComp.getFastestTransitTo(dest);
-                        if (transit == undefined) {
-                            continue;
+                        try {
+                            for (var _e = __values(t.bodies), _f = _e.next(); !_f.done; _f = _e.next()) {
+                                var dest = _f.value;
+                                var sellPrice = game.planets[dest].sellPrice(item);
+                                var profitPerUnit = sellPrice - buyPrice;
+                                if (profitPerUnit <= 0) {
+                                    continue;
+                                }
+                                var transit = navComp.getFastestTransitTo(dest);
+                                if (transit == undefined) {
+                                    continue;
+                                }
+                                var fuelPrice = game.planets[dest].buyPrice('fuel', this);
+                                var fuelCost = transit.fuel * fuelPrice;
+                                var grossProfit = profitPerUnit * canBuy;
+                                var netProfit = (grossProfit - fuelCost) / transit.turns;
+                                if (netProfit >= data_1.default.min_agent_profit) {
+                                    routes.push({
+                                        action: 'route',
+                                        dest: dest,
+                                        item: item,
+                                        count: canBuy,
+                                        profit: netProfit,
+                                        transit: transit,
+                                    });
+                                }
+                            }
                         }
-                        const fuelPrice = game.planets[dest].buyPrice('fuel', this);
-                        const fuelCost = transit.fuel * fuelPrice;
-                        const grossProfit = profitPerUnit * canBuy;
-                        const netProfit = (grossProfit - fuelCost) / transit.turns;
-                        if (netProfit >= data_1.default.min_agent_profit) {
-                            routes.push({
-                                action: 'route',
-                                dest: dest,
-                                item: item,
-                                count: canBuy,
-                                profit: netProfit,
-                                transit: transit,
-                            });
+                        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                        finally {
+                            try {
+                                if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                            }
+                            finally { if (e_3) throw e_3.error; }
                         }
                     }
                 }
+                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                finally {
+                    try {
+                        if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                    }
+                    finally { if (e_2) throw e_2.error; }
+                }
             }
-            return routes.sort((a, b) => a.profit < b.profit ? 1 : -1);
-        }
-    }
+            return routes.sort(function (a, b) { return a.profit < b.profit ? 1 : -1; });
+        };
+        return Agent;
+    }(person_1.Person));
     exports.Agent = Agent;
 });

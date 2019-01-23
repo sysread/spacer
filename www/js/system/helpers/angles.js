@@ -1,7 +1,7 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    const circleInRadians = 2 * Math.PI;
+    var circleInRadians = 2 * Math.PI;
     function degreesToRadians(v) {
         return v * (Math.PI / 180);
     }

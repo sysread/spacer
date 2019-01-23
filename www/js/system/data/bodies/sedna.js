@@ -1,6 +1,6 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    const sedna = {
+    var sedna = {
         name: 'Sedna',
         type: 'dwarfPlanet',
         radius: 497.5,

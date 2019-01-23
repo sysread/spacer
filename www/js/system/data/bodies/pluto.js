@@ -1,6 +1,6 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    const pluto = {
+    var pluto = {
         name: 'Pluto',
         type: 'dwarfPlanet',
         radius: 1195,

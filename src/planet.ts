@@ -206,43 +206,50 @@ export class Planet {
   }
 
   turn(turn: number) {
-    // Only do the really expensive stuff once per day
+    // Spread expensive daily procedures out over multiple turns; note the
+    // fall-through in each case to default, which are actions called on every
+    // turn.
     switch (turn % data.turns_per_day) {
-      // note fallthrough to ensure default actions happen every turn
       case 0:
         this.manufacture();
-        this.luxuriate();
-
-        for (const item of this.stock.keys())
-          this.incSupply(item, this.getStock(item))
-
-        this.supply.rollup()
-        this.demand.rollup()
-
-        for (const item of this.need.keys())
-          this.need.inc(item, this.getNeed(item))
-
-        this.need.rollup()
 
       case 1:
         this.imports();
-        this.refreshContracts();
 
       case 2:
-        this._exporter = {};
-        this._need = {};
+        if (turn >= data.initial_days * data.turns_per_day)
+          this.refreshContracts();
+
         this.replenishFabricators();
+        this.luxuriate();
         this.apply_conditions();
+        this.rollups(turn);
 
       default:
         this.produce();
         this.consume();
         this.processQueue();
     }
+  }
+
+  rollups(turn: number) {
+    for (const item of this.stock.keys())
+      this.incSupply(item, this.getStock(item))
+
+    this.supply.rollup()
+    this.demand.rollup()
+
+    for (const item of this.need.keys())
+      this.need.inc(item, this.getNeed(item))
+
+    this.need.rollup()
+
+    this._exporter = {};
+    this._need = {};
 
     // randomly cycle updates to price
     for (const item of t.resources) {
-      if (turn % this._cycle[item]) {
+      if (!this._cycle[item] || turn % this._cycle[item]) {
         // drop the saved price
         delete this._price[item];
 
@@ -550,7 +557,7 @@ export class Planet {
   }
 
   hasSuperSurplus(item: t.resource) {
-    return this.getNeed(item) <= this.surplusFactor(item) / 2;
+    return this.getNeed(item) <= this.surplusFactor(item) * 0.75;
   }
 
   production(item: t.resource) {
@@ -1082,7 +1089,7 @@ export class Planet {
   }
 
   produce() {
-    for (const item of this.produces.keys()) {
+    for (const item of t.resources) {
       // allow some surplus to build
       if (this.getStock(item) < this.min_stock || !this.hasSuperSurplus(item)) {
         const amount = this.production(item);
@@ -1094,7 +1101,7 @@ export class Planet {
   }
 
   consume() {
-    for (const item of this.consumes.keys()) {
+    for (const item of t.resources) {
       const amt = this.consumption(item);
       if (amt > 0) {
         this.buy(item, this.consumption(item));

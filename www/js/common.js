@@ -1,7 +1,7 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    const _resource = {
+    var _resource = {
         water: true,
         ore: true,
         minerals: true,
@@ -18,14 +18,14 @@ define(["require", "exports"], function (require, exports) {
         narcotics: true,
         weapons: true,
     };
-    const _faction = {
+    var _faction = {
         UN: true,
         MC: true,
         CERES: true,
         JFT: true,
         TRANSA: true,
     };
-    const _body = {
+    var _body = {
         mercury: true,
         earth: true,
         moon: true,
@@ -43,15 +43,15 @@ define(["require", "exports"], function (require, exports) {
         titania: true,
         pluto: true,
     };
-    const _drive = {
+    var _drive = {
         ion: true,
         fusion: true,
     };
-    const _shipdmg = {
+    var _shipdmg = {
         armor: true,
         hull: true,
     };
-    const _shiptype = {
+    var _shiptype = {
         shuttle: true,
         schooner: true,
         hauler: true,
@@ -65,7 +65,7 @@ define(["require", "exports"], function (require, exports) {
         barsoom: true,
         'rock-hopper': true,
     };
-    const _addon = {
+    var _addon = {
         cargo_pod: true,
         fuel_tank: true,
         liquid_schwartz: true,
@@ -82,7 +82,7 @@ define(["require", "exports"], function (require, exports) {
         ecm: true,
         stealthPlating: true,
     };
-    const _trait = {
+    var _trait = {
         'mineral rich': true,
         'mineral poor': true,
         'water rich': true,

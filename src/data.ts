@@ -12,14 +12,14 @@ const data = {
   start_date:          new Date(2242, 0, 1, 1),
   hours_per_turn:      hoursPerTurn,
   turns_per_day:       turnsPerDay,
-  initial_days:        2 * 365,
+  initial_days:        365,
   initial_stock:       20,
   market_history:      10 * turnsPerDay,
   scarcity_markup:     0.25,
   min_stock_count:     100,
   max_imports:         4, // per market
   max_crafts:          10, // per market
-  max_agents:          0, // per faction
+  max_agents:          2, // total
   max_agent_money:     5000, // after which they buy luxuries
   min_agent_profit:    100, // min credits net profit before a route is attractive
   necessity:           {water: true, food: true, medicine: true, fuel: true},
@@ -462,28 +462,28 @@ const data = {
       cargo:      -4,
       price:      16000,
     },
-    // TODO this
-    liquid_schwartz: {
-      name:       'Liquid Schwartz',
-      desc:       'Boosts fuel efficiency',
+    heat_reclaimer: {
+      name:       'Waste heat reclaimation system',
+      desc:       "Boosts drive efficiency by reclaiming waste heat from the drive and internal electrical systems. A fortunate side benefit is a reduction in visibility to infrared systems, making this a popular an relatively inexpensive way to mask a civilian ship's signature from pirates... and inspectors.",
       mass:       1,
-      burn_rate:  -0.025,
+      burn_rate:  -0.0035,
       price:      18500,
+      stealth:    0.08,
     },
     ion: {
       name:       'Ion drive',
       desc:       'Adds an additional pair of ion drives to the hull, increasing thrust. Care must be taken not to unbalance the ship, however.',
       mass:       20,
       thrust:     100,
-      burn_rate:  0.008,
-      price:      3000,
+      burn_rate:  0.005,
+      price:      8000,
     },
     fusion: {
       name:       'Fusion drive',
       desc:       'Somewhat reduced in efficiency when installed as a set of external pods, adding a fusion drive to an existing craft can drastically increase thrust and manuevering.',
       mass:       80,
-      thrust:     450,
-      burn_rate:  0.05,
+      thrust:     850,
+      burn_rate:  0.03,
       price:      25000,
       restricted: 'Trusted',
     },

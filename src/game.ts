@@ -40,14 +40,15 @@ interface ImportReport {
   };
 };
 
+const planets: {[key: string]: Planet} = {};
 
 class Game {
   turnEvent:     Event;
+  dayEvent:      Event;
   turns:         number = 0;
   date:          Date = new Date(data.start_date);
   _player:       Person | null = null;
   locus:         t.body | null = null;
-  planets:       {[key: string]: Planet} = {};
   page:          string | null = null;
   frozen:        boolean = false;
   transit_plan?: TransitPlan;
@@ -57,6 +58,13 @@ class Game {
     this.reset_date();
 
     this.turnEvent = new CustomEvent('turn', {
+      detail: {
+        get turn()     { return game.turns },
+        get isNewDay() { return game.turns % data.turns_per_day == 0 },
+      },
+    });
+
+    this.dayEvent = new CustomEvent('day', {
       detail: {
         get turn()     { return game.turns },
         get isNewDay() { return game.turns % data.turns_per_day == 0 },
@@ -99,6 +107,14 @@ class Game {
 
   onTurn(cb: TurnCallBack) {
     window.addEventListener('turn', cb);
+  }
+
+  onDay(cb: TurnCallBack) {
+    window.addEventListener('day', cb);
+  }
+
+  get planets() {
+    return planets;
   }
 
   get player() {
@@ -147,13 +163,11 @@ class Game {
   }
 
   build_planets(init?: {[key: string]: SavedPlanet}) {
-    this.planets = {};
-
     for (const body of t.bodies) {
       if (init && init[body]) {
-        this.planets[body] = new Planet(body, init[body]);
+        planets[body] = new Planet(body, init[body]);
       } else {
-        this.planets[body] = new Planet(body);
+        planets[body] = new Planet(body);
       }
     }
   }
@@ -168,20 +182,19 @@ class Game {
     }
     else {
       for (let i = 0; i < data.max_agents; ++i) {
-        for (const faction of t.factions) {
-          const body = data.factions[faction].capital;
+        const faction = util.oneOf(t.factions);
+        const body = data.factions[faction].capital;
 
-          const agent = new Agent({
-            name:     'Merchant from ' + data.bodies[body].name,
-            ship:     { type: 'schooner' },
-            faction:  faction,
-            home:     body,
-            money:    1000,
-            standing: data.factions[faction].standing,
-          });
+        const agent = new Agent({
+          name:     'Merchant from ' + data.bodies[body].name,
+          ship:     { type: 'schooner' },
+          faction:  faction,
+          home:     body,
+          money:    1000,
+          standing: data.factions[faction].standing,
+        });
 
-          this.agents.push(agent);
-        }
+        this.agents.push(agent);
       }
     }
   }
@@ -193,14 +206,17 @@ class Game {
     this._player = player;
     this.locus = home;
 
-    this.turns = NewGameData.turns;
-    this.page = NewGameData.page;
+    //this.turns = NewGameData.turns;
+    //this.page = NewGameData.page;
+    this.turns = 0;
+    this.page = 'summary';
 
     this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
     console.log('setting system date', this.date);
     system.set_date(this.strdate());
 
-    this.build_planets(NewGameData.planets);
+    //this.build_planets(NewGameData.planets);
+    this.build_planets();
     this.build_agents(); // agents not part of initial data set
 
     // Work-around for chicken and egg problem with initializing contracts for
@@ -248,6 +264,9 @@ class Game {
 
       Events.signal({type: Ev.Turn, turn: this.turns});
       window.dispatchEvent(this.turnEvent);
+
+      if (this.turns % data.turns_per_day)
+        window.dispatchEvent(this.dayEvent);
     }
 
     if (!no_save) {

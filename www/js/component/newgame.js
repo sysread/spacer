@@ -37,7 +37,7 @@ define(function(require, exports, module) {
     },
 
     methods: {
-      /*processBatch() {
+      processBatch() {
         this.$nextTick(function() {
           if (this.turnsComplete < this.startTurns) {
             const count = Math.min(this.startTurns - this.turnsComplete, this.step);
@@ -45,11 +45,12 @@ define(function(require, exports, module) {
             this.game.turn(count, true);
           }
           else {
+            this.game.save_game();
             this.game.unfreeze();
             this.$nextTick(() => this.$emit('open', 'summary'));
           }
         });
-      },*/
+      },
 
       startGame() {
         this.starting = true;
@@ -66,16 +67,16 @@ define(function(require, exports, module) {
           this.home
         );
 
-        //this.$nextTick(this.processBatch);
-        this.game.unfreeze();
-        this.$nextTick(() => this.$emit('open', 'summary'));
+        this.$nextTick(this.processBatch);
+        //this.game.unfreeze();
+        //this.$nextTick(() => this.$emit('open', 'summary'));
       },
     },
 
     template: `
 <div class="container container-fluid">
   <card v-if="starting" title="Starting game">
-    <progress-bar :percent="percent" width=100 @ready="/*processBatch*/" />
+    <progress-bar :percent="percent" width=100 @ready="processBatch" />
   </card>
 
   <card v-else>

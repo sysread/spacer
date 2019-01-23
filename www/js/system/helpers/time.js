@@ -15,7 +15,7 @@ define(["require", "exports"], function (require, exports) {
     }
     exports.addMilliseconds = addMilliseconds;
     function addDays(date, days) {
-        const result = new Date(date);
+        var result = new Date(date);
         result.setDate(result.getDate() + days);
         return result;
     }
