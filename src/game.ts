@@ -49,7 +49,7 @@ class Game {
   date:          Date = new Date(data.start_date);
   _player:       Person | null = null;
   locus:         t.body | null = null;
-  page:          string | null = null;
+  page:          string = 'summary';
   frozen:        boolean = false;
   transit_plan?: TransitPlan;
   agents:        Agent[] = [];
@@ -80,8 +80,7 @@ class Game {
       try {
         this.turns = init.turns;
         this.locus = init.locus;
-        this.page  = init.page;
-        this._player = new Person(init._player);
+        this._player = new Person(init.player);
 
         this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
         console.log('setting system date', this.date);
@@ -219,18 +218,19 @@ class Game {
     this.build_planets();
     this.build_agents(); // agents not part of initial data set
 
-    // Work-around for chicken and egg problem with initializing contracts for
-    // newly created planets when doing so relies on the existence of
-    // window.game and window.game.player.
-    for (const p of Object.values(this.planets)) {
-      p.refreshContracts();
-    }
-
     this.save_game();
   }
 
   save_game() {
-    window.localStorage.setItem('game', JSON.stringify(this));
+    const data = {
+      turns:   this.turns,
+      locus:   this.locus,
+      player:  this._player,
+      agents:  this.agents,
+      planets: this.planets,
+    };
+
+    window.localStorage.setItem('game', JSON.stringify(data));
   }
 
   delete_game() {

@@ -203,10 +203,11 @@ define(function(require, exports, module) {
         const cargoMalus = this.piracyEvasionMalusCargo;
         const speedBonus = this.piracyEvasionBonusSpeed;
 
-        let chance = baseRate
-          + cargoMalus // Increase chance of piracy if the ship has valuable cargo
-          - speedBonus // Reduce chance of an encounter at higher velocities
-          - stealth    // Reduce based on ship's own stealth rating;
+        let chance = baseRate;
+        chance *= 1 - stealth;
+        chance += cargoMalus // Increase chance of piracy if the ship has valuable cargo
+        chance -= speedBonus // Reduce chance of an encounter at higher velocities
+        chance -= stealth    // Reduce based on ship's own stealth rating;
 
         // Reduce chances for each previous encounter this trip
         for (let i = 0; i < this.stoppedBy.pirate; ++i) {
@@ -505,7 +506,7 @@ define(function(require, exports, module) {
           }
 
           let rate = patrols[body];
-          rate -= this.game.player.ship.stealth;
+          rate *= 1 - this.game.player.ship.stealth;
 
           if (rate > 0) {
             // Encountered a patrol

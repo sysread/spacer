@@ -77,12 +77,6 @@ define(function(require, exports, module) {
       };
     },
 
-    computed: {
-      contracts() {
-        return this.person.contracts;
-      },
-    },
-
     methods: {
       cancel(contract, confirmed) {
         if (this.show_confirm) {
@@ -102,8 +96,8 @@ define(function(require, exports, module) {
 
     template: `
 <card title="Contracts">
-  <div v-if="contracts.length > 0">
-    <card v-for="(contract, idx) of contracts" :key="idx" :title="contract.short_title">
+  <div v-if="person.contracts.length > 0">
+    <card v-for="(contract, idx) of person.contracts" :key="idx" :title="contract.short_title">
       <card-text>{{contract.description}}</card-text>
       <btn @click="cancel(contract)" block=1 class="my-3">Cancel contract</btn>
 

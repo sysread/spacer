@@ -24,6 +24,7 @@ define(function(require, exports, module) {
         contract:    null,
       };
     },
+
     computed: {
       player()        { return this.game.player },
       raise()         { return this.player.getStandingPriceAdjustment(this.planet.faction.abbrev) },
@@ -35,8 +36,8 @@ define(function(require, exports, module) {
       percent()       { return Math.min(100, Math.ceil(this.turnsWorked / this.turns * 100)) },
       timeSpent()     { return Math.floor(this.turnsWorked / this.data.turns_per_day) },
       hasPicketLine() { return this.planet.hasPicketLine() },
-      contracts()     { return this.planet.contracts },
     },
+
     methods: {
       getPayRate: function(task) {
         return this.planet.payRate(this.player, task);
@@ -111,6 +112,7 @@ define(function(require, exports, module) {
         this.clearContract();
       },
     },
+
     template: `
 <div>
   <card title="Work crews">
@@ -177,7 +179,7 @@ define(function(require, exports, module) {
   </card>
 
   <card title="Contracts" class="my-3">
-    <card-text v-if="contracts.length == 0" class="font-italic text-warning">
+    <card-text v-if="planet.contracts.length == 0" class="font-italic text-warning">
       There are no contracts available at this time.
     </card-text>
 
@@ -188,7 +190,7 @@ define(function(require, exports, module) {
       </card-text>
 
       <card-text>
-        <btn v-for="c in contracts" :key="c.mission.title" @click="setContract(c)" block=1>
+        <btn v-for="c in planet.contracts" :key="c.mission.title" @click="setContract(c)" block=1>
           {{c.mission.short_title}}
           <badge right=1>{{c.mission.price|csn}}c</badge>
         </btn>

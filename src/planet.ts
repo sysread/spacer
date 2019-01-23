@@ -167,6 +167,9 @@ export class Planet {
         });
       }
     }
+    else {
+      this.refreshContracts();
+    }
 
     /*
      * Economics
