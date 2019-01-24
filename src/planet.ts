@@ -552,7 +552,7 @@ export class Planet {
   }
 
   surplusFactor(item: t.resource) {
-    return this.isNetExporter(item) ? 0.1 : 0.25;
+    return this.isNetExporter(item) ? 0.2 : 0.5;
   }
 
   hasSurplus(item: t.resource) {
@@ -767,7 +767,7 @@ export class Planet {
       price *= this.getAvailabilityMarkup(item);
 
       // Add a bit of "unaccounted for local influences"
-      price = util.fuzz(price, 0.2);
+      price = util.fuzz(price, 0.05);
 
       this._price[item] = util.R(price);
     }
@@ -1164,10 +1164,25 @@ export class Planet {
       this.contracts = this.contracts.filter(c => c.valid_until >= window.game.turns);
     }
 
-    const want = util.getRandomInt(1, this.scale(5));
+    const want  = util.getRandomInt(0, this.scale(10));
+    const dests = t.bodies.filter(t => t != this.body);
+
+    for (const body of t.bodies) {
+      if (body != this.body) {
+        // add weight to destinations from our own faction
+        if (data.bodies[body].faction == this.faction.abbrev) {
+          dests.push(body);
+        }
+
+        // add weight to capitals
+        if (data.factions[data.bodies[body].faction].capital == body) {
+          dests.push(body);
+        }
+      }
+    }
 
     while (this.contracts.length < want) {
-      const dest = util.oneOf(t.bodies.filter(t => t != this.body));
+      const dest = util.oneOf(dests.filter(d => !this.contracts.find(c => (<Passengers>c.mission).dest == d)));
       const mission = new Passengers({issuer: this.body, dest: dest});
 
       if (this.contracts.find(c => c.mission.title == mission.title)) {

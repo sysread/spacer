@@ -556,7 +556,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return this.getNeed(item) >= this.shortageFactor(item);
         };
         Planet.prototype.surplusFactor = function (item) {
-            return this.isNetExporter(item) ? 0.1 : 0.25;
+            return this.isNetExporter(item) ? 0.2 : 0.5;
         };
         Planet.prototype.hasSurplus = function (item) {
             return this.getNeed(item) <= this.surplusFactor(item);
@@ -807,7 +807,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 // Post-clamp adjustments due to distance
                 price *= this.getAvailabilityMarkup(item);
                 // Add a bit of "unaccounted for local influences"
-                price = util.fuzz(price, 0.2);
+                price = util.fuzz(price, 0.05);
                 this._price[item] = util.R(price);
             }
             return this._price[item];
@@ -1297,12 +1297,36 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          */
         Planet.prototype.refreshContracts = function () {
             var _this = this;
+            var e_36, _a;
             if (this.contracts.length > 0 && window.game) {
                 this.contracts = this.contracts.filter(function (c) { return c.valid_until >= window.game.turns; });
             }
-            var want = util.getRandomInt(1, this.scale(5));
+            var want = util.getRandomInt(0, this.scale(10));
+            var dests = t.bodies.filter(function (t) { return t != _this.body; });
+            try {
+                for (var _b = __values(t.bodies), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var body = _c.value;
+                    if (body != this.body) {
+                        // add weight to destinations from our own faction
+                        if (data_1.default.bodies[body].faction == this.faction.abbrev) {
+                            dests.push(body);
+                        }
+                        // add weight to capitals
+                        if (data_1.default.factions[data_1.default.bodies[body].faction].capital == body) {
+                            dests.push(body);
+                        }
+                    }
+                }
+            }
+            catch (e_36_1) { e_36 = { error: e_36_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_36) throw e_36.error; }
+            }
             var _loop_1 = function () {
-                var dest = util.oneOf(t.bodies.filter(function (t) { return t != _this.body; }));
+                var dest = util.oneOf(dests.filter(function (d) { return !_this.contracts.find(function (c) { return c.mission.dest == d; }); }));
                 var mission = new mission_1.Passengers({ issuer: this_1.body, dest: dest });
                 if (this_1.contracts.find(function (c) { return c.mission.title == mission.title; })) {
                     return "continue";
@@ -1324,7 +1348,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * Misc
          */
         Planet.prototype.addonPrice = function (addon, player) {
-            var e_36, _a;
+            var e_37, _a;
             var base = data_1.default.addons[addon].price;
             var standing = base * player.getStandingPriceAdjustment(this.faction.abbrev);
             var tax = base * this.faction.sales_tax;
@@ -1337,12 +1361,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_36_1) { e_36 = { error: e_36_1 }; }
+            catch (e_37_1) { e_37 = { error: e_37_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_36) throw e_36.error; }
+                finally { if (e_37) throw e_37.error; }
             }
             return price;
         };
