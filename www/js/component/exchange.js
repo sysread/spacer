@@ -25,6 +25,8 @@ define(function(require, exports, module) {
       this.monitor = window.setInterval(() => {
         if (this.$refs.slider.value != this.value) {
           this.setValue(this.$refs.slider.value);
+          // update the slider to match in case the owner of value rejects it
+          this.$refs.slider.value = this.value;
         }
       }, 100);
     },
@@ -81,28 +83,28 @@ define(function(require, exports, module) {
     props: ['store'],
 
     data() {
+      const cargo = window.game.player.ship.cargo;
+
       // build pre-populated object because Vue cannot see new keys added
       const obj = {};
       for (const res of t.resources)
         obj[res] = 0;
 
+      for (const item of cargo.keys()) {
+        obj[item] += cargo.count(item);
+      }
+
+      for (const item of this.store.keys()) {
+        obj[item] += this.store.count(item);
+      }
+
       return {
+        cargo: cargo,
         resources: obj,
       };
     },
 
-    mounted() {
-      for (const item of this.game.player.ship.cargo.keys()) {
-        this.resources[item] += this.game.player.ship.cargo.count(item);
-      }
-
-      for (const item of this.store.keys()) {
-        this.resources[item] += this.store.count(item);
-      }
-    },
-
     computed: {
-      cargo()      { return this.game.player.ship.cargo      },
       cargoSpace() { return this.game.player.ship.cargoSpace },
       cargoUsed()  { return this.game.player.ship.cargoUsed  },
       cargoLeft()  { return this.game.player.ship.cargoLeft  },
