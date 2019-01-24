@@ -313,20 +313,20 @@ define(["require", "exports"], function (require, exports) {
                 faction: 'TRANSA',
                 desc: '',
             },
+            titania: {
+                name: 'Titania Outpost',
+                size: 'normal',
+                traits: ['subterranean', 'ringed system', 'icy', 'rocky', 'hydrocarbon rich', 'black market', 'manufacturing hub'],
+                faction: 'TRANSA',
+                gravity: 0.15,
+                desc: '',
+            },
             triton: {
                 name: 'Triton Command',
                 size: 'small',
                 traits: ['orbital', 'icy', 'water rich', 'mineral poor', 'black market', 'military'],
                 faction: 'TRANSA',
                 gravity: 0.4,
-                desc: '',
-            },
-            titania: {
-                name: 'Titania Outpost',
-                size: 'normal',
-                traits: ['subterranean', 'ringed system', 'icy', 'rocky', 'mineral rich', 'hydrocarbon rich', 'black market', 'manufacturing hub'],
-                faction: 'TRANSA',
-                gravity: 0.15,
                 desc: '',
             },
             pluto: {
@@ -574,7 +574,7 @@ define(["require", "exports"], function (require, exports) {
     data.bodies.enceladus.desc = "The supply station orbiting Enceladus boasts the best views in the system and is the nexus for the harvesting and shipping of water from Saturn's rings.";
     data.bodies.rhea.desc = "The Rhea Orbital Lab is the primary research and development platform of the JFT and maintains a small population serving the needs of the research community there.";
     data.bodies.titan.desc = "With an actual atmosphere, albeit a poisonous one, Titan is home to TRANSA's largest and most prosperous settlement. Nestled in close proximity to JFT's orbital around Saturn, Titan has become a minor trade hub between the two factions.";
-    data.bodies.triton.desc = "In retrograde orbit of Neptune, the Triton orbital hosts the meager Plutonian Naval Command and acts as their primary supply station.";
+    data.bodies.triton.desc = "In retrograde orbit of Neptune, the Triton orbital hosts the meager Plutonian Widdershins Naval Command, providing anchorage on the far side of the system and minimal support for the TRANSA facilities around Saturn. It's remote location makes it a secure, if not convenient, location for TRANSA's limited number of secret research projects.";
     data.bodies.titania.desc = "Rich in heavy organic compounds, Titania is the primary source of raw materials and shipping for TRANSA. When the war began, the process of spinning up Titania was nearly halfway complete. With nearly a quarter of Earth's gravity and supported by a growing commercial mining industry, it is also one of the few TRANSA settlements with a growing population.";
     data.bodies.pluto.desc = "The furthest outpost of humanity, Pluto is home to the TRANSA high command. It's deeply excavated chambers support a surprisingly robust population, many descended from the original scientific mission team stationed on the dwarf planet at the outset of the Martian rebellion.";
     data.shipclass.fortuna.desc = "Named for the daughter of Jupiter, the Fortuna is a container ship optimized to carry larger loads at higher efficiency than a typical freighter.";
