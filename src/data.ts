@@ -73,17 +73,17 @@ const data = {
     'water rich':        {produces: {water: 3}, consumes: {}},
     'water poor':        {produces: {water: -1}, consumes: {}, price: {water: 2}},
 
-    'hydrocarbon rich':  {produces: {hydrocarbons: 4}, consumes: {}},
+    'hydrocarbon rich':  {produces: {hydrocarbons: 2}, consumes: {}},
     'hydrocarbon poor':  {produces: {hydrocarbons: -2}, consumes: {hydrocarbons: 2}},
 
     'rocky':             {produces: {ore: 5, minerals: 2} , consumes: {}, price: {minerals: 0.75, ore: 0.75}},
-    'icy':               {produces: {water: 5, minerals: 1, hydrocarbons: 2}, consumes: {}},
+    'icy':               {produces: {water: 5, minerals: 1, hydrocarbons: 1}, consumes: {}},
 
     'asteroids':         {produces: {ore: 8, minerals: 8}, consumes: {fuel: 1.5, electronics: 0.3, machines: 1, cybernetics: 0.3}, price: {ore: 0.75, minerals: 0.75}},
-    'ringed system':     {produces: {water: 8, minerals: 2, hydrocarbons: 3}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
+    'ringed system':     {produces: {water: 8, minerals: 1, hydrocarbons: 1}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
 
     'agricultural':      {produces: {food: 4, hydrocarbons: 1}, consumes: {machines: 0.5, fuel: 0.5, water: 2, hydrocarbons: 2}, price: {hydrocarbons: 1.5, water: 1.25}},
-    'habitable':         {produces: {food: 8, hydrocarbons: 4}, consumes: {food: 4, narcotics: 0.25, weapons: 0.5}, price: {hydrocarbons: 0.5, water: 1.25}},
+    'habitable':         {produces: {food: 8, hydrocarbons: 3}, consumes: {food: 4, narcotics: 0.25, weapons: 0.5}, price: {hydrocarbons: 0.5, water: 1.25}},
     'domed':             {produces: {food: 0.5, hydrocarbons: 0.25}, consumes: {metal: 0.6, fuel: 0.6, electronics: 0.5, machines: 0.5, water: 0.75, hydrocarbons: 0.75, weapons: 0.5}},
     'subterranean':      {produces: {food: 0.25, hydrocarbons: 0.25}, consumes: {metal: 0.6, fuel: 0.3, electronics: 0.5, machines: 0.5, water: 0.3, hydrocarbons: 0.75, weapons: 0.35}},
     'orbital':           {produces: {food: 0.1, hydrocarbons: 0.1}, consumes: {metal: 1, fuel: 1.5, electronics: 0.75, machines: 0.75, water: 0.15, hydrocarbons: 0.25, weapons: 0.2}},
