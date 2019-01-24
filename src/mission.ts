@@ -172,7 +172,7 @@ export class Passengers extends Mission {
     // contract is offered, which may make the deadline impossible after
     // several days.
     opt.turns = Math.max(data.turns_per_day * 3, Passengers.estimateTimeNeeded(opt.issuer, opt.dest));
-    opt.reward = Math.max(500, Math.ceil(Math.log(1 + opt.turns) * 1500));
+    opt.reward = util.fuzz(Math.max(500, Math.ceil(Math.log(1 + opt.turns) * 1500)), 0.05);
     opt.standing = Math.ceil(Math.log10(opt.reward));
 
     super(opt);
