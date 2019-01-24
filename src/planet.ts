@@ -544,7 +544,7 @@ export class Planet {
   }
 
   shortageFactor(item: t.resource) {
-    return this.isNetExporter(item) ? 1 : 2.5;
+    return this.isNetExporter(item) ? 3 : 6;
   }
 
   hasShortage(item: t.resource) {
@@ -552,7 +552,7 @@ export class Planet {
   }
 
   surplusFactor(item: t.resource) {
-    return this.isNetExporter(item) ? 0.2 : 0.5;
+    return this.isNetExporter(item) ? 0.3 : 0.6;
   }
 
   hasSurplus(item: t.resource) {
@@ -634,11 +634,11 @@ export class Planet {
   getNeed(item: t.resource) {
     if (this._need[item] === undefined) {
       const d = this.getDemand(item);
-      const s = (this.getStock(item) + this.getSupply(item)) / 2;
+      const s = (this.getStock(item) + (2 * this.getSupply(item))) / 3;
       const n = d - s;
       this._need[item] =
             n == 0 ? 1
-          : n > 0  ? Math.log(1 + n)
+          : n > 0  ? Math.log(10 * (1 + n))
                    : d / s;
     }
 
@@ -859,6 +859,8 @@ export class Planet {
   }
 
   neededResourceAmount(item: Resource) {
+    if (this.getStock(item.name) > data.min_stock_count)
+      return 0;
     const amount = this.getDemand(item.name) - this.getSupply(item.name) - this.pending.get(item.name);
     return Math.max(Math.ceil(amount), 0);
   }
@@ -1021,8 +1023,9 @@ export class Planet {
         }
 
         if (gets < want) {
+          const diff = want - gets;
           for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
-            this.incDemand(mat, res.recipe.materials[mat] || 0);
+            this.incDemand(mat, diff * (res.recipe.materials[mat] || 0));
           }
         }
       }
@@ -1057,8 +1060,8 @@ export class Planet {
 
     ITEM: for (const item of list) {
       // clamp max amount to the size of a hauler's cargo bay, with a minimum
-      // of 10 units for deliveries
-      const amount = util.clamp(want[item], 10, data.shipclass.hauler.cargo);
+      // of 2 units for deliveries
+      const amount = util.clamp(want[item], 2, data.shipclass.hauler.cargo);
       const planet = this.selectExporter(item, amount);
 
       if (!planet) {

@@ -16,8 +16,8 @@ const data = {
   initial_stock:       20,
   market_history:      10 * turnsPerDay,
   scarcity_markup:     0.25,
-  min_stock_count:     100,
-  max_imports:         4, // per market
+  min_stock_count:     20,
+  max_imports:         2, // per market
   max_crafts:          10, // per market
   max_agents:          2, // total
   max_agent_money:     5000, // after which they buy luxuries
@@ -63,12 +63,12 @@ const data = {
     fabricators: 10,
     minability:  0.1,
     produces:    {},
-    consumes:    {water: 2, food: 1.5, medicine: 1.5, narcotics: 0.3, weapons: 0.6},
+    consumes:    {water: 3, food: 2, medicine: 1.5, narcotics: 0.3, weapons: 0.6},
   },
 
   traits: {
-    'mineral rich':      {produces: {ore: 3, minerals: 2}, consumes: {}, price: {minerals: 0.75, ore: 0.75}},
-    'mineral poor':      {produces: {ore: -3, minerals: -1}, consumes: {}},
+    'mineral rich':      {produces: {ore: 2, minerals: 1}, consumes: {}, price: {minerals: 0.75, ore: 0.75}},
+    'mineral poor':      {produces: {ore: -2, minerals: -1}, consumes: {}},
 
     'water rich':        {produces: {water: 3}, consumes: {}},
     'water poor':        {produces: {water: -1}, consumes: {}, price: {water: 2}},
@@ -76,11 +76,11 @@ const data = {
     'hydrocarbon rich':  {produces: {hydrocarbons: 2}, consumes: {}},
     'hydrocarbon poor':  {produces: {hydrocarbons: -2}, consumes: {hydrocarbons: 2}},
 
-    'rocky':             {produces: {ore: 5, minerals: 2} , consumes: {}, price: {minerals: 0.75, ore: 0.75}},
-    'icy':               {produces: {water: 5, minerals: 1, hydrocarbons: 1}, consumes: {}},
+    'rocky':             {produces: {ore: 3, minerals: 1} , consumes: {}, price: {minerals: 0.75, ore: 0.75}},
+    'icy':               {produces: {water: 3, minerals: 1, hydrocarbons: 1}, consumes: {}},
 
-    'asteroids':         {produces: {ore: 8, minerals: 8}, consumes: {fuel: 1.5, electronics: 0.3, machines: 1, cybernetics: 0.3}, price: {ore: 0.75, minerals: 0.75}},
-    'ringed system':     {produces: {water: 8, minerals: 1, hydrocarbons: 1}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
+    'asteroids':         {produces: {ore: 5, minerals: 4}, consumes: {fuel: 1.5, electronics: 0.3, machines: 1, cybernetics: 0.3}, price: {ore: 0.75, minerals: 0.75}},
+    'ringed system':     {produces: {water: 5, minerals: 1, hydrocarbons: 1}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
 
     'agricultural':      {produces: {food: 4, hydrocarbons: 1}, consumes: {machines: 0.5, fuel: 0.5, water: 2, hydrocarbons: 2}, price: {hydrocarbons: 1.5, water: 1.25}},
     'habitable':         {produces: {food: 8, hydrocarbons: 3}, consumes: {food: 4, narcotics: 0.25, weapons: 0.5}, price: {hydrocarbons: 0.5, water: 1.25}},

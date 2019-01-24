@@ -550,13 +550,13 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return this.supply.avg(item);
         };
         Planet.prototype.shortageFactor = function (item) {
-            return this.isNetExporter(item) ? 1 : 2.5;
+            return this.isNetExporter(item) ? 3 : 6;
         };
         Planet.prototype.hasShortage = function (item) {
             return this.getNeed(item) >= this.shortageFactor(item);
         };
         Planet.prototype.surplusFactor = function (item) {
-            return this.isNetExporter(item) ? 0.2 : 0.5;
+            return this.isNetExporter(item) ? 0.3 : 0.6;
         };
         Planet.prototype.hasSurplus = function (item) {
             return this.getNeed(item) <= this.surplusFactor(item);
@@ -662,11 +662,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.getNeed = function (item) {
             if (this._need[item] === undefined) {
                 var d = this.getDemand(item);
-                var s = (this.getStock(item) + this.getSupply(item)) / 2;
+                var s = (this.getStock(item) + (2 * this.getSupply(item))) / 3;
                 var n = d - s;
                 this._need[item] =
                     n == 0 ? 1
-                        : n > 0 ? Math.log(1 + n)
+                        : n > 0 ? Math.log(10 * (1 + n))
                             : d / s;
             }
             return this._need[item];
@@ -891,6 +891,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
         };
         Planet.prototype.neededResourceAmount = function (item) {
+            if (this.getStock(item.name) > data_1.default.min_stock_count)
+                return 0;
             var amount = this.getDemand(item.name) - this.getSupply(item.name) - this.pending.get(item.name);
             return Math.max(Math.ceil(amount), 0);
         };
@@ -1086,10 +1088,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                             });
                         }
                         if (gets < want) {
+                            var diff = want - gets;
                             try {
                                 for (var _h = __values(Object.keys(res.recipe.materials)), _j = _h.next(); !_j.done; _j = _h.next()) {
                                     var mat = _j.value;
-                                    this.incDemand(mat, res.recipe.materials[mat] || 0);
+                                    this.incDemand(mat, diff * (res.recipe.materials[mat] || 0));
                                 }
                             }
                             catch (e_28_1) { e_28 = { error: e_28_1 }; }
@@ -1136,8 +1139,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 ITEM: for (var list_1 = __values(list), list_1_1 = list_1.next(); !list_1_1.done; list_1_1 = list_1.next()) {
                     var item = list_1_1.value;
                     // clamp max amount to the size of a hauler's cargo bay, with a minimum
-                    // of 10 units for deliveries
-                    var amount = util.clamp(want[item], 10, data_1.default.shipclass.hauler.cargo);
+                    // of 2 units for deliveries
+                    var amount = util.clamp(want[item], 2, data_1.default.shipclass.hauler.cargo);
                     var planet = this.selectExporter(item, amount);
                     if (!planet) {
                         continue;
