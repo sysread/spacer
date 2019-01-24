@@ -169,11 +169,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./events", "./
         function Passengers(opt) {
             var _this = this;
             var dist = util.R(system_1.default.distance(opt.issuer, opt.dest) / physics_1.default.AU);
+            var est = Passengers.estimateTimeNeeded(opt.issuer, opt.dest);
             // TODO race condition here; the orig and dest are moving so long as the
             // contract is offered, which may make the deadline impossible after
             // several days.
-            opt.turns = Math.max(data_1.default.turns_per_day * 3, Passengers.estimateTimeNeeded(opt.issuer, opt.dest));
-            opt.reward = util.fuzz(Math.max(500, Math.ceil(Math.log(1 + opt.turns) * 1500)), 0.05);
+            opt.turns = Math.max(data_1.default.turns_per_day * 3, est);
+            opt.reward = util.fuzz(Math.max(500, Math.ceil(Math.log(1 + est) * 1500)), 0.05);
             opt.standing = Math.ceil(Math.log10(opt.reward));
             _this = _super.call(this, opt) || this;
             _this.dest = opt.dest;

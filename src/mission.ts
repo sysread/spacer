@@ -167,12 +167,13 @@ export class Passengers extends Mission {
 
   constructor(opt: any) {
     const dist = util.R(system.distance(opt.issuer, opt.dest) / Physics.AU);
+    const est  = Passengers.estimateTimeNeeded(opt.issuer, opt.dest);
 
     // TODO race condition here; the orig and dest are moving so long as the
     // contract is offered, which may make the deadline impossible after
     // several days.
-    opt.turns = Math.max(data.turns_per_day * 3, Passengers.estimateTimeNeeded(opt.issuer, opt.dest));
-    opt.reward = util.fuzz(Math.max(500, Math.ceil(Math.log(1 + opt.turns) * 1500)), 0.05);
+    opt.turns = Math.max(data.turns_per_day * 3, est);
+    opt.reward = util.fuzz(Math.max(500, Math.ceil(Math.log(1 + est) * 1500)), 0.05);
     opt.standing = Math.ceil(Math.log10(opt.reward));
 
     super(opt);
