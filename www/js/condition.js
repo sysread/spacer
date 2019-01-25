@@ -64,6 +64,9 @@ define(["require", "exports", "./data", "./util"], function (require, exports, d
             configurable: true
         });
         Condition.prototype.inc_turns = function () { ++this.turns_done; };
+        Condition.prototype.mul_turns = function (f) {
+            this.turns_total = Math.ceil(this.turns_total * f);
+        };
         return Condition;
     }());
     exports.Condition = Condition;

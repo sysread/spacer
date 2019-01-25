@@ -1117,8 +1117,27 @@ export class Planet {
 
   apply_conditions() {
     // Increment turns on each condition and filter out those which are no
-    // longer active.
+    // longer active. Where condition triggers no longer exist, conditions'
+    // duration is reduced.
     this.conditions = this.conditions.filter(c => {
+      for (const item of Object.keys(c.triggers.shortage) as t.resource[]) {
+        if (!this.hasShortage(item)) {
+          c.mul_turns(0.8);
+        }
+      }
+
+      for (const item of Object.keys(c.triggers.surplus) as t.resource[]) {
+        if (!this.hasSurplus(item)) {
+          c.mul_turns(0.8);
+        }
+      }
+
+      for (const cond of Object.keys(c.triggers.condition)) {
+        if (!this.hasCondition(cond)) {
+          c.mul_turns(0.8);
+        }
+      }
+
       c.inc_turns();
       return !c.is_over;
     });

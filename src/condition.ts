@@ -41,4 +41,8 @@ export class Condition {
   get is_over()      { return this.turns_done >= this.turns_total }
 
   inc_turns() { ++this.turns_done }
+
+  mul_turns(f: number) {
+    this.turns_total = Math.ceil(this.turns_total * f);
+  }
 };
