@@ -16,7 +16,7 @@
     <script src="js/vendor/bootstrap.bundle.min.js"></script>
 
     <!-- Libs -->
-    <script data-main="js/loader" src="js/vendor/require.js"></script>
+    <script src="js/vendor/require.js"></script>
 
     <title>Spacer</title>
   </head>
@@ -25,72 +25,79 @@
     <div id="content" />
 
     <script>
-      require(
-        [
-          'vendor/vue',          // base framework
-          'game',                // game state
-          'component/global',    // global state
-          'component/navbar',    // nav bar
-          'component/content',   // content div
-          'component/statusbar', // top status bar
-        ],
+      // configure requirejs
+      require(['js/loader'], () => {
+        // wait on deviceready, which configures requirejs to find the correct
+        // vue.js for this environment
+        document.addEventListener("deviceready", (e) => {
+          require(
+            [
+              'vendor/vue',          // base framework
+              'game',                // game state
+              'component/global',    // global state
+              'component/navbar',    // nav bar
+              'component/content',   // content div
+              'component/statusbar', // top status bar
+            ],
 
-        function(Vue, game) {
-          const initial_page
-            = game.turns == 0              ? 'newgame'
-            : game.player.ship.isDestroyed ? 'newgame'
-                                           : 'summary';
+            (Vue, game) => {
+              const initial_page
+                = game.turns == 0              ? 'newgame'
+                : game.player.ship.isDestroyed ? 'newgame'
+                                               : 'summary';
 
-          const content_app = new Vue({
-            el: '#content',
+              const content_app = new Vue({
+                el: '#content',
 
-            data: {
-              page: initial_page,
+                data: {
+                  page: initial_page,
+                },
+
+                mounted() {
+                  this.override_page();
+                },
+
+                watch: {
+                  page() {
+                    this.override_page();
+                  },
+                },
+
+                computed: {
+                  nav_disabled() { return this.game.is_frozen },
+                },
+
+                methods: {
+                  override_page() {
+                    if (this.game.turns == 0) {
+                      this.page = 'newgame';
+                    }
+                    else if (this.game.player.ship.isDestroyed) {
+                      this.page = 'newgame';
+                    }
+                  },
+
+                  open(page) {
+                    if (this.game.is_frozen && page != 'newgame') {
+                      return;
+                    }
+
+                    this.page = page;
+                  },
+                },
+
+                template: `
+                  <div>
+                    <StatusBar />
+                    <Content @open="open" :page="page" />
+                    <NavBar  @open="open" :page="page" :disabled="nav_disabled" />
+                  </div>
+                `,
+              });
             },
-
-            mounted() {
-              this.override_page();
-            },
-
-            watch: {
-              page() {
-                this.override_page();
-              },
-            },
-
-            computed: {
-              nav_disabled() { return this.game.is_frozen },
-            },
-
-            methods: {
-              override_page() {
-                if (this.game.turns == 0) {
-                  this.page = 'newgame';
-                }
-                else if (this.game.player.ship.isDestroyed) {
-                  this.page = 'newgame';
-                }
-              },
-
-              open(page) {
-                if (this.game.is_frozen && page != 'newgame') {
-                  return;
-                }
-
-                this.page = page;
-              },
-            },
-
-            template: `
-              <div>
-                <StatusBar />
-                <Content @open="open" :page="page" />
-                <NavBar  @open="open" :page="page" :disabled="nav_disabled" />
-              </div>
-            `,
-          });
-        },
-      );
+          );
+        });
+      });
     </script>
   </body>
 </html>

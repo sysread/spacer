@@ -25,5 +25,23 @@ requirejs([],
 
       e.preventDefault();
     }, false);
+
+    /*
+     * Set some convenient globals
+     */
+    document.addEventListener("deviceready", (e) => {
+      window.DEV = window.device.platform == 'browser' || window.device.isVirtual;
+
+      let vue = 'vendor/vue.prod';
+      if (window.DEV) {
+        vue = 'vendor/vue.dev';
+      }
+
+      requirejs.config({
+        paths: {
+          'vendor/vue': vue
+        }
+      });
+    });
   }
 );

@@ -1233,7 +1233,8 @@ export class Planet {
   }
 
   hasRepairs() {
-    return this.resourceDependencyPriceAdjustment('metal') < 10;
+    //return this.resourceDependencyPriceAdjustment('metal') < 10;
+    return this.getStock('metal');
   }
 
   hullRepairPrice(player: Person) {
@@ -1250,5 +1251,29 @@ export class Planet {
     const standing = player.getStandingPriceAdjustment(this.faction.abbrev);
     const scarcity = this.resourceDependencyPriceAdjustment('metal');
     return (base + (base * tax) - (base * standing)) * scarcity;
+  }
+
+  estimateAvailability(item: t.resource): number|undefined {
+    let turns = undefined;
+
+    if (this.getStock(item) > 0)
+      return 0;
+
+    for (const task of this.queue) {
+      if (isImportTask(task)
+        && task.item == item
+        && (turns == undefined || turns > task.turns))
+      {
+        turns = task.turns;
+      }
+      else if (isCraftTask(task)
+        && task.item == item
+        && (turns == undefined || turns > task.turns))
+      {
+        turns = task.turns;
+      }
+    }
+
+    return turns;
   }
 }

@@ -23,8 +23,7 @@ define(function(require, exports, module) {
     props: ['page', 'disabled'],
 
     data: function() {
-      return {
-        menu: {
+      const pages = {
           'Summary':     'summary',
           'News':        'news',
           'Work':        'work',
@@ -33,8 +32,14 @@ define(function(require, exports, module) {
           'Shipyard':    'shipyard',
           'NavComp':     'navigation',
           'Status':      'status',
-          'Debug':       'test',
-        },
+      };
+
+      if (window.DEV) {
+        pages.Debug = 'test';
+      }
+
+      return {
+        menu: pages,
       };
     },
 

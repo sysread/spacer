@@ -64,6 +64,7 @@ define(function(require, exports, module) {
     `,
   });
 
+
   Vue.component('shipyard-refuel', {
     data: function() { return { change: 0 } },
     computed: {
@@ -94,6 +95,7 @@ define(function(require, exports, module) {
 </modal>
     `,
   });
+
 
   Vue.component('shipyard-transfer', {
     data: function() {
@@ -126,6 +128,7 @@ define(function(require, exports, module) {
     `,
   });
 
+
   Vue.component('shipyard-repair', {
     data() {
       return {
@@ -149,6 +152,7 @@ define(function(require, exports, module) {
         return Math.min(
           (this.money - this.price_armor) / this.price_hull_each,
           this.need_hull,
+          this.has_repairs - this.repair_armor,
         );
       },
 
@@ -156,13 +160,24 @@ define(function(require, exports, module) {
         return Math.min(
           (this.money - this.price_hull) / this.price_armor_each,
           this.need_armor,
+          this.has_repairs - this.repair_hull,
         );
       },
+
+      next_availability() {
+        const turns = this.game.here.estimateAvailability('metal');
+
+        if (turns != undefined) {
+          return Math.ceil(turns / this.data.turns_per_day);
+        }
+      }
     },
 
     methods: {
       repair() {
         if (this.price_total) {
+          const count = this.repair_hull + this.repair_armor;
+          this.game.here.buy('metal', count);
           this.game.player.debit(this.price_total);
           this.game.player.ship.repairDamage(this.repair_hull, this.repair_armor);
           this.game.turn();
@@ -178,9 +193,9 @@ define(function(require, exports, module) {
       You have {{money|csn|unit('c')}} available for repairs.
     </p>
 
+    <def term="Total price"  :def="price_total|R(1)|csn|unit('c')"      />
     <def term="Hull repair"  :def="price_hull_each|R(1)|csn|unit('c')"  />
     <def term="Armor repair" :def="price_armor_each|R(1)|csn|unit('c')" />
-    <def term="Total price"  :def="price_total|R(1)|csn|unit('c')"      />
 
     <def term="Hull" :def="price_hull|R(1)|csn|unit('c')" />
     <slider class="my-3" :value.sync="repair_hull"  min=0 :max="max_hull|R(1)"  step=1 minmax=true>
@@ -196,9 +211,21 @@ define(function(require, exports, module) {
 
     <btn slot="footer" @click="repair" close=1>Repair ship</btn>
   </template>
-  <div v-else class="font-italic text-danger">
-    The shipyard is currently unable to effect repairs due to a severe shortage
-    of refined metal.
+
+  <div v-else class="font-italic text-warning">
+    <p>The shipyard is currently unable to effect repairs due to a shortage of refined metal.</p>
+
+    <p>
+      <template v-if="next_availability == undefined">
+        The dockyard supervisor does not know when they can expect a new shipment of metal to arrive.
+      </template>
+
+      <template v-else>
+        The dockyard supervisor notes that they are expecting a load of refined metal in {{next_availability}} days.
+      </template>
+
+      If there is raw ore is available in the market, you could have some refined in the fabricators.
+    </p>
   </div>
 </modal>
     `,
