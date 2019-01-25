@@ -56,7 +56,10 @@ define(function(require, exports, module) {
 
       fuelRate() {
         if (this.info.burn_rate) {
-          return this.info.burn_rate / this.data.hours_per_turn;
+          return (this.info.burn_rate / this.data.hours_per_turn) + ' tonnes/hour';
+        }
+        else if (this.info.burn_rate_pct) {
+          return (this.info.burn_rate_pct * 100) + '% reduction';
         }
       },
 
@@ -157,8 +160,8 @@ define(function(require, exports, module) {
 
     <def v-if="info.thrust" y=0 split="5" term="Max thrust" :def="info.thrust|unit('kN')" />
 
-    <def v-if="info.burn_rate" y=0 split="5" term="Fuel rate">
-      {{fuelRate|unit('tonnes/hr')}} at maximum thrust
+    <def v-if="fuelRate" y=0 split="5" term="Fuel rate">
+      {{fuelRate}}
     </def>
 
     <def v-if="info.damage" y=0 split="5" term="Damage" :def="info.damage" />

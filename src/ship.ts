@@ -46,7 +46,6 @@ class Ship {
   get restricted()     { return this.shipclass.restricted }
   get faction()        { return this.shipclass.faction }
   get thrust()         { return this.drives * this.drive.thrust + Math.max(0, this.attr('thrust', true)) }
-  get fuelrate()       { return Math.max(0.001, this.drives * this.drive.burn_rate + this.attr('burn_rate', true)) }
   get acceleration()   { return Physics.deltav(this.thrust, this.mass) }
   get tank()           { return Math.max(0,    this.attr('tank', true)) }
   get fullHull()       { return Math.max(0,    this.attr('hull', true)) }
@@ -57,6 +56,14 @@ class Ship {
   get cargoSpace()     { return Math.max(0,    this.attr('cargo')) }
   get intercept()      { return Math.min(0.35, this.attr('intercept')) }
   get powerMassRatio() { return this.thrust / this.mass }
+
+  get fuelrate() {
+    const base   = this.drives * this.drive.burn_rate;
+    const linear = this.attr('burn_rate', true);
+    const pct    = 1 - this.attr('burn_rate_pct', true);
+    const rate   = (base + linear) * pct;
+    return Math.max(0.001, rate);
+  }
 
   /*
    * Base dodge chance based on power-mass ratio

@@ -433,16 +433,6 @@ const data = {
     armor: {repair: 200},
   },
 
-  /*
-   * keys:
-   *    armor, mass, cargo, etc: bonus or malus to existing ship attributes
-   *    reload    : combat turns between use
-   *    magazine  : number of uses per reload
-   *    rate      : rate of fire (uses per turn after reload)
-   *    damage    : max damage against enemy vessel
-   *    intercept : chance of intercepting and disabling a missile
-   *    dodge     : chance of dodging a projectile (or reducing its accuracy or range)
-   */
   addons: {
     cargo_pod: {
       name:       'External cargo pod',
@@ -460,15 +450,15 @@ const data = {
       mass:       1,
       tank:       4,
       cargo:      -4,
-      price:      16000,
+      price:      8500,
     },
     heat_reclaimer: {
       name:       'Waste heat reclaimation system',
-      desc:       "Boosts drive efficiency by reclaiming waste heat from the drive and internal electrical systems. A fortunate side benefit is a reduction in visibility to infrared systems, making this a popular an relatively inexpensive way to mask a civilian ship's signature from pirates... and inspectors.",
+      desc:       "Boosts drive efficiency by 10% by recycling waste heat from the drive and internal electrical systems. A fortunate side benefit is a reduction in visibility to infrared systems, making this a popular an relatively inexpensive way to mask a civilian ship's signature from pirates... and inspectors.",
       mass:       1,
-      burn_rate:  -0.0035,
-      price:      18500,
       stealth:    0.08,
+      burn_rate_pct: 0.10,
+      price:      18500,
     },
     ion: {
       name:       'Ion drive',

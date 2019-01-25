@@ -81,11 +81,6 @@ define(["require", "exports", "./data", "./physics", "./store", "./common"], fun
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Ship.prototype, "fuelrate", {
-            get: function () { return Math.max(0.001, this.drives * this.drive.burn_rate + this.attr('burn_rate', true)); },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(Ship.prototype, "acceleration", {
             get: function () { return physics_1.default.deltav(this.thrust, this.mass); },
             enumerable: true,
@@ -133,6 +128,17 @@ define(["require", "exports", "./data", "./physics", "./store", "./common"], fun
         });
         Object.defineProperty(Ship.prototype, "powerMassRatio", {
             get: function () { return this.thrust / this.mass; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Ship.prototype, "fuelrate", {
+            get: function () {
+                var base = this.drives * this.drive.burn_rate;
+                var linear = this.attr('burn_rate', true);
+                var pct = 1 - this.attr('burn_rate_pct', true);
+                var rate = (base + linear) * pct;
+                return Math.max(0.001, rate);
+            },
             enumerable: true,
             configurable: true
         });
