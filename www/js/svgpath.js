@@ -18,7 +18,7 @@ var __read = (this && this.__read) || function (o, n) {
 };
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    // Render the svg <path> element 
+    // Render the svg <path> element
     // I:  - points (array): points coordinates
     //     - command (function)
     //       I:  - point (array) [x,y]: current point coordinates
@@ -35,7 +35,7 @@ define(["require", "exports"], function (require, exports) {
             : acc + " " + command(point, i, a); }, '');
         return d;
     }
-    // Properties of a line 
+    // Properties of a line
     // I:  - pointA (array) [x,y]: coordinates
     //     - pointB (array) [x,y]: coordinates
     // O:  - (object) { length: l, angle: a }: properties of the line
@@ -47,7 +47,7 @@ define(["require", "exports"], function (require, exports) {
             angle: Math.atan2(lengthY, lengthX)
         };
     }
-    // Position of a control point 
+    // Position of a control point
     // I:  - current (array) [x, y]: current point coordinates
     //     - previous (array) [x, y]: previous point coordinates
     //     - next (array) [x, y]: next point coordinates
@@ -72,7 +72,7 @@ define(["require", "exports"], function (require, exports) {
         var y = current[1] + Math.sin(angle) * length;
         return [x, y];
     }
-    // Create the bezier curve command 
+    // Create the bezier curve command
     // I:  - point (array) [x,y]: current point coordinates
     //     - i (integer): index of 'point' in the array 'a'
     //     - a (array): complete array of points coordinates

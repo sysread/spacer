@@ -626,15 +626,12 @@ define(function(require, exports, module) {
 
 
   Vue.component('SvgDestinationPath', {
-    props: ['color', 'layout', 'body', 'turns'],
+    props: ['color', 'layout', 'body', 'turns', 'transit'],
 
     computed: {
       path() {
-        return this.layout.scale_path(
-          this.system
-            .orbit_by_turns(this.body)
-            .slice(0, this.turns)
-        );
+        const path = this.system.orbit_by_turns(this.body).slice(0, this.turns);
+        return this.layout.scale_path(path);
       },
     },
 

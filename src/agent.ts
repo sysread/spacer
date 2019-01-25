@@ -254,10 +254,12 @@ export class Agent extends Person {
     const routes: Route[] = [];
 
     if (isDocked(this.action)) {
-      const game       = window.game;
-      const here       = this.here;
-      const navComp    = new NavComp(this, this.here.body);
+      const game = window.game;
+      const here = this.here;
       const cargoSpace = this.ship.cargoLeft;
+
+      const navComp = new NavComp(this, this.here.body);
+      navComp.dt = 10;
 
       for (const item of t.resources) {
         const stock    = here.getStock(item);

@@ -9,7 +9,7 @@ import * as util from './util';
 import * as t from './common';
 
 const SPT = data.hours_per_turn * 3600; // seconds per turn
-const DT  = 1000;                       // frames per turn for euler integration
+const DT  = 10000;                      // frames per turn for euler integration
 const TI  = SPT / DT;                   // seconds per frame
 
 
@@ -42,15 +42,17 @@ export class Course {
   maxAccel: number;
   turns:    number;
   tflip:    number;
+  dt:       number;
   _path:    null | PathSegment[];
 
-  constructor(target: Body, agent: Body, maxAccel: number, turns: number) {
+  constructor(target: Body, agent: Body, maxAccel: number, turns: number, dt?: number) {
     this.target   = target;
     this.agent    = agent;
     this.maxAccel = maxAccel;
     this.turns    = turns;
     this.tflip    = SPT * this.turns / 2; // seconds to flip point
     this.accel    = this.calculateAcceleration();
+    this.dt       = dt || DT;
     this._path    = null;
   }
 
@@ -91,44 +93,44 @@ export class Course {
   }
 
   path(): PathSegment[] {
-    if (this._path != null) {
-      return this._path;
-    }
+    if (!this._path) {
+      let p      = this.agent[POSITION];                   // initial position
+      let v      = this.agent[VELOCITY];                   // initial velocity
+      const TI   = SPT / this.dt;
+      const vax  = Vec.mul_scalar(this.acc, TI);           // static portion of change in velocity each TI
+      const dax  = Vec.mul_scalar(this.acc, TI * TI / 2);  // static portion of change in position each TI
+      const path = [];
 
-    let p      = this.agent[POSITION];                   // initial position
-    let v      = this.agent[VELOCITY];                   // initial velocity
-    const vax  = Vec.mul_scalar(this.acc, TI);           // static portion of change in velocity each TI
-    const dax  = Vec.mul_scalar(this.acc, TI * TI / 2);  // static portion of change in position each TI
-    const path = [];
+      let t = 0;
 
-    let t = 0;
+      for (let turn = 0; turn < this.turns; ++turn) {
+        // Split turn's updates into DT increments to prevent inaccuracies
+        // creeping into the final result.
+        for (let i = 0; i < this.dt; ++i) {
+          t += TI;
 
-    for (let turn = 0; turn < this.turns; ++turn) {
-      // Split turn's updates into DT increments to prevent inaccuracies
-      // creeping into the final result.
-      for (let i = 0; i < DT; ++i) {
-        t += TI;
+          if (t > this.tflip) {
+            v = Vec.sub(v, vax); // decelerate after flip
+          } else {
+            v = Vec.add(v, vax); // accelerate before flip
+          }
 
-        if (t > this.tflip) {
-          v = Vec.sub(v, vax); // decelerate after flip
-        } else {
-          v = Vec.add(v, vax); // accelerate before flip
+          // Update position
+          p = Vec.add(p, Vec.add(Vec.mul_scalar(v, TI), dax));
         }
 
-        // Update position
-        p = Vec.add(p, Vec.add(Vec.mul_scalar(v, TI), dax));
+        const segment = {
+          position: p,
+          velocity: Vec.length(v),
+        };
+
+        path.push(segment);
       }
 
-      const segment = {
-        position: p,
-        velocity: Vec.length(v),
-      };
-
-      path.push(segment);
+      this._path = path;
     }
 
-    this._path = path;
-    return path;
+    return this._path;
   }
 }
 
@@ -140,6 +142,7 @@ export class NavComp {
   fuelTarget: number;
   max:        number;
   data:       undefined | any;
+  dt:         undefined | number;
 
   constructor(player: Person, orig: t.body, showAll?: boolean, fuelTarget?: number) {
     this.player     = player;
@@ -199,7 +202,7 @@ export class NavComp {
       const vFinal        = Vec.div_scalar( Vec.sub(dest[turns], dest[turns - 1]), SPT );
       const target: Body  = [ dest[turns], vFinal ];
       const agent: Body   = [ orig[0], vInit ];
-      const course        = new Course(target, agent, maxAccel, turns);
+      const course        = new Course(target, agent, maxAccel, turns, this.dt);
       const a             = Vec.length(course.accel);
 
       if (a > maxAccel)

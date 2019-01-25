@@ -8,7 +8,7 @@ interface line {
   angle:  number;
 }
 
-// Render the svg <path> element 
+// Render the svg <path> element
 // I:  - points (array): points coordinates
 //     - command (function)
 //       I:  - point (array) [x,y]: current point coordinates
@@ -27,7 +27,7 @@ function svgPath(points: point[], command: Function): string {
   return d;
 }
 
-// Properties of a line 
+// Properties of a line
 // I:  - pointA (array) [x,y]: coordinates
 //     - pointB (array) [x,y]: coordinates
 // O:  - (object) { length: l, angle: a }: properties of the line
@@ -40,7 +40,7 @@ function line(pointA: point, pointB: point): line {
   }
 }
 
-// Position of a control point 
+// Position of a control point
 // I:  - current (array) [x, y]: current point coordinates
 //     - previous (array) [x, y]: previous point coordinates
 //     - next (array) [x, y]: next point coordinates
@@ -65,7 +65,7 @@ function controlPoint(current: point, previous: point, next: point, reverse: boo
   return [x, y]
 }
 
-// Create the bezier curve command 
+// Create the bezier curve command
 // I:  - point (array) [x,y]: current point coordinates
 //     - i (integer): index of 'point' in the array 'a'
 //     - a (array): complete array of points coordinates

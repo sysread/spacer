@@ -52,9 +52,9 @@ export class TransitPlan {
   dest:        t.body;
   dist:        number;
 
-  left:        number;     // remaining turns in transit; updated by turn()
-  coords:      Point; // current position; updated by turn()
-  velocity:    number;     // current ship velocity; updated by turn()
+  left:        number; // remaining turns in transit; updated by turn()
+  coords:      Point;  // current position; updated by turn()
+  velocity:    number; // current ship velocity; updated by turn()
   au:          number;
   km:          number;
 

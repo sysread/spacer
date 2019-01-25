@@ -53,18 +53,19 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     physics_1 = __importDefault(physics_1);
     Vec = __importStar(Vec);
     var SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
-    var DT = 1000; // frames per turn for euler integration
+    var DT = 10000; // frames per turn for euler integration
     var TI = SPT / DT; // seconds per frame
     var POSITION = 0;
     var VELOCITY = 1;
     var Course = /** @class */ (function () {
-        function Course(target, agent, maxAccel, turns) {
+        function Course(target, agent, maxAccel, turns, dt) {
             this.target = target;
             this.agent = agent;
             this.maxAccel = maxAccel;
             this.turns = turns;
             this.tflip = SPT * this.turns / 2; // seconds to flip point
             this.accel = this.calculateAcceleration();
+            this.dt = dt || DT;
             this._path = null;
         }
         Course.prototype.export = function () {
@@ -100,37 +101,37 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             return Vec.length(Vec.mul_scalar(this.accel, t));
         };
         Course.prototype.path = function () {
-            if (this._path != null) {
-                return this._path;
-            }
-            var p = this.agent[POSITION]; // initial position
-            var v = this.agent[VELOCITY]; // initial velocity
-            var vax = Vec.mul_scalar(this.acc, TI); // static portion of change in velocity each TI
-            var dax = Vec.mul_scalar(this.acc, TI * TI / 2); // static portion of change in position each TI
-            var path = [];
-            var t = 0;
-            for (var turn = 0; turn < this.turns; ++turn) {
-                // Split turn's updates into DT increments to prevent inaccuracies
-                // creeping into the final result.
-                for (var i = 0; i < DT; ++i) {
-                    t += TI;
-                    if (t > this.tflip) {
-                        v = Vec.sub(v, vax); // decelerate after flip
+            if (!this._path) {
+                var p = this.agent[POSITION]; // initial position
+                var v = this.agent[VELOCITY]; // initial velocity
+                var TI_1 = SPT / this.dt;
+                var vax = Vec.mul_scalar(this.acc, TI_1); // static portion of change in velocity each TI
+                var dax = Vec.mul_scalar(this.acc, TI_1 * TI_1 / 2); // static portion of change in position each TI
+                var path = [];
+                var t_1 = 0;
+                for (var turn = 0; turn < this.turns; ++turn) {
+                    // Split turn's updates into DT increments to prevent inaccuracies
+                    // creeping into the final result.
+                    for (var i = 0; i < this.dt; ++i) {
+                        t_1 += TI_1;
+                        if (t_1 > this.tflip) {
+                            v = Vec.sub(v, vax); // decelerate after flip
+                        }
+                        else {
+                            v = Vec.add(v, vax); // accelerate before flip
+                        }
+                        // Update position
+                        p = Vec.add(p, Vec.add(Vec.mul_scalar(v, TI_1), dax));
                     }
-                    else {
-                        v = Vec.add(v, vax); // accelerate before flip
-                    }
-                    // Update position
-                    p = Vec.add(p, Vec.add(Vec.mul_scalar(v, TI), dax));
+                    var segment = {
+                        position: p,
+                        velocity: Vec.length(v),
+                    };
+                    path.push(segment);
                 }
-                var segment = {
-                    position: p,
-                    velocity: Vec.length(v),
-                };
-                path.push(segment);
+                this._path = path;
             }
-            this._path = path;
-            return path;
+            return this._path;
         };
         return Course;
     }());
@@ -212,7 +213,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                         vFinal = Vec.div_scalar(Vec.sub(dest[turns], dest[turns - 1]), SPT);
                         target = [dest[turns], vFinal];
                         agent = [orig[0], vInit];
-                        course = new Course(target, agent, maxAccel, turns);
+                        course = new Course(target, agent, maxAccel, turns, this.dt);
                         a = Vec.length(course.accel);
                         if (a > maxAccel)
                             return [3 /*break*/, 3];

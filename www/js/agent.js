@@ -243,8 +243,9 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
             if (isDocked(this.action)) {
                 var game = window.game;
                 var here = this.here;
-                var navComp = new navcomp_1.NavComp(this, this.here.body);
                 var cargoSpace = this.ship.cargoLeft;
+                var navComp = new navcomp_1.NavComp(this, this.here.body);
+                navComp.dt = 10;
                 try {
                     for (var _c = __values(t.resources), _d = _c.next(); !_d.done; _d = _c.next()) {
                         var item = _d.value;
