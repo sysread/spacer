@@ -71,7 +71,7 @@ const _shiptype = {
 const _addon = {
   cargo_pod:       true,
   fuel_tank:       true,
-  liquid_schwartz: true,
+  heat_reclaimer:  true,
   ion:             true,
   fusion:          true,
   armor:           true,
@@ -246,33 +246,48 @@ export interface Drive {
   desc?:     string;
 }
 
-export interface Addon {
-  [key: string]: any;
 
+interface BaseAddon {
+  [key:           string]:  any;
   name:           string;
-  desc?:          string;
-  price:          number;
-  restricted?:    string;
-  markets?:       string[];
   mass:           number;
+  price:          number;
+  desc:           string;
+  restricted?:    standing;
+  markets?:       trait[];
+}
 
-  cargo?:         number;
-  armor?:         number;
-
-  burn_rate?:     number;
-  thrust?:        number;
-
-  damage?:        number;
-  reload?:        number;
-  rate?:          number;
-  magazine?:      number;
-  accuracy?:      number;
+export interface OffensiveAddon extends BaseAddon {
+  is_offensive:   true;
+  damage:         number;
+  reload:         number;
+  rate:           number;
+  magazine:       number;
+  accuracy:       number;
   interceptable?: boolean;
+}
 
+export interface DefensiveAddon extends BaseAddon {
+  is_defensive:   true;
   stealth?:       number;
   intercept?:     number;
   dodge?:         number;
+  armor?:         number;
 }
+
+export interface MiscAddon extends BaseAddon {
+  is_misc:        true;
+  cargo?:         number;
+  burn_rate?:     number;
+  burn_rate_pct?: number;
+  thrust?:        number;
+}
+
+export type Addon = OffensiveAddon | DefensiveAddon | MiscAddon;
+export const isOffensive = (addon: Addon): addon is OffensiveAddon => (<OffensiveAddon>addon).is_offensive;
+export const isDefensive = (addon: Addon): addon is DefensiveAddon => (<DefensiveAddon>addon).is_defensive;
+export const isMisc      = (addon: Addon): addon is MiscAddon      => (<MiscAddon>addon).is_misc;
+
 
 export interface Trait {
   produces?: ResourceCounter;

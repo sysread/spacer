@@ -379,6 +379,8 @@ define(["require", "exports"], function (require, exports) {
         },
         addons: {
             cargo_pod: {
+                is_misc: true,
+                is_defensive: true,
                 name: 'External cargo pod',
                 desc: 'Welds additional cargo units onto the outer hull, increasing total cargo space but reducing the effectiveness of armor.',
                 mass: 5,
@@ -389,6 +391,7 @@ define(["require", "exports"], function (require, exports) {
                 price: 12500,
             },
             fuel_tank: {
+                is_misc: true,
                 name: 'Auxiliary fuel tank',
                 desc: 'Installs a supplementary fuel tank in the cargo bay, trading storage for range.',
                 mass: 1,
@@ -397,6 +400,8 @@ define(["require", "exports"], function (require, exports) {
                 price: 8500,
             },
             heat_reclaimer: {
+                is_misc: true,
+                is_defensive: true,
                 name: 'Waste heat reclaimation system',
                 desc: "Boosts drive efficiency by 10% by recycling waste heat from the drive and internal electrical systems. A fortunate side benefit is a reduction in visibility to infrared systems, making this a popular an relatively inexpensive way to mask a civilian ship's signature from pirates... and inspectors.",
                 mass: 1,
@@ -405,6 +410,7 @@ define(["require", "exports"], function (require, exports) {
                 price: 18500,
             },
             ion: {
+                is_misc: true,
                 name: 'Ion drive',
                 desc: 'Adds an additional pair of ion drives to the hull, increasing thrust. Care must be taken not to unbalance the ship, however.',
                 mass: 20,
@@ -413,6 +419,7 @@ define(["require", "exports"], function (require, exports) {
                 price: 8000,
             },
             fusion: {
+                is_misc: true,
                 name: 'Fusion drive',
                 desc: 'Somewhat reduced in efficiency when installed as a set of external pods, adding a fusion drive to an existing craft can drastically increase thrust and manuevering.',
                 mass: 80,
@@ -422,6 +429,7 @@ define(["require", "exports"], function (require, exports) {
                 restricted: 'Trusted',
             },
             armor: {
+                is_defensive: true,
                 name: 'Armor plating',
                 desc: 'Welds plates of ceramic carbon-steel armor to the hull, protecting it from damage, but adding greatly to the mass of the ship.',
                 mass: 100,
@@ -431,6 +439,7 @@ define(["require", "exports"], function (require, exports) {
                 markets: ['military', 'capital'],
             },
             advanced_armor: {
+                is_defensive: true,
                 name: 'Milspec armor plating',
                 desc: 'More expensive and much more highly restricted than carbon-steel, military grade armor achieves a higher level of protection per tonne using advanced materials science.',
                 mass: 150,
@@ -440,6 +449,7 @@ define(["require", "exports"], function (require, exports) {
                 markets: ['military', 'capital'],
             },
             railgun_turret: {
+                is_offensive: true,
                 name: 'Rail gun turret',
                 desc: 'A military-grade rail gun turret, magnetically accelerating 100kg rounds at an appreciable fraction of the speed of light.',
                 mass: 15,
@@ -453,6 +463,7 @@ define(["require", "exports"], function (require, exports) {
                 markets: ['military', 'capital'],
             },
             railgun_cannon: {
+                is_offensive: true,
                 name: 'Rail gun cannon',
                 desc: "More powerful than it's smaller cousin, a rail gun cannon fires heavier slugs of denser material, resulting in more energy released on impact.",
                 mass: 30,
@@ -466,6 +477,7 @@ define(["require", "exports"], function (require, exports) {
                 markets: ['military', 'capital'],
             },
             light_torpedo: {
+                is_offensive: true,
                 name: 'Light torpedo launcher',
                 desc: 'Adds a torpedo launcher tube suitable for low yield, self-guided payloads.',
                 mass: 20,
@@ -479,6 +491,7 @@ define(["require", "exports"], function (require, exports) {
                 restricted: 'Friendly',
             },
             medium_torpedo: {
+                is_offensive: true,
                 name: 'Medium torpedo launcher',
                 desc: 'Adds a torpedo launcher tube suitable for moderate yield, self-guided payloads.',
                 mass: 40,
@@ -493,6 +506,7 @@ define(["require", "exports"], function (require, exports) {
                 markets: ['military', 'capital'],
             },
             heavy_torpedo: {
+                is_offensive: true,
                 name: 'Heavy torpedo launcher',
                 desc: 'Adds a torpedo launcher tube suitable for high yield, self-guided payloads.',
                 mass: 60,
@@ -507,6 +521,8 @@ define(["require", "exports"], function (require, exports) {
                 markets: ['military', 'capital'],
             },
             pds: {
+                is_offensive: true,
+                is_defensive: true,
                 name: 'PDS',
                 desc: 'Mounts a computer-controlled network of small, magnetically propelled, point defense turrets around the ship to stop incoming torpedos at a safe range.',
                 mass: 5,
@@ -520,6 +536,7 @@ define(["require", "exports"], function (require, exports) {
                 restricted: 'Friendly',
             },
             ecm: {
+                is_defensive: true,
                 name: 'ECM',
                 desc: "Electronic counter-measures generate randomized, electromagnetic interference and false signals to confuse an enemy's targeting systems.",
                 mass: 1,
@@ -531,6 +548,7 @@ define(["require", "exports"], function (require, exports) {
                 markets: ['military', 'capital'],
             },
             stealthPlating: {
+                is_defensive: true,
                 name: "Adaptive hull plating",
                 desc: "This Martian technology, originally designed as part of an adaptive camouflage system for ground forces' power armor, alters the absorbtive range of the ships' outer hull to absorb EM radiation, making it effectively invisible except at very close range.",
                 mass: 100,

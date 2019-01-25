@@ -68,7 +68,7 @@ define(["require", "exports"], function (require, exports) {
     var _addon = {
         cargo_pod: true,
         fuel_tank: true,
-        liquid_schwartz: true,
+        heat_reclaimer: true,
         ion: true,
         fusion: true,
         armor: true,
@@ -132,4 +132,7 @@ define(["require", "exports"], function (require, exports) {
         return res.recipe !== undefined;
     }
     exports.isCraft = isCraft;
+    exports.isOffensive = function (addon) { return addon.is_offensive; };
+    exports.isDefensive = function (addon) { return addon.is_defensive; };
+    exports.isMisc = function (addon) { return addon.is_misc; };
 });

@@ -51,12 +51,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./store", "./util"], function (require, exports, data_1, store_1, util) {
+define(["require", "exports", "./data", "./store", "./util", "./common"], function (require, exports, data_1, store_1, util, t) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     store_1 = __importDefault(store_1);
     util = __importStar(util);
+    t = __importStar(t);
     var Action = /** @class */ (function () {
         function Action() {
         }
@@ -77,9 +78,7 @@ define(["require", "exports", "./data", "./store", "./util"], function (require,
             _this.count = 1;
             _this._round = 0;
             _this._reload = 0;
-            if (_this.isReloadable) {
-                _this._magazine = _this.magazine;
-            }
+            _this._magazine = _this.magazine;
             return _this;
         }
         Object.defineProperty(Attack.prototype, "name", {
@@ -88,14 +87,12 @@ define(["require", "exports", "./data", "./store", "./util"], function (require,
             configurable: true
         });
         Object.defineProperty(Attack.prototype, "rate", {
-            get: function () { if (this.opt.rate)
-                return this.count * this.opt.rate; },
+            get: function () { return this.count * this.opt.rate; },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Attack.prototype, "magazine", {
-            get: function () { if (this.opt.magazine)
-                return this.count * this.opt.magazine; },
+            get: function () { return this.count * this.opt.magazine; },
             enumerable: true,
             configurable: true
         });
@@ -119,24 +116,15 @@ define(["require", "exports", "./data", "./store", "./util"], function (require,
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Attack.prototype, "isReloadable", {
-            get: function () {
-                return this.reload !== undefined;
-            },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(Attack.prototype, "isReloading", {
             get: function () {
-                return this.isReloadable && this._magazine === 0;
+                return this._magazine === 0;
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Attack.prototype, "isReady", {
             get: function () {
-                if (!this.isReloadable || this._magazine == undefined)
-                    return true;
                 return this._magazine > 0;
             },
             enumerable: true,
@@ -144,8 +132,6 @@ define(["require", "exports", "./data", "./store", "./util"], function (require,
         });
         Object.defineProperty(Attack.prototype, "roundsUntilReload", {
             get: function () {
-                if (!this.isReloadable)
-                    return 0;
                 return this._reload;
             },
             enumerable: true,
@@ -159,17 +145,14 @@ define(["require", "exports", "./data", "./store", "./util"], function (require,
             configurable: true
         });
         Attack.prototype.addUnit = function () {
-            if (this._magazine != undefined && this.magazine)
-                this._magazine += this.magazine;
+            this._magazine += this.magazine;
             ++this.count;
         };
         Attack.prototype.nextRound = function () {
             ++this._round;
-            if (this.isReloadable) {
-                if (this._magazine === 0 && this._reload === 1) {
-                    this._reload = 0;
-                    this._magazine = this.magazine;
-                }
+            if (this._magazine === 0 && this._reload === 1) {
+                this._reload = 0;
+                this._magazine = this.magazine;
             }
         };
         Attack.prototype.use = function (from, to) {
@@ -186,12 +169,10 @@ define(["require", "exports", "./data", "./store", "./util"], function (require,
                     damage += Math.max(0.1, util.getRandomNum(0, dmg));
                     ++hits;
                 }
-                if (this.isReloadable && this._magazine != undefined) {
-                    --this._magazine;
-                    if (this._magazine === 0) {
-                        this._reload = this.reload;
-                        break;
-                    }
+                --this._magazine;
+                if (this._magazine === 0) {
+                    this._reload = this.reload;
+                    break;
                 }
             }
             var effect = !hits ? 'miss'
@@ -278,7 +259,7 @@ define(["require", "exports", "./data", "./store", "./util"], function (require,
                 for (var _b = __values(this.ship.addons), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var addon = _c.value;
                     var info = data_1.default.addons[addon];
-                    if (info.damage) {
+                    if (t.isOffensive(info)) {
                         if (this._actions[addon]) {
                             this._actions[addon].addUnit();
                         }

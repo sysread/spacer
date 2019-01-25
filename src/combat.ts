@@ -40,51 +40,38 @@ abstract class Action {
 }
 
 export class Attack extends Action {
-  public    opt:        t.Addon;
-  public    count:      number;
-  protected _round:     number;
-  protected _reload?:   number;
-  protected _magazine?: number;
+  public    opt:       t.OffensiveAddon;
+  public    count:     number;
+  protected _round:    number;
+  protected _reload:   number;
+  protected _magazine: number;
 
-  constructor(opt: t.Addon) {
+  constructor(opt: t.OffensiveAddon) {
     super();
-    this.opt     = opt;
-    this.count   = 1;
-    this._round  = 0;
-    this._reload = 0;
-
-    if (this.isReloadable) {
-      this._magazine = this.magazine;
-    }
+    this.opt       = opt;
+    this.count     = 1;
+    this._round    = 0;
+    this._reload   = 0;
+    this._magazine = this.magazine;
   }
 
   get name()          { return this.opt.name }
-  get rate()          { if (this.opt.rate) return this.count * this.opt.rate }
-  get magazine()      { if (this.opt.magazine) return this.count * this.opt.magazine }
+  get rate()          { return this.count * this.opt.rate }
+  get magazine()      { return this.count * this.opt.magazine }
   get accuracy()      { return this.opt.accuracy }
   get reload()        { return this.opt.reload }
   get damage()        { return this.opt.damage }
   get interceptable() { return this.opt.interceptable ? true : false }
 
-  get isReloadable() {
-    return this.reload !== undefined;
-  }
-
   get isReloading() {
-    return this.isReloadable && this._magazine === 0;
+    return this._magazine === 0;
   }
 
   get isReady() {
-    if (!this.isReloadable || this._magazine == undefined)
-      return true;
-
     return this._magazine > 0;
   }
 
   get roundsUntilReload() {
-    if (!this.isReloadable)
-      return 0;
-
     return this._reload;
   }
 
@@ -93,20 +80,16 @@ export class Attack extends Action {
   }
 
   addUnit() {
-    if (this._magazine != undefined && this.magazine)
-      this._magazine += this.magazine;
-
+    this._magazine += this.magazine;
     ++this.count;
   }
 
   nextRound() {
     ++this._round;
 
-    if (this.isReloadable) {
-      if (this._magazine === 0 && this._reload === 1) {
-        this._reload = 0;
-        this._magazine = this.magazine;
-      }
+    if (this._magazine === 0 && this._reload === 1) {
+      this._reload = 0;
+      this._magazine = this.magazine;
     }
   }
 
@@ -127,13 +110,11 @@ export class Attack extends Action {
         ++hits;
       }
 
-      if (this.isReloadable && this._magazine != undefined) {
-        --this._magazine;
+      --this._magazine;
 
-        if (this._magazine === 0) {
-          this._reload = this.reload;
-          break;
-        }
+      if (this._magazine === 0) {
+        this._reload = this.reload;
+        break;
       }
     }
 
@@ -229,7 +210,7 @@ export class Combatant {
     for (const addon of this.ship.addons) {
       const info = data.addons[addon];
 
-      if (info.damage) {
+      if (t.isOffensive(info)) {
         if (this._actions[addon]) {
           this._actions[addon].addUnit();
         } else {
