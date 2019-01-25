@@ -818,17 +818,26 @@ export class Planet {
       if (hasShortage && !resources[item].contraband) {
         // Player ended a shortage. Increase their standing with our faction.
         if (!this.hasShortage(item)) {
-          standing = util.getRandomNum(3, 8);
-          player.incStanding(this.faction.abbrev, standing);
+          standing += util.getRandomNum(3, 8);
         }
         // Player contributed toward ending a shortage. Increase their
         // standing with our faction slightly.
         else {
-          standing = util.getRandomNum(1, 3);
-          player.incStanding(this.faction.abbrev, standing);
+          standing += util.getRandomNum(1, 3);
         }
       }
 
+      // Player sold items needed as a result of a condition
+      for (const c of this.conditions) {
+        if (c.consumes[item] != undefined) {
+          standing += util.getRandomNum(2, 5);
+        }
+      }
+
+      if (standing > 0)
+        player.incStanding(this.faction.abbrev, standing);
+
+      // only trigger for the player, not for agents
       if (player === window.game.player)
         Events.signal({type: Ev.ItemsSold, count: amount, item, price, standing});
     }
@@ -1153,6 +1162,7 @@ export class Planet {
       for (const item of Object.keys(data.conditions[c].triggers.shortage)) {
         if (this.hasShortage(item as t.resource)) {
           if (util.chance( data.conditions[c].triggers.shortage[item] )) {
+console.log(this.body, c);
             this.conditions.push(new Condition(c));
           }
         }
@@ -1162,6 +1172,7 @@ export class Planet {
       for (const item of Object.keys(data.conditions[c].triggers.surplus)) {
         if (this.hasSurplus(item as t.resource)) {
           if (util.chance( data.conditions[c].triggers.surplus[item] )) {
+console.log(this.body, c);
             this.conditions.push(new Condition(c));
           }
         }
@@ -1171,6 +1182,7 @@ export class Planet {
       for (const cond of Object.keys(data.conditions[c].triggers.condition)) {
         if (this.hasCondition(cond) || this.hasTrait(cond)) {
           if (util.chance( data.conditions[c].triggers.condition[cond] )) {
+console.log(this.body, c);
             this.conditions.push(new Condition(c));
           }
         }
