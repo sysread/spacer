@@ -1373,6 +1373,44 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
             return price;
         };
+        /*
+         * Returns the number of turns until the next expected import or fabrication
+         * of the desired resource will arrive. Returns undefined if none are
+         * scheduled in the queue. Does not account for agents.
+         */
+        Planet.prototype.estimateAvailability = function (item) {
+            var e_38, _a;
+            var turns = undefined;
+            if (this.getStock(item) > 0)
+                return 0;
+            var res = resource_1.resources[item];
+            if (resource_1.isRaw(res) && this.netProduction(item) > 0) {
+                return 3;
+            }
+            try {
+                for (var _b = __values(this.queue), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var task = _c.value;
+                    if (isImportTask(task)
+                        && task.item == item
+                        && (turns == undefined || turns > task.turns)) {
+                        turns = task.turns;
+                    }
+                    else if (isCraftTask(task)
+                        && task.item == item
+                        && (turns == undefined || turns > task.turns)) {
+                        turns = task.turns;
+                    }
+                }
+            }
+            catch (e_38_1) { e_38 = { error: e_38_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_38) throw e_38.error; }
+            }
+            return turns;
+        };
         Planet.prototype.resourceDependencyPriceAdjustment = function (resource) {
             if (this.hasShortage(resource)) {
                 return this.getNeed(resource);
@@ -1401,35 +1439,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             var standing = player.getStandingPriceAdjustment(this.faction.abbrev);
             var scarcity = this.resourceDependencyPriceAdjustment('metal');
             return (base + (base * tax) - (base * standing)) * scarcity;
-        };
-        Planet.prototype.estimateAvailability = function (item) {
-            var e_38, _a;
-            var turns = undefined;
-            if (this.getStock(item) > 0)
-                return 0;
-            try {
-                for (var _b = __values(this.queue), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var task = _c.value;
-                    if (isImportTask(task)
-                        && task.item == item
-                        && (turns == undefined || turns > task.turns)) {
-                        turns = task.turns;
-                    }
-                    else if (isCraftTask(task)
-                        && task.item == item
-                        && (turns == undefined || turns > task.turns)) {
-                        turns = task.turns;
-                    }
-                }
-            }
-            catch (e_38_1) { e_38 = { error: e_38_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_38) throw e_38.error; }
-            }
-            return turns;
         };
         return Planet;
     }());

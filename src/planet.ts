@@ -1222,6 +1222,40 @@ export class Planet {
     return price;
   }
 
+  /*
+   * Returns the number of turns until the next expected import or fabrication
+   * of the desired resource will arrive. Returns undefined if none are
+   * scheduled in the queue. Does not account for agents.
+   */
+  estimateAvailability(item: t.resource): number|undefined {
+    let turns = undefined;
+
+    if (this.getStock(item) > 0)
+      return 0;
+
+    const res = resources[item];
+    if (isRaw(res) && this.netProduction(item) > 0) {
+      return 3;
+    }
+
+    for (const task of this.queue) {
+      if (isImportTask(task)
+        && task.item == item
+        && (turns == undefined || turns > task.turns))
+      {
+        turns = task.turns;
+      }
+      else if (isCraftTask(task)
+        && task.item == item
+        && (turns == undefined || turns > task.turns))
+      {
+        turns = task.turns;
+      }
+    }
+
+    return turns;
+  }
+
   resourceDependencyPriceAdjustment(resource: t.resource) {
     if (this.hasShortage(resource)) {
       return this.getNeed(resource);
@@ -1251,29 +1285,5 @@ export class Planet {
     const standing = player.getStandingPriceAdjustment(this.faction.abbrev);
     const scarcity = this.resourceDependencyPriceAdjustment('metal');
     return (base + (base * tax) - (base * standing)) * scarcity;
-  }
-
-  estimateAvailability(item: t.resource): number|undefined {
-    let turns = undefined;
-
-    if (this.getStock(item) > 0)
-      return 0;
-
-    for (const task of this.queue) {
-      if (isImportTask(task)
-        && task.item == item
-        && (turns == undefined || turns > task.turns))
-      {
-        turns = task.turns;
-      }
-      else if (isCraftTask(task)
-        && task.item == item
-        && (turns == undefined || turns > task.turns))
-      {
-        turns = task.turns;
-      }
-    }
-
-    return turns;
   }
 }
