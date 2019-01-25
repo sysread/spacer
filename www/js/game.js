@@ -196,14 +196,9 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
             window.localStorage.removeItem('game');
             this._player = player;
             this.locus = home;
-            //this.turns = NewGameData.turns;
-            //this.page = NewGameData.page;
             this.turns = 0;
             this.page = 'summary';
-            this.date.setHours(this.date.getHours() + (this.turns * data_1.default.hours_per_turn));
-            console.log('setting system date', this.date);
-            system_1.default.set_date(this.strdate());
-            //this.build_planets(NewGameData.planets);
+            this.reset_date();
             this.build_planets();
             this.build_agents(); // agents not part of initial data set
             this.save_game();

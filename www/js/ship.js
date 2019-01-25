@@ -246,7 +246,7 @@ define(["require", "exports", "./data", "./physics", "./store", "./common"], fun
                 finally { if (e_2) throw e_2.error; }
             }
             if (!nominal) {
-                if (typeof this.damage[name] == 'number') {
+                if (name == 'hull' || name == 'armor') {
                     value -= this.damage[name];
                 }
             }

@@ -124,14 +124,8 @@ define(["require", "exports"], function (require, exports) {
     exports.addons = Object.keys(_addon);
     exports.traits = Object.keys(_trait);
     exports.standings = Object.keys(exports.Standing);
-    function isRaw(res) {
-        return res.mine !== undefined;
-    }
-    exports.isRaw = isRaw;
-    function isCraft(res) {
-        return res.recipe !== undefined;
-    }
-    exports.isCraft = isCraft;
+    exports.isRaw = function (res) { return res.mine !== undefined; };
+    exports.isCraft = function (res) { return res.recipe !== undefined; };
     exports.isOffensive = function (addon) { return addon.is_offensive; };
     exports.isDefensive = function (addon) { return addon.is_defensive; };
     exports.isMisc = function (addon) { return addon.is_misc; };

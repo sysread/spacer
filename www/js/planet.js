@@ -148,9 +148,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     finally { if (e_4) throw e_4.error; }
                 }
             }
-            else {
-                this.refreshContracts();
-            }
             /*
              * Economics
              */
@@ -212,8 +209,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 case 1:
                     this.imports();
                 case 2:
-                    if (turn >= data_1.default.initial_days * data_1.default.turns_per_day)
+                    // >= should catch the final turn of a new game being prepared so
+                    // the new game starts with a selection of jobs generated
+                    if (turn >= data_1.default.initial_days * data_1.default.turns_per_day) {
                         this.refreshContracts();
+                    }
                     this.replenishFabricators();
                     this.luxuriate();
                     this.apply_conditions();
@@ -1335,7 +1335,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     return "continue";
                 }
                 this_1.contracts.push({
-                    valid_until: util.getRandomInt(1, 30),
+                    valid_until: util.getRandomInt(10, 30) * data_1.default.turns_per_day,
                     mission: mission,
                 });
             };

@@ -125,7 +125,7 @@ class Ship {
     }
 
     if (!nominal) {
-      if (typeof this.damage[name] == 'number') {
+      if (name == 'hull' || name == 'armor') {
         value -= this.damage[name];
       }
     }

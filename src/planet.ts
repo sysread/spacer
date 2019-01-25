@@ -167,9 +167,6 @@ export class Planet {
         });
       }
     }
-    else {
-      this.refreshContracts();
-    }
 
     /*
      * Economics
@@ -220,8 +217,11 @@ export class Planet {
         this.imports();
 
       case 2:
-        if (turn >= data.initial_days * data.turns_per_day)
+        // >= should catch the final turn of a new game being prepared so
+        // the new game starts with a selection of jobs generated
+        if (turn >= data.initial_days * data.turns_per_day) {
           this.refreshContracts();
+        }
 
         this.replenishFabricators();
         this.luxuriate();
@@ -1193,7 +1193,7 @@ export class Planet {
       }
 
       this.contracts.push({
-        valid_until: util.getRandomInt(1, 30),
+        valid_until: util.getRandomInt(10, 30) * data.turns_per_day,
         mission: mission,
       });
     }

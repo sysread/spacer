@@ -166,6 +166,7 @@ export type StandingCounter = {
   [key in faction]?: number;
 };
 
+
 export interface Mining {
   tics:  number;
   value: number;
@@ -189,19 +190,11 @@ export interface Craft {
 }
 
 export type Resource = Raw | Craft;
-
-export function isRaw(res: Resource): res is Raw {
-  return (<Raw>res).mine !== undefined;
-}
-
-export function isCraft(res: Resource): res is Craft {
-  return (<Craft>res).recipe !== undefined;
-}
+export const isRaw   = (res: Resource): res is Raw => (<Raw>res).mine !== undefined;
+export const isCraft = (res: Resource): res is Craft => (<Craft>res).recipe !== undefined;
 
 
 export interface Faction {
-  [key: string]: any;
-
   full_name:  string;
   capital:    body;
   sales_tax:  number;
@@ -214,12 +207,12 @@ export interface Faction {
   standing:   StandingCounter;
 }
 
-export interface ShipDamage {
-  [key: string]: any;
 
+export interface ShipDamage {
   hull:  number;
   armor: number;
 }
+
 
 export interface ShipClass {
   [key: string]: any;
@@ -236,6 +229,7 @@ export interface ShipClass {
   faction?:   string;
   desc?:      string;
 }
+
 
 export interface Drive {
   name:      string;
@@ -295,6 +289,7 @@ export interface Trait {
   price?:    PriceAdjustmentCounter;
 }
 
+
 export interface ConditionTriggers {
   shortage:  Counter;
   surplus:   Counter;
@@ -308,6 +303,7 @@ export interface Condition {
   triggers: ConditionTriggers;
 }
 
+
 export interface Body {
   name:     string;
   size:     string;
@@ -317,6 +313,7 @@ export interface Body {
   desc:     string;
 }
 
+
 export interface Work {
   name:    string;
   avail:   string[];
@@ -324,6 +321,7 @@ export interface Work {
   pay:     number;
   desc:    string;
 }
+
 
 export interface GameData {
   [key: string]: any;
