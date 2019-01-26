@@ -829,8 +829,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             if (player && bought) {
                 player.debit(price);
                 player.ship.loadCargo(item, bought);
-                if (player === window.game.player)
-                    events_1.Events.signal({ type: events_1.Ev.ItemsBought, count: bought, item: item, price: price });
+                if (player === window.game.player) {
+                    events_1.Events.signal({ type: events_1.Ev.ItemsBought, count: bought, body: this.body, item: item, price: price });
+                }
             }
             return [bought, price];
         };
@@ -874,7 +875,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     player.incStanding(this.faction.abbrev, standing);
                 // only trigger for the player, not for agents
                 if (player === window.game.player)
-                    events_1.Events.signal({ type: events_1.Ev.ItemsSold, count: amount, item: item, price: price, standing: standing });
+                    events_1.Events.signal({ type: events_1.Ev.ItemsSold, count: amount, body: this.body, item: item, price: price, standing: standing });
             }
             return [amount, price, standing];
         };

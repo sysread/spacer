@@ -32,12 +32,13 @@
         document.addEventListener("deviceready", (e) => {
           require(
             [
-              'vendor/vue',          // base framework
-              'game',                // game state
-              'component/global',    // global state
-              'component/navbar',    // nav bar
-              'component/content',   // content div
-              'component/statusbar', // top status bar
+              'vendor/vue',             // base framework
+              'game',                   // game state
+              'component/global',       // global state
+              'component/navbar',       // nav bar
+              'component/content',      // content div
+              'component/statusbar',    // top status bar
+              'component/notification', // notifications
             ],
 
             (Vue, game) => {
@@ -84,6 +85,10 @@
 
                     this.page = page;
                   },
+
+                  dismiss(msg) {
+                    this.game.dismiss(msg);
+                  },
                 },
 
                 template: `
@@ -91,6 +96,10 @@
                     <StatusBar />
                     <Content @open="open" :page="page" />
                     <NavBar  @open="open" :page="page" :disabled="nav_disabled" />
+
+                    <div v-if="game.notifications.length > 0" class="fixed-top m-3">
+                      <Notification v-for="msg in game.notifications" :key="msg" :msg="msg" @dismiss="dismiss" dismiss="5" />
+                    </div>
                   </div>
                 `,
               });

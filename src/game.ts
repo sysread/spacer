@@ -6,6 +6,7 @@ import { Person, SavedPerson } from './person';
 import { Planet, SavedPlanet, isImportTask } from './planet';
 import { Agent, SavedAgent } from './agent';
 import { Events, Ev, TurnCallBack, TurnDetail } from './events';
+import { Conflict, Embargo } from './conflict';
 
 import * as t from './common';
 import * as util from './util';
@@ -52,6 +53,8 @@ class Game {
   frozen:        boolean = false;
   transit_plan?: TransitPlan;
   agents:        Agent[] = [];
+  conflicts:     {[key: string]: Conflict} = {};
+  notifications: string[] = [];
 
   constructor() {
     this.reset_date();
@@ -87,6 +90,7 @@ class Game {
 
         this.build_planets(init.planets);
         this.build_agents(init.agents);
+        this.build_conflicts(init.conflicts);
       }
       catch (e) {
         console.warn('initialization error:', e);
@@ -95,6 +99,7 @@ class Game {
         this._player = null;
         this.build_planets();
         this.build_agents();
+        this.build_conflicts();
       }
     }
     else {
@@ -197,6 +202,15 @@ class Game {
     }
   }
 
+  build_conflicts(init?: any) {
+    this.conflicts = {};
+
+    if (init != undefined) {
+      for (const c of Object.keys(init)) {
+        this.conflicts[c] = new Embargo(init[c]);
+      }
+    }
+  }
 
   new_game(player: Person, home: t.body) {
     window.localStorage.removeItem('game');
@@ -206,17 +220,19 @@ class Game {
     this.page = 'summary';
     this.reset_date();
     this.build_planets();
-    this.build_agents(); // agents not part of initial data set
+    this.build_agents();
+    this.build_conflicts();
     this.save_game();
   }
 
   save_game() {
     const data = {
-      turns:   this.turns,
-      locus:   this.locus,
-      player:  this._player,
-      agents:  this.agents,
-      planets: this.planets,
+      turns:     this.turns,
+      locus:     this.locus,
+      player:    this._player,
+      agents:    this.agents,
+      planets:   this.planets,
+      conflicts: this.conflicts,
     };
 
     window.localStorage.setItem('game', JSON.stringify(data));
@@ -227,35 +243,29 @@ class Game {
   }
 
 
-  build_new_game_data() {
-    this.turns = 0;
-    this.reset_date();
-    this.build_planets();
-    this.build_agents();
-    this.turn(data.initial_days * data.turns_per_day, true);
-
-    // clear bits we do not wish to include in the initial data set
-    this._player = null;
-    for (const p of Object.values(this.planets)) {
-      p.contracts = [];
-    }
-
-    return JSON.stringify(this);
-  }
-
-
   turn(n=1, no_save=false) {
     for (let i = 0; i < n; ++i) {
       ++this.turns;
 
+      // Update game and system date
       this.date.setHours(this.date.getHours() + data.hours_per_turn);
       system.set_date(this.strdate());
 
+      // Start new conflicts
+      if (this.turns % (data.turns_per_day * 3) == 0) {
+        this.start_conflicts();
+      }
+
+      // Remove finished conflicts
+      this.finish_conflicts();
+
+      // Dispatch events
       Events.signal({type: Ev.Turn, turn: this.turns});
       window.dispatchEvent(this.turnEvent);
 
-      if (this.turns % data.turns_per_day)
+      if (this.turns % data.turns_per_day) {
         window.dispatchEvent(this.dayEvent);
+      }
     }
 
     if (!no_save) {
@@ -319,6 +329,61 @@ class Game {
     }
 
     return trade;
+  }
+
+
+  notify(msg: string) {
+    this.notifications.push(msg);
+  }
+
+  dismiss(msg: string) {
+    this.notifications = this.notifications.filter(n => n != msg);
+  }
+
+
+  /*
+   * Conflicts
+   */
+  start_conflicts() {
+    if (Object.keys(this.conflicts).length >= 2)
+      return;
+
+    // TODO notifications when conflicts start
+    for (const pro of t.factions) {
+      for (const target of t.factions) {
+        // Embargos
+        const embargo = new Embargo({proponent: pro, target: target});
+
+        if (this.conflicts[ embargo.key ] == undefined && embargo.chance()) {
+          this.conflicts[ embargo.key ] = embargo;
+
+          const turns = Math.ceil(util.getRandomNum(data.turns_per_day * 7, data.turns_per_day * 60));
+          embargo.start(turns);
+
+          this.notify(`${pro} has declared a ${embargo.name} against ${target}`);
+        }
+      }
+    }
+  }
+
+  finish_conflicts() {
+    for (const k of Object.keys(this.conflicts)) {
+      if (this.conflicts[k].is_over) {
+        delete this.conflicts[k];
+      }
+    }
+  }
+
+  get_conflicts(opt?: {target?: t.faction, proponent?: t.faction}): Conflict[] {
+    return Object.values(this.conflicts).filter(c => {
+      if (opt && opt.target && c.target != opt.target)
+        return false;
+
+      if (opt && opt.proponent && c.proponent != opt.proponent)
+        return false;
+
+      return true;
+    });
   }
 };
 

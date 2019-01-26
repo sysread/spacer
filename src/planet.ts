@@ -11,6 +11,7 @@ import { Condition, SavedCondition } from './condition';
 import { Events, Ev, TurnCallBack, TurnDetail } from './events';
 import { Mission, Passengers, MissionData } from './mission';
 import { Person } from './person';
+import { Conflict, Embargo } from './conflict';
 
 import * as t from './common';
 import * as util from './util';
@@ -797,8 +798,9 @@ export class Planet {
       player.debit(price);
       player.ship.loadCargo(item, bought);
 
-      if (player === window.game.player)
-        Events.signal({type: Ev.ItemsBought, count: bought, item, price});
+      if (player === window.game.player) {
+        Events.signal({type: Ev.ItemsBought, count: bought, body: this.body, item, price});
+      }
     }
 
     return [bought, price];
@@ -839,7 +841,7 @@ export class Planet {
 
       // only trigger for the player, not for agents
       if (player === window.game.player)
-        Events.signal({type: Ev.ItemsSold, count: amount, item, price, standing});
+        Events.signal({type: Ev.ItemsSold, count: amount, body: this.body, item, price, standing});
     }
 
     return [amount, price, standing];

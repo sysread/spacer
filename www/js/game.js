@@ -18,7 +18,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./person", "./planet", "./agent", "./events", "./common", "./util"], function (require, exports, data_1, system_1, person_1, planet_1, agent_1, events_1, t, util) {
+define(["require", "exports", "./data", "./system", "./person", "./planet", "./agent", "./events", "./conflict", "./common", "./util"], function (require, exports, data_1, system_1, person_1, planet_1, agent_1, events_1, conflict_1, t, util) {
     "use strict";
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
@@ -35,6 +35,8 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
             this.page = 'summary';
             this.frozen = false;
             this.agents = [];
+            this.conflicts = {};
+            this.notifications = [];
             this.reset_date();
             this.turnEvent = new CustomEvent('turn', {
                 detail: {
@@ -62,6 +64,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                     system_1.default.set_date(this.strdate());
                     this.build_planets(init.planets);
                     this.build_agents(init.agents);
+                    this.build_conflicts(init.conflicts);
                 }
                 catch (e) {
                     console.warn('initialization error:', e);
@@ -70,6 +73,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                     this._player = null;
                     this.build_planets();
                     this.build_agents();
+                    this.build_conflicts();
                 }
             }
             else {
@@ -192,6 +196,25 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                 }
             }
         };
+        Game.prototype.build_conflicts = function (init) {
+            var e_3, _a;
+            this.conflicts = {};
+            if (init != undefined) {
+                try {
+                    for (var _b = __values(Object.keys(init)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var c = _c.value;
+                        this.conflicts[c] = new conflict_1.Embargo(init[c]);
+                    }
+                }
+                catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    }
+                    finally { if (e_3) throw e_3.error; }
+                }
+            }
+        };
         Game.prototype.new_game = function (player, home) {
             window.localStorage.removeItem('game');
             this._player = player;
@@ -200,7 +223,8 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
             this.page = 'summary';
             this.reset_date();
             this.build_planets();
-            this.build_agents(); // agents not part of initial data set
+            this.build_agents();
+            this.build_conflicts();
             this.save_game();
         };
         Game.prototype.save_game = function () {
@@ -210,47 +234,33 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                 player: this._player,
                 agents: this.agents,
                 planets: this.planets,
+                conflicts: this.conflicts,
             };
             window.localStorage.setItem('game', JSON.stringify(data));
         };
         Game.prototype.delete_game = function () {
             window.localStorage.removeItem('game');
         };
-        Game.prototype.build_new_game_data = function () {
-            var e_3, _a;
-            this.turns = 0;
-            this.reset_date();
-            this.build_planets();
-            this.build_agents();
-            this.turn(data_1.default.initial_days * data_1.default.turns_per_day, true);
-            // clear bits we do not wish to include in the initial data set
-            this._player = null;
-            try {
-                for (var _b = __values(Object.values(this.planets)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var p = _c.value;
-                    p.contracts = [];
-                }
-            }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_3) throw e_3.error; }
-            }
-            return JSON.stringify(this);
-        };
         Game.prototype.turn = function (n, no_save) {
             if (n === void 0) { n = 1; }
             if (no_save === void 0) { no_save = false; }
             for (var i = 0; i < n; ++i) {
                 ++this.turns;
+                // Update game and system date
                 this.date.setHours(this.date.getHours() + data_1.default.hours_per_turn);
                 system_1.default.set_date(this.strdate());
+                // Start new conflicts
+                if (this.turns % (data_1.default.turns_per_day * 3) == 0) {
+                    this.start_conflicts();
+                }
+                // Remove finished conflicts
+                this.finish_conflicts();
+                // Dispatch events
                 events_1.Events.signal({ type: events_1.Ev.Turn, turn: this.turns });
                 window.dispatchEvent(this.turnEvent);
-                if (this.turns % data_1.default.turns_per_day)
+                if (this.turns % data_1.default.turns_per_day) {
                     window.dispatchEvent(this.dayEvent);
+                }
             }
             if (!no_save) {
                 this.save_game();
@@ -320,6 +330,80 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                 finally { if (e_4) throw e_4.error; }
             }
             return trade;
+        };
+        Game.prototype.notify = function (msg) {
+            this.notifications.push(msg);
+        };
+        Game.prototype.dismiss = function (msg) {
+            this.notifications = this.notifications.filter(function (n) { return n != msg; });
+        };
+        /*
+         * Conflicts
+         */
+        Game.prototype.start_conflicts = function () {
+            var e_6, _a, e_7, _b;
+            if (Object.keys(this.conflicts).length >= 2)
+                return;
+            try {
+                // TODO notifications when conflicts start
+                for (var _c = __values(t.factions), _d = _c.next(); !_d.done; _d = _c.next()) {
+                    var pro = _d.value;
+                    try {
+                        for (var _e = __values(t.factions), _f = _e.next(); !_f.done; _f = _e.next()) {
+                            var target = _f.value;
+                            // Embargos
+                            var embargo = new conflict_1.Embargo({ proponent: pro, target: target });
+                            if (this.conflicts[embargo.key] == undefined && embargo.chance()) {
+                                this.conflicts[embargo.key] = embargo;
+                                var turns = Math.ceil(util.getRandomNum(data_1.default.turns_per_day * 7, data_1.default.turns_per_day * 60));
+                                embargo.start(turns);
+                                this.notify(pro + " has declared a " + embargo.name + " against " + target);
+                            }
+                        }
+                    }
+                    catch (e_7_1) { e_7 = { error: e_7_1 }; }
+                    finally {
+                        try {
+                            if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                        }
+                        finally { if (e_7) throw e_7.error; }
+                    }
+                }
+            }
+            catch (e_6_1) { e_6 = { error: e_6_1 }; }
+            finally {
+                try {
+                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                }
+                finally { if (e_6) throw e_6.error; }
+            }
+        };
+        Game.prototype.finish_conflicts = function () {
+            var e_8, _a;
+            try {
+                for (var _b = __values(Object.keys(this.conflicts)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var k = _c.value;
+                    if (this.conflicts[k].is_over) {
+                        delete this.conflicts[k];
+                    }
+                }
+            }
+            catch (e_8_1) { e_8 = { error: e_8_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_8) throw e_8.error; }
+            }
+        };
+        Game.prototype.get_conflicts = function (opt) {
+            return Object.values(this.conflicts).filter(function (c) {
+                if (opt && opt.target && c.target != opt.target)
+                    return false;
+                if (opt && opt.proponent && c.proponent != opt.proponent)
+                    return false;
+                return true;
+            });
         };
         return Game;
     }());

@@ -66,18 +66,27 @@ define(function(require, exports, module) {
     props: ['body', 'title'],
 
     computed: {
-      bodies()    { return Object.keys(this.data.bodies)     },
-      resources() { return Object.keys(this.data.resources)  },
+      bodies()    { return Object.keys(this.data.bodies) },
+      resources() { return Object.keys(this.data.resources) },
       name()      { return this.game.planets[this.body].name },
+      faction()   { return this.game.planets[this.body].faction.abbrev },
 
       hasShortages()  { return this.shortages[this.body]  && this.shortages[this.body].length  > 0 },
       hasSurpluses()  { return this.surpluses[this.body]  && this.surpluses[this.body].length  > 0 },
       hasConditions() { return this.conditions[this.body] && this.conditions[this.body].length > 0 },
+      hasConflicts()  { return this.conflicts.length > 0 },
 
       hasNews() {
         return this.hasShortages
             || this.hasSurpluses
-            || this.hasConditions;
+            || this.hasConditions
+            || this.hasConflicts;
+      },
+
+      conflicts() {
+        const faction = game.planets[this.body].faction.abbrev;
+        return this.game.get_conflicts()
+          .filter(c => c.target == faction || c.proponent == faction);
       },
 
       shipments() {
@@ -176,6 +185,17 @@ define(function(require, exports, module) {
             </p>
 
             <p v-if="cond.need.length">Officials are asking for any available shipping to assist with deliveries of {{cond.need.join(', ')}}.</p>
+          </div>
+
+          <div v-if="hasConflicts" class="my-2">
+            <h6>Politics</h6>
+            <ul>
+              <template v-for="conflict in conflicts">
+                <li :class="{'text-warning': conflict.target == faction}">
+                  {{conflict.proponent}} has declared a {{conflict.name}} against {{conflict.target}}
+                </li>
+              </template>
+            </ul>
           </div>
 
           <div v-if="hasShortages" class="my-2">

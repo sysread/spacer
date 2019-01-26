@@ -23,6 +23,7 @@ export interface Arrived {
 
 export interface ItemsBought {
   type:  Ev.ItemsBought;
+  body:  t.body;
   item:  t.resource;
   count: number;
   price: number;
@@ -30,6 +31,7 @@ export interface ItemsBought {
 
 export interface ItemsSold {
   type:     Ev.ItemsSold;
+  body:     t.body;
   item:     t.resource;
   count:    number;
   price:    number;
