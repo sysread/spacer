@@ -1371,7 +1371,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             if (this.contracts.length > 0 && window.game) {
                 this.contracts = this.contracts.filter(function (c) { return c.valid_until >= window.game.turns; });
             }
-            var want = util.getRandomInt(0, this.scale(10));
+            var want = util.getRandomInt(0, this.scale(5));
             var dests = t.bodies.filter(function (t) { return t != _this.body; });
             try {
                 for (var _b = __values(t.bodies), _c = _b.next(); !_c.done; _c = _b.next()) {

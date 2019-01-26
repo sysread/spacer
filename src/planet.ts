@@ -1197,7 +1197,7 @@ export class Planet {
       this.contracts = this.contracts.filter(c => c.valid_until >= window.game.turns);
     }
 
-    const want  = util.getRandomInt(0, this.scale(10));
+    const want  = util.getRandomInt(0, this.scale(5));
     const dests = t.bodies.filter(t => t != this.body);
 
     for (const body of t.bodies) {

@@ -110,7 +110,7 @@ define(["require", "exports", "./data", "./events", "./util"], function (require
             else {
                 chance = 0.005;
             }
-            chance /= 5;
+            chance /= 10;
             return util.chance(chance);
         };
         Embargo.prototype.start = function (turns) {

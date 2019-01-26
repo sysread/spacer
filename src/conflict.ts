@@ -132,7 +132,7 @@ export class Embargo extends Conflict {
       chance = 0.005;
     }
 
-    chance /= 5;
+    chance /= 10;
 
     return util.chance(chance);
   }
