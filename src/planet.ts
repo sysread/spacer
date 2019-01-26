@@ -1162,7 +1162,6 @@ export class Planet {
       for (const item of Object.keys(data.conditions[c].triggers.shortage)) {
         if (this.hasShortage(item as t.resource)) {
           if (util.chance( data.conditions[c].triggers.shortage[item] )) {
-console.log(this.body, c);
             this.conditions.push(new Condition(c));
           }
         }
@@ -1172,7 +1171,6 @@ console.log(this.body, c);
       for (const item of Object.keys(data.conditions[c].triggers.surplus)) {
         if (this.hasSurplus(item as t.resource)) {
           if (util.chance( data.conditions[c].triggers.surplus[item] )) {
-console.log(this.body, c);
             this.conditions.push(new Condition(c));
           }
         }
@@ -1182,7 +1180,6 @@ console.log(this.body, c);
       for (const cond of Object.keys(data.conditions[c].triggers.condition)) {
         if (this.hasCondition(cond) || this.hasTrait(cond)) {
           if (util.chance( data.conditions[c].triggers.condition[cond] )) {
-console.log(this.body, c);
             this.conditions.push(new Condition(c));
           }
         }

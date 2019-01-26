@@ -1303,7 +1303,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                             var item = _h.value;
                             if (this.hasShortage(item)) {
                                 if (util.chance(data_1.default.conditions[c].triggers.shortage[item])) {
-                                    console.log(this.body, c);
                                     this.conditions.push(new condition_1.Condition(c));
                                 }
                             }
@@ -1322,7 +1321,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                             var item = _k.value;
                             if (this.hasSurplus(item)) {
                                 if (util.chance(data_1.default.conditions[c].triggers.surplus[item])) {
-                                    console.log(this.body, c);
                                     this.conditions.push(new condition_1.Condition(c));
                                 }
                             }
@@ -1341,7 +1339,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                             var cond = _m.value;
                             if (this.hasCondition(cond) || this.hasTrait(cond)) {
                                 if (util.chance(data_1.default.conditions[c].triggers.condition[cond])) {
-                                    console.log(this.body, c);
                                     this.conditions.push(new condition_1.Condition(c));
                                 }
                             }

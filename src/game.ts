@@ -2,7 +2,6 @@ import data from './data';
 import system from './system';
 
 import { TransitPlan } from './transitplan';
-import { NewGameData } from './data/initial';
 import { Person, SavedPerson } from './person';
 import { Planet, SavedPlanet, isImportTask } from './planet';
 import { Agent, SavedAgent } from './agent';

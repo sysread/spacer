@@ -68,8 +68,6 @@ define(function(require, exports, module) {
         );
 
         this.$nextTick(this.processBatch);
-        //this.game.unfreeze();
-        //this.$nextTick(() => this.$emit('open', 'summary'));
       },
     },
 
