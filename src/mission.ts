@@ -108,6 +108,7 @@ export abstract class Mission {
   abstract get title(): string;
   abstract get short_title(): string;
   abstract get description(): string;
+  abstract get description_remaining(): string;
 
   get faction(): t.faction {
     return data.bodies[this.issuer].faction;
@@ -153,6 +154,22 @@ export abstract class Mission {
     } else {
       return `${days} days`;
     }
+  }
+
+  get time_total(): string {
+    const days  = util.csn(Math.floor(this.turns / data.turns_per_day));
+    const hours = Math.floor((this.turns_left % data.turns_per_day) * data.hours_per_turn);
+    if (hours) {
+      return `${days} days, ${hours} hours`;
+    } else {
+      return `${days} days`;
+    }
+  }
+
+  get end_date(): string {
+    const date = new Date(window.game.date);
+    date.setDate(date.getDate() + (this.turns_left * data.turns_per_day));
+    return window.game.strdate(date);
   }
 
   setStatus(status: Status) {
@@ -261,10 +278,15 @@ export class Passengers extends Mission {
 
     return [
       `Provide legal transport to these passengers to ${this.destination}.`,
-      `They must arrive at their destination within ${this.time_left}; you will receive ${reward} credits on arrival.`,
+      `They must arrive at their destination within ${this.time_total} by ${this.end_date}; you will receive ${reward} credits on arrival.`,
       `These passengers are legal citizens of ${faction} and are protected by the laws of their government.`,
       `Failure to complete the contract will result in a loss of standing and/or monetary penalties.`,
+      `You have ${this.time_left} remaining to complete this contract.`,
     ].join(' ');
+  }
+
+  get description_remaining(): string {
+    return `You have ${this.time_left} remaining to complete this contract.`;
   }
 
   accept() {
@@ -325,9 +347,16 @@ export class Smuggler extends Mission {
     return [
       `There is currently a ban in trade against our faction.`,
       `As a result, we are in desparate need of ${this.item} as our supplies dwindle.`,
-      `We are asking you to acquire ${this.amt} units of ${this.item} and return them here within ${this.time_left} days.`,
+      `We are asking you to acquire ${this.amt} units of ${this.item} and return them here within ${this.time_total} by ${this.end_date}.`,
       `These goods will be quietly removed from your hold by our people when you arrive at the dock.`,
       `We will offer you ${reward} credits you for the completion of this contract in a timely fashion.`,
+    ].join(' ');
+  }
+
+  get description_remaining(): string {
+    return [
+      `You have ${this.amt_left} remaining units to deliver.`,
+      `You have ${this.time_left} remaining to complete this contract.`,
     ].join(' ');
   }
 
@@ -345,11 +374,15 @@ export class Smuggler extends Mission {
         if (amt > 0) {
           this.amt_left -= amt;
           window.game.player.ship.unloadCargo(this.item, amt);
+          window.game.planets[this.issuer].sell(this.item, amt);
 
           if (this.amt_left == 0) {
             this.setStatus(Status.Complete);
             this.complete();
             return false;
+          }
+          else {
+            window.game.notify(`You have delivered ${amt} units of ${this.item}. ${this.description_remaining}.`);
           }
         }
       }

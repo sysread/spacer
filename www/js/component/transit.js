@@ -628,7 +628,7 @@ define(function(require, exports, module) {
             :body="encounter.body"
             :faction="encounter.faction"
             :distance="encounter.distance"
-            :dest="transit.dest"
+            :dest="plan.dest"
             class="my-3" />
 
         <PirateEncounter

@@ -69,6 +69,7 @@ define(["require", "exports", "./data", "./events", "./util"], function (require
                 starts: window.game.turns,
                 ends: window.game.turns + turns,
             };
+            this.install_event_watchers();
         };
         return Condition;
     }());
@@ -112,14 +113,10 @@ define(["require", "exports", "./data", "./events", "./util"], function (require
             chance /= 10;
             return util.chance(chance);
         };
-        Embargo.prototype.start = function (turns) {
-            _super.prototype.start.call(this, turns);
-            this.install_event_watchers();
-        };
         Embargo.prototype.install_event_watchers = function () {
             var _this = this;
-            events_1.Events.watch(events_1.Ev.ItemsBought, function (ev) { console.log(ev); return _this.violation(ev.body, ev.item, ev.count); });
-            events_1.Events.watch(events_1.Ev.ItemsSold, function (ev) { console.log(ev); return _this.violation(ev.body, ev.item, ev.count); });
+            events_1.Events.watch(events_1.Ev.ItemsBought, function (ev) { return _this.violation(ev.body, ev.item, ev.count); });
+            events_1.Events.watch(events_1.Ev.ItemsSold, function (ev) { return _this.violation(ev.body, ev.item, ev.count); });
         };
         Embargo.prototype.violation = function (body, item, count) {
             if (!this.is_started || this.is_over)

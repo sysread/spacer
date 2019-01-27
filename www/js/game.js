@@ -123,7 +123,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
         });
         Game.prototype.start_date = function () {
             var date = new Date(data_1.default.start_date);
-            date.setDate(this.date.getDate() - data_1.default.initial_days);
+            date.setDate(date.getDate() - data_1.default.initial_days);
             return date;
         };
         Game.prototype.reset_date = function () {
@@ -288,6 +288,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                 this.transit_plan = undefined;
             }
             if (this.locus) {
+                console.log('Arrived', this.locus);
                 events_1.Events.signal({ type: events_1.Ev.Arrived, dest: this.locus });
             }
         };

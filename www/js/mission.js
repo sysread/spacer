@@ -132,6 +132,29 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Mission.prototype, "time_total", {
+            get: function () {
+                var days = util.csn(Math.floor(this.turns / data_1.default.turns_per_day));
+                var hours = Math.floor((this.turns_left % data_1.default.turns_per_day) * data_1.default.hours_per_turn);
+                if (hours) {
+                    return days + " days, " + hours + " hours";
+                }
+                else {
+                    return days + " days";
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Mission.prototype, "end_date", {
+            get: function () {
+                var date = new Date(window.game.date);
+                date.setDate(date.getDate() + (this.turns_left * data_1.default.turns_per_day));
+                return window.game.strdate(date);
+            },
+            enumerable: true,
+            configurable: true
+        });
         Mission.prototype.setStatus = function (status) {
             if (this.status >= status) {
                 var info = JSON.stringify(this);
@@ -237,10 +260,18 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
                     faction = 'The ' + faction;
                 return [
                     "Provide legal transport to these passengers to " + this.destination + ".",
-                    "They must arrive at their destination within " + this.time_left + "; you will receive " + reward + " credits on arrival.",
+                    "They must arrive at their destination within " + this.time_total + " by " + this.end_date + "; you will receive " + reward + " credits on arrival.",
                     "These passengers are legal citizens of " + faction + " and are protected by the laws of their government.",
                     "Failure to complete the contract will result in a loss of standing and/or monetary penalties.",
+                    "You have " + this.time_left + " remaining to complete this contract.",
                 ].join(' ');
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Passengers.prototype, "description_remaining", {
+            get: function () {
+                return "You have " + this.time_left + " remaining to complete this contract.";
             },
             enumerable: true,
             configurable: true
@@ -302,9 +333,19 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
                 return [
                     "There is currently a ban in trade against our faction.",
                     "As a result, we are in desparate need of " + this.item + " as our supplies dwindle.",
-                    "We are asking you to acquire " + this.amt + " units of " + this.item + " and return them here within " + this.time_left + " days.",
+                    "We are asking you to acquire " + this.amt + " units of " + this.item + " and return them here within " + this.time_total + " by " + this.end_date + ".",
                     "These goods will be quietly removed from your hold by our people when you arrive at the dock.",
                     "We will offer you " + reward + " credits you for the completion of this contract in a timely fashion.",
+                ].join(' ');
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Smuggler.prototype, "description_remaining", {
+            get: function () {
+                return [
+                    "You have " + this.amt_left + " remaining units to deliver.",
+                    "You have " + this.time_left + " remaining to complete this contract.",
                 ].join(' ');
             },
             enumerable: true,
@@ -322,10 +363,14 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
                     if (amt > 0) {
                         _this.amt_left -= amt;
                         window.game.player.ship.unloadCargo(_this.item, amt);
+                        window.game.planets[_this.issuer].sell(_this.item, amt);
                         if (_this.amt_left == 0) {
                             _this.setStatus(Status.Complete);
                             _this.complete();
                             return false;
+                        }
+                        else {
+                            window.game.notify("You have delivered " + amt + " units of " + _this.item + ". " + _this.description_remaining + ".");
                         }
                     }
                 }

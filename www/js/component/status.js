@@ -99,6 +99,7 @@ define(function(require, exports, module) {
   <div v-if="person.contracts.length > 0">
     <card v-for="(contract, idx) of person.contracts" :key="idx" :title="contract.short_title">
       <card-text>{{contract.description}}</card-text>
+      <card-text>{{contract.description_remaining}}</card-text>
       <btn @click="cancel(contract)" block=1 class="my-3">Cancel contract</btn>
 
       <confirm v-if="show_confirm" yes="Yes" no="No" @confirm="cancel(contract, $event)">

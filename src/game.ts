@@ -143,7 +143,7 @@ class Game {
 
   start_date() {
     const date = new Date(data.start_date);
-    date.setDate(this.date.getDate() - data.initial_days);
+    date.setDate(date.getDate() - data.initial_days);
     return date;
   }
 
@@ -297,6 +297,7 @@ class Game {
     }
 
     if (this.locus) {
+console.log('Arrived', this.locus);
       Events.signal({type: Ev.Arrived, dest: this.locus});
     }
   }

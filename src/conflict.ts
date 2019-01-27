@@ -93,6 +93,8 @@ abstract class Condition {
       starts: window.game.turns,
       ends:   window.game.turns + turns,
     };
+
+    this.install_event_watchers();
   }
 }
 
@@ -138,14 +140,9 @@ export class Embargo extends Conflict {
     return util.chance(chance);
   }
 
-  start(turns: number) {
-    super.start(turns);
-    this.install_event_watchers();
-  }
-
   install_event_watchers() {
-    Events.watch(Ev.ItemsBought, (ev: ItemsBought) => {console.log(ev); return this.violation(ev.body, ev.item, ev.count)});
-    Events.watch(Ev.ItemsSold,   (ev: ItemsSold)   => {console.log(ev); return this.violation(ev.body, ev.item, ev.count)});
+    Events.watch(Ev.ItemsBought, (ev: ItemsBought) => this.violation(ev.body, ev.item, ev.count));
+    Events.watch(Ev.ItemsSold,   (ev: ItemsSold)   => this.violation(ev.body, ev.item, ev.count));
   }
 
   violation(body: t.body, item: t.resource, count: number) {
