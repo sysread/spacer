@@ -600,6 +600,15 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
             return amount;
         };
+        // Increases demand by the number of units of item less than amt that
+        // there are in the market. For example, if requesting 5 units of fuel
+        // and only 3 are in the market, demand will increase by 2.
+        Planet.prototype.requestResource = function (item, amt) {
+            var avail = this.getStock(item);
+            if (amt > avail) {
+                this.incDemand(item, amt - avail);
+            }
+        };
         Planet.prototype.incDemand = function (item, amt) {
             var e_15, _a;
             var queue = [[item, amt]];
@@ -1498,14 +1507,14 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             var tax = this.faction.sales_tax;
             var standing = player.getStandingPriceAdjustment(this.faction.abbrev);
             var scarcity = this.resourceDependencyPriceAdjustment('metal');
-            return (base + (base * tax) - (base * standing)) * scarcity;
+            return Math.ceil((base + (base * tax) - (base * standing)) * scarcity);
         };
         Planet.prototype.armorRepairPrice = function (player) {
             var base = data_1.default.ship.armor.repair;
             var tax = this.faction.sales_tax;
             var standing = player.getStandingPriceAdjustment(this.faction.abbrev);
             var scarcity = this.resourceDependencyPriceAdjustment('metal');
-            return (base + (base * tax) - (base * standing)) * scarcity;
+            return Math.ceil((base + (base * tax) - (base * standing)) * scarcity);
         };
         return Planet;
     }());

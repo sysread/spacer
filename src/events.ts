@@ -11,11 +11,17 @@ export enum Ev {
 };
 
 
+/*
+ * Global events
+ */
 export interface Turn {
   type: Ev.Turn;
   turn: number;
 }
 
+/*
+ * Player-specific events
+ */
 export interface Arrived {
   type: Ev.Arrived;
   dest: t.body;

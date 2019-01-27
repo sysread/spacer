@@ -1,12 +1,20 @@
 import data from './data';
 import Physics from './physics';
 import Store from './store';
+
+import { Ev, Events, Arrived } from './events';
+
 import * as util from './util';
 import * as t from './common';
+
+
+declare var window: { game: any; }
+
 
 interface MarketShim {
   sellPrice(item: t.resource): number;
 }
+
 
 interface SavedShip {
   type:    t.shiptype;
@@ -15,6 +23,7 @@ interface SavedShip {
   fuel?:   number;
   cargo?:  t.ResourceCounter;
 }
+
 
 class Ship {
   type:   t.shiptype;
@@ -35,6 +44,25 @@ class Ship {
     this.damage = init.damage || {hull: 0, armor: 0};
     this.fuel   = init.fuel   || this.tank;
     this.cargo  = new Store(init.cargo);
+
+    /*
+     * When the player arrives at dock, increase demand for any resources
+     * related to ship's maintenance (fuel, metal) that are not currently
+     * available.
+     */
+    Events.watch(Ev.Arrived, (ev: Arrived) => {
+      // metal to repair damage to the ship
+      if (this.hasDamage()) {
+        const want = this.damage.armor + this.damage.hull;
+        window.game.here.requestResource('metal', want);
+      }
+
+      // fuel for the tank
+      if (this.needsFuel()) {
+        const want = this.refuelUnits();
+        window.game.here.requestResource('fuel', want);
+      }
+    });
   }
 
   get shipclass()      { return data.shipclass[this.type] }
@@ -200,8 +228,9 @@ class Ship {
   }
 
   refuelUnits() {return Math.ceil(this.tank - this.fuel)}
+  needsFuel()   {return this.fuel < this.tank}
   tankIsFull()  {return Math.floor(this.fuel) >= this.tank}
-  tankIsEmpty() {return this.fuel === 0}
+  tankIsEmpty() {return util.R(this.fuel) === 0}
 
   refuel(units: number) {
     this.fuel = Math.min(this.tank, this.fuel + units);

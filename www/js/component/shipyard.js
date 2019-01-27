@@ -49,9 +49,9 @@ define(function(require, exports, module) {
     </card-text>
 
     <row>
-      <btn :disabled="!needsFuel() || !affordFuel()" :block=1 class="m-1" @click="modal='refuel'">Refuel</btn>
-      <btn :disabled="!needsFuel() || !hasFuel()" :block=1 class="m-1" @click="modal='transfer'">Transfer fuel</btn>
-      <btn :disabled="!hasDamage()" :block=1 class="m-1" @click="modal='repair'">Repairs</btn>
+      <btn :muted="!needsFuel() || !affordFuel()" :block=1 class="m-1" @click="modal='refuel'">Refuel</btn>
+      <btn :muted="!needsFuel() || !hasFuel()" :block=1 class="m-1" @click="modal='transfer'">Transfer fuel</btn>
+      <btn :muted="!hasDamage()" :block=1 class="m-1" @click="modal='repair'">Repairs</btn>
       <btn :block=1 class="m-1" @click="open('ships')">Ships</btn>
       <btn :block=1 class="m-1" @click="open('addons')">Upgrades</btn>
     </row>
@@ -102,14 +102,14 @@ define(function(require, exports, module) {
       return { change: 0 };
     },
     computed: {
-      need:  function() { return this.game.player.ship.refuelUnits() },
-      have:  function() { return this.game.player.ship.cargo.count('fuel') },
-      max:   function() { return Math.min(this.have, this.need) },
-      tank:  function() { return Math.min(this.game.player.ship.tank, this.game.player.ship.fuel + this.change) },
-      cargo: function() { return this.game.player.ship.cargo.count('fuel') - this.change },
+      need()  { return this.game.player.ship.refuelUnits() },
+      have()  { return this.game.player.ship.cargo.count('fuel') },
+      max()   { return Math.min(this.have, this.need) },
+      tank()  { return Math.min(this.game.player.ship.tank, this.game.player.ship.fuel + this.change) },
+      cargo() { return this.game.player.ship.cargo.count('fuel') - this.change },
     },
     methods: {
-      fillHerUp: function() {
+      fillHerUp() {
         if (this.change !== NaN && this.change > 0 && this.change <= this.max) {
           this.game.player.ship.refuel(this.change);
           this.game.player.ship.cargo.dec('fuel', this.change);
@@ -138,15 +138,16 @@ define(function(require, exports, module) {
     },
 
     computed: {
-      money()            { return this.game.player.money                            },
-      need_hull()        { return Math.ceil(this.game.player.ship.damage.hull)      },
-      need_armor()       { return Math.ceil(this.game.player.ship.damage.armor)     },
-      has_repairs()      { return this.game.here.hasRepairs()                       },
-      price_hull_each()  { return this.game.here.hullRepairPrice(this.game.player)  },
+      avail()            { return this.game.here.getStock('metal') },
+      money()            { return this.game.player.money },
+      need_hull()        { return Math.ceil(this.game.player.ship.damage.hull) },
+      need_armor()       { return Math.ceil(this.game.player.ship.damage.armor) },
+      has_repairs()      { return this.game.here.hasRepairs() },
+      price_hull_each()  { return this.game.here.hullRepairPrice(this.game.player) },
       price_armor_each() { return this.game.here.armorRepairPrice(this.game.player) },
-      price_hull()       { return this.price_hull_each * this.repair_hull           },
-      price_armor()      { return this.price_armor_each * this.repair_armor         },
-      price_total()      { return this.price_hull + this.price_armor                },
+      price_hull()       { return this.price_hull_each * this.repair_hull },
+      price_armor()      { return this.price_armor_each * this.repair_armor },
+      price_total()      { return this.price_hull + this.price_armor },
 
       max_hull() {
         return Math.min(
@@ -190,6 +191,7 @@ define(function(require, exports, module) {
   <template v-if="has_repairs">
     <p>
       The shipyard is capable of repairing most structural damage to a ship.
+      There are {{avail|csn}} units of metal in the market available for repairs.
       You have {{money|csn|unit('c')}} available for repairs.
     </p>
 

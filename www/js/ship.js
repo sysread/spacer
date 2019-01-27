@@ -18,14 +18,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./physics", "./store", "./common"], function (require, exports, data_1, physics_1, store_1, t) {
+define(["require", "exports", "./data", "./physics", "./store", "./events", "./util", "./common"], function (require, exports, data_1, physics_1, store_1, events_1, util, t) {
     "use strict";
     data_1 = __importDefault(data_1);
     physics_1 = __importDefault(physics_1);
     store_1 = __importDefault(store_1);
+    util = __importStar(util);
     t = __importStar(t);
     var Ship = /** @class */ (function () {
         function Ship(init) {
+            var _this = this;
             init = init || { 'type': 'shuttle' };
             if (!data_1.default.shipclass.hasOwnProperty(init.type)) {
                 throw new Error("Ship type not recognized: " + init.type);
@@ -35,6 +37,23 @@ define(["require", "exports", "./data", "./physics", "./store", "./common"], fun
             this.damage = init.damage || { hull: 0, armor: 0 };
             this.fuel = init.fuel || this.tank;
             this.cargo = new store_1.default(init.cargo);
+            /*
+             * When the player arrives at dock, increase demand for any resources
+             * related to ship's maintenance (fuel, metal) that are not currently
+             * available.
+             */
+            events_1.Events.watch(events_1.Ev.Arrived, function (ev) {
+                // metal to repair damage to the ship
+                if (_this.hasDamage()) {
+                    var want = _this.damage.armor + _this.damage.hull;
+                    window.game.here.requestResource('metal', want);
+                }
+                // fuel for the tank
+                if (_this.needsFuel()) {
+                    var want = _this.refuelUnits();
+                    window.game.here.requestResource('fuel', want);
+                }
+            });
         }
         Object.defineProperty(Ship.prototype, "shipclass", {
             get: function () { return data_1.default.shipclass[this.type]; },
@@ -323,8 +342,9 @@ define(["require", "exports", "./data", "./physics", "./store", "./common"], fun
             return physics_1.default.deltav(this.thrust, this.currentMass() + mass);
         };
         Ship.prototype.refuelUnits = function () { return Math.ceil(this.tank - this.fuel); };
+        Ship.prototype.needsFuel = function () { return this.fuel < this.tank; };
         Ship.prototype.tankIsFull = function () { return Math.floor(this.fuel) >= this.tank; };
-        Ship.prototype.tankIsEmpty = function () { return this.fuel === 0; };
+        Ship.prototype.tankIsEmpty = function () { return util.R(this.fuel) === 0; };
         Ship.prototype.refuel = function (units) {
             this.fuel = Math.min(this.tank, this.fuel + units);
         };

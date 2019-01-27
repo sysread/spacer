@@ -584,6 +584,17 @@ export class Planet {
     return amount;
   }
 
+  // Increases demand by the number of units of item less than amt that
+  // there are in the market. For example, if requesting 5 units of fuel
+  // and only 3 are in the market, demand will increase by 2.
+  requestResource(item: t.resource, amt: number) {
+    const avail = this.getStock(item);
+
+    if (amt > avail) {
+      this.incDemand(item, amt - avail);
+    }
+  }
+
   incDemand(item: t.resource, amt: number) {
     const queue: [t.resource, number][] = [[item, amt]];
 
@@ -1306,7 +1317,7 @@ export class Planet {
     const tax      = this.faction.sales_tax;
     const standing = player.getStandingPriceAdjustment(this.faction.abbrev);
     const scarcity = this.resourceDependencyPriceAdjustment('metal');
-    return (base + (base * tax) - (base * standing)) * scarcity;
+    return Math.ceil((base + (base * tax) - (base * standing)) * scarcity);
   }
 
   armorRepairPrice(player: Person) {
@@ -1314,6 +1325,6 @@ export class Planet {
     const tax      = this.faction.sales_tax;
     const standing = player.getStandingPriceAdjustment(this.faction.abbrev);
     const scarcity = this.resourceDependencyPriceAdjustment('metal');
-    return (base + (base * tax) - (base * standing)) * scarcity;
+    return Math.ceil((base + (base * tax) - (base * standing)) * scarcity);
   }
 }
