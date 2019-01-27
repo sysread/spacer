@@ -160,9 +160,10 @@ define(function(require, exports, module) {
       </div>
 
       <div v-else-if="combat.opponentSurrendered" class="my-3">
-        <span v-if="hasLoot" class="text-success">
-          Your opponent has surrendered. You may choose to salvage any intact cargo from their vessel.
+        Your opponent surrendered.
 
+        <span v-if="hasLoot" class="text-success">
+          Your boarding party notes that there is intact cargo in the hold.
           <btn @click="salvage=true" block=1 class="mt-3">Salvage</btn>
         </span>
 

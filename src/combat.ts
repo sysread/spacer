@@ -314,11 +314,11 @@ export class Combat {
   }
 
   get playerSurrendered() {
-    return this.surrendered === this.player.name;
+    return this.surrendered == this.player.name;
   }
 
   get opponentSurrendered() {
-    return this.surrendered === this.opponent.name;
+    return this.surrendered == this.opponent.name;
   }
 
   get playerDestroyed() {

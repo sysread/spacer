@@ -430,14 +430,14 @@ define(["require", "exports", "./data", "./store", "./util", "./common"], functi
         });
         Object.defineProperty(Combat.prototype, "playerSurrendered", {
             get: function () {
-                return this.surrendered === this.player.name;
+                return this.surrendered == this.player.name;
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Combat.prototype, "opponentSurrendered", {
             get: function () {
-                return this.surrendered === this.opponent.name;
+                return this.surrendered == this.opponent.name;
             },
             enumerable: true,
             configurable: true
