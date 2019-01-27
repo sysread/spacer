@@ -59,7 +59,7 @@ define(function(require, exports, module) {
   Vue.component('Testing', {
     data() {
       return {
-        menu: 'bodies',
+        show: 'bodies',
         body: window.game.locus,
         item: 'water',
         slow: false,
@@ -133,16 +133,16 @@ define(function(require, exports, module) {
 <card>
 <div class="input-group input-group-sm my-1">
   <div class="input-group-prepend btn-group">
-    <btn :disabled="menu == 'items'" @click="menu='items'">Resources</btn>
-    <btn :disabled="menu == 'bodies'" @click="menu='bodies'">Markets</btn>
+    <btn :disabled="show == 'items'" @click="show='items'">Resources</btn>
+    <btn :disabled="show == 'bodies'" @click="show='bodies'">Markets</btn>
   </div>
 
-  <select v-if="menu == 'bodies'" v-model="body" class="form-control">
+  <select v-if="show == 'bodies'" v-model="body" class="form-control">
     <option value="">Market</option>
     <option v-for="body in bodies" :key="body" :value="body">{{body|caps}}</option>
   </select>
 
-  <select v-if="menu == 'items'" v-model="item" class="form-control">
+  <select v-if="show == 'items'" v-model="item" class="form-control">
     <option value="">Resource</option>
     <option v-for="item in resources" :key="item" :value="item">
       {{item|caps}}
@@ -150,7 +150,7 @@ define(function(require, exports, module) {
     </option>
   </select>
 
-  <span v-if="menu == 'items'">
+  <span v-if="show == 'items'">
     Min: {{ minPrice }}
     <br />
     Max: {{ maxPrice }}
@@ -176,10 +176,11 @@ define(function(require, exports, module) {
   <div class="input-group-append btn-group">
     <span class="input-group-text">Misc</span>
     <btn @click="fixMe">Fix me</btn>
+    <btn @click="show='pirate'">Pirate</btn>
   </div>
 </div>
 
-<table v-if="menu == 'items' && item" class="table table-sm mini">
+<table v-if="show == 'items' && item" class="table table-sm mini">
   <thead>
     <tr>
       <th>Loc</th>
@@ -208,7 +209,7 @@ define(function(require, exports, module) {
   </tbody>
 </table>
 
-<table v-else-if="menu == 'bodies' && body" class="table table-sm mini">
+<table v-else-if="show == 'bodies' && body" class="table table-sm mini">
   <thead>
     <tr>
       <th>Item</th>
@@ -236,6 +237,8 @@ define(function(require, exports, module) {
     </template>
   </tbody>
 </table>
+
+<PirateEncounter v-if="show == 'pirate'" :nearest="body ? data.bodies[body].faction : 'TRANSA'" />
 
 </card>
     `,
