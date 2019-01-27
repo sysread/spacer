@@ -87,7 +87,7 @@ export class Attack extends Action {
   nextRound() {
     ++this._round;
 
-    if (this._magazine === 0 && this._reload === 1) {
+    if (this._magazine === 0 && --this._reload === 0) {
       this._reload = 0;
       this._magazine = this.magazine;
     }

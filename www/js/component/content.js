@@ -238,7 +238,7 @@ define(function(require, exports, module) {
   </tbody>
 </table>
 
-<PirateEncounter v-if="show == 'pirate'" :nearest="body ? data.bodies[body].faction : 'TRANSA'" />
+<PirateEncounter v-if="show == 'pirate'" @complete="show='bodies'" :nearest="body ? data.bodies[body].faction : 'TRANSA'" />
 
 </card>
     `,

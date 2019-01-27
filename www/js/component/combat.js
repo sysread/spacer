@@ -276,11 +276,11 @@ define(function(require, exports, module) {
     [{{action.count}}]
   </template>
 
-  <badge right=1 v-if="action.isReloadable" class="mx-2">
+  <badge right=1 class="mx-2">
     {{action.magazineRemaining}}/{{action.magazine}}
   </badge>
 
-  <badge right=1 v-if="action.isReloadable && action.isReloading">
+  <badge right=1 v-if="action.isReloading">
     Reloading: {{action.roundsUntilReload}}
   </badge>
 </card-btn>

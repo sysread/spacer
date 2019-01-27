@@ -150,7 +150,7 @@ define(["require", "exports", "./data", "./store", "./util", "./common"], functi
         };
         Attack.prototype.nextRound = function () {
             ++this._round;
-            if (this._magazine === 0 && this._reload === 1) {
+            if (this._magazine === 0 && --this._reload === 0) {
                 this._reload = 0;
                 this._magazine = this.magazine;
             }
