@@ -151,6 +151,7 @@ export abstract class Mission {
     window.game.player.incStanding(this.faction, this.standing);
     window.game.player.completeMission(this);
     window.game.save_game();
+    window.game.notify(`Contract completed: ${this.short_title}. ${util.csn(this.price)} credits have been deposited in your account.`);
   }
 
   cancel() {
@@ -158,6 +159,7 @@ export abstract class Mission {
     window.game.player.decStanding(this.faction, this.standing / 2);
     window.game.player.completeMission(this);
     window.game.save_game();
+    window.game.notify(`Contract cancelled: ${this.short_title}`);
   }
 }
 
