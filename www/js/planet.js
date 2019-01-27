@@ -136,7 +136,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         var info = _p.value;
                         this.contracts.push({
                             valid_until: info.valid_until,
-                            mission: new mission_1.Passengers(info.mission),
+                            mission: mission_1.restoreMission(info.mission),
                         });
                     }
                 }
@@ -1019,9 +1019,13 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             // available units
             var bestPlanet;
             var bestRating = 0;
+            var hasTradeBan = this.hasTradeBan;
             try {
                 for (var exporters_3 = __values(exporters), exporters_3_1 = exporters_3.next(); !exporters_3_1.done; exporters_3_1 = exporters_3.next()) {
                     var body = exporters_3_1.value;
+                    // no trade ban violations from unaligned markets
+                    if (hasTradeBan && data_1.default.bodies[body].faction != this.faction.abbrev)
+                        continue;
                     var rating = priceRating[body] * stockRating[body] * distRating[body];
                     if (rating > bestRating) {
                         bestRating = rating;
@@ -1375,11 +1379,51 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * Contracts
          */
         Planet.prototype.refreshContracts = function () {
-            var _this = this;
-            var e_40, _a;
             if (this.contracts.length > 0 && window.game) {
                 this.contracts = this.contracts.filter(function (c) { return c.valid_until >= window.game.turns; });
             }
+            this.refreshPassengerContracts();
+            this.refreshSmugglerContracts();
+        };
+        Planet.prototype.refreshSmugglerContracts = function () {
+            var e_40, _a;
+            var hasTradeBan = this.hasTradeBan;
+            // If the trade ban is over, remove smuggling contracts
+            if (this.contracts.length > 0 && window.game) {
+                this.contracts = this.contracts.filter(function (c) { return !(c instanceof mission_1.Smuggler) || hasTradeBan; });
+            }
+            if (hasTradeBan) {
+                var needed = this.neededResources();
+                var missions = [];
+                try {
+                    for (var _b = __values(needed.prioritized), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var item = _c.value;
+                        if (missions.length > 3)
+                            break;
+                        var mission = new mission_1.Smuggler({
+                            issuer: this.body,
+                            item: item,
+                            amt: needed.amounts[item],
+                        });
+                        missions.push({
+                            valid_until: util.getRandomInt(10, 30) * data_1.default.turns_per_day,
+                            mission: mission,
+                        });
+                    }
+                }
+                catch (e_40_1) { e_40 = { error: e_40_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    }
+                    finally { if (e_40) throw e_40.error; }
+                }
+                this.contracts = this.contracts.concat(missions);
+            }
+        };
+        Planet.prototype.refreshPassengerContracts = function () {
+            var _this = this;
+            var e_41, _a;
             var want = util.getRandomInt(0, this.scale(5));
             var dests = t.bodies.filter(function (t) { return t != _this.body; });
             try {
@@ -1397,12 +1441,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_40_1) { e_40 = { error: e_40_1 }; }
+            catch (e_41_1) { e_41 = { error: e_41_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_40) throw e_40.error; }
+                finally { if (e_41) throw e_41.error; }
             }
             var _loop_1 = function () {
                 var dest = util.oneOf(dests.filter(function (d) { return !_this.contracts.find(function (c) { return c.mission.dest == d; }); }));
@@ -1423,11 +1467,22 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.acceptMission = function (mission) {
             this.contracts = this.contracts.filter(function (c) { return c.mission.title != mission.title; });
         };
+        Object.defineProperty(Planet.prototype, "hasTradeBan", {
+            get: function () {
+                var trade_bans = window.game.get_conflicts({
+                    target: this.faction.abbrev,
+                    name: 'trade ban',
+                });
+                return trade_bans.length > 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
         /*
          * Misc
          */
         Planet.prototype.addonPrice = function (addon, player) {
-            var e_41, _a;
+            var e_42, _a;
             var base = data_1.default.addons[addon].price;
             var standing = base * player.getStandingPriceAdjustment(this.faction.abbrev);
             var tax = base * this.faction.sales_tax;
@@ -1440,12 +1495,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_41_1) { e_41 = { error: e_41_1 }; }
+            catch (e_42_1) { e_42 = { error: e_42_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_41) throw e_41.error; }
+                finally { if (e_42) throw e_42.error; }
             }
             return price;
         };
@@ -1455,7 +1510,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * scheduled in the queue. Does not account for agents.
          */
         Planet.prototype.estimateAvailability = function (item) {
-            var e_42, _a;
+            var e_43, _a;
             var turns = undefined;
             if (this.getStock(item) > 0)
                 return 0;
@@ -1478,12 +1533,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
-            catch (e_42_1) { e_42 = { error: e_42_1 }; }
+            catch (e_43_1) { e_43 = { error: e_43_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_42) throw e_42.error; }
+                finally { if (e_43) throw e_43.error; }
             }
             return turns;
         };

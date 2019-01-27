@@ -17,6 +17,7 @@ define(["require", "exports"], function (require, exports) {
         Ev["Arrived"] = "Arrived";
         Ev["ItemsBought"] = "ItemsBought";
         Ev["ItemsSold"] = "ItemsSold";
+        Ev["CaughtSmuggling"] = "CaughtSmuggling";
     })(Ev = exports.Ev || (exports.Ev = {}));
     ;
     var Events = /** @class */ (function () {

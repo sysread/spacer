@@ -21,13 +21,26 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./physics", "./events", "./util"], function (require, exports, data_1, system_1, physics_1, events_1, util) {
+define(["require", "exports", "./data", "./system", "./physics", "./resource", "./events", "./util"], function (require, exports, data_1, system_1, physics_1, resource_1, events_1, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
     physics_1 = __importDefault(physics_1);
     util = __importStar(util);
+    function estimateTransitTimeAU(au) {
+        var turns = 0;
+        for (var i = 0, inc = 15; i < au; ++i, inc *= 0.8) {
+            turns += inc * data_1.default.turns_per_day;
+        }
+        return Math.ceil(turns);
+    }
+    exports.estimateTransitTimeAU = estimateTransitTimeAU;
+    function estimateTransitTime(orig, dest) {
+        var au = util.R(system_1.default.distance(orig, dest) / physics_1.default.AU);
+        return estimateTransitTimeAU(au);
+    }
+    exports.estimateTransitTime = estimateTransitTime;
     var Status;
     (function (Status) {
         Status[Status["Ready"] = 0] = "Ready";
@@ -36,12 +49,22 @@ define(["require", "exports", "./data", "./system", "./physics", "./events", "./
         Status[Status["Success"] = 3] = "Success";
         Status[Status["Failure"] = 4] = "Failure";
     })(Status = exports.Status || (exports.Status = {}));
+    function restoreMission(opt) {
+        if (opt.dest) {
+            return new Passengers(opt);
+        }
+        if (opt.item) {
+            return new Smuggler(opt);
+        }
+        throw new Error('mission data does not match recognized mission type');
+    }
+    exports.restoreMission = restoreMission;
     var Mission = /** @class */ (function () {
         function Mission(opt) {
             this.status = opt.status || Status.Ready;
-            this.standing = opt.standing;
-            this.reward = opt.reward;
-            this.turns = opt.turns;
+            this.standing = opt.standing || 0;
+            this.reward = opt.reward || 0;
+            this.turns = opt.turns || 0;
             this.issuer = opt.issuer;
             this.deadline = opt.deadline;
         }
@@ -170,11 +193,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./events", "./
         __extends(Passengers, _super);
         function Passengers(opt) {
             var _this = this;
-            var dist = util.R(system_1.default.distance(opt.issuer, opt.dest) / physics_1.default.AU);
-            var est = Passengers.estimateTimeNeeded(opt.issuer, opt.dest);
+            var est = estimateTransitTime(opt.issuer, opt.dest);
             // TODO race condition here; the orig and dest are moving so long as the
             // contract is offered, which may make the deadline impossible after
             // several days.
+            // NOTE these are NOT restored from opt when reinitialized from game data.
+            // they should always be fresh.
             opt.turns = Math.max(data_1.default.turns_per_day * 3, est);
             opt.reward = util.fuzz(Math.max(500, Math.ceil(Math.log(1 + est) * 1500)), 0.05);
             opt.standing = Math.ceil(Math.log10(opt.reward));
@@ -182,14 +206,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./events", "./
             _this.dest = opt.dest;
             return _this;
         }
-        Passengers.estimateTimeNeeded = function (orig, dest) {
-            var au = util.R(system_1.default.distance(orig, dest) / physics_1.default.AU);
-            var turns = 0;
-            for (var i = 0, inc = 15; i < au; ++i, inc *= 0.8) {
-                turns += inc * data_1.default.turns_per_day;
-            }
-            return Math.ceil(turns);
-        };
         Object.defineProperty(Passengers.prototype, "destination", {
             get: function () {
                 return data_1.default.bodies[this.dest].name;
@@ -241,12 +257,90 @@ define(["require", "exports", "./data", "./system", "./physics", "./events", "./
                     _this.complete();
                     return false;
                 }
-                else {
-                    return true;
-                }
+                return true;
             });
         };
         return Passengers;
     }(Mission));
     exports.Passengers = Passengers;
+    var Smuggler = /** @class */ (function (_super) {
+        __extends(Smuggler, _super);
+        function Smuggler(opt) {
+            var _this = this;
+            opt.turns = 2 * Math.max(data_1.default.turns_per_day * 3, estimateTransitTimeAU(10));
+            opt.reward = 4 * resource_1.resources[opt.item].value * opt.amt;
+            opt.standing = Math.ceil(Math.log10(opt.reward));
+            _this = _super.call(this, opt) || this;
+            _this.item = opt.item;
+            _this.amt = opt.amt;
+            _this.amt_left = opt.amt_left || opt.amt;
+            return _this;
+        }
+        Object.defineProperty(Smuggler.prototype, "title", {
+            get: function () {
+                var name = window.game.planets[this.issuer].name;
+                return "Smuggle " + this.amt + " units of " + this.item + " to " + name;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Smuggler.prototype, "short_title", {
+            get: function () {
+                var name = window.game.planets[this.issuer].name;
+                return "Smuggle " + this.item + " to " + name;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Smuggler.prototype, "description", {
+            get: function () {
+                var reward = util.csn(this.price);
+                var factions = window.game.get_conflicts({
+                    name: 'trade ban',
+                    target: this.issuer,
+                }).map(function (c) { return c.proponent; });
+                return [
+                    "There is currently a ban in trade against our faction.",
+                    "As a result, we are in desparate need of " + this.item + " as our supplies dwindle.",
+                    "We are asking you to acquire " + this.amt + " units of " + this.item + " and return them here within " + this.time_left + " days.",
+                    "These goods will be quietly removed from your hold by our people when you arrive at the dock.",
+                    "We will offer you " + reward + " credits you for the completion of this contract in a timely fashion.",
+                ].join(' ');
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Smuggler.prototype.accept = function () {
+            var _this = this;
+            _super.prototype.accept.call(this);
+            events_1.Events.watch(events_1.Ev.Arrived, function (event) {
+                if (_this.is_expired || _this.is_complete) {
+                    return false;
+                }
+                if (event.dest == _this.issuer) {
+                    var amt = Math.min(_this.amt_left, window.game.player.ship.cargo.count(_this.item));
+                    if (amt > 0) {
+                        _this.amt_left -= amt;
+                        window.game.player.ship.unloadCargo(_this.item, amt);
+                        if (_this.amt_left == 0) {
+                            _this.setStatus(Status.Complete);
+                            _this.complete();
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            });
+            events_1.Events.watch(events_1.Ev.CaughtSmuggling, function (event) {
+                if (_this.is_expired || _this.is_complete) {
+                    return false;
+                }
+                _this.setStatus(Status.Failure);
+                _this.complete();
+                return false;
+            });
+        };
+        return Smuggler;
+    }(Mission));
+    exports.Smuggler = Smuggler;
 });

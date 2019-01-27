@@ -9,6 +9,7 @@ define(function(require, exports, module) {
   const util     = require('util');
   const t        = require('common');
   const resource = require('resource');
+  const events   = require('events');
   const Layout   = require('component/layout');
 
   const intvl = 0.3;
@@ -153,6 +154,27 @@ define(function(require, exports, module) {
         for (const body of Object.keys(ranges)) {
           const au = ranges[body] / Physics.AU;
           rates[body] = this.game.planets[body].patrolRate(au);
+        }
+
+        const bans = this.game.get_conflicts({name: 'trade ban'});
+
+        if (bans.length > 0) {
+          // for nearby bodies
+          for (const body of Object.keys(ranges)) {
+            // for bans targeting this nearby body
+            for (const ban of bans.filter(c => c.target == this.data.bodies[body].faction)) {
+              // distance to nearby body
+              const au = ranges[body] / Physics.AU;
+
+              // bodies implementing the ban
+              for (const banner of t.bodies.filter(b => this.data.bodies[body].faction == ban.target)) {
+                // add banning body's patrol rate using the distance to the
+                // banned body, rather than the distance to the banner's
+                // planet.
+                rates[banner] = this.game.planets[body].patrolRate(au);
+              }
+            }
+          }
         }
 
         return rates;
@@ -606,6 +628,7 @@ define(function(require, exports, module) {
             :body="encounter.body"
             :faction="encounter.faction"
             :distance="encounter.distance"
+            :dest="transit.dest"
             class="my-3" />
 
         <PirateEncounter
@@ -620,7 +643,7 @@ define(function(require, exports, module) {
   });
 
   Vue.component('transit-inspection', {
-    props: ['faction', 'body', 'distance'],
+    props: ['faction', 'body', 'distance', 'dest'],
 
     data() {
       return {
@@ -644,6 +667,18 @@ define(function(require, exports, module) {
       bribeAmount()    { return Math.ceil(this.game.player.ship.price() * 0.03) },
       canAffordBribe() { return this.bribeAmount <= this.game.player.money      },
 
+      // true if the inspection's faction holds a trade ban against the
+      // destination's faction
+      isBlockade() {
+        const bans = this.game.get_conflicts({
+          name:      'trade ban',
+          target:    this.data.bodies[this.dest].faction,
+          proponent: this.faction,
+        });
+
+        return bans.length != 0;
+      },
+
       hasContraband() {
         for (const item of Object.keys(this.data.resources)) {
           if (this.data.resources[item].contraband) {
@@ -653,7 +688,7 @@ define(function(require, exports, module) {
           }
         }
 
-        return false;
+        return this.isBlockade;
       },
 
       isHostile() {
@@ -677,9 +712,13 @@ define(function(require, exports, module) {
 
       submit() {
         let fine = 0;
+
+        const isBlockade = this.isBlockade;
+        const isContraband = (item) => isBlockade || this.data.resources[item].contraband;
+
         for (const item of this.game.player.ship.cargo.keys()) {
-          const amt = this.game.player.ship.cargo.count(item);
-          if (this.data.resources[item].contraband) {
+          if (isContraband(item)) {
+            const amt = this.game.player.ship.cargo.count(item);
             fine += amt * this.planet.inspectionFine(this.game.player);
           }
         }
@@ -687,10 +726,19 @@ define(function(require, exports, module) {
         this.fine = Math.min(fine, this.game.player.money);
 
         if (this.fine > 0) {
+          if (isBlockade) {
+            events.Events.signal({
+              type: events.Ev.CaughtSmuggling,
+              by:   this.faction,
+            });
+
+            find *= 2;
+          }
+
           this.game.player.debit(this.fine);
 
           for (const [item, amt] of this.game.player.ship.cargo.entries()) {
-            if (amt > 0 && this.data.resources[item].contraband) {
+            if (amt > 0 && isContraband(item)) {
               this.game.player.ship.cargo.dec(item, amt);
               this.game.player.decStanding(this.faction, this.data.resources[item].contraband);
             }

@@ -70,10 +70,15 @@ abstract class Condition {
   constructor(name: string, init: any) {
     this.name     = name;
     this.duration = init.duration;
+
+    if (this.is_started && !this.is_over) {
+      this.install_event_watchers();
+    }
   }
 
   abstract get key(): string;
   abstract chance(): boolean;
+  abstract install_event_watchers(): void;
 
   get is_started() {
     return this.duration && this.duration.starts >= window.game.turns;
@@ -111,10 +116,6 @@ export abstract class Conflict extends Condition {
 export class Embargo extends Conflict {
   constructor(init: any) {
     super('trade ban', init);
-
-    if (this.is_started && !this.is_over) {
-      this.install_event_watchers();
-    }
   }
 
   chance(): boolean {
@@ -143,8 +144,8 @@ export class Embargo extends Conflict {
   }
 
   install_event_watchers() {
-    Events.watch(Ev.ItemsBought, (ev: ItemsBought) => this.violation(ev.body, ev.item, ev.count));
-    Events.watch(Ev.ItemsSold,   (ev: ItemsSold)   => this.violation(ev.body, ev.item, ev.count));
+    Events.watch(Ev.ItemsBought, (ev: ItemsBought) => {console.log(ev); return this.violation(ev.body, ev.item, ev.count)});
+    Events.watch(Ev.ItemsSold,   (ev: ItemsSold)   => {console.log(ev); return this.violation(ev.body, ev.item, ev.count)});
   }
 
   violation(body: t.body, item: t.resource, count: number) {

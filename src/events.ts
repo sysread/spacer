@@ -4,10 +4,11 @@ export type TurnDetail   = {detail: {turn: number, isNewDay: boolean}};
 export type TurnCallBack = (ev: TurnDetail) => void;
 
 export enum Ev {
-  Turn        = 'Turn',
-  Arrived     = 'Arrived',
-  ItemsBought = 'ItemsBought',
-  ItemsSold   = 'ItemsSold',
+  Turn            = 'Turn',
+  Arrived         = 'Arrived',
+  ItemsBought     = 'ItemsBought',
+  ItemsSold       = 'ItemsSold',
+  CaughtSmuggling = 'CaughtSmuggling',
 };
 
 
@@ -44,11 +45,18 @@ export interface ItemsSold {
   standing: number;
 }
 
+export interface CaughtSmuggling {
+  type: Ev.CaughtSmuggling;
+  by:   t.body;
+}
+
 export type Event =
   | Turn
   | Arrived
   | ItemsBought
-  | ItemsSold;
+  | ItemsSold
+  | CaughtSmuggling
+;
 
 
 export class Events {

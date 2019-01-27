@@ -9,7 +9,7 @@ import { Trait } from './trait';
 import { Faction } from './faction';
 import { Condition, SavedCondition } from './condition';
 import { Events, Ev, TurnCallBack, TurnDetail } from './events';
-import { Mission, Passengers, MissionData } from './mission';
+import { Mission, SavedMission, restoreMission, Passengers, Smuggler } from './mission';
 import { Person } from './person';
 import { Conflict, Embargo } from './conflict';
 
@@ -62,7 +62,7 @@ interface Contract {
 
 interface SavedContract {
   valid_until: number;
-  mission:     MissionData;
+  mission:     SavedMission;
 }
 
 
@@ -164,7 +164,7 @@ export class Planet {
       for (const info of init.contracts) {
         this.contracts.push({
           valid_until: info.valid_until,
-          mission: new Passengers(info.mission),
+          mission: restoreMission(info.mission),
         });
       }
     }
@@ -966,8 +966,15 @@ export class Planet {
     let bestPlanet: t.body | void;
     let bestRating = 0;
 
+    const hasTradeBan = this.hasTradeBan;
+
     for (const body of exporters) {
+      // no trade ban violations from unaligned markets
+      if (hasTradeBan && data.bodies[body].faction != this.faction.abbrev)
+        continue;
+
       const rating = priceRating[body] * stockRating[body] * distRating[body];
+
       if (rating > bestRating) {
         bestRating = rating;
         bestPlanet = body;
@@ -1208,6 +1215,43 @@ export class Planet {
       this.contracts = this.contracts.filter(c => c.valid_until >= window.game.turns);
     }
 
+    this.refreshPassengerContracts();
+    this.refreshSmugglerContracts();
+  }
+
+  refreshSmugglerContracts() {
+    const hasTradeBan = this.hasTradeBan;
+
+    // If the trade ban is over, remove smuggling contracts
+    if (this.contracts.length > 0 && window.game) {
+      this.contracts = this.contracts.filter(c => !(c instanceof Smuggler) || hasTradeBan);
+    }
+
+    if (hasTradeBan) {
+      const needed   = this.neededResources();
+      const missions = [];
+
+      for (const item of needed.prioritized) {
+        if (missions.length > 3)
+          break;
+
+        const mission = new Smuggler({
+          issuer: this.body,
+          item:   item,
+          amt:    needed.amounts[item],
+        })
+
+        missions.push({
+          valid_until: util.getRandomInt(10, 30) * data.turns_per_day,
+          mission: mission,
+        });
+      }
+
+      this.contracts = this.contracts.concat(missions);
+    }
+  }
+
+  refreshPassengerContracts() {
     const want  = util.getRandomInt(0, this.scale(5));
     const dests = t.bodies.filter(t => t != this.body);
 
@@ -1242,6 +1286,15 @@ export class Planet {
 
   acceptMission(mission: Mission) {
     this.contracts = this.contracts.filter(c => c.mission.title != mission.title);
+  }
+
+  get hasTradeBan(): boolean {
+    const trade_bans = window.game.get_conflicts({
+      target: this.faction.abbrev,
+      name:   'trade ban',
+    });
+
+    return trade_bans.length > 0;
   }
 
   /*

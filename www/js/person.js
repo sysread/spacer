@@ -67,7 +67,7 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
                             // TODO chicken and the egg problem: contract gets watchers assigned
                             // once accept() is called, but accept() needs game.turns, which is
                             // not yet defined while initializing the game.
-                            var contract = new mission_1.Passengers(c);
+                            var contract = mission_1.restoreMission(c);
                             this.contracts.push(contract);
                             contract.accept();
                         }

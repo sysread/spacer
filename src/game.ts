@@ -242,6 +242,10 @@ class Game {
     window.localStorage.removeItem('game');
   }
 
+  get is_starting() {
+    return this.turns < (data.initial_days * data.turns_per_day);
+  }
+
 
   turn(n=1, no_save=false) {
     for (let i = 0; i < n; ++i) {
@@ -333,7 +337,9 @@ class Game {
 
 
   notify(msg: string) {
-    this.notifications.push(msg);
+    if (!this.is_starting) {
+      this.notifications.push(msg);
+    }
   }
 
   dismiss(msg: string) {
@@ -374,13 +380,22 @@ class Game {
     }
   }
 
-  get_conflicts(opt?: {target?: t.faction, proponent?: t.faction}): Conflict[] {
+  get_conflicts(opt?: {
+    target?:    t.faction;
+    proponent?: t.faction;
+    name?:      string;
+  }): Conflict[] {
     return Object.values(this.conflicts).filter(c => {
-      if (opt && opt.target && c.target != opt.target)
-        return false;
+      if (opt) {
+        if (opt.target && c.target != opt.target)
+          return false;
 
-      if (opt && opt.proponent && c.proponent != opt.proponent)
-        return false;
+        if (opt.proponent && c.proponent != opt.proponent)
+          return false;
+
+        if (opt.name && c.name != opt.name)
+          return false;
+      }
 
       return true;
     });

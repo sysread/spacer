@@ -241,6 +241,13 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
         Game.prototype.delete_game = function () {
             window.localStorage.removeItem('game');
         };
+        Object.defineProperty(Game.prototype, "is_starting", {
+            get: function () {
+                return this.turns < (data_1.default.initial_days * data_1.default.turns_per_day);
+            },
+            enumerable: true,
+            configurable: true
+        });
         Game.prototype.turn = function (n, no_save) {
             if (n === void 0) { n = 1; }
             if (no_save === void 0) { no_save = false; }
@@ -332,7 +339,9 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
             return trade;
         };
         Game.prototype.notify = function (msg) {
-            this.notifications.push(msg);
+            if (!this.is_starting) {
+                this.notifications.push(msg);
+            }
         };
         Game.prototype.dismiss = function (msg) {
             this.notifications = this.notifications.filter(function (n) { return n != msg; });
@@ -398,10 +407,14 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
         };
         Game.prototype.get_conflicts = function (opt) {
             return Object.values(this.conflicts).filter(function (c) {
-                if (opt && opt.target && c.target != opt.target)
-                    return false;
-                if (opt && opt.proponent && c.proponent != opt.proponent)
-                    return false;
+                if (opt) {
+                    if (opt.target && c.target != opt.target)
+                        return false;
+                    if (opt.proponent && c.proponent != opt.proponent)
+                        return false;
+                    if (opt.name && c.name != opt.name)
+                        return false;
+                }
                 return true;
             });
         };

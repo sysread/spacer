@@ -46,6 +46,9 @@ define(["require", "exports", "./data", "./events", "./util"], function (require
         function Condition(name, init) {
             this.name = name;
             this.duration = init.duration;
+            if (this.is_started && !this.is_over) {
+                this.install_event_watchers();
+            }
         }
         Object.defineProperty(Condition.prototype, "is_started", {
             get: function () {
@@ -90,11 +93,7 @@ define(["require", "exports", "./data", "./events", "./util"], function (require
     var Embargo = /** @class */ (function (_super) {
         __extends(Embargo, _super);
         function Embargo(init) {
-            var _this = _super.call(this, 'trade ban', init) || this;
-            if (_this.is_started && !_this.is_over) {
-                _this.install_event_watchers();
-            }
-            return _this;
+            return _super.call(this, 'trade ban', init) || this;
         }
         Embargo.prototype.chance = function () {
             if (this.proponent == this.target)
@@ -119,8 +118,8 @@ define(["require", "exports", "./data", "./events", "./util"], function (require
         };
         Embargo.prototype.install_event_watchers = function () {
             var _this = this;
-            events_1.Events.watch(events_1.Ev.ItemsBought, function (ev) { return _this.violation(ev.body, ev.item, ev.count); });
-            events_1.Events.watch(events_1.Ev.ItemsSold, function (ev) { return _this.violation(ev.body, ev.item, ev.count); });
+            events_1.Events.watch(events_1.Ev.ItemsBought, function (ev) { console.log(ev); return _this.violation(ev.body, ev.item, ev.count); });
+            events_1.Events.watch(events_1.Ev.ItemsSold, function (ev) { console.log(ev); return _this.violation(ev.body, ev.item, ev.count); });
         };
         Embargo.prototype.violation = function (body, item, count) {
             if (!this.is_started || this.is_over)

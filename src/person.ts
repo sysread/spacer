@@ -7,7 +7,7 @@ import * as t from './common';
 import * as util from './util';
 import { Faction } from './faction';
 import { resources, isCraft, isRaw } from './resource';
-import { Mission, Passengers, Status } from './mission';
+import { SavedMission, Mission, Status, restoreMission } from './mission';
 
 
 // Shims for global browser objects
@@ -33,7 +33,7 @@ export interface SavedPerson {
   home:       t.body;
   money:      number;
   standing:   t.StandingCounter;
-  contracts?: Mission[];
+  contracts?: SavedMission[];
 };
 
 
@@ -67,7 +67,7 @@ export class Person {
           // TODO chicken and the egg problem: contract gets watchers assigned
           // once accept() is called, but accept() needs game.turns, which is
           // not yet defined while initializing the game.
-          const contract = new Passengers(c);
+          const contract = restoreMission(c);
           this.contracts.push(contract);
           contract.accept();
         }
