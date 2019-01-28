@@ -141,9 +141,9 @@ define(function(require, exports, module) {
     },
 
     computed: {
-      show_map()       { return this.show == 'map'    },
-      show_dest_menu() { return this.show == 'dest'   },
-      show_info()      { return this.show == 'info'   },
+      show_map()       { return this.show == 'map' },
+      show_dest_menu() { return this.show == 'dest' },
+      show_info()      { return this.show == 'info' },
       show_market()    { return this.show == 'market' },
       show_routes()    { return this.show == 'routes' },
 
@@ -263,12 +263,16 @@ define(function(require, exports, module) {
       },
 
       go_map() {
+        if (!this.transit) {
+          this.dest = null;
+        }
+
         this.show = 'map';
         this.$nextTick(() => this.layout_resize());
       },
 
-      go_dest_menu()   { this.show = 'dest'   },
-      go_info()        { this.show = 'info'   },
+      go_dest_menu()   { this.show = 'dest' },
+      go_info()        { this.show = 'info' },
       go_market()      { this.show = 'market' },
       go_routes()      { this.show = 'routes' },
       is_here(body)    { return body == this.game.locus },
@@ -308,30 +312,15 @@ define(function(require, exports, module) {
 
           if (this.dest) {
             // Select the first transit path for that destination
-            const transits = this.navcomp.getTransitsTo(this.dest);
+            this.transit = this.navcomp.getFastestTransitTo(this.dest);
 
-            if (transits.length > 0) {
-              this.transit = transits[0];
+            if (this.transit) {
+              this.go_map();
+            }
+            else {
+              this.go_routes();
             }
           }
-        }
-      },
-
-      set_dest_return(dest) {
-        this.set_dest(dest, true);
-
-        if (!this.transit) {
-          this.go_routes();
-        }
-        else {
-          this.go_map();
-
-          this.$nextTick(() => {
-            if (this.layout) {
-              this.layout.set_center(this.map_center_point);
-              this.layout.set_fov_au(this.map_fov_au);
-            }
-          });
         }
       },
 
@@ -398,7 +387,7 @@ define(function(require, exports, module) {
               title="Select a destination"
               v-if="show_dest_menu"
               :prev="dest"
-              @answer="set_dest_return" />
+              @answer="set_dest" />
 
           <NavRoutePlanner
               v-if="show_routes"
@@ -416,7 +405,6 @@ define(function(require, exports, module) {
             <btn block=1 v-if="!rel" @click="rel=true">Absolute prices</btn>
             <market-report :relprices="rel" :body="dest || next_dest()" />
           </div>
-
         </div>
 
         <confirm v-if="confirm" yes="Yes" no="No" @confirm="confirm_transit">
