@@ -320,7 +320,7 @@ define(function(require, exports, module) {
       set_dest_return(dest) {
         this.set_dest(dest, true);
 
-        if (this.show_dest_menu) {
+        if (!this.transit) {
           this.go_routes();
         }
         else {
