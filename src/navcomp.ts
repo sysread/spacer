@@ -9,7 +9,7 @@ import * as util from './util';
 import * as t from './common';
 
 const SPT = data.hours_per_turn * 3600; // seconds per turn
-const DT  = 10000;                      // frames per turn for euler integration
+const DT  = 5000;                       // frames per turn for euler integration
 const TI  = SPT / DT;                   // seconds per frame
 
 

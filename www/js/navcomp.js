@@ -53,7 +53,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     physics_1 = __importDefault(physics_1);
     Vec = __importStar(Vec);
     var SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
-    var DT = 10000; // frames per turn for euler integration
+    var DT = 5000; // frames per turn for euler integration
     var TI = SPT / DT; // seconds per frame
     var POSITION = 0;
     var VELOCITY = 1;
