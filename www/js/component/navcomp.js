@@ -635,15 +635,8 @@ define(function(require, exports, module) {
     computed: {
       path() {
         if (this.transit) {
-          const path = [];
-
-          path.push(this.layout.scale_point(this.system.position(this.transit.origin)));
-
-          for (let i = this.transit.currentTurn; i < this.transit.turns; ++i) {
-            path.push(this.layout.scale_point(this.transit.path[i].position));
-          }
-
-          return path;
+          return this.transit.path
+            .map(p => this.layout.scale_point(p.position));
         }
       },
     },

@@ -53,7 +53,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     physics_1 = __importDefault(physics_1);
     Vec = __importStar(Vec);
     var SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
-    var DT = 5000; // frames per turn for euler integration
+    var DT = 200; // frames per turn for euler integration
     var TI = SPT / DT; // seconds per frame
     var POSITION = 0;
     var VELOCITY = 1;
@@ -63,7 +63,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             this.agent = agent;
             this.maxAccel = maxAccel;
             this.turns = turns;
-            this.tflip = SPT * this.turns / 2; // seconds to flip point
+            this.tflip = (SPT * this.turns) / 2; // seconds to flip point
             this.accel = this.calculateAcceleration();
             this.dt = dt || DT;
             this._path = null;
@@ -109,6 +109,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 var dax = Vec.mul_scalar(this.acc, TI_1 * TI_1 / 2); // static portion of change in position each TI
                 var path = [];
                 var t_1 = 0;
+                // Start with initial position
+                path.push({ position: p, velocity: Vec.length(v) });
                 for (var turn = 0; turn < this.turns; ++turn) {
                     // Split turn's updates into DT increments to prevent inaccuracies
                     // creeping into the final result.
@@ -117,17 +119,13 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                         if (t_1 > this.tflip) {
                             v = Vec.sub(v, vax); // decelerate after flip
                         }
-                        else {
+                        else if (t_1 < this.tflip) {
                             v = Vec.add(v, vax); // accelerate before flip
                         }
                         // Update position
                         p = Vec.add(p, Vec.add(Vec.mul_scalar(v, TI_1), dax));
                     }
-                    var segment = {
-                        position: p,
-                        velocity: Vec.length(v),
-                    };
-                    path.push(segment);
+                    path.push({ position: p, velocity: Vec.length(v) });
                 }
                 this._path = path;
             }

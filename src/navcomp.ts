@@ -9,7 +9,7 @@ import * as util from './util';
 import * as t from './common';
 
 const SPT = data.hours_per_turn * 3600; // seconds per turn
-const DT  = 5000;                       // frames per turn for euler integration
+const DT  = 200;                        // frames per turn for euler integration
 const TI  = SPT / DT;                   // seconds per frame
 
 
@@ -50,7 +50,7 @@ export class Course {
     this.agent    = agent;
     this.maxAccel = maxAccel;
     this.turns    = turns;
-    this.tflip    = SPT * this.turns / 2; // seconds to flip point
+    this.tflip    = (SPT * this.turns) / 2; // seconds to flip point
     this.accel    = this.calculateAcceleration();
     this.dt       = dt || DT;
     this._path    = null;
@@ -103,6 +103,9 @@ export class Course {
 
       let t = 0;
 
+      // Start with initial position
+      path.push({ position: p, velocity: Vec.length(v) });
+
       for (let turn = 0; turn < this.turns; ++turn) {
         // Split turn's updates into DT increments to prevent inaccuracies
         // creeping into the final result.
@@ -111,7 +114,7 @@ export class Course {
 
           if (t > this.tflip) {
             v = Vec.sub(v, vax); // decelerate after flip
-          } else {
+          } else if (t < this.tflip) {
             v = Vec.add(v, vax); // accelerate before flip
           }
 
@@ -119,12 +122,7 @@ export class Course {
           p = Vec.add(p, Vec.add(Vec.mul_scalar(v, TI), dax));
         }
 
-        const segment = {
-          position: p,
-          velocity: Vec.length(v),
-        };
-
-        path.push(segment);
+        path.push({ position: p, velocity: Vec.length(v) });
       }
 
       this._path = path;
