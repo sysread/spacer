@@ -297,7 +297,6 @@ class Game {
     }
 
     if (this.locus) {
-console.log('Arrived', this.locus);
       Events.signal({type: Ev.Arrived, dest: this.locus});
     }
   }

@@ -356,7 +356,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             _super.prototype.accept.call(this);
             events_1.Events.watch(events_1.Ev.Arrived, function (event) {
                 if (_this.is_expired || _this.is_complete) {
-                    return false;
+                    return true;
                 }
                 if (event.dest == _this.issuer) {
                     var amt = Math.min(_this.amt_left, window.game.player.ship.cargo.count(_this.item));
@@ -367,14 +367,14 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
                         if (_this.amt_left == 0) {
                             _this.setStatus(Status.Complete);
                             _this.complete();
-                            return false;
+                            return true;
                         }
                         else {
                             window.game.notify("You have delivered " + amt + " units of " + _this.item + ". " + _this.description_remaining + ".");
                         }
                     }
                 }
-                return true;
+                return false;
             });
             events_1.Events.watch(events_1.Ev.CaughtSmuggling, function (event) {
                 if (_this.is_expired || _this.is_complete) {

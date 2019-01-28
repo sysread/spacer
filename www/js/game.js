@@ -288,7 +288,6 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                 this.transit_plan = undefined;
             }
             if (this.locus) {
-                console.log('Arrived', this.locus);
                 events_1.Events.signal({ type: events_1.Ev.Arrived, dest: this.locus });
             }
         };

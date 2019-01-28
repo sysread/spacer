@@ -365,7 +365,7 @@ export class Smuggler extends Mission {
 
     Events.watch(Ev.Arrived, (event: Arrived) => {
       if (this.is_expired || this.is_complete) {
-        return false;
+        return true;
       }
 
       if (event.dest == this.issuer) {
@@ -379,7 +379,7 @@ export class Smuggler extends Mission {
           if (this.amt_left == 0) {
             this.setStatus(Status.Complete);
             this.complete();
-            return false;
+            return true;
           }
           else {
             window.game.notify(`You have delivered ${amt} units of ${this.item}. ${this.description_remaining}.`);
@@ -387,7 +387,7 @@ export class Smuggler extends Mission {
         }
       }
 
-      return true;
+      return false;
     });
 
     Events.watch(Ev.CaughtSmuggling, (event: CaughtSmuggling) => {
