@@ -412,6 +412,7 @@ define(function(require, exports, module) {
           <def split=4 term="Duration"     :def="transit.str_arrival" />
           <def split=4 term="Distance"     :def="transit.auRemaining()|R(2)|unit('AU')" />
           <def split=4 term="Max Velocity" :def="(transit.maxVelocity/1000)|R|csn|unit('km/s')" />
+          <def split=4 term="Acceleration" :def="transit.accel_g|R(3)|unit('G')" />
           <def split=4 term="Fuel"         :def="transit.fuel|R(2)|unit('tonnes')" />
         </confirm>
 

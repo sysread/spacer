@@ -43,7 +43,10 @@ define(function(require, exports, module) {
         this.orbits[body] = this.system.orbit_by_turns(body);
       }
 
-      this.$nextTick( this.resume() );
+      this.$nextTick(() => {
+        this.interval(); // calling immediately prevents a delay before animation begins
+        this.$nextTick(() => this.resume());
+      });
     },
 
     computed: {
@@ -351,6 +354,10 @@ define(function(require, exports, module) {
           }
         }
 
+        if (this.plan.is_complete) {
+          this.complete();
+        }
+
         // Update body's positions
         this.layout.set_center(this.center);
         this.layout.set_fov_au(this.fov);
@@ -418,10 +425,6 @@ define(function(require, exports, module) {
         this.game.turn(1, true);
         this.plan.turn(1);
         this.game.player.ship.burn(this.plan.accel);
-
-        if (this.plan.is_complete) {
-          this.complete();
-        }
       },
 
       complete() {
@@ -575,6 +578,8 @@ define(function(require, exports, module) {
             <text style="fill:red; font:12px monospace" x=5 y=34>Piracy:&nbsp;{{piracyRate|pct(2)}}</text>
 
             <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{displayFoV}}</text>
+            <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{displayFoV}}</text>
+            <text style="fill:red; font:12px monospace" x=5 y=68>&Delta;V:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{plan.accel_g|R(3)|unit('G')}}</text>
           </SvgPlot>
         </div>
 
