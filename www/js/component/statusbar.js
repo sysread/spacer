@@ -17,6 +17,7 @@ define(function(require, exports, module) {
       fuel()       { return this.game._player ? this.game.player.ship.fuel : 0 },
       tank()       { return this.game._player ? this.game.player.ship.tank : 0 },
       fuelPct()    { return this.game._player ? util.R(100 * (this.fuel / this.tank)) : 0 },
+      mass()       { return this.game._player ? util.R(this.game.player.ship.currentMass()) : 0 },
 
       // Re-calculate date from start date using game.turns so that the
       // reactive setter has something to watch since game.date is updated
@@ -34,6 +35,7 @@ define(function(require, exports, module) {
   <span class="navbar-text text-capitalize" id="spacer-location">{{locus}}</span>
   <span class="navbar-text">{{money|csn}} c</span>
   <span class="navbar-text">{{cargoUsed}}/{{cargoSpace}} cu</span>
+  <span class="navbar-text">{{mass|csn}} tonnes</span>
   <span class="navbar-text">Fuel {{fuelPct}}%</span>
   <span class="navbar-text">{{date}}</span>
 </nav>
