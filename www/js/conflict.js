@@ -52,7 +52,7 @@ define(["require", "exports", "./data", "./events", "./util"], function (require
         }
         Object.defineProperty(Condition.prototype, "is_started", {
             get: function () {
-                return this.duration && this.duration.starts >= window.game.turns;
+                return this.duration && this.duration.starts <= window.game.turns;
             },
             enumerable: true,
             configurable: true
@@ -119,16 +119,17 @@ define(["require", "exports", "./data", "./events", "./util"], function (require
             events_1.Events.watch(events_1.Ev.ItemsSold, function (ev) { return _this.violation(ev.body, ev.item, ev.count); });
         };
         Embargo.prototype.violation = function (body, item, count) {
+            console.log(body, item, count);
             if (!this.is_started || this.is_over)
-                return false;
-            if (this.target != data_1.default.bodies[body].faction)
                 return true;
+            if (this.target != data_1.default.bodies[body].faction)
+                return false;
             var loss = count * 2;
             if (item == 'weapons')
                 loss *= 2;
             window.game.player.decStanding(this.proponent, loss);
             window.game.notify("You are in violation of " + this.proponent + "'s trade ban against " + this.target + ". Your standing has decreased by " + loss + ".");
-            return true;
+            return false;
         };
         return Embargo;
     }(Conflict));

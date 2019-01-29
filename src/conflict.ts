@@ -81,7 +81,7 @@ abstract class Condition {
   abstract install_event_watchers(): void;
 
   get is_started() {
-    return this.duration && this.duration.starts >= window.game.turns;
+    return this.duration && this.duration.starts <= window.game.turns;
   }
 
   get is_over() {
@@ -146,8 +146,9 @@ export class Embargo extends Conflict {
   }
 
   violation(body: t.body, item: t.resource, count: number) {
-    if (!this.is_started || this.is_over) return false;
-    if (this.target != data.bodies[body].faction) return true;
+console.log(body, item, count);
+    if (!this.is_started || this.is_over) return true;
+    if (this.target != data.bodies[body].faction) return false;
 
     let loss = count * 2;
 
@@ -157,6 +158,6 @@ export class Embargo extends Conflict {
     window.game.player.decStanding(this.proponent, loss);
     window.game.notify(`You are in violation of ${this.proponent}'s trade ban against ${this.target}. Your standing has decreased by ${loss}.`);
 
-    return true;
+    return false;
   }
 }
