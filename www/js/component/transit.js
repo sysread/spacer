@@ -34,7 +34,7 @@ define(function(require, exports, module) {
         orbits:           {},
         objects:          {},
         sun:              null,
-        ship:             [0,0],
+        ship:             [0, 0],
       };
     },
 
@@ -54,7 +54,15 @@ define(function(require, exports, module) {
       percent()      { return this.plan.pct_complete },
       distance()     { return util.R(this.plan.auRemaining()) },
 
+      is_zoomed_in() {
+        return this.plan.turns < (10 * data.turns_per_day);
+      },
+
       intvl_ms() {
+        if (this.is_zoomed_in) {
+          return 700;
+        }
+
         return 300;
       },
 
@@ -301,9 +309,14 @@ define(function(require, exports, module) {
       show_label(body) {
         const central = this.system.central(body);
 
-        if (this.plan.dest == body && central == 'sun') {
+        if (this.plan.dest == body && (central == 'sun' || this.is_zoomed_in))
           return true;
-        }
+
+        if (this.plan.origin == body && (central == 'sun' || this.is_zoomed_in))
+          return true;
+
+        if (this.is_zoomed_in && central == 'sun' && central != this.plan.dest && central != this.plan.origin)
+          return false;
 
         const position = this.system.position(body);
         const center   = central == 'sun' ? [0, 0] : this.system.position(central);
@@ -344,11 +357,17 @@ define(function(require, exports, module) {
 
         if (this.current_turn == 0) {
           for (const body of this.bodies) {
-            const p = this.layout.scale_point(this.orbits[body][this.current_turn]);
+            const [x, y] = this.layout.scale_point(this.orbits[body][this.current_turn]);
             const d = this.layout.scale_body_diameter(body);
-            $(this.$refs[body]).attr({x: p[0], y: p[1], width: d, height: d});
-            $(this.$refs[body + '_patrol']).attr({cx: p[0], cy: p[1], r: this.patrol_radius(body)});
-            $(this.$refs[body + '_label']).attr({x: p[0] + d + 10, y: p[1] + d / 3});
+
+            $(this.$refs[body]).attr({x: x, y: y, width: d, height: d});
+            $(this.$refs[body + '_patrol']).attr({cx: x, cy: y, r: this.patrol_radius(body)});
+
+            // HACK: jquery.animate cannot animate svg text elements' x and y
+            // properties since they are not css. so we set them as css
+            // properties and manually step through them during animation
+            // below.
+            $(this.$refs[body + '_label']).css({x: x + d + 10, y: y + d / 3});
           }
 
           const sun_p = this.layout.scale_point([0, 0]);
@@ -366,20 +385,35 @@ define(function(require, exports, module) {
           return;
         }
 
+        const intvl = this.intvl_ms;
+
         for (const body of this.bodies) {
-          const p = this.layout.scale_point(this.orbits[body][this.current_turn]);
+          const [x, y] = this.layout.scale_point(this.orbits[body][this.current_turn]);
           const d = this.layout.scale_body_diameter(body);
-          $(this.$refs[body]).animate({x: p[0], y: p[1], width: d, height: d}, this.intvl_ms);
-          $(this.$refs[body + '_patrol']).animate({cx: p[0], cy: p[1], r: this.patrol_radius(body)}, this.intvl_ms);
-          $(this.$refs[body + '_label']).attr({x: p[0] + d + 10, y: p[1] + d / 3});
+
+          $(this.$refs[body]).animate({x: x, y: y, width: d, height: d}, intvl, 'linear');
+          $(this.$refs[body + '_patrol']).animate({cx: x, cy: y, r: this.patrol_radius(body)}, intvl, 'linear');
+
+          // HACK PART DEUX: we use jquery.animate to step through the values,
+          // then manually set them using Element.setAttribute (sinece they are
+          // attributes, not css properties).
+          $(this.$refs[body + '_label']).animate({ x: x + d + 10, y: y + d / 3 }, {
+            duration: intvl,
+            easing: 'linear',
+            step: (now, fx) => {
+              if (!isNaN(now)) {
+                fx.elem.setAttribute(fx.prop, now);
+              }
+            },
+          });
         }
 
         const sun_p = this.layout.scale_point([0, 0]);
         const sun_d = this.layout.scale_body_diameter('sun');
-        $(this.$refs['sun']).animate({x: sun_p[0], y: sun_p[1], width: sun_d, height: sun_d}, this.intvl_ms);
+        $(this.$refs['sun']).animate({x: sun_p[0], y: sun_p[1], width: sun_d, height: sun_d}, intvl, 'linear');
 
         const ship = this.layout.scale_point(this.plan.path[this.current_turn].position);
-        $(this.$refs['ship']).animate({x: ship[0], y: ship[1]}, this.intvl_ms);
+        $(this.$refs['ship']).animate({x: ship[0], y: ship[1]}, intvl, 'linear');
 
         this.game.turn(1, true);
         this.plan.turn(1);
@@ -503,57 +537,36 @@ define(function(require, exports, module) {
           </tr>
         </table>
 
-        <btn @click="paused ? resume() : pause()">Pause</btn>
-
         <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
           <div class="plot-root-bg" :style="bg_css()"></div>
 
           <SvgPlot :layout="layout" v-if="layout">
-            <g>
-              <image
-                ref="sun"
-                x="0"
-                y="0"
-                width="1"
-                height="1"
-                :xlink:href="'img/sun.png'" />
+            <image ref="sun" x="0" y="0" width="1" height="1" :xlink:href="'img/sun.png'" />
 
-              <template v-for="body in bodies">
-                <image
-                  :ref="body"
-                  x="0"
-                  y="0"
-                  width="1"
-                  height="1"
-                  :xlink:href="'img/' + body + '.png'" />
+            <template v-for="body in bodies">
+              <image :ref="body" x="0" y="0"
+                width="1" height="1"
+                :xlink:href="'img/' + body + '.png'" />
 
-                <circle v-show="data.bodies[body] != undefined"
-                  :ref="body + '_patrol'"
-                  cx="0"
-                  cy="0"
-                  r="0"
-                  stroke="green"
-                  stroke-width="0.5"
-                  fill="green"
-                  fill-opacity="0.025"/>
+              <circle v-show="data.bodies[body] != undefined"
+                :ref="body + '_patrol'"
+                cx="0" cy="0" r="0"
+                stroke="green" stroke-width="0.5"
+                fill="green" fill-opacity="0.025"/>
 
-                <text v-show="show_label(body)"
-                    :ref="body + '_label'"
-                    style="font: 14px monospace; fill: #7FDF3F"
-                    x=0
-                    y=0>
-                  {{body|caps}}
-                </text>
-              </template>
+              <text v-show="show_label(body)" :ref="body + '_label'"
+                  style="font: 14px monospace; fill: #7FDF3F" x=0 y=0>
+                {{body|caps}}
+              </text>
+            </template>
 
-              <image
-                ref="ship"
-                x="0"
-                y="0"
-                width="10"
-                height="10"
-                :xlink:href="'img/ship.png'" />
-            </g>
+            <image
+              ref="ship"
+              x="0"
+              y="0"
+              width="10"
+              height="10"
+              :xlink:href="'img/ship.png'" />
 
             <line x1=130 y1=13 :x2="patrolRate * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
             <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{patrolRate|pct(2)}}</text>
