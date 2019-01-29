@@ -35,7 +35,7 @@ define(function(require, exports, module) {
   <span class="navbar-text text-capitalize" id="spacer-location">{{locus}}</span>
   <span class="navbar-text">{{money|csn}} c</span>
   <span class="navbar-text">{{cargoUsed}}/{{cargoSpace}} cu</span>
-  <span class="navbar-text">{{mass|csn}} tonnes</span>
+  <span class="navbar-text d-none d-sm-inline">{{mass|csn}} tonnes</span>
   <span class="navbar-text">Fuel {{fuelPct}}%</span>
   <span class="navbar-text">{{date}}</span>
 </nav>
