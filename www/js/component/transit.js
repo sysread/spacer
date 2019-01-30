@@ -9,6 +9,7 @@ define(function(require, exports, module) {
   const util     = require('util');
   const t        = require('common');
   const resource = require('resource');
+  const Transit  = require('transit');
   const events   = require('events');
   const Layout   = require('component/layout');
 
@@ -26,7 +27,7 @@ define(function(require, exports, module) {
     data() {
       return {
         layout_target_id: 'transit-plot-root',
-        timeline:         null,
+        transit:          null,
         paused:           false,
         stoppedBy:        {'pirate': 0, 'police': 0},
         encounter:        null,
@@ -35,18 +36,8 @@ define(function(require, exports, module) {
         objects:          {},
         sun:              null,
         ship:             [0, 0],
+        path_index:       0,
       };
-    },
-
-    mounted() {
-      for (const body of this.bodies) {
-        this.orbits[body] = this.system.orbit_by_turns(body);
-      }
-
-      this.$nextTick(() => {
-        this.interval(); // calling immediately prevents a delay before animation begins
-        this.$nextTick(() => this.resume());
-      });
     },
 
     computed: {
@@ -123,10 +114,34 @@ define(function(require, exports, module) {
         }
 
         points.push(this.plan.end);
-        //points.push(this.plan.start);
 
         const max = Math.max(...points.map(p => Physics.distance(p, center)));
         return max / Physics.AU * 1.2;
+      },
+
+      center2() {
+        const dest_central = this.system.central(this.plan.dest);
+        const orig_central = this.system.central(this.plan.origin);
+
+        // Moon to moon in same system
+        if (dest_central == orig_central && dest_central != 'sun') {
+          return this.system.position(dest_central);
+        }
+        // Planet to its own moon
+        else if (this.game.locus == dest_central) {
+          return this.system.position(dest_central);
+        }
+        // Moon to it's host planet
+        else if (this.plan.dest == orig_central) {
+          return this.system.position(dest_central);
+        }
+        // Cross system path
+        else {
+          return Physics.centroid(
+            this.plan.end,
+            this.plan.coords,
+          );
+        }
       },
 
       center() {
@@ -167,19 +182,7 @@ define(function(require, exports, module) {
       },
 
       bodies() {
-        // Build list of planetary bodies to show
-        const bodies = {};
-        for (const body of this.system.bodies()) {
-          const central = this.system.central(body);
-
-          if (central != 'sun') {
-            bodies[central] = true;
-          }
-
-          bodies[body] = true;
-        }
-
-        return Object.keys(bodies);
+        return this.system.all_bodies();
       },
 
       patrolRates() {
@@ -292,6 +295,24 @@ define(function(require, exports, module) {
     },
 
     methods: {
+      layout_set() {
+        // Update layout
+        this.layout.set_center(this.center);
+        this.layout.set_fov_au(this.fov);
+
+        // Create transit object
+        this.transit = new Transit(this.plan, this.layout);
+
+        // Set initial positions
+        for (const body of this.bodies)
+          this.set_position(body);
+
+        this.set_position('sun');
+        this.set_position('ship');
+
+        this.resume();
+      },
+
       dead() { this.$emit('open', 'newgame') },
 
       bg_css() {
@@ -302,15 +323,7 @@ define(function(require, exports, module) {
       },
 
       show_plot() {
-        if ($(this.$refs.plot).width() < 300) {
-          return false;
-        }
-
-        if (this.encounter) {
-          return false;
-        }
-
-        return true;
+        return this.layout && !this.encounter;
       },
 
       show_label(body) {
@@ -331,10 +344,6 @@ define(function(require, exports, module) {
         return distance > this.layout.fov_au / 5;
       },
 
-      name(body) {
-        return this.system.name(body);
-      },
-
       patrol_radius(body) {
         if (this.game.planets[body]) {
           return this.layout.scale_length(this.game.planets[body].patrolRadius() * Physics.AU);
@@ -351,7 +360,7 @@ define(function(require, exports, module) {
           return;
         }
 
-        if (this.current_turn % data.turns_per_day == 0) {
+        if (this.plan.is_started && this.current_turn % data.turns_per_day == 0) {
           if (this.inspectionChance() || this.piracyChance()) {
             this.pause();
             return;
@@ -361,77 +370,132 @@ define(function(require, exports, module) {
         // TODO this is not capturing the final burn to the planet
         if (this.plan.is_complete) {
           clearInterval(this.intvl);
-          setTimeout(() => this.complete(), 500);
+
+          const [x, y] = this.layout.scale_point(this.plan.end)
+          $(this.$refs['ship']).animate({x: x, y: y}, this.intvl_ms, 'linear', () => {
+            this.$nextTick(() => {
+              this.complete();
+            });
+          });
+
           return;
         }
 
-        // Update body's positions
+        this.transit.turn();
+
+        // Update layout
         this.layout.set_center(this.center);
         this.layout.set_fov_au(this.fov);
 
-        if (this.current_turn == 0) {
-          for (const body of this.bodies) {
-            const [x, y] = this.layout.scale_point(this.orbits[body][this.current_turn]);
-            const d = this.layout.scale_body_diameter(body);
+        // Update bodies' positions
+        for (const body of this.bodies)
+          this.animate(body);
 
-            $(this.$refs[body]).attr({x: x, y: y, width: d, height: d});
-            $(this.$refs[body + '_patrol']).attr({cx: x, cy: y, r: this.patrol_radius(body)});
+        // Update the sun and ship
+        this.animate('sun');
+        this.animate('ship');
+      },
 
-            // HACK: jquery.animate cannot animate svg text elements' x and y
-            // properties since they are not css. so we set them as css
-            // properties and manually step through them during animation
-            // below.
-            $(this.$refs[body + '_label']).css({x: x + d + 10, y: y + d / 3});
+      set_position(body) {
+        const info = this.transit.body(body);
+
+        if (body == 'ship') {
+          // HACK: jquery.animate cannot animate svg text elements' x and y
+          // properties since they are not css. so we set them as css
+          // properties and manually step through them during animation
+          // below.
+          $(this.$refs['ship']).css({
+            x: info.coords[0] + info.diameter + 10,
+            y: info.coords[1] + info.diameter / 3,
+          });
+
+        }
+        else {
+          const props = {
+            x:      info.coords[0],
+            y:      info.coords[1],
+            width:  info.diameter,
+            height: info.diameter,
+          };
+
+          $(this.$refs[body]).attr(props);
+
+          if (this.$refs[body + '_patrol']) {
+            $(this.$refs[body + '_patrol']).attr({
+              cx: info.coords[0],
+              cy: info.coords[1],
+              r:  this.patrol_radius(body),
+            });
           }
 
-          const sun_p = this.layout.scale_point([0, 0]);
-          const sun_d = this.layout.scale_body_diameter('sun');
-          $(this.$refs['sun']).attr({x: sun_p[0], y: sun_p[1], width: sun_d, height: sun_d});
-
-
-          const ship = this.layout.scale_point(this.plan.path[this.current_turn].position);
-          $(this.$refs['ship']).attr({x: ship[0], y: ship[1]});
-
-          this.game.turn(1, true);
-          this.plan.turn(1);
-          this.game.player.ship.burn(this.plan.accel);
-
-          return;
+          if (this.$refs[body + '_label']) {
+            $(this.$refs[body + '_label']).css({
+              x: info.coords[0] + info.diameter + 10,
+              y: info.coords[1] + info.diameter / 3,
+            });
+          }
         }
+      },
 
+      animate(body) {
         const intvl = this.intvl_ms;
+        const info  = this.transit.body(body);
 
-        for (const body of this.bodies) {
-          const [x, y] = this.layout.scale_point(this.orbits[body][this.current_turn]);
-          const d = this.layout.scale_body_diameter(body);
-
-          $(this.$refs[body]).animate({x: x, y: y, width: d, height: d}, intvl, 'linear');
-          $(this.$refs[body + '_patrol']).animate({cx: x, cy: y, r: this.patrol_radius(body)}, intvl, 'linear');
-
+        if (body == 'ship') {
           // HACK PART DEUX: we use jquery.animate to step through the values,
           // then manually set them using Element.setAttribute (sinece they are
           // attributes, not css properties).
-          $(this.$refs[body + '_label']).animate({ x: x + d + 10, y: y + d / 3 }, {
-            duration: intvl,
-            easing: 'linear',
-            step: (now, fx) => {
-              if (!isNaN(now)) {
-                fx.elem.setAttribute(fx.prop, now);
-              }
-            },
-          });
+          $(this.$refs['ship']).animate(
+            {x: info.coords[0], y: info.coords[1]},
+            {
+              duration: intvl,
+              easing:   'linear',
+              step:     (now, fx) => {
+                if (!isNaN(now))
+                  fx.elem.setAttribute(fx.prop, now);
+              },
+            }
+          );
         }
+        else {
+          const props = {
+            x:      info.coords[0],
+            y:      info.coords[1],
+            width:  info.diameter,
+            height: info.diameter,
+          };
 
-        const sun_p = this.layout.scale_point([0, 0]);
-        const sun_d = this.layout.scale_body_diameter('sun');
-        $(this.$refs['sun']).animate({x: sun_p[0], y: sun_p[1], width: sun_d, height: sun_d}, intvl, 'linear');
+          $(this.$refs[body]).animate(props, intvl, 'linear');
 
-        const ship = this.layout.scale_point(this.plan.path[this.current_turn].position);
-        $(this.$refs['ship']).animate({x: ship[0], y: ship[1]}, intvl, 'linear');
+          if (this.$refs[body + '_patrol']) {
+            $(this.$refs[body + '_patrol']).animate(
+              {
+                cx: info.coords[0],
+                cy: info.coords[1],
+                r:  this.patrol_radius(body)
+              },
+              intvl,
+              'linear',
+            );
+          }
 
-        this.game.turn(1, true);
-        this.plan.turn(1);
-        this.game.player.ship.burn(this.plan.accel);
+          if (this.$refs[body + '_label']) {
+            $(this.$refs[body + '_label']).animate(
+              {
+                x: info.coords[0] + info.diameter + 10,
+                y: info.coords[1] + info.diameter / 3,
+              },
+              {
+                duration: intvl,
+                easing:   'linear',
+                step:     (now, fx) => {
+                  if (!isNaN(now))
+                    fx.elem.setAttribute(fx.prop, now);
+                },
+              }
+            );
+          }
+        }
       },
 
       complete() {
@@ -449,8 +513,9 @@ define(function(require, exports, module) {
 
       resume() {
         this.paused = false;
-        this.intvl = setInterval(() => this.interval(), this.intvl_ms);
         console.log('transit resumed');
+        //this.interval(); // calling immediately prevents a delay before animation begins
+        this.intvl = setInterval(() => this.interval(), this.intvl_ms);
       },
 
       complete_encounter() {
@@ -533,6 +598,11 @@ define(function(require, exports, module) {
 
     template: `
       <card nopad=1>
+        <span slot="header">
+          <btn v-if="paused" :disabled="encounter" @click="resume()">Resume</btn>
+          <btn v-else :disabled="encounter" @click="pause()">Pause</btn>
+        </span>
+
         <table class="table table-sm m-0" :style="{width: show_plot() && layout ? layout.width_px + 'px' : '100%'}">
           <tr>
             <td class="text-left">{{plan.days_left|unit('days')}}</td>
@@ -553,13 +623,13 @@ define(function(require, exports, module) {
             <image ref="sun" x="0" y="0" width="1" height="1" :xlink:href="'img/sun.png'" />
 
             <template v-for="body in bodies">
-              <image :ref="body" x="0" y="0"
-                width="1" height="1"
+              <image :ref="body" x=0 y=0
+                width=1 height=1
                 :xlink:href="'img/' + body + '.png'" />
 
               <circle v-show="data.bodies[body] != undefined"
                 :ref="body + '_patrol'"
-                cx="0" cy="0" r="0"
+                cx=0 cy=0 r=0
                 stroke="green" stroke-width="0.5"
                 fill="green" fill-opacity="0.025"/>
 
@@ -569,13 +639,9 @@ define(function(require, exports, module) {
               </text>
             </template>
 
-            <image
-              ref="ship"
-              x="0"
-              y="0"
-              width="10"
-              height="10"
-              :xlink:href="'img/ship.png'" />
+            <text ref="ship" text-anchor="middle" alignment-baseline="middle" style="fill:yellow; font:12px monospace;">
+              &tridot;
+            </text>
 
             <line x1=130 y1=13 :x2="patrolRate * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
             <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{patrolRate|pct(2)}}</text>

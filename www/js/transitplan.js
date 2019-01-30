@@ -34,7 +34,7 @@ define(["require", "exports", "./data", "./physics", "./navcomp", "./vector", ".
         return opt.course != undefined;
     }
     function isSavedTransitPlan(opt) {
-        return opt.left != undefined;
+        return opt.current_turn != undefined;
     }
     var TransitPlan = /** @class */ (function () {
         function TransitPlan(opt) {
@@ -46,19 +46,11 @@ define(["require", "exports", "./data", "./physics", "./navcomp", "./vector", ".
             this.dist = opt.dist; // trip distance in meters
             if (isSavedTransitPlan(opt)) {
                 this.course = navcomp_1.Course.import(opt.course);
-                this.left = opt.left;
-                this.coords = opt.coords;
-                this.velocity = opt.velocity;
-                this.au = opt.au;
-                this.km = opt.dist;
+                this.current_turn = opt.current_turn;
             }
             else if (isNewTransitPlan(opt)) {
                 this.course = opt.course;
-                this.left = opt.course.turns;
-                this.coords = this.start;
-                this.velocity = 0;
-                this.au = this.dist / physics_1.default.AU;
-                this.km = this.dist / 1000;
+                this.current_turn = 0;
             }
             else {
                 throw new Error('invalid transit plan args');
@@ -97,8 +89,13 @@ define(["require", "exports", "./data", "./physics", "./navcomp", "./vector", ".
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(TransitPlan.prototype, "left", {
+            get: function () { return this.turns - this.current_turn; },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(TransitPlan.prototype, "currentTurn", {
-            get: function () { return this.turns - this.left; },
+            get: function () { return this.current_turn; },
             enumerable: true,
             configurable: true
         });
@@ -108,8 +105,13 @@ define(["require", "exports", "./data", "./physics", "./navcomp", "./vector", ".
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(TransitPlan.prototype, "is_started", {
+            get: function () { return this.current_turn > 0; },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(TransitPlan.prototype, "is_complete", {
-            get: function () { return this.left === 0; },
+            get: function () { return this.left <= 0; },
             enumerable: true,
             configurable: true
         });
@@ -130,6 +132,26 @@ define(["require", "exports", "./data", "./physics", "./navcomp", "./vector", ".
         });
         Object.defineProperty(TransitPlan.prototype, "flip_point", {
             get: function () { return this.path[Math.floor(this.turns / 2)].position; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TransitPlan.prototype, "coords", {
+            get: function () { return this.path[this.current_turn].position; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TransitPlan.prototype, "velocity", {
+            get: function () { return this.path[this.current_turn].velocity; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TransitPlan.prototype, "au", {
+            get: function () { return this.dist / physics_1.default.AU; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(TransitPlan.prototype, "km", {
+            get: function () { return this.dist / 1000; },
             enumerable: true,
             configurable: true
         });
@@ -157,14 +179,9 @@ define(["require", "exports", "./data", "./physics", "./navcomp", "./vector", ".
             enumerable: true,
             configurable: true
         });
-        TransitPlan.prototype.turn = function (turns) {
-            if (turns === void 0) { turns = 1; }
+        TransitPlan.prototype.turn = function () {
             if (!this.is_complete) {
-                turns = Math.min(this.left, turns);
-                var path = this.path[this.currentTurn + turns - 1];
-                this.velocity = path.velocity;
-                this.coords = path.position;
-                this.left -= turns;
+                ++this.current_turn;
             }
         };
         TransitPlan.prototype.distanceRemaining = function () {

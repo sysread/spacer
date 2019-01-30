@@ -104,6 +104,25 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
         System.prototype.bodies = function () {
             return Object.keys(data_1.default.bodies);
         };
+        System.prototype.all_bodies = function () {
+            var e_2, _a;
+            var bodies = {};
+            try {
+                for (var _b = __values(this.bodies()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var body = _c.value;
+                    bodies[body] = true;
+                    bodies[this.central(body)] = true;
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_2) throw e_2.error; }
+            }
+            return Object.keys(bodies);
+        };
         System.prototype.body = function (name) {
             if (name == 'trojans') {
                 return Trojans;
@@ -167,7 +186,7 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             return (grav * mass) / Math.pow(radius, 2) / physics_1.default.G;
         };
         System.prototype.ranges = function (point) {
-            var e_2, _a;
+            var e_3, _a;
             var ranges = {};
             try {
                 for (var _b = __values(this.bodies()), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -175,17 +194,17 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
                     ranges[body] = physics_1.default.distance(point, this.position(body));
                 }
             }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_2) throw e_2.error; }
+                finally { if (e_3) throw e_3.error; }
             }
             return ranges;
         };
         System.prototype.closestBodyToPoint = function (point) {
-            var e_3, _a;
+            var e_4, _a;
             var dist, closest;
             try {
                 for (var _b = __values(this.bodies()), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -197,12 +216,12 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
                     }
                 }
             }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_3) throw e_3.error; }
+                finally { if (e_4) throw e_4.error; }
             }
             return [closest, dist];
         };

@@ -134,10 +134,11 @@ class Layout {
     return no_offset ? n_scaled : n_scaled + this.offset_y;
   }
 
-  scale_point(p: Point, no_offset: boolean=false) {
+  scale_point(p: Point, no_offset: boolean=false): Point {
     return [
       this.scale_x(p[0], no_offset),
       this.scale_y(p[1], no_offset),
+      0,
     ];
   }
 
@@ -175,13 +176,13 @@ class Layout {
     return meters * px_per_m;
   }
 
-  scale_body_diameter(body: t.body) {
+  scale_body_diameter(body: string) {
     const fov_m    = this.fov_au * Physics.AU;
     const px_per_m = this.scale_px / fov_m;
     const diameter = system.body(body).radius * 2;
     const is_tiny  = diameter < 3200000;
 
-    const adjust = body == ('sun' as t.body) ? 1
+    const adjust = body == 'sun' ? 1
                  : body.match(/jupiter|saturn|uranus|neptune|trojans/) ? 10
                  : is_tiny ? 200
                  : 80;

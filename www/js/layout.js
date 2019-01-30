@@ -150,6 +150,7 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
             return [
                 this.scale_x(p[0], no_offset),
                 this.scale_y(p[1], no_offset),
+                0,
             ];
         };
         Layout.prototype.scale_path = function (points, max) {

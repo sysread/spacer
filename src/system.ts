@@ -73,8 +73,19 @@ class System {
     this.system.setTime(date);
   }
 
-  bodies(): string[] {
-    return Object.keys(data.bodies);
+  bodies(): t.body[] {
+    return Object.keys(data.bodies) as t.body[];
+  }
+
+  all_bodies(): string[] {
+    const bodies: {[index:string]: boolean} = {};
+
+    for (const body of this.bodies()) {
+      bodies[body] = true;
+      bodies[this.central(body)] = true;
+    }
+
+    return Object.keys(bodies);
   }
 
   body(name: string) {
