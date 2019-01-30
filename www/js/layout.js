@@ -182,15 +182,16 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
             var fov_m = this.fov_au * physics_1.default.AU;
             var px_per_m = this.scale_px / fov_m;
             var diameter = system_1.default.body(body).radius * 2;
-            var is_moon = system_1.default.central(body) != 'sun';
+            var is_tiny = diameter < 3200000;
             var adjust = body == 'sun' ? 1
                 : body.match(/jupiter|saturn|uranus|neptune|trojans/) ? 10
-                    : is_moon ? 60
-                        : 40;
+                    : is_tiny ? 200
+                        : 80;
             var factor = this.fov_au + Math.log2(Math.max(1, this.fov_au));
             var amount = util.clamp(adjust * factor, 1);
-            var min = is_moon ? 1 : 3;
-            return util.clamp(diameter * px_per_m * amount, min, this.scale_px);
+            var min = is_tiny ? 1 : 3;
+            var result = util.clamp(diameter * px_per_m * amount, min, this.scale_px);
+            return result;
         };
         Layout.prototype.is_within_fov = function (target, reference_point) {
             var d = physics_1.default.distance(target, reference_point) / physics_1.default.AU;

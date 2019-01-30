@@ -179,17 +179,18 @@ class Layout {
     const fov_m    = this.fov_au * Physics.AU;
     const px_per_m = this.scale_px / fov_m;
     const diameter = system.body(body).radius * 2;
-    const is_moon  = system.central(body) != 'sun';
+    const is_tiny  = diameter < 3200000;
 
     const adjust = body == ('sun' as t.body) ? 1
                  : body.match(/jupiter|saturn|uranus|neptune|trojans/) ? 10
-                 : is_moon ? 60
-                 : 40;
+                 : is_tiny ? 200
+                 : 80;
 
     const factor = this.fov_au + Math.log2(Math.max(1, this.fov_au));
     const amount = util.clamp(adjust * factor, 1);
-    const min    = is_moon ? 1 : 3;
-    return util.clamp(diameter * px_per_m * amount, min, this.scale_px);
+    const min    = is_tiny ? 1 : 3;
+    const result = util.clamp(diameter * px_per_m * amount, min, this.scale_px);
+    return result;
   }
 
   is_within_fov(target: Point, reference_point: Point) {
