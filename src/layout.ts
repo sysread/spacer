@@ -142,7 +142,7 @@ class Layout {
     ];
   }
 
-  scale_path(points: Point[], max: number) {
+  scale_path(points: Point[], max?: number) {
     if (max === undefined) {
       max = points.length;
     }

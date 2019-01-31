@@ -119,31 +119,6 @@ define(function(require, exports, module) {
         return max / Physics.AU * 1.2;
       },
 
-      center2() {
-        const dest_central = this.system.central(this.plan.dest);
-        const orig_central = this.system.central(this.plan.origin);
-
-        // Moon to moon in same system
-        if (dest_central == orig_central && dest_central != 'sun') {
-          return this.system.position(dest_central);
-        }
-        // Planet to its own moon
-        else if (this.game.locus == dest_central) {
-          return this.system.position(dest_central);
-        }
-        // Moon to it's host planet
-        else if (this.plan.dest == orig_central) {
-          return this.system.position(dest_central);
-        }
-        // Cross system path
-        else {
-          return Physics.centroid(
-            this.plan.end,
-            this.plan.coords,
-          );
-        }
-      },
-
       center() {
         let center;
 
@@ -383,10 +358,6 @@ define(function(require, exports, module) {
 
         this.transit.turn();
 
-        // Update layout
-        this.layout.set_center(this.center);
-        this.layout.set_fov_au(this.fov);
-
         // Update bodies' positions
         for (const body of this.bodies)
           this.animate(body);
@@ -622,26 +593,22 @@ define(function(require, exports, module) {
           <SvgPlot :layout="layout" v-if="layout">
             <image ref="sun" x="0" y="0" width="1" height="1" :xlink:href="'img/sun.png'" />
 
+
             <template v-for="body in bodies">
-              <image :ref="body" x=0 y=0
-                width=1 height=1
-                :xlink:href="'img/' + body + '.png'" />
-
-              <circle v-show="data.bodies[body] != undefined"
-                :ref="body + '_patrol'"
-                cx=0 cy=0 r=0
-                stroke="green" stroke-width="0.5"
-                fill="green" fill-opacity="0.025"/>
-
-              <text v-show="show_label(body)" :ref="body + '_label'"
-                  style="font: 14px monospace; fill: #7FDF3F" x=0 y=0>
+              <SvgOrbitPath v-if="body != 'sun'" :body="body" :layout="layout" />
+              <circle v-show="data.bodies[body] != undefined" :ref="body + '_patrol'" fill="green" fill-opacity="0.1" cx=0 cy=0 r=0 />
+              <image :ref="body" x=0 y=0 width=1 height=1 :xlink:href="'img/' + body + '.png'" />
+              <text v-show="show_label(body)" :ref="body + '_label'" style="font: 14px monospace; fill: #7FDF3F" x=0 y=0>
                 {{body|caps}}
               </text>
             </template>
 
-            <text ref="ship" text-anchor="middle" alignment-baseline="middle" style="fill:yellow; font:12px monospace;">
+
+            <SvgPath v-if="transit" :points="transit.path('ship')" color="#605B0E" />
+            <text ref="ship" text-anchor="middle" alignment-baseline="middle" style="fill: yellow; font: bold 14px monospace;">
               &tridot;
             </text>
+
 
             <line x1=130 y1=13 :x2="patrolRate * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
             <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{patrolRate|pct(2)}}</text>

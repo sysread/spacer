@@ -24,6 +24,11 @@ const Trojans = {
     return [x, y, p[2]];
   },
 
+  getOrbitPath: function() {
+    const path = system.bodies.jupiter.getOrbitPath();
+    return path.slice(60, 360).concat( path.slice(0, 60) );
+  },
+
   getOrbitPathSegment: function(periods: number, msPerPeriod: number): V.Point[] {
     return system.bodies.jupiter.getOrbitPathSegment(periods, msPerPeriod)
       .map(p => this.adjustPoint(p));
@@ -220,6 +225,19 @@ class System {
     }
 
     return this.pos[key][name];
+  }
+
+  full_orbit(name: string) {
+    if (name == 'sun')
+      return new Array(360).fill([0, 0, 0]);
+
+    const key = `${name}.full_orbit`;
+
+    if (this.cache[key] == undefined) {
+      this.cache[key] = this.body(name).getOrbitPath();
+    }
+
+    return this.cache[key];
   }
 
   orbit(name: string) {

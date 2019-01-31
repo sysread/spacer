@@ -420,7 +420,6 @@ define(function(require, exports, module) {
           <template slot="svg">
             <NavBodies :layout="layout" :focus="dest || game.locus" @click="set_dest" />
             <SvgTransitPath v-if="transit" :layout="layout" :transit="transit" />
-            <SvgDestinationPath v-if="transit" :layout="layout" :transit="transit" :body="transit.dest" :turns="transit.left+1" />
           </template>
         </NavPlot>
 
@@ -614,18 +613,17 @@ define(function(require, exports, module) {
   });
 
 
-  Vue.component('SvgDestinationPath', {
-    props: ['color', 'layout', 'body', 'turns', 'transit'],
+  Vue.component('SvgOrbitPath', {
+    props: ['color', 'layout', 'body'],
 
     computed: {
       path() {
-        const path = this.system.orbit_by_turns(this.body).slice(0, this.turns);
-        return this.layout.scale_path(path);
+        return this.layout.scale_path( this.system.full_orbit(this.body) );
       },
     },
 
     template: `
-      <SvgPath :points="path" :color="color || '#8B8B8B'" />
+      <SvgPath :points="path" :color="color || '#333333'" />
     `,
   });
 
@@ -730,7 +728,6 @@ define(function(require, exports, module) {
             point:    p_sun,
             diameter: d_sun,
             label:    false,
-            patrol:   0,
           };
 
           for (const body of this.bodies) {
@@ -739,15 +736,10 @@ define(function(require, exports, module) {
             p[0] -= d / 2;
             p[1] -= d / 2;
 
-            const patrol_radius = this.game.planets[body]
-              ? this.game.planets[body].patrolRadius() * Physics.AU
-              : 0;
-
             bodies[body] = {
               point:    p,
               diameter: d,
               label:    this.show_label(body) ? this.system.name(body) : '',
-              patrol:   this.layout.scale_length(patrol_radius),
             };
           }
 
@@ -785,17 +777,10 @@ define(function(require, exports, module) {
 
     template: `
       <g>
-        <circle
-          v-for="(info, body) of plot_points"
-          v-if="info.patrol > 0"
-          :key="body + '_patrol_radius'"
-          :cx="info.point[0]"
-          :cy="info.point[1]"
-          :r="info.patrol"
-          stroke="green"
-          stroke-width="0.5"
-          fill="green"
-          fill-opacity="0.025" />
+        <template v-for="body of bodies">
+          <SvgOrbitPath    :key="body + '-orbit'"  :body="body" :layout="layout" />
+          <SvgPatrolRadius :key="body + '-patrol'" :body="body" :layout="layout" />
+        </template>
 
         <SvgPlotPoint
           v-for="(info, body) of plot_points"
@@ -808,6 +793,45 @@ define(function(require, exports, module) {
           :focus="is_focus(body)"
           @click="click(body)" />
       </g>
+    `,
+  });
+
+
+  Vue.component('SvgPatrolRadius', {
+    props: ['body', 'layout', 'color'],
+
+    computed: {
+      point() {
+        return this.layout.scale_point(this.system.position(this.body));
+      },
+
+      radius() {
+        const r = this.game.planets[this.body]
+          ? this.game.planets[this.body].patrolRadius() * Physics.AU
+          : 0;
+
+        return this.layout.scale_length(r);
+      },
+
+      opacity() {
+        if (this.data.bodies[this.body]) {
+          const faction = this.data.bodies[this.body].faction;
+          return this.data.factions[faction].patrol;
+        }
+        else {
+          return 0;
+        }
+      },
+    },
+
+    template: `
+      <circle
+          v-if="radius > 0 && opacity"
+          :cx="point[0]"
+          :cy="point[1]"
+          :r="radius"
+          :fill="color || 'green'"
+          fill-opacity="0.1" />
     `,
   });
 

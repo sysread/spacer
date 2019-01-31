@@ -20,6 +20,7 @@ define(["require", "exports", "./system"], function (require, exports, system_1)
             this.layout = layout;
             this.bodies = {};
             this.orbits = {};
+            this.full_orbits = {};
             this.update_bodies();
         }
         Transit.prototype.ship_velocity = function () {
@@ -52,6 +53,16 @@ define(["require", "exports", "./system"], function (require, exports, system_1)
                 throw new Error("body not tracked: " + body);
             return this.bodies[body];
         };
+        Transit.prototype.path = function (body) {
+            switch (body) {
+                case 'ship':
+                    return this.layout.scale_path(this.plan.path.map(function (p) { return p.position; }));
+                case 'sun':
+                    return [this.layout.scale_point([0, 0, 0])];
+                default:
+                    return this.layout.scale_path(this.full_orbits[body]);
+            }
+        };
         // TODO bodies positions are taken from orbits using current_turn. If the
         // transit is continued after the game is restarted, the position at index 0
         // in orbits won't correspond to current_turn, since orbit_by_turns starts at
@@ -63,6 +74,7 @@ define(["require", "exports", "./system"], function (require, exports, system_1)
                     for (var _c = __values(system_1.default.all_bodies()), _d = _c.next(); !_d.done; _d = _c.next()) {
                         var body = _d.value;
                         this.orbits[body] = system_1.default.orbit_by_turns(body);
+                        this.full_orbits[body] = system_1.default.full_orbit(body);
                     }
                 }
                 catch (e_1_1) { e_1 = { error: e_1_1 }; }

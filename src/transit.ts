@@ -23,16 +23,18 @@ interface Body {
 
 
 class Transit {
-  plan:   TransitPlan;
-  layout: Layout;
-  orbits: { [key: string]: Point[] };
-  bodies: { [key: string]: Body };
+  plan:        TransitPlan;
+  layout:      Layout;
+  bodies:      { [key: string]: Body };
+  orbits:      { [key: string]: Point[] };
+  full_orbits: { [key: string]: Point[] };
 
   constructor(plan: TransitPlan, layout: Layout) {
-    this.plan   = plan;
-    this.layout = layout;
-    this.bodies = {};
-    this.orbits = {};
+    this.plan        = plan;
+    this.layout      = layout;
+    this.bodies      = {};
+    this.orbits      = {};
+    this.full_orbits = {};
 
     this.update_bodies();
   }
@@ -55,9 +57,11 @@ class Transit {
       case 'sun':
         point = [0, 0, 0];
         break;
+
       case 'ship':
         point = this.plan.coords;
         break;
+
       default:
         if (this.orbits[body] == undefined)
           throw new Error(`body not tracked: ${body}`);
@@ -76,6 +80,19 @@ class Transit {
     return this.bodies[body];
   }
 
+  path(body: string): Point[] {
+    switch (body) {
+      case 'ship':
+        return this.layout.scale_path(this.plan.path.map(p => p.position));
+
+      case 'sun':
+        return [this.layout.scale_point([0, 0, 0])];
+
+      default:
+        return this.layout.scale_path( this.full_orbits[body] );
+    }
+  }
+
   // TODO bodies positions are taken from orbits using current_turn. If the
   // transit is continued after the game is restarted, the position at index 0
   // in orbits won't correspond to current_turn, since orbit_by_turns starts at
@@ -84,6 +101,7 @@ class Transit {
     if (Object.keys(this.orbits).length == 0) {
       for (const body of system.all_bodies()) {
         this.orbits[body] = system.orbit_by_turns(body);
+        this.full_orbits[body] = system.full_orbit(body);
       }
     }
 

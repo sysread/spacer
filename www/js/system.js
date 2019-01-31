@@ -54,6 +54,10 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             var y = (p[0] * Math.sin(t)) + (p[1] * Math.cos(t));
             return [x, y, p[2]];
         },
+        getOrbitPath: function () {
+            var path = system.bodies.jupiter.getOrbitPath();
+            return path.slice(60, 360).concat(path.slice(0, 60));
+        },
         getOrbitPathSegment: function (periods, msPerPeriod) {
             var _this = this;
             return system.bodies.jupiter.getOrbitPathSegment(periods, msPerPeriod)
@@ -249,6 +253,15 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
                 this.pos[key][name] = pos;
             }
             return this.pos[key][name];
+        };
+        System.prototype.full_orbit = function (name) {
+            if (name == 'sun')
+                return new Array(360).fill([0, 0, 0]);
+            var key = name + ".full_orbit";
+            if (this.cache[key] == undefined) {
+                this.cache[key] = this.body(name).getOrbitPath();
+            }
+            return this.cache[key];
         };
         System.prototype.orbit = function (name) {
             if (!this.system.time) {
