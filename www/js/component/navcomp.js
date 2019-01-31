@@ -618,7 +618,13 @@ define(function(require, exports, module) {
 
     computed: {
       path() {
-        return this.layout.scale_path( this.system.full_orbit(this.body) );
+        const points = this.system.full_orbit(this.body);
+        const sample = points.reduce((acc, p, i) => {
+          if (i % 60) acc.push(p);
+          return acc;
+        }, [points[0]]);
+
+        return this.layout.scale_path(sample);
       },
     },
 
