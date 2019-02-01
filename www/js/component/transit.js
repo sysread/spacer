@@ -53,19 +53,17 @@ define(function(require, exports, module) {
       },
 
       intvl_ms() {
-        if (this.is_zoomed_in) {
-          return 800;
-        }
-
-        return 400;
+        return this.is_zoomed_in ? 800 : 400;
       },
 
-      tx_style() {
-        if (this.plan.turns <= this.data.turns_per_day * 10) {
-          return 'nav-body-slow';
-        }
+      center() {
+        if (this.transit)
+          return this.transit.center;
+      },
 
-        return 'nav-body';
+      fov() {
+        if (this.transit)
+          return this.transit.fov;
       },
 
       displayFoV() {
@@ -76,84 +74,6 @@ define(function(require, exports, module) {
         } else {
           return util.R(fov, 1) + ' AU';
         }
-      },
-
-      fov() {
-        let center = this.center;
-        const points = [];
-
-        const dest_central = this.system.central(this.plan.dest);
-        const orig_central = this.system.central(this.plan.origin);
-
-        // Moon to moon in same system
-        if (dest_central == orig_central && dest_central != 'sun') {
-          points.push(this.plan.start);
-          points.push(this.system.position(dest_central));
-        }
-        // Planet to its own moon
-        else if (this.plan.origin == dest_central) {
-          points.push(this.plan.start);
-          for (const body of this.system.bodies()) {
-            if (this.system.central(body) == dest_central) {
-              points.push(this.system.position(body));
-            }
-          }
-        }
-        // Moon to it's host planet
-        else if (this.plan.dest == orig_central) {
-          points.push(this.plan.start);
-          for (const body of this.system.bodies()) {
-            if (this.system.central(body) == orig_central) {
-              points.push(this.system.position(body));
-            }
-          }
-        }
-        // Cross system path
-        else {
-          points.push(Physics.centroid(this.plan.start, this.plan.coords));
-        }
-
-        points.push(this.plan.end);
-
-        const max = Math.max(...points.map(p => Physics.distance(p, center)));
-        return max / Physics.AU * 1.2;
-      },
-
-      center() {
-        let center;
-
-        const dest_central = this.system.central(this.plan.dest);
-        const orig_central = this.system.central(this.plan.origin);
-        const bodies = [];
-
-        // Moon to moon in same system
-        if (dest_central == orig_central && dest_central != 'sun') {
-          bodies.push(this.system.position(dest_central));
-          bodies.push(this.plan.flip_point);
-          bodies.push(this.plan.start);
-        }
-        // Planet to its own moon
-        else if (this.game.locus == dest_central) {
-          bodies.push(this.system.position(this.plan.origin));
-          bodies.push(this.plan.flip_point);
-          bodies.push(this.plan.start);
-        }
-        // Moon to it's host planet
-        else if (this.plan.dest == orig_central) {
-          bodies.push(this.system.position(this.plan.dest));
-          bodies.push(this.plan.flip_point);
-          bodies.push(this.plan.start);
-        }
-        // Cross system path
-        else {
-          bodies.push(this.system.position(this.plan.dest));
-          bodies.push(this.system.position(this.plan.origin));
-          bodies.push(this.plan.coords);
-        }
-
-        bodies.push(this.plan.end);
-
-        return Physics.centroid(...bodies);
       },
 
       bodies() {
@@ -271,10 +191,6 @@ define(function(require, exports, module) {
 
     methods: {
       layout_set() {
-        // Update layout
-        this.layout.set_center(this.center);
-        this.layout.set_fov_au(this.fov);
-
         // Create transit object
         this.transit = new Transit(this.plan, this.layout);
 
