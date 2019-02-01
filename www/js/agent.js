@@ -99,18 +99,34 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                 }
                 // fully refueled!
                 if (this.refuel()) {
-                    // select a route
-                    var routes = this.profitableRoutes();
-                    if (routes.length > 0) {
-                        // buy the goods to transport
-                        var _a = routes[0], item = _a.item, count = _a.count;
-                        var _b = __read(this.here.buy(item, count, this), 2), bought = _b[0], price = _b[1];
-                        if (bought != routes[0].count) {
-                            throw new Error(bought + " != " + count);
+                    if (this.here.hasTradeBan) {
+                        var transit = this.findAlternateMarket();
+                        if (transit != undefined) {
+                            this.action = {
+                                action: 'route',
+                                dest: transit.dest,
+                                transit: new transitplan_1.TransitPlan(transit),
+                                item: 'water',
+                                count: 0,
+                                profit: 0,
+                            };
+                            return;
                         }
-                        // switch to the new action
-                        this.action = routes[0];
-                        return;
+                    }
+                    else {
+                        // select a route
+                        var routes = this.profitableRoutes();
+                        if (routes.length > 0) {
+                            // buy the goods to transport
+                            var _a = routes[0], item = _a.item, count = _a.count;
+                            var _b = __read(this.here.buy(item, count, this), 2), bought = _b[0], price = _b[1];
+                            if (bought != routes[0].count) {
+                                throw new Error(bought + " != " + count);
+                            }
+                            // switch to the new action
+                            this.action = routes[0];
+                            return;
+                        }
                     }
                 }
                 // still here? then find a job and wait for profitability to happen
@@ -230,8 +246,10 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                     // Arrive
                     this.action = this.dock(action.dest);
                     // Sell cargo
-                    var _a = __read(this.here.sell(action.item, action.count, this), 3), amt = _a[0], price = _a[1], standing = _a[2];
-                    //console.debug(`agent: sold ${action.count} units of ${action.item} for ${util.csn(price)} on ${action.dest}`);
+                    if (action.count > 0) {
+                        var _a = __read(this.here.sell(action.item, action.count, this), 3), amt = _a[0], price = _a[1], standing = _a[2];
+                        //console.debug(`agent: sold ${action.count} units of ${action.item} for ${util.csn(price)} on ${action.dest}`);
+                    }
                 }
                 return true;
             }
@@ -258,6 +276,8 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                         try {
                             for (var _e = __values(t.bodies), _f = _e.next(); !_f.done; _f = _e.next()) {
                                 var dest = _f.value;
+                                if (game.planets[dest].hasTradeBan)
+                                    continue;
                                 var sellPrice = game.planets[dest].sellPrice(item);
                                 var profitPerUnit = sellPrice - buyPrice;
                                 if (profitPerUnit <= 0) {
@@ -301,6 +321,31 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                 }
             }
             return routes.sort(function (a, b) { return a.profit < b.profit ? 1 : -1; });
+        };
+        Agent.prototype.findAlternateMarket = function () {
+            var e_4, _a;
+            var navComp = new navcomp_1.NavComp(this, this.here.body);
+            navComp.dt = 10;
+            var best;
+            try {
+                for (var _b = __values(t.bodies), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var dest = _c.value;
+                    var transit = navComp.getFastestTransitTo(dest);
+                    if (transit == undefined)
+                        continue;
+                    if (best != undefined && best.turns > transit.turns) {
+                        best = transit;
+                    }
+                }
+            }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_4) throw e_4.error; }
+            }
+            return best;
         };
         return Agent;
     }(person_1.Person));

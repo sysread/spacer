@@ -98,22 +98,40 @@ export class Agent extends Person {
 
       // fully refueled!
       if (this.refuel()) {
-        // select a route
-        const routes = this.profitableRoutes();
+        if (this.here.hasTradeBan) {
+          const transit = this.findAlternateMarket();
 
-        if (routes.length > 0) {
-          // buy the goods to transport
-          const { item, count } = routes[0];
-          const [bought, price] = this.here.buy(item, count, this);
+          if (transit != undefined) {
+            this.action = {
+              action:  'route',
+              dest:    transit.dest,
+              transit: new TransitPlan(transit),
+              item:    'water', // doesn't matter since the count is 0
+              count:   0,
+              profit:  0,
+            };
 
-          if (bought != routes[0].count) {
-            throw new Error(`${bought} != ${count}`);
+            return;
           }
+        }
+        else {
+          // select a route
+          const routes = this.profitableRoutes();
 
-          // switch to the new action
-          this.action = routes[0];
+          if (routes.length > 0) {
+            // buy the goods to transport
+            const { item, count } = routes[0];
+            const [bought, price] = this.here.buy(item, count, this);
 
-          return;
+            if (bought != routes[0].count) {
+              throw new Error(`${bought} != ${count}`);
+            }
+
+            // switch to the new action
+            this.action = routes[0];
+
+            return;
+          }
         }
       }
 
@@ -240,8 +258,10 @@ export class Agent extends Person {
         this.action = this.dock(action.dest);
 
         // Sell cargo
-        const [amt, price, standing] = this.here.sell(action.item, action.count, this);
-        //console.debug(`agent: sold ${action.count} units of ${action.item} for ${util.csn(price)} on ${action.dest}`);
+        if (action.count > 0) {
+          const [amt, price, standing] = this.here.sell(action.item, action.count, this);
+          //console.debug(`agent: sold ${action.count} units of ${action.item} for ${util.csn(price)} on ${action.dest}`);
+        }
       }
 
       return true;
@@ -271,6 +291,9 @@ export class Agent extends Person {
         }
 
         for (const dest of t.bodies) {
+          if (game.planets[dest].hasTradeBan)
+            continue;
+
           const sellPrice     = game.planets[dest].sellPrice(item);
           const profitPerUnit = sellPrice - buyPrice;
 
@@ -304,5 +327,25 @@ export class Agent extends Person {
     }
 
     return routes.sort((a, b) => a.profit < b.profit ? 1 : -1);
+  }
+
+  findAlternateMarket() {
+    const navComp = new NavComp(this, this.here.body);
+    navComp.dt = 10;
+
+    let best: TransitPlan | undefined;
+
+    for (const dest of t.bodies) {
+      const transit = navComp.getFastestTransitTo(dest);
+
+      if (transit == undefined)
+        continue;
+
+      if (best != undefined && best.turns > transit.turns) {
+        best = transit;
+      }
+    }
+
+    return best;
   }
 }
