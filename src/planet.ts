@@ -935,7 +935,7 @@ export class Planet {
     const price: t.Counter = {};
     const stock: t.Counter = {};
     for (const body of exporters) {
-      if (window.game.plants[body].hasTradeBan)
+      if (window.game.planets[body].hasTradeBan)
         continue;
 
       dist[body]  = this.distance(body) / Physics.AU * window.game.planets[body].buyPrice('fuel');
