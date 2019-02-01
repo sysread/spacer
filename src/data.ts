@@ -313,7 +313,7 @@ const data = {
     europa: {
       name:    'Europa',
       size:    'small',
-      traits:  ['subterranean', 'rocky', 'mineral rich'],
+      traits:  ['subterranean', 'icy', 'mineral rich', 'water rich'],
       faction: 'JFT',
       desc:    '',
     },
@@ -634,7 +634,7 @@ data.bodies.mars.desc       = "Rising from the ashes of the Earth fleet's system
 data.bodies.phobos.desc     = "Phobos Command hosts the orbital command center of the Martian navy, coordinating the planet's orbital defense network, as well as its most prestigious officer training school. Having been spun up close to Earth gravity, it is also home to the Martian Marines, allowing them to train under the conditions they would face during an invasion of Earth.";
 data.bodies.ceres.desc      = "Large enough to be given a comfortable spin gravity of more than a third of Earth, the hollowed out planetoid Ceres is a major shipping and commercial hub between the inner and outer planets.";
 data.bodies.trojans.desc    = "Stretching across nearly half an AU of Jupiter's L5 Lagrange point, Trojan Atoll collectively represents the second largest population in the system. As well as being a source of incredible mineral wealth, it also boasts some of the most exotic and highly adapted habitats humanity has ever designed. A cluster of hollowed out and spun up asteroids, the \"Isles\" are connected by a flotilla of small transports linking the dozens of habitats, each boasting their own unique culture.|After the war, with shipments of necessities scarce, the government of Ceres stepped up to aid their fellow spacers, later formalizing the Isles' status as a protectorate with full voting rights in the Serene Council.|Descended from an eclectic community of asteroid miners and scientists, Islanders, as they are commonly known, have a reputation for cleverness and technological know-how.";
-data.bodies.europa.desc     = "One of the two Jovian moons claimed by the JFT during the war, Europa's mines provide the backbone of the JFT's trade in raw materials.";
+data.bodies.europa.desc     = "One of the two Jovian moons claimed by the JFT during the war, Europa's mines provide the backbone of the JFT's trade from ice and disolved minerals from its subsurface oceans.";
 data.bodies.callisto.desc   = "Callisto's vast domed farms produce tons of food that are shipped across the system, supporting many of the outer colonies that cannot produce enough food to be self sufficient. It also hosts the regional Martian command orbital and dock yards.";
 data.bodies.ganymede.desc   = "The official headquarters of the JFT, Ganymede also hosts excellent agricultural facilities and shipyards, making it a commercial hub of the outer system.";
 data.bodies.enceladus.desc  = "The supply station orbiting Enceladus boasts the best views in the system and is the nexus for the harvesting and shipping of water from Saturn's rings.";
