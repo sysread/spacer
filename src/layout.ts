@@ -14,13 +14,17 @@ class Layout {
   on_pan?:    Function;
   on_resize?: Function;
 
-  fov_au:     number;
+  fov_au:     number; // *radius* of field of view in meters
+
   width_px:   number;
   height_px:  number;
+
   init_x:     number;
   init_y:     number;
+
   offset_x:   number;
   offset_y:   number;
+
   init_set:   boolean=false;
 
   _zero_x?:   number;
@@ -78,8 +82,12 @@ class Layout {
     return this._elt;
   }
 
-  get center() {
-    return [this.offset_x, this.offset_y];
+  get px_per_meter() {
+    return this.scale_px / (this.fov_au * Physics.AU);
+  }
+
+  get center(): Point {
+    return [this.offset_x, this.offset_y, 0];
   }
 
   set_fov_au(au: number) {
@@ -171,14 +179,10 @@ class Layout {
   }
 
   scale_length(meters: number): number {
-    const fov_m    = this.fov_au * Physics.AU;
-    const px_per_m = this.scale_px / fov_m;
-    return meters * px_per_m;
+    return meters * this.px_per_meter;
   }
 
   scale_body_diameter(body: string) {
-    const fov_m    = this.fov_au * Physics.AU;
-    const px_per_m = this.scale_px / fov_m;
     const diameter = system.body(body).radius * 2;
     const is_tiny  = diameter < 3200000;
 
@@ -190,13 +194,20 @@ class Layout {
     const factor = this.fov_au + Math.log2(Math.max(1, this.fov_au));
     const amount = util.clamp(adjust * factor, 1);
     const min    = is_tiny ? 1 : 3;
-    const result = util.clamp(diameter * px_per_m * amount, min, this.scale_px);
+    const result = util.clamp(diameter * this.px_per_meter * amount, min, this.scale_px);
     return result;
   }
 
-  is_within_fov(target: Point, reference_point: Point) {
-    const d = Physics.distance(target, reference_point) / Physics.AU;
-    return d < 0.5 || d < this.fov_au;
+  is_within_fov(target: Point): boolean {
+    const [x, y] = this.scale_point(target);
+
+    if (x < 0 || x > this.width_px)
+      return false;
+
+    if (y < 0 || y > this.height_px)
+      return false;
+
+    return true;
   }
 
   update_width() {

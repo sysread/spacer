@@ -6,17 +6,16 @@ type point = [number, number];
 // The smoothing ratio
 const smoothing = 0.2;
 
-function controlPoint(current: point, previous: point, next: point, reverse: boolean=false): point {
-  // When 'current' is the first or last point of the array
-  // 'previous' or 'next' don't exist.
-  // Replace with 'current'
-  const p = previous || current;
-  const n = next || current;
+function control_point(current: point, prev: point, next: point, reverse: boolean=false): string {
+  // When 'current' is the first or last point of the array 'previous' or
+  // 'next' don't exist. Replace with 'current'.
+  prev = prev || current;
+  next = next || current;
 
   // Properties of the opposed-line
-  const line_x      = n[0] - p[0];
-  const line_y      = n[1] - p[1];
-  const line_length = Math.sqrt(Math.pow(line_x, 2) + Math.pow(line_y, 2));
+  const line_x      = next[0] - prev[0];
+  const line_y      = next[1] - prev[1];
+  const line_length = Math.sqrt((line_x * line_x) + (line_y * line_y));
   const line_angle  = Math.atan2(line_y, line_x);
 
   // If is end-control-point, add PI to the angle to go backward
@@ -24,30 +23,17 @@ function controlPoint(current: point, previous: point, next: point, reverse: boo
   const length = line_length * smoothing;
 
   // The control point position is relative to the current point
-  const x = current[0] + Math.cos(angle) * length;
-  const y = current[1] + Math.sin(angle) * length;
-
-  return [x, y];
+  return (current[0] + Math.cos(angle) * length) + ',' + (current[1] + Math.sin(angle) * length);
 }
 
 function smooth(points: point[]): string {
-  let path = '';
+  let path = 'M ' + points[0][0] + ',' + points[0][1];
 
-  for (let i = 0; i < points.length; ++i) {
-    // init line
-    if (i == 0) {
-      path += `M ${points[i][0]},${points[i][1]}`;
-    }
-    // add bezier curve command
-    else {
-      // start control point
-      const [cps_x, cps_y] = controlPoint(points[i - 1], points[i - 2], points[i])
-
-      // end control point
-      const [cpe_x, cpe_y] = controlPoint(points[i], points[i - 1], points[i + 1], true)
-
-      path += `C ${cps_x},${cps_y} ${cpe_x},${cpe_y} ${points[i][0]},${points[i][1]}`
-    }
+  // add bezier curve command
+  for (let i = 1; i < points.length; ++i) {
+    const c1 = control_point(points[i - 1], points[i - 2], points[i]);       // start control point
+    const c2 = control_point(points[i], points[i - 1], points[i + 1], true); // end control point
+    path += ' C ' + c1 + ' ' + c2 + ' ' + points[i][0] + ',' + points[i][1];
   }
 
   return path;

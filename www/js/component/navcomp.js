@@ -620,7 +620,7 @@ define(function(require, exports, module) {
       path() {
         const points = this.system.full_orbit(this.body);
         const sample = points.reduce((acc, p, i) => {
-          if (i % 60) acc.push(p);
+          if (i % 90) acc.push(p);
           return acc;
         }, [points[0]]);
 
@@ -707,12 +707,18 @@ define(function(require, exports, module) {
         for (const body of this.system.bodies()) {
           if (!seen[body]) {
             seen[body] = true;
-            bodies.push(body);
 
+            const visible = this.layout.is_within_fov(System.position(body));
             const central = this.system.central(body);
+
+            if (visible)
+              bodies.push(body);
+
             if (central != 'sun' && !seen[central]) {
               seen[central] = true;
-              bodies.push(central);
+
+              if (visible)
+                bodies.push(central);
             }
           }
         }
@@ -725,16 +731,18 @@ define(function(require, exports, module) {
           const t = this.system.system.time;
           const bodies = {};
 
-          const d_sun = this.layout.scale_body_diameter('sun');
-          const p_sun = this.layout.scale_point([0, 0]);
-          p_sun[0] -= d_sun / 2;
-          p_sun[1] -= d_sun / 2;
+          if (this.layout.is_within_fov([0, 0])) {
+            const p_sun = this.layout.scale_point([0, 0]);
+            const d_sun = this.layout.scale_body_diameter('sun');
+            p_sun[0] -= d_sun / 2;
+            p_sun[1] -= d_sun / 2;
 
-          bodies.sun = {
-            point:    p_sun,
-            diameter: d_sun,
-            label:    false,
-          };
+            bodies.sun = {
+              point:    p_sun,
+              diameter: d_sun,
+              label:    false,
+            };
+          }
 
           for (const body of this.bodies) {
             const d = this.layout.scale_body_diameter(body);
@@ -784,7 +792,7 @@ define(function(require, exports, module) {
     template: `
       <g>
         <template v-for="body of bodies">
-          <SvgOrbitPath    :key="body + '-orbit'"  :body="body" :layout="layout" />
+          <SvgOrbitPath v-if="show_label(body)" :key="body + '-orbit'" :body="body" :layout="layout" />
           <SvgPatrolRadius :key="body + '-patrol'" :body="body" :layout="layout" />
         </template>
 

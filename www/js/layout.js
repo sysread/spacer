@@ -92,9 +92,16 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Layout.prototype, "px_per_meter", {
+            get: function () {
+                return this.scale_px / (this.fov_au * physics_1.default.AU);
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Layout.prototype, "center", {
             get: function () {
-                return [this.offset_x, this.offset_y];
+                return [this.offset_x, this.offset_y, 0];
             },
             enumerable: true,
             configurable: true
@@ -175,13 +182,9 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
             return path;
         };
         Layout.prototype.scale_length = function (meters) {
-            var fov_m = this.fov_au * physics_1.default.AU;
-            var px_per_m = this.scale_px / fov_m;
-            return meters * px_per_m;
+            return meters * this.px_per_meter;
         };
         Layout.prototype.scale_body_diameter = function (body) {
-            var fov_m = this.fov_au * physics_1.default.AU;
-            var px_per_m = this.scale_px / fov_m;
             var diameter = system_1.default.body(body).radius * 2;
             var is_tiny = diameter < 3200000;
             var adjust = body == 'sun' ? 1
@@ -191,12 +194,16 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
             var factor = this.fov_au + Math.log2(Math.max(1, this.fov_au));
             var amount = util.clamp(adjust * factor, 1);
             var min = is_tiny ? 1 : 3;
-            var result = util.clamp(diameter * px_per_m * amount, min, this.scale_px);
+            var result = util.clamp(diameter * this.px_per_meter * amount, min, this.scale_px);
             return result;
         };
-        Layout.prototype.is_within_fov = function (target, reference_point) {
-            var d = physics_1.default.distance(target, reference_point) / physics_1.default.AU;
-            return d < 0.5 || d < this.fov_au;
+        Layout.prototype.is_within_fov = function (target) {
+            var _a = __read(this.scale_point(target), 2), x = _a[0], y = _a[1];
+            if (x < 0 || x > this.width_px)
+                return false;
+            if (y < 0 || y > this.height_px)
+                return false;
+            return true;
         };
         Layout.prototype.update_width = function () {
             if (!this.elt) {
