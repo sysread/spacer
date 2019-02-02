@@ -1,4 +1,4 @@
-// Adopted (read: copy pasta) from:
+// Adopted from:
 //   https://medium.com/@francoisromain/smooth-a-svg-path-with-cubic-bezier-curves-e37b49d46c74
 
 type point = [number, number];
@@ -13,14 +13,11 @@ function control_point(current: point, prev: point, next: point, reverse: boolea
   next = next || current;
 
   // Properties of the opposed-line
-  const line_x      = next[0] - prev[0];
-  const line_y      = next[1] - prev[1];
-  const line_length = Math.sqrt((line_x * line_x) + (line_y * line_y));
-  const line_angle  = Math.atan2(line_y, line_x);
+  const x = next[0] - prev[0];
+  const y = next[1] - prev[1];
 
-  // If is end-control-point, add PI to the angle to go backward
-  const angle  = line_angle + (reverse ? Math.PI : 0);
-  const length = line_length * smoothing;
+  const length = Math.sqrt((x * x) + (y * y)) * smoothing;
+  const angle  = Math.atan2(y, x) + (reverse ? Math.PI : 0); // if end-control-point, add PI to the angle to go backward
 
   // The control point position is relative to the current point
   return (current[0] + Math.cos(angle) * length) + ',' + (current[1] + Math.sin(angle) * length);

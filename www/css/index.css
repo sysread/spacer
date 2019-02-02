@@ -170,6 +170,27 @@ a.info:hover {
   font-size: 12px;
 }
 
+svg.plot {
+  position: absolute;
+  display:  inline;
+  z-index:  0;
+}
+
+.plot-label {
+  font: 14px monospace;
+  fill: #EEEEEE;
+}
+
+.plot-label-hi {
+  font: 14px monospace;
+  fill: #7FDF3F;
+}
+
+.plot-legend {
+  font: 12px monospace;
+  fill: red;
+}
+
 .plot-controls {
   background-color: #000;
   border: 1px solid rgb(200,0,0);

@@ -127,17 +127,17 @@ class Layout {
     this._zero_y = undefined;
   }
 
-  scale(n: number) {
+  scale(n: number): number {
     const fov_m = this.fov_au * Physics.AU;
     return n / fov_m * this.zero;
   }
 
-  scale_x(n: number, no_offset: boolean=false) {
+  scale_x(n: number, no_offset: boolean=false): number {
     const n_scaled = this.zero_x + this.scale(n);
     return no_offset ? n_scaled : n_scaled + this.offset_x;
   }
 
-  scale_y(n: number, no_offset: boolean=false) {
+  scale_y(n: number, no_offset: boolean=false): number {
     const n_scaled = this.zero_y - this.scale(n);
     return no_offset ? n_scaled : n_scaled + this.offset_y;
   }

@@ -20,6 +20,8 @@ define(function(require, exports, module) {
   require('component/card');
   require('component/combat');
   require('component/navcomp');
+  require('component/svg');
+
 
   Vue.component('transit', {
     mixins: [ Layout ],
@@ -506,9 +508,8 @@ define(function(require, exports, module) {
         <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
           <div class="plot-root-bg" :style="bg_css()"></div>
 
-          <SvgPlot :layout="layout" v-if="layout">
-            <image ref="sun" x="0" y="0" width="1" height="1" :xlink:href="'img/sun.png'" />
-
+          <SvgPlot v-if="layout" :width="layout.width_px" :height="layout.height_px">
+            <image ref="sun" x="0" y="0" width="1" height="1" xlink:href="img/sun.png" />
 
             <template v-for="body in bodies">
               <SvgOrbitPath v-if="body != 'sun'" :body="body" :layout="layout" />

@@ -14,6 +14,7 @@ define(function(require, exports, module) {
   require('component/modal');
   require('component/commerce');
   require('component/summary');
+  require('component/svg');
 
 
   Vue.component('NavBtn', {
@@ -263,12 +264,14 @@ define(function(require, exports, module) {
       },
 
       go_map() {
-        if (!this.transit) {
-          this.dest = null;
-        }
+        if (this.show != 'map') {
+          if (!this.transit) {
+            this.dest = null;
+          }
 
-        this.show = 'map';
-        this.$nextTick(() => this.layout_resize());
+          this.show = 'map';
+          this.$nextTick(() => this.layout_resize());
+        }
       },
 
       go_dest_menu()   { this.show = 'dest' },
@@ -573,66 +576,30 @@ define(function(require, exports, module) {
   });
 
 
-  Vue.component('SvgPlot', {
-    'props': ['layout'],
-
-    'computed': {
-      view_box() {
-        return '0 0 '
-             + this.layout.width_px
-             + ' '
-             + this.layout.height_px;
-      },
-    },
-
-    //<image xlink:href="img/milkyway.jpg" x="0" y="0" :width="layout.width_px" :height="layout.height_px" />
-    'template': `
-      <svg :viewBox="view_box"
-           fill="none"
-           style="position:absolute;display:inline;z-index:0"
-           xmlns="http://www.w3.org/2000/svg"
-           xmlns:xlink="http://www.w3.org/1999/xlink">
-        <slot />
-      </svg>
-    `
-  });
-
-
-  Vue.component('SvgPath', {
-    'props': ['points', 'color'],
-
-    'computed': {
-      svg_path() {
-        return svgpath(this.points);
-      }
-    },
-
-    'template': `
-      <path fill="none" :stroke="color" stroke-width="0.75px" :d="svg_path" />
-    `,
-  });
-
-
   Vue.component('SvgOrbitPath', {
     props: ['color', 'layout', 'body'],
 
     computed: {
       path() {
         const points = this.system.full_orbit(this.body);
-        const sample = points.reduce((acc, p, i) => {
-          if (i % 90) acc.push(p);
-          return acc;
-        }, [points[0]]);
 
-        sample.push(points[0]);
+        const sample = points.reduce((acc, p, i) => {
+            if ((i + 1) % 3 == 0)
+              acc.push(p);
+
+            return acc;
+          }, [points[0]]);
+
+        // Not 100% certain why this is needed. Perhaps because pluto does not
+        // have a stable orbit?
+        if (this.body == 'pluto')
+          sample.push(points[0]);
 
         return this.layout.scale_path(sample);
       },
     },
 
-    template: `
-      <SvgPath :points="path" :color="color || '#333333'" />
-    `,
+    template: '<SvgPath :points="path" :color="color || \'#333333\'" line="0.75px" />',
   });
 
 
@@ -640,17 +607,11 @@ define(function(require, exports, module) {
     props: ['transit', 'color', 'layout'],
 
     computed: {
-      path() {
-        if (this.transit) {
-          return this.transit.path
-            .map(p => this.layout.scale_point(p.position));
-        }
-      },
+      points() { return this.transit ? this.transit.path : [] },
+      path()   { return this.points.map(p => this.layout.scale_point(p.position)) },
     },
 
-    template: `
-      <SvgPath :points="path" :color="color || '#A01B1B'" />
-    `,
+    template: '<SvgPath :points="path" :color="color || \'#A01B1B\'" line="0.75px" />',
   });
 
 
@@ -658,15 +619,9 @@ define(function(require, exports, module) {
     props: ['layout', 'label', 'pos', 'diameter', 'img', 'focus'],
 
     computed: {
-      label_x() { return this.pos[0] + this.diameter + 10 },
-      label_y() { return this.pos[1] + this.diameter / 3  },
-
-      text_style() {
-        return {
-          'font': '14px monospace',
-          'fill': this.focus ? '#7FDF3F' : '#EEEEEE',
-        };
-      },
+      label_x()     { return this.pos[0] + this.diameter + 10 },
+      label_y()     { return this.pos[1] + this.diameter / 3  },
+      label_class() { return this.focus ? 'plot-label-hi' : 'plot-label' },
 
       show_label() {
         if (this.label) {
@@ -689,8 +644,11 @@ define(function(require, exports, module) {
 
     template: `
       <g @click="click">
-        <image v-if="img" :xlink:href="img" :height="diameter" :width="diameter" :x="pos[0]" :y="pos[1]" />
-        <text v-show="show_label" :style="text_style" :x="label_x" :y="label_y">{{label|caps}}</text>
+        <SvgImg v-if="img" :src="img" :height="diameter" :width="diameter" :x="pos[0]" :y="pos[1]" />
+
+        <SvgText v-if="show_label" :class="label_class" :x="label_x" :y="label_y">
+          {{label|caps}}
+        </SvgText>
       </g>
     `,
   });
@@ -710,17 +668,14 @@ define(function(require, exports, module) {
           if (!seen[body]) {
             seen[body] = true;
 
-            const visible = this.layout.is_within_fov(System.position(body));
-            const central = this.system.central(body);
+            bodies.push(body);
 
-            if (visible)
-              bodies.push(body);
+            const central = this.system.central(body);
 
             if (central != 'sun' && !seen[central]) {
               seen[central] = true;
 
-              if (visible)
-                bodies.push(central);
+              bodies.push(central);
             }
           }
         }
@@ -733,18 +688,16 @@ define(function(require, exports, module) {
           const t = this.system.system.time;
           const bodies = {};
 
-          if (this.layout.is_within_fov([0, 0])) {
-            const p_sun = this.layout.scale_point([0, 0]);
-            const d_sun = this.layout.scale_body_diameter('sun');
-            p_sun[0] -= d_sun / 2;
-            p_sun[1] -= d_sun / 2;
+          const p_sun = this.layout.scale_point([0, 0]);
+          const d_sun = this.layout.scale_body_diameter('sun');
+          p_sun[0] -= d_sun / 2;
+          p_sun[1] -= d_sun / 2;
 
-            bodies.sun = {
-              point:    p_sun,
-              diameter: d_sun,
-              label:    false,
-            };
-          }
+          bodies.sun = {
+            point:    p_sun,
+            diameter: d_sun,
+            label:    false,
+          };
 
           for (const body of this.bodies) {
             const d = this.layout.scale_body_diameter(body);
@@ -794,7 +747,7 @@ define(function(require, exports, module) {
     template: `
       <g>
         <template v-for="body of bodies">
-          <SvgOrbitPath v-if="show_label(body)" :key="body + '-orbit'" :body="body" :layout="layout" />
+          <SvgOrbitPath :key="body + '-orbit'" :body="body" :layout="layout" />
           <SvgPatrolRadius :key="body + '-patrol'" :body="body" :layout="layout" />
         </template>
 
@@ -817,11 +770,11 @@ define(function(require, exports, module) {
     props: ['body', 'layout', 'color'],
 
     computed: {
-      point() {
-        return this.layout.scale_point(this.system.position(this.body));
-      },
+      point() { return this.layout.scale_point(this.system.position(this.body)) },
+      cx() { return this.point[0] },
+      cy() { return this.point[1] },
 
-      radius() {
+      r() {
         const r = this.game.planets[this.body]
           ? this.game.planets[this.body].patrolRadius() * Physics.AU
           : 0;
@@ -832,30 +785,35 @@ define(function(require, exports, module) {
       opacity() {
         if (this.data.bodies[this.body]) {
           const faction = this.data.bodies[this.body].faction;
-          return this.data.factions[faction].patrol;
-        }
-        else {
+          return 0.2 * this.data.factions[faction].patrol;
+        } else {
           return 0;
         }
       },
     },
 
     template: `
-      <circle
-          v-if="radius > 0 && opacity"
-          :cx="point[0]"
-          :cy="point[1]"
-          :r="radius"
-          :fill="color || 'green'"
-          fill-opacity="0.1" />
+      <SvgCircle v-if="r > 0 && opacity" :cx="cx" :cy="cy" :r="r" :bg="color || 'green'" :opacity="opacity" />
     `,
+  });
+
+
+  Vue.component("PlotLegend", {
+    props:    ['x', 'y'],
+    template: '<SvgText class="plot-legend" :x="x" :y="y"><slot /></SvgText>',
   });
 
 
   Vue.component('NavPlot', {
     props: ['layout', 'transit'],
 
+    computed: {
+      x() { return 5 },
+    },
+
     methods: {
+      y(n) { return (n * 17) },
+
       bg_css() {
         return {
           width:  this.layout ? this.layout.width_px  + 'px' : '100%',
@@ -868,14 +826,17 @@ define(function(require, exports, module) {
       <div id="navcomp-map-root" class="plot-root border border-dark">
         <div class="plot-root-bg" :style="bg_css()"></div>
 
-        <SvgPlot v-if="layout" :layout="layout">
-          <text style="fill:red;font:12px monospace" x=5 y=17>FoV:&nbsp;&nbsp;{{layout.fov_au * 2|R(4)|unit('AU')}}</text>
-          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=34>Dest.&nbsp;{{transit.dest|caps}}</text>
-          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=51>Dist.&nbsp;{{transit.segment_au|R(4)|unit('AU')}}</text>
-          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=68>&Delta;V:&nbsp;&nbsp;&nbsp;{{transit.accel_g|R(3)|unit('G')}}</text>
-          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=85>MaxV:&nbsp;{{(transit.maxVelocity/1000)|R|csn|unit('km/s')}}</text>
-          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=102>Fuel:&nbsp;{{transit.fuel|R(2)}}</text>
-          <text v-if="transit" style="fill:red;font:12px monospace" x=5 y=119>Time:&nbsp;{{transit.str_arrival}}</text>
+        <SvgPlot v-if="layout" :width="layout.width_px" :height="layout.height_px">
+          <PlotLegend :x="x" :y="y(1)">FoV:&nbsp;&nbsp;{{layout.fov_au * 2|R(4)|unit('AU')}}</PlotLegend>
+
+          <template v-if="transit">
+            <PlotLegend :x="x" :y="y(2)">Dest.&nbsp;{{transit.dest|caps}}</PlotLegend>
+            <PlotLegend :x="x" :y="y(3)">Dist.&nbsp;{{transit.segment_au|R(4)|unit('AU')}}</PlotLegend>
+            <PlotLegend :x="x" :y="y(4)">&Delta;V:&nbsp;&nbsp;&nbsp;{{transit.accel_g|R(3)|unit('G')}}</PlotLegend>
+            <PlotLegend :x="x" :y="y(5)">MaxV:&nbsp;{{(transit.maxVelocity/1000)|R|csn|unit('km/s')}}</PlotLegend>
+            <PlotLegend :x="x" :y="y(6)">Fuel:&nbsp;{{transit.fuel|R(2)}}</PlotLegend>
+            <PlotLegend :x="x" :y="y(7)">Time:&nbsp;{{transit.str_arrival}}</PlotLegend>
+          </template>
 
           <slot name="svg" />
         </SvgPlot>

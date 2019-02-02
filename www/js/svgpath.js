@@ -1,4 +1,4 @@
-// Adopted (read: copy pasta) from:
+// Adopted from:
 //   https://medium.com/@francoisromain/smooth-a-svg-path-with-cubic-bezier-curves-e37b49d46c74
 define(["require", "exports"], function (require, exports) {
     "use strict";
@@ -11,13 +11,10 @@ define(["require", "exports"], function (require, exports) {
         prev = prev || current;
         next = next || current;
         // Properties of the opposed-line
-        var line_x = next[0] - prev[0];
-        var line_y = next[1] - prev[1];
-        var line_length = Math.sqrt((line_x * line_x) + (line_y * line_y));
-        var line_angle = Math.atan2(line_y, line_x);
-        // If is end-control-point, add PI to the angle to go backward
-        var angle = line_angle + (reverse ? Math.PI : 0);
-        var length = line_length * smoothing;
+        var x = next[0] - prev[0];
+        var y = next[1] - prev[1];
+        var length = Math.sqrt((x * x) + (y * y)) * smoothing;
+        var angle = Math.atan2(y, x) + (reverse ? Math.PI : 0); // if end-control-point, add PI to the angle to go backward
         // The control point position is relative to the current point
         return (current[0] + Math.cos(angle) * length) + ',' + (current[1] + Math.sin(angle) * length);
     }
