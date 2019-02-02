@@ -624,6 +624,8 @@ define(function(require, exports, module) {
           return acc;
         }, [points[0]]);
 
+        sample.push(points[0]);
+
         return this.layout.scale_path(sample);
       },
     },
