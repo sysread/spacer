@@ -4,22 +4,17 @@ import Physics from './physics';
 import { resources } from './resource';
 import { Conflict } from './conflict';
 
-import {
-  Events,
-  Ev,
-  Turn,
-  Arrived,
-  ItemsSold,
-  CaughtSmuggling,
-} from './events';
-
 import * as t from './common';
 import * as util from './util';
 
 
 // Shims for global browser objects
 declare var console: any;
-declare var window: { game: any; }
+declare var window: {
+  game: any;
+  addEventListener: (ev: string, cb: any) => void;
+  removeEventListener: (ev: string, cb: any) => void;
+}
 
 
 export function estimateTransitTimeAU(au: number): number {
@@ -182,22 +177,26 @@ export abstract class Mission {
   }
 
   accept() {
-    // If already set, this is a saved mission being reinitialized
+    // If not already set, this is a new mission, rather than an already
+    // accepted mission being reinitialized.
     if (this.status < Status.Accepted) {
-      this.status = Status.Accepted;
-      this.deadline = window.game.turns + this.turns;
-
+      // Ask issuer to remove it from its list of offered work
       window.game.planets[this.issuer].acceptMission(this);
-      window.game.player.acceptMission(this);
+
+      // Set the deadline
+      this.deadline = window.game.turns + this.turns;
     }
 
-    Events.watch(Ev.Turn, (event: Turn) => {
+    // Either way, set the status to Accepted
+    this.status = Status.Accepted;
+
+    // ...and ask the player object to retain it
+    window.game.player.acceptMission(this);
+
+    window.addEventListener('turn', () => {
       if (this.turns_left <= 0) {
+        console.log('mission complete:', this.title);
         this.complete();
-        return false;
-      }
-      else {
-        return true;
       }
     });
   }
@@ -292,18 +291,12 @@ export class Passengers extends Mission {
   accept() {
     super.accept();
 
-    Events.watch(Ev.Arrived, (event: Arrived) => {
-      if (this.is_expired) {
-        return false;
-      }
-
-      if (event.dest == this.dest) {
+    window.addEventListener('arrived', (event: CustomEvent) => {
+      if (!this.is_expired && event.detail.dest == this.dest) {
+        console.log("passengers mission complete:", this.short_title);
         this.setStatus(Status.Complete);
         this.complete();
-        return false;
       }
-
-      return true;
     });
   }
 }
@@ -363,12 +356,8 @@ export class Smuggler extends Mission {
   accept() {
     super.accept();
 
-    Events.watch(Ev.Arrived, (event: Arrived) => {
-      if (this.is_expired || this.is_complete) {
-        return true;
-      }
-
-      if (event.dest == this.issuer) {
+    window.addEventListener('arrived', (event: CustomEvent) => {
+      if (!this.is_expired && !this.is_complete && event.detail.dest == this.issuer) {
         const amt = Math.min(this.amt_left, window.game.player.ship.cargo.count(this.item));
 
         if (amt > 0) {
@@ -379,25 +368,19 @@ export class Smuggler extends Mission {
           if (this.amt_left == 0) {
             this.setStatus(Status.Complete);
             this.complete();
-            return true;
           }
           else {
             window.game.notify(`You have delivered ${amt} units of ${this.item}. ${this.description_remaining}.`);
           }
         }
       }
-
-      return false;
     });
 
-    Events.watch(Ev.CaughtSmuggling, (event: CaughtSmuggling) => {
-      if (this.is_expired || this.is_complete) {
-        return false;
+    window.addEventListener('caughtSmuggling', (event: CustomEvent) => {
+      if (!this.is_expired && !this.is_complete) {
+        this.setStatus(Status.Failure);
+        this.complete();
       }
-
-      this.setStatus(Status.Failure);
-      this.complete();
-      return false;
     });
   }
 }

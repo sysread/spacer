@@ -18,7 +18,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./person", "./planet", "./agent", "./events", "./conflict", "./common", "./util"], function (require, exports, data_1, system_1, person_1, planet_1, agent_1, events_1, conflict_1, t, util) {
+define(["require", "exports", "./data", "./system", "./person", "./planet", "./agent", "./conflict", "./common", "./util"], function (require, exports, data_1, system_1, person_1, planet_1, agent_1, conflict_1, t, util) {
     "use strict";
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
@@ -80,12 +80,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                 this.build_planets();
                 this.build_agents();
             }
-        };
-        Game.prototype.onTurn = function (cb) {
-            window.addEventListener('turn', cb);
-        };
-        Game.prototype.onDay = function (cb) {
-            window.addEventListener('day', cb);
+            window.dispatchEvent(new CustomEvent('gameLoaded'));
         };
         Object.defineProperty(Game.prototype, "planets", {
             get: function () {
@@ -263,7 +258,6 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                 // Remove finished conflicts
                 this.finish_conflicts();
                 // Dispatch events
-                events_1.Events.signal({ type: events_1.Ev.Turn, turn: this.turns });
                 window.dispatchEvent(this.turnEvent);
                 if (this.turns % data_1.default.turns_per_day) {
                     window.dispatchEvent(this.dayEvent);
@@ -288,7 +282,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                 this.transit_plan = undefined;
             }
             if (this.locus) {
-                events_1.Events.signal({ type: events_1.Ev.Arrived, dest: this.locus });
+                window.dispatchEvent(new CustomEvent('arrived', { detail: { dest: this.locus } }));
             }
         };
         Game.prototype.trade_routes = function () {

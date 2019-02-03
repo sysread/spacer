@@ -21,7 +21,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./physics", "./resource", "./events", "./util"], function (require, exports, data_1, system_1, physics_1, resource_1, events_1, util) {
+define(["require", "exports", "./data", "./system", "./physics", "./resource", "./util"], function (require, exports, data_1, system_1, physics_1, resource_1, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
@@ -164,20 +164,22 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
         };
         Mission.prototype.accept = function () {
             var _this = this;
-            // If already set, this is a saved mission being reinitialized
+            // If not already set, this is a new mission, rather than an already
+            // accepted mission being reinitialized.
             if (this.status < Status.Accepted) {
-                this.status = Status.Accepted;
-                this.deadline = window.game.turns + this.turns;
+                // Ask issuer to remove it from its list of offered work
                 window.game.planets[this.issuer].acceptMission(this);
-                window.game.player.acceptMission(this);
+                // Set the deadline
+                this.deadline = window.game.turns + this.turns;
             }
-            events_1.Events.watch(events_1.Ev.Turn, function (event) {
+            // Either way, set the status to Accepted
+            this.status = Status.Accepted;
+            // ...and ask the player object to retain it
+            window.game.player.acceptMission(this);
+            window.addEventListener('turn', function () {
                 if (_this.turns_left <= 0) {
+                    console.log('mission complete:', _this.title);
                     _this.complete();
-                    return false;
-                }
-                else {
-                    return true;
                 }
             });
         };
@@ -279,16 +281,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
         Passengers.prototype.accept = function () {
             var _this = this;
             _super.prototype.accept.call(this);
-            events_1.Events.watch(events_1.Ev.Arrived, function (event) {
-                if (_this.is_expired) {
-                    return false;
-                }
-                if (event.dest == _this.dest) {
+            window.addEventListener('arrived', function (event) {
+                if (!_this.is_expired && event.detail.dest == _this.dest) {
+                    console.log("passengers mission complete:", _this.short_title);
                     _this.setStatus(Status.Complete);
                     _this.complete();
-                    return false;
                 }
-                return true;
             });
         };
         return Passengers;
@@ -354,11 +352,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
         Smuggler.prototype.accept = function () {
             var _this = this;
             _super.prototype.accept.call(this);
-            events_1.Events.watch(events_1.Ev.Arrived, function (event) {
-                if (_this.is_expired || _this.is_complete) {
-                    return true;
-                }
-                if (event.dest == _this.issuer) {
+            window.addEventListener('arrived', function (event) {
+                if (!_this.is_expired && !_this.is_complete && event.detail.dest == _this.issuer) {
                     var amt = Math.min(_this.amt_left, window.game.player.ship.cargo.count(_this.item));
                     if (amt > 0) {
                         _this.amt_left -= amt;
@@ -367,22 +362,18 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
                         if (_this.amt_left == 0) {
                             _this.setStatus(Status.Complete);
                             _this.complete();
-                            return true;
                         }
                         else {
                             window.game.notify("You have delivered " + amt + " units of " + _this.item + ". " + _this.description_remaining + ".");
                         }
                     }
                 }
-                return false;
             });
-            events_1.Events.watch(events_1.Ev.CaughtSmuggling, function (event) {
-                if (_this.is_expired || _this.is_complete) {
-                    return false;
+            window.addEventListener('caughtSmuggling', function (event) {
+                if (!_this.is_expired && !_this.is_complete) {
+                    _this.setStatus(Status.Failure);
+                    _this.complete();
                 }
-                _this.setStatus(Status.Failure);
-                _this.complete();
-                return false;
             });
         };
         return Smuggler;

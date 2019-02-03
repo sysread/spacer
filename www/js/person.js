@@ -61,15 +61,16 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
                 this.home = init.home;
                 this.money = Math.floor(init.money);
                 if (init.contracts) {
+                    var _loop_1 = function (c) {
+                        window.addEventListener("gameLoaded", function () {
+                            var contract = mission_1.restoreMission(c);
+                            contract.accept();
+                        });
+                    };
                     try {
                         for (var _c = __values(init.contracts), _d = _c.next(); !_d.done; _d = _c.next()) {
                             var c = _d.value;
-                            // TODO chicken and the egg problem: contract gets watchers assigned
-                            // once accept() is called, but accept() needs game.turns, which is
-                            // not yet defined while initializing the game.
-                            var contract = mission_1.restoreMission(c);
-                            this.contracts.push(contract);
-                            contract.accept();
+                            _loop_1(c);
                         }
                     }
                     catch (e_1_1) { e_1 = { error: e_1_1 }; }

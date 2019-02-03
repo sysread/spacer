@@ -830,7 +830,7 @@ define(function(require, exports, module) {
           <PlotLegend :x="x" :y="y(1)">FoV:&nbsp;&nbsp;{{layout.fov_au * 2|R(4)|unit('AU')}}</PlotLegend>
 
           <template v-if="transit">
-            <PlotLegend :x="x" :y="y(2)">Dest.&nbsp;{{transit.dest|caps}}</PlotLegend>
+            <PlotLegend :x="x" :y="y(2)" style="fill: yellow">Dest.&nbsp;{{transit.dest|caps}}</PlotLegend>
             <PlotLegend :x="x" :y="y(3)">Dist.&nbsp;{{transit.segment_au|R(4)|unit('AU')}}</PlotLegend>
             <PlotLegend :x="x" :y="y(4)">&Delta;V:&nbsp;&nbsp;&nbsp;{{transit.accel_g|R(3)|unit('G')}}</PlotLegend>
             <PlotLegend :x="x" :y="y(5)">MaxV:&nbsp;{{(transit.maxVelocity/1000)|R|csn|unit('km/s')}}</PlotLegend>

@@ -3,14 +3,16 @@ import Ship from './ship';
 import { NavComp } from './navcomp';
 import { TransitPlan, SavedTransitPlan } from './transitplan';
 import { Person, SavedPerson } from './person';
-import { TurnDetail } from './events';
 import * as t from './common';
 import * as util from './util';
 
 
 // Shims for global browser objects
-declare var window: { game: any; }
 declare var console: any;
+declare var window: {
+  game: any;
+  addEventListener: (ev: string, cb: Function) => void;
+};
 
 
 export interface SavedAgent extends SavedPerson {
@@ -83,9 +85,10 @@ export class Agent extends Person {
       this.action = this.dock(this.home);
     }
 
-    window.game.onTurn((ev: TurnDetail) => {
-      if (ev.detail.isNewDay)
+    window.addEventListener("turn", () => {
+      if (window.game.turns % data.turns_per_day == 0) {
         this.turn()
+      }
     });
   }
 

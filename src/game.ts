@@ -5,7 +5,6 @@ import { TransitPlan } from './transitplan';
 import { Person, SavedPerson } from './person';
 import { Planet, SavedPlanet, isImportTask } from './planet';
 import { Agent, SavedAgent } from './agent';
-import { Events, Ev, TurnCallBack, TurnDetail } from './events';
 import { Conflict, Embargo } from './conflict';
 
 import * as t from './common';
@@ -45,6 +44,7 @@ const planets: {[key: string]: Planet} = {};
 class Game {
   turnEvent:     Event;
   dayEvent:      Event;
+
   turns:         number = 0;
   date:          Date = new Date(data.start_date);
   _player:       Person | null = null;
@@ -106,14 +106,8 @@ class Game {
       this.build_planets();
       this.build_agents();
     }
-  }
 
-  onTurn(cb: TurnCallBack) {
-    window.addEventListener('turn', cb);
-  }
-
-  onDay(cb: TurnCallBack) {
-    window.addEventListener('day', cb);
+    window.dispatchEvent(new CustomEvent('gameLoaded'));
   }
 
   get planets() {
@@ -264,7 +258,6 @@ class Game {
       this.finish_conflicts();
 
       // Dispatch events
-      Events.signal({type: Ev.Turn, turn: this.turns});
       window.dispatchEvent(this.turnEvent);
 
       if (this.turns % data.turns_per_day) {
@@ -297,7 +290,7 @@ class Game {
     }
 
     if (this.locus) {
-      Events.signal({type: Ev.Arrived, dest: this.locus});
+      window.dispatchEvent(new CustomEvent('arrived', {detail: {dest: this.locus}}));
     }
   }
 
@@ -404,7 +397,7 @@ class Game {
 
 console.log('Spacer is starting');
 
-var game: Game = new Game;
+const game: Game = new Game;
 
 window.game = game;
 window.game.init();

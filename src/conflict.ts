@@ -8,13 +8,14 @@
 
 import data from './data';
 
-import { Ev, Events, ItemsBought, ItemsSold } from './events';
-
 import * as t from './common';
 import * as util from './util';
 
 
-declare var window: { game: any; }
+declare var window: {
+  game: any;
+  addEventListener: (ev: string, cb: Function) => void;
+}
 
 
 interface Production  { production: t.ResourceCounter }
@@ -141,12 +142,18 @@ export class Embargo extends Conflict {
   }
 
   install_event_watchers() {
-    Events.watch(Ev.ItemsBought, (ev: ItemsBought) => this.violation(ev.body, ev.item, ev.count));
-    Events.watch(Ev.ItemsSold,   (ev: ItemsSold)   => this.violation(ev.body, ev.item, ev.count));
+    window.addEventListener("itemsBought", (event: CustomEvent) => {
+      const {body, item, count} = event.detail;
+      this.violation(body, item, count);
+    });
+
+    window.addEventListener("itemsSold", (event: CustomEvent) => {
+      const {body, item, count} = event.detail;
+      this.violation(body, item, count);
+    });
   }
 
   violation(body: t.body, item: t.resource, count: number) {
-console.log(body, item, count);
     if (!this.is_started || this.is_over) return true;
     if (this.target != data.bodies[body].faction) return false;
 

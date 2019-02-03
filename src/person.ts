@@ -11,8 +11,11 @@ import { SavedMission, Mission, Status, restoreMission } from './mission';
 
 
 // Shims for global browser objects
-declare var window: { game: any; }
 declare var console: any;
+declare var window: {
+  game: any;
+  addEventListener: (ev: string, cb: Function) => void;
+}
 
 
 type factionesque = Faction | t.faction;
@@ -64,12 +67,17 @@ export class Person {
 
       if (init.contracts) {
         for (const c of init.contracts) {
+
+          window.addEventListener("gameLoaded", () => {
+            const contract = restoreMission(c);
+            contract.accept();
+          });
+
           // TODO chicken and the egg problem: contract gets watchers assigned
           // once accept() is called, but accept() needs game.turns, which is
           // not yet defined while initializing the game.
-          const contract = restoreMission(c);
-          this.contracts.push(contract);
-          contract.accept();
+          //this.contracts.push(contract);
+          //contract.accept();
         }
       }
     }

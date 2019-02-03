@@ -34,7 +34,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./physics", "./store", "./history", "./resource", "./trait", "./faction", "./condition", "./events", "./mission", "./common", "./util"], function (require, exports, data_1, system_1, physics_1, store_1, history_1, resource_1, trait_1, faction_1, condition_1, events_1, mission_1, t, util) {
+define(["require", "exports", "./data", "./system", "./physics", "./store", "./history", "./resource", "./trait", "./faction", "./condition", "./mission", "./common", "./util"], function (require, exports, data_1, system_1, physics_1, store_1, history_1, resource_1, trait_1, faction_1, condition_1, mission_1, t, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
@@ -197,7 +197,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this._cycle = {};
             this._need = {};
             this._exporter = {};
-            window.game.onTurn(function (ev) { return _this.turn(ev.detail.turn); });
+            window.addEventListener("turn", function () { return _this.turn(window.game.turns); });
         }
         Planet.prototype.turn = function (turn) {
             // Spread expensive daily procedures out over multiple turns; note the
@@ -839,7 +839,14 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 player.debit(price);
                 player.ship.loadCargo(item, bought);
                 if (player === window.game.player) {
-                    events_1.Events.signal({ type: events_1.Ev.ItemsBought, count: bought, body: this.body, item: item, price: price });
+                    window.dispatchEvent(new CustomEvent("itemsBought", {
+                        detail: {
+                            count: bought,
+                            body: this.body,
+                            item: item,
+                            price: price
+                        }
+                    }));
                 }
             }
             return [bought, price];
@@ -883,8 +890,17 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 if (standing > 0)
                     player.incStanding(this.faction.abbrev, standing);
                 // only trigger for the player, not for agents
-                if (player === window.game.player)
-                    events_1.Events.signal({ type: events_1.Ev.ItemsSold, count: amount, body: this.body, item: item, price: price, standing: standing });
+                if (player === window.game.player) {
+                    window.dispatchEvent(new CustomEvent("itemsSold", {
+                        detail: {
+                            count: amount,
+                            body: this.body,
+                            item: item,
+                            price: price,
+                            standing: standing,
+                        },
+                    }));
+                }
             }
             return [amount, price, standing];
         };

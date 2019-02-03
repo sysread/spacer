@@ -28,7 +28,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./events", "./util"], function (require, exports, data_1, events_1, util) {
+define(["require", "exports", "./data", "./util"], function (require, exports, data_1, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
@@ -115,11 +115,16 @@ define(["require", "exports", "./data", "./events", "./util"], function (require
         };
         Embargo.prototype.install_event_watchers = function () {
             var _this = this;
-            events_1.Events.watch(events_1.Ev.ItemsBought, function (ev) { return _this.violation(ev.body, ev.item, ev.count); });
-            events_1.Events.watch(events_1.Ev.ItemsSold, function (ev) { return _this.violation(ev.body, ev.item, ev.count); });
+            window.addEventListener("itemsBought", function (event) {
+                var _a = event.detail, body = _a.body, item = _a.item, count = _a.count;
+                _this.violation(body, item, count);
+            });
+            window.addEventListener("itemsSold", function (event) {
+                var _a = event.detail, body = _a.body, item = _a.item, count = _a.count;
+                _this.violation(body, item, count);
+            });
         };
         Embargo.prototype.violation = function (body, item, count) {
-            console.log(body, item, count);
             if (!this.is_started || this.is_over)
                 return true;
             if (this.target != data_1.default.bodies[body].faction)

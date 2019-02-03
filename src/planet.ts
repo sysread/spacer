@@ -8,7 +8,6 @@ import { Resource, Raw, Craft, isRaw, isCraft, resources } from './resource';
 import { Trait } from './trait';
 import { Faction } from './faction';
 import { Condition, SavedCondition } from './condition';
-import { Events, Ev, TurnCallBack, TurnDetail } from './events';
 import { Mission, SavedMission, restoreMission, Passengers, Smuggler } from './mission';
 import { Person } from './person';
 import { Conflict, Embargo } from './conflict';
@@ -19,7 +18,11 @@ import * as util from './util';
 
 // Shims for global browser objects
 declare var console: any;
-declare var window: { game: any; }
+declare var window: {
+  game: any;
+  dispatchEvent(ev: Event): void;
+  addEventListener: (ev: string, cb: Function) => void;
+}
 
 
 interface NeededResources {
@@ -203,7 +206,7 @@ export class Planet {
     this._need     = {};
     this._exporter = {};
 
-    window.game.onTurn((ev: TurnDetail) => this.turn(ev.detail.turn));
+    window.addEventListener("turn", () => this.turn(window.game.turns));
   }
 
   turn(turn: number) {
@@ -810,7 +813,14 @@ export class Planet {
       player.ship.loadCargo(item, bought);
 
       if (player === window.game.player) {
-        Events.signal({type: Ev.ItemsBought, count: bought, body: this.body, item, price});
+        window.dispatchEvent(new CustomEvent("itemsBought", {
+          detail: {
+            count: bought,
+            body: this.body,
+            item: item,
+            price: price
+          }
+        }));
       }
     }
 
@@ -851,8 +861,17 @@ export class Planet {
         player.incStanding(this.faction.abbrev, standing);
 
       // only trigger for the player, not for agents
-      if (player === window.game.player)
-        Events.signal({type: Ev.ItemsSold, count: amount, body: this.body, item, price, standing});
+      if (player === window.game.player) {
+        window.dispatchEvent(new CustomEvent("itemsSold", {
+          detail: {
+            count:    amount,
+            body:     this.body,
+            item:     item,
+            price:    price,
+            standing: standing,
+          },
+        }));
+      }
     }
 
     return [amount, price, standing];

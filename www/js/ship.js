@@ -18,7 +18,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./physics", "./store", "./events", "./util", "./common"], function (require, exports, data_1, physics_1, store_1, events_1, util, t) {
+define(["require", "exports", "./data", "./physics", "./store", "./util", "./common"], function (require, exports, data_1, physics_1, store_1, util, t) {
     "use strict";
     data_1 = __importDefault(data_1);
     physics_1 = __importDefault(physics_1);
@@ -42,16 +42,19 @@ define(["require", "exports", "./data", "./physics", "./store", "./events", "./u
              * related to ship's maintenance (fuel, metal) that are not currently
              * available.
              */
-            events_1.Events.watch(events_1.Ev.Arrived, function (ev) {
-                // metal to repair damage to the ship
-                if (_this.hasDamage()) {
-                    var want = _this.damage.armor + _this.damage.hull;
-                    window.game.here.requestResource('metal', want);
-                }
-                // fuel for the tank
-                if (_this.needsFuel()) {
-                    var want = _this.refuelUnits();
-                    window.game.here.requestResource('fuel', want);
+            window.addEventListener("arrived", function (event) {
+                // only trigger for player ship
+                if (_this === window.game.player.ship) {
+                    // metal to repair damage to the ship
+                    if (_this.hasDamage()) {
+                        var want = _this.damage.armor + _this.damage.hull;
+                        window.game.here.requestResource('metal', want);
+                    }
+                    // fuel for the tank
+                    if (_this.needsFuel()) {
+                        var want = _this.refuelUnits();
+                        window.game.here.requestResource('fuel', want);
+                    }
                 }
             });
         }

@@ -10,7 +10,6 @@ define(function(require, exports, module) {
   const t        = require('common');
   const resource = require('resource');
   const Transit  = require('transit');
-  const events   = require('events');
   const Layout   = require('component/layout');
 
   const turns_per_day = 24 / data.hours_per_turn;
@@ -403,7 +402,6 @@ define(function(require, exports, module) {
       resume() {
         this.paused = false;
         console.log('transit resumed');
-        //this.interval(); // calling immediately prevents a delay before animation begins
         this.intvl = setInterval(() => this.interval(), this.intvl_ms);
       },
 
@@ -645,11 +643,7 @@ define(function(require, exports, module) {
 
         if (this.fine > 0) {
           if (isBlockade) {
-            events.Events.signal({
-              type: events.Ev.CaughtSmuggling,
-              by:   this.faction,
-            });
-
+            window.dispatchEvent("caughtSmuggling", {detail: {by: this.faction}});
             find *= 2;
           }
 
