@@ -197,6 +197,14 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
             var result = util.clamp(diameter * this.px_per_meter * amount, min, this.scale_px);
             return result;
         };
+        Layout.prototype.is_visible = function (pos) {
+            var p = this.scale_point(pos);
+            if (p[0] < 0 || p[1] < 0)
+                return false;
+            if (p[0] > this.width_px || p[1] > this.height_px)
+                return false;
+            return true;
+        };
         Layout.prototype.is_within_fov = function (target) {
             var _a = __read(this.scale_point(target), 2), x = _a[0], y = _a[1];
             if (x < 0 || x > this.width_px)

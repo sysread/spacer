@@ -234,7 +234,17 @@ class System {
     const key = `${name}.full_orbit`;
 
     if (this.cache[key] == undefined) {
-      this.cache[key] = this.body(name).getOrbitPath();
+      const central = this.central(name);
+
+      if (central != 'sun') {
+        const orbit = this.full_orbit(central);
+        this.cache[key] = this.body(name).getOrbitPath()
+          .map((p, i) => V.add(p, orbit[i]));
+        this.cache[key].push(this.cache[key][0]);
+      }
+      else {
+        this.cache[key] = this.body(name).getOrbitPath();
+      }
     }
 
     return this.cache[key];

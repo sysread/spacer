@@ -98,7 +98,7 @@
                     <NavBar  @open="open" :page="page" :disabled="nav_disabled" />
 
                     <div v-if="game.notifications.length > 0" class="fixed-top m-3">
-                      <Notification v-for="msg in game.notifications" :key="msg" :msg="msg" @dismiss="dismiss" dismiss="5" />
+                      <Notification v-for="msg in game.notifications" :key="msg" :msg="msg" @dismiss="dismiss" dismiss="4" />
                     </div>
                   </div>
                 `,

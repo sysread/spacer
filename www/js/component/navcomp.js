@@ -244,6 +244,9 @@ define(function(require, exports, module) {
           points.push(this.system.position(this.dest));
         }
 
+        points.push(this.transit.end);
+        points.push(this.transit.start);
+
         const max = Math.max(...points.map(p => Physics.distance(p, center)));
         return max / Physics.AU * 1.2;
       },
@@ -577,41 +580,44 @@ define(function(require, exports, module) {
 
 
   Vue.component('SvgOrbitPath', {
-    props: ['color', 'layout', 'body'],
+    props: ['layout', 'body'],
 
     computed: {
-      path() {
-        const points = this.system.full_orbit(this.body);
-
-        const sample = points.reduce((acc, p, i) => {
-            if ((i + 1) % 3 == 0)
-              acc.push(p);
-
-            return acc;
-          }, [points[0]]);
-
-        // Not 100% certain why this is needed. Perhaps because pluto does not
-        // have a stable orbit?
-        if (this.body == 'pluto')
-          sample.push(points[0]);
-
-        return this.layout.scale_path(sample);
-      },
+      orbit() { return this.system.full_orbit(this.body) },
+      path()  { return this.layout.scale_path(this.orbit) },
     },
 
-    template: '<SvgPath :points="path" :color="color || \'#333333\'" line="0.75px" />',
+    template: '<SvgPath :points="path" color="#333333" line="0.75px" />',
   });
 
 
   Vue.component('SvgTransitPath', {
-    props: ['transit', 'color', 'layout'],
+    props: ['transit', 'layout'],
 
     computed: {
-      points() { return this.transit ? this.transit.path : [] },
-      path()   { return this.points.map(p => this.layout.scale_point(p.position)) },
+      points() { return this.transit.path },
+      path()   { return this.layout.scale_path(this.points.map(p => p.position)) },
+
+      dest_path() {
+        const orbit = this.system.orbit_by_turns(this.transit.dest);
+        const path  = orbit.slice(0, this.transit.turns + 1);
+        return this.layout.scale_path(path);
+      },
+
+      orig_path() {
+        const orbit = this.system.orbit_by_turns(this.transit.origin);
+        const path  = orbit.slice(0, this.transit.turns + 1);
+        return this.layout.scale_path(path);
+      },
     },
 
-    template: '<SvgPath :points="path" :color="color || \'#A01B1B\'" line="0.75px" />',
+    template: `
+      <g>
+        <SvgPath :points="path"      color="#A01B1B" line="0.75px" />
+        <SvgPath :points="dest_path" color="#605B0E" line="0.75px" />
+        <SvgPath :points="orig_path" color="#605B0E" line="0.75px" />
+      </g>
+    `,
   });
 
 
@@ -660,6 +666,10 @@ define(function(require, exports, module) {
     computed: {
       fov() { return this.layout.fov_au },
 
+      is_zoomed() {
+        return this.layout.fov_au < 0.25;
+      },
+
       bodies() {
         const seen   = {};
         const bodies = [];
@@ -668,14 +678,16 @@ define(function(require, exports, module) {
           if (!seen[body]) {
             seen[body] = true;
 
-            bodies.push(body);
+            if (this.is_visible(body))
+              bodies.push(body);
 
             const central = this.system.central(body);
 
             if (central != 'sun' && !seen[central]) {
               seen[central] = true;
 
-              bodies.push(central);
+              if (this.is_visible(central))
+                bodies.push(central);
             }
           }
         }
@@ -685,31 +697,38 @@ define(function(require, exports, module) {
 
       plot_points() {
         if (this.layout) {
-          const t = this.system.system.time;
           const bodies = {};
 
-          const p_sun = this.layout.scale_point([0, 0]);
-          const d_sun = this.layout.scale_body_diameter('sun');
-          p_sun[0] -= d_sun / 2;
-          p_sun[1] -= d_sun / 2;
+          if (this.layout.is_visible([0, 0])) {
+            const p_sun = this.layout.scale_point([0, 0]);
+            const d_sun = this.layout.scale_body_diameter('sun');
+            p_sun[0] -= d_sun / 2;
+            p_sun[1] -= d_sun / 2;
 
-          bodies.sun = {
-            point:    p_sun,
-            diameter: d_sun,
-            label:    false,
-          };
+            bodies.sun = {
+              point:    p_sun,
+              diameter: d_sun,
+              label:    false,
+            };
+          }
 
           for (const body of this.bodies) {
-            const d = this.layout.scale_body_diameter(body);
-            const p = this.layout.scale_point( this.system.position(body, t) );
-            p[0] -= d / 2;
-            p[1] -= d / 2;
+            const pos = this.system.position(body);
 
-            bodies[body] = {
-              point:    p,
-              diameter: d,
-              label:    this.show_label(body) ? this.system.name(body) : '',
-            };
+            if (this.layout.is_visible(pos)) {
+              const p = this.layout.scale_point(pos);
+              const d = this.layout.scale_body_diameter(body);
+
+              // center the point against the image
+              p[0] -= d / 2;
+              p[1] -= d / 2;
+
+              bodies[body] = {
+                point:    p,
+                diameter: d,
+                label:    this.show_label(body) ? this.system.name(body) : '',
+              };
+            }
           }
 
           return bodies;
@@ -718,16 +737,31 @@ define(function(require, exports, module) {
     },
 
     methods: {
-      show_label(body) {
-        const central = this.system.central(body);
+      is_visible(body) {
+        return this.system.full_orbit(body).some(p => this.layout.is_visible(p));
+      },
 
-        if (this.focus == body) {
+      is_moon(body) {
+        return this.system.central(body) != 'sun';
+      },
+
+      show_orbit(body) {
+        if (!this.is_moon(body))
           return true;
-        }
 
-        if (this.system.central(this.focus) == body) {
+        if (this.is_zoomed)
+          return true;
+
+        return false;
+      },
+
+      show_label(body) {
+        if (this.is_focus(body))
+          return true;
+
+        const central = this.system.central(body);
+        if (this.system.central(this.focus) == body)
           return false;
-        }
 
         const position = this.system.position(body);
         const center   = central == 'sun' ? [0, 0] : this.system.position(central);
@@ -746,10 +780,10 @@ define(function(require, exports, module) {
 
     template: `
       <g>
-        <template v-for="body of bodies">
-          <SvgOrbitPath :key="body + '-orbit'" :body="body" :layout="layout" />
-          <SvgPatrolRadius :key="body + '-patrol'" :body="body" :layout="layout" />
-        </template>
+        <g v-for="body of bodies">
+          <SvgOrbitPath v-if="show_orbit(body)" :key="body+'-orbit'" :body="body" :layout="layout" />
+          <SvgPatrolRadius v-if="!is_zoomed" :key="body + '-patrol'" :body="body" :layout="layout" />
+        </g>
 
         <SvgPlotPoint
           v-for="(info, body) of plot_points"

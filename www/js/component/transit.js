@@ -218,6 +218,10 @@ define(function(require, exports, module) {
         return this.layout && !this.encounter;
       },
 
+      is_visible(body) {
+        return this.system.full_orbit(body).some(p => this.layout.is_visible(p));
+      },
+
       show_label(body) {
         const central = this.system.central(body);
 
@@ -510,7 +514,7 @@ define(function(require, exports, module) {
             <image ref="sun" x="0" y="0" width="1" height="1" xlink:href="img/sun.png" />
 
             <template v-for="body in bodies">
-              <SvgOrbitPath v-if="body != 'sun'" :body="body" :layout="layout" />
+              <SvgOrbitPath v-if="body != 'sun' && is_visible(body)" :body="body" :layout="layout" />
               <circle v-show="data.bodies[body] != undefined" :ref="body + '_patrol'" fill="green" fill-opacity="0.1" cx=0 cy=0 r=0 />
               <image :ref="body" x=0 y=0 width=1 height=1 :xlink:href="'img/' + body + '.png'" />
               <text v-show="show_label(body)" :ref="body + '_label'" style="font: 14px monospace; fill: #7FDF3F" x=0 y=0>

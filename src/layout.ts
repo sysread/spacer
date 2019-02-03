@@ -198,6 +198,18 @@ class Layout {
     return result;
   }
 
+  is_visible(pos: Point): boolean {
+    const p = this.scale_point(pos);
+
+    if (p[0] < 0 || p[1] < 0)
+      return false;
+
+    if (p[0] > this.width_px || p[1] > this.height_px)
+      return false;
+
+    return true;
+  }
+
   is_within_fov(target: Point): boolean {
     const [x, y] = this.scale_point(target);
 

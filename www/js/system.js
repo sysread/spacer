@@ -259,7 +259,16 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
                 return new Array(360).fill([0, 0, 0]);
             var key = name + ".full_orbit";
             if (this.cache[key] == undefined) {
-                this.cache[key] = this.body(name).getOrbitPath();
+                var central = this.central(name);
+                if (central != 'sun') {
+                    var orbit_1 = this.full_orbit(central);
+                    this.cache[key] = this.body(name).getOrbitPath()
+                        .map(function (p, i) { return V.add(p, orbit_1[i]); });
+                    this.cache[key].push(this.cache[key][0]);
+                }
+                else {
+                    this.cache[key] = this.body(name).getOrbitPath();
+                }
             }
             return this.cache[key];
         };
