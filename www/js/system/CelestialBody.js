@@ -97,8 +97,30 @@ define(["require", "exports", "./helpers/units", "./helpers/time", "./data/const
         };
         CelestialBody.prototype.getMeanAnomaly = function (L, lp, t) {
             var M = L - lp;
-            if (this.elements && this.elements.day) {
-                M += this.elements.day.M * time.daysBetween(t, time.J2000);
+            if (this.elements) {
+                if (this.elements.day) {
+                    M += this.elements.day.M * time.daysBetween(t, time.J2000);
+                }
+                // augmentation for outer planets per:
+                //   https://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf
+                if (this.elements.aug) {
+                    var T = time.centuriesBetween(t, time.J2000);
+                    var b = this.elements.aug.b;
+                    var c = this.elements.aug.c;
+                    var s = this.elements.aug.s;
+                    var f = this.elements.aug.f;
+                    if (b != undefined) {
+                        M += T * T * b;
+                    }
+                    if (f != undefined) {
+                        if (c != undefined) {
+                            M += c * Math.cos(f * T);
+                        }
+                        if (s != undefined) {
+                            M += s * Math.sin(f * T);
+                        }
+                    }
+                }
             }
             return M;
         };
@@ -142,9 +164,14 @@ define(["require", "exports", "./helpers/units", "./helpers/time", "./data/const
             var ms = period === undefined
                 ? undefined
                 : (period * 1000) / 360;
-            var points = this.getOrbitPathSegment(359, ms);
-            points.push(points[0].slice()); // fake a complete ellipse
-            return points;
+            if (!this.central || this.central.key == 'sun') {
+                var points = this.getOrbitPathSegment(359, ms);
+                points.push(points[0].slice());
+                return points;
+            }
+            else {
+                return this.getOrbitPathSegment(360, ms);
+            }
         };
         CelestialBody.prototype.getOrbitPathSegment = function (periods, msPerPeriod) {
             if (!this.time) {

@@ -586,10 +586,11 @@ define(function(require, exports, module) {
     computed: {
       orbit() { return this.system.full_orbit(this.body) },
       path()  { return this.layout.scale_path(this.orbit) },
+      color() { return '#333333' },
     },
 
     template: `
-      <SvgPath :points="path" color="#333333" line="0.75px" />
+      <SvgPath :points="path" :color="color" line="0.75px" />
     `,
   });
 

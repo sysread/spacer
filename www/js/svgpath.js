@@ -18,7 +18,7 @@ define(["require", "exports"], function (require, exports) {
         // The control point position is relative to the current point
         return (current[0] + Math.cos(angle) * length) + ',' + (current[1] + Math.sin(angle) * length);
     }
-    function full(points) {
+    function bezier(points) {
         var path = 'M ' + points[0][0] + ',' + points[0][1];
         // add bezier curve command
         for (var i = 1; i < points.length; ++i) {
@@ -28,25 +28,13 @@ define(["require", "exports"], function (require, exports) {
         }
         return path;
     }
-    exports.full = full;
-    function bezier(points) {
-        var path = 'M ' + points[0][0] + ',' + points[0][1];
-        var c1 = control_point(points[0], undefined, points[1]); // start control point
-        var c2 = control_point(points[1], points[0], points[2], true); // end control point
-        path += ' C ' + c1 + ' ' + c2 + ' ' + points[1][0] + ',' + points[1][1];
-        for (var i = 2; i < points.length; ++i) {
-            var c = control_point(points[i], points[i - 1], points[i + 1], true); // end control point
-            path += ' S ' + c + ',' + points[i][0] + ',' + points[i][1];
-        }
-        return path;
-    }
     exports.bezier = bezier;
-    function plain(points) {
+    function line(points) {
         var path = 'M ' + points[0][0] + ',' + points[0][1];
         for (var i = 1; i < points.length; ++i) {
             path += ' L ' + points[i][0] + ' ' + points[i][1];
         }
         return path;
     }
-    exports.plain = plain;
+    exports.line = line;
 });

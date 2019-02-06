@@ -41,11 +41,19 @@ export interface ElementsBase {
   readonly node: number;
 }
 
+export interface Augmentation {
+  readonly b?: number;
+  readonly c?: number;
+  readonly s?: number;
+  readonly f?: number;
+}
+
 export interface Elements {
   readonly format: string;
   readonly day?:   { M: number };
   readonly base:   ElementsBase;
   readonly cy?:    ElementsBase;
+  readonly aug?:   Augmentation;
 }
 
 export interface Body {

@@ -154,8 +154,34 @@ class CelestialBody {
   getMeanAnomaly(L: number, lp: number, t: Date): number {
     let M = L - lp;
 
-    if (this.elements && this.elements.day) {
-      M += this.elements.day.M * time.daysBetween(t, time.J2000);
+    if (this.elements) {
+      if (this.elements.day) {
+        M += this.elements.day.M * time.daysBetween(t, time.J2000);
+      }
+
+      // augmentation for outer planets per:
+      //   https://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf
+      if (this.elements.aug) {
+        const T = time.centuriesBetween(t, time.J2000);
+        const b = this.elements.aug.b;
+        const c = this.elements.aug.c;
+        const s = this.elements.aug.s;
+        const f = this.elements.aug.f;
+
+        if (b != undefined) {
+          M += T * T * b;
+        }
+
+        if (f != undefined) {
+          if (c != undefined) {
+            M += c * Math.cos(f * T);
+          }
+
+          if (s != undefined) {
+            M += s * Math.sin(f * T);
+          }
+        }
+      }
     }
 
     return M;
@@ -221,10 +247,13 @@ class CelestialBody {
       ? undefined
       : (period * 1000) / 360;
 
-    const points = this.getOrbitPathSegment(359, ms);
-    points.push( points[0].slice() as position ); // fake a complete ellipse
-
-    return points;
+    if (!this.central || this.central.key == 'sun') {
+      const points = this.getOrbitPathSegment(359, ms);
+      points.push( points[0].slice() as position );
+      return points;
+    } else {
+      return this.getOrbitPathSegment(360, ms);
+    }
   }
 
   getOrbitPathSegment(periods: number, msPerPeriod?: number): position[] {

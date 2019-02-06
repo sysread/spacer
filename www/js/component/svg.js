@@ -63,10 +63,10 @@ define(function(require, exports, module) {
 
 
   Vue.component('SvgPath', {
-    props: ['points', 'color', 'line'],
+    props: ['points', 'color', 'line', 'smooth'],
 
     computed: {
-      path()   { return path.bezier(this.points) },
+      path()   { return this.smooth ? path.bezier(this.points) : path.line(this.points) },
       stroke() { return this.color || 'white' },
       width()  { return this.line || '1px' },
     },
