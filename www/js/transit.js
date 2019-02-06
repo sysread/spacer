@@ -180,7 +180,6 @@ define(["require", "exports", "./physics", "./system"], function (require, expor
         });
         Object.defineProperty(Transit.prototype, "fov", {
             get: function () {
-                var _this = this;
                 var e_3, _a, e_4, _b;
                 var points = [];
                 var dest_central = system_1.default.central(this.plan.dest);
@@ -233,7 +232,10 @@ define(["require", "exports", "./physics", "./system"], function (require, expor
                     points.push(physics_1.default.centroid(this.plan.start, this.plan.coords));
                 }
                 points.push(this.plan.end);
-                var max = Math.max.apply(Math, __spread(points.map(function (p) { return physics_1.default.distance(p, _this.center); })));
+                // Lop off z to prevent it from affecting the distance calculation
+                var points_2d = points.map(function (p) { return [p[0], p[1], 0]; });
+                var center = this.center;
+                var max = Math.max.apply(Math, __spread(points_2d.map(function (p) { return physics_1.default.distance(p, center); })));
                 return max / physics_1.default.AU * 1.2;
             },
             enumerable: true,

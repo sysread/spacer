@@ -176,7 +176,6 @@ class Transit {
 
   get fov(): number {
     const points = [];
-
     const dest_central = system.central(this.plan.dest);
     const orig_central = system.central(this.plan.origin);
 
@@ -210,7 +209,11 @@ class Transit {
 
     points.push(this.plan.end);
 
-    const max = Math.max(...points.map(p => Physics.distance(p, this.center)));
+    // Lop off z to prevent it from affecting the distance calculation
+    const points_2d = points.map(p => [p[0], p[1], 0]) as Point[];
+    const center = this.center;
+
+    const max = Math.max(...points_2d.map(p => Physics.distance(p, center)));
     return max / Physics.AU * 1.2;
   }
 }

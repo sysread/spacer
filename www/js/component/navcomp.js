@@ -207,9 +207,7 @@ define(function(require, exports, module) {
       },
 
       map_fov_au_transit() {
-        let center = this.map_center_point;
         const points = [];
-
         const dest_central = this.system.central(this.dest);
         const orig_central = this.system.central(this.game.locus);
 
@@ -246,7 +244,11 @@ define(function(require, exports, module) {
         points.push(this.transit.end);
         points.push(this.transit.start);
 
-        const max = Math.max(...points.map(p => Physics.distance(p, center)));
+        // Lop off z to prevent it from affecting the distance calculation
+        const points_2d = points.map(p => [p[0], p[1], 0]);
+        const center = this.map_center_point;
+
+        const max = Math.max(...points_2d.map(p => Physics.distance(p, center)));
         return max / Physics.AU * 1.2;
       },
     },
