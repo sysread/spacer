@@ -62,7 +62,7 @@ define(function(require, exports, module) {
             home:    this.home,
             faction: this.body.faction,
             ship:    new Ship({type: this.data.initial_ship}),
-            money:   1000,
+            money:   this.data.initial_money,
           }),
           this.home
         );
