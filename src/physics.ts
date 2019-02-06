@@ -1,6 +1,9 @@
 type point = [number, number, number];
 
 declare var console: any;
+declare var window: {
+  Physics: any;
+};
 
 class Physics {
   static get C()  { return 299792458;    } // m/s
@@ -84,5 +87,6 @@ class Physics {
   }
 }
 
-export = Physics;
+window.Physics = Physics;
 
+export = Physics;

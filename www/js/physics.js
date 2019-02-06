@@ -108,5 +108,6 @@ define(["require", "exports"], function (require, exports) {
         };
         return Physics;
     }());
+    window.Physics = Physics;
     return Physics;
 });
