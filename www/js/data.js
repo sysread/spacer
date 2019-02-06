@@ -25,7 +25,7 @@ define(["require", "exports"], function (require, exports) {
         craft_fee: 0.2,
         fabricators: 10,
         fab_health: 30,
-        grav_deltav_factor: 1.2,
+        grav_deltav_factor: 1.75,
         initial_ship: 'schooner',
         initial_money: 500,
         max_abs_standing: 100,
