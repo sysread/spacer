@@ -77,6 +77,10 @@ define(function(require, exports, module) {
         }
       },
 
+      showPatrolRadii() {
+        return this.layout.fov_au > 0.25;
+      },
+
       bodies() {
         return this.system.all_bodies();
       },
@@ -515,7 +519,7 @@ define(function(require, exports, module) {
 
             <template v-for="body in bodies">
               <SvgOrbitPath v-if="body != 'sun' && is_visible(body)" :body="body" :layout="layout" />
-              <circle v-show="data.bodies[body] != undefined" :ref="body + '_patrol'" fill="green" fill-opacity="0.1" cx=0 cy=0 r=0 />
+              <circle v-if="showPatrolRadii" v-show="data.bodies[body] != undefined" :ref="body + '_patrol'" fill="green" fill-opacity="0.1" cx=0 cy=0 r=0 />
               <image :ref="body" x=0 y=0 width=1 height=1 :xlink:href="'img/' + body + '.png'" />
               <text v-show="show_label(body)" :ref="body + '_label'" style="font: 14px monospace; fill: #7FDF3F" x=0 y=0>
                 {{body|caps}}
