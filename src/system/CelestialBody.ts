@@ -1,15 +1,19 @@
 import { Body, Elements, ElementsBase, Satellites, Rings, body_type, position } from './data/body';
 import * as units     from './helpers/units';
-import * as angles    from './helpers/angles';
 import * as time      from './helpers/time';
 import * as constants from './data/constants';
 
 import {
-  quaternion,
-  vector,
+  normalizeRadians,
+  degreesToRadians,
+} from './helpers/angles';
+
+import {
   quaternion_from_euler,
   quaternion_mul,
   quaternion_rotate_vector,
+  quaternion,
+  vector,
 } from './helpers/quaternion';
 
 
@@ -24,6 +28,23 @@ interface ElementsAtTime {
   M:       number;
   E:       number;
   period?: number;
+}
+
+
+function v_add(p1: position, p2: position): position {
+  return [
+    p1[0] + p2[0],
+    p1[1] + p2[1],
+    p1[2] + p2[2],
+  ];
+}
+
+function v_sub(p1: position, p2: position): position {
+  return [
+    p1[0] - p2[0],
+    p1[1] - p2[1],
+    p1[2] - p2[2],
+  ];
 }
 
 
@@ -98,40 +119,43 @@ class CelestialBody {
     }
   }
 
+  getElementAtTime(name: keyof ElementsBase, t: Date): number {
+    if (!this.elements)
+      throw new Error(`getElementAtTime called with no elements defined on ${this.name}`);
+
+    let value = this.elements.base[name];
+
+    if (this.elements.cy !== undefined && this.elements.cy[name] !== undefined)
+      value += this.elements.cy[name] * time.centuriesBetween(t, time.J2000);
+
+    return value;
+  }
+
   getElementsAtTime(t: Date): ElementsAtTime {
     const a    = this.getElementAtTime('a',    t);
     const e    = this.getElementAtTime('e',    t);
-    const i    = this.getElementAtTime('e',    t);
+    const i    = this.getElementAtTime('i',    t);
     const L    = this.getElementAtTime('L',    t);
     const lp   = this.getElementAtTime('lp',   t);
     const node = this.getElementAtTime('node', t);
+
     const w    = lp - node; // argument of periapsis
     const M    = this.getMeanAnomaly(L, lp, t);
     const E    = this.getEccentricAnomaly(M, e);
 
     let period;
     if (this.central) {
-      period = 2 * Math.PI * Math.sqrt(Math.pow(a, 3) / this.central.mu);
+      period = 2 * Math.PI * Math.sqrt((a * a * a) / this.central.mu);
     }
 
     return {a, e, i, L, lp, node, w, M, E, period};
-  }
-
-  getElementAtTime(name: keyof ElementsBase, t: Date): number {
-    if (!this.elements) {
-      throw new Error(`getElementAtTime called with no elements defined on ${this.name}`);
-    }
-
-    return this.elements.cy
-      ? this.elements.base[name] + this.elements.cy[name] * time.centuriesBetween(t, time.J2000)
-      : this.elements.base[name];
   }
 
   getMeanAnomaly(L: number, lp: number, t: Date): number {
     let M = L - lp;
 
     if (this.elements && this.elements.day) {
-      M += this.elements.day.M + time.daysBetween(t, time.J2000);
+      M += this.elements.day.M * time.daysBetween(t, time.J2000);
     }
 
     return M;
@@ -144,7 +168,7 @@ class CelestialBody {
       const dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
       E -= dE;
 
-      if (Math.abs(dE) < 1e-6) {
+      if (Math.abs(dE) < (1e-6)) {
         break;
       }
     }
@@ -158,58 +182,60 @@ class CelestialBody {
     }
 
     let {a, e, i, L, lp, node, w, M, E} = this.getElementsAtTime(t);
-    i    = angles.normalizeRadians(angles.degreesToRadians(i));
-    node = angles.normalizeRadians(angles.degreesToRadians(node));
-    w    = angles.normalizeRadians(angles.degreesToRadians(w));
-    M    = angles.normalizeRadians(angles.degreesToRadians(M));
-    E    = angles.normalizeRadians(angles.degreesToRadians(E));
+
+    i    = normalizeRadians(degreesToRadians(i));
+    node = normalizeRadians(degreesToRadians(node));
+    w    = normalizeRadians(degreesToRadians(w));
+    M    = normalizeRadians(degreesToRadians(M));
+    E    = normalizeRadians(degreesToRadians(E));
 
     const x = a * (Math.cos(E) - e);
-    const y = a * Math.sin(E) * Math.sqrt(1 - Math.pow(e, 2));
+    const y = a * Math.sin(E) * Math.sqrt(1 - (e * e));
 
-    const tilt = this.central && this.central.tilt
-      ? angles.degreesToRadians(-this.central.tilt)
+    const tilt = this.central      != undefined
+              && this.central.tilt != undefined
+      ? degreesToRadians(-this.central.tilt)
       : 0;
 
-    const q = quaternion_mul(
-      quaternion_from_euler(node, tilt, 0),
-      quaternion_from_euler(w, i, 0),
+    const pos = quaternion_rotate_vector(
+      quaternion_mul(
+        quaternion_from_euler(node, tilt, 0),
+        quaternion_from_euler(w, i, 0),
+      ),
+      [x, y, 0],
     );
 
-    return quaternion_rotate_vector(q, [x, y, 0]);
+    return v_add(pos, this.central.getPositionAtTime(t));
   }
 
   // Array of 360 points, representing positions at each degree for the body's
   // orbital period.
-  getOrbitPath() {
+  getOrbitPath(): position[] {
     if (!this.time) {
       throw new Error('setTime must be called before getOrbitPath');
     }
 
-    const {period} = this.getElementsAtTime(this.time);
-    const points: position[] = [];
+    const { period } = this.getElementsAtTime(this.time);
 
-    // Period is only undefined when the body is the sun, which has no
-    // central body in this context.
-    if (period == undefined) {
-      for (let i = 0; i < 360; ++i) {
-        points.push([0, 0, 0]);
-      }
+    let ms = period === undefined
+      ? undefined
+      : (period * 1000) / 360;
 
-      return points;
-    }
+    const points = this.getOrbitPathSegment(359, ms);
+    points.push( points[0].slice() as position ); // fake a complete ellipse
 
-    return this.getOrbitPathSegment(360, (period * 1000) / 360);
+    return points;
   }
 
-  getOrbitPathSegment(periods: number, msPerPeriod: number) {
+  getOrbitPathSegment(periods: number, msPerPeriod?: number): position[] {
     if (!this.time) {
       throw new Error('setTime must be called before getOrbitPath');
     }
 
     const points: position[] = [];
 
-    if (this.name == 'sun') {
+    // sun
+    if (msPerPeriod === undefined) {
       for (let i = 0; i < periods; ++i) {
         points.push([0, 0, 0]);
       }
@@ -217,9 +243,11 @@ class CelestialBody {
       return points;
     }
 
+    const date = new Date(this.time);
+
     for (let i = 0; i < periods; ++i) {
-      const t = time.addMilliseconds(this.time, i * msPerPeriod);
-      points.push(this.getPositionAtTime(t));
+      points.push( this.getPositionAtTime(date) );
+      date.setMilliseconds(date.getMilliseconds() + msPerPeriod);
     }
 
     return points;

@@ -2,7 +2,7 @@ define(function(require, exports, module) {
   "use strict"
 
   const Vue = require('vendor/vue');
-  const svgpath = require('svgpath');
+  const path = require('svgpath');
 
   require('component/global');
   require('component/common');
@@ -66,11 +66,11 @@ define(function(require, exports, module) {
     props: ['points', 'color', 'line'],
 
     computed: {
-      svg_path() { return svgpath(this.points) },
-      stroke()   { return this.color || 'white' },
-      width()    { return this.line  || '1px' },
+      path()   { return path.bezier(this.points) },
+      stroke() { return this.color || 'white' },
+      width()  { return this.line || '1px' },
     },
 
-    template: '<path fill="none" :stroke="stroke" :stroke-width="width" :d="svg_path" />',
+    template: '<path fill="none" :stroke="stroke" :stroke-width="width" :d="path" />',
   });
 });

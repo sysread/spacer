@@ -6,7 +6,6 @@ define(function(require, exports, module) {
   const util    = require('util');
   const NavComp = require('navcomp').NavComp;
   const Layout  = require('component/layout');
-  const svgpath = require('svgpath');
 
   require('component/global');
   require('component/common');
@@ -587,7 +586,9 @@ define(function(require, exports, module) {
       path()  { return this.layout.scale_path(this.orbit) },
     },
 
-    template: '<SvgPath :points="path" color="#333333" line="0.75px" />',
+    template: `
+      <SvgPath :points="path" color="#333333" line="0.75px" />
+    `,
   });
 
 

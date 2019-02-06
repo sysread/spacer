@@ -1,13 +1,7 @@
 const circleInRadians = 2 * Math.PI
+const ratioDegToRad   = Math.PI / 180;
+const ratioRadToDeg   = 180 / Math.PI;
 
-export function degreesToRadians(v: number): number {
-  return v * (Math.PI / 180);
-}
-
-export function radiansToDegrees(v: number): number {
-  return v * (180 / Math.PI);
-}
-
-export function normalizeRadians(v: number): number {
-  return v % circleInRadians;
-}
+export const degreesToRadians = (v: number): number => v * ratioDegToRad;
+export const radiansToDegrees = (v: number): number => v * ratioRadToDeg;
+export const normalizeRadians = (v: number): number => v % circleInRadians;

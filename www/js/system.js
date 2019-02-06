@@ -24,19 +24,11 @@ var __values = (this && this.__values) || function (o) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./vector"], function (require, exports, data_1, physics_1, SolarSystem_1, V) {
+define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], function (require, exports, data_1, physics_1, SolarSystem_1) {
     "use strict";
     data_1 = __importDefault(data_1);
     physics_1 = __importDefault(physics_1);
     SolarSystem_1 = __importDefault(SolarSystem_1);
-    V = __importStar(V);
     var system = new SolarSystem_1.default;
     var Trojans = {
         key: 'trojans',
@@ -243,14 +235,7 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             }
             if (this.pos[key][name] == undefined) {
                 var body = this.body(name);
-                var pos = body.getPositionAtTime(date);
-                // Positions are relative to the central body; in the case of the sun,
-                // that requires no adjustment. Moons, however, must be added to the host
-                // planet's position.
-                if (body.central && body.central.key !== 'sun') {
-                    pos = V.add(pos, this.position(body.central.key, date));
-                }
-                this.pos[key][name] = pos;
+                this.pos[key][name] = body.getPositionAtTime(date);
             }
             return this.pos[key][name];
         };
@@ -259,16 +244,7 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
                 return new Array(360).fill([0, 0, 0]);
             var key = name + ".full_orbit";
             if (this.cache[key] == undefined) {
-                var central = this.central(name);
-                if (central != 'sun') {
-                    var orbit_1 = this.full_orbit(central);
-                    this.cache[key] = this.body(name).getOrbitPath()
-                        .map(function (p, i) { return V.add(p, orbit_1[i]); });
-                    this.cache[key].push(this.cache[key][0]);
-                }
-                else {
-                    this.cache[key] = this.body(name).getOrbitPath();
-                }
+                this.cache[key] = this.body(name).getOrbitPath();
             }
             return this.cache[key];
         };
@@ -279,10 +255,10 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             var key = name + ".orbit";
             if (this.cache[key] == undefined) {
                 var date = new Date(this.system.time);
-                var orbit = [this.position(name)];
-                for (var day = 1; day < 365; ++day) {
-                    date.setDate(date.getDate() + 1);
+                var orbit = [];
+                for (var day = 0; day < 365; ++day) {
                     orbit.push(this.position(name, date));
+                    date.setDate(date.getDate() + 1);
                 }
                 this.cache[key] = orbit;
             }
@@ -291,16 +267,8 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
         System.prototype.orbit_by_turns = function (name) {
             var key = name + ".orbit.byturns";
             if (this.cache[key] == undefined) {
-                var tpd = data_1.default.turns_per_day;
                 var msPerTurn = data_1.default.hours_per_turn * 60 * 60 * 1000;
-                var body = this.body(name);
-                var path = body.getOrbitPathSegment(365, msPerTurn);
-                var central = body.central || this.body('sun');
-                var cpath = central.getOrbitPathSegment(365, msPerTurn);
-                for (var i = 0; i < 365; ++i) {
-                    path[i] = V.add(path[i], cpath[i]);
-                }
-                this.cache[key] = path;
+                this.cache[key] = this.body(name).getOrbitPathSegment(365, msPerTurn);
             }
             return this.cache[key];
         };

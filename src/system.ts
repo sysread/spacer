@@ -212,16 +212,7 @@ class System {
 
     if (this.pos[key][name] == undefined) {
       const body = this.body(name);
-      let pos = body.getPositionAtTime(date);
-
-      // Positions are relative to the central body; in the case of the sun,
-      // that requires no adjustment. Moons, however, must be added to the host
-      // planet's position.
-      if (body.central && body.central.key !== 'sun') {
-        pos = V.add(pos, this.position(body.central.key, date));
-      }
-
-      this.pos[key][name] = pos;
+      this.pos[key][name] = body.getPositionAtTime(date);
     }
 
     return this.pos[key][name];
@@ -234,17 +225,7 @@ class System {
     const key = `${name}.full_orbit`;
 
     if (this.cache[key] == undefined) {
-      const central = this.central(name);
-
-      if (central != 'sun') {
-        const orbit = this.full_orbit(central);
-        this.cache[key] = this.body(name).getOrbitPath()
-          .map((p, i) => V.add(p, orbit[i]));
-        this.cache[key].push(this.cache[key][0]);
-      }
-      else {
-        this.cache[key] = this.body(name).getOrbitPath();
-      }
+      this.cache[key] = this.body(name).getOrbitPath();
     }
 
     return this.cache[key];
@@ -259,11 +240,11 @@ class System {
 
     if (this.cache[key] == undefined) {
       const date  = new Date(this.system.time);
-      const orbit = [this.position(name)];
+      const orbit = [];
 
-      for (let day = 1; day < 365; ++day) {
-        date.setDate(date.getDate() + 1);
+      for (let day = 0; day < 365; ++day) {
         orbit.push(this.position(name, date));
+        date.setDate(date.getDate() + 1);
       }
 
       this.cache[key] = orbit;
@@ -276,18 +257,8 @@ class System {
     const key = `${name}.orbit.byturns`;
 
     if (this.cache[key] == undefined) {
-      const tpd       = data.turns_per_day;
       const msPerTurn = data.hours_per_turn * 60 * 60 * 1000;
-      const body      = this.body(name);
-      const path      = body.getOrbitPathSegment(365, msPerTurn);
-      const central   = body.central || this.body('sun');
-      const cpath     = central.getOrbitPathSegment(365, msPerTurn);
-
-      for (let i = 0; i < 365; ++i) {
-        path[i] = V.add(path[i], cpath[i]);
-      }
-
-      this.cache[key] = path;
+      this.cache[key] = this.body(name).getOrbitPathSegment(365, msPerTurn);
     }
 
     return this.cache[key];

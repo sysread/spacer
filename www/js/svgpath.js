@@ -2,10 +2,10 @@
 //   https://medium.com/@francoisromain/smooth-a-svg-path-with-cubic-bezier-curves-e37b49d46c74
 define(["require", "exports"], function (require, exports) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     // The smoothing ratio
     var smoothing = 0.2;
     function control_point(current, prev, next, reverse) {
-        if (reverse === void 0) { reverse = false; }
         // When 'current' is the first or last point of the array 'previous' or
         // 'next' don't exist. Replace with 'current'.
         prev = prev || current;
@@ -18,7 +18,7 @@ define(["require", "exports"], function (require, exports) {
         // The control point position is relative to the current point
         return (current[0] + Math.cos(angle) * length) + ',' + (current[1] + Math.sin(angle) * length);
     }
-    function smooth(points) {
+    function full(points) {
         var path = 'M ' + points[0][0] + ',' + points[0][1];
         // add bezier curve command
         for (var i = 1; i < points.length; ++i) {
@@ -28,5 +28,25 @@ define(["require", "exports"], function (require, exports) {
         }
         return path;
     }
-    return smooth;
+    exports.full = full;
+    function bezier(points) {
+        var path = 'M ' + points[0][0] + ',' + points[0][1];
+        var c1 = control_point(points[0], undefined, points[1]); // start control point
+        var c2 = control_point(points[1], points[0], points[2], true); // end control point
+        path += ' C ' + c1 + ' ' + c2 + ' ' + points[1][0] + ',' + points[1][1];
+        for (var i = 2; i < points.length; ++i) {
+            var c = control_point(points[i], points[i - 1], points[i + 1], true); // end control point
+            path += ' S ' + c + ',' + points[i][0] + ',' + points[i][1];
+        }
+        return path;
+    }
+    exports.bezier = bezier;
+    function plain(points) {
+        var path = 'M ' + points[0][0] + ',' + points[0][1];
+        for (var i = 1; i < points.length; ++i) {
+            path += ' L ' + points[i][0] + ' ' + points[i][1];
+        }
+        return path;
+    }
+    exports.plain = plain;
 });
