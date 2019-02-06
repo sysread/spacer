@@ -164,11 +164,14 @@ define(["require", "exports", "./helpers/units", "./helpers/time", "./data/const
             var ms = period === undefined
                 ? undefined
                 : (period * 1000) / 360;
+            // TODO perhaps the difference here should be the caller's responsibility
+            // For planets, provide a "complete", closed ellipsis
             if (!this.central || this.central.key == 'sun') {
                 var points = this.getOrbitPathSegment(359, ms);
                 points.push(points[0].slice());
                 return points;
             }
+            // For moons, simply provide the orbital positions
             else {
                 return this.getOrbitPathSegment(360, ms);
             }
