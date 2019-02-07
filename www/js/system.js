@@ -46,13 +46,13 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], fu
             var y = (p[0] * Math.sin(t)) + (p[1] * Math.cos(t));
             return [x, y, p[2]];
         },
-        getOrbitPath: function () {
-            var path = system.bodies.jupiter.getOrbitPath();
+        getOrbitPath: function (start) {
+            var path = system.bodies.jupiter.getOrbitPath(start);
             return path.slice(60, 360).concat(path.slice(0, 60));
         },
-        getOrbitPathSegment: function (periods, msPerPeriod) {
+        getOrbitPathSegment: function (start, periods, msPerPeriod) {
             var _this = this;
-            return system.bodies.jupiter.getOrbitPathSegment(periods, msPerPeriod)
+            return system.bodies.jupiter.getOrbitPathSegment(start, periods, msPerPeriod)
                 .map(function (p) { return _this.adjustPoint(p); });
         },
         getPositionAtTime: function (date) {
@@ -69,34 +69,41 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], fu
     }(Error));
     var System = /** @class */ (function () {
         function System() {
+            var _this = this;
             this.system = system;
             this.cache = {};
             this.pos = {};
-        }
-        System.prototype.set_date = function (date) {
-            var e_1, _a;
-            var dt = new Date(date + ' 00:00:00');
-            var ts = dt.valueOf();
-            if (!this.system.time || dt.getDate() !== this.system.time.getDate()) {
-                this.cache = {};
-                try {
-                    for (var _b = __values(Object.keys(this.pos)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                        var key = _c.value;
-                        if (parseInt(key, 10) < ts) {
-                            delete this.pos[key];
+            window.addEventListener("turn", function () {
+                var e_1, _a;
+                if (window.game.turns % data_1.default.turns_per_day == 0) {
+                    var dt = new Date(window.game.date + ' 00:00:00');
+                    var ts = dt.valueOf();
+                    _this.cache = {};
+                    try {
+                        for (var _b = __values(Object.keys(_this.pos)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                            var key = _c.value;
+                            if (parseInt(key, 10) < ts) {
+                                delete _this.pos[key];
+                            }
                         }
                     }
-                }
-                catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                finally {
-                    try {
-                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                    finally {
+                        try {
+                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                        }
+                        finally { if (e_1) throw e_1.error; }
                     }
-                    finally { if (e_1) throw e_1.error; }
                 }
-            }
-            this.system.setTime(date);
-        };
+            });
+        }
+        Object.defineProperty(System.prototype, "time", {
+            get: function () {
+                return window.game.date;
+            },
+            enumerable: true,
+            configurable: true
+        });
         System.prototype.bodies = function () {
             return Object.keys(data_1.default.bodies);
         };
@@ -225,7 +232,7 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], fu
             if (name == 'sun') {
                 return [0, 0, 0];
             }
-            date = date || this.system.time;
+            date = date || this.time;
             if (!date) {
                 throw new OutsideOfTime;
             }
@@ -239,36 +246,36 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], fu
             }
             return this.pos[key][name];
         };
+        // radians
         System.prototype.full_orbit = function (name) {
             if (name == 'sun')
                 return new Array(360).fill([0, 0, 0]);
             var key = name + ".full_orbit";
             if (this.cache[key] == undefined) {
-                this.cache[key] = this.body(name).getOrbitPath();
+                this.cache[key] = this.body(name).getOrbitPath(this.time);
             }
             return this.cache[key];
         };
+        // days
         System.prototype.orbit = function (name) {
-            if (!this.system.time) {
+            if (!this.time) {
                 throw new OutsideOfTime;
             }
             var key = name + ".orbit";
             if (this.cache[key] == undefined) {
-                var date = new Date(this.system.time);
-                var orbit = [];
-                for (var day = 0; day < 365; ++day) {
-                    orbit.push(this.position(name, date));
-                    date.setDate(date.getDate() + 1);
-                }
-                this.cache[key] = orbit;
+                var p = 365;
+                var t_1 = 24 * 60 * 60 * 1000;
+                this.cache[key] = this.body(name).getOrbitPathSegment(this.time, p, t_1 / p);
             }
             return this.cache[key];
         };
+        // turns
         System.prototype.orbit_by_turns = function (name) {
             var key = name + ".orbit.byturns";
             if (this.cache[key] == undefined) {
-                var msPerTurn = data_1.default.hours_per_turn * 60 * 60 * 1000;
-                this.cache[key] = this.body(name).getOrbitPathSegment(365, msPerTurn);
+                var p = data_1.default.turns_per_day * 365; // periods
+                var t_2 = data_1.default.hours_per_turn * 60 * 60 * 1000; // ms per period
+                this.cache[key] = this.body(name).getOrbitPathSegment(this.time, p, t_2 / p);
             }
             return this.cache[key];
         };

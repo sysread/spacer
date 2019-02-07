@@ -41,18 +41,6 @@ const earth: Body = {
         day:    {M: 13.176358},
       },
     },
-
-    iss: {
-      name:   'ISS',
-      type:   'spacecraft',
-      radius: (0.1085 * 0.0728) / 2,
-
-      elements: {
-        format: 'heavens-above',
-        base:   {a: 6378.1596564 + ((399 + 408) / 2), e: 0.0006514, i: 51.6424, L: 645.0066, lp: 480.9673, node: 284.9119},
-        day:    {M: 360 * 15.54381896},
-      },
-    },
   },
 };
 

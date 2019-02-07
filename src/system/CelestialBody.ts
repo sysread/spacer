@@ -2,66 +2,47 @@ import { Body, Elements, ElementsBase, Satellites, Rings, body_type, position } 
 import * as units     from './helpers/units';
 import * as time      from './helpers/time';
 import * as constants from './data/constants';
-
-import {
-  normalizeRadians,
-  degreesToRadians,
-} from './helpers/angles';
-
-import {
-  quaternion_from_euler,
-  quaternion_mul,
-  quaternion_rotate_vector,
-  quaternion,
-  vector,
-} from './helpers/quaternion';
-
+import * as V         from '../vector';
+import * as Q         from '../quaternion';
 
 interface ElementsAtTime {
-  a:       number;
-  e:       number;
-  i:       number;
-  L:       number;
-  lp:      number;
-  node:    number;
-  w:       number;
-  M:       number;
-  E:       number;
-  period?: number;
+  a:      number;
+  e:      number;
+  i:      number;
+  L:      number;
+  lp:     number;
+  node:   number;
+  w:      number;
+  M:      number;
+  E:      number;
+  period: number;
 }
 
 
-function v_add(p1: position, p2: position): position {
-  return [
-    p1[0] + p2[0],
-    p1[1] + p2[1],
-    p1[2] + p2[2],
-  ];
-}
-
-function v_sub(p1: position, p2: position): position {
-  return [
-    p1[0] - p2[0],
-    p1[1] - p2[1],
-    p1[2] - p2[2],
-  ];
-}
+/**
+ * Convenience function to convert degrees to normalized radians.
+ */
+const circleInRadians = 2 * Math.PI
+const ratioDegToRad   = Math.PI / 180;
+const rad  = (n: number): number => n * ratioDegToRad;
+const nrad = (n: number): number => (n * ratioDegToRad) % circleInRadians;
 
 
 class CelestialBody {
   key:        string;
   name:       string;
   type:       body_type;
+  ring?:      Rings;
+  central?:   CelestialBody;
+  satellites: {[key: string]: CelestialBody} = {};
+
   radius:     number;
   mass:       number;
-  tilt?:      number;
+  tilt:       number;
   mu:         number;
+
   elements?:  Elements;
-  ring?:      Rings;
   position?:  position;
-  central?:   CelestialBody;
-  time?:      Date;
-  satellites: {[key: string]: CelestialBody} = {};
 
   constructor(key: string, data: Body, central?: CelestialBody) {
     const init = CelestialBody.adaptData(data);
@@ -72,10 +53,10 @@ class CelestialBody {
     this.radius   = init.radius;
     this.elements = init.elements;
     this.mass     = init.mass || 1;
-    this.tilt     = init.tilt;
     this.ring     = init.ring;
     this.position = init.position;
     this.mu       = constants.G * this.mass; // m^3/s^2
+    this.tilt     = init.tilt == undefined ? 0 : rad(-init.tilt);
   }
 
   static adaptData(body: Body): Body {
@@ -111,14 +92,6 @@ class CelestialBody {
     return data;
   }
 
-  setTime(time: Date) {
-    this.time = time;
-
-    if (this.elements) {
-      this.position = this.getPositionAtTime(time);
-    }
-  }
-
   getElementAtTime(name: keyof ElementsBase, t: Date): number {
     if (!this.elements)
       throw new Error(`getElementAtTime called with no elements defined on ${this.name}`);
@@ -143,7 +116,7 @@ class CelestialBody {
     const M    = this.getMeanAnomaly(L, lp, t);
     const E    = this.getEccentricAnomaly(M, e);
 
-    let period;
+    let period = 0;
     if (this.central) {
       period = 2 * Math.PI * Math.sqrt((a * a * a) / this.central.mu);
     }
@@ -209,66 +182,43 @@ class CelestialBody {
 
     let {a, e, i, L, lp, node, w, M, E} = this.getElementsAtTime(t);
 
-    i    = normalizeRadians(degreesToRadians(i));
-    node = normalizeRadians(degreesToRadians(node));
-    w    = normalizeRadians(degreesToRadians(w));
-    M    = normalizeRadians(degreesToRadians(M));
-    E    = normalizeRadians(degreesToRadians(E));
+    i    = nrad(i);
+    node = nrad(node);
+    w    = nrad(w);
+    M    = nrad(M);
+    E    = nrad(E);
 
     const x = a * (Math.cos(E) - e);
     const y = a * Math.sin(E) * Math.sqrt(1 - (e * e));
 
-    const tilt = this.central      != undefined
-              && this.central.tilt != undefined
-      ? degreesToRadians(-this.central.tilt)
-      : 0;
-
-    const pos = quaternion_rotate_vector(
-      quaternion_mul(
-        quaternion_from_euler(node, tilt, 0),
-        quaternion_from_euler(w, i, 0),
+    const pos = Q.rotate_vector(
+      Q.mul(
+        Q.from_euler(node, this.central.tilt, 0),
+        Q.from_euler(w, i, 0),
       ),
       [x, y, 0],
     );
 
-    return v_add(pos, this.central.getPositionAtTime(t));
+    return V.add(pos, this.central.getPositionAtTime(t));
   }
 
   // Array of 360 points, representing positions at each degree for the body's
   // orbital period.
-  getOrbitPath(): position[] {
-    if (!this.time) {
-      throw new Error('setTime must be called before getOrbitPath');
-    }
+  getOrbitPath(start: Date): position[] {
+    const { period } = (!this.central || this.central.key == 'sun')
+      ? this.getElementsAtTime(start)
+      : this.central.getElementsAtTime(start);
 
-    const { period } = this.getElementsAtTime(this.time);
+    const ms = (period * 1000) / 360;
 
-    let ms = period === undefined
-      ? undefined
-      : (period * 1000) / 360;
-
-    // TODO perhaps the difference here should be the caller's responsibility
-    // For planets, provide a "complete", closed ellipsis
-    if (!this.central || this.central.key == 'sun') {
-      const points = this.getOrbitPathSegment(359, ms);
-      points.push( points[0].slice() as position );
-      return points;
-    }
-    // For moons, simply provide the orbital positions
-    else {
-      return this.getOrbitPathSegment(360, ms);
-    }
+    return this.getOrbitPathSegment(start, 360, ms);
   }
 
-  getOrbitPathSegment(periods: number, msPerPeriod?: number): position[] {
-    if (!this.time) {
-      throw new Error('setTime must be called before getOrbitPath');
-    }
-
+  getOrbitPathSegment(start: Date, periods: number, ms: number): position[] {
     const points: position[] = [];
 
     // sun
-    if (msPerPeriod === undefined) {
+    if (!ms) {
       for (let i = 0; i < periods; ++i) {
         points.push([0, 0, 0]);
       }
@@ -276,11 +226,11 @@ class CelestialBody {
       return points;
     }
 
-    const date = new Date(this.time);
+    const date = new Date(start);
 
     for (let i = 0; i < periods; ++i) {
-      points.push( this.getPositionAtTime(date) );
-      date.setMilliseconds(date.getMilliseconds() + msPerPeriod);
+      points.push(this.getPositionAtTime(date));
+      date.setMilliseconds(date.getMilliseconds() + ms);
     }
 
     return points;

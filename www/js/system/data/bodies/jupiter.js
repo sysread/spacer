@@ -32,17 +32,6 @@ define(["require", "exports"], function (require, exports) {
             },
         },
         satellites: {
-            io: {
-                name: 'Io',
-                type: 'moon',
-                radius: 1821.3,
-                mass: 8933e19,
-                elements: {
-                    format: 'jpl-satellites-table',
-                    base: { a: 421800, e: 0.0041, i: 0.036, L: 470.127, lp: 128.106, node: 43.977 },
-                    day: { M: 203.4889583 },
-                },
-            },
             europa: {
                 name: 'Europa',
                 type: 'moon',

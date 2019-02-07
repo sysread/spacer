@@ -1,7 +1,8 @@
-export type quaternion = [number, number, number, number];
-export type vector     = [number, number, number];
+import * as V from './vector';
 
-export function quaternion_from_euler(phi: number, theta: number, psi: number): quaternion {
+export type quaternion = [number, number, number, number];
+
+export const from_euler = (phi: number, theta: number, psi: number): quaternion => {
   const _x = theta * 0.5;
   const _y = psi * 0.5;
   const _z = phi * 0.5;
@@ -20,9 +21,9 @@ export function quaternion_from_euler(phi: number, theta: number, psi: number): 
   const z = cX * cY * sZ + sX * sY * cZ;
 
   return [w, x, y, z];
-}
+};
 
-export function quaternion_mul(a: quaternion, b: quaternion): quaternion {
+export const mul = (a: quaternion, b: quaternion): quaternion => {
   const [w1, x1, y1, z1] = a;
   const [w2, x2, y2, z2] = b;
 
@@ -32,9 +33,9 @@ export function quaternion_mul(a: quaternion, b: quaternion): quaternion {
     w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2,
     w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2,
   ];
-}
+};
 
-export function quaternion_rotate_vector(q: quaternion, v: vector): vector {
+export const rotate_vector = (q: quaternion, v: V.Point): V.Point => {
   const [w1, x1, y1, z1] = q;
   const w2 = 0, [x2, y2, z2] = v; // [0, v]
 
@@ -50,4 +51,4 @@ export function quaternion_rotate_vector(q: quaternion, v: vector): vector {
   const z4 = z3 * w1 - w3 * z1 - x3 * y1 + y3 * x1;
 
   return [x4, y4, z4];
-}
+};

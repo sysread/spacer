@@ -18,10 +18,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./person", "./planet", "./agent", "./conflict", "./common", "./util"], function (require, exports, data_1, system_1, person_1, planet_1, agent_1, conflict_1, t, util) {
+define(["require", "exports", "./data", "./person", "./planet", "./agent", "./conflict", "./common", "./util"], function (require, exports, data_1, person_1, planet_1, agent_1, conflict_1, t, util) {
     "use strict";
     data_1 = __importDefault(data_1);
-    system_1 = __importDefault(system_1);
     t = __importStar(t);
     util = __importStar(util);
     ;
@@ -61,7 +60,6 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                     this._player = new person_1.Person(init.player);
                     this.date.setHours(this.date.getHours() + (this.turns * data_1.default.hours_per_turn));
                     console.log('setting system date', this.date);
-                    system_1.default.set_date(this.strdate());
                     this.build_planets(init.planets);
                     this.build_agents(init.agents);
                     this.build_conflicts(init.conflicts);
@@ -124,7 +122,6 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
         Game.prototype.reset_date = function () {
             this.date = this.start_date();
             console.log('resetting system date', this.date);
-            system_1.default.set_date(this.strdate());
         };
         Game.prototype.strdate = function (date) {
             date = date || this.date;
@@ -250,7 +247,6 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                 ++this.turns;
                 // Update game and system date
                 this.date.setHours(this.date.getHours() + data_1.default.hours_per_turn);
-                system_1.default.set_date(this.strdate());
                 // Start new conflicts
                 if (this.turns % (data_1.default.turns_per_day * 3) == 0) {
                     this.start_conflicts();

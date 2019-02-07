@@ -86,7 +86,6 @@ class Game {
 
         this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
         console.log('setting system date', this.date);
-        system.set_date(this.strdate());
 
         this.build_planets(init.planets);
         this.build_agents(init.agents);
@@ -144,7 +143,6 @@ class Game {
   reset_date() {
     this.date = this.start_date();
     console.log('resetting system date', this.date);
-    system.set_date(this.strdate());
   }
 
   strdate(date?: Date) {
@@ -247,7 +245,6 @@ class Game {
 
       // Update game and system date
       this.date.setHours(this.date.getHours() + data.hours_per_turn);
-      system.set_date(this.strdate());
 
       // Start new conflicts
       if (this.turns % (data.turns_per_day * 3) == 0) {

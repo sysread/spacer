@@ -584,13 +584,19 @@ define(function(require, exports, module) {
     props: ['layout', 'body'],
 
     computed: {
-      orbit() { return this.system.full_orbit(this.body) },
-      path()  { return this.layout.scale_path(this.orbit) },
       color() { return '#333333' },
+      path()  { return this.layout.scale_path(this.orbit) },
+      last()  { return this.path[ this.path.length - 1 ] },
+
+      orbit() {
+        const path = this.system.full_orbit(this.body);
+        path[359] = path[0].slice();
+        return path;
+      },
     },
 
     template: `
-      <SvgPath :points="path" :color="color" line="0.75px" />
+      <SvgPath :points="path" :color="color" line="0.75px" smooth=1 />
     `,
   });
 
@@ -617,9 +623,9 @@ define(function(require, exports, module) {
 
     template: `
       <g>
-        <SvgPath :points="path"      color="#A01B1B" line="0.75px" />
-        <SvgPath :points="dest_path" color="#605B0E" line="0.75px" />
-        <SvgPath :points="orig_path" color="#605B0E" line="0.75px" />
+        <SvgPath :points="path"      color="#A01B1B" line="0.75px" smooth=1 />
+        <SvgPath :points="dest_path" color="#605B0E" line="0.75px" smooth=1 />
+        <SvgPath :points="orig_path" color="#605B0E" line="0.75px" smooth=1 />
       </g>
     `,
   });
@@ -750,6 +756,9 @@ define(function(require, exports, module) {
       },
 
       show_orbit(body) {
+        if (body == 'trojans')
+          return false; // same as jupiter's
+
         if (!this.is_moon(body))
           return true;
 

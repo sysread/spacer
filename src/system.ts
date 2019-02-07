@@ -4,6 +4,15 @@ import SolarSystem from './system/SolarSystem';
 import * as t from './common';
 import * as V from './vector';
 
+declare var window: {
+  addEventListener: (ev: string, cb: Function) => void;
+
+  game: {
+    date:  Date;
+    turns: number;
+  };
+}
+
 const system = new SolarSystem;
 
 const Trojans = {
@@ -24,13 +33,13 @@ const Trojans = {
     return [x, y, p[2]];
   },
 
-  getOrbitPath: function() {
-    const path = system.bodies.jupiter.getOrbitPath();
+  getOrbitPath: function(start: Date) {
+    const path = system.bodies.jupiter.getOrbitPath(start);
     return path.slice(60, 360).concat( path.slice(0, 60) );
   },
 
-  getOrbitPathSegment: function(periods: number, msPerPeriod: number): V.Point[] {
-    return system.bodies.jupiter.getOrbitPathSegment(periods, msPerPeriod)
+  getOrbitPathSegment: function(start: Date, periods: number, msPerPeriod: number): V.Point[] {
+    return system.bodies.jupiter.getOrbitPathSegment(start, periods, msPerPeriod)
       .map(p => this.adjustPoint(p));
   },
 
@@ -61,21 +70,25 @@ class System {
   cache:   OrbitCache    = {};
   pos:     PositionCache = {};
 
-  set_date(date: string) {
-    const dt = new Date(date + ' 00:00:00');
-    const ts = dt.valueOf();
+  constructor() {
+    window.addEventListener("turn", () => {
+      if (window.game.turns % data.turns_per_day == 0) {
+        const dt = new Date(window.game.date + ' 00:00:00');
+        const ts = dt.valueOf();
 
-    if (!this.system.time || dt.getDate() !== this.system.time.getDate()) {
-      this.cache = {};
+        this.cache = {};
 
-      for (const key of Object.keys(this.pos)) {
-        if (parseInt(key, 10) < ts) {
-          delete this.pos[key];
+        for (const key of Object.keys(this.pos)) {
+          if (parseInt(key, 10) < ts) {
+            delete this.pos[key];
+          }
         }
       }
-    }
+    });
+  }
 
-    this.system.setTime(date);
+  get time() {
+    return window.game.date;
   }
 
   bodies(): t.body[] {
@@ -198,7 +211,7 @@ class System {
       return [0, 0, 0];
     }
 
-    date = date || this.system.time;
+    date = date || this.time;
 
     if (!date) {
       throw new OutsideOfTime;
@@ -218,6 +231,7 @@ class System {
     return this.pos[key][name];
   }
 
+  // radians
   full_orbit(name: string) {
     if (name == 'sun')
       return new Array(360).fill([0, 0, 0]);
@@ -225,40 +239,37 @@ class System {
     const key = `${name}.full_orbit`;
 
     if (this.cache[key] == undefined) {
-      this.cache[key] = this.body(name).getOrbitPath();
+      this.cache[key] = this.body(name).getOrbitPath(this.time);
     }
 
     return this.cache[key];
   }
 
+  // days
   orbit(name: string) {
-    if (!this.system.time) {
+    if (!this.time) {
       throw new OutsideOfTime;
     }
 
     const key = `${name}.orbit`;
 
     if (this.cache[key] == undefined) {
-      const date  = new Date(this.system.time);
-      const orbit = [];
-
-      for (let day = 0; day < 365; ++day) {
-        orbit.push(this.position(name, date));
-        date.setDate(date.getDate() + 1);
-      }
-
-      this.cache[key] = orbit;
+      const p = 365;
+      const t = 24 * 60 * 60 * 1000;
+      this.cache[key] = this.body(name).getOrbitPathSegment(this.time, p, t / p);
     }
 
     return this.cache[key];
   }
 
+  // turns
   orbit_by_turns(name: string) {
     const key = `${name}.orbit.byturns`;
 
     if (this.cache[key] == undefined) {
-      const msPerTurn = data.hours_per_turn * 60 * 60 * 1000;
-      this.cache[key] = this.body(name).getOrbitPathSegment(365, msPerTurn);
+      const p = data.turns_per_day  * 365;            // periods
+      const t = data.hours_per_turn * 60 * 60 * 1000; // ms per period
+      this.cache[key] = this.body(name).getOrbitPathSegment(this.time, p, t / p);
     }
 
     return this.cache[key];

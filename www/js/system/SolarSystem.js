@@ -18,7 +18,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./CelestialBody", "./helpers/time", "./data/bodies"], function (require, exports, CelestialBody_1, time_1, data) {
+define(["require", "exports", "./CelestialBody", "./data/bodies"], function (require, exports, CelestialBody_1, data) {
     "use strict";
     CelestialBody_1 = __importDefault(CelestialBody_1);
     data = __importStar(data);
@@ -51,23 +51,6 @@ define(["require", "exports", "./CelestialBody", "./helpers/time", "./data/bodie
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
                 finally { if (e_1) throw e_1.error; }
-            }
-        };
-        SolarSystem.prototype.setTime = function (input) {
-            var e_2, _a;
-            this.time = typeof input == 'string' ? time_1.parse(input) : input;
-            try {
-                for (var _b = __values(Object.keys(this.bodies)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var name_2 = _c.value;
-                    this.bodies[name_2].setTime(this.time);
-                }
-            }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_2) throw e_2.error; }
             }
         };
         return SolarSystem;

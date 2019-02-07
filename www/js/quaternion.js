@@ -17,7 +17,7 @@ var __read = (this && this.__read) || function (o, n) {
 define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    function quaternion_from_euler(phi, theta, psi) {
+    exports.from_euler = function (phi, theta, psi) {
         var _x = theta * 0.5;
         var _y = psi * 0.5;
         var _z = phi * 0.5;
@@ -32,9 +32,8 @@ define(["require", "exports"], function (require, exports) {
         var y = cX * sY * cZ - sX * cY * sZ;
         var z = cX * cY * sZ + sX * sY * cZ;
         return [w, x, y, z];
-    }
-    exports.quaternion_from_euler = quaternion_from_euler;
-    function quaternion_mul(a, b) {
+    };
+    exports.mul = function (a, b) {
         var _a = __read(a, 4), w1 = _a[0], x1 = _a[1], y1 = _a[2], z1 = _a[3];
         var _b = __read(b, 4), w2 = _b[0], x2 = _b[1], y2 = _b[2], z2 = _b[3];
         return [
@@ -43,9 +42,8 @@ define(["require", "exports"], function (require, exports) {
             w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2,
             w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2,
         ];
-    }
-    exports.quaternion_mul = quaternion_mul;
-    function quaternion_rotate_vector(q, v) {
+    };
+    exports.rotate_vector = function (q, v) {
         var _a = __read(q, 4), w1 = _a[0], x1 = _a[1], y1 = _a[2], z1 = _a[3];
         var w2 = 0, _b = __read(v, 3), x2 = _b[0], y2 = _b[1], z2 = _b[2]; // [0, v]
         // Q * [0, v]
@@ -58,6 +56,5 @@ define(["require", "exports"], function (require, exports) {
         var y4 = y3 * w1 - w3 * y1 - z3 * x1 + x3 * z1;
         var z4 = z3 * w1 - w3 * z1 - x3 * y1 + y3 * x1;
         return [x4, y4, z4];
-    }
-    exports.quaternion_rotate_vector = quaternion_rotate_vector;
+    };
 });

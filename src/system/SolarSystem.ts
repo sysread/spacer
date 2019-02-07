@@ -13,7 +13,6 @@ interface CelestialBodyMap {
 
 class SolarSystem {
   bodies: CelestialBodyMap = {};
-  time?:  Date;
 
   constructor() {
     this.importBodies(data);
@@ -34,14 +33,6 @@ class SolarSystem {
           this.importBodies(body.satellites, celestial);
         }
       }
-    }
-  }
-
-  setTime(input: string | Date) {
-    this.time = typeof input == 'string' ? parse_time(input) : input;
-
-    for (const name of Object.keys(this.bodies)) {
-      this.bodies[name].setTime(this.time);
     }
   }
 }

@@ -6,7 +6,7 @@ type point = [number, number];
 // The smoothing ratio
 const smoothing = 0.2;
 
-function control_point(current: point, prev?: point, next?: point, reverse?: true): string {
+const control_point = (current: point, prev?: point, next?: point, reverse?: true): string => {
   // When 'current' is the first or last point of the array 'previous' or
   // 'next' don't exist. Replace with 'current'.
   prev = prev || current;
@@ -21,9 +21,9 @@ function control_point(current: point, prev?: point, next?: point, reverse?: tru
 
   // The control point position is relative to the current point
   return (current[0] + Math.cos(angle) * length) + ',' + (current[1] + Math.sin(angle) * length);
-}
+};
 
-export function bezier(points: point[]): string {
+export const bezier = (points: point[]): string => {
   let path = 'M ' + points[0][0] + ',' + points[0][1];
 
   // add bezier curve command
@@ -34,9 +34,9 @@ export function bezier(points: point[]): string {
   }
 
   return path;
-}
+};
 
-export function line(points: point[]): string {
+export const line = (points: point[]): string => {
   let path = 'M ' + points[0][0] + ',' + points[0][1];
 
   for (let i = 1; i < points.length; ++i) {
@@ -44,4 +44,21 @@ export function line(points: point[]): string {
   }
 
   return path;
-}
+};
+
+export const smooth = (points: point[]): string => {
+  let path = 'M ' + points[0][0] + ',' + points[0][1];
+
+  const c1 = control_point(points[1], undefined, points[2]);       // start control point
+  const c2 = control_point(points[2], points[1], points[3], true); // end control point
+  path += ' C ' + c1 + ' ' + c2 + ' ' + points[1][0] + ',' + points[1][1];
+
+  // add bezier curve command
+  for (let i = 2; i < points.length; ++i) {
+    const s = control_point(points[i], points[i - 1], points[i + 1], true); // end control point
+    path += ' S ' + s + ' ' + points[i][0] + ',' + points[i][1];
+  }
+
+  return path;
+
+};

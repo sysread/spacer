@@ -1,6 +1,5 @@
 import { Body } from '../body';
 import mercury from './mercury';
-import venus   from './venus';
 import earth   from './earth';
 import mars    from './mars';
 import ceres   from './ceres';
@@ -9,8 +8,6 @@ import saturn  from './saturn';
 import uranus  from './uranus';
 import neptune from './neptune';
 import pluto   from './pluto';
-import eris    from './eris';
-import sedna   from './sedna';
 
 const sun: Body = {
   name:     'The Sun',
@@ -21,7 +18,6 @@ const sun: Body = {
 
   satellites: {
     mercury,
-    venus,
     earth,
     mars,
     ceres,
@@ -30,8 +26,6 @@ const sun: Body = {
     uranus,
     neptune,
     pluto,
-    eris,
-    sedna,
   },
 };
 

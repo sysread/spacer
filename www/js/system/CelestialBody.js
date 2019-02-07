@@ -5,25 +5,20 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./helpers/units", "./helpers/time", "./data/constants", "./helpers/angles", "./helpers/quaternion"], function (require, exports, units, time, constants, angles_1, quaternion_1) {
+define(["require", "exports", "./helpers/units", "./helpers/time", "./data/constants", "../vector", "../quaternion"], function (require, exports, units, time, constants, V, Q) {
     "use strict";
     units = __importStar(units);
     time = __importStar(time);
     constants = __importStar(constants);
-    function v_add(p1, p2) {
-        return [
-            p1[0] + p2[0],
-            p1[1] + p2[1],
-            p1[2] + p2[2],
-        ];
-    }
-    function v_sub(p1, p2) {
-        return [
-            p1[0] - p2[0],
-            p1[1] - p2[1],
-            p1[2] - p2[2],
-        ];
-    }
+    V = __importStar(V);
+    Q = __importStar(Q);
+    /**
+     * Convenience function to convert degrees to normalized radians.
+     */
+    var circleInRadians = 2 * Math.PI;
+    var ratioDegToRad = Math.PI / 180;
+    var rad = function (n) { return n * ratioDegToRad; };
+    var nrad = function (n) { return (n * ratioDegToRad) % circleInRadians; };
     var CelestialBody = /** @class */ (function () {
         function CelestialBody(key, data, central) {
             this.satellites = {};
@@ -35,10 +30,10 @@ define(["require", "exports", "./helpers/units", "./helpers/time", "./data/const
             this.radius = init.radius;
             this.elements = init.elements;
             this.mass = init.mass || 1;
-            this.tilt = init.tilt;
             this.ring = init.ring;
             this.position = init.position;
             this.mu = constants.G * this.mass; // m^3/s^2
+            this.tilt = init.tilt == undefined ? 0 : rad(-init.tilt);
         }
         CelestialBody.adaptData = function (body) {
             // deep clone the body data, which is ro
@@ -65,12 +60,6 @@ define(["require", "exports", "./helpers/units", "./helpers/time", "./data/const
             }
             return data;
         };
-        CelestialBody.prototype.setTime = function (time) {
-            this.time = time;
-            if (this.elements) {
-                this.position = this.getPositionAtTime(time);
-            }
-        };
         CelestialBody.prototype.getElementAtTime = function (name, t) {
             if (!this.elements)
                 throw new Error("getElementAtTime called with no elements defined on " + this.name);
@@ -89,7 +78,7 @@ define(["require", "exports", "./helpers/units", "./helpers/time", "./data/const
             var w = lp - node; // argument of periapsis
             var M = this.getMeanAnomaly(L, lp, t);
             var E = this.getEccentricAnomaly(M, e);
-            var period;
+            var period = 0;
             if (this.central) {
                 period = 2 * Math.PI * Math.sqrt((a * a * a) / this.central.mu);
             }
@@ -140,58 +129,38 @@ define(["require", "exports", "./helpers/units", "./helpers/time", "./data/const
                 return [0, 0, 0];
             }
             var _a = this.getElementsAtTime(t), a = _a.a, e = _a.e, i = _a.i, L = _a.L, lp = _a.lp, node = _a.node, w = _a.w, M = _a.M, E = _a.E;
-            i = angles_1.normalizeRadians(angles_1.degreesToRadians(i));
-            node = angles_1.normalizeRadians(angles_1.degreesToRadians(node));
-            w = angles_1.normalizeRadians(angles_1.degreesToRadians(w));
-            M = angles_1.normalizeRadians(angles_1.degreesToRadians(M));
-            E = angles_1.normalizeRadians(angles_1.degreesToRadians(E));
+            i = nrad(i);
+            node = nrad(node);
+            w = nrad(w);
+            M = nrad(M);
+            E = nrad(E);
             var x = a * (Math.cos(E) - e);
             var y = a * Math.sin(E) * Math.sqrt(1 - (e * e));
-            var tilt = this.central != undefined
-                && this.central.tilt != undefined
-                ? angles_1.degreesToRadians(-this.central.tilt)
-                : 0;
-            var pos = quaternion_1.quaternion_rotate_vector(quaternion_1.quaternion_mul(quaternion_1.quaternion_from_euler(node, tilt, 0), quaternion_1.quaternion_from_euler(w, i, 0)), [x, y, 0]);
-            return v_add(pos, this.central.getPositionAtTime(t));
+            var pos = Q.rotate_vector(Q.mul(Q.from_euler(node, this.central.tilt, 0), Q.from_euler(w, i, 0)), [x, y, 0]);
+            return V.add(pos, this.central.getPositionAtTime(t));
         };
         // Array of 360 points, representing positions at each degree for the body's
         // orbital period.
-        CelestialBody.prototype.getOrbitPath = function () {
-            if (!this.time) {
-                throw new Error('setTime must be called before getOrbitPath');
-            }
-            var period = this.getElementsAtTime(this.time).period;
-            var ms = period === undefined
-                ? undefined
-                : (period * 1000) / 360;
-            // TODO perhaps the difference here should be the caller's responsibility
-            // For planets, provide a "complete", closed ellipsis
-            if (!this.central || this.central.key == 'sun') {
-                var points = this.getOrbitPathSegment(359, ms);
-                points.push(points[0].slice());
-                return points;
-            }
-            // For moons, simply provide the orbital positions
-            else {
-                return this.getOrbitPathSegment(360, ms);
-            }
+        CelestialBody.prototype.getOrbitPath = function (start) {
+            var period = ((!this.central || this.central.key == 'sun')
+                ? this.getElementsAtTime(start)
+                : this.central.getElementsAtTime(start)).period;
+            var ms = (period * 1000) / 360;
+            return this.getOrbitPathSegment(start, 360, ms);
         };
-        CelestialBody.prototype.getOrbitPathSegment = function (periods, msPerPeriod) {
-            if (!this.time) {
-                throw new Error('setTime must be called before getOrbitPath');
-            }
+        CelestialBody.prototype.getOrbitPathSegment = function (start, periods, ms) {
             var points = [];
             // sun
-            if (msPerPeriod === undefined) {
+            if (!ms) {
                 for (var i = 0; i < periods; ++i) {
                     points.push([0, 0, 0]);
                 }
                 return points;
             }
-            var date = new Date(this.time);
+            var date = new Date(start);
             for (var i = 0; i < periods; ++i) {
                 points.push(this.getPositionAtTime(date));
-                date.setMilliseconds(date.getMilliseconds() + msPerPeriod);
+                date.setMilliseconds(date.getMilliseconds() + ms);
             }
             return points;
         };

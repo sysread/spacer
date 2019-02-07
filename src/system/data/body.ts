@@ -17,13 +17,13 @@
 // cy = change per century
 
 // Sources of orbital elements:
-// jpl-1800-2050: http://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf / https://ssd.jpl.nasa.gov/?planet_pos
-// jpl-satellites-table: http://ssd.jpl.nasa.gov/?sat_elem
-// jpl-sbdb: http://ssd.jpl.nasa.gov/sbdb.cgi
-// heavens-above: http://heavens-above.com/orbit.aspx?satid=25544
+//   jpl-1800-2050: http://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf / https://ssd.jpl.nasa.gov/?planet_pos
+//   jpl-3000-3000: https://ssd.jpl.nasa.gov/txt/p_elem_t2.txt
+//   jpl-satellites-table: http://ssd.jpl.nasa.gov/?sat_elem
+//   jpl-sbdb: http://ssd.jpl.nasa.gov/sbdb.cgi
 
-export type body_type  = 'star' | 'planet' | 'dwarfPlanet' | 'moon' | 'spacecraft';
-export type format     = 'jpl-1800-2050' | 'jpl-satellites-table' | 'heavens-above';
+export type body_type  = 'star' | 'planet' | 'dwarfPlanet' | 'moon';
+export type format     = 'jpl-3000-3000' | 'jpl-1800-2050' | 'jpl-satellites-table' | 'jpl-sbdb';
 export type position   = [number, number, number];
 export type Satellites = { [key: string]: Body };
 
@@ -49,7 +49,7 @@ export interface Augmentation {
 }
 
 export interface Elements {
-  readonly format: string;
+  readonly format: format;
   readonly day?:   { M: number };
   readonly base:   ElementsBase;
   readonly cy?:    ElementsBase;

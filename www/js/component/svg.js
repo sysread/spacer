@@ -23,11 +23,9 @@ define(function(require, exports, module) {
     },
 
     template: `
-
-<svg :viewBox="viewbox" class="plot" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <slot />
-</svg>
-
+      <svg :viewBox="viewbox" class="plot" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <slot />
+      </svg>
     `,
   });
 
@@ -48,16 +46,9 @@ define(function(require, exports, module) {
     props: ['cx', 'cy', 'r', 'opacity', 'line', 'color', 'bg'],
 
     template: `
-
-<circle
-  :cx="cx || 0"
-  :cy="cy || 0"
-  :r="r || 0"
-  :fill="bg || 'black'"
-  :fill-opacity="opacity || 1"
-  :stroke="color"
-  :stroke-width="line || 0" />
-
+      <circle :cx="cx || 0" :cy="cy || 0" :r="r || 0"
+        :fill="bg || 'black'" :fill-opacity="opacity || 1"
+        :stroke="color" :stroke-width="line || 0" />
     `,
   });
 
@@ -66,7 +57,7 @@ define(function(require, exports, module) {
     props: ['points', 'color', 'line', 'smooth'],
 
     computed: {
-      path()   { return this.smooth ? path.bezier(this.points) : path.line(this.points) },
+      path()   { return /*this.smooth ? path.bezier(this.points) :*/ path.line(this.points) },
       stroke() { return this.color || 'white' },
       width()  { return this.line || '1px' },
     },
