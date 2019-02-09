@@ -86,9 +86,11 @@ export class Agent extends Person {
     }
 
     window.addEventListener("turn", () => {
-      if (window.game.turns % data.turns_per_day == 0) {
+      if (window.game.turns < data.initial_days * data.turns_per_day)
+        return;
+
+      if (window.game.turns % data.turns_per_day == 0)
         this.turn()
-      }
     });
   }
 

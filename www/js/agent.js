@@ -86,9 +86,10 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                 _this.action = _this.dock(_this.home);
             }
             window.addEventListener("turn", function () {
-                if (window.game.turns % data_1.default.turns_per_day == 0) {
+                if (window.game.turns < data_1.default.initial_days * data_1.default.turns_per_day)
+                    return;
+                if (window.game.turns % data_1.default.turns_per_day == 0)
                     _this.turn();
-                }
             });
             return _this;
         }
