@@ -51,12 +51,12 @@ const data = {
     luxuries:     {mass:  10, recipe: {tics: 8, materials: {water: 2, ore: 2, minerals: 2, hydrocarbons: 2}}},
     metal:        {mass:  40, recipe: {tics: 2, materials: {ore: 3}}},
     ceramics:     {mass:  25, recipe: {tics: 2, materials: {minerals: 3}}},
-    medicine:     {mass:   5, recipe: {tics: 3, materials: {food: 2, hydrocarbons: 1}}},
-    machines:     {mass:  35, recipe: {tics: 3, materials: {metal: 3}}},
-    electronics:  {mass:  20, recipe: {tics: 3, materials: {ceramics: 3}}},
-    cybernetics:  {mass:  60, recipe: {tics: 4, materials: {machines: 2, electronics: 3}}},
+    medicine:     {mass:   5, recipe: {tics: 3, materials: {food: 1, hydrocarbons: 2}}},
+    machines:     {mass:  35, recipe: {tics: 3, materials: {metal: 6}}},
+    electronics:  {mass:  20, recipe: {tics: 3, materials: {ceramics: 8}}},
+    cybernetics:  {mass:  60, recipe: {tics: 4, materials: {machines: 3, electronics: 4}}},
     narcotics:    {mass:   5, recipe: {tics: 2, materials: {medicine: 1, hydrocarbons: 1, water: 1}}, contraband: 5},
-    weapons:      {mass:  15, recipe: {tics: 4, materials: {metal: 2, ceramics: 1}}, contraband: 7},
+    weapons:      {mass:  15, recipe: {tics: 4, materials: {metal: 4, ceramics: 1}}, contraband: 7},
   },
 
   market: {
