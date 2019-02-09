@@ -31,6 +31,13 @@ define(["require", "exports"], function (require, exports) {
                 f: 38.35125000,
             },
         },
+        lagranges: {
+            trojans: {
+                name: 'Trojans',
+                offset: -1.0472,
+                radius: 100000,
+            }
+        },
         satellites: {
             europa: {
                 name: 'Europa',

@@ -33,6 +33,14 @@ const jupiter: Body = {
     },
   },
 
+  lagranges: {
+    trojans: {
+      name:   'Trojans',
+      offset: -1.0472, // 60 degrees in radians
+      radius: 100000,
+    }
+  },
+
   satellites: {
     europa: {
       name:   'Europa',

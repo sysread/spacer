@@ -2,7 +2,7 @@ define(["require", "exports"], function (require, exports) {
     "use strict";
     var pluto = {
         name: 'Pluto',
-        type: 'dwarfPlanet',
+        type: 'dwarf',
         radius: 1195,
         mass: 1.307e22,
         tilt: 122.5,

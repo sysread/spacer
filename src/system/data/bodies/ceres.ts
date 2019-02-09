@@ -2,7 +2,7 @@ import { Body } from '../body';
 
 const ceres: Body = {
   name:     'Ceres',
-  type:     'dwarfPlanet',
+  type:     'dwarf',
   radius:   476.2,
   mass:     9.393e20,
   tilt:     4,

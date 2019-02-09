@@ -1,14 +1,14 @@
-import CelestialBody from './CelestialBody';
-import { Body } from './data/body';
+import { SpaceThing, LaGrangePoint, CelestialBody } from './CelestialBody';
+import { Body, LaGrange, isBody, isLaGrange } from './data/body';
 import { parse as parse_time } from './helpers/time';
 import * as data from './data/bodies';
 
-interface BodyData {
-  [key: string]: Body;
+interface Data {
+  [key: string]: Body | LaGrange;
 }
 
 interface CelestialBodyMap {
-  [key: string]: CelestialBody;
+  [key: string]: SpaceThing;
 }
 
 class SolarSystem {
@@ -18,20 +18,40 @@ class SolarSystem {
     this.importBodies(data);
   }
 
-  importBodies(data: BodyData, central?: CelestialBody) {
+  importBodies(data: Data, central?: CelestialBody) {
     for (const name of Object.keys(data)) {
+      const thing = data[name];
+
       if (this.bodies[name] == undefined) {
-        const body = data[name];
-        const celestial = new CelestialBody(name, data[name], central);
-        this.bodies[name] = celestial;
+        let body;
 
-        if (central) {
-          central.satellites[name] = celestial;
+        if (isBody(thing)) {
+          body = new CelestialBody(name, thing, central);
+
+          if (central) {
+            central.satellites[name] = body;
+          }
+
+          if (thing.satellites) {
+            this.importBodies(thing.satellites, body);
+          }
+
+          if (thing.lagranges) {
+            this.importBodies(thing.lagranges, body);
+          }
+        }
+        else if (isLaGrange(thing)) {
+          if (!central) {
+            throw new Error('LaGrange point requested with no parent body');
+          }
+
+          body = new LaGrangePoint(name, thing, central);
+        }
+        else {
+          throw new Error('unrecognized body type');
         }
 
-        if (body.satellites) {
-          this.importBodies(body.satellites, celestial);
-        }
+        this.bodies[name] = body;
       }
     }
   }

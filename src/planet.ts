@@ -84,7 +84,6 @@ export class Planet {
   readonly body:      t.body;
   readonly name:      string;
   readonly size:      string;
-  readonly radius:    number;
   readonly kind:      string;
   readonly central:   string;
   readonly gravity:   number;
@@ -124,7 +123,6 @@ export class Planet {
     this.body    = body;
     this.name    = data.bodies[this.body].name;
     this.size    = data.bodies[this.body].size;
-    this.radius  = system.body(this.body).radius;
     this.kind    = system.kind(this.body);
     this.central = system.central(this.body);
     this.gravity = system.gravity(this.body);

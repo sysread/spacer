@@ -2,7 +2,7 @@ define(["require", "exports"], function (require, exports) {
     "use strict";
     var ceres = {
         name: 'Ceres',
-        type: 'dwarfPlanet',
+        type: 'dwarf',
         radius: 476.2,
         mass: 9.393e20,
         tilt: 4,

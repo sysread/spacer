@@ -585,9 +585,14 @@ define(function(require, exports, module) {
 
     computed: {
       color() { return '#333333' },
-      orbit() { return this.system.orbit(this.body) },
       path()  { return this.layout.scale_path(this.orbit) },
       last()  { return this.path[ this.path.length - 1 ] },
+
+      orbit() {
+        return this.system.orbit(this.body)
+          .relativeToTime(this.game.date.getTime())
+          .absolute
+      },
     },
 
     template: `
@@ -608,19 +613,12 @@ define(function(require, exports, module) {
         const path  = orbit.slice(0, this.transit.turns + 1);
         return this.layout.scale_path(path);
       },
-
-      orig_path() {
-        const orbit = this.system.orbit_by_turns(this.transit.origin);
-        const path  = orbit.slice(0, this.transit.turns + 1);
-        return this.layout.scale_path(path);
-      },
     },
 
     template: `
       <g>
-        <SvgPath :points="dest_path" color="#605B0E" line="0.75px" smooth=1 />
-        <SvgPath :points="orig_path" color="#605B0E" line="0.75px" smooth=1 />
-        <SvgPath :points="path"      color="#A01B1B" line="0.75px" smooth=1 />
+        <SvgPath :points="dest_path" color="#605B0E" smooth=1 />
+        <SvgPath :points="path"      color="#A01B1B" smooth=1 />
       </g>
     `,
   });
@@ -743,7 +741,8 @@ define(function(require, exports, module) {
 
     methods: {
       is_visible(body) {
-        return this.system.orbit(body).some(p => this.layout.is_visible(p));
+        return this.system.orbit(body).absolute
+          .some(p => this.layout.is_visible(p));
       },
 
       is_moon(body) {

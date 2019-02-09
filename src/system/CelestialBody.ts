@@ -1,9 +1,29 @@
-import { Body, Elements, ElementsBase, Satellites, Rings, body_type, position } from './data/body';
+import { Body, Elements, ElementsBase, Satellites, LaGrange, LaGranges, Rings, body_type, position } from './data/body';
+import { Orbit, Frame } from "./orbit";
+import Physics from '../physics';
 import * as units     from './helpers/units';
-import * as time      from './helpers/time';
 import * as constants from './data/constants';
 import * as V         from '../vector';
 import * as Q         from '../quaternion';
+
+
+/*
+ * Convenience functions to convert degrees to normalized radians.
+ */
+const circleInRadians = 2 * Math.PI
+const ratioDegToRad = Math.PI / 180;
+const rad = (n: number): number => n * ratioDegToRad;
+const nrad = (n: number): number => (n * ratioDegToRad) % circleInRadians;
+
+/*
+ * Convenience functions to work with time stamps
+ */
+const J2000 = Date.UTC(2000, 0, 1, 12, 0, 0);
+const DayInMS = 24 * 60 * 60 * 1000;
+const CenturyInMS = 100 * 365.24 * DayInMS;
+const daysBetween = (a: number, b: number): number => (a - b) / DayInMS;
+const centuriesBetween = (a: number, b: number): number => (a - b) / CenturyInMS;
+
 
 interface ElementsAtTime {
   a:      number;
@@ -19,24 +39,33 @@ interface ElementsAtTime {
 }
 
 
-/**
- * Convenience function to convert degrees to normalized radians.
- */
-const circleInRadians = 2 * Math.PI
-const ratioDegToRad   = Math.PI / 180;
-const rad  = (n: number): number => n * ratioDegToRad;
-const nrad = (n: number): number => (n * ratioDegToRad) % circleInRadians;
+export abstract class SpaceThing {
+  key:    string;
+  name:   string;
+  type:   body_type;
+  radius: number;
+
+  constructor(key: string, name: string, type: body_type, radius: number) {
+    this.key    = key;
+    this.name   = name;
+    this.type   = type;
+    this.radius = units.kmToMeters(radius);
+  }
+
+  orbit(start: number): Orbit {
+    return new Orbit(this, start);
+  }
+
+  abstract period(start: number): number;
+  abstract getPositionAtTime(t: number): Frame;
+}
 
 
-class CelestialBody {
-  key:        string;
-  name:       string;
-  type:       body_type;
+export class CelestialBody extends SpaceThing {
   ring?:      Rings;
   central?:   CelestialBody;
   satellites: {[key: string]: CelestialBody} = {};
 
-  radius:     number;
   mass:       number;
   tilt:       number;
   mu:         number;
@@ -45,12 +74,9 @@ class CelestialBody {
   position?:  position;
 
   constructor(key: string, data: Body, central?: CelestialBody) {
+    super(key, data.name, data.type, data.radius);
     const init = CelestialBody.adaptData(data);
-    this.key      = key;
     this.central  = central;
-    this.name     = init.name;
-    this.type     = init.type;
-    this.radius   = init.radius;
     this.elements = init.elements;
     this.mass     = init.mass || 1;
     this.ring     = init.ring;
@@ -63,8 +89,7 @@ class CelestialBody {
     // deep clone the body data, which is ro
     const data = JSON.parse(JSON.stringify(body));
 
-    data.radius = units.kmToMeters(data.radius);
-    data.mass   = data.mass || 1;
+    data.mass = data.mass || 1;
 
     if (data.ring) {
       data.ring.innerRadius = units.kmToMeters(data.ring.innerRadius);
@@ -92,7 +117,10 @@ class CelestialBody {
     return data;
   }
 
-  period(t: Date): number {
+  period(t: number): number {
+    if (!this.central)
+      return 0;
+
     const a = this.getElementAtTime('a', t);
 
     let period = 0;
@@ -103,25 +131,19 @@ class CelestialBody {
     return period;
   }
 
-  solar_period(t: Date): number {
-    return (!this.central || this.central.key == 'sun')
-      ? this.period(t)
-      : this.central.period(t);
-  }
-
-  getElementAtTime(name: keyof ElementsBase, t: Date): number {
+  getElementAtTime(name: keyof ElementsBase, t: number): number {
     if (!this.elements)
       throw new Error(`getElementAtTime called with no elements defined on ${this.name}`);
 
     let value = this.elements.base[name];
 
     if (this.elements.cy !== undefined && this.elements.cy[name] !== undefined)
-      value += this.elements.cy[name] * time.centuriesBetween(t, time.J2000);
+      value += this.elements.cy[name] * centuriesBetween(t, J2000);
 
     return value;
   }
 
-  getElementsAtTime(t: Date): ElementsAtTime {
+  getElementsAtTime(t: number): ElementsAtTime {
     const a      = this.getElementAtTime('a',    t);
     const e      = this.getElementAtTime('e',    t);
     const i      = this.getElementAtTime('i',    t);
@@ -135,18 +157,18 @@ class CelestialBody {
     return {a, e, i, L, lp, node, w, M, E, period};
   }
 
-  getMeanAnomaly(L: number, lp: number, t: Date): number {
+  getMeanAnomaly(L: number, lp: number, t: number): number {
     let M = L - lp;
 
     if (this.elements) {
       if (this.elements.day) {
-        M += this.elements.day.M * time.daysBetween(t, time.J2000);
+        M += this.elements.day.M * daysBetween(t, J2000);
       }
 
       // augmentation for outer planets per:
       //   https://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf
       if (this.elements.aug) {
-        const T = time.centuriesBetween(t, time.J2000);
+        const T = centuriesBetween(t, J2000);
         const b = this.elements.aug.b;
         const c = this.elements.aug.c;
         const s = this.elements.aug.s;
@@ -186,9 +208,9 @@ class CelestialBody {
     return E;
   }
 
-  getPositionAtTime(t: Date): position {
+  getPositionAtTime(t: number): Frame {
     if (!this.central) {
-      return [0, 0, 0];
+      return new Frame([0, 0, 0], undefined, t);
     }
 
     let {a, e, i, L, lp, node, w, M, E} = this.getElementsAtTime(t);
@@ -202,36 +224,47 @@ class CelestialBody {
     const x = a * (Math.cos(E) - e);
     const y = a * Math.sin(E) * Math.sqrt(1 - (e * e));
 
-    return Q.rotate_vector(
+    const p = Q.rotate_vector(
       Q.mul(
         Q.from_euler(node, this.central.tilt, 0),
         Q.from_euler(w, i, 0),
       ),
       [x, y, 0],
     );
-  }
 
-  // Array of 360 points, representing positions at each degree for the body's
-  // orbital period.
-  getOrbitPath(start: Date, periods: number=360, msPerPeriod?: number): position[] {
-    // sun
-    if (!this.central)
-      return new Array(periods).fill([0, 0, 0]);
-
-    if (msPerPeriod === undefined) {
-      msPerPeriod = (this.period(start) * 1000) / periods;
-    }
-
-    const date = new Date(start);
-    const points = [];
-
-    for (let i = 0; i < periods; ++i) {
-      points.push(this.getPositionAtTime(date));
-      date.setMilliseconds(date.getMilliseconds() + msPerPeriod);
-    }
-
-    return points;
+    return new Frame(p, this.central, t);
   }
 }
 
-export = CelestialBody;
+
+export class LaGrangePoint extends SpaceThing {
+  offset: number;
+  parent: CelestialBody;
+
+  constructor(key: string, data: LaGrange, parent: CelestialBody) {
+    super(key, data.name, "lagrange", data.radius);
+    this.offset = data.offset;
+    this.parent = parent;
+  }
+
+  period(t: number): number {
+    return this.parent.period(t);
+  }
+
+  getPositionAtTime(t: number): Frame {
+    const r = this.offset;
+    let [x, y, z] = this.parent.getPositionAtTime(t).position;
+    const x1 = (x * Math.cos(this.offset)) - (y * Math.sin(this.offset));
+    const y1 = (x * Math.sin(this.offset)) + (y * Math.cos(this.offset));
+    return new Frame([x1, y1, z], undefined, t);
+  }
+}
+
+
+export function isCelestialBody(body: SpaceThing): body is CelestialBody {
+  return (<CelestialBody>body).type != undefined;
+}
+
+export function isLaGrangePoint(body: SpaceThing): body is LaGrangePoint {
+  return (<LaGrangePoint>body).parent != undefined;
+}

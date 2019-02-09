@@ -64,7 +64,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.body = body;
             this.name = data_1.default.bodies[this.body].name;
             this.size = data_1.default.bodies[this.body].size;
-            this.radius = system_1.default.body(this.body).radius;
             this.kind = system_1.default.kind(this.body);
             this.central = system_1.default.central(this.body);
             this.gravity = system_1.default.gravity(this.body);

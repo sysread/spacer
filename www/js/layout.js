@@ -187,8 +187,9 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
         Layout.prototype.scale_body_diameter = function (body) {
             var diameter = system_1.default.body(body).radius * 2;
             var is_tiny = diameter < 3200000;
+            var is_huge = diameter > 10000000;
             var adjust = body == 'sun' ? 1
-                : body.match(/jupiter|saturn|uranus|neptune|trojans/) ? 10
+                : is_huge ? 10
                     : is_tiny ? 200
                         : 80;
             var factor = this.fov_au + Math.log2(Math.max(1, this.fov_au));

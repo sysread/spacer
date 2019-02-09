@@ -2,7 +2,7 @@ import { Body } from '../body';
 
 const pluto: Body = {
   name:   'Pluto',
-  type:   'dwarfPlanet',
+  type:   'dwarf',
   radius: 1195,
   mass:   1.307e22,
   tilt:   122.5, // https://nssdc.gsfc.nasa.gov/planetary/factsheet/index.html

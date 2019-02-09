@@ -185,9 +185,10 @@ class Layout {
   scale_body_diameter(body: string) {
     const diameter = system.body(body).radius * 2;
     const is_tiny  = diameter < 3200000;
+    const is_huge  = diameter > 10000000;
 
     const adjust = body == 'sun' ? 1
-                 : body.match(/jupiter|saturn|uranus|neptune|trojans/) ? 10
+                 : is_huge ? 10
                  : is_tiny ? 200
                  : 80;
 

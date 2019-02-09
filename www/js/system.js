@@ -11,55 +11,22 @@ var __values = (this && this.__values) || function (o) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./vector"], function (require, exports, data_1, physics_1, SolarSystem_1, V) {
+define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./system/CelestialBody"], function (require, exports, data_1, physics_1, SolarSystem_1, CelestialBody_1) {
     "use strict";
     data_1 = __importDefault(data_1);
     physics_1 = __importDefault(physics_1);
     SolarSystem_1 = __importDefault(SolarSystem_1);
-    V = __importStar(V);
     var system = new SolarSystem_1.default;
     var ms_per_hour = 60 * 60 * 1000;
-    var Trojans = {
-        key: 'trojans',
-        central: system.bodies.sun,
-        name: 'Trojans',
-        type: 'asteroids',
-        radius: system.bodies.jupiter.radius,
-        mass: 0,
-        satellites: {},
-        period: function (t) { return system.bodies.jupiter.period(t); },
-        solar_period: function (t) { return system.bodies.jupiter.solar_period(t); },
-        // Adjust a point from Jupiter's orbit to the corresponding L5 point
-        adjustPoint: function (p) {
-            var r = physics_1.default.distance(p, [0, 0, 0]);
-            var t = -1.0472; // 60 degrees in radians
-            var x = (p[0] * Math.cos(t)) - (p[1] * Math.sin(t));
-            var y = (p[0] * Math.sin(t)) + (p[1] * Math.cos(t));
-            return [x, y, p[2]];
-        },
-        getOrbitPath: function (start) {
-            var path = system.bodies.jupiter.getOrbitPath(start);
-            return path.slice(60, 360).concat(path.slice(0, 60));
-        },
-        getPositionAtTime: function (date) {
-            var p = system.bodies.jupiter.getPositionAtTime(date);
-            return this.adjustPoint(p);
-        },
-    };
     var System = /** @class */ (function () {
         function System() {
             var _this = this;
             this.system = system;
             this.cache = {};
             this.pos = {};
+            this.orbits = {};
             window.addEventListener("turn", function () {
+                _this.orbits = {};
                 if (window.game.turns % data_1.default.turns_per_day == 0) {
                     _this.cache = {};
                     _this.pos = {};
@@ -96,9 +63,6 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             return Object.keys(bodies);
         };
         System.prototype.body = function (name) {
-            if (name == 'trojans') {
-                return Trojans;
-            }
             if (this.system.bodies[name] == undefined) {
                 throw new Error("body not found: " + name);
             }
@@ -119,14 +83,11 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             return data_1.default.bodies[name].faction;
         };
         System.prototype.type = function (name) {
-            var type = this.body(name).type;
-            if (type === 'dwarfPlanet')
-                return 'dwarf';
-            return type;
+            return this.body(name).type;
         };
         System.prototype.central = function (name) {
             var body = this.body(name);
-            if (body.central) {
+            if (CelestialBody_1.isCelestialBody(body) && body.central) {
                 return body.central.key;
             }
             return 'sun';
@@ -137,8 +98,11 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             if (type == 'dwarf') {
                 type = 'Dwarf';
             }
-            else if (body.central && body.central.name != 'The Sun') {
+            else if (CelestialBody_1.isCelestialBody(body) && body.central && body.central.name != 'The Sun') {
                 type = body.central.name;
+            }
+            else if (CelestialBody_1.isLaGrangePoint(body)) {
+                type = "LaGrange Point";
             }
             else {
                 type = 'Planet';
@@ -151,11 +115,14 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             if (artificial != undefined) {
                 return artificial;
             }
-            var grav = 6.67e-11;
             var body = this.body(name);
-            var mass = body.mass;
-            var radius = body.radius;
-            return (grav * mass) / Math.pow(radius, 2) / physics_1.default.G;
+            var grav = 6.67e-11;
+            if (CelestialBody_1.isCelestialBody(body)) {
+                var mass = body.mass;
+                var radius = body.radius;
+                return (grav * mass) / Math.pow(radius, 2) / physics_1.default.G;
+            }
+            throw new Error(name + " does not have parameters for calculation of gravity");
         };
         System.prototype.ranges = function (point) {
             var e_2, _a;
@@ -208,41 +175,29 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             }
             if (this.pos[key][name] == undefined) {
                 var body = this.body(name);
-                var pos = body.getPositionAtTime(date);
-                if (body.central && body.central.key != 'sun') {
-                    var central = body.central.getPositionAtTime(date);
-                    pos = V.add(pos, central);
-                }
-                this.pos[key][name] = pos;
+                var t_1 = date instanceof Date ? date.getTime() : date;
+                var pos = body.getPositionAtTime(t_1);
+                this.pos[key][name] = pos.absolute;
             }
             return this.pos[key][name];
         };
-        // radians, relative to central
         System.prototype.orbit = function (name) {
-            var key = name + ".orbit.radians";
-            if (this.cache[key] == undefined) {
-                var body = this.body(name);
-                var orbit = body.getOrbitPath(this.time);
-                if (body.central && body.central.key != 'sun') {
-                    var central = body.central.getPositionAtTime(this.time);
-                    for (var i = 0; i < orbit.length; ++i) {
-                        orbit[i] = V.add(orbit[i], central);
-                    }
-                }
-                this.cache[key] = orbit;
+            if (!this.orbits[name]) {
+                this.orbits[name] = this.body(name).orbit(this.time.getTime());
             }
-            return this.cache[key];
+            return this.orbits[name];
         };
         // turns, relative to sun
         System.prototype.orbit_by_turns = function (name) {
             var key = name + ".orbit.turns";
             if (this.cache[key] == undefined) {
+                var inc = data_1.default.hours_per_turn * 60 * 60 * 1000;
                 var periods = data_1.default.turns_per_day * 365;
-                var date = new Date(this.time);
                 var points = [];
+                var date = this.time.getTime();
                 for (var i = 0; i < periods; ++i) {
                     points.push(this.position(name, date));
-                    date.setHours(date.getHours() + data_1.default.hours_per_turn);
+                    date += inc;
                 }
                 this.cache[key] = points;
             }

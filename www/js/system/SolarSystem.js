@@ -8,9 +8,6 @@ var __values = (this && this.__values) || function (o) {
         }
     };
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -18,9 +15,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./CelestialBody", "./data/bodies"], function (require, exports, CelestialBody_1, data) {
+define(["require", "exports", "./CelestialBody", "./data/body", "./data/bodies"], function (require, exports, CelestialBody_1, body_1, data) {
     "use strict";
-    CelestialBody_1 = __importDefault(CelestialBody_1);
     data = __importStar(data);
     var SolarSystem = /** @class */ (function () {
         function SolarSystem() {
@@ -32,16 +28,31 @@ define(["require", "exports", "./CelestialBody", "./data/bodies"], function (req
             try {
                 for (var _b = __values(Object.keys(data)), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var name_1 = _c.value;
+                    var thing = data[name_1];
                     if (this.bodies[name_1] == undefined) {
-                        var body = data[name_1];
-                        var celestial = new CelestialBody_1.default(name_1, data[name_1], central);
-                        this.bodies[name_1] = celestial;
-                        if (central) {
-                            central.satellites[name_1] = celestial;
+                        var body = void 0;
+                        if (body_1.isBody(thing)) {
+                            body = new CelestialBody_1.CelestialBody(name_1, thing, central);
+                            if (central) {
+                                central.satellites[name_1] = body;
+                            }
+                            if (thing.satellites) {
+                                this.importBodies(thing.satellites, body);
+                            }
+                            if (thing.lagranges) {
+                                this.importBodies(thing.lagranges, body);
+                            }
                         }
-                        if (body.satellites) {
-                            this.importBodies(body.satellites, celestial);
+                        else if (body_1.isLaGrange(thing)) {
+                            if (!central) {
+                                throw new Error('LaGrange point requested with no parent body');
+                            }
+                            body = new CelestialBody_1.LaGrangePoint(name_1, thing, central);
                         }
+                        else {
+                            throw new Error('unrecognized body type');
+                        }
+                        this.bodies[name_1] = body;
                     }
                 }
             }
