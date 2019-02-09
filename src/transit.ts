@@ -25,18 +25,16 @@ interface Body {
 
 
 class Transit {
-  plan:        TransitPlan;
-  layout:      Layout;
-  bodies:      { [key: string]: Body };
-  orbits:      { [key: string]: Point[] };
-  full_orbits: { [key: string]: Point[] };
+  plan:   TransitPlan;
+  layout: Layout;
+  bodies: { [key: string]: Body };
+  orbits: { [key: string]: Point[] };
 
   constructor(plan: TransitPlan, layout: Layout) {
-    this.plan        = plan;
-    this.layout      = layout;
-    this.bodies      = {};
-    this.orbits      = {};
-    this.full_orbits = {};
+    this.plan   = plan;
+    this.layout = layout;
+    this.bodies = {};
+    this.orbits = {};
 
     this.layout.set_center(this.center);
     this.layout.set_fov_au(this.fov);
@@ -93,7 +91,7 @@ class Transit {
         return [this.layout.scale_point([0, 0, 0])];
 
       default:
-        return this.layout.scale_path( this.full_orbits[body] );
+        return this.layout.scale_path( this.orbits[body] );
     }
   }
 
@@ -105,7 +103,6 @@ class Transit {
     if (Object.keys(this.orbits).length == 0) {
       for (const body of system.all_bodies()) {
         this.orbits[body] = system.orbit_by_turns(body);
-        this.full_orbits[body] = system.orbit(body);
       }
     }
 

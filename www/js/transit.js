@@ -41,7 +41,6 @@ define(["require", "exports", "./physics", "./system"], function (require, expor
             this.layout = layout;
             this.bodies = {};
             this.orbits = {};
-            this.full_orbits = {};
             this.layout.set_center(this.center);
             this.layout.set_fov_au(this.fov);
             this.update_bodies();
@@ -83,7 +82,7 @@ define(["require", "exports", "./physics", "./system"], function (require, expor
                 case 'sun':
                     return [this.layout.scale_point([0, 0, 0])];
                 default:
-                    return this.layout.scale_path(this.full_orbits[body]);
+                    return this.layout.scale_path(this.orbits[body]);
             }
         };
         // TODO bodies positions are taken from orbits using current_turn. If the
@@ -97,7 +96,6 @@ define(["require", "exports", "./physics", "./system"], function (require, expor
                     for (var _c = __values(system_1.default.all_bodies()), _d = _c.next(); !_d.done; _d = _c.next()) {
                         var body = _d.value;
                         this.orbits[body] = system_1.default.orbit_by_turns(body);
-                        this.full_orbits[body] = system_1.default.orbit(body);
                     }
                 }
                 catch (e_1_1) { e_1 = { error: e_1_1 }; }

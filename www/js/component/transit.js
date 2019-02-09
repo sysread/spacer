@@ -29,7 +29,7 @@ define(function(require, exports, module) {
       return {
         layout_target_id: 'transit-plot-root',
         transit:          null,
-        paused:           false,
+        paused:           true,//false,
         stoppedBy:        {'pirate': 0, 'police': 0},
         encounter:        null,
         intvl:            null,
@@ -196,16 +196,7 @@ define(function(require, exports, module) {
 
     methods: {
       layout_set() {
-        // Create transit object
         this.transit = new Transit(this.plan, this.layout);
-
-        // Set initial positions
-        for (const body of this.bodies)
-          this.set_position(body);
-
-        this.set_position('sun');
-        this.set_position('ship');
-
         this.resume();
       },
 
@@ -223,7 +214,7 @@ define(function(require, exports, module) {
       },
 
       is_visible(body) {
-        return this.system.orbit(body).some(p => this.layout.is_visible(p));
+        return this.system.orbit_by_turns(body).some(p => this.layout.is_visible(p));
       },
 
       show_label(body) {
@@ -267,7 +258,6 @@ define(function(require, exports, module) {
           }
         }
 
-        // TODO this is not capturing the final burn to the planet
         if (this.plan.is_complete) {
           clearInterval(this.intvl);
 
@@ -281,6 +271,10 @@ define(function(require, exports, module) {
           return;
         }
 
+        if (!this.plan.is_started) {
+          this.set_initial_positions();
+        }
+
         this.transit.turn();
 
         // Update bodies' positions
@@ -290,6 +284,15 @@ define(function(require, exports, module) {
         // Update the sun and ship
         this.animate('sun');
         this.animate('ship');
+      },
+
+      set_initial_positions() {
+        this.set_position('ship');
+        this.set_position('sun');
+
+        // Set initial positions
+        for (const body of this.bodies)
+          this.set_position(body);
       },
 
       set_position(body) {
@@ -518,7 +521,6 @@ define(function(require, exports, module) {
             <image ref="sun" x="0" y="0" width="1" height="1" xlink:href="img/sun.png" />
 
             <template v-for="body in bodies">
-              <SvgOrbitPath v-if="body != 'sun' && is_visible(body)" :body="body" :layout="layout" />
               <circle v-if="showPatrolRadii" v-show="data.bodies[body] != undefined" :ref="body + '_patrol'" fill="green" fill-opacity="0.1" cx=0 cy=0 r=0 />
               <image v-if="is_visible(body)" :ref="body" x=0 y=0 width=1 height=1 :xlink:href="'img/' + body + '.png'" />
               <text v-if="show_label(body)" :ref="body + '_label'" style="font: 14px monospace; fill: #7FDF3F" x=0 y=0>
@@ -526,12 +528,9 @@ define(function(require, exports, module) {
               </text>
             </template>
 
-
-            <SvgPath v-if="transit" :points="transit.path('ship')" color="#605B0E" />
             <text ref="ship" text-anchor="middle" alignment-baseline="middle" style="fill: yellow; font: bold 14px monospace;">
               &tridot;
             </text>
-
 
             <line x1=130 y1=13 :x2="patrolRate * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
             <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{patrolRate|pct(2)}}</text>
