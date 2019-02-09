@@ -21,7 +21,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./physics", "./resource", "./util"], function (require, exports, data_1, system_1, physics_1, resource_1, util) {
+define(["require", "exports", "./data", "./system", "./physics", "./resource", "./navcomp", "./util"], function (require, exports, data_1, system_1, physics_1, resource_1, navcomp_1, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
@@ -224,13 +224,27 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             // several days.
             // NOTE these are NOT restored from opt when reinitialized from game data.
             // they should always be fresh.
-            opt.turns = Math.max(data_1.default.turns_per_day * 3, est);
-            opt.reward = util.fuzz(Math.max(500, Math.ceil(Math.log(1 + est) * 1500)), 0.05);
-            opt.standing = Math.ceil(Math.log10(opt.reward));
+            var params = Passengers.mission_parameters(opt.issuer, opt.dest);
+            opt.turns = params.turns;
+            opt.reward = params.reward;
+            opt.standing = Math.ceil(Math.log10(params.reward));
             _this = _super.call(this, opt) || this;
             _this.dest = opt.dest;
             return _this;
         }
+        Passengers.mission_parameters = function (orig, dest) {
+            var nav = new navcomp_1.NavComp(window.game.player, orig, false, data_1.default.shipclass.schooner.tank);
+            var transit = nav.getFastestTransitTo(dest);
+            if (transit) {
+                var rate = 3 * window.game.planets[orig].buyPrice('fuel');
+                var cost = util.fuzz(Math.max(500, Math.ceil(transit.au * rate)), 0.05);
+                var turns = Math.ceil(transit.turns * 1.5);
+                return { reward: cost, turns: turns };
+            }
+            else {
+                throw new Error('no transits possible');
+            }
+        };
         Object.defineProperty(Passengers.prototype, "destination", {
             get: function () {
                 return data_1.default.bodies[this.dest].name;

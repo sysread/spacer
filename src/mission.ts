@@ -3,6 +3,7 @@ import system from './system';
 import Physics from './physics';
 import { resources } from './resource';
 import { Conflict } from './conflict';
+import { NavComp } from './navcomp';
 
 import * as t from './common';
 import * as util from './util';
@@ -245,13 +246,29 @@ export class Passengers extends Mission {
     // several days.
     // NOTE these are NOT restored from opt when reinitialized from game data.
     // they should always be fresh.
-    opt.turns    = Math.max(data.turns_per_day * 3, est);
-    opt.reward   = util.fuzz(Math.max(500, Math.ceil(Math.log(1 + est) * 1500)), 0.05);
-    opt.standing = Math.ceil(Math.log10(opt.reward));
+    const params = Passengers.mission_parameters(opt.issuer, opt.dest);
+    opt.turns    = params.turns;
+    opt.reward   = params.reward;
+    opt.standing = Math.ceil(Math.log10(params.reward));
 
     super(opt);
 
     this.dest = opt.dest;
+  }
+
+  static mission_parameters(orig: t.body, dest: t.body) {
+    const nav = new NavComp(window.game.player, orig, false, data.shipclass.schooner.tank);
+    const transit = nav.getFastestTransitTo(dest);
+
+    if (transit) {
+      const rate  = 3 * window.game.planets[orig].buyPrice('fuel');
+      const cost  = util.fuzz(Math.max(500, Math.ceil(transit.au * rate)), 0.05);
+      const turns = Math.ceil(transit.turns * 1.5);
+      return {reward: cost, turns: turns};
+    }
+    else {
+      throw new Error('no transits possible');
+    }
   }
 
   get destination(): string {

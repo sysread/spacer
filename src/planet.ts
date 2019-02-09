@@ -163,14 +163,24 @@ export class Planet {
     }
 
     this.contracts = [];
+    // TODO This is perhaps the worst piece of programming I have
+    // ever done. I *really* hope you are not a potential employer
+    // reading this hack.
     if (init.contracts) {
-      for (const info of init.contracts) {
-        this.contracts.push({
-          valid_until: info.valid_until,
-          mission: restoreMission(info.mission),
-        });
-      }
+      window.addEventListener('arrived', () => {
+        if (init && init.contracts) {
+          for (const info of init.contracts) {
+            this.contracts.push({
+              valid_until: info.valid_until,
+              mission: restoreMission(info.mission),
+            });
+          }
+
+          delete init.contracts;
+        }
+      });
     }
+    // END shame
 
     /*
      * Economics

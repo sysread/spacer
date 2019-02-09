@@ -55,7 +55,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
     exports.isCraftTask = isCraftTask;
     var Planet = /** @class */ (function () {
         function Planet(body, init) {
-            var e_1, _a, e_2, _b, e_3, _c, e_4, _d, e_5, _e, e_6, _f;
+            var e_1, _a, e_2, _b, e_3, _c, e_4, _d, e_5, _e;
             var _this = this;
             init = init || {};
             /*
@@ -90,14 +90,14 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
              */
             this.work_tasks = [];
             try {
-                TASK: for (var _g = __values(data_1.default.work), _h = _g.next(); !_h.done; _h = _g.next()) {
-                    var task = _h.value;
+                TASK: for (var _f = __values(data_1.default.work), _g = _f.next(); !_g.done; _g = _f.next()) {
+                    var task = _g.value;
                     try {
-                        for (var _j = __values(task.avail), _k = _j.next(); !_k.done; _k = _j.next()) {
-                            var req = _k.value;
+                        for (var _h = __values(task.avail), _j = _h.next(); !_j.done; _j = _h.next()) {
+                            var req = _j.value;
                             try {
-                                for (var _l = __values(this.traits), _m = _l.next(); !_m.done; _m = _l.next()) {
-                                    var trait = _m.value;
+                                for (var _k = __values(this.traits), _l = _k.next(); !_l.done; _l = _k.next()) {
+                                    var trait = _l.value;
                                     if (req === trait.name) {
                                         this.work_tasks.push(task.name);
                                         continue TASK;
@@ -107,7 +107,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                             catch (e_3_1) { e_3 = { error: e_3_1 }; }
                             finally {
                                 try {
-                                    if (_m && !_m.done && (_c = _l.return)) _c.call(_l);
+                                    if (_l && !_l.done && (_c = _k.return)) _c.call(_k);
                                 }
                                 finally { if (e_3) throw e_3.error; }
                             }
@@ -116,7 +116,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     catch (e_2_1) { e_2 = { error: e_2_1 }; }
                     finally {
                         try {
-                            if (_k && !_k.done && (_b = _j.return)) _b.call(_j);
+                            if (_j && !_j.done && (_b = _h.return)) _b.call(_h);
                         }
                         finally { if (e_2) throw e_2.error; }
                     }
@@ -125,29 +125,39 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
             finally {
                 try {
-                    if (_h && !_h.done && (_a = _g.return)) _a.call(_g);
+                    if (_g && !_g.done && (_a = _f.return)) _a.call(_f);
                 }
                 finally { if (e_1) throw e_1.error; }
             }
             this.contracts = [];
+            // TODO This is perhaps the worst piece of programming I have
+            // ever done. I *really* hope you are not a potential employer
+            // reading this hack.
             if (init.contracts) {
-                try {
-                    for (var _o = __values(init.contracts), _p = _o.next(); !_p.done; _p = _o.next()) {
-                        var info = _p.value;
-                        this.contracts.push({
-                            valid_until: info.valid_until,
-                            mission: mission_1.restoreMission(info.mission),
-                        });
+                window.addEventListener('arrived', function () {
+                    var e_6, _a;
+                    if (init && init.contracts) {
+                        try {
+                            for (var _b = __values(init.contracts), _c = _b.next(); !_c.done; _c = _b.next()) {
+                                var info = _c.value;
+                                _this.contracts.push({
+                                    valid_until: info.valid_until,
+                                    mission: mission_1.restoreMission(info.mission),
+                                });
+                            }
+                        }
+                        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                        finally {
+                            try {
+                                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                            }
+                            finally { if (e_6) throw e_6.error; }
+                        }
+                        delete init.contracts;
                     }
-                }
-                catch (e_4_1) { e_4 = { error: e_4_1 }; }
-                finally {
-                    try {
-                        if (_p && !_p.done && (_d = _o.return)) _d.call(_o);
-                    }
-                    finally { if (e_4) throw e_4.error; }
-                }
+                });
             }
+            // END shame
             /*
              * Economics
              */
@@ -161,34 +171,34 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.produces = new store_1.default;
             this.consumes = new store_1.default;
             try {
-                for (var _q = __values(t.resources), _r = _q.next(); !_r.done; _r = _q.next()) {
-                    var item = _r.value;
+                for (var _m = __values(t.resources), _o = _m.next(); !_o.done; _o = _m.next()) {
+                    var item = _o.value;
                     this.produces.inc(item, this.scale(data_1.default.market.produces[item]));
                     this.consumes.inc(item, this.scale(data_1.default.market.consumes[item]));
                     this.produces.inc(item, this.scale(this.faction.produces[item] || 0));
                     this.consumes.inc(item, this.scale(this.faction.consumes[item] || 0));
                     try {
-                        for (var _s = __values(this.traits), _t = _s.next(); !_t.done; _t = _s.next()) {
-                            var trait = _t.value;
+                        for (var _p = __values(this.traits), _q = _p.next(); !_q.done; _q = _p.next()) {
+                            var trait = _q.value;
                             this.produces.inc(item, this.scale(trait.produces[item]));
                             this.consumes.inc(item, this.scale(trait.consumes[item]));
                         }
                     }
-                    catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                    catch (e_5_1) { e_5 = { error: e_5_1 }; }
                     finally {
                         try {
-                            if (_t && !_t.done && (_f = _s.return)) _f.call(_s);
+                            if (_q && !_q.done && (_e = _p.return)) _e.call(_p);
                         }
-                        finally { if (e_6) throw e_6.error; }
+                        finally { if (e_5) throw e_5.error; }
                     }
                 }
             }
-            catch (e_5_1) { e_5 = { error: e_5_1 }; }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
             finally {
                 try {
-                    if (_r && !_r.done && (_e = _q.return)) _e.call(_q);
+                    if (_o && !_o.done && (_d = _m.return)) _d.call(_m);
                 }
-                finally { if (e_5) throw e_5.error; }
+                finally { if (e_4) throw e_4.error; }
             }
             // Assign directly in constructor rather than in a method call for
             // performance reasons. V8's jit will produce more optimized classes by
