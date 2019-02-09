@@ -14,6 +14,8 @@ declare var window: {
 }
 
 const system = new SolarSystem;
+const ms_per_hour = 60 * 60 * 1000;
+
 
 const Trojans = {
   key:        'trojans',
@@ -23,6 +25,9 @@ const Trojans = {
   radius:     system.bodies.jupiter.radius,
   mass:       0,
   satellites: {},
+
+  period: function(t: Date) { return system.bodies.jupiter.period(t) },
+  solar_period: function(t: Date) { return system.bodies.jupiter.solar_period(t) },
 
   // Adjust a point from Jupiter's orbit to the corresponding L5 point
   adjustPoint: function(p: V.Point): V.Point {
@@ -38,16 +43,12 @@ const Trojans = {
     return path.slice(60, 360).concat( path.slice(0, 60) );
   },
 
-  getOrbitPathSegment: function(start: Date, periods: number, msPerPeriod: number): V.Point[] {
-    return system.bodies.jupiter.getOrbitPathSegment(start, periods, msPerPeriod)
-      .map(p => this.adjustPoint(p));
-  },
-
   getPositionAtTime: function(date: Date): V.Point {
     const p = system.bodies.jupiter.getPositionAtTime(date);
     return this.adjustPoint(p);
   },
 };
+
 
 interface OrbitCache {
   [key: string]: V.Point[];
@@ -59,11 +60,6 @@ interface PositionCache {
   };
 }
 
-class OutsideOfTime extends Error {
-  constructor() {
-    super("set_date() must be called before positional information is available");
-  }
-}
 
 class System {
   system:  SolarSystem   = system;
@@ -73,16 +69,8 @@ class System {
   constructor() {
     window.addEventListener("turn", () => {
       if (window.game.turns % data.turns_per_day == 0) {
-        const dt = new Date(window.game.date + ' 00:00:00');
-        const ts = dt.valueOf();
-
         this.cache = {};
-
-        for (const key of Object.keys(this.pos)) {
-          if (parseInt(key, 10) < ts) {
-            delete this.pos[key];
-          }
-        }
+        this.pos = {};
       }
     });
   }
@@ -212,11 +200,6 @@ class System {
     }
 
     date = date || this.time;
-
-    if (!date) {
-      throw new OutsideOfTime;
-    }
-
     const key = date.valueOf();
 
     if (this.pos[key] == undefined) {
@@ -225,51 +208,55 @@ class System {
 
     if (this.pos[key][name] == undefined) {
       const body = this.body(name);
-      this.pos[key][name] = body.getPositionAtTime(date);
+      let pos = body.getPositionAtTime(date);
+
+      if (body.central && body.central.key != 'sun') {
+        const central = body.central.getPositionAtTime(date);
+        pos = V.add(pos, central);
+      }
+
+      this.pos[key][name] = pos;
     }
 
     return this.pos[key][name];
   }
 
-  // radians
-  full_orbit(name: string) {
-    if (name == 'sun')
-      return new Array(360).fill([0, 0, 0]);
-
-    const key = `${name}.full_orbit`;
-
-    if (this.cache[key] == undefined) {
-      this.cache[key] = this.body(name).getOrbitPath(this.time);
-    }
-
-    return this.cache[key];
-  }
-
-  // days
+  // radians, relative to central
   orbit(name: string) {
-    if (!this.time) {
-      throw new OutsideOfTime;
-    }
-
-    const key = `${name}.orbit`;
+    const key = `${name}.orbit.radians`;
 
     if (this.cache[key] == undefined) {
-      const p = 365;
-      const t = 24 * 60 * 60 * 1000;
-      this.cache[key] = this.body(name).getOrbitPathSegment(this.time, p, t / p);
+      const body  = this.body(name);
+      const orbit = body.getOrbitPath(this.time);
+
+      if (body.central && body.central.key != 'sun') {
+        const central = body.central.getPositionAtTime(this.time);
+        for (let i = 0; i < orbit.length; ++i) {
+          orbit[i] = V.add(orbit[i], central);
+        }
+      }
+
+      this.cache[key] = orbit;
     }
 
     return this.cache[key];
   }
 
-  // turns
+  // turns, relative to sun
   orbit_by_turns(name: string) {
-    const key = `${name}.orbit.byturns`;
+    const key = `${name}.orbit.turns`;
 
     if (this.cache[key] == undefined) {
-      const p = data.turns_per_day  * 365;            // periods
-      const t = data.hours_per_turn * 60 * 60 * 1000; // ms per period
-      this.cache[key] = this.body(name).getOrbitPathSegment(this.time, p, t / p);
+      const periods = data.turns_per_day * 365;
+      const date    = new Date(this.time);
+      const points  = [];
+
+      for (let i = 0; i < periods; ++i) {
+        points.push(this.position(name, date));
+        date.setHours(date.getHours() + data.hours_per_turn);
+      }
+
+      this.cache[key] = points;
     }
 
     return this.cache[key];

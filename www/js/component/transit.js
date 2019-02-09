@@ -223,7 +223,7 @@ define(function(require, exports, module) {
       },
 
       is_visible(body) {
-        return this.system.full_orbit(body).some(p => this.layout.is_visible(p));
+        return this.system.orbit(body).some(p => this.layout.is_visible(p));
       },
 
       show_label(body) {

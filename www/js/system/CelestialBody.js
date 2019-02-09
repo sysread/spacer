@@ -5,12 +5,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./helpers/units", "./helpers/time", "./data/constants", "../vector", "../quaternion"], function (require, exports, units, time, constants, V, Q) {
+define(["require", "exports", "./helpers/units", "./helpers/time", "./data/constants", "../quaternion"], function (require, exports, units, time, constants, Q) {
     "use strict";
     units = __importStar(units);
     time = __importStar(time);
     constants = __importStar(constants);
-    V = __importStar(V);
     Q = __importStar(Q);
     /**
      * Convenience function to convert degrees to normalized radians.
@@ -60,6 +59,19 @@ define(["require", "exports", "./helpers/units", "./helpers/time", "./data/const
             }
             return data;
         };
+        CelestialBody.prototype.period = function (t) {
+            var a = this.getElementAtTime('a', t);
+            var period = 0;
+            if (this.central) {
+                period = 2 * Math.PI * Math.sqrt((a * a * a) / this.central.mu);
+            }
+            return period;
+        };
+        CelestialBody.prototype.solar_period = function (t) {
+            return (!this.central || this.central.key == 'sun')
+                ? this.period(t)
+                : this.central.period(t);
+        };
         CelestialBody.prototype.getElementAtTime = function (name, t) {
             if (!this.elements)
                 throw new Error("getElementAtTime called with no elements defined on " + this.name);
@@ -78,10 +90,7 @@ define(["require", "exports", "./helpers/units", "./helpers/time", "./data/const
             var w = lp - node; // argument of periapsis
             var M = this.getMeanAnomaly(L, lp, t);
             var E = this.getEccentricAnomaly(M, e);
-            var period = 0;
-            if (this.central) {
-                period = 2 * Math.PI * Math.sqrt((a * a * a) / this.central.mu);
-            }
+            var period = this.period(t);
             return { a: a, e: e, i: i, L: L, lp: lp, node: node, w: w, M: M, E: E, period: period };
         };
         CelestialBody.prototype.getMeanAnomaly = function (L, lp, t) {
@@ -136,31 +145,23 @@ define(["require", "exports", "./helpers/units", "./helpers/time", "./data/const
             E = nrad(E);
             var x = a * (Math.cos(E) - e);
             var y = a * Math.sin(E) * Math.sqrt(1 - (e * e));
-            var pos = Q.rotate_vector(Q.mul(Q.from_euler(node, this.central.tilt, 0), Q.from_euler(w, i, 0)), [x, y, 0]);
-            return V.add(pos, this.central.getPositionAtTime(t));
+            return Q.rotate_vector(Q.mul(Q.from_euler(node, this.central.tilt, 0), Q.from_euler(w, i, 0)), [x, y, 0]);
         };
         // Array of 360 points, representing positions at each degree for the body's
         // orbital period.
-        CelestialBody.prototype.getOrbitPath = function (start) {
-            var period = ((!this.central || this.central.key == 'sun')
-                ? this.getElementsAtTime(start)
-                : this.central.getElementsAtTime(start)).period;
-            var ms = (period * 1000) / 360;
-            return this.getOrbitPathSegment(start, 360, ms);
-        };
-        CelestialBody.prototype.getOrbitPathSegment = function (start, periods, ms) {
-            var points = [];
+        CelestialBody.prototype.getOrbitPath = function (start, periods, msPerPeriod) {
+            if (periods === void 0) { periods = 360; }
             // sun
-            if (!ms) {
-                for (var i = 0; i < periods; ++i) {
-                    points.push([0, 0, 0]);
-                }
-                return points;
+            if (!this.central)
+                return new Array(periods).fill([0, 0, 0]);
+            if (msPerPeriod === undefined) {
+                msPerPeriod = (this.period(start) * 1000) / periods;
             }
             var date = new Date(start);
+            var points = [];
             for (var i = 0; i < periods; ++i) {
                 points.push(this.getPositionAtTime(date));
-                date.setMilliseconds(date.getMilliseconds() + ms);
+                date.setMilliseconds(date.getMilliseconds() + msPerPeriod);
             }
             return points;
         };

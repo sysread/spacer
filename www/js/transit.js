@@ -97,7 +97,7 @@ define(["require", "exports", "./physics", "./system"], function (require, expor
                     for (var _c = __values(system_1.default.all_bodies()), _d = _c.next(); !_d.done; _d = _c.next()) {
                         var body = _d.value;
                         this.orbits[body] = system_1.default.orbit_by_turns(body);
-                        this.full_orbits[body] = system_1.default.full_orbit(body);
+                        this.full_orbits[body] = system_1.default.orbit(body);
                     }
                 }
                 catch (e_1_1) { e_1 = { error: e_1_1 }; }

@@ -1,16 +1,3 @@
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var __values = (this && this.__values) || function (o) {
     var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
     if (m) return m.call(o);
@@ -24,12 +11,21 @@ var __values = (this && this.__values) || function (o) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], function (require, exports, data_1, physics_1, SolarSystem_1) {
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./vector"], function (require, exports, data_1, physics_1, SolarSystem_1, V) {
     "use strict";
     data_1 = __importDefault(data_1);
     physics_1 = __importDefault(physics_1);
     SolarSystem_1 = __importDefault(SolarSystem_1);
+    V = __importStar(V);
     var system = new SolarSystem_1.default;
+    var ms_per_hour = 60 * 60 * 1000;
     var Trojans = {
         key: 'trojans',
         central: system.bodies.sun,
@@ -38,6 +34,8 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], fu
         radius: system.bodies.jupiter.radius,
         mass: 0,
         satellites: {},
+        period: function (t) { return system.bodies.jupiter.period(t); },
+        solar_period: function (t) { return system.bodies.jupiter.solar_period(t); },
         // Adjust a point from Jupiter's orbit to the corresponding L5 point
         adjustPoint: function (p) {
             var r = physics_1.default.distance(p, [0, 0, 0]);
@@ -50,23 +48,11 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], fu
             var path = system.bodies.jupiter.getOrbitPath(start);
             return path.slice(60, 360).concat(path.slice(0, 60));
         },
-        getOrbitPathSegment: function (start, periods, msPerPeriod) {
-            var _this = this;
-            return system.bodies.jupiter.getOrbitPathSegment(start, periods, msPerPeriod)
-                .map(function (p) { return _this.adjustPoint(p); });
-        },
         getPositionAtTime: function (date) {
             var p = system.bodies.jupiter.getPositionAtTime(date);
             return this.adjustPoint(p);
         },
     };
-    var OutsideOfTime = /** @class */ (function (_super) {
-        __extends(OutsideOfTime, _super);
-        function OutsideOfTime() {
-            return _super.call(this, "set_date() must be called before positional information is available") || this;
-        }
-        return OutsideOfTime;
-    }(Error));
     var System = /** @class */ (function () {
         function System() {
             var _this = this;
@@ -74,26 +60,9 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], fu
             this.cache = {};
             this.pos = {};
             window.addEventListener("turn", function () {
-                var e_1, _a;
                 if (window.game.turns % data_1.default.turns_per_day == 0) {
-                    var dt = new Date(window.game.date + ' 00:00:00');
-                    var ts = dt.valueOf();
                     _this.cache = {};
-                    try {
-                        for (var _b = __values(Object.keys(_this.pos)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                            var key = _c.value;
-                            if (parseInt(key, 10) < ts) {
-                                delete _this.pos[key];
-                            }
-                        }
-                    }
-                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                    finally {
-                        try {
-                            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                        }
-                        finally { if (e_1) throw e_1.error; }
-                    }
+                    _this.pos = {};
                 }
             });
         }
@@ -108,7 +77,7 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], fu
             return Object.keys(data_1.default.bodies);
         };
         System.prototype.all_bodies = function () {
-            var e_2, _a;
+            var e_1, _a;
             var bodies = {};
             try {
                 for (var _b = __values(this.bodies()), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -117,12 +86,12 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], fu
                     bodies[this.central(body)] = true;
                 }
             }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_2) throw e_2.error; }
+                finally { if (e_1) throw e_1.error; }
             }
             return Object.keys(bodies);
         };
@@ -189,7 +158,7 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], fu
             return (grav * mass) / Math.pow(radius, 2) / physics_1.default.G;
         };
         System.prototype.ranges = function (point) {
-            var e_3, _a;
+            var e_2, _a;
             var ranges = {};
             try {
                 for (var _b = __values(this.bodies()), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -197,17 +166,17 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], fu
                     ranges[body] = physics_1.default.distance(point, this.position(body));
                 }
             }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_3) throw e_3.error; }
+                finally { if (e_2) throw e_2.error; }
             }
             return ranges;
         };
         System.prototype.closestBodyToPoint = function (point) {
-            var e_4, _a;
+            var e_3, _a;
             var dist, closest;
             try {
                 for (var _b = __values(this.bodies()), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -219,12 +188,12 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], fu
                     }
                 }
             }
-            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_4) throw e_4.error; }
+                finally { if (e_3) throw e_3.error; }
             }
             return [closest, dist];
         };
@@ -233,49 +202,49 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem"], fu
                 return [0, 0, 0];
             }
             date = date || this.time;
-            if (!date) {
-                throw new OutsideOfTime;
-            }
             var key = date.valueOf();
             if (this.pos[key] == undefined) {
                 this.pos[key] = {};
             }
             if (this.pos[key][name] == undefined) {
                 var body = this.body(name);
-                this.pos[key][name] = body.getPositionAtTime(date);
+                var pos = body.getPositionAtTime(date);
+                if (body.central && body.central.key != 'sun') {
+                    var central = body.central.getPositionAtTime(date);
+                    pos = V.add(pos, central);
+                }
+                this.pos[key][name] = pos;
             }
             return this.pos[key][name];
         };
-        // radians
-        System.prototype.full_orbit = function (name) {
-            if (name == 'sun')
-                return new Array(360).fill([0, 0, 0]);
-            var key = name + ".full_orbit";
-            if (this.cache[key] == undefined) {
-                this.cache[key] = this.body(name).getOrbitPath(this.time);
-            }
-            return this.cache[key];
-        };
-        // days
+        // radians, relative to central
         System.prototype.orbit = function (name) {
-            if (!this.time) {
-                throw new OutsideOfTime;
-            }
-            var key = name + ".orbit";
+            var key = name + ".orbit.radians";
             if (this.cache[key] == undefined) {
-                var p = 365;
-                var t_1 = 24 * 60 * 60 * 1000;
-                this.cache[key] = this.body(name).getOrbitPathSegment(this.time, p, t_1 / p);
+                var body = this.body(name);
+                var orbit = body.getOrbitPath(this.time);
+                if (body.central && body.central.key != 'sun') {
+                    var central = body.central.getPositionAtTime(this.time);
+                    for (var i = 0; i < orbit.length; ++i) {
+                        orbit[i] = V.add(orbit[i], central);
+                    }
+                }
+                this.cache[key] = orbit;
             }
             return this.cache[key];
         };
-        // turns
+        // turns, relative to sun
         System.prototype.orbit_by_turns = function (name) {
-            var key = name + ".orbit.byturns";
+            var key = name + ".orbit.turns";
             if (this.cache[key] == undefined) {
-                var p = data_1.default.turns_per_day * 365; // periods
-                var t_2 = data_1.default.hours_per_turn * 60 * 60 * 1000; // ms per period
-                this.cache[key] = this.body(name).getOrbitPathSegment(this.time, p, t_2 / p);
+                var periods = data_1.default.turns_per_day * 365;
+                var date = new Date(this.time);
+                var points = [];
+                for (var i = 0; i < periods; ++i) {
+                    points.push(this.position(name, date));
+                    date.setHours(date.getHours() + data_1.default.hours_per_turn);
+                }
+                this.cache[key] = points;
             }
             return this.cache[key];
         };

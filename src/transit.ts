@@ -105,7 +105,7 @@ class Transit {
     if (Object.keys(this.orbits).length == 0) {
       for (const body of system.all_bodies()) {
         this.orbits[body] = system.orbit_by_turns(body);
-        this.full_orbits[body] = system.full_orbit(body);
+        this.full_orbits[body] = system.orbit(body);
       }
     }
 

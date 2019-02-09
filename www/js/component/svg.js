@@ -57,7 +57,7 @@ define(function(require, exports, module) {
     props: ['points', 'color', 'line', 'smooth'],
 
     computed: {
-      path()   { return /*this.smooth ? path.bezier(this.points) :*/ path.line(this.points) },
+      path()   { return this.smooth ? path.bezier(this.points) : path.line(this.points) },
       stroke() { return this.color || 'white' },
       width()  { return this.line || '1px' },
     },
