@@ -270,17 +270,17 @@ export class Passengers extends Mission {
   }
 
   static mission_parameters(orig: t.body, dest: t.body) {
-    const nav = new NavComp(window.game.player, orig, false, data.shipclass.schooner.tank);
+    const nav = new NavComp(window.game.player, orig, false, data.shipclass.schooner.tank, true);
     const transit = nav.getFastestTransitTo(dest);
 
     if (transit) {
       const rate  = 3 * window.game.planets[orig].buyPrice('fuel');
-      const cost  = util.fuzz(Math.max(500, Math.ceil(transit.au * rate)), 0.05);
-      const turns = Math.ceil(transit.turns * 1.5);
+      const cost  = Math.ceil(util.fuzz(Math.max(500, Math.ceil(transit.au * rate)), 0.05));
+      const turns = Math.ceil(transit.turns * 2);
       return {reward: cost, turns: turns};
     }
     else {
-      throw new Error('no transits possible');
+      throw new Error(`no transits possible between ${orig} and ${dest}`);
     }
   }
 

@@ -241,16 +241,16 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             return _this;
         }
         Passengers.mission_parameters = function (orig, dest) {
-            var nav = new navcomp_1.NavComp(window.game.player, orig, false, data_1.default.shipclass.schooner.tank);
+            var nav = new navcomp_1.NavComp(window.game.player, orig, false, data_1.default.shipclass.schooner.tank, true);
             var transit = nav.getFastestTransitTo(dest);
             if (transit) {
                 var rate = 3 * window.game.planets[orig].buyPrice('fuel');
-                var cost = util.fuzz(Math.max(500, Math.ceil(transit.au * rate)), 0.05);
-                var turns = Math.ceil(transit.turns * 1.5);
+                var cost = Math.ceil(util.fuzz(Math.max(500, Math.ceil(transit.au * rate)), 0.05));
+                var turns = Math.ceil(transit.turns * 2);
                 return { reward: cost, turns: turns };
             }
             else {
-                throw new Error('no transits possible');
+                throw new Error("no transits possible between " + orig + " and " + dest);
             }
         };
         Object.defineProperty(Passengers.prototype, "destination", {

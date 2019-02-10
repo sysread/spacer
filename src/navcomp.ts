@@ -134,20 +134,22 @@ export class Course {
 
 
 export class NavComp {
-  player:     Person;
-  orig:       t.body;
-  showAll:    boolean;
-  fuelTarget: number;
-  max:        number;
-  data:       undefined | any;
-  dt:         undefined | number;
+  player:      Person;
+  orig:        t.body;
+  showAll:     boolean;
+  fuelTarget?: number;
+  max:         number;
+  data:        undefined | any;
+  dt:          undefined | number;
+  nominal:     boolean;
 
-  constructor(player: Person, orig: t.body, showAll?: boolean, fuelTarget?: number) {
+  constructor(player: Person, orig: t.body, showAll?: boolean, fuelTarget?: number, nominal?: boolean) {
     this.player     = player;
     this.orig       = orig;
     this.showAll    = showAll || false;
-    this.fuelTarget = fuelTarget ? Math.min(fuelTarget, player.ship.fuel) : player.ship.fuel;
+    this.fuelTarget = fuelTarget;
     this.max        = player.maxAcceleration();
+    this.nominal    = nominal ? true : false;
   }
 
   setFuelTarget(units: number) {
@@ -172,6 +174,7 @@ export class NavComp {
     return this.data[dest];
   }
 
+  // TODO this does not match Course.calculateAcceleration() in the slightest.
   guestimate(dest: t.body) {
     const max_turns  = data.turns_per_day * 365;
     const start_pos  = system.position(this.orig);
@@ -211,15 +214,39 @@ export class NavComp {
     }
   }
 
+  getShipAcceleration() {
+    if (this.nominal) {
+      return Physics.deltav(this.player.ship.thrust, this.player.ship.currentMass())
+    } else {
+      return this.player.shipAcceleration();
+    }
+  }
+
+  getFuelTarget() {
+    if (!this.nominal && this.fuelTarget) {
+      return Math.min(this.fuelTarget, this.player.ship.fuel);
+    } else {
+      return this.player.ship.tank;
+    }
+  }
+
+  getShipMass() {
+    if (this.nominal) {
+      return this.player.ship.nominalMass(true);;
+    } else {
+      return this.player.ship.currentMass();
+    }
+  }
+
   *astrogator(destination: t.body) {
     const orig     = system.orbit_by_turns(this.orig);
     const dest     = system.orbit_by_turns(destination);
     const vInit    = Vec.div_scalar( Vec.sub(orig[1], orig[0]), SPT );
-    const bestAcc  = Math.min(this.player.maxAcceleration(), this.player.shipAcceleration());
-    const mass     = this.player.ship.currentMass();
+    const bestAcc  = Math.min(this.player.maxAcceleration(), this.getShipAcceleration());
     const fuelrate = this.player.ship.fuelrate;
     const thrust   = this.player.ship.thrust;
-    const fuel     = this.fuelTarget;
+    const fuel     = this.getFuelTarget();
+    const mass     = this.getShipMass();
 
     let prevFuelUsed;
 

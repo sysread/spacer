@@ -135,12 +135,13 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     }());
     exports.Course = Course;
     var NavComp = /** @class */ (function () {
-        function NavComp(player, orig, showAll, fuelTarget) {
+        function NavComp(player, orig, showAll, fuelTarget, nominal) {
             this.player = player;
             this.orig = orig;
             this.showAll = showAll || false;
-            this.fuelTarget = fuelTarget ? Math.min(fuelTarget, player.ship.fuel) : player.ship.fuel;
+            this.fuelTarget = fuelTarget;
             this.max = player.maxAcceleration();
+            this.nominal = nominal ? true : false;
         }
         NavComp.prototype.setFuelTarget = function (units) {
             this.fuelTarget = Math.min(units, this.player.ship.fuel);
@@ -169,6 +170,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             }
             return this.data[dest];
         };
+        // TODO this does not match Course.calculateAcceleration() in the slightest.
         NavComp.prototype.guestimate = function (dest) {
             var max_turns = data_1.default.turns_per_day * 365;
             var start_pos = system_1.default.position(this.orig);
@@ -214,19 +216,44 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 finally { if (e_2) throw e_2.error; }
             }
         };
+        NavComp.prototype.getShipAcceleration = function () {
+            if (this.nominal) {
+                return physics_1.default.deltav(this.player.ship.thrust, this.player.ship.currentMass());
+            }
+            else {
+                return this.player.shipAcceleration();
+            }
+        };
+        NavComp.prototype.getFuelTarget = function () {
+            if (!this.nominal && this.fuelTarget) {
+                return Math.min(this.fuelTarget, this.player.ship.fuel);
+            }
+            else {
+                return this.player.ship.tank;
+            }
+        };
+        NavComp.prototype.getShipMass = function () {
+            if (this.nominal) {
+                return this.player.ship.nominalMass(true);
+                ;
+            }
+            else {
+                return this.player.ship.currentMass();
+            }
+        };
         NavComp.prototype.astrogator = function (destination) {
-            var orig, dest, vInit, bestAcc, mass, fuelrate, thrust, fuel, prevFuelUsed, turns, distance, fuelPerTurn, thrustPerTurn, availAcc, maxAccel, vFinal, target, agent, course, a, fuelUsed, fuelUsedPerTurn;
+            var orig, dest, vInit, bestAcc, fuelrate, thrust, fuel, mass, prevFuelUsed, turns, distance, fuelPerTurn, thrustPerTurn, availAcc, maxAccel, vFinal, target, agent, course, a, fuelUsed, fuelUsedPerTurn;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         orig = system_1.default.orbit_by_turns(this.orig);
                         dest = system_1.default.orbit_by_turns(destination);
                         vInit = Vec.div_scalar(Vec.sub(orig[1], orig[0]), SPT);
-                        bestAcc = Math.min(this.player.maxAcceleration(), this.player.shipAcceleration());
-                        mass = this.player.ship.currentMass();
+                        bestAcc = Math.min(this.player.maxAcceleration(), this.getShipAcceleration());
                         fuelrate = this.player.ship.fuelrate;
                         thrust = this.player.ship.thrust;
-                        fuel = this.fuelTarget;
+                        fuel = this.getFuelTarget();
+                        mass = this.getShipMass();
                         turns = 1;
                         _a.label = 1;
                     case 1:
