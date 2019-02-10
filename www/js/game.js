@@ -37,18 +37,6 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
             this.conflicts = {};
             this.notifications = [];
             this.reset_date();
-            this.turnEvent = new CustomEvent('turn', {
-                detail: {
-                    get turn() { return game.turns; },
-                    get isNewDay() { return game.turns % data_1.default.turns_per_day == 0; },
-                },
-            });
-            this.dayEvent = new CustomEvent('day', {
-                detail: {
-                    get turn() { return game.turns; },
-                    get isNewDay() { return game.turns % data_1.default.turns_per_day == 0; },
-                },
-            });
         }
         Game.prototype.init = function () {
             var saved = window.localStorage.getItem('game');
@@ -254,9 +242,19 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                 // Remove finished conflicts
                 this.finish_conflicts();
                 // Dispatch events
-                window.dispatchEvent(this.turnEvent);
+                window.dispatchEvent(new CustomEvent("turn", {
+                    detail: {
+                        turn: this.turns,
+                        isNewDay: this.turns % data_1.default.turns_per_day == 0,
+                    }
+                }));
                 if (this.turns % data_1.default.turns_per_day) {
-                    window.dispatchEvent(this.dayEvent);
+                    window.dispatchEvent(new CustomEvent("day", {
+                        detail: {
+                            turn: this.turns,
+                            isNewDay: this.turns % data_1.default.turns_per_day == 0,
+                        }
+                    }));
                 }
             }
             if (!no_save) {
@@ -278,7 +276,11 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                 this.transit_plan = undefined;
             }
             if (this.locus) {
-                window.dispatchEvent(new CustomEvent('arrived', { detail: { dest: this.locus } }));
+                window.dispatchEvent(new CustomEvent('arrived', {
+                    detail: {
+                        dest: this.locus
+                    }
+                }));
             }
         };
         Game.prototype.trade_routes = function () {

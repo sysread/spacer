@@ -42,9 +42,6 @@ interface ImportReport {
 const planets: {[key: string]: Planet} = {};
 
 class Game {
-  turnEvent:     Event;
-  dayEvent:      Event;
-
   turns:         number = 0;
   date:          Date = new Date(data.start_date);
   _player:       Person | null = null;
@@ -58,20 +55,6 @@ class Game {
 
   constructor() {
     this.reset_date();
-
-    this.turnEvent = new CustomEvent('turn', {
-      detail: {
-        get turn()     { return game.turns },
-        get isNewDay() { return game.turns % data.turns_per_day == 0 },
-      },
-    });
-
-    this.dayEvent = new CustomEvent('day', {
-      detail: {
-        get turn()     { return game.turns },
-        get isNewDay() { return game.turns % data.turns_per_day == 0 },
-      },
-    });
   }
 
   init() {
@@ -255,10 +238,20 @@ class Game {
       this.finish_conflicts();
 
       // Dispatch events
-      window.dispatchEvent(this.turnEvent);
+      window.dispatchEvent(new CustomEvent("turn", {
+        detail: {
+          turn:     this.turns,
+          isNewDay: this.turns % data.turns_per_day == 0,
+        }
+      }));
 
       if (this.turns % data.turns_per_day) {
-        window.dispatchEvent(this.dayEvent);
+        window.dispatchEvent(new CustomEvent("day", {
+          detail: {
+            turn:     this.turns,
+            isNewDay: this.turns % data.turns_per_day == 0,
+          }
+        }))
       }
     }
 
@@ -287,7 +280,11 @@ class Game {
     }
 
     if (this.locus) {
-      window.dispatchEvent(new CustomEvent('arrived', {detail: {dest: this.locus}}));
+      window.dispatchEvent(new CustomEvent('arrived', {
+        detail: {
+          dest: this.locus
+        }
+      }));
     }
   }
 
