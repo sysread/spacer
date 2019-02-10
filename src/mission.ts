@@ -258,7 +258,7 @@ export class Passengers extends Mission {
 
   static mission_parameters(orig: t.body, dest: t.body) {
     const nav = new NavComp(window.game.player, orig, false, data.shipclass.schooner.tank);
-    const transit = nav.getFastestTransitTo(dest);
+    const transit = nav.guestimate(dest);
 
     if (transit) {
       const rate  = 3 * window.game.planets[orig].buyPrice('fuel');

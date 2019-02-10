@@ -172,6 +172,38 @@ export class NavComp {
     return this.data[dest];
   }
 
+  guestimate(dest: t.body) {
+    const max_turns  = data.turns_per_day * 365;
+    const start_pos  = system.position(this.orig);
+    const start_time = system.time.getTime();
+
+    for (let i = 1; i < max_turns; ++i) {
+      const t      = i * data.hours_per_turn * 3600;
+      const end    = system.position(dest, start_time + t);
+      const s      = Physics.distance(start_pos, end);
+      const t_flip = Math.ceil(t / 2);
+      const s_flip = s / 2;
+      const v      = (2 * s_flip) / t_flip;
+      const a      = Math.abs(((2 * s_flip) / (t_flip * t_flip)) - ((2 * v) / t_flip));
+
+      if (a <= this.max) {
+        const target: Body = [end, [0, 0, 0]];
+        const agent:  Body = [start_pos, [0, 0, 0]];
+        const course = new Course(target, agent, a, i, this.dt);
+
+        return new TransitPlan({
+          origin: this.orig,
+          dest:   dest,
+          start:  start_pos,
+          end:    end,
+          dist:   s,
+          fuel:   this.player.ship.burnRate(a) * i,
+          course: course,
+        });
+      }
+    }
+  }
+
   getFastestTransitTo(dest: t.body) {
     const transits = this.astrogator(dest);
     for (const transit of transits) {

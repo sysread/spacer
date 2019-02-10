@@ -169,6 +169,34 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             }
             return this.data[dest];
         };
+        NavComp.prototype.guestimate = function (dest) {
+            var max_turns = data_1.default.turns_per_day * 365;
+            var start_pos = system_1.default.position(this.orig);
+            var start_time = system_1.default.time.getTime();
+            for (var i = 1; i < max_turns; ++i) {
+                var t_2 = i * data_1.default.hours_per_turn * 3600;
+                var end = system_1.default.position(dest, start_time + t_2);
+                var s = physics_1.default.distance(start_pos, end);
+                var t_flip = Math.ceil(t_2 / 2);
+                var s_flip = s / 2;
+                var v = (2 * s_flip) / t_flip;
+                var a = Math.abs(((2 * s_flip) / (t_flip * t_flip)) - ((2 * v) / t_flip));
+                if (a <= this.max) {
+                    var target = [end, [0, 0, 0]];
+                    var agent = [start_pos, [0, 0, 0]];
+                    var course = new Course(target, agent, a, i, this.dt);
+                    return new transitplan_1.TransitPlan({
+                        origin: this.orig,
+                        dest: dest,
+                        start: start_pos,
+                        end: end,
+                        dist: s,
+                        fuel: this.player.ship.burnRate(a) * i,
+                        course: course,
+                    });
+                }
+            }
+        };
         NavComp.prototype.getFastestTransitTo = function (dest) {
             var e_2, _a;
             var transits = this.astrogator(dest);

@@ -285,7 +285,7 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                                 if (profitPerUnit <= 0) {
                                     continue;
                                 }
-                                var transit = navComp.getFastestTransitTo(dest);
+                                var transit = navComp.guestimate(dest);
                                 if (transit == undefined) {
                                     continue;
                                 }
@@ -332,7 +332,7 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
             try {
                 for (var _b = __values(t.bodies), _c = _b.next(); !_c.done; _c = _b.next()) {
                     var dest = _c.value;
-                    var transit = navComp.getFastestTransitTo(dest);
+                    var transit = navComp.guestimate(dest);
                     if (transit == undefined)
                         continue;
                     if (best != undefined && best.turns > transit.turns) {

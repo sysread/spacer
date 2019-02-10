@@ -234,7 +234,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
         }
         Passengers.mission_parameters = function (orig, dest) {
             var nav = new navcomp_1.NavComp(window.game.player, orig, false, data_1.default.shipclass.schooner.tank);
-            var transit = nav.getFastestTransitTo(dest);
+            var transit = nav.guestimate(dest);
             if (transit) {
                 var rate = 3 * window.game.planets[orig].buyPrice('fuel');
                 var cost = util.fuzz(Math.max(500, Math.ceil(transit.au * rate)), 0.05);

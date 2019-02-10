@@ -348,10 +348,13 @@ define(function(require, exports, module) {
             {x: info.coords[0], y: info.coords[1]},
             {
               duration: intvl,
-              easing:   'linear',
-              step:     (now, fx) => {
+              easing: 'linear',
+              step: (now, fx) => {
                 if (!isNaN(now))
                   fx.elem.setAttribute(fx.prop, now);
+              },
+              complete: () => {
+                this.$nextTick(() => this.interval());
               },
             }
           );
@@ -413,7 +416,8 @@ define(function(require, exports, module) {
       resume() {
         this.paused = false;
         console.log('transit resumed');
-        this.intvl = setInterval(() => this.interval(), this.intvl_ms);
+        //this.intvl = setInterval(() => this.interval(), this.intvl_ms);
+        this.$nextTick(() => this.interval());
       },
 
       complete_encounter() {
