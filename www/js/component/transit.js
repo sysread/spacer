@@ -32,13 +32,34 @@ define(function(require, exports, module) {
         paused:           true,//false,
         stoppedBy:        {'pirate': 0, 'police': 0},
         encounter:        null,
-        intvl:            null,
         orbits:           {},
         objects:          {},
         sun:              null,
         ship:             [0, 0],
         path_index:       0,
       };
+    },
+
+    /*
+     * Add an event listener to animate the plot on each turn.
+     */
+    mounted() {
+      window.addEventListener('turn', () => {
+        if (!this.plan.is_complete) {
+          // Update bodies' positions
+          for (const body of this.bodies)
+            this.animate(body);
+
+          // Update the sun and ship
+          this.animate('sun');
+          this.animate('ship', () => {
+            this.$nextTick(() => this.interval());
+          });
+        }
+        else {
+          this.complete();
+        }
+      });
     },
 
     computed: {
@@ -48,6 +69,7 @@ define(function(require, exports, module) {
       daysLeft()     { return Math.floor(this.plan.left * this.data.hours_per_turn / 24) },
       percent()      { return this.plan.pct_complete },
       distance()     { return util.R(this.plan.auRemaining()) },
+      is_next_day()  { return this.current_turn % data.turns_per_day == 0 },
 
       is_zoomed_in() {
         return this.plan.turns < (10 * data.turns_per_day);
@@ -243,32 +265,25 @@ define(function(require, exports, module) {
         }
       },
 
+      /*
+       * Runs a single turn and checks for the chance of in-transit events,
+       * such as a patrol or piracy encounter.
+       */
       interval() {
-        if (this.game.player.ship.isDestroyed)
+        if (this.game.player.ship.isDestroyed) {
           this.$emit('open', 'newgame');
+          return;
+        }
 
         if (this.paused || this.encounter) {
           return;
         }
 
-        if (this.plan.is_started && this.current_turn % data.turns_per_day == 0) {
+        if (this.plan.is_started && this.is_next_day) {
           if (this.inspectionChance() || this.piracyChance()) {
             this.pause();
             return;
           }
-        }
-
-        if (this.plan.is_complete) {
-          clearInterval(this.intvl);
-
-          const [x, y] = this.layout.scale_point(this.plan.end)
-          $(this.$refs['ship']).animate({x: x, y: y}, this.intvl_ms, 'linear', () => {
-            this.$nextTick(() => {
-              this.complete();
-            });
-          });
-
-          return;
         }
 
         if (!this.plan.is_started) {
@@ -276,25 +291,21 @@ define(function(require, exports, module) {
         }
 
         this.transit.turn();
-
-        // Update bodies' positions
-        for (const body of this.bodies)
-          this.animate(body);
-
-        // Update the sun and ship
-        this.animate('sun');
-        this.animate('ship');
       },
 
+      // Sets the initial positions of bodies on the nav plot.
       set_initial_positions() {
-        this.set_position('ship');
-        this.set_position('sun');
-
-        // Set initial positions
         for (const body of this.bodies)
           this.set_position(body);
+
+        this.set_position('sun');
+        this.set_position('ship');
       },
 
+      /*
+       * Immediately sets the current position of the ship, sun, and celestial
+       * bodies, without animation or easing.
+       */
       set_position(body) {
         const info = this.transit.body(body);
 
@@ -336,7 +347,12 @@ define(function(require, exports, module) {
         }
       },
 
-      animate(body) {
+      /*
+       * Animates the movement of bodies on the map. When called with a
+       * function as the second argument, the on-complete event for the
+       * animation will trigger it.
+       */
+      animate(body, on_complete) {
         const intvl = this.intvl_ms;
         const info  = this.transit.body(body);
 
@@ -353,9 +369,7 @@ define(function(require, exports, module) {
                 if (!isNaN(now))
                   fx.elem.setAttribute(fx.prop, now);
               },
-              complete: () => {
-                this.$nextTick(() => this.interval());
-              },
+              complete: () => on_complete(),
             }
           );
         }
@@ -400,23 +414,33 @@ define(function(require, exports, module) {
         }
       },
 
+      /*
+       * Animates the final arrival to the destination body. On that tween's
+       * completion, triggers `game.arrive()` and opens the destination's
+       * summary page.
+       */
       complete() {
-        this.game.arrive();
-        this.game.unfreeze();
-        this.game.save_game();
-        this.$emit('open', 'summary');
+        // animate arrival
+        const [x, y] = this.layout.scale_point(this.plan.end)
+        $(this.$refs['ship']).animate({x: x, y: y}, this.intvl_ms, 'linear', () => {
+          this.$nextTick(() => {
+            // trigger actual arrival
+            this.game.arrive();
+            this.game.unfreeze();
+            this.game.save_game();
+            this.$emit('open', 'summary');
+          });
+        });
       },
 
       pause() {
         this.paused = true;
-        clearInterval(this.intvl);
         console.log('transit paused');
       },
 
       resume() {
         this.paused = false;
         console.log('transit resumed');
-        //this.intvl = setInterval(() => this.interval(), this.intvl_ms);
         this.$nextTick(() => this.interval());
       },
 
@@ -513,7 +537,7 @@ define(function(require, exports, module) {
           </tr>
           <tr v-if="!show_plot()">
             <td colspan="3">
-              <progress-bar width=100 :percent="percent" :frame_rate="intvl" />
+              <progress-bar width=100 :percent="percent" :frame_rate="intvl_ms" />
             </td>
           </tr>
         </table>
