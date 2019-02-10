@@ -48,13 +48,13 @@ define(function(require, exports, module) {
         if (!this.plan.is_complete) {
           // Update bodies' positions
           for (const body of this.bodies)
-            this.animate(body);
+            this.set_position(body);
 
           // Update the sun and ship
-          this.animate('sun');
-          this.animate('ship', () => {
-            this.$nextTick(() => this.interval());
-          });
+          this.set_position('sun');
+          this.set_position('ship');
+
+          this.$nextTick(() => this.interval());
         }
         else {
           this.complete();
@@ -363,6 +363,7 @@ define(function(require, exports, module) {
           $(this.$refs['ship']).animate(
             {x: info.coords[0], y: info.coords[1]},
             {
+              queue: false,
               duration: intvl,
               easing: 'linear',
               step: (now, fx) => {
@@ -390,8 +391,11 @@ define(function(require, exports, module) {
                 cy: info.coords[1],
                 r:  this.patrol_radius(body)
               },
-              intvl,
-              'linear',
+              {
+                queue:    false,
+                duration: intvl,
+                easing:   'linear',
+              }
             );
           }
 
@@ -402,6 +406,7 @@ define(function(require, exports, module) {
                 y: info.coords[1] + info.diameter / 3,
               },
               {
+                queue:    false,
                 duration: intvl,
                 easing:   'linear',
                 step:     (now, fx) => {

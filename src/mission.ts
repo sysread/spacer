@@ -13,8 +13,22 @@ import * as util from './util';
 declare var console: any;
 declare var window: {
   game: any;
-  addEventListener: (ev: string, cb: any) => void;
+  addEventListener: (ev: string, cb: any, opt?: any) => void;
   removeEventListener: (ev: string, cb: any) => void;
+}
+
+
+function watch(event: string, cb: Function) {
+  const opt = {
+    passive: true,
+    once: true,
+  };
+
+  window.addEventListener(event, (ev: any) => {
+    if (cb(ev)) {
+      watch(event, cb);
+    }
+  }, opt);
 }
 
 
@@ -164,7 +178,7 @@ export abstract class Mission {
 
   get end_date(): string {
     const date = new Date(window.game.date);
-    date.setDate(date.getDate() + (this.turns_left * data.turns_per_day));
+    date.setTime(date.getTime() + (this.turns_left * data.hours_per_turn * 60 * 60 * 1000));
     return window.game.strdate(date);
   }
 
@@ -194,11 +208,14 @@ export abstract class Mission {
     // ...and ask the player object to retain it
     window.game.player.acceptMission(this);
 
-    window.addEventListener('turn', () => {
-      if (this.turns_left <= 0) {
-        console.log('mission complete:', this.title);
+    watch('turn', () => {
+      if (this.turns_left == 0) {
+        console.log('mission over:', this.title);
         this.complete();
+        return false;
       }
+
+      return true;
     });
   }
 
@@ -208,12 +225,8 @@ export abstract class Mission {
       return;
     }
 
-    // TODO notification system
-    if (this.turns_left >= 0) {
-      this.finish();
-    } else {
-      this.cancel();
-    }
+    window.game.notify(`Contract expired: ${this.short_title}`);
+    this.cancel();
   }
 
   finish() {
@@ -258,7 +271,7 @@ export class Passengers extends Mission {
 
   static mission_parameters(orig: t.body, dest: t.body) {
     const nav = new NavComp(window.game.player, orig, false, data.shipclass.schooner.tank);
-    const transit = nav.guestimate(dest);
+    const transit = nav.getFastestTransitTo(dest);
 
     if (transit) {
       const rate  = 3 * window.game.planets[orig].buyPrice('fuel');
@@ -308,12 +321,14 @@ export class Passengers extends Mission {
   accept() {
     super.accept();
 
-    window.addEventListener('arrived', (event: CustomEvent) => {
+    watch('arrived', (event: CustomEvent) => {
       if (!this.is_expired && event.detail.dest == this.dest) {
         console.log("passengers mission complete:", this.short_title);
-        this.setStatus(Status.Complete);
-        this.complete();
+        this.finish();
+        return false;
       }
+
+      return true;
     });
   }
 }
@@ -373,7 +388,7 @@ export class Smuggler extends Mission {
   accept() {
     super.accept();
 
-    window.addEventListener('arrived', (event: CustomEvent) => {
+    watch('arrived', (event: CustomEvent) => {
       if (!this.is_expired && !this.is_complete && event.detail.dest == this.issuer) {
         const amt = Math.min(this.amt_left, window.game.player.ship.cargo.count(this.item));
 
@@ -383,21 +398,24 @@ export class Smuggler extends Mission {
           window.game.planets[this.issuer].sell(this.item, amt);
 
           if (this.amt_left == 0) {
-            this.setStatus(Status.Complete);
-            this.complete();
+            this.finish();
+            return false;
           }
           else {
             window.game.notify(`You have delivered ${amt} units of ${this.item}. ${this.description_remaining}.`);
+            return true;
           }
         }
       }
     });
 
-    window.addEventListener('caughtSmuggling', (event: CustomEvent) => {
+    watch('caughtSmuggling', (event: CustomEvent) => {
       if (!this.is_expired && !this.is_complete) {
-        this.setStatus(Status.Failure);
-        this.complete();
+        this.cancel();
+        return false;
       }
+
+      return true;
     });
   }
 }
