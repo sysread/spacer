@@ -33,6 +33,7 @@
     },
     "devDependencies": {
         "@types/jquery": "^3.3.29",
+        "@types/pixi.js": "^4.8.0",
         "typescript": "^3.2.2"
     }
 }

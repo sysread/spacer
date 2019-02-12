@@ -35,7 +35,7 @@ define(function(require, exports, module) {
       };
 
       if (window.DEV) {
-        pages.Debug = 'test';
+        pages.Debug = 'debug';
       }
 
       return {
