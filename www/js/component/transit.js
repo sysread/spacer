@@ -28,15 +28,12 @@ define(function(require, exports, module) {
     data() {
       return {
         layout_target_id: 'transit-plot-root',
-        transit:          null,
-        paused:           true,//false,
-        stoppedBy:        {'pirate': 0, 'police': 0},
-        encounter:        null,
-        orbits:           {},
-        objects:          {},
-        sun:              null,
-        ship:             [0, 0],
-        path_index:       0,
+        transit:   null,
+        paused:    false,
+        stoppedBy: {'pirate': 0, 'police': 0},
+        encounter: null,
+        orbits:    {},
+        objects:   {},
       };
     },
 
@@ -129,7 +126,7 @@ define(function(require, exports, module) {
                 // add banning body's patrol rate using the distance to the
                 // banned body, rather than the distance to the banner's
                 // planet.
-                rates[banner] = this.game.planets[body].patrolRate(au);
+                rates[banner] += this.game.planets[body].patrolRate(au);
               }
             }
           }
@@ -457,7 +454,6 @@ define(function(require, exports, module) {
         const bodies = {};
 
         for (const body of Object.keys(ranges)) {
-          const au = ranges[body] / Physics.AU;
           bodies[body] = ranges[body];
         }
 
