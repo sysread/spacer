@@ -18,6 +18,7 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
     SolarSystem_1 = __importDefault(SolarSystem_1);
     var system = new SolarSystem_1.default;
     var ms_per_hour = 60 * 60 * 1000;
+    var ms_per_turn = data_1.default.hours_per_turn * ms_per_hour;
     var System = /** @class */ (function () {
         function System() {
             var _this = this;
@@ -26,10 +27,30 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             this.pos = {};
             this.orbits = {};
             window.addEventListener("turn", function () {
+                var e_1, _a;
                 _this.orbits = {};
-                if (window.game.turns % data_1.default.turns_per_day == 0) {
-                    _this.cache = {};
-                    _this.pos = {};
+                _this.pos = {};
+                var turns = data_1.default.turns_per_day * 365 - 1;
+                var date = turns * ms_per_turn + _this.time.getTime();
+                try {
+                    for (var _b = __values(_this.all_bodies()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                        var body = _c.value;
+                        var key = name + ".orbit.turns";
+                        if (_this.cache[key] == undefined) {
+                            _this.orbit_by_turns(body);
+                        }
+                        else {
+                            _this.cache[key].shift();
+                            _this.cache[key].push(_this.position(body, date));
+                        }
+                    }
+                }
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                finally {
+                    try {
+                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    }
+                    finally { if (e_1) throw e_1.error; }
                 }
             });
         }
@@ -44,7 +65,7 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             return Object.keys(data_1.default.bodies);
         };
         System.prototype.all_bodies = function () {
-            var e_1, _a;
+            var e_2, _a;
             var bodies = {};
             try {
                 for (var _b = __values(this.bodies()), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -53,12 +74,12 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
                     bodies[this.central(body)] = true;
                 }
             }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_1) throw e_1.error; }
+                finally { if (e_2) throw e_2.error; }
             }
             return Object.keys(bodies);
         };
@@ -125,7 +146,7 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             throw new Error(name + " does not have parameters for calculation of gravity");
         };
         System.prototype.ranges = function (point) {
-            var e_2, _a;
+            var e_3, _a;
             var ranges = {};
             try {
                 for (var _b = __values(this.bodies()), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -133,17 +154,17 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
                     ranges[body] = physics_1.default.distance(point, this.position(body));
                 }
             }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_2) throw e_2.error; }
+                finally { if (e_3) throw e_3.error; }
             }
             return ranges;
         };
         System.prototype.closestBodyToPoint = function (point) {
-            var e_3, _a;
+            var e_4, _a;
             var dist, closest;
             try {
                 for (var _b = __values(this.bodies()), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -155,12 +176,12 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
                     }
                 }
             }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
                 }
-                finally { if (e_3) throw e_3.error; }
+                finally { if (e_4) throw e_4.error; }
             }
             return [closest, dist];
         };
@@ -191,13 +212,12 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
         System.prototype.orbit_by_turns = function (name) {
             var key = name + ".orbit.turns";
             if (this.cache[key] == undefined) {
-                var inc = data_1.default.hours_per_turn * 60 * 60 * 1000;
                 var periods = data_1.default.turns_per_day * 365;
                 var points = [];
                 var date = this.time.getTime();
                 for (var i = 0; i < periods; ++i) {
                     points.push(this.position(name, date));
-                    date += inc;
+                    date += ms_per_turn;
                 }
                 this.cache[key] = points;
             }

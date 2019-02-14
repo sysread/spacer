@@ -17,6 +17,7 @@ declare var window: {
 
 const system = new SolarSystem;
 const ms_per_hour = 60 * 60 * 1000;
+const ms_per_turn = data.hours_per_turn * ms_per_hour;
 
 
 interface OrbitCache {
@@ -39,10 +40,20 @@ class System {
   constructor() {
     window.addEventListener("turn", () => {
       this.orbits = {};
+      this.pos = {};
 
-      if (window.game.turns % data.turns_per_day == 0) {
-        this.cache = {};
-        this.pos = {};
+      const turns = data.turns_per_day * 365 - 1;
+      const date  = turns * ms_per_turn + this.time.getTime();
+
+      for (const body of this.all_bodies()) {
+        const key = `${name}.orbit.turns`;
+
+        if (this.cache[key] == undefined) {
+          this.orbit_by_turns(body);
+        } else {
+          this.cache[key].shift();
+          this.cache[key].push(this.position(body, date));
+        }
       }
     });
   }
@@ -203,14 +214,14 @@ class System {
     const key = `${name}.orbit.turns`;
 
     if (this.cache[key] == undefined) {
-      const inc = data.hours_per_turn * 60 * 60 * 1000;
       const periods = data.turns_per_day * 365;
-      const points = [];
+      const points  = [];
+
       let date = this.time.getTime();
 
       for (let i = 0; i < periods; ++i) {
         points.push(this.position(name, date));
-        date += inc;
+        date += ms_per_turn;
       }
 
       this.cache[key] = points;
