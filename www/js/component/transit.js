@@ -66,9 +66,9 @@ define(function(require, exports, module) {
     data() {
       // set initial values
       const [x, y] = this.layout.scale_point(this.path[0]);
-      const d = this.layout.scale_body_diameter(this.body);
+      const d  = this.layout.scale_body_diameter(this.body);
       const pr = game.planets[this.body] ? game.planets[this.body].patrolRadius() : 0;
-      const p = this.layout.scale_length(pr * Physics.AU);
+      const p  = this.layout.scale_length(pr * Physics.AU);
 
       return {
         x:  x,
@@ -87,9 +87,9 @@ define(function(require, exports, module) {
     watch: {
       turn() {
         const [x, y] = this.layout.scale_point(this.path[this.turn]);
-        const d = this.layout.scale_body_diameter(this.body);
+        const d  = this.layout.scale_body_diameter(this.body);
         const pr = this.game.planets[this.body] ? this.game.planets[this.body].patrolRadius() : 0;
-        const p = this.layout.scale_length(pr * Physics.AU);
+        const p  = this.layout.scale_length(pr * Physics.AU);
 
         TweenMax.to(this.$data, intvl_ms, {
           x:  x,
@@ -117,7 +117,7 @@ define(function(require, exports, module) {
   });
 
 
-  Vue.component('transit', {
+  Vue.component('Transit', {
     mixins: [ Layout ],
 
     data() {
@@ -405,7 +405,7 @@ define(function(require, exports, module) {
 
         this.plan.turn();
         this.game.player.ship.burn(this.plan.accel);
-        this.game.turn(1, true);
+        setTimeout(() => this.game.turn(1, true), 50);
       },
 
       complete() {
