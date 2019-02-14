@@ -275,7 +275,7 @@ class Game {
 
   arrive() {
     if (this.transit_plan) {
-      console.log('arrived:', this.transit_plan);
+      console.log('arrived:', this.transit_plan.dest);
       this.locus = this.transit_plan.dest;
       this.transit_plan = undefined;
     }
