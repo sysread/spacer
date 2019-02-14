@@ -248,17 +248,17 @@ define(function(require, exports, module) {
         if (bans.length > 0) {
           // for nearby bodies
           for (const body of Object.keys(ranges)) {
-            // for bans targeting this nearby body
+            // for bans targeting this nearby body's faction
             for (const ban of bans.filter(c => c.target == this.data.bodies[body].faction)) {
               // distance to nearby body
               const au = ranges[body] / Physics.AU;
 
               // bodies implementing the ban
               for (const banner of t.bodies.filter(b => this.data.bodies[body].faction == ban.target)) {
-                // add banning body's patrol rate using the distance to the
+                // set banning body's patrol rate using the distance to the
                 // banned body, rather than the distance to the banner's
                 // planet.
-                rates[banner] += this.game.planets[body].patrolRate(au);
+                rates[banner] = this.game.planets[body].patrolRate(au);
               }
             }
           }
