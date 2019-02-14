@@ -272,16 +272,13 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
         };
         Game.prototype.arrive = function () {
             if (this.transit_plan) {
+                console.log('arrived:', this.transit_plan);
                 this.locus = this.transit_plan.dest;
                 this.transit_plan = undefined;
             }
-            if (this.locus) {
-                window.dispatchEvent(new CustomEvent('arrived', {
-                    detail: {
-                        dest: this.locus
-                    }
-                }));
-            }
+            window.dispatchEvent(new CustomEvent('arrived', {
+                detail: { dest: this.locus }
+            }));
         };
         Game.prototype.trade_routes = function () {
             var e_4, _a, e_5, _b;

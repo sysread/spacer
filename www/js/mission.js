@@ -383,6 +383,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
                         window.game.player.ship.unloadCargo(_this.item, amt);
                         window.game.planets[_this.issuer].sell(_this.item, amt);
                         if (_this.amt_left == 0) {
+                            window.game.notify("All promised units of " + _this.item + " have been delivered.");
                             _this.finish();
                             return false;
                         }
@@ -392,6 +393,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
                         }
                     }
                 }
+                return true;
             });
             watch('caughtSmuggling', function (event) {
                 if (!_this.is_expired && !_this.is_complete) {

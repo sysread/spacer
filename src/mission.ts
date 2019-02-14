@@ -398,6 +398,7 @@ export class Smuggler extends Mission {
           window.game.planets[this.issuer].sell(this.item, amt);
 
           if (this.amt_left == 0) {
+            window.game.notify(`All promised units of ${this.item} have been delivered.`);
             this.finish();
             return false;
           }
@@ -407,6 +408,8 @@ export class Smuggler extends Mission {
           }
         }
       }
+
+      return true;
     });
 
     watch('caughtSmuggling', (event: CustomEvent) => {
