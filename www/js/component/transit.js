@@ -4,16 +4,16 @@ define(function(require, exports, module) {
   const NPC      = require('npc');
   const Ship     = require('ship');
   const Physics  = require('physics');
+  const system   = require('system');
   const Vue      = require('vendor/vue');
   const data     = require('data');
+  const game     = require('game');
   const util     = require('util');
   const t        = require('common');
   const resource = require('resource');
-  const Transit  = require('transit');
   const Layout   = require('component/layout');
 
-  const turns_per_day = 24 / data.hours_per_turn;
-
+  require('vendor/TweenMax.min');
   require('component/global');
   require('component/common');
   require('component/card');
@@ -21,67 +21,207 @@ define(function(require, exports, module) {
   require('component/navcomp');
   require('component/svg');
 
+  const intvl = 300;
+  const intvl_ms = intvl / 1000;
+
+
+  Vue.component('TransitShip', {
+    props: ['layout', 'turn', 'path'],
+
+    data() {
+      const [x, y] = this.layout.scale_point(this.path[this.turn].position);
+      return {
+        x: x,
+        y: y,
+      };
+    },
+
+    watch: {
+      turn() {
+        const [x, y] = this.layout.scale_point(this.path[this.turn].position);
+        TweenMax.to(this.$data, intvl_ms, {
+          x: x,
+          y: y,
+          ease: Linear.easeNone,
+          onComplete: () => this.$emit('tweenComplete'),
+        }).play();
+      },
+    },
+
+    template: `
+      <text text-anchor="middle"
+          alignment-baseline="middle"
+          style="fill: yellow; font: bold 14px monospace;"
+          :x="x"
+          :y="y">
+        &tridot;
+      </text>
+    `,
+  });
+
+
+  Vue.component('TransitBody', {
+    props: ['layout', 'turn', 'body', 'path', 'showpatrol', 'showlabel'],
+
+    data() {
+      // set initial values
+      const [x, y] = this.layout.scale_point(this.path[0]);
+      const d = this.layout.scale_body_diameter(this.body);
+      const pr = game.planets[this.body] ? game.planets[this.body].patrolRadius() : 0;
+      const p = this.layout.scale_length(pr * Physics.AU);
+
+      return {
+        x:  x,
+        y:  y,
+        d:  d,
+        p:  p,
+        lx: x + d + 10,
+        ly: y + d / 3,
+      };
+    },
+
+    computed: {
+      img() { return 'img/' + this.body + '.png' },
+    },
+
+    watch: {
+      turn() {
+        const [x, y] = this.layout.scale_point(this.path[this.turn]);
+        const d = this.layout.scale_body_diameter(this.body);
+        const pr = this.game.planets[this.body] ? this.game.planets[this.body].patrolRadius() : 0;
+        const p = this.layout.scale_length(pr * Physics.AU);
+
+        TweenMax.to(this.$data, intvl_ms, {
+          x:  x,
+          y:  y,
+          d:  d,
+          p:  p,
+          lx: (x + d + 10),
+          ly: (y + d / 3),
+          ease: Linear.easeNone,
+        }).play();
+      },
+    },
+
+    template: `
+      <g>
+        <circle v-if="showpatrol" fill="green" fill-opacity="0.1" :cx="x" :cy="y" :r="p" />
+
+        <image :x="x" :y="y" :width="d" :height="d" :xlink:href="img" />
+
+        <text v-if="showlabel" style="font: 14px monospace; fill: #7FDF3F" :x="lx" :y="ly">
+          {{body|caps}}
+        </text>
+      </g>
+    `,
+  });
+
 
   Vue.component('transit', {
     mixins: [ Layout ],
 
     data() {
+      const orbits = {};
+      for (const body of system.all_bodies())
+        orbits[body] = system.orbit_by_turns(body);
+
       return {
         layout_target_id: 'transit-plot-root',
         transit:   null,
-        paused:    false,
+        paused:    true,
         stoppedBy: {'pirate': 0, 'police': 0},
         encounter: null,
-        orbits:    {},
-        objects:   {},
+        orbits:    orbits,
       };
     },
 
-    /*
-     * Add an event listener to animate the plot on each turn.
-     */
-    mounted() {
-      window.addEventListener('turn', () => {
-        if (!this.plan.is_complete) {
-          // Update bodies' positions
-          for (const body of this.bodies)
-            this.animate(body);
-
-          // Update the sun and ship
-          this.animate('sun');
-          this.animate('ship', () => this.$nextTick(() => this.interval()));
-        }
-        else {
-          this.complete();
-        }
-      });
-    },
-
     computed: {
-      plan()         { return this.game.transit_plan },
-      destination()  { return this.system.name(this.plan.dest) },
-      current_turn() { return this.plan.currentTurn },
-      daysLeft()     { return Math.floor(this.plan.left * this.data.hours_per_turn / 24) },
-      percent()      { return this.plan.pct_complete },
-      distance()     { return util.R(this.plan.auRemaining()) },
-      is_next_day()  { return this.current_turn % data.turns_per_day == 0 },
+      plan()            { return this.game.transit_plan },
+      percent()         { return this.plan.pct_complete },
+      distance()        { return util.R(this.plan.auRemaining()) },
+      is_next_day()     { return this.plan.current_turn % data.turns_per_day == 0 },
+      is_zoomed_in()    { return this.plan.turns < (10 * data.turns_per_day) },
+      intvl_ms()        { return this.is_zoomed_in ? 800: 400 },
+      showPatrolRadii() { return this.layout.fov_au > 0.25 },
 
-      is_zoomed_in() {
-        return this.plan.turns < (10 * data.turns_per_day);
-      },
+      fov() {
+        const points = [];
+        const dest_central = system.central(this.plan.dest);
+        const orig_central = system.central(this.plan.origin);
 
-      intvl_ms() {
-        return this.is_zoomed_in ? 800 : 400;
+        // Moon to moon in same system
+        if (dest_central == orig_central && dest_central != 'sun') {
+          points.push(this.plan.start);
+          points.push(system.position(dest_central));
+        }
+        // Planet to its own moon
+        else if (this.plan.origin == dest_central) {
+          points.push(this.plan.start);
+          for (const body of system.bodies()) {
+            if (system.central(body) == dest_central) {
+              points.push(system.position(body));
+            }
+          }
+        }
+        // Moon to it's host planet
+        else if (this.plan.dest == orig_central) {
+          points.push(this.plan.start);
+          for (const body of system.bodies()) {
+            if (system.central(body) == orig_central) {
+              points.push(system.position(body));
+            }
+          }
+        }
+        // Cross system path
+        else {
+          points.push(Physics.centroid(this.plan.start, this.plan.coords));
+        }
+
+        points.push(this.plan.end);
+
+        // Lop off z to prevent it from affecting the distance calculation
+        const points_2d = points.map(p => [p[0], p[1], 0]);
+        const center = this.center;
+
+        const max = Math.max(...points_2d.map(p => Physics.distance(p, center)));
+        return max / Physics.AU * 1.2;
       },
 
       center() {
-        if (this.transit)
-          return this.transit.center;
-      },
+        let center;
 
-      fov() {
-        if (this.transit)
-          return this.transit.fov;
+        const dest_central = system.central(this.plan.dest);
+        const orig_central = system.central(this.plan.origin);
+        const bodies = [];
+
+        // Moon to moon in same system
+        if (dest_central == orig_central && dest_central != 'sun') {
+          bodies.push(system.position(dest_central));
+          bodies.push(this.plan.flip_point);
+          bodies.push(this.plan.start);
+        }
+        // Planet to its own moon
+        else if (window.game.locus == dest_central) {
+          bodies.push(system.position(this.plan.origin));
+          bodies.push(this.plan.flip_point);
+          bodies.push(this.plan.start);
+        }
+        // Moon to it's host planet
+        else if (this.plan.dest == orig_central) {
+          bodies.push(system.position(this.plan.dest));
+          bodies.push(this.plan.flip_point);
+          bodies.push(this.plan.start);
+        }
+        // Cross system path
+        else {
+          bodies.push(system.position(this.plan.dest));
+          bodies.push(system.position(this.plan.origin));
+          bodies.push(this.plan.coords);
+        }
+
+        bodies.push(this.plan.end);
+
+        return Physics.centroid(...bodies);
       },
 
       displayFoV() {
@@ -92,14 +232,6 @@ define(function(require, exports, module) {
         } else {
           return util.R(fov, 1) + ' AU';
         }
-      },
-
-      showPatrolRadii() {
-        return this.layout.fov_au > 0.25;
-      },
-
-      bodies() {
-        return this.system.all_bodies();
       },
 
       patrolRates() {
@@ -212,26 +344,20 @@ define(function(require, exports, module) {
     },
 
     methods: {
-      layout_set() {
-        this.transit = new Transit(this.plan, this.layout);
-        this.resume();
-      },
+      dead()      { this.$emit('open', 'newgame') },
+      show_plot() { return this.layout && !this.encounter },
 
-      dead() { this.$emit('open', 'newgame') },
+      layout_set() {
+        this.layout.set_center(this.center);
+        this.layout.set_fov_au(this.fov);
+        setTimeout(() => this.resume(), 300);
+      },
 
       bg_css() {
         return {
           width:  this.layout ? this.layout.width_px  + 'px' : '100%',
           height: this.layout ? this.layout.height_px + 'px' : '100%',
         };
-      },
-
-      show_plot() {
-        return this.layout && !this.encounter;
-      },
-
-      is_visible(body) {
-        return this.system.orbit_by_turns(body).some(p => this.layout.is_visible(p));
       },
 
       show_label(body) {
@@ -246,18 +372,10 @@ define(function(require, exports, module) {
         if (this.is_zoomed_in && central == 'sun' && central != this.plan.dest && central != this.plan.origin)
           return false;
 
-        const position = this.system.position(body);
-        const center   = central == 'sun' ? [0, 0] : this.system.position(central);
+        const position = this.orbits[body][this.plan.current_turn];
+        const center   = central == 'sun' ? [0, 0] : this.orbits[central][this.plan.current_turn];
         const distance = Physics.distance(position, center) / Physics.AU;
         return distance > this.layout.fov_au / 5;
-      },
-
-      patrol_radius(body) {
-        if (this.game.planets[body]) {
-          return this.layout.scale_length(this.game.planets[body].patrolRadius() * Physics.AU);
-        } else {
-          return;
-        }
       },
 
       /*
@@ -265,6 +383,10 @@ define(function(require, exports, module) {
        * such as a patrol or piracy encounter.
        */
       interval() {
+        if (this.plan.is_complete) {
+          this.complete();
+        }
+
         if (this.game.player.ship.isDestroyed) {
           this.$emit('open', 'newgame');
           return;
@@ -281,156 +403,16 @@ define(function(require, exports, module) {
           }
         }
 
-        if (!this.plan.is_started) {
-          this.set_initial_positions();
-        }
-
-        this.transit.turn();
+        this.plan.turn();
+        this.game.player.ship.burn(this.plan.accel);
+        this.game.turn(1, true);
       },
 
-      // Sets the initial positions of bodies on the nav plot.
-      set_initial_positions() {
-        for (const body of this.bodies)
-          this.set_position(body);
-
-        this.set_position('sun');
-        this.set_position('ship');
-      },
-
-      /*
-       * Immediately sets the current position of the ship, sun, and celestial
-       * bodies, without animation or easing.
-       */
-      set_position(body) {
-        const info = this.transit.body(body);
-
-        if (body == 'ship') {
-          // HACK: jquery.animate cannot animate svg text elements' x and y
-          // properties since they are not css. so we set them as css
-          // properties and manually step through them during animation
-          // below.
-          $(this.$refs['ship']).css({
-            x: info.coords[0] + info.diameter + 10,
-            y: info.coords[1] + info.diameter / 3,
-          });
-
-        }
-        else {
-          const props = {
-            x:      info.coords[0],
-            y:      info.coords[1],
-            width:  info.diameter,
-            height: info.diameter,
-          };
-
-          $(this.$refs[body]).attr(props);
-
-          if (this.$refs[body + '_patrol']) {
-            $(this.$refs[body + '_patrol']).attr({
-              cx: info.coords[0],
-              cy: info.coords[1],
-              r:  this.patrol_radius(body),
-            });
-          }
-
-          if (this.$refs[body + '_label']) {
-            $(this.$refs[body + '_label']).css({
-              x: info.coords[0] + info.diameter + 10,
-              y: info.coords[1] + info.diameter / 3,
-            });
-          }
-        }
-      },
-
-      /*
-       * Animates the movement of bodies on the map. When called with a
-       * function as the second argument, the on-complete event for the
-       * animation will trigger it.
-       */
-      animate(body, on_complete) {
-        const intvl = this.intvl_ms;
-        const info  = this.transit.body(body);
-
-        if (body == 'ship') {
-          // HACK PART DEUX: we use jquery.animate to step through the values,
-          // then manually set them using Element.setAttribute (sinece they are
-          // attributes, not css properties).
-          $(this.$refs['ship']).animate(
-            {x: info.coords[0], y: info.coords[1]},
-            {
-              queue: false,
-              duration: intvl,
-              easing: 'linear',
-              step: (now, fx) => {
-                if (!isNaN(now))
-                  fx.elem.setAttribute(fx.prop, now);
-              },
-              complete: () => on_complete(),
-            }
-          );
-        }
-        else {
-          const props = {
-            x:      info.coords[0],
-            y:      info.coords[1],
-            width:  info.diameter,
-            height: info.diameter,
-          };
-
-          $(this.$refs[body]).animate(props, intvl, 'linear');
-
-          if (this.$refs[body + '_patrol']) {
-            $(this.$refs[body + '_patrol']).animate(
-              {
-                cx: info.coords[0],
-                cy: info.coords[1],
-                r:  this.patrol_radius(body)
-              },
-              {
-                queue:    false,
-                duration: intvl,
-                easing:   'linear',
-              }
-            );
-          }
-
-          if (this.$refs[body + '_label']) {
-            $(this.$refs[body + '_label']).animate(
-              {
-                x: info.coords[0] + info.diameter + 10,
-                y: info.coords[1] + info.diameter / 3,
-              },
-              {
-                queue:    false,
-                duration: intvl,
-                easing:   'linear',
-                step:     (now, fx) => {
-                  if (!isNaN(now))
-                    fx.elem.setAttribute(fx.prop, now);
-                },
-              }
-            );
-          }
-        }
-      },
-
-      /*
-       * Animates the final arrival to the destination body. On that tween's
-       * completion, triggers `game.arrive()` and opens the destination's
-       * summary page.
-       */
       complete() {
-        // animate arrival
-        const [x, y] = this.layout.scale_point(this.plan.end)
-        $(this.$refs['ship']).animate({x: x, y: y}, this.intvl_ms, 'linear', () => {
-          this.$nextTick(() => {
-            // trigger actual arrival
-            this.game.arrive();
-            this.game.unfreeze();
-            this.game.save_game();
-            this.$emit('open', 'summary');
-          });
-        });
+        this.game.arrive();
+        this.game.unfreeze();
+        this.game.save_game();
+        this.$emit('open', 'summary');
       },
 
       pause() {
@@ -463,7 +445,7 @@ define(function(require, exports, module) {
       inspectionChance() {
         const patrols = this.patrolRates;
 
-        if (this.current_turn == 0) {
+        if (this.plan.current_turn == 0) {
           return false;
         }
 
@@ -545,19 +527,21 @@ define(function(require, exports, module) {
           <div class="plot-root-bg" :style="bg_css()"></div>
 
           <SvgPlot v-if="layout" :width="layout.width_px" :height="layout.height_px">
-            <image ref="sun" x="0" y="0" width="1" height="1" xlink:href="img/sun.png" />
+            <TransitBody v-if="layout"
+              v-for="body in system.all_bodies()"
+              :key="body"
+              :layout="layout"
+              :turn="plan.current_turn"
+              :body="body"
+              :path="orbits[body]"
+              :showpatrol="showPatrolRadii"
+              :showlabel="show_label(body)" />
 
-            <template v-for="body in bodies">
-              <circle v-if="showPatrolRadii" v-show="data.bodies[body] != undefined" :ref="body + '_patrol'" fill="green" fill-opacity="0.1" cx=0 cy=0 r=0 />
-              <image v-if="is_visible(body)" :ref="body" x=0 y=0 width=1 height=1 :xlink:href="'img/' + body + '.png'" />
-              <text v-if="show_label(body)" :ref="body + '_label'" style="font: 14px monospace; fill: #7FDF3F" x=0 y=0>
-                {{body|caps}}
-              </text>
-            </template>
-
-            <text ref="ship" text-anchor="middle" alignment-baseline="middle" style="fill: yellow; font: bold 14px monospace;">
-              &tridot;
-            </text>
+            <TransitShip v-if="layout"
+              :layout="layout"
+              :turn="plan.current_turn"
+              :path="plan.path"
+              @tweenComplete="interval" />
 
             <line x1=130 y1=13 :x2="patrolRate * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
             <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{patrolRate|pct(2)}}</text>
