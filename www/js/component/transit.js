@@ -255,10 +255,11 @@ define(function(require, exports, module) {
 
               // bodies implementing the ban
               for (const banner of t.bodies.filter(b => this.data.bodies[body].faction == ban.target)) {
-                // set banning body's patrol rate using the distance to the
-                // banned body, rather than the distance to the banner's
-                // planet.
-                rates[banner] = this.game.planets[body].patrolRate(au);
+                // Set banning body's patrol rate to a fractioon of their home
+                // rate (the rate around the banning body itself) using the
+                // distance to the banned body, rather than the distance to the
+                // banner's planet.
+                rates[banner] += this.game.planets[banner].patrolRate(au) / 4;
               }
             }
           }
@@ -462,6 +463,11 @@ define(function(require, exports, module) {
 
           let rate = patrols[body];
           rate *= 1 - this.game.player.ship.stealth;
+
+          // Reduce chances for each previous encounter this trip
+          for (let i = 0; i < this.stoppedBy.police; ++i) {
+            chance /= 2;
+          }
 
           if (rate > 0) {
             // Encountered a patrol
