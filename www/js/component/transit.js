@@ -466,7 +466,7 @@ define(function(require, exports, module) {
 
           // Reduce chances for each previous encounter this trip
           for (let i = 0; i < this.stoppedBy.police; ++i) {
-            chance /= 2;
+            rate /= 2;
           }
 
           if (rate > 0) {
