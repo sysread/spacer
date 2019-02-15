@@ -7,6 +7,7 @@ define(function(require, exports, module) {
   require('component/global');
   require('component/common');
 
+
   Vue.component('slider', {
     props: ['value', 'min', 'max', 'step', 'minmax'],
 
@@ -56,25 +57,35 @@ define(function(require, exports, module) {
     },
 
     template: `
-<div class="input-group">
-  <slot name="pre" />
-  <span @click="setMin" v-if="minmax" class="input-group-btn"><btn class="font-weight-bold btn-sm">&lt;&lt;</btn></span>
-  <span @click="dec" class="input-group-btn"><btn class="font-weight-bold btn-sm">&lt;</btn></span>
+      <div>
+        <div class="form-row">
+          <div class="col">
+            <input class="form-control"
+                ref="slider"
+                @change="update"
+                :value="value || 0"
+                :min="min"
+                :max="max"
+                :step="stepValue || 1"
+                type="range" />
+          </div>
+        </div>
 
-  <input
-    ref="slider"
-    class="form-control"
-    @change="update"
-    :value="value || 0"
-    :min="min"
-    :max="max"
-    :step="stepValue || 1"
-    type="range" />
+        <div class="form-row">
+          <div class="col">
+            <span @click="setMin" v-if="minmax" class="input-group-btn float-left"><btn class="font-weight-bold btn-lg">&lt;&lt;</btn></span>
+            <span @click="dec" class="input-group-btn float-left mx-3"><btn class="font-weight-bold btn-lg">&lt;</btn></span>
+          </div>
 
-  <span @click="inc" class="input-group-btn"><btn class="font-weight-bold btn-sm">&gt;</btn></span>
-  <span @click="setMax" v-if="minmax" class="input-group-btn"><btn class="font-weight-bold btn-sm">&gt;&gt;</btn></span>
-  <slot name="post" />
-</div>
+          <div class="col">&nbsp;</div>
+
+          <div class="col">
+            <span @click="inc" class="input-group-btn float-right"><btn class="font-weight-bold btn-lg">&gt;</btn></span>
+            <span @click="setMax" v-if="minmax" class="input-group-btn float-right mx-3"><btn class="font-weight-bold btn-lg">&gt;&gt;</btn></span>
+            <slot name="post" />
+          </div>
+        </div>
+      </div>
     `,
   });
 
