@@ -276,9 +276,11 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                 this.locus = this.transit_plan.dest;
                 this.transit_plan = undefined;
             }
-            window.dispatchEvent(new CustomEvent('arrived', {
-                detail: { dest: this.locus }
-            }));
+            if (this.locus) { // game has started
+                window.dispatchEvent(new CustomEvent('arrived', {
+                    detail: { dest: this.locus }
+                }));
+            }
         };
         Game.prototype.trade_routes = function () {
             var e_4, _a, e_5, _b;

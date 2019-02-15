@@ -53,7 +53,7 @@ class Ship {
      */
     window.addEventListener("arrived", (event: CustomEvent) => {
       // only trigger for player ship
-      if (this === window.game.player.ship) {
+      if (window && this === window.game.player.ship) {
         // metal to repair damage to the ship
         if (this.hasDamage()) {
           const want = this.damage.armor + this.damage.hull;

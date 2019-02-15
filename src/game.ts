@@ -280,9 +280,11 @@ class Game {
       this.transit_plan = undefined;
     }
 
-    window.dispatchEvent(new CustomEvent('arrived', {
-      detail: {dest: this.locus}
-    }));
+    if (this.locus) { // game has started
+      window.dispatchEvent(new CustomEvent('arrived', {
+        detail: {dest: this.locus}
+      }));
+    }
   }
 
 

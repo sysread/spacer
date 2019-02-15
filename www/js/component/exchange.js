@@ -72,16 +72,16 @@ define(function(require, exports, module) {
         </div>
 
         <div class="form-row">
-          <div class="col">
-            <span @click="setMin" v-if="minmax" class="input-group-btn float-left"><btn class="font-weight-bold btn-lg">&lt;&lt;</btn></span>
-            <span @click="dec" class="input-group-btn float-left mx-3"><btn class="font-weight-bold btn-lg">&lt;</btn></span>
+          <div class="col-5">
+            <span @click="setMin" v-if="minmax" class="input-group-btn float-left"><btn class="font-weight-bold btn">&lt;&lt;</btn></span>
+            <span @click="dec" class="input-group-btn float-left mx-2"><btn class="font-weight-bold btn">&lt;</btn></span>
           </div>
 
-          <div class="col">&nbsp;</div>
+          <div class="col-2">&nbsp;</div>
 
-          <div class="col">
-            <span @click="inc" class="input-group-btn float-right"><btn class="font-weight-bold btn-lg">&gt;</btn></span>
-            <span @click="setMax" v-if="minmax" class="input-group-btn float-right mx-3"><btn class="font-weight-bold btn-lg">&gt;&gt;</btn></span>
+          <div class="col-5">
+            <span @click="inc" class="input-group-btn float-right"><btn class="font-weight-bold btn">&gt;</btn></span>
+            <span @click="setMax" v-if="minmax" class="input-group-btn float-right mx-2"><btn class="font-weight-bold btn">&gt;&gt;</btn></span>
             <slot name="post" />
           </div>
         </div>

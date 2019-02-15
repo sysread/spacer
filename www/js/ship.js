@@ -44,7 +44,7 @@ define(["require", "exports", "./data", "./physics", "./store", "./util", "./com
              */
             window.addEventListener("arrived", function (event) {
                 // only trigger for player ship
-                if (_this === window.game.player.ship) {
+                if (window && _this === window.game.player.ship) {
                     // metal to repair damage to the ship
                     if (_this.hasDamage()) {
                         var want = _this.damage.armor + _this.damage.hull;
