@@ -61,11 +61,11 @@ define(function(require, exports, module) {
 
 
   Vue.component('TransitBody', {
-    props: ['layout', 'turn', 'body', 'path', 'showpatrol', 'showlabel'],
+    props: ['layout', 'turn', 'body', 'coords', 'showpatrol', 'showlabel'],
 
     data() {
       // set initial values
-      const [x, y] = this.layout.scale_point(this.path[0]);
+      const [x, y] = this.layout.scale_point(this.coords);
       const d  = this.layout.scale_body_diameter(this.body);
       const pr = game.planets[this.body] ? game.planets[this.body].patrolRadius() : 0;
       const p  = this.layout.scale_length(pr * Physics.AU);
@@ -86,7 +86,7 @@ define(function(require, exports, module) {
 
     watch: {
       turn() {
-        const [x, y] = this.layout.scale_point(this.path[this.turn]);
+        const [x, y] = this.layout.scale_point(this.coords);
         const d  = this.layout.scale_body_diameter(this.body);
         const pr = this.game.planets[this.body] ? this.game.planets[this.body].patrolRadius() : 0;
         const p  = this.layout.scale_length(pr * Physics.AU);
@@ -539,7 +539,7 @@ define(function(require, exports, module) {
               :layout="layout"
               :turn="plan.current_turn"
               :body="body"
-              :path="orbits[body]"
+              :coords="orbits[body][0] /* orbit_by_turns dynamically updates */"
               :showpatrol="showPatrolRadii"
               :showlabel="show_label(body)" />
 
