@@ -46,7 +46,7 @@ class System {
       const date  = turns * ms_per_turn + this.time.getTime();
 
       for (const body of this.all_bodies()) {
-        const key = `${name}.orbit.turns`;
+        const key = `${body}.orbit.turns`;
 
         if (this.cache[key] == undefined) {
           this.orbit_by_turns(body);

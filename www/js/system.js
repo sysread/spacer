@@ -35,7 +35,7 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
                 try {
                     for (var _b = __values(_this.all_bodies()), _c = _b.next(); !_c.done; _c = _b.next()) {
                         var body = _c.value;
-                        var key = name + ".orbit.turns";
+                        var key = body + ".orbit.turns";
                         if (_this.cache[key] == undefined) {
                             _this.orbit_by_turns(body);
                         }
