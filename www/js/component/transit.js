@@ -21,7 +21,7 @@ define(function(require, exports, module) {
   require('component/navcomp');
   require('component/svg');
 
-  const intvl = 300;
+  const intvl = 400;
   const intvl_ms = intvl / 1000;
 
 
