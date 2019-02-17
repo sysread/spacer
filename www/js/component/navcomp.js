@@ -915,6 +915,9 @@ define(function(require, exports, module) {
       },
 
       color() {
+        if (this.game.planets[this.body] && this.game.planets[this.body].hasTradeBan)
+          return 'red';
+
         const s = this.standing;
 
         if (s <= -29)
