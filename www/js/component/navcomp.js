@@ -241,8 +241,10 @@ define(function(require, exports, module) {
           points.push(this.system.position(this.dest));
         }
 
-        points.push(this.transit.end);
-        points.push(this.transit.start);
+        if (this.transit) {
+          points.push(this.transit.end);
+          points.push(this.transit.start);
+        }
 
         // Lop off z to prevent it from affecting the distance calculation
         const points_2d = points.map(p => [p[0], p[1], 0]);

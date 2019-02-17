@@ -139,13 +139,18 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             this.player = player;
             this.orig = orig;
             this.showAll = showAll || false;
-            this.fuelTarget = fuelTarget;
             this.max = player.maxAcceleration();
             this.nominal = nominal ? true : false;
+            if (!this.nominal && fuelTarget !== undefined) {
+                this.fuelTarget = Math.min(fuelTarget, this.player.ship.fuel);
+            }
+            else if (this.nominal) {
+                this.fuelTarget = this.player.ship.tank;
+            }
+            else {
+                this.fuelTarget = this.player.ship.fuel;
+            }
         }
-        NavComp.prototype.setFuelTarget = function (units) {
-            this.fuelTarget = Math.min(units, this.player.ship.fuel);
-        };
         NavComp.prototype.getTransitsTo = function (dest) {
             var e_1, _a;
             if (!this.data) {
@@ -224,14 +229,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 return this.player.shipAcceleration();
             }
         };
-        NavComp.prototype.getFuelTarget = function () {
-            if (!this.nominal && this.fuelTarget) {
-                return Math.min(this.fuelTarget, this.player.ship.fuel);
-            }
-            else {
-                return this.player.ship.tank;
-            }
-        };
         NavComp.prototype.getShipMass = function () {
             if (this.nominal) {
                 return this.player.ship.nominalMass(true);
@@ -252,7 +249,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                         bestAcc = Math.min(this.player.maxAcceleration(), this.getShipAcceleration());
                         fuelrate = this.player.ship.fuelrate;
                         thrust = this.player.ship.thrust;
-                        fuel = this.getFuelTarget();
+                        fuel = this.fuelTarget;
                         mass = this.getShipMass();
                         turns = 1;
                         _a.label = 1;

@@ -134,26 +134,29 @@ export class Course {
 
 
 export class NavComp {
-  player:      Person;
-  orig:        t.body;
-  showAll:     boolean;
-  fuelTarget?: number;
-  max:         number;
-  data:        undefined | any;
-  dt:          undefined | number;
-  nominal:     boolean;
+  player:     Person;
+  orig:       t.body;
+  showAll:    boolean;
+  fuelTarget: number;
+  max:        number;
+  data:       undefined | any;
+  dt:         undefined | number;
+  nominal:    boolean;
 
   constructor(player: Person, orig: t.body, showAll?: boolean, fuelTarget?: number, nominal?: boolean) {
-    this.player     = player;
-    this.orig       = orig;
-    this.showAll    = showAll || false;
-    this.fuelTarget = fuelTarget;
-    this.max        = player.maxAcceleration();
-    this.nominal    = nominal ? true : false;
-  }
+    this.player  = player;
+    this.orig    = orig;
+    this.showAll = showAll || false;
+    this.max     = player.maxAcceleration();
+    this.nominal = nominal ? true : false;
 
-  setFuelTarget(units: number) {
-    this.fuelTarget = Math.min(units, this.player.ship.fuel);
+    if (!this.nominal && fuelTarget !== undefined) {
+      this.fuelTarget = Math.min(fuelTarget, this.player.ship.fuel);
+    } else if (this.nominal) {
+      this.fuelTarget = this.player.ship.tank;
+    } else {
+      this.fuelTarget = this.player.ship.fuel;
+    }
   }
 
   getTransitsTo(dest: t.body) {
@@ -222,14 +225,6 @@ export class NavComp {
     }
   }
 
-  getFuelTarget() {
-    if (!this.nominal && this.fuelTarget) {
-      return Math.min(this.fuelTarget, this.player.ship.fuel);
-    } else {
-      return this.player.ship.tank;
-    }
-  }
-
   getShipMass() {
     if (this.nominal) {
       return this.player.ship.nominalMass(true);;
@@ -245,7 +240,7 @@ export class NavComp {
     const bestAcc  = Math.min(this.player.maxAcceleration(), this.getShipAcceleration());
     const fuelrate = this.player.ship.fuelrate;
     const thrust   = this.player.ship.thrust;
-    const fuel     = this.getFuelTarget();
+    const fuel     = this.fuelTarget;
     const mass     = this.getShipMass();
 
     let prevFuelUsed;
