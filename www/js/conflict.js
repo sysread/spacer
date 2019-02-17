@@ -102,15 +102,14 @@ define(["require", "exports", "./data", "./util"], function (require, exports, d
             var standing = data_1.default.factions[this.proponent].standing[this.target] || 0;
             var chance = 0;
             if (standing < 0) {
-                chance = Math.abs(standing) / 100;
+                chance = Math.abs(standing) / 2000;
             }
             else if (standing > 0) {
-                chance = (Math.log(100) - Math.log(standing)) / 100;
+                chance = (Math.log(100) - Math.log(standing)) / 2000;
             }
             else {
-                chance = 0.005;
+                chance = 0.00025;
             }
-            chance /= 10;
             return util.chance(chance);
         };
         Embargo.prototype.install_event_watchers = function () {

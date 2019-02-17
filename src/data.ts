@@ -101,7 +101,7 @@ const data = {
       consumes: {medicine: 2},
       produces: {},
       triggers: {
-        shortage:  {'water': 0.0002, 'food': 0.0001},
+        shortage:  {'water': 0.0005, 'food': 0.0003},
         surplus:   {'narcotics': 0.001},
         condition: {},
       },
@@ -114,7 +114,7 @@ const data = {
       triggers: {
         shortage:  {},
         surplus:   {},
-        condition: {'agricultural': 0.0001, 'habitable': 0.0002, 'manufacturing hub': 0.0003, 'military': 0.0004, 'black market': 0.0005},
+        condition: {'agricultural': 0.0003, 'habitable': 0.0006, 'manufacturing hub': 0.0009, 'military': 0.0008, 'black market': 0.0010},
       },
     },
 
@@ -123,9 +123,9 @@ const data = {
       consumes: {},
       produces: {water: -2, ore: -2, minerals: -1, food: -1},
       triggers: {
-        shortage:  {'food': 0.001, 'fuel': 0.0002, 'cybernetics': 0.0001},
+        shortage:  {'food': 0.002, 'fuel': 0.0004, 'cybernetics': 0.0002},
         surplus:   {},
-        condition: {'manufacturing hub': 0.0001, 'agricultural': 0.0002, 'environmental disaster': 0.0005},
+        condition: {'manufacturing hub': 0.0002, 'agricultural': 0.0004, 'environmental disaster': 0.001},
       },
     },
   },
