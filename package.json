@@ -31,6 +31,7 @@
     },
     "devDependencies": {
         "@types/jquery": "^3.3.29",
-        "typescript": "^3.2.2"
+        "typescript": "^3.2.2",
+        "vue": "^2.6.6"
     }
 }
