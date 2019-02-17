@@ -71,8 +71,8 @@ define(function(require, exports, module) {
       const p  = this.layout.scale_length(pr * Physics.AU);
 
       return {
-        x:  x,
-        y:  y,
+        x:  x - (d / 2),
+        y:  y + (d / 2),
         d:  d,
         p:  p,
         lx: x + d + 10,
