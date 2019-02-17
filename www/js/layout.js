@@ -26,6 +26,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 define(["require", "exports", "./physics", "system", "./util"], function (require, exports, physics_1, system_1, util) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     physics_1 = __importDefault(physics_1);
     system_1 = __importDefault(system_1);
     util = __importStar(util);
@@ -218,13 +219,10 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
             if (!this.elt)
                 return 0;
             var height = window.innerHeight
+                - ($('#spacer-status').outerHeight() || 0)
                 - ($('#spacer-navbar').outerHeight() || 0)
-                - ($('#spacer-navbar').outerHeight() || 0)
-                - ($('#navcomp-toolbar').outerHeight() || 0);
-            -parseInt($('#spacer-content').css('padding-top'))
-                - parseInt($('#spacer-content').css('padding-bottom'))
-                - parseInt($('#spacer-content').css('margin-top'))
-                - parseInt($('#spacer-content').css('margin-bottom'));
+                - ($('#navcomp-toolbar').outerHeight() || 0)
+                - ($('#navcomp-transit-info').outerHeight() || 0);
             var width = $(this.elt).parent().width() || 0;
             var changed = width != this.width_px || height != this.height_px;
             this.clear_zero();
@@ -241,5 +239,5 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
         Layout.SCALE_MAX_AU = 35; // 1/2 true value which is per quadrant
         return Layout;
     }());
-    return Layout;
+    exports.Layout = Layout;
 });

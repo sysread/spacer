@@ -1,10 +1,12 @@
 import Physics from './physics';
 import system from 'system';
+import game from './game';
 import { Point } from './vector';
 import * as util from './util';
 import * as t from './common';
 
-class Layout {
+
+export class Layout {
   static SCALE_DEFAULT_AU = 2;
   static SCALE_MIN_AU     = 0.00001; // 1/2 true value which is per quadrant
   static SCALE_MAX_AU     = 35;      // 1/2 true value which is per quadrant
@@ -227,15 +229,11 @@ class Layout {
     if (!this.elt)
       return 0;
 
-    const height
-      = window.innerHeight
+    const height = window.innerHeight
+      - ($('#spacer-status').outerHeight() || 0)
       - ($('#spacer-navbar').outerHeight() || 0)
-      - ($('#spacer-navbar').outerHeight() || 0)
-      - ($('#navcomp-toolbar').outerHeight() || 0);
-      - parseInt($('#spacer-content').css('padding-top'))
-      - parseInt($('#spacer-content').css('padding-bottom'))
-      - parseInt($('#spacer-content').css('margin-top'))
-      - parseInt($('#spacer-content').css('margin-bottom'));
+      - ($('#navcomp-toolbar').outerHeight() || 0)
+      - ($('#navcomp-transit-info').outerHeight() || 0);
 
     const width   = $(this.elt).parent().width() || 0;
     const changed = width != this.width_px || height != this.height_px;
@@ -253,5 +251,3 @@ class Layout {
     this.init_set = true;
   }
 }
-
-export = Layout;

@@ -63,70 +63,14 @@ define(function(require, exports, module) {
   Vue.component('TransitBody', {
     props: ['layout', 'turn', 'body', 'coords', 'showpatrol', 'showlabel'],
 
-    data() {
-      // set initial values
-      const [x, y] = this.layout.scale_point(this.coords);
-      const d  = this.layout.scale_body_diameter(this.body);
-      const pr = game.planets[this.body] ? game.planets[this.body].patrolRadius() : 0;
-      const p  = this.layout.scale_length(pr * Physics.AU);
-
-      return {
-        x:  x - (d / 2),
-        y:  y + (d / 2),
-        d:  d,
-        p:  p,
-        lx: x + d + 10,
-        ly: y + d / 3,
-      };
-    },
-
     computed: {
       img() { return 'img/' + this.body + '.png' },
-      standing() { return this.game.player.getStanding(this.data.bodies[this.body].faction) },
-
-      patrol_color() {
-        const s = this.standing;
-
-        if (s <= -29)
-          return 'red';
-
-        if (s < -9)
-          return 'yellow';
-
-        return 'green';
-      },
-    },
-
-    watch: {
-      turn() {
-        const [x, y] = this.layout.scale_point(this.coords);
-        const d = this.layout.scale_body_diameter(this.body);
-        const p = this.layout.scale_length(
-            (this.game.planets[this.body] ? this.game.planets[this.body].patrolRadius() : 0)
-          * Physics.AU
-        );
-
-        TweenMax.to(this.$data, intvl_ms, {
-          x:  x,
-          y:  y,
-          d:  d,
-          p:  p,
-          lx: (x + d + 10),
-          ly: (y + d / 3),
-          ease: Linear.easeNone,
-        }).play();
-      },
     },
 
     template: `
       <g>
-        <circle v-if="showpatrol" fill="patrol_color" fill-opacity="0.1" :cx="x" :cy="y" :r="p" />
-
-        <image :x="x" :y="y" :width="d" :height="d" :xlink:href="img" />
-
-        <text v-if="showlabel" style="font: 14px monospace; fill: #7FDF3F" :x="lx" :y="ly">
-          {{body|caps}}
-        </text>
+        <SvgPatrolRadius :body="body" :coords="coords" :layout="layout" />
+        <SvgPlotPoint :body="body" :coords="coords" :layout="layout" :img="img" :label="showlabel" />
       </g>
     `,
   });
@@ -526,12 +470,14 @@ define(function(require, exports, module) {
 
     template: `
       <card nopad=1>
-        <span slot="header">
-          <btn v-if="paused" :disabled="encounter" @click="resume()">Resume</btn>
-          <btn v-else :disabled="encounter" @click="pause()">Pause</btn>
-        </span>
+        <div class="btn-toolbar" id="navcomp-toolbar">
+          <div class="btn-group">
+            <btn v-if="paused" :disabled="encounter" @click="resume()">Resume</btn>
+            <btn v-else :disabled="encounter" @click="pause()">Pause</btn>
+          </div>
+        </div>
 
-        <table class="table table-sm m-0" :style="{width: show_plot() && layout ? layout.width_px + 'px' : '100%'}">
+        <table id="navcomp-transit-info" class="table table-sm m-0" :style="{width: show_plot() && layout ? layout.width_px + 'px' : '100%'}">
           <tr>
             <td class="text-left">{{plan.days_left|unit('days')}}</td>
             <td class="text-center">{{plan.velocity/1000|R|csn|unit('km/s')}}</td>

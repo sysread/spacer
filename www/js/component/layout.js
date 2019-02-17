@@ -3,7 +3,7 @@
 define(function(require, exports, module) {
   const Vue    = require('vendor/vue');
   const Hammer = require('vendor/hammer.min');
-  const Layout = require('layout');
+  const Layout = require('layout').Layout;
 
   return {
     data() {

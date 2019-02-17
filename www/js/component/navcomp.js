@@ -3,10 +3,12 @@ define(function(require, exports, module) {
 
   const Vue     = require('vendor/vue');
   const Physics = require('physics');
+  const system  = require('system');
   const util    = require('util');
   const NavComp = require('navcomp').NavComp;
   const Layout  = require('component/layout');
 
+  require('vendor/TweenMax.min');
   require('component/global');
   require('component/common');
   require('component/card');
@@ -627,12 +629,36 @@ define(function(require, exports, module) {
 
 
   Vue.component('SvgPlotPoint', {
-    props: ['layout', 'label', 'pos', 'diameter', 'img', 'focus'],
+    props: ['layout', 'body', 'label', 'img', 'focus', 'coords'],
+
+    data() {
+      const [x, y] = this.layout.scale_point(system.position(this.body));
+      return {
+        x: x,
+        y: y,
+        d: this.diameter,
+        label_x: 0,
+        label_y: 0,
+        tween: null,
+      }; 
+    },
 
     computed: {
-      label_x()     { return this.pos[0] + this.diameter + 10 },
-      label_y()     { return this.pos[1] + this.diameter / 3  },
       label_class() { return this.focus ? 'plot-label-hi' : 'plot-label' },
+      diameter()    { return this.layout.scale_body_diameter(this.body) },
+
+      point() {
+        if (this.layout) {
+          if (this.coords) {
+            return this.layout.scale_point(this.coords);
+          } else {
+            return this.layout.scale_point(this.system.position(this.body)) 
+          }
+        }
+        else {
+          return [0, 0];
+        }
+      },
 
       show_label() {
         if (this.label) {
@@ -651,14 +677,40 @@ define(function(require, exports, module) {
       click() {
         this.$emit('click');
       },
+
+      update() {
+        const [x, y] = this.point;
+        const d = this.diameter;
+
+        if (this.tween)
+          this.tween.kill();
+
+        const intvl = this.coords ? 0.4 : 0;
+
+        this.tween = TweenMax.to(this.$data, intvl, {
+          x: x,
+          y: y,
+          d: d,
+          label_x: x + d + 10,
+          label_y: y + d / 3,
+          ease: Linear.easeNone,
+        });
+
+        this.tween.play();
+      },
+    },
+
+    watch: {
+      point:    function() { this.update() },
+      diameter: function() { this.update() },
     },
 
     template: `
       <g @click="click">
-        <SvgImg v-if="img" :src="img" :height="diameter" :width="diameter" :x="pos[0]" :y="pos[1]" />
+        <SvgImg v-if="img" :src="img" :height="diameter" :width="diameter" :x="x" :y="y" />
 
         <SvgText v-if="show_label" :class="label_class" :x="label_x" :y="label_y">
-          {{label|caps}}
+          {{body|caps}}
         </SvgText>
       </g>
     `,
@@ -797,6 +849,7 @@ define(function(require, exports, module) {
         <SvgPlotPoint
           v-for="(info, body) of plot_points"
           :key="body"
+          :body="body"
           :layout="layout"
           :label="info.label"
           :diameter="info.diameter"
@@ -810,15 +863,37 @@ define(function(require, exports, module) {
 
 
   Vue.component('SvgPatrolRadius', {
-    props: ['body', 'layout'],
+    props: ['body', 'layout', 'coords'],
+
+    data() {
+      const [x, y] = this.layout.scale_point(system.position(this.body));
+      return {
+        x: x,
+        y: y,
+        r: this.radius,
+        tween: null,
+      };
+    },
 
     computed: {
-      standing() { return this.game.player.getStanding(this.data.bodies[this.body].faction) },
-      point()    { return this.layout.scale_point(this.system.position(this.body)) },
-      cx()       { return this.point[0] },
-      cy()       { return this.point[1] },
+      faction() {
+        return this.data.bodies[this.body].faction;
+      },
 
-      r() {
+      point() {
+        if (this.layout) {
+          if (this.coords) {
+            return this.layout.scale_point(this.coords);
+          } else {
+            return this.layout.scale_point(this.system.position(this.body)) 
+          }
+        }
+        else {
+          return [0, 0];
+        }
+      },
+
+      radius() {
         const r = this.game.planets[this.body]
           ? this.game.planets[this.body].patrolRadius() * Physics.AU
           : 0;
@@ -828,11 +903,15 @@ define(function(require, exports, module) {
 
       opacity() {
         if (this.data.bodies[this.body]) {
-          const faction = this.data.bodies[this.body].faction;
-          return 0.2 * this.data.factions[faction].patrol;
+          const a = 0.25 * this.data.factions[this.faction].patrol;
+          return util.clamp(a, 0.1, 1.0);
         } else {
           return 0;
         }
+      },
+
+      standing() {
+        return this.game.player.getStanding(this.data.bodies[this.body].faction);
       },
 
       color() {
@@ -842,14 +921,40 @@ define(function(require, exports, module) {
           return 'red';
 
         if (s < -9)
-          return 'yellow';
+          return '#DAD49B';
 
-        return 'green';
+        return '#60D65D';
       },
     },
 
+    methods: {
+      update() {
+        const [x, y] = this.point;
+        const r = this.radius;
+
+        if (this.tween)
+          this.tween.kill();
+
+        const intvl = this.coords ? 0.4 : 0;
+
+        this.tween = TweenMax.to(this.$data, intvl, {
+          x: x,
+          y: y,
+          r: r,
+          ease: Linear.easeNone,
+        });
+
+        this.tween.play();
+      },
+    },
+
+    watch: {
+      point:  function() { this.update() },
+      radius: function() { this.update() },
+    },
+
     template: `
-      <SvgCircle v-if="r > 0 && opacity" :cx="cx" :cy="cy" :r="r" :bg="color" :opacity="opacity" />
+      <SvgCircle v-if="r > 0 && opacity" :cx="x" :cy="y" :r="r" :bg="color" :opacity="opacity" />
     `,
   });
 
