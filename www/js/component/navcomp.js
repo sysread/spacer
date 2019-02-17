@@ -808,12 +808,13 @@ define(function(require, exports, module) {
 
 
   Vue.component('SvgPatrolRadius', {
-    props: ['body', 'layout', 'color'],
+    props: ['body', 'layout'],
 
     computed: {
-      point() { return this.layout.scale_point(this.system.position(this.body)) },
-      cx() { return this.point[0] },
-      cy() { return this.point[1] },
+      standing() { return this.game.player.getStanding(this.data.bodies[this.body].faction) },
+      point()    { return this.layout.scale_point(this.system.position(this.body)) },
+      cx()       { return this.point[0] },
+      cy()       { return this.point[1] },
 
       r() {
         const r = this.game.planets[this.body]
@@ -831,10 +832,22 @@ define(function(require, exports, module) {
           return 0;
         }
       },
+
+      color() {
+        const s = this.standing;
+
+        if (s <= -29)
+          return 'red';
+
+        if (s < -9)
+          return 'yellow';
+
+        return 'green';
+      },
     },
 
     template: `
-      <SvgCircle v-if="r > 0 && opacity" :cx="cx" :cy="cy" :r="r" :bg="color || 'green'" :opacity="opacity" />
+      <SvgCircle v-if="r > 0 && opacity" :cx="cx" :cy="cy" :r="r" :bg="color" :opacity="opacity" />
     `,
   });
 

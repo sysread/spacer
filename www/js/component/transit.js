@@ -82,6 +82,19 @@ define(function(require, exports, module) {
 
     computed: {
       img() { return 'img/' + this.body + '.png' },
+      standing() { return this.game.player.getStanding(this.data.bodies[this.body].faction) },
+
+      patrol_color() {
+        const s = this.standing;
+
+        if (s <= -29)
+          return 'red';
+
+        if (s < -9)
+          return 'yellow';
+
+        return 'green';
+      },
     },
 
     watch: {
@@ -105,7 +118,7 @@ define(function(require, exports, module) {
 
     template: `
       <g>
-        <circle v-if="showpatrol" fill="green" fill-opacity="0.1" :cx="x" :cy="y" :r="p" />
+        <circle v-if="showpatrol" fill="patrol_color" fill-opacity="0.1" :cx="x" :cy="y" :r="p" />
 
         <image :x="x" :y="y" :width="d" :height="d" :xlink:href="img" />
 
