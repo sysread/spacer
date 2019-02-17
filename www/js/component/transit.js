@@ -91,7 +91,19 @@ define(function(require, exports, module) {
         stoppedBy: {'pirate': 0, 'police': 0},
         encounter: null,
         orbits:    orbits,
+        patrolpct: 0,
+        piracypct: 0,
       };
+    },
+
+    watch: {
+      'plan.current_turn': function() {
+        TweenMax.to(this.$data, intvl_ms, {
+          patrolpct: this.patrolRate,
+          piracypct: this.piracyRate,
+          ease: Linear.easeNone,
+        }).play();
+      },
     },
 
     computed: {
@@ -510,10 +522,10 @@ define(function(require, exports, module) {
               :path="plan.path"
               @tweenComplete="interval" />
 
-            <line x1=130 y1=13 :x2="patrolRate * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
+            <line x1=130 y1=13 :x2="patrolpct * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
             <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{patrolRate|pct(2)}}</text>
 
-            <line x1=130 y1=30 :x2="piracyRate * layout.width_px + 130" y2=30 stroke="red" stroke-width="14" />
+            <line x1=130 y1=30 :x2="piracypct * layout.width_px + 130" y2=30 stroke="red" stroke-width="14" />
             <text style="fill:red; font:12px monospace" x=5 y=34>Piracy:&nbsp;{{piracyRate|pct(2)}}</text>
 
             <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{displayFoV}}</text>
