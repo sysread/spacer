@@ -224,20 +224,18 @@ class Layout {
   }
 
   update_width() {
-    if (!this.elt) {
+    if (!this.elt)
       return 0;
-    }
-
-    const status_bar_height = Math.max(0, screen.height - window.innerHeight);
 
     const height
       = window.innerHeight
-      + window.scrollY
-      - status_bar_height
-      - this.elt.getBoundingClientRect().top
-      - ($('#spacer-status').height() || 0)
-      - ($('#spacer-navbar').height() || 0)
-      - ($('#navcomp-toolbar').height() || 0);
+      - ($('#spacer-navbar').outerHeight() || 0)
+      - ($('#spacer-navbar').outerHeight() || 0)
+      - ($('#navcomp-toolbar').outerHeight() || 0);
+      - parseInt($('#spacer-content').css('padding-top'))
+      - parseInt($('#spacer-content').css('padding-bottom'))
+      - parseInt($('#spacer-content').css('margin-top'))
+      - parseInt($('#spacer-content').css('margin-bottom'));
 
     const width   = $(this.elt).parent().width() || 0;
     const changed = width != this.width_px || height != this.height_px;

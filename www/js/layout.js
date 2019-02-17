@@ -215,17 +215,16 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
             return true;
         };
         Layout.prototype.update_width = function () {
-            if (!this.elt) {
+            if (!this.elt)
                 return 0;
-            }
-            var status_bar_height = Math.max(0, screen.height - window.innerHeight);
             var height = window.innerHeight
-                + window.scrollY
-                - status_bar_height
-                - this.elt.getBoundingClientRect().top
-                - ($('#spacer-status').height() || 0)
-                - ($('#spacer-navbar').height() || 0)
-                - ($('#navcomp-toolbar').height() || 0);
+                - ($('#spacer-navbar').outerHeight() || 0)
+                - ($('#spacer-navbar').outerHeight() || 0)
+                - ($('#navcomp-toolbar').outerHeight() || 0);
+            -parseInt($('#spacer-content').css('padding-top'))
+                - parseInt($('#spacer-content').css('padding-bottom'))
+                - parseInt($('#spacer-content').css('margin-top'))
+                - parseInt($('#spacer-content').css('margin-bottom'));
             var width = $(this.elt).parent().width() || 0;
             var changed = width != this.width_px || height != this.height_px;
             this.clear_zero();
