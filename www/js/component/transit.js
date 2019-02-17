@@ -100,9 +100,11 @@ define(function(require, exports, module) {
     watch: {
       turn() {
         const [x, y] = this.layout.scale_point(this.coords);
-        const d  = this.layout.scale_body_diameter(this.body);
-        const pr = this.game.planets[this.body] ? this.game.planets[this.body].patrolRadius() : 0;
-        const p  = this.layout.scale_length(pr * Physics.AU);
+        const d = this.layout.scale_body_diameter(this.body);
+        const p = this.layout.scale_length(
+            (this.game.planets[this.body] ? this.game.planets[this.body].patrolRadius() : 0)
+          * Physics.AU
+        );
 
         TweenMax.to(this.$data, intvl_ms, {
           x:  x,
