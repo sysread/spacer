@@ -48,8 +48,8 @@ define(function(require, exports, module) {
     watch: {
       'plan.current_turn': function() {
         if (!this.isSubSystemTransit) {
-          this.layout.set_center(this.center);
-          this.layout.set_fov_au(this.fov);
+          this.layout.set_center(this.center());
+          this.layout.set_fov_au(this.fov());
         }
 
         const [x, y] = this.layout.scale_point(this.plan.coords);
@@ -71,7 +71,7 @@ define(function(require, exports, module) {
       distance()        { return util.R(this.plan.auRemaining()) },
       is_next_day()     { return this.plan.current_turn % data.turns_per_day == 0 },
       is_zoomed_in()    { return this.plan.turns < (10 * data.turns_per_day) },
-      showPatrolRadii() { return this.layout.fov_au > 0.35 },
+      showPatrolRadii() { return !this.isSubSystemTransit },
       intvl_ms()        { return this.intvl * 1000 },
 
       isSubSystemTransit() {
@@ -97,43 +97,6 @@ define(function(require, exports, module) {
           return 0.6;
         else
           return 0.4;
-      },
-
-      fov() {
-        const central = system.central(this.plan.dest);
-        const points = [this.plan.end];
-
-        // For sub-system transits, center on the common central body.
-        if (this.isSubSystemTransit) {
-          for (const body of this.system.all_bodies()) {
-            if (system.central(body) == central) {
-              points.push(this.orbits[body][0]);
-            }
-          }
-        }
-        // Cross system path
-        else {
-          points.push(this.orbits[ central == 'sun' ? this.plan.dest : central ][0]);
-          points.push(this.plan.coords);
-        }
-
-        // Lop off z to prevent it from affecting the distance calculation
-        const points_2d = points.map(p => [p[0], p[1], 0]);
-        const center = this.center;
-
-        const max = Math.max(...points_2d.map(p => Physics.distance(p, center)));
-        return max / Physics.AU;
-      },
-
-      center() {
-        // For sub-system transits, center on the common central body.
-        if (this.isSubSystemTransit) {
-          return this.orbits[ system.central(this.plan.dest) ][0];
-        }
-        // Cross system path
-        else {
-          return Physics.segment(this.plan.end, this.plan.start, this.plan.distanceRemaining() * 1.1);
-        }
       },
 
       displayFoV() {
@@ -260,9 +223,55 @@ define(function(require, exports, module) {
       dead()      { this.$emit('open', 'newgame') },
       show_plot() { return this.layout && !this.encounter },
 
+      fov() {
+        const central = system.central(this.plan.dest);
+        const points = [this.plan.end];
+
+        // For sub-system transits, center on the common central body.
+        if (this.isSubSystemTransit) {
+          for (const body of this.system.all_bodies()) {
+            if (system.central(body) == central) {
+              points.push(this.orbits[body][0]);
+            }
+          }
+        }
+        // Cross system path
+        else {
+          points.push(this.orbits[ central == 'sun' ? this.plan.dest : central ][0]);
+          points.push(this.plan.coords);
+          points.push(this.plan.end);
+        }
+
+        // Lop off z to prevent it from affecting the distance calculation
+        const points_2d = points.map(p => [p[0], p[1], 0]);
+        const center = this.center();
+        const distances = points_2d.map(p => Physics.distance(p, center));
+        const max = Math.max(...distances);
+
+        if (this.isSubSystemTransit)
+          return max / (Physics.AU * 2);
+        else
+          return max / Physics.AU;
+      },
+
+      center() {
+        if (this.isSubSystemTransit) // center on the common central body
+          return this.orbits[ system.central(this.plan.dest) ][0];
+        else // cross system path
+          return Physics.segment(this.plan.end, this.plan.start, this.plan.distanceRemaining());
+      },
+
+      layout_scale() {
+        this.layout.update_width();
+      },
+
+      layout_pan() {
+        this.layout.update_width();
+      },
+
       layout_set() {
-        this.layout.set_center(this.center);
-        this.layout.set_fov_au(this.fov);
+        this.layout.set_center(this.center());
+        this.layout.set_fov_au(this.fov());
 
         const [x, y] = this.layout.scale_point(this.plan.coords);
         this.ship_x = x;

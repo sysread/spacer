@@ -154,6 +154,22 @@ define(function(require, exports, module) {
         return this.game.planets[dest];
       },
 
+      isSubSystemTransit() {
+        if (this.dest) {
+          const dest_central = system.central(this.transit.dest);
+          const orig_central = system.central(this.transit.origin);
+
+          if ((dest_central == orig_central && dest_central != 'sun') // moon to moon in same system
+              || window.game.locus == dest_central                    // central to its own moon
+              || this.transit.dest == orig_central)                   // moon to its host planet
+            return true;
+          else
+            return false;
+        }
+
+        return false;
+      },
+
       map_center_point() {
         if (this.dest) {
           return this.map_center_point_transit;
@@ -171,19 +187,9 @@ define(function(require, exports, module) {
         const orig_central = this.system.central(this.game.locus);
         const bodies = [];
 
-        // Moon to moon in same system
-        if (dest_central == orig_central && dest_central != 'sun') {
+        if (this.isSubSystemTransit) {
           bodies.push(this.system.position(dest_central));
         }
-        // Planet to its own moon
-        else if (this.game.locus == dest_central) {
-          bodies.push(this.system.position(this.game.locus));
-        }
-        // Moon to it's host planet
-        else if (this.dest == orig_central) {
-          bodies.push(this.system.position(this.dest));
-        }
-        // Cross system path
         else {
           bodies.push(this.system.position(this.dest));
           bodies.push(this.system.position(this.game.locus));
@@ -213,26 +219,9 @@ define(function(require, exports, module) {
         const dest_central = this.system.central(this.dest);
         const orig_central = this.system.central(this.game.locus);
 
-        // Moon to moon in same system
-        if (dest_central == orig_central && dest_central != 'sun') {
-          for (const body of this.system.bodies()) {
-            if (this.system.central(body) == dest_central) {
-              points.push(this.system.position(body));
-            }
-          }
-        }
-        // Planet to its own moon
-        else if (this.game.locus == dest_central) {
-          for (const body of this.system.bodies()) {
-            if (this.system.central(body) == dest_central) {
-              points.push(this.system.position(body));
-            }
-          }
-        }
-        // Moon to it's host planet
-        else if (this.dest == orig_central) {
-          for (const body of this.system.bodies()) {
-            if (this.system.central(body) == orig_central) {
+        if (this.isSubSystemTransit) {
+          for (const body of this.system.all_bodies()) {
+            if (system.central(body) == dest_central) {
               points.push(this.system.position(body));
             }
           }
@@ -251,9 +240,13 @@ define(function(require, exports, module) {
         // Lop off z to prevent it from affecting the distance calculation
         const points_2d = points.map(p => [p[0], p[1], 0]);
         const center = this.map_center_point;
+        const distances = points_2d.map(p => Physics.distance(p, center));
+        const max = Math.max(...distances);
 
-        const max = Math.max(...points_2d.map(p => Physics.distance(p, center)));
-        return max / Physics.AU * 1.2;
+        if (this.isSubSystemTransit)
+          return max / (Physics.AU * 2);
+        else
+          return max / Physics.AU;
       },
     },
 
