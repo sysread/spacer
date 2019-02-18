@@ -229,11 +229,23 @@ export class Layout {
     if (!this.elt)
       return 0;
 
+    const status_bar_height = Math.max(0, screen.height - window.innerHeight);
+
+    const height
+      = window.innerHeight
+      + window.scrollY
+      - this.elt.getBoundingClientRect().top
+      - ($('#spacer-status').height() || 0)
+      - ($('#spacer-navbar').height() || 0)
+      - ($('#navcomp-toolbar').height() || 0)
+      - ($('#navcomp-transit-info').outerHeight() || 0);
+
+    /*
     const height = window.innerHeight
       - ($('#spacer-status').outerHeight() || 0)
       - ($('#spacer-navbar').outerHeight() || 0)
       - ($('#navcomp-toolbar').outerHeight() || 0)
-      - ($('#navcomp-transit-info').outerHeight() || 0);
+    */
 
     const width   = $(this.elt).parent().width() || 0;
     const changed = width != this.width_px || height != this.height_px;

@@ -218,11 +218,20 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
         Layout.prototype.update_width = function () {
             if (!this.elt)
                 return 0;
+            var status_bar_height = Math.max(0, screen.height - window.innerHeight);
             var height = window.innerHeight
-                - ($('#spacer-status').outerHeight() || 0)
-                - ($('#spacer-navbar').outerHeight() || 0)
-                - ($('#navcomp-toolbar').outerHeight() || 0)
+                + window.scrollY
+                - this.elt.getBoundingClientRect().top
+                - ($('#spacer-status').height() || 0)
+                - ($('#spacer-navbar').height() || 0)
+                - ($('#navcomp-toolbar').height() || 0)
                 - ($('#navcomp-transit-info').outerHeight() || 0);
+            /*
+            const height = window.innerHeight
+              - ($('#spacer-status').outerHeight() || 0)
+              - ($('#spacer-navbar').outerHeight() || 0)
+              - ($('#navcomp-toolbar').outerHeight() || 0)
+            */
             var width = $(this.elt).parent().width() || 0;
             var changed = width != this.width_px || height != this.height_px;
             this.clear_zero();
