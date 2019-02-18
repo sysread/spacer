@@ -100,6 +100,7 @@ define(function(require, exports, module) {
       },
 
       fov() {
+        const central = system.central(this.plan.dest);
         const points = [this.plan.end];
 
         // For sub-system transits, center on the common central body.
@@ -112,7 +113,6 @@ define(function(require, exports, module) {
         }
         // Cross system path
         else {
-          const central = system.central(this.plan.dest);
           points.push(this.orbits[ central == 'sun' ? this.plan.dest : central ][0]);
           points.push(this.plan.coords);
         }
