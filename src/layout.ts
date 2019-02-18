@@ -229,8 +229,6 @@ export class Layout {
     if (!this.elt)
       return 0;
 
-    const status_bar_height = Math.max(0, screen.height - window.innerHeight);
-
     const height
       = window.innerHeight
       + window.scrollY

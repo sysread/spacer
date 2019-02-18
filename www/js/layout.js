@@ -218,7 +218,6 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
         Layout.prototype.update_width = function () {
             if (!this.elt)
                 return 0;
-            var status_bar_height = Math.max(0, screen.height - window.innerHeight);
             var height = window.innerHeight
                 + window.scrollY
                 - this.elt.getBoundingClientRect().top
