@@ -14,6 +14,7 @@ define(function(require, exports, module) {
     },
 
     computed: {
+      inDev()  { return window.DEV },
       data()   { return data   },
       system() { return system },
     },

@@ -640,7 +640,7 @@ define(function(require, exports, module) {
         label_x: 0,
         label_y: 0,
         tween: null,
-      }; 
+      };
     },
 
     computed: {
@@ -652,7 +652,7 @@ define(function(require, exports, module) {
           if (this.coords) {
             return this.layout.scale_point(this.coords);
           } else {
-            return this.layout.scale_point(this.system.position(this.body)) 
+            return this.layout.scale_point(this.system.position(this.body))
           }
         }
         else {
@@ -688,8 +688,8 @@ define(function(require, exports, module) {
         const intvl = this.coords ? 0.4 : 0;
 
         this.tween = TweenMax.to(this.$data, intvl, {
-          x: x,
-          y: y,
+          x: x - (d / 2),
+          y: y - (d / 2),
           d: d,
           label_x: x + d + 10,
           label_y: y + d / 3,
@@ -885,7 +885,7 @@ define(function(require, exports, module) {
           if (this.coords) {
             return this.layout.scale_point(this.coords);
           } else {
-            return this.layout.scale_point(this.system.position(this.body)) 
+            return this.layout.scale_point(this.system.position(this.body));
           }
         }
         else {

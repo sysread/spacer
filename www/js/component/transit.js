@@ -482,7 +482,7 @@ define(function(require, exports, module) {
 
     template: `
       <card nopad=1>
-        <div class="btn-toolbar" id="navcomp-toolbar">
+        <div v-if="inDev" class="btn-toolbar" id="navcomp-toolbar">
           <div class="btn-group">
             <btn v-if="paused" :disabled="encounter" @click="resume()">Resume</btn>
             <btn v-else :disabled="encounter" @click="pause()">Pause</btn>
