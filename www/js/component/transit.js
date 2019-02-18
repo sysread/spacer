@@ -165,32 +165,20 @@ define(function(require, exports, module) {
         const orig_central = system.central(this.plan.origin);
         const bodies = [];
 
-        // Moon to moon in same system
-        if (dest_central == orig_central && dest_central != 'sun') {
+        // For sub-system transits, center on the common central body.
+        if ((dest_central == orig_central && dest_central != 'sun') // moon to moon in same system
+         || window.game.locus == dest_central                       // central to its own moon
+         || this.plan.dest == orig_central)                         // moon to its host planet
+        {
           bodies.push(system.position(dest_central));
-          bodies.push(this.plan.flip_point);
-          bodies.push(this.plan.start);
-        }
-        // Planet to its own moon
-        else if (window.game.locus == dest_central) {
-          bodies.push(system.position(this.plan.origin));
-          bodies.push(this.plan.flip_point);
-          bodies.push(this.plan.start);
-        }
-        // Moon to it's host planet
-        else if (this.plan.dest == orig_central) {
-          bodies.push(system.position(this.plan.dest));
-          bodies.push(this.plan.flip_point);
-          bodies.push(this.plan.start);
         }
         // Cross system path
         else {
           bodies.push(system.position(this.plan.dest));
           bodies.push(system.position(this.plan.origin));
           bodies.push(this.plan.coords);
+          bodies.push(this.plan.end);
         }
-
-        bodies.push(this.plan.end);
 
         return Physics.centroid(...bodies);
       },
