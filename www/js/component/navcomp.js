@@ -621,15 +621,15 @@ define(function(require, exports, module) {
 
     template: `
       <g>
-        <SvgPath :points="dest_path" color="#605B0E" smooth=1 />
-        <SvgPath :points="path"      color="#A01B1B" smooth=1 />
+        <SvgPath :points="dest_path" color="red" smooth=1 />
+        <SvgPath :points="path" color="yellow" smooth=1 />
       </g>
     `,
   });
 
 
   Vue.component('SvgPlotPoint', {
-    props: ['layout', 'body', 'label', 'img', 'focus', 'coords'],
+    props: ['layout', 'body', 'label', 'img', 'focus', 'coords', 'intvl'],
 
     data() {
       const [x, y] = this.layout.scale_point(system.position(this.body));
@@ -685,9 +685,7 @@ define(function(require, exports, module) {
         if (this.tween)
           this.tween.kill();
 
-        const intvl = this.coords ? 0.4 : 0;
-
-        this.tween = TweenMax.to(this.$data, intvl, {
+        this.tween = TweenMax.to(this.$data, this.intvl || 0, {
           x: x - (d / 2),
           y: y - (d / 2),
           d: d,
@@ -863,7 +861,7 @@ define(function(require, exports, module) {
 
 
   Vue.component('SvgPatrolRadius', {
-    props: ['body', 'layout', 'coords'],
+    props: ['body', 'layout', 'coords', 'intvl'],
 
     data() {
       const [x, y] = this.layout.scale_point(system.position(this.body));
@@ -903,8 +901,8 @@ define(function(require, exports, module) {
 
       opacity() {
         if (this.data.bodies[this.body]) {
-          const a = 0.25 * this.data.factions[this.faction].patrol;
-          return util.clamp(a, 0.1, 1.0);
+          const a = 0.1 * this.data.factions[this.faction].patrol;
+          return util.clamp(a, 0.1, 0.25);
         } else {
           return 0;
         }
@@ -938,9 +936,7 @@ define(function(require, exports, module) {
         if (this.tween)
           this.tween.kill();
 
-        const intvl = this.coords ? 0.4 : 0;
-
-        this.tween = TweenMax.to(this.$data, intvl, {
+        this.tween = TweenMax.to(this.$data, this.intvl || 0, {
           x: x,
           y: y,
           r: r,

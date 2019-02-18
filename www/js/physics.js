@@ -78,7 +78,7 @@ define(["require", "exports"], function (require, exports) {
             return v + (a * t);
         };
         /*
-         * segment([x,y,z], [x,y,z], m)
+         * segment(p0: [x,y,z], p1: [x,y,z], m)
          *
          * Finds a point [x,y,z] at distance d1 along line p1, p2.
          */
@@ -93,6 +93,10 @@ define(["require", "exports"], function (require, exports) {
                 (((1 - t) * z0) + (t * z1))
             ];
         };
+        /*
+         * Finds the centroid, the center point, averaging all points
+         * together.
+         */
         Physics.centroid = function () {
             var points = [];
             for (var _i = 0; _i < arguments.length; _i++) {
@@ -100,10 +104,11 @@ define(["require", "exports"], function (require, exports) {
             }
             var sum_x = points.reduce(function (a, p) { return a + p[0]; }, 0);
             var sum_y = points.reduce(function (a, p) { return a + p[1]; }, 0);
+            var sum_z = points.reduce(function (a, p) { return a + (p[2] || 0); }, 0);
             return [
                 sum_x / points.length,
                 sum_y / points.length,
-                0,
+                sum_z / points.length,
             ];
         };
         return Physics;

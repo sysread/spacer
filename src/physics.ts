@@ -60,7 +60,7 @@ class Physics {
   }
 
   /*
-   * segment([x,y,z], [x,y,z], m)
+   * segment(p0: [x,y,z], p1: [x,y,z], m)
    *
    * Finds a point [x,y,z] at distance d1 along line p1, p2.
    */
@@ -76,13 +76,18 @@ class Physics {
     ];
   }
 
+  /*
+   * Finds the centroid, the center point, averaging all points
+   * together.
+   */
   static centroid(...points: point[]): point {
     let sum_x = points.reduce((a, p) => a + p[0], 0);
     let sum_y = points.reduce((a, p) => a + p[1], 0);
+    let sum_z = points.reduce((a, p) => a + (p[2] || 0), 0);
     return [
       sum_x / points.length,
       sum_y / points.length,
-      0,
+      sum_z / points.length,
     ];
   }
 }

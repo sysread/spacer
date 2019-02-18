@@ -21,60 +21,6 @@ define(function(require, exports, module) {
   require('component/navcomp');
   require('component/svg');
 
-  const intvl = 400;
-  const intvl_ms = intvl / 1000;
-
-
-  Vue.component('TransitShip', {
-    props: ['layout', 'turn', 'path'],
-
-    data() {
-      const [x, y] = this.layout.scale_point(this.path[this.turn].position);
-      return {
-        x: x,
-        y: y,
-      };
-    },
-
-    watch: {
-      turn() {
-        const [x, y] = this.layout.scale_point(this.path[this.turn].position);
-        TweenMax.to(this.$data, intvl_ms, {
-          x: x,
-          y: y,
-          ease: Linear.easeNone,
-          onComplete: () => this.$emit('tweenComplete'),
-        }).play();
-      },
-    },
-
-    template: `
-      <text text-anchor="middle"
-          alignment-baseline="middle"
-          style="fill: yellow; font: bold 14px monospace;"
-          :x="x"
-          :y="y">
-        &tridot;
-      </text>
-    `,
-  });
-
-
-  Vue.component('TransitBody', {
-    props: ['layout', 'turn', 'body', 'coords', 'showpatrol', 'showlabel'],
-
-    computed: {
-      img() { return 'img/' + this.body + '.png' },
-    },
-
-    template: `
-      <g>
-        <SvgPatrolRadius :body="body" :coords="coords" :layout="layout" />
-        <SvgPlotPoint :body="body" :coords="coords" :layout="layout" :img="img" :label="showlabel" />
-      </g>
-    `,
-  });
-
 
   Vue.component('Transit', {
     mixins: [ Layout ],
@@ -91,17 +37,30 @@ define(function(require, exports, module) {
         stoppedBy: {'pirate': 0, 'police': 0},
         encounter: null,
         orbits:    orbits,
+        // animated values
         patrolpct: 0,
         piracypct: 0,
+        ship_x:    0,
+        ship_y:    0,
       };
     },
 
     watch: {
       'plan.current_turn': function() {
-        TweenMax.to(this.$data, intvl_ms, {
-          patrolpct: this.patrolRate,
-          piracypct: this.piracyRate,
-          ease: Linear.easeNone,
+        if (!this.isSubSystemTransit) {
+          this.layout.set_center(this.center);
+          this.layout.set_fov_au(this.fov);
+        }
+
+        const [x, y] = this.layout.scale_point(this.plan.coords);
+
+        TweenMax.to(this.$data, this.intvl || 0, {
+          ship_x:     x,
+          ship_y:     y,
+          patrolpct:  this.patrolRate,
+          piracypct:  this.piracyRate,
+          ease:       Linear.easeNone,
+          onComplete: () => this.interval(),
         }).play();
       },
     },
@@ -112,75 +71,69 @@ define(function(require, exports, module) {
       distance()        { return util.R(this.plan.auRemaining()) },
       is_next_day()     { return this.plan.current_turn % data.turns_per_day == 0 },
       is_zoomed_in()    { return this.plan.turns < (10 * data.turns_per_day) },
-      intvl_ms()        { return this.is_zoomed_in ? 800: 400 },
-      showPatrolRadii() { return this.layout.fov_au > 0.25 },
+      showPatrolRadii() { return this.layout.fov_au > 0.35 },
+      intvl_ms()        { return this.intvl * 1000 },
 
-      fov() {
-        const points = [];
+      isSubSystemTransit() {
         const dest_central = system.central(this.plan.dest);
         const orig_central = system.central(this.plan.origin);
 
-        // Moon to moon in same system
-        if (dest_central == orig_central && dest_central != 'sun') {
-          points.push(this.plan.start);
-          points.push(system.position(dest_central));
-        }
-        // Planet to its own moon
-        else if (this.plan.origin == dest_central) {
-          points.push(this.plan.start);
-          for (const body of system.bodies()) {
-            if (system.central(body) == dest_central) {
-              points.push(system.position(body));
-            }
-          }
-        }
-        // Moon to it's host planet
-        else if (this.plan.dest == orig_central) {
-          points.push(this.plan.start);
-          for (const body of system.bodies()) {
-            if (system.central(body) == orig_central) {
-              points.push(system.position(body));
+        if ((dest_central == orig_central && dest_central != 'sun') // moon to moon in same system
+            || window.game.locus == dest_central                    // central to its own moon
+            || this.plan.dest == orig_central)                      // moon to its host planet
+          return true;
+        else
+          return false;
+      },
+
+      intvl() {
+        if (this.plan.current_turn == 0)
+          return 0;
+        if (this.isSubSystemTransit)
+          return 0.6;
+        else if (this.layout.fov_au < 0.1)
+          return 0.8;
+        else if (this.layout.fov_au < 0.35)
+          return 0.6;
+        else
+          return 0.4;
+      },
+
+      fov() {
+        const points = [this.plan.end];
+
+        // For sub-system transits, center on the common central body.
+        if (this.isSubSystemTransit) {
+          for (const body of this.system.all_bodies()) {
+            if (system.central(body) == central) {
+              points.push(this.orbits[body][0]);
             }
           }
         }
         // Cross system path
         else {
-          points.push(Physics.centroid(this.plan.start, this.plan.coords));
+          const central = system.central(this.plan.dest);
+          points.push(this.orbits[ central == 'sun' ? this.plan.dest : central ][0]);
+          points.push(this.plan.coords);
         }
-
-        points.push(this.plan.end);
 
         // Lop off z to prevent it from affecting the distance calculation
         const points_2d = points.map(p => [p[0], p[1], 0]);
         const center = this.center;
 
         const max = Math.max(...points_2d.map(p => Physics.distance(p, center)));
-        return max / Physics.AU * 1.2;
+        return max / Physics.AU;
       },
 
       center() {
-        let center;
-
-        const dest_central = system.central(this.plan.dest);
-        const orig_central = system.central(this.plan.origin);
-        const bodies = [];
-
         // For sub-system transits, center on the common central body.
-        if ((dest_central == orig_central && dest_central != 'sun') // moon to moon in same system
-         || window.game.locus == dest_central                       // central to its own moon
-         || this.plan.dest == orig_central)                         // moon to its host planet
-        {
-          bodies.push(system.position(dest_central));
+        if (this.isSubSystemTransit) {
+          return this.orbits[ system.central(this.plan.dest) ][0];
         }
         // Cross system path
         else {
-          bodies.push(system.position(this.plan.dest));
-          bodies.push(system.position(this.plan.origin));
-          bodies.push(this.plan.coords);
-          bodies.push(this.plan.end);
+          return Physics.segment(this.plan.end, this.plan.start, this.plan.distanceRemaining() * 1.1);
         }
-
-        return Physics.centroid(...bodies);
       },
 
       displayFoV() {
@@ -310,6 +263,11 @@ define(function(require, exports, module) {
       layout_set() {
         this.layout.set_center(this.center);
         this.layout.set_fov_au(this.fov);
+
+        const [x, y] = this.layout.scale_point(this.plan.coords);
+        this.ship_x = x;
+        this.ship_y = y;
+
         setTimeout(() => this.resume(), 300);
       },
 
@@ -494,22 +452,6 @@ define(function(require, exports, module) {
           <div class="plot-root-bg" :style="bg_css()"></div>
 
           <SvgPlot v-if="layout" :width="layout.width_px" :height="layout.height_px">
-            <TransitBody v-if="layout"
-              v-for="body in system.all_bodies()"
-              :key="body"
-              :layout="layout"
-              :turn="plan.current_turn"
-              :body="body"
-              :coords="orbits[body][0] /* orbit_by_turns dynamically updates */"
-              :showpatrol="showPatrolRadii"
-              :showlabel="show_label(body)" />
-
-            <TransitShip v-if="layout"
-              :layout="layout"
-              :turn="plan.current_turn"
-              :path="plan.path"
-              @tweenComplete="interval" />
-
             <line x1=130 y1=13 :x2="patrolpct * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
             <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{patrolRate|pct(2)}}</text>
 
@@ -519,6 +461,19 @@ define(function(require, exports, module) {
             <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{displayFoV}}</text>
             <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{displayFoV}}</text>
             <text style="fill:red; font:12px monospace" x=5 y=68>&Delta;V:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{plan.accel_g|R(3)|unit('G')}}</text>
+
+            <g v-for="body in system.all_bodies()" :key="body">
+              <SvgPatrolRadius v-if="showPatrolRadii" :body="body" :coords="orbits[body][0]" :layout="layout" :intvl="intvl" />
+              <SvgPlotPoint :body="body" :coords="orbits[body][0]" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" />
+            </g>
+
+            <text text-anchor="middle"
+                alignment-baseline="middle"
+                style="fill: yellow; font: bold 14px monospace;"
+                :x="ship_x"
+                :y="ship_y">
+              &tridot;
+            </text>
           </SvgPlot>
         </div>
 
