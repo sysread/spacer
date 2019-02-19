@@ -24,6 +24,7 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
     t = __importStar(t);
     util = __importStar(util);
     ;
+    ;
     var planets = {};
     var Game = /** @class */ (function () {
         function Game() {
@@ -36,6 +37,7 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
             this.agents = [];
             this.conflicts = {};
             this.notifications = [];
+            this.options = {};
             this.reset_date();
         }
         Game.prototype.init = function () {
@@ -45,6 +47,7 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                 try {
                     this.turns = init.turns;
                     this.locus = init.locus;
+                    this.options = init.options || {};
                     this._player = new person_1.Person(init.player);
                     this.date.setHours(this.date.getHours() + (this.turns * data_1.default.hours_per_turn));
                     console.log('setting system date', this.date);
@@ -215,6 +218,7 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                 agents: this.agents,
                 planets: this.planets,
                 conflicts: this.conflicts,
+                options: this.options,
             };
             window.localStorage.setItem('game', JSON.stringify(data));
         };

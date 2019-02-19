@@ -433,6 +433,15 @@ define(function(require, exports, module) {
 
         return false;
       },
+
+      classes() {
+        return {
+          'plot-root': true,
+          'plot-root-with-galaxy': !this.game.options.hideMapBackground,
+          'border': true,
+          'border-dark': true,
+        };
+      },
     },
 
     template: `
@@ -457,7 +466,7 @@ define(function(require, exports, module) {
           </tr>
         </table>
 
-        <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
+        <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" :class="classes()">
           <div class="plot-root-bg" :style="bg_css()"></div>
 
           <SvgPlot v-if="layout" :width="layout.width_px" :height="layout.height_px">
@@ -472,7 +481,7 @@ define(function(require, exports, module) {
             <text style="fill:red; font:12px monospace" x=5 y=68>&Delta;V:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{plan.accel_g|R(3)|unit('G')}}</text>
 
             <g v-for="body in system.all_bodies()" :key="body">
-              <SvgPatrolRadius v-if="showPatrolRadii" :body="body" :coords="orbits[body][0]" :layout="layout" :intvl="intvl" />
+              <SvgOrbitPath :key="body+'-orbit'" :body="body" :layout="layout" />
               <SvgPlotPoint :body="body" :coords="orbits[body][0]" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" />
             </g>
 

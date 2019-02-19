@@ -59,7 +59,7 @@ define(function(require, exports, module) {
     computed: {
       path()   { return this.smooth ? path.bezier(this.points) : path.line(this.points) },
       stroke() { return this.color || 'white' },
-      width()  { return this.line || '1px' },
+      width()  { return this.line || '0.75px' },
     },
 
     template: '<path fill="none" :stroke="stroke" :stroke-width="width" :d="path" />',

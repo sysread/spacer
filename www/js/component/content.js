@@ -23,6 +23,7 @@ define(function(require, exports, module) {
   require('component/ships');
   require('component/addons');
   require('component/navcomp');
+  require('component/options');
   require('component/transit');
   require('component/status');
   require('component/debug');
@@ -51,6 +52,7 @@ define(function(require, exports, module) {
         <NavComp       v-else-if="page == 'navigation'"  @open="open" />
         <transit       v-else-if="page == 'transit'"     @open="open" />
         <player-status v-else-if="page == 'status'"      @open="open" />
+        <options       v-else-if="page == 'options'"     @open="open" />
         <Debug         v-else-if="page == 'debug'"       @open="open" />
       </div>
     `,

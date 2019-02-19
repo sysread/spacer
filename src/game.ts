@@ -28,6 +28,11 @@ declare var window: {
 declare var console: any;
 
 
+interface Options {
+  hideMapBackground?: boolean;
+};
+
+
 interface ImportReport {
   [key: string]: {
     [key: string /* to */]: {
@@ -52,6 +57,7 @@ class Game {
   agents:        Agent[] = [];
   conflicts:     {[key: string]: Conflict} = {};
   notifications: string[] = [];
+  options:       Options = {};
 
   constructor() {
     this.reset_date();
@@ -63,8 +69,9 @@ class Game {
 
     if (init) {
       try {
-        this.turns = init.turns;
-        this.locus = init.locus;
+        this.turns   = init.turns;
+        this.locus   = init.locus;
+        this.options = init.options || {};
         this._player = new Person(init.player);
 
         this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
@@ -208,6 +215,7 @@ class Game {
       agents:    this.agents,
       planets:   this.planets,
       conflicts: this.conflicts,
+      options:   this.options,
     };
 
     window.localStorage.setItem('game', JSON.stringify(data));

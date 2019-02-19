@@ -615,7 +615,7 @@ define(function(require, exports, module) {
     template: `
       <g>
         <SvgPath :points="dest_path" color="red" smooth=1 />
-        <SvgPath :points="path" color="yellow" smooth=1 />
+        <SvgPath :points="path" color="green" smooth=1 />
       </g>
     `,
   });
@@ -973,10 +973,19 @@ define(function(require, exports, module) {
           height: this.layout ? this.layout.height_px + 'px' : '100%',
         };
       },
+
+      classes() {
+        return {
+          'plot-root': true,
+          'plot-root-with-galaxy': !this.game.options.hideMapBackground,
+          'border': true,
+          'border-dark': true,
+        };
+      },
     },
 
     template: `
-      <div id="navcomp-map-root" class="plot-root border border-dark">
+      <div id="navcomp-map-root" :class="classes()">
         <div class="plot-root-bg" :style="bg_css()"></div>
 
         <SvgPlot v-if="layout" :width="layout.width_px" :height="layout.height_px">

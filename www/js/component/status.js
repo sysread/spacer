@@ -31,6 +31,10 @@ define(function(require, exports, module) {
     },
 
     methods: {
+      openOptions: function() {
+        this.$emit('open', 'options');
+      },
+
       newGameConfirm: function() {
         this.show_confirm = true;
       },
@@ -49,7 +53,8 @@ define(function(require, exports, module) {
   <card-title>
     <Flag :width="50" :faction="person.faction.abbrev" class="m-1" />
     {{name}}
-    <btn @click="newGameConfirm" class="float-right">New Game</btn>
+    <btn @click="openOptions" class="float-right">Options</btn>
+    <btn @click="newGameConfirm" class="mx-2 float-right">New Game</btn>
   </card-title>
 
   <div>
@@ -112,7 +117,7 @@ define(function(require, exports, module) {
   <div v-else>
     No active contracts.
   </div>
-</card> 
+</card>
     `,
   });
 
