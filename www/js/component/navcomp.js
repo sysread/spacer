@@ -974,19 +974,16 @@ define(function(require, exports, module) {
         };
       },
 
-      classes() {
+      bg_class() {
         return {
-          'plot-root': true,
           'plot-root-with-galaxy': !this.game.options.hideMapBackground,
-          'border': true,
-          'border-dark': true,
         };
       },
     },
 
     template: `
-      <div id="navcomp-map-root" :class="classes()">
-        <div class="plot-root-bg" :style="bg_css()"></div>
+      <div id="navcomp-map-root" class="plot-root border border-dark">
+        <div class="plot-root-bg" :class="bg_class()" :style="bg_css()"></div>
 
         <SvgPlot v-if="layout" :width="layout.width_px" :height="layout.height_px">
           <PlotLegend :x="x" :y="y(1)">FoV:&nbsp;&nbsp;{{layout.fov_au * 2|R(4)|unit('AU')}}</PlotLegend>

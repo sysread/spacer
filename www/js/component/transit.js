@@ -287,6 +287,12 @@ define(function(require, exports, module) {
         };
       },
 
+      bg_class() {
+        return {
+          'plot-root-with-galaxy': !this.game.options.hideMapBackground,
+        };
+      },
+
       show_label(body) {
         const central = this.system.central(body);
 
@@ -433,15 +439,6 @@ define(function(require, exports, module) {
 
         return false;
       },
-
-      classes() {
-        return {
-          'plot-root': true,
-          'plot-root-with-galaxy': !this.game.options.hideMapBackground,
-          'border': true,
-          'border-dark': true,
-        };
-      },
     },
 
     template: `
@@ -466,8 +463,8 @@ define(function(require, exports, module) {
           </tr>
         </table>
 
-        <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" :class="classes()">
-          <div class="plot-root-bg" :style="bg_css()"></div>
+        <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
+          <div class="plot-root-bg" :class="bg_class()" :style="bg_css()"></div>
 
           <SvgPlot v-if="layout" :width="layout.width_px" :height="layout.height_px">
             <line x1=130 y1=13 :x2="patrolpct * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
