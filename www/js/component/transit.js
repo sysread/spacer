@@ -481,7 +481,7 @@ define(function(require, exports, module) {
             <text style="fill:red; font:12px monospace" x=5 y=68>&Delta;V:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{plan.accel_g|R(3)|unit('G')}}</text>
 
             <g v-for="body in system.all_bodies()" :key="body">
-              <SvgOrbitPath :key="body+'-orbit'" :body="body" :layout="layout" />
+              <SvgPatrolRadius v-if="showPatrolRadii" :body="body" :coords="orbits[body][0]" :layout="layout" :intvl="intvl" />
               <SvgPlotPoint :body="body" :coords="orbits[body][0]" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" />
             </g>
 
