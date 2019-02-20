@@ -794,13 +794,6 @@ define(function(require, exports, module) {
         return this.system.central(body) != 'sun';
       },
 
-      show_patrol_radius(body) {
-        if (this.game.options.hidePatrolRadius)
-          return false;
-
-        return !this.is_zoomed;
-      },
-
       show_orbit(body) {
         if (this.game.options.hideOrbitPaths)
           return false;
@@ -844,7 +837,7 @@ define(function(require, exports, module) {
       <g>
         <g v-for="body of bodies">
           <SvgOrbitPath v-if="show_orbit(body)" :key="body+'-orbit'" :body="body" :layout="layout" />
-          <SvgPatrolRadius v-if="show_patrol_radius(body)" :key="body + '-patrol'" :body="body" :layout="layout" />
+          <SvgPatrolRadius :key="body + '-patrol'" :body="body" :layout="layout" />
         </g>
 
         <SvgPlotPoint
@@ -894,21 +887,29 @@ define(function(require, exports, module) {
         }
       },
 
-      radius() {
-        const r = this.game.planets[this.body]
-          ? this.game.planets[this.body].patrolRadius() * Physics.AU
+      radius_au() {
+        return this.game.planets[this.body]
+          ? this.game.planets[this.body].patrolRadius()
           : 0;
+      },
 
-        return this.layout.scale_length(r);
+      radius() {
+        return this.layout.scale_length(this.radius_au * Physics.AU);
       },
 
       opacity() {
+        if (this.game.options.hidePatrolRadius)
+          return 0;
+
+        if (this.radius_au > this.layout.fov_au)
+          return 0;
+
         if (this.data.bodies[this.body]) {
           const a = 0.1 * this.data.factions[this.faction].patrol;
           return util.clamp(a, 0.1, 0.25);
-        } else {
-          return 0;
         }
+
+        return 0;
       },
 
       standing() {

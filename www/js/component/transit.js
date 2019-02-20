@@ -71,7 +71,6 @@ define(function(require, exports, module) {
       distance()        { return util.R(this.plan.auRemaining()) },
       is_next_day()     { return this.plan.current_turn % data.turns_per_day == 0 },
       is_zoomed_in()    { return this.plan.turns < (10 * data.turns_per_day) },
-      showPatrolRadii() { return !this.game.options.hidePatrolRadius && !this.isSubSystemTransit },
       intvl_ms()        { return this.intvl * 1000 },
 
       isSubSystemTransit() {
@@ -509,7 +508,7 @@ define(function(require, exports, module) {
             <text style="fill:red; font:12px monospace" x=5 y=68>&Delta;V:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{plan.accel_g|R(3)|unit('G')}}</text>
 
             <g v-for="body in system.all_bodies()" :key="body">
-              <SvgPatrolRadius v-if="showPatrolRadii" :body="body" :coords="orbits[body][0]" :layout="layout" :intvl="intvl" />
+              <SvgPatrolRadius :body="body" :coords="orbits[body][0]" :layout="layout" :intvl="intvl" />
               <SvgPlotPoint :body="body" :coords="orbits[body][0]" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" />
             </g>
 
