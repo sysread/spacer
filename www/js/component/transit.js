@@ -148,6 +148,37 @@ define(function(require, exports, module) {
         return util.clamp(rate, 0, 1);
       },
 
+      // TODO implement this as its own version of the pirate encounter and
+      // remove trade bans from inspection/patrol rates.
+      privateerRates() {
+        const bans   = this.game.get_conflicts({name: 'trade ban'});
+        const ranges = this.nearby();
+        const rates  = {};
+
+        for (const body of Object.keys(this.data.bodies))
+          rates[body] = 0;
+
+        if (bans.length > 0) {
+          // for nearby bodies
+          for (const body of Object.keys(ranges).filter(b => this.game.planets[b].hasTradeBan)) {
+            // for bans targeting this nearby body's faction
+            for (const ban of bans.filter(c => c.target == this.data.bodies[body].faction)) {
+              // distance to nearby body
+              const au = ranges[body] / Physics.AU;
+
+              // bodies implementing the ban
+              for (const banner of t.bodies.filter(b => this.data.bodies[body].faction == ban.target)) {
+                // use the nearby body's piracy rate as the base, since it is
+                // calculated based on its patrol rate at this range.
+                rates[banner] += game.planets[body].piracyRate(au);
+              }
+            }
+          }
+        }
+
+        return rates;
+      },
+
       piracyRate() {
         const ranges = this.nearby();
         let total = 0;
