@@ -159,7 +159,7 @@ export class NavComp {
     }
   }
 
-  getTransitsTo(dest: t.body) {
+  async getTransitsTo(dest: t.body) {
     if (!this.data) {
       this.data = {};
     }
@@ -169,7 +169,7 @@ export class NavComp {
 
       const transits = this.astrogator(dest);
 
-      for (const transit of transits) {
+      for await (const transit of transits) {
         this.data[dest].push(transit);
       }
     }
@@ -178,14 +178,14 @@ export class NavComp {
   }
 
   // TODO this does not match Course.calculateAcceleration() in the slightest.
-  guestimate(dest: t.body) {
+  async guestimate(dest: t.body) {
     const max_turns  = data.turns_per_day * 365;
-    const start_pos  = system.position(this.orig);
+    const start_pos  = await system.position(this.orig);
     const start_time = system.time.getTime();
 
     for (let i = 1; i < max_turns; ++i) {
       const t      = i * data.hours_per_turn * 3600;
-      const end    = system.position(dest, start_time + t);
+      const end    = await system.position(dest, start_time + t);
       const s      = Physics.distance(start_pos, end);
       const t_flip = Math.ceil(t / 2);
       const s_flip = s / 2;
@@ -210,9 +210,9 @@ export class NavComp {
     }
   }
 
-  getFastestTransitTo(dest: t.body) {
+  async getFastestTransitTo(dest: t.body) {
     const transits = this.astrogator(dest);
-    for (const transit of transits) {
+    for await (const transit of transits) {
       return transit;
     }
   }
@@ -233,9 +233,9 @@ export class NavComp {
     }
   }
 
-  *astrogator(destination: t.body) {
-    const orig     = system.orbit_by_turns(this.orig);
-    const dest     = system.orbit_by_turns(destination);
+  async *astrogator(destination: t.body) {
+    const orig     = await system.orbit_by_turns(this.orig);
+    const dest     = await system.orbit_by_turns(destination);
     const vInit    = Vec.div_scalar( Vec.sub(orig[1], orig[0]), SPT );
     const bestAcc  = Math.min(this.player.maxAcceleration(), this.getShipAcceleration());
     const fuelrate = this.player.ship.fuelrate;

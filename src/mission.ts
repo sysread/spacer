@@ -42,8 +42,8 @@ export function estimateTransitTimeAU(au: number): number {
 }
 
 
-export function estimateTransitTime(orig: t.body, dest: t.body): number {
-  let au = util.R(system.distance(orig, dest) / Physics.AU);
+export async function estimateTransitTime(orig: t.body, dest: t.body) {
+  let au = util.R(await system.distance(orig, dest) / Physics.AU);
   return estimateTransitTimeAU(au);
 }
 
@@ -252,26 +252,26 @@ export class Passengers extends Mission {
   dest: t.body;
 
   constructor(opt: SavedPassengers) {
-    const est = estimateTransitTime(opt.issuer, opt.dest);
-
     // TODO race condition here; the orig and dest are moving so long as the
     // contract is offered, which may make the deadline impossible after
     // several days.
     // NOTE these are NOT restored from opt when reinitialized from game data.
     // they should always be fresh.
-    const params = Passengers.mission_parameters(opt.issuer, opt.dest);
-    opt.turns    = params.turns;
-    opt.reward   = params.reward;
-    opt.standing = Math.ceil(Math.log10(params.reward));
+    setTimeout(async () => {
+      const params = await Passengers.mission_parameters(opt.issuer, opt.dest);
+      opt.turns    = params.turns;
+      opt.reward   = params.reward;
+      opt.standing = Math.ceil(Math.log10(params.reward));
+    });
 
     super(opt);
 
     this.dest = opt.dest;
   }
 
-  static mission_parameters(orig: t.body, dest: t.body) {
+  static async mission_parameters(orig: t.body, dest: t.body) {
     const nav = new NavComp(window.game.player, orig, false, data.shipclass.schooner.tank, true);
-    const transit = nav.getFastestTransitTo(dest);
+    const transit = await nav.getFastestTransitTo(dest);
 
     if (transit) {
       const rate  = 3 * window.game.planets[orig].buyPrice('fuel');

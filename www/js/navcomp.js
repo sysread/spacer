@@ -1,3 +1,11 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __generator = (this && this.__generator) || function (thisArg, body) {
     var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
@@ -25,15 +33,24 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __values = (this && this.__values) || function (o) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
-    if (m) return m.call(o);
-    return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
+var __await = (this && this.__await) || function (v) { return this instanceof __await ? (this.v = v, this) : new __await(v); }
+var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _arguments, generator) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var g = generator.apply(thisArg, _arguments || []), i, q = [];
+    return i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i;
+    function verb(n) { if (g[n]) i[n] = function (v) { return new Promise(function (a, b) { q.push([n, v, a, b]) > 1 || resume(n, v); }); }; }
+    function resume(n, v) { try { step(g[n](v)); } catch (e) { settle(q[0][3], e); } }
+    function step(r) { r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r); }
+    function fulfill(value) { resume("next", value); }
+    function reject(value) { resume("throw", value); }
+    function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
 };
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -152,74 +169,138 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             }
         }
         NavComp.prototype.getTransitsTo = function (dest) {
-            var e_1, _a;
-            if (!this.data) {
-                this.data = {};
-            }
-            if (!this.data[dest]) {
-                this.data[dest] = [];
-                var transits = this.astrogator(dest);
-                try {
-                    for (var transits_1 = __values(transits), transits_1_1 = transits_1.next(); !transits_1_1.done; transits_1_1 = transits_1.next()) {
-                        var transit = transits_1_1.value;
-                        this.data[dest].push(transit);
+            return __awaiter(this, void 0, void 0, function () {
+                var e_1, _a, transits, transits_1, transits_1_1, transit, e_1_1;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            if (!this.data) {
+                                this.data = {};
+                            }
+                            if (!!this.data[dest]) return [3 /*break*/, 12];
+                            this.data[dest] = [];
+                            transits = this.astrogator(dest);
+                            _b.label = 1;
+                        case 1:
+                            _b.trys.push([1, 6, 7, 12]);
+                            transits_1 = __asyncValues(transits);
+                            _b.label = 2;
+                        case 2: return [4 /*yield*/, transits_1.next()];
+                        case 3:
+                            if (!(transits_1_1 = _b.sent(), !transits_1_1.done)) return [3 /*break*/, 5];
+                            transit = transits_1_1.value;
+                            this.data[dest].push(transit);
+                            _b.label = 4;
+                        case 4: return [3 /*break*/, 2];
+                        case 5: return [3 /*break*/, 12];
+                        case 6:
+                            e_1_1 = _b.sent();
+                            e_1 = { error: e_1_1 };
+                            return [3 /*break*/, 12];
+                        case 7:
+                            _b.trys.push([7, , 10, 11]);
+                            if (!(transits_1_1 && !transits_1_1.done && (_a = transits_1.return))) return [3 /*break*/, 9];
+                            return [4 /*yield*/, _a.call(transits_1)];
+                        case 8:
+                            _b.sent();
+                            _b.label = 9;
+                        case 9: return [3 /*break*/, 11];
+                        case 10:
+                            if (e_1) throw e_1.error;
+                            return [7 /*endfinally*/];
+                        case 11: return [7 /*endfinally*/];
+                        case 12: return [2 /*return*/, this.data[dest]];
                     }
-                }
-                catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                finally {
-                    try {
-                        if (transits_1_1 && !transits_1_1.done && (_a = transits_1.return)) _a.call(transits_1);
-                    }
-                    finally { if (e_1) throw e_1.error; }
-                }
-            }
-            return this.data[dest];
+                });
+            });
         };
         // TODO this does not match Course.calculateAcceleration() in the slightest.
         NavComp.prototype.guestimate = function (dest) {
-            var max_turns = data_1.default.turns_per_day * 365;
-            var start_pos = system_1.default.position(this.orig);
-            var start_time = system_1.default.time.getTime();
-            for (var i = 1; i < max_turns; ++i) {
-                var t_2 = i * data_1.default.hours_per_turn * 3600;
-                var end = system_1.default.position(dest, start_time + t_2);
-                var s = physics_1.default.distance(start_pos, end);
-                var t_flip = Math.ceil(t_2 / 2);
-                var s_flip = s / 2;
-                var v = (2 * s_flip) / t_flip;
-                var a = Math.abs(((2 * s_flip) / (t_flip * t_flip)) - ((2 * v) / t_flip));
-                if (a <= this.max) {
-                    var target = [end, [0, 0, 0]];
-                    var agent = [start_pos, [0, 0, 0]];
-                    var course = new Course(target, agent, a, i, this.dt);
-                    return new transitplan_1.TransitPlan({
-                        origin: this.orig,
-                        dest: dest,
-                        start: start_pos,
-                        end: end,
-                        dist: s,
-                        fuel: this.player.ship.burnRate(a) * i,
-                        course: course,
-                    });
-                }
-            }
+            return __awaiter(this, void 0, void 0, function () {
+                var max_turns, start_pos, start_time, i, t_2, end, s, t_flip, s_flip, v, a, target, agent, course;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            max_turns = data_1.default.turns_per_day * 365;
+                            return [4 /*yield*/, system_1.default.position(this.orig)];
+                        case 1:
+                            start_pos = _a.sent();
+                            start_time = system_1.default.time.getTime();
+                            i = 1;
+                            _a.label = 2;
+                        case 2:
+                            if (!(i < max_turns)) return [3 /*break*/, 5];
+                            t_2 = i * data_1.default.hours_per_turn * 3600;
+                            return [4 /*yield*/, system_1.default.position(dest, start_time + t_2)];
+                        case 3:
+                            end = _a.sent();
+                            s = physics_1.default.distance(start_pos, end);
+                            t_flip = Math.ceil(t_2 / 2);
+                            s_flip = s / 2;
+                            v = (2 * s_flip) / t_flip;
+                            a = Math.abs(((2 * s_flip) / (t_flip * t_flip)) - ((2 * v) / t_flip));
+                            if (a <= this.max) {
+                                target = [end, [0, 0, 0]];
+                                agent = [start_pos, [0, 0, 0]];
+                                course = new Course(target, agent, a, i, this.dt);
+                                return [2 /*return*/, new transitplan_1.TransitPlan({
+                                        origin: this.orig,
+                                        dest: dest,
+                                        start: start_pos,
+                                        end: end,
+                                        dist: s,
+                                        fuel: this.player.ship.burnRate(a) * i,
+                                        course: course,
+                                    })];
+                            }
+                            _a.label = 4;
+                        case 4:
+                            ++i;
+                            return [3 /*break*/, 2];
+                        case 5: return [2 /*return*/];
+                    }
+                });
+            });
         };
         NavComp.prototype.getFastestTransitTo = function (dest) {
-            var e_2, _a;
-            var transits = this.astrogator(dest);
-            try {
-                for (var transits_2 = __values(transits), transits_2_1 = transits_2.next(); !transits_2_1.done; transits_2_1 = transits_2.next()) {
-                    var transit = transits_2_1.value;
-                    return transit;
-                }
-            }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (transits_2_1 && !transits_2_1.done && (_a = transits_2.return)) _a.call(transits_2);
-                }
-                finally { if (e_2) throw e_2.error; }
-            }
+            return __awaiter(this, void 0, void 0, function () {
+                var e_2, _a, transits, transits_2, transits_2_1, transit, e_2_1;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            transits = this.astrogator(dest);
+                            _b.label = 1;
+                        case 1:
+                            _b.trys.push([1, 6, 7, 12]);
+                            transits_2 = __asyncValues(transits);
+                            _b.label = 2;
+                        case 2: return [4 /*yield*/, transits_2.next()];
+                        case 3:
+                            if (!(transits_2_1 = _b.sent(), !transits_2_1.done)) return [3 /*break*/, 5];
+                            transit = transits_2_1.value;
+                            return [2 /*return*/, transit];
+                        case 4: return [3 /*break*/, 2];
+                        case 5: return [3 /*break*/, 12];
+                        case 6:
+                            e_2_1 = _b.sent();
+                            e_2 = { error: e_2_1 };
+                            return [3 /*break*/, 12];
+                        case 7:
+                            _b.trys.push([7, , 10, 11]);
+                            if (!(transits_2_1 && !transits_2_1.done && (_a = transits_2.return))) return [3 /*break*/, 9];
+                            return [4 /*yield*/, _a.call(transits_2)];
+                        case 8:
+                            _b.sent();
+                            _b.label = 9;
+                        case 9: return [3 /*break*/, 11];
+                        case 10:
+                            if (e_2) throw e_2.error;
+                            return [7 /*endfinally*/];
+                        case 11: return [7 /*endfinally*/];
+                        case 12: return [2 /*return*/];
+                    }
+                });
+            });
         };
         NavComp.prototype.getShipAcceleration = function () {
             if (this.nominal) {
@@ -239,61 +320,67 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             }
         };
         NavComp.prototype.astrogator = function (destination) {
-            var orig, dest, vInit, bestAcc, fuelrate, thrust, fuel, mass, prevFuelUsed, turns, distance, fuelPerTurn, thrustPerTurn, availAcc, maxAccel, vFinal, target, agent, course, a, fuelUsed, fuelUsedPerTurn;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        orig = system_1.default.orbit_by_turns(this.orig);
-                        dest = system_1.default.orbit_by_turns(destination);
-                        vInit = Vec.div_scalar(Vec.sub(orig[1], orig[0]), SPT);
-                        bestAcc = Math.min(this.player.maxAcceleration(), this.getShipAcceleration());
-                        fuelrate = this.player.ship.fuelrate;
-                        thrust = this.player.ship.thrust;
-                        fuel = this.fuelTarget;
-                        mass = this.getShipMass();
-                        turns = 1;
-                        _a.label = 1;
-                    case 1:
-                        if (!(turns < dest.length)) return [3 /*break*/, 4];
-                        distance = physics_1.default.distance(orig[0], dest[turns]);
-                        fuelPerTurn = Math.min(fuel / turns, fuelrate);
-                        thrustPerTurn = thrust * fuelPerTurn / fuelrate;
-                        availAcc = thrustPerTurn / mass;
-                        maxAccel = Math.min(bestAcc, availAcc);
-                        vFinal = Vec.div_scalar(Vec.sub(dest[turns], dest[turns - 1]), SPT);
-                        target = [dest[turns], vFinal];
-                        agent = [orig[0], vInit];
-                        course = new Course(target, agent, maxAccel, turns, this.dt);
-                        a = Vec.length(course.accel);
-                        if (a > maxAccel)
+            return __asyncGenerator(this, arguments, function astrogator_1() {
+                var orig, dest, vInit, bestAcc, fuelrate, thrust, fuel, mass, prevFuelUsed, turns, distance, fuelPerTurn, thrustPerTurn, availAcc, maxAccel, vFinal, target, agent, course, a, fuelUsed, fuelUsedPerTurn;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, __await(system_1.default.orbit_by_turns(this.orig))];
+                        case 1:
+                            orig = _a.sent();
+                            return [4 /*yield*/, __await(system_1.default.orbit_by_turns(destination))];
+                        case 2:
+                            dest = _a.sent();
+                            vInit = Vec.div_scalar(Vec.sub(orig[1], orig[0]), SPT);
+                            bestAcc = Math.min(this.player.maxAcceleration(), this.getShipAcceleration());
+                            fuelrate = this.player.ship.fuelrate;
+                            thrust = this.player.ship.thrust;
+                            fuel = this.fuelTarget;
+                            mass = this.getShipMass();
+                            turns = 1;
+                            _a.label = 3;
+                        case 3:
+                            if (!(turns < dest.length)) return [3 /*break*/, 7];
+                            distance = physics_1.default.distance(orig[0], dest[turns]);
+                            fuelPerTurn = Math.min(fuel / turns, fuelrate);
+                            thrustPerTurn = thrust * fuelPerTurn / fuelrate;
+                            availAcc = thrustPerTurn / mass;
+                            maxAccel = Math.min(bestAcc, availAcc);
+                            vFinal = Vec.div_scalar(Vec.sub(dest[turns], dest[turns - 1]), SPT);
+                            target = [dest[turns], vFinal];
+                            agent = [orig[0], vInit];
+                            course = new Course(target, agent, maxAccel, turns, this.dt);
+                            a = Vec.length(course.accel);
+                            if (a > maxAccel)
+                                return [3 /*break*/, 6];
+                            fuelUsed = a / availAcc * fuelPerTurn * turns * 0.99;
+                            fuelUsedPerTurn = fuelUsed / turns;
+                            if (fuelUsed > fuel)
+                                return [3 /*break*/, 6];
+                            if (prevFuelUsed === undefined || prevFuelUsed >= fuelUsed) {
+                                prevFuelUsed = fuelUsed;
+                            }
+                            else {
+                                return [3 /*break*/, 6];
+                            }
+                            return [4 /*yield*/, __await(new transitplan_1.TransitPlan({
+                                    origin: this.orig,
+                                    dest: destination,
+                                    start: orig[0],
+                                    end: dest[turns],
+                                    dist: distance,
+                                    fuel: fuelUsed,
+                                    course: course,
+                                }))];
+                        case 4: return [4 /*yield*/, _a.sent()];
+                        case 5:
+                            _a.sent();
+                            _a.label = 6;
+                        case 6:
+                            ++turns;
                             return [3 /*break*/, 3];
-                        fuelUsed = a / availAcc * fuelPerTurn * turns * 0.99;
-                        fuelUsedPerTurn = fuelUsed / turns;
-                        if (fuelUsed > fuel)
-                            return [3 /*break*/, 3];
-                        if (prevFuelUsed === undefined || prevFuelUsed >= fuelUsed) {
-                            prevFuelUsed = fuelUsed;
-                        }
-                        else {
-                            return [3 /*break*/, 3];
-                        }
-                        return [4 /*yield*/, new transitplan_1.TransitPlan({
-                                origin: this.orig,
-                                dest: destination,
-                                start: orig[0],
-                                end: dest[turns],
-                                dist: distance,
-                                fuel: fuelUsed,
-                                course: course,
-                            })];
-                    case 2:
-                        _a.sent();
-                        _a.label = 3;
-                    case 3:
-                        ++turns;
-                        return [3 /*break*/, 1];
-                    case 4: return [2 /*return*/];
-                }
+                        case 7: return [2 /*return*/];
+                    }
+                });
             });
         };
         return NavComp;

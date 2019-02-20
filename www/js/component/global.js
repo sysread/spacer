@@ -1,10 +1,13 @@
 define(function(require, exports, module) {
   "use strict"
 
-  const Vue    = require('vendor/vue');
   const game   = require('game');
   const data   = require('data');
   const system = require('system');
+
+  const Vue = require('vendor/vue');
+  const AsyncComputed = require('vendor/vue-async-computed');
+  Vue.use(AsyncComputed);
 
   Vue.mixin({
     data() {

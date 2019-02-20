@@ -38,7 +38,7 @@ class System {
   orbits:  {[key: string]: Orbit} = {};
 
   constructor() {
-    window.addEventListener("turn", () => {
+    window.addEventListener("turn", async () => {
       this.orbits = {};
       this.pos = {};
 
@@ -52,7 +52,7 @@ class System {
           this.orbit_by_turns(body);
         } else {
           this.cache[key].shift();
-          this.cache[key].push(this.position(body, date));
+          this.cache[key].push(await this.position(body, date));
         }
       }
     });
@@ -155,21 +155,21 @@ class System {
     throw new Error(name + " does not have parameters for calculation of gravity");
   }
 
-  ranges(point: V.Point) {
+  async ranges(point: V.Point) {
     const ranges: { [key: string]: number } = {};
 
     for (const body of this.bodies()) {
-      ranges[body] = Physics.distance(point, this.position(body));
+      ranges[body] = Physics.distance(point, await this.position(body));
     }
 
     return ranges;
   }
 
-  closestBodyToPoint(point: V.Point) {
+  async closestBodyToPoint(point: V.Point) {
     let dist, closest;
 
     for (const body of this.bodies()) {
-      const d = Physics.distance(point, this.position(body));
+      const d = Physics.distance(point, await this.position(body));
       if (dist === undefined || d < dist) {
         dist = d;
         closest = body;
@@ -179,7 +179,15 @@ class System {
     return [closest, dist];
   }
 
-  position(name: string, date?: number | Date): V.Point {
+  orbit(name: string) {
+    if (!this.orbits[name]) {
+      this.orbits[name] = this.body(name).orbit(this.time.getTime());
+    }
+
+    return this.orbits[name];
+  }
+
+  async position(name: string, date?: number | Date): Promise<V.Point> {
     if (name == 'sun') {
       return [0, 0, 0];
     }
@@ -194,23 +202,15 @@ class System {
     if (this.pos[key][name] == undefined) {
       const body = this.body(name);
       const t = date instanceof Date ? date.getTime() : date;
-      let pos = body.getPositionAtTime(t);
-      this.pos[key][name] = pos.absolute;
+      let pos = await body.getPositionAtTimeSoon(t);
+      this.pos[key][name] = await pos.absolute();
     }
 
     return this.pos[key][name];
   }
 
-  orbit(name: string) {
-    if (!this.orbits[name]) {
-      this.orbits[name] = this.body(name).orbit(this.time.getTime());
-    }
-
-    return this.orbits[name];
-  }
-
   // turns, relative to sun
-  orbit_by_turns(name: string) {
+  async orbit_by_turns(name: string): Promise<V.Point[]> {
     const key = `${name}.orbit.turns`;
 
     if (this.cache[key] == undefined) {
@@ -220,7 +220,7 @@ class System {
       let date = this.time.getTime();
 
       for (let i = 0; i < periods; ++i) {
-        points.push(this.position(name, date));
+        points.push(await this.position(name, date));
         date += ms_per_turn;
       }
 
@@ -230,10 +230,10 @@ class System {
     return this.cache[key];
   }
 
-  distance(origin: string, destination: string): number {
+  async distance(origin: string, destination: string): Promise<number> {
     return Physics.distance(
-      this.position(origin),
-      this.position(destination)
+      await this.position(origin),
+      await this.position(destination)
     );
   }
 }

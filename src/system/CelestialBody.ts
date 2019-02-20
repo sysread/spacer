@@ -1,6 +1,7 @@
 import { Body, Elements, ElementsBase, Satellites, LaGrange, LaGranges, Rings, body_type, position } from './data/body';
 import { Orbit, Frame } from "./orbit";
 import Physics from '../physics';
+import Deferred from '../deferred';
 import * as units     from './helpers/units';
 import * as constants from './data/constants';
 import * as V         from '../vector';
@@ -58,6 +59,7 @@ export abstract class SpaceThing {
 
   abstract period(start: number): number;
   abstract getPositionAtTime(t: number): Frame;
+  abstract async getPositionAtTimeSoon(t: number): Promise<Frame>;
 }
 
 
@@ -73,6 +75,9 @@ export class CelestialBody extends SpaceThing {
   elements?:  Elements;
   position?:  position;
 
+  worker:     Worker;
+  pending:    {[key: number]: Deferred<ElementsAtTime>};
+
   constructor(key: string, data: Body, central?: CelestialBody) {
     super(key, data.name, data.type, data.radius);
     const init = CelestialBody.adaptData(data);
@@ -83,6 +88,14 @@ export class CelestialBody extends SpaceThing {
     this.position = init.position;
     this.mu       = constants.G * this.mass; // m^3/s^2
     this.tilt     = init.tilt == undefined ? 0 : rad(-init.tilt);
+
+
+    this.pending = {};
+    this.worker = new Worker("js/orbit_worker.js");
+    this.worker.onmessage = (e) => {
+      const {time, result} = e.data;
+      this.pending[time].resolve(result);
+    };
   }
 
   static adaptData(body: Body): Body {
@@ -115,6 +128,49 @@ export class CelestialBody extends SpaceThing {
     }
 
     return data;
+  }
+
+  async getElementsAtTimeSoon(time: number): Promise<ElementsAtTime> {
+    this.pending[time] = new Deferred;
+
+    const body = {
+      elements: this.elements,
+      central:  this.central ? {mu: this.central.mu} : undefined,
+    };
+
+    this.worker.postMessage({
+      body: body,
+      time: time,
+    });
+
+    return await this.pending[time].promise;
+  }
+
+  async getPositionAtTimeSoon(t: number): Promise<Frame> {
+    if (!this.central) {
+      return new Frame([0, 0, 0], undefined, t);
+    }
+
+    let {a, e, i, L, lp, node, w, M, E} = await this.getElementsAtTimeSoon(t);
+
+    i    = nrad(i);
+    node = nrad(node);
+    w    = nrad(w);
+    M    = nrad(M);
+    E    = nrad(E);
+
+    const x = a * (Math.cos(E) - e);
+    const y = a * Math.sin(E) * Math.sqrt(1 - (e * e));
+
+    const p = Q.rotate_vector(
+      Q.mul(
+        Q.from_euler(node, this.central.tilt, 0),
+        Q.from_euler(w, i, 0),
+      ),
+      [x, y, 0],
+    );
+
+    return new Frame(p, this.central, t);
   }
 
   period(t: number): number {
@@ -254,6 +310,14 @@ export class LaGrangePoint extends SpaceThing {
   getPositionAtTime(t: number): Frame {
     const r = this.offset;
     let [x, y, z] = this.parent.getPositionAtTime(t).position;
+    const x1 = (x * Math.cos(this.offset)) - (y * Math.sin(this.offset));
+    const y1 = (x * Math.sin(this.offset)) + (y * Math.cos(this.offset));
+    return new Frame([x1, y1, z], undefined, t);
+  }
+
+  async getPositionAtTimeSoon(t: number): Promise<Frame> {
+    const r = this.offset;
+    let [x, y, z] = (await this.parent.getPositionAtTimeSoon(t)).position;
     const x1 = (x * Math.cos(this.offset)) - (y * Math.sin(this.offset));
     const y1 = (x * Math.sin(this.offset)) + (y * Math.cos(this.offset));
     return new Frame([x1, y1, z], undefined, t);

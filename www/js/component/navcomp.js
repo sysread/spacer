@@ -604,17 +604,19 @@ define(function(require, exports, module) {
     computed: {
       points() { return this.transit.path },
       path()   { return this.layout.scale_path(this.points.map(p => p.position)) },
+    },
 
-      dest_path() {
-        const orbit = this.system.orbit_by_turns(this.transit.dest);
-        const path  = orbit.slice(0, this.transit.turns + 1);
+    asyncComputed: {
+      async dest_path() {
+        const orbit = await this.system.orbit_by_turns_soon(this.transit.dest);
+        const path = orbit.slice(0, this.transit.turns + 1);
         return this.layout.scale_path(path);
       },
     },
 
     template: `
       <g>
-        <SvgPath :points="dest_path" color="red" smooth=1 />
+        <SvgPath v-if="dest_path" :points="dest_path" color="red" smooth=1 />
         <SvgPath :points="path" color="green" smooth=1 />
       </g>
     `,

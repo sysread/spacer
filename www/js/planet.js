@@ -1,3 +1,38 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
 var __values = (this && this.__values) || function (o) {
     var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
     if (m) return m.call(o);
@@ -301,7 +336,14 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             configurable: true
         });
         Planet.prototype.distance = function (toBody) {
-            return system_1.default.distance(this.body, toBody);
+            return __awaiter(this, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, system_1.default.distance(this.body, toBody)];
+                        case 1: return [2 /*return*/, _a.sent()];
+                    }
+                });
+            });
         };
         Planet.prototype.hasTrait = function (trait) {
             var e_10, _a;
@@ -453,21 +495,32 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.fabricationFee = function (item, count, player) {
             if (count === void 0) { count = 1; }
-            var resource = resource_1.resources[item];
-            if (!resource_1.isCraft(resource)) {
-                throw new Error(item + " is not craftable");
-            }
-            var rate = data_1.default.craft_fee * this.sellPrice(item);
-            var reduction = this.fabricationReductionRate();
-            var health = this.fab_health;
-            var fee = 5 * rate * count;
-            for (var i = 0; i < count && health > 0; ++i) {
-                health -= resource.craftTurns * reduction;
-                fee -= rate * 4;
-            }
-            fee -= fee * player.getStandingPriceAdjustment(this.faction.abbrev);
-            fee += fee * this.faction.sales_tax;
-            return Math.max(1, Math.ceil(fee));
+            return __awaiter(this, void 0, void 0, function () {
+                var resource, rate, _a, reduction, health, fee, i;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            resource = resource_1.resources[item];
+                            if (!resource_1.isCraft(resource)) {
+                                throw new Error(item + " is not craftable");
+                            }
+                            _a = data_1.default.craft_fee;
+                            return [4 /*yield*/, this.sellPrice(item)];
+                        case 1:
+                            rate = _a * (_b.sent());
+                            reduction = this.fabricationReductionRate();
+                            health = this.fab_health;
+                            fee = 5 * rate * count;
+                            for (i = 0; i < count && health > 0; ++i) {
+                                health -= resource.craftTurns * reduction;
+                                fee -= rate * 4;
+                            }
+                            fee -= fee * player.getStandingPriceAdjustment(this.faction.abbrev);
+                            fee += fee * this.faction.sales_tax;
+                            return [2 /*return*/, Math.max(1, Math.ceil(fee))];
+                    }
+                });
+            });
         };
         Planet.prototype.fabricate = function (item) {
             var resource = resource_1.resources[item];
@@ -488,11 +541,22 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return turns_taken;
         };
         Planet.prototype.replenishFabricators = function () {
-            if (this.fab_health < this.max_fab_health / 2) {
-                var want = Math.ceil((this.max_fab_health - this.fab_health) / data_1.default.fab_health);
-                var _a = __read(this.buy('cybernetics', want), 2), bought = _a[0], price = _a[1];
-                this.fab_health += bought * data_1.default.fab_health;
-            }
+            return __awaiter(this, void 0, void 0, function () {
+                var want, _a, bought, price;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            if (!(this.fab_health < this.max_fab_health / 2)) return [3 /*break*/, 2];
+                            want = Math.ceil((this.max_fab_health - this.fab_health) / data_1.default.fab_health);
+                            return [4 /*yield*/, this.buy('cybernetics', want)];
+                        case 1:
+                            _a = __read.apply(void 0, [_b.sent(), 2]), bought = _a[0], price = _a[1];
+                            this.fab_health += bought * data_1.default.fab_health;
+                            _b.label = 2;
+                        case 2: return [2 /*return*/];
+                    }
+                });
+            });
         };
         /*
          * Work
@@ -695,54 +759,72 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * adjustment.
          */
         Planet.prototype.getAvailabilityMarkup = function (item) {
-            var e_17, _a;
-            // If this planet is a net exporter of the item, easy access results in a
-            // lower price.
-            if (this.isNetExporter(item)) {
-                return 0.8;
-            }
-            // Find the nearest exporter of the item
-            var distance;
-            var nearest;
-            try {
-                for (var _b = __values(t.bodies), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var body = _c.value;
-                    if (body == this.body) {
-                        continue;
+            return __awaiter(this, void 0, void 0, function () {
+                var e_17, _a, distance, nearest, _b, _c, body, d, e_17_1, markup, au, i;
+                return __generator(this, function (_d) {
+                    switch (_d.label) {
+                        case 0:
+                            // If this planet is a net exporter of the item, easy access results in a
+                            // lower price.
+                            if (this.isNetExporter(item)) {
+                                return [2 /*return*/, 0.8];
+                            }
+                            _d.label = 1;
+                        case 1:
+                            _d.trys.push([1, 6, 7, 8]);
+                            _b = __values(t.bodies), _c = _b.next();
+                            _d.label = 2;
+                        case 2:
+                            if (!!_c.done) return [3 /*break*/, 5];
+                            body = _c.value;
+                            if (body == this.body) {
+                                return [3 /*break*/, 4];
+                            }
+                            if (!window.game.planets[body].isNetExporter(item)) {
+                                return [3 /*break*/, 4];
+                            }
+                            return [4 /*yield*/, system_1.default.distance(this.body, body)];
+                        case 3:
+                            d = _d.sent();
+                            if (distance == undefined || distance > d) {
+                                nearest = body;
+                                distance = d;
+                            }
+                            _d.label = 4;
+                        case 4:
+                            _c = _b.next();
+                            return [3 /*break*/, 2];
+                        case 5: return [3 /*break*/, 8];
+                        case 6:
+                            e_17_1 = _d.sent();
+                            e_17 = { error: e_17_1 };
+                            return [3 /*break*/, 8];
+                        case 7:
+                            try {
+                                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                            }
+                            finally { if (e_17) throw e_17.error; }
+                            return [7 /*endfinally*/];
+                        case 8:
+                            if (distance != undefined && nearest != undefined) {
+                                markup = 1;
+                                // Competing market malus
+                                if (data_1.default.bodies[nearest].faction != data_1.default.bodies[this.body].faction) {
+                                    markup += 0.1;
+                                }
+                                au = Math.ceil(distance / physics_1.default.AU);
+                                for (i = 0; i < au; ++i) {
+                                    markup *= 1.05;
+                                }
+                                return [2 /*return*/, markup];
+                            }
+                            else {
+                                return [2 /*return*/, 1];
+                            }
+                            return [2 /*return*/];
                     }
-                    if (!window.game.planets[body].isNetExporter(item)) {
-                        continue;
-                    }
-                    var d = system_1.default.distance(this.body, body);
-                    if (distance == undefined || distance > d) {
-                        nearest = body;
-                        distance = d;
-                    }
-                }
-            }
-            catch (e_17_1) { e_17 = { error: e_17_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_17) throw e_17.error; }
-            }
-            if (distance != undefined && nearest != undefined) {
-                var markup = 1;
-                // Competing market malus
-                if (data_1.default.bodies[nearest].faction != data_1.default.bodies[this.body].faction) {
-                    markup += 0.1;
-                }
-                // Distance malus: compound 10% markup for each AU
-                var au = Math.ceil(distance / physics_1.default.AU);
-                for (var i = 0; i < au; ++i) {
-                    markup *= 1.05;
-                }
-                return markup;
-            }
-            else {
-                return 1;
-            }
+                });
+            });
         };
         /**
          * Percent adjustment to price due to an item being a necessity (see
@@ -786,132 +868,180 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return markup;
         };
         Planet.prototype.price = function (item) {
-            var e_19, _a;
-            if (this._price[item] == undefined) {
-                var value = resource_1.resources[item].value;
-                var need = this.getNeed(item);
-                var price = 0;
-                if (need > 1) {
-                    price = value + (value * Math.log(need));
-                }
-                else if (need < 1) {
-                    price = value * need;
-                }
-                else {
-                    price = value;
-                }
-                try {
-                    // Linear adjustments for market classifications
-                    for (var _b = __values(this.traits), _c = _b.next(); !_c.done; _c = _b.next()) {
-                        var trait = _c.value;
-                        price -= price * (trait.price[item] || 0);
+            return __awaiter(this, void 0, void 0, function () {
+                var e_19, _a, value, need, price, _b, _c, trait, _d;
+                return __generator(this, function (_e) {
+                    switch (_e.label) {
+                        case 0:
+                            if (!(this._price[item] == undefined)) return [3 /*break*/, 2];
+                            value = resource_1.resources[item].value;
+                            need = this.getNeed(item);
+                            price = 0;
+                            if (need > 1) {
+                                price = value + (value * Math.log(need));
+                            }
+                            else if (need < 1) {
+                                price = value * need;
+                            }
+                            else {
+                                price = value;
+                            }
+                            try {
+                                // Linear adjustments for market classifications
+                                for (_b = __values(this.traits), _c = _b.next(); !_c.done; _c = _b.next()) {
+                                    trait = _c.value;
+                                    price -= price * (trait.price[item] || 0);
+                                }
+                            }
+                            catch (e_19_1) { e_19 = { error: e_19_1 }; }
+                            finally {
+                                try {
+                                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                                }
+                                finally { if (e_19) throw e_19.error; }
+                            }
+                            // Scarcity adjustment for items necessary to survival
+                            price *= this.getScarcityMarkup(item);
+                            // Scarcity adjustment due to temporary conditions affecting production
+                            // and consumption of resources
+                            price *= this.getConditionMarkup(item);
+                            // Set upper and lower boundary to prevent superheating or crashing
+                            // markets.
+                            price = resource_1.resources[item].clampPrice(price);
+                            // Post-clamp adjustments due to distance
+                            _d = price;
+                            return [4 /*yield*/, this.getAvailabilityMarkup(item)];
+                        case 1:
+                            // Post-clamp adjustments due to distance
+                            price = _d * _e.sent();
+                            // Add a bit of "unaccounted for local influences"
+                            price = util.fuzz(price, 0.05);
+                            this._price[item] = util.R(price);
+                            _e.label = 2;
+                        case 2: return [2 /*return*/, this._price[item]];
                     }
-                }
-                catch (e_19_1) { e_19 = { error: e_19_1 }; }
-                finally {
-                    try {
-                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                    }
-                    finally { if (e_19) throw e_19.error; }
-                }
-                // Scarcity adjustment for items necessary to survival
-                price *= this.getScarcityMarkup(item);
-                // Scarcity adjustment due to temporary conditions affecting production
-                // and consumption of resources
-                price *= this.getConditionMarkup(item);
-                // Set upper and lower boundary to prevent superheating or crashing
-                // markets.
-                price = resource_1.resources[item].clampPrice(price);
-                // Post-clamp adjustments due to distance
-                price *= this.getAvailabilityMarkup(item);
-                // Add a bit of "unaccounted for local influences"
-                price = util.fuzz(price, 0.05);
-                this._price[item] = util.R(price);
-            }
-            return this._price[item];
+                });
+            });
         };
         Planet.prototype.sellPrice = function (item) {
-            return this.price(item);
+            return __awaiter(this, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, this.price(item)];
+                        case 1: return [2 /*return*/, _a.sent()];
+                    }
+                });
+            });
         };
         Planet.prototype.buyPrice = function (item, player) {
-            var price = this.price(item) * (1 + this.faction.sales_tax);
-            return player
-                ? Math.ceil(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
-                : Math.ceil(price);
+            return __awaiter(this, void 0, void 0, function () {
+                var price;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, this.price(item)];
+                        case 1:
+                            price = (_a.sent()) * (1 + this.faction.sales_tax);
+                            return [2 /*return*/, player
+                                    ? Math.ceil(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
+                                    : Math.ceil(price)];
+                    }
+                });
+            });
         };
         Planet.prototype.buy = function (item, amount, player) {
-            var bought = Math.min(amount, this.getStock(item));
-            var price = bought * this.buyPrice(item, player);
-            this.incDemand(item, amount);
-            this.stock.dec(item, bought);
-            if (player && bought) {
-                player.debit(price);
-                player.ship.loadCargo(item, bought);
-                if (player === window.game.player) {
-                    window.dispatchEvent(new CustomEvent("itemsBought", {
-                        detail: {
-                            count: bought,
-                            body: this.body,
-                            item: item,
-                            price: price
-                        }
-                    }));
-                }
-            }
-            return [bought, price];
+            return __awaiter(this, void 0, void 0, function () {
+                var bought, price, _a;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
+                        case 0:
+                            bought = Math.min(amount, this.getStock(item));
+                            _a = bought;
+                            return [4 /*yield*/, this.buyPrice(item, player)];
+                        case 1:
+                            price = _a * (_b.sent());
+                            this.incDemand(item, amount);
+                            this.stock.dec(item, bought);
+                            if (player && bought) {
+                                player.debit(price);
+                                player.ship.loadCargo(item, bought);
+                                if (player === window.game.player) {
+                                    window.dispatchEvent(new CustomEvent("itemsBought", {
+                                        detail: {
+                                            count: bought,
+                                            body: this.body,
+                                            item: item,
+                                            price: price
+                                        }
+                                    }));
+                                }
+                            }
+                            return [2 /*return*/, [bought, price]];
+                    }
+                });
+            });
         };
         Planet.prototype.sell = function (item, amount, player) {
-            var e_20, _a;
-            var hasShortage = this.hasShortage(item);
-            var price = amount * this.sellPrice(item);
-            this.stock.inc(item, amount);
-            var standing = 0;
-            if (player) {
-                player.ship.unloadCargo(item, amount);
-                player.credit(price);
-                if (hasShortage && !resource_1.resources[item].contraband) {
-                    // Player ended a shortage. Increase their standing with our faction.
-                    if (!this.hasShortage(item)) {
-                        standing += util.getRandomNum(3, 8);
+            return __awaiter(this, void 0, void 0, function () {
+                var e_20, _a, hasShortage, price, _b, standing, _c, _d, c;
+                return __generator(this, function (_e) {
+                    switch (_e.label) {
+                        case 0:
+                            hasShortage = this.hasShortage(item);
+                            _b = amount;
+                            return [4 /*yield*/, this.sellPrice(item)];
+                        case 1:
+                            price = _b * (_e.sent());
+                            this.stock.inc(item, amount);
+                            standing = 0;
+                            if (player) {
+                                player.ship.unloadCargo(item, amount);
+                                player.credit(price);
+                                if (hasShortage && !resource_1.resources[item].contraband) {
+                                    // Player ended a shortage. Increase their standing with our faction.
+                                    if (!this.hasShortage(item)) {
+                                        standing += util.getRandomNum(3, 8);
+                                    }
+                                    // Player contributed toward ending a shortage. Increase their
+                                    // standing with our faction slightly.
+                                    else {
+                                        standing += util.getRandomNum(1, 3);
+                                    }
+                                }
+                                try {
+                                    // Player sold items needed as a result of a condition
+                                    for (_c = __values(this.conditions), _d = _c.next(); !_d.done; _d = _c.next()) {
+                                        c = _d.value;
+                                        if (c.consumes[item] != undefined) {
+                                            standing += util.getRandomNum(2, 5);
+                                        }
+                                    }
+                                }
+                                catch (e_20_1) { e_20 = { error: e_20_1 }; }
+                                finally {
+                                    try {
+                                        if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                                    }
+                                    finally { if (e_20) throw e_20.error; }
+                                }
+                                if (standing > 0)
+                                    player.incStanding(this.faction.abbrev, standing);
+                                // only trigger for the player, not for agents
+                                if (player === window.game.player) {
+                                    window.dispatchEvent(new CustomEvent("itemsSold", {
+                                        detail: {
+                                            count: amount,
+                                            body: this.body,
+                                            item: item,
+                                            price: price,
+                                            standing: standing,
+                                        },
+                                    }));
+                                }
+                            }
+                            return [2 /*return*/, [amount, price, standing]];
                     }
-                    // Player contributed toward ending a shortage. Increase their
-                    // standing with our faction slightly.
-                    else {
-                        standing += util.getRandomNum(1, 3);
-                    }
-                }
-                try {
-                    // Player sold items needed as a result of a condition
-                    for (var _b = __values(this.conditions), _c = _b.next(); !_c.done; _c = _b.next()) {
-                        var c = _c.value;
-                        if (c.consumes[item] != undefined) {
-                            standing += util.getRandomNum(2, 5);
-                        }
-                    }
-                }
-                catch (e_20_1) { e_20 = { error: e_20_1 }; }
-                finally {
-                    try {
-                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                    }
-                    finally { if (e_20) throw e_20.error; }
-                }
-                if (standing > 0)
-                    player.incStanding(this.faction.abbrev, standing);
-                // only trigger for the player, not for agents
-                if (player === window.game.player) {
-                    window.dispatchEvent(new CustomEvent("itemsSold", {
-                        detail: {
-                            count: amount,
-                            body: this.body,
-                            item: item,
-                            price: price,
-                            standing: standing,
-                        },
-                    }));
-                }
-            }
-            return [amount, price, standing];
+                });
+            });
         };
         Planet.prototype.schedule = function (task) {
             this.pending.inc(task.item, task.count);
@@ -950,37 +1080,59 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return Math.max(Math.ceil(amount), 0);
         };
         Planet.prototype.neededResources = function () {
-            var e_22, _a;
-            var amounts = {}; // Calculate how many of each item we want
-            var need = {}; // Pre-calculate each item's need
-            try {
-                for (var _b = __values(t.resources), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var item = _c.value;
-                    var amount = this.neededResourceAmount(resource_1.resources[item]);
-                    if (amount > 0) {
-                        amounts[item] = amount;
-                        need[item] = Math.log(this.price(item)) * this.getNeed(item);
+            return __awaiter(this, void 0, void 0, function () {
+                var e_22, _a, amounts, need, _b, _c, item, amount, _d, _e, _f, _g, e_22_1, prioritized;
+                return __generator(this, function (_h) {
+                    switch (_h.label) {
+                        case 0:
+                            amounts = {};
+                            need = {};
+                            _h.label = 1;
+                        case 1:
+                            _h.trys.push([1, 6, 7, 8]);
+                            _b = __values(t.resources), _c = _b.next();
+                            _h.label = 2;
+                        case 2:
+                            if (!!_c.done) return [3 /*break*/, 5];
+                            item = _c.value;
+                            amount = this.neededResourceAmount(resource_1.resources[item]);
+                            if (!(amount > 0)) return [3 /*break*/, 4];
+                            amounts[item] = amount;
+                            _d = need;
+                            _e = item;
+                            _g = (_f = Math).log;
+                            return [4 /*yield*/, this.price(item)];
+                        case 3:
+                            _d[_e] = _g.apply(_f, [_h.sent()]) * this.getNeed(item);
+                            _h.label = 4;
+                        case 4:
+                            _c = _b.next();
+                            return [3 /*break*/, 2];
+                        case 5: return [3 /*break*/, 8];
+                        case 6:
+                            e_22_1 = _h.sent();
+                            e_22 = { error: e_22_1 };
+                            return [3 /*break*/, 8];
+                        case 7:
+                            try {
+                                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                            }
+                            finally { if (e_22) throw e_22.error; }
+                            return [7 /*endfinally*/];
+                        case 8:
+                            prioritized = Object.keys(amounts).sort(function (a, b) {
+                                var diff = need[a] - need[b];
+                                return diff > 0 ? -1
+                                    : diff < 0 ? 1
+                                        : 0;
+                            });
+                            return [2 /*return*/, {
+                                    'prioritized': prioritized,
+                                    'amounts': amounts,
+                                }];
                     }
-                }
-            }
-            catch (e_22_1) { e_22 = { error: e_22_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_22) throw e_22.error; }
-            }
-            // Sort the greatest needs to the front of the list
-            var prioritized = Object.keys(amounts).sort(function (a, b) {
-                var diff = need[a] - need[b];
-                return diff > 0 ? -1
-                    : diff < 0 ? 1
-                        : 0;
+                });
             });
-            return {
-                'prioritized': prioritized,
-                'amounts': amounts,
-            };
         };
         Planet.prototype.exporters = function (item) {
             var _this = this;
@@ -993,81 +1145,101 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             });
         };
         Planet.prototype.selectExporter = function (item, amount) {
-            var e_23, _a, e_24, _b, e_25, _c;
-            var exporters = this.exporters(item);
-            if (exporters.length === 0)
-                return;
-            // Calculate a rating based on difference from average distance, price, stock
-            var dist = {};
-            var price = {};
-            var stock = {};
-            try {
-                for (var exporters_1 = __values(exporters), exporters_1_1 = exporters_1.next(); !exporters_1_1.done; exporters_1_1 = exporters_1.next()) {
-                    var body = exporters_1_1.value;
-                    if (window.game.planets[body].hasTradeBan)
-                        continue;
-                    dist[body] = this.distance(body) / physics_1.default.AU * window.game.planets[body].buyPrice('fuel');
-                    price[body] = window.game.planets[body].buyPrice(item);
-                    stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
-                }
-            }
-            catch (e_23_1) { e_23 = { error: e_23_1 }; }
-            finally {
-                try {
-                    if (exporters_1_1 && !exporters_1_1.done && (_a = exporters_1.return)) _a.call(exporters_1);
-                }
-                finally { if (e_23) throw e_23.error; }
-            }
-            var avgDist = Object.values(dist).reduce(function (a, b) { return a + b; }, 0)
-                / Object.values(dist).length;
-            var avgPrice = Object.values(price).reduce(function (a, b) { return a + b; }, 0)
-                / Object.values(price).length;
-            var avgStock = Object.values(stock).reduce(function (a, b) { return a + b; }, 0)
-                / Object.values(stock).length;
-            var distRating = {};
-            var priceRating = {};
-            var stockRating = {};
-            try {
-                for (var exporters_2 = __values(exporters), exporters_2_1 = exporters_2.next(); !exporters_2_1.done; exporters_2_1 = exporters_2.next()) {
-                    var body = exporters_2_1.value;
-                    distRating[body] = avgDist / dist[body];
-                    priceRating[body] = avgPrice / price[body];
-                    stockRating[body] = stock[body] / avgStock;
-                }
-            }
-            catch (e_24_1) { e_24 = { error: e_24_1 }; }
-            finally {
-                try {
-                    if (exporters_2_1 && !exporters_2_1.done && (_b = exporters_2.return)) _b.call(exporters_2);
-                }
-                finally { if (e_24) throw e_24.error; }
-            }
-            // Calculate a rating by comparing distance, price, and number of
-            // available units
-            var bestPlanet;
-            var bestRating = 0;
-            var hasTradeBan = this.hasTradeBan;
-            try {
-                for (var exporters_3 = __values(exporters), exporters_3_1 = exporters_3.next(); !exporters_3_1.done; exporters_3_1 = exporters_3.next()) {
-                    var body = exporters_3_1.value;
-                    // no trade ban violations from unaligned markets
-                    if (hasTradeBan && data_1.default.bodies[body].faction != this.faction.abbrev)
-                        continue;
-                    var rating = priceRating[body] * stockRating[body] * distRating[body];
-                    if (rating > bestRating) {
-                        bestRating = rating;
-                        bestPlanet = body;
+            return __awaiter(this, void 0, void 0, function () {
+                var e_23, _a, e_24, _b, e_25, _c, exporters, dist, price, stock, exporters_1, exporters_1_1, body, _d, _e, e_23_1, avgDist, avgPrice, avgStock, distRating, priceRating, stockRating, exporters_2, exporters_2_1, body, bestPlanet, bestRating, hasTradeBan, exporters_3, exporters_3_1, body, rating;
+                return __generator(this, function (_f) {
+                    switch (_f.label) {
+                        case 0: return [4 /*yield*/, this.exporters(item)];
+                        case 1:
+                            exporters = _f.sent();
+                            if (exporters.length === 0)
+                                return [2 /*return*/];
+                            dist = {};
+                            price = {};
+                            stock = {};
+                            _f.label = 2;
+                        case 2:
+                            _f.trys.push([2, 7, 8, 9]);
+                            exporters_1 = __values(exporters), exporters_1_1 = exporters_1.next();
+                            _f.label = 3;
+                        case 3:
+                            if (!!exporters_1_1.done) return [3 /*break*/, 6];
+                            body = exporters_1_1.value;
+                            if (window.game.planets[body].hasTradeBan)
+                                return [3 /*break*/, 5];
+                            _d = dist;
+                            _e = body;
+                            return [4 /*yield*/, this.distance(body)];
+                        case 4:
+                            _d[_e] = (_f.sent()) / physics_1.default.AU * window.game.planets[body].buyPrice('fuel');
+                            price[body] = window.game.planets[body].buyPrice(item);
+                            stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
+                            _f.label = 5;
+                        case 5:
+                            exporters_1_1 = exporters_1.next();
+                            return [3 /*break*/, 3];
+                        case 6: return [3 /*break*/, 9];
+                        case 7:
+                            e_23_1 = _f.sent();
+                            e_23 = { error: e_23_1 };
+                            return [3 /*break*/, 9];
+                        case 8:
+                            try {
+                                if (exporters_1_1 && !exporters_1_1.done && (_a = exporters_1.return)) _a.call(exporters_1);
+                            }
+                            finally { if (e_23) throw e_23.error; }
+                            return [7 /*endfinally*/];
+                        case 9:
+                            avgDist = Object.values(dist).reduce(function (a, b) { return a + b; }, 0)
+                                / Object.values(dist).length;
+                            avgPrice = Object.values(price).reduce(function (a, b) { return a + b; }, 0)
+                                / Object.values(price).length;
+                            avgStock = Object.values(stock).reduce(function (a, b) { return a + b; }, 0)
+                                / Object.values(stock).length;
+                            distRating = {};
+                            priceRating = {};
+                            stockRating = {};
+                            try {
+                                for (exporters_2 = __values(exporters), exporters_2_1 = exporters_2.next(); !exporters_2_1.done; exporters_2_1 = exporters_2.next()) {
+                                    body = exporters_2_1.value;
+                                    distRating[body] = avgDist / dist[body];
+                                    priceRating[body] = avgPrice / price[body];
+                                    stockRating[body] = stock[body] / avgStock;
+                                }
+                            }
+                            catch (e_24_1) { e_24 = { error: e_24_1 }; }
+                            finally {
+                                try {
+                                    if (exporters_2_1 && !exporters_2_1.done && (_b = exporters_2.return)) _b.call(exporters_2);
+                                }
+                                finally { if (e_24) throw e_24.error; }
+                            }
+                            bestRating = 0;
+                            hasTradeBan = this.hasTradeBan;
+                            try {
+                                for (exporters_3 = __values(exporters), exporters_3_1 = exporters_3.next(); !exporters_3_1.done; exporters_3_1 = exporters_3.next()) {
+                                    body = exporters_3_1.value;
+                                    // no trade ban violations from unaligned markets
+                                    if (hasTradeBan && data_1.default.bodies[body].faction != this.faction.abbrev)
+                                        continue;
+                                    rating = priceRating[body] * stockRating[body] * distRating[body];
+                                    if (rating > bestRating) {
+                                        bestRating = rating;
+                                        bestPlanet = body;
+                                    }
+                                }
+                            }
+                            catch (e_25_1) { e_25 = { error: e_25_1 }; }
+                            finally {
+                                try {
+                                    if (exporters_3_1 && !exporters_3_1.done && (_c = exporters_3.return)) _c.call(exporters_3);
+                                }
+                                finally { if (e_25) throw e_25.error; }
+                            }
+                            return [2 /*return*/, bestPlanet];
                     }
-                }
-            }
-            catch (e_25_1) { e_25 = { error: e_25_1 }; }
-            finally {
-                try {
-                    if (exporters_3_1 && !exporters_3_1.done && (_c = exporters_3.return)) _c.call(exporters_3);
-                }
-                finally { if (e_25) throw e_25.error; }
-            }
-            return bestPlanet;
+                });
+            });
         };
         /**
          * Returns the number of an item which can be crafted given the resources
@@ -1112,123 +1284,159 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return data_1.default.max_crafts - this.queue.filter(function (t) { return isCraftTask(t); }).length;
         };
         Planet.prototype.manufacture = function () {
-            var e_27, _a, e_28, _b, e_29, _c;
-            var slots = this.manufactureSlots();
-            if (slots <= 0)
-                return;
-            var needed = this.neededResources();
-            try {
-                for (var _d = __values(needed.prioritized), _e = _d.next(); !_e.done; _e = _d.next()) {
-                    var item = _e.value;
-                    var res = resource_1.resources[item];
-                    if (resource_1.isCraft(res)) {
-                        var want = needed.amounts[item];
-                        var avail = this.canManufacture(item);
-                        var gets = Math.min(want, avail);
-                        if (gets > 0) {
+            return __awaiter(this, void 0, void 0, function () {
+                var e_27, _a, e_28, _b, e_29, _c, slots, needed, _d, _e, item, res, want, avail, gets, _f, _g, mat, diff, _h, _j, mat;
+                return __generator(this, function (_k) {
+                    switch (_k.label) {
+                        case 0:
+                            slots = this.manufactureSlots();
+                            if (slots <= 0)
+                                return [2 /*return*/];
+                            return [4 /*yield*/, this.neededResources()];
+                        case 1:
+                            needed = _k.sent();
                             try {
-                                for (var _f = __values(Object.keys(res.recipe.materials)), _g = _f.next(); !_g.done; _g = _f.next()) {
-                                    var mat = _g.value;
-                                    this.buy(mat, gets * (res.recipe.materials[mat] || 0));
+                                for (_d = __values(needed.prioritized), _e = _d.next(); !_e.done; _e = _d.next()) {
+                                    item = _e.value;
+                                    res = resource_1.resources[item];
+                                    if (resource_1.isCraft(res)) {
+                                        want = needed.amounts[item];
+                                        avail = this.canManufacture(item);
+                                        gets = Math.min(want, avail);
+                                        if (gets > 0) {
+                                            try {
+                                                for (_f = __values(Object.keys(res.recipe.materials)), _g = _f.next(); !_g.done; _g = _f.next()) {
+                                                    mat = _g.value;
+                                                    this.buy(mat, gets * (res.recipe.materials[mat] || 0));
+                                                }
+                                            }
+                                            catch (e_28_1) { e_28 = { error: e_28_1 }; }
+                                            finally {
+                                                try {
+                                                    if (_g && !_g.done && (_b = _f.return)) _b.call(_f);
+                                                }
+                                                finally { if (e_28) throw e_28.error; }
+                                            }
+                                            this.schedule({
+                                                type: 'craft',
+                                                turns: this.fabricate(item),
+                                                item: item,
+                                                count: gets,
+                                            });
+                                        }
+                                        if (gets < want) {
+                                            diff = want - gets;
+                                            try {
+                                                for (_h = __values(Object.keys(res.recipe.materials)), _j = _h.next(); !_j.done; _j = _h.next()) {
+                                                    mat = _j.value;
+                                                    this.incDemand(mat, diff * (res.recipe.materials[mat] || 0));
+                                                }
+                                            }
+                                            catch (e_29_1) { e_29 = { error: e_29_1 }; }
+                                            finally {
+                                                try {
+                                                    if (_j && !_j.done && (_c = _h.return)) _c.call(_h);
+                                                }
+                                                finally { if (e_29) throw e_29.error; }
+                                            }
+                                        }
+                                    }
+                                    if (--slots <= 0)
+                                        break;
                                 }
                             }
-                            catch (e_28_1) { e_28 = { error: e_28_1 }; }
+                            catch (e_27_1) { e_27 = { error: e_27_1 }; }
                             finally {
                                 try {
-                                    if (_g && !_g.done && (_b = _f.return)) _b.call(_f);
+                                    if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
                                 }
-                                finally { if (e_28) throw e_28.error; }
+                                finally { if (e_27) throw e_27.error; }
                             }
-                            this.schedule({
-                                type: 'craft',
-                                turns: this.fabricate(item),
-                                item: item,
-                                count: gets,
-                            });
-                        }
-                        if (gets < want) {
-                            var diff = want - gets;
-                            try {
-                                for (var _h = __values(Object.keys(res.recipe.materials)), _j = _h.next(); !_j.done; _j = _h.next()) {
-                                    var mat = _j.value;
-                                    this.incDemand(mat, diff * (res.recipe.materials[mat] || 0));
-                                }
-                            }
-                            catch (e_29_1) { e_29 = { error: e_29_1 }; }
-                            finally {
-                                try {
-                                    if (_j && !_j.done && (_c = _h.return)) _c.call(_h);
-                                }
-                                finally { if (e_29) throw e_29.error; }
-                            }
-                        }
+                            return [2 /*return*/];
                     }
-                    if (--slots <= 0)
-                        break;
-                }
-            }
-            catch (e_27_1) { e_27 = { error: e_27_1 }; }
-            finally {
-                try {
-                    if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
-                }
-                finally { if (e_27) throw e_27.error; }
-            }
+                });
+            });
         };
         Planet.prototype.importSlots = function () {
             return data_1.default.max_imports - this.queue.filter(function (t) { return isImportTask(t); }).length;
         };
         Planet.prototype.imports = function () {
-            var _this = this;
-            var e_30, _a;
-            var slots = this.importSlots();
-            if (slots <= 0)
-                return;
-            var need = this.neededResources();
-            var want = need.amounts;
-            var list = need.prioritized.filter(function (i) {
-                if (_this.isNetExporter(i) && !_this.hasShortage(i)) {
-                    // Remove items that we ourselves export or that we aren't short of
-                    delete want[i];
-                    return false;
-                }
-                return true;
+            return __awaiter(this, void 0, void 0, function () {
+                var e_30, _a, slots, need, want, list, list_1, list_1_1, item, amount, planet, _b, bought, price, distance, turns, e_30_1;
+                var _this = this;
+                return __generator(this, function (_c) {
+                    switch (_c.label) {
+                        case 0:
+                            slots = this.importSlots();
+                            if (slots <= 0)
+                                return [2 /*return*/];
+                            return [4 /*yield*/, this.neededResources()];
+                        case 1:
+                            need = _c.sent();
+                            want = need.amounts;
+                            list = need.prioritized.filter(function (i) {
+                                if (_this.isNetExporter(i) && !_this.hasShortage(i)) {
+                                    // Remove items that we ourselves export or that we aren't short of
+                                    delete want[i];
+                                    return false;
+                                }
+                                return true;
+                            });
+                            _c.label = 2;
+                        case 2:
+                            _c.trys.push([2, 10, 11, 12]);
+                            list_1 = __values(list), list_1_1 = list_1.next();
+                            _c.label = 3;
+                        case 3:
+                            if (!!list_1_1.done) return [3 /*break*/, 9];
+                            item = list_1_1.value;
+                            amount = util.clamp(want[item], 2, data_1.default.shipclass.hauler.cargo);
+                            return [4 /*yield*/, this.selectExporter(item, amount)];
+                        case 4:
+                            planet = _c.sent();
+                            if (!planet) {
+                                return [3 /*break*/, 8];
+                            }
+                            return [4 /*yield*/, window.game.planets[planet].buy(item, amount)];
+                        case 5:
+                            _b = __read.apply(void 0, [_c.sent(), 2]), bought = _b[0], price = _b[1];
+                            if (!(bought > 0)) return [3 /*break*/, 7];
+                            return [4 /*yield*/, this.distance(planet)];
+                        case 6:
+                            distance = (_c.sent()) / physics_1.default.AU;
+                            turns = Math.max(3, Math.ceil(Math.log(distance) * 2)) * data_1.default.turns_per_day;
+                            window.game.planets[planet].buy('fuel', distance);
+                            this.schedule({
+                                type: 'import',
+                                item: item,
+                                count: bought,
+                                from: planet,
+                                to: this.body,
+                                turns: turns,
+                            });
+                            _c.label = 7;
+                        case 7:
+                            if (--slots <= 0)
+                                return [3 /*break*/, 9];
+                            _c.label = 8;
+                        case 8:
+                            list_1_1 = list_1.next();
+                            return [3 /*break*/, 3];
+                        case 9: return [3 /*break*/, 12];
+                        case 10:
+                            e_30_1 = _c.sent();
+                            e_30 = { error: e_30_1 };
+                            return [3 /*break*/, 12];
+                        case 11:
+                            try {
+                                if (list_1_1 && !list_1_1.done && (_a = list_1.return)) _a.call(list_1);
+                            }
+                            finally { if (e_30) throw e_30.error; }
+                            return [7 /*endfinally*/];
+                        case 12: return [2 /*return*/];
+                    }
+                });
             });
-            try {
-                ITEM: for (var list_1 = __values(list), list_1_1 = list_1.next(); !list_1_1.done; list_1_1 = list_1.next()) {
-                    var item = list_1_1.value;
-                    // clamp max amount to the size of a hauler's cargo bay, with a minimum
-                    // of 2 units for deliveries
-                    var amount = util.clamp(want[item], 2, data_1.default.shipclass.hauler.cargo);
-                    var planet = this.selectExporter(item, amount);
-                    if (!planet) {
-                        continue;
-                    }
-                    var _b = __read(window.game.planets[planet].buy(item, amount), 2), bought = _b[0], price = _b[1];
-                    if (bought > 0) {
-                        var distance = this.distance(planet) / physics_1.default.AU;
-                        var turns = Math.max(3, Math.ceil(Math.log(distance) * 2)) * data_1.default.turns_per_day;
-                        window.game.planets[planet].buy('fuel', distance);
-                        this.schedule({
-                            type: 'import',
-                            item: item,
-                            count: bought,
-                            from: planet,
-                            to: this.body,
-                            turns: turns,
-                        });
-                    }
-                    if (--slots <= 0)
-                        break;
-                }
-            }
-            catch (e_30_1) { e_30 = { error: e_30_1 }; }
-            finally {
-                try {
-                    if (list_1_1 && !list_1_1.done && (_a = list_1.return)) _a.call(list_1);
-                }
-                finally { if (e_30) throw e_30.error; }
-            }
         };
         Planet.prototype.luxuriate = function () {
             this.buy('luxuries', this.scale(3));
@@ -1413,40 +1621,50 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.refreshSmugglerContracts();
         };
         Planet.prototype.refreshSmugglerContracts = function () {
-            var e_40, _a;
-            var hasTradeBan = this.hasTradeBan;
-            // If the trade ban is over, remove smuggling contracts
-            if (this.contracts.length > 0 && window.game) {
-                this.contracts = this.contracts.filter(function (c) { return !(c instanceof mission_1.Smuggler) || hasTradeBan; });
-            }
-            if (hasTradeBan) {
-                var needed = this.neededResources();
-                var missions = [];
-                try {
-                    for (var _b = __values(needed.prioritized), _c = _b.next(); !_c.done; _c = _b.next()) {
-                        var item = _c.value;
-                        if (missions.length > 3)
-                            break;
-                        var mission = new mission_1.Smuggler({
-                            issuer: this.body,
-                            item: item,
-                            amt: needed.amounts[item],
-                        });
-                        missions.push({
-                            valid_until: util.getRandomInt(10, 30) * data_1.default.turns_per_day,
-                            mission: mission,
-                        });
+            return __awaiter(this, void 0, void 0, function () {
+                var e_40, _a, hasTradeBan, needed, missions, _b, _c, item, mission;
+                return __generator(this, function (_d) {
+                    switch (_d.label) {
+                        case 0:
+                            hasTradeBan = this.hasTradeBan;
+                            // If the trade ban is over, remove smuggling contracts
+                            if (this.contracts.length > 0 && window.game) {
+                                this.contracts = this.contracts.filter(function (c) { return !(c instanceof mission_1.Smuggler) || hasTradeBan; });
+                            }
+                            if (!hasTradeBan) return [3 /*break*/, 2];
+                            return [4 /*yield*/, this.neededResources()];
+                        case 1:
+                            needed = _d.sent();
+                            missions = [];
+                            try {
+                                for (_b = __values(needed.prioritized), _c = _b.next(); !_c.done; _c = _b.next()) {
+                                    item = _c.value;
+                                    if (missions.length > 3)
+                                        break;
+                                    mission = new mission_1.Smuggler({
+                                        issuer: this.body,
+                                        item: item,
+                                        amt: needed.amounts[item],
+                                    });
+                                    missions.push({
+                                        valid_until: util.getRandomInt(10, 30) * data_1.default.turns_per_day,
+                                        mission: mission,
+                                    });
+                                }
+                            }
+                            catch (e_40_1) { e_40 = { error: e_40_1 }; }
+                            finally {
+                                try {
+                                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                                }
+                                finally { if (e_40) throw e_40.error; }
+                            }
+                            this.contracts = this.contracts.concat(missions);
+                            _d.label = 2;
+                        case 2: return [2 /*return*/];
                     }
-                }
-                catch (e_40_1) { e_40 = { error: e_40_1 }; }
-                finally {
-                    try {
-                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                    }
-                    finally { if (e_40) throw e_40.error; }
-                }
-                this.contracts = this.contracts.concat(missions);
-            }
+                });
+            });
         };
         Planet.prototype.refreshPassengerContracts = function () {
             var _this = this;

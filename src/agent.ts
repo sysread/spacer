@@ -94,7 +94,7 @@ export class Agent extends Person {
     });
   }
 
-  turn() {
+  async turn() {
     if (isDocked(this.action)) {
       // Money to burn?
       if (this.money > data.max_agent_money) {
@@ -104,7 +104,7 @@ export class Agent extends Person {
       // fully refueled!
       if (this.refuel()) {
         if (this.here.hasTradeBan) {
-          const transit = this.findAlternateMarket();
+          const transit = await this.findAlternateMarket();
 
           if (transit != undefined) {
             this.action = {
@@ -121,7 +121,7 @@ export class Agent extends Person {
         }
         else {
           // select a route
-          const routes = this.profitableRoutes();
+          const routes = await this.profitableRoutes();
 
           if (routes.length > 0) {
             // buy the goods to transport
@@ -275,7 +275,7 @@ export class Agent extends Person {
     return false;
   }
 
-  profitableRoutes() {
+  async profitableRoutes() {
     const routes: Route[] = [];
 
     if (isDocked(this.action)) {
@@ -306,7 +306,7 @@ export class Agent extends Person {
             continue;
           }
 
-          const transit = navComp.guestimate(dest);
+          const transit = await navComp.guestimate(dest);
 
           if (transit == undefined) {
             continue;
@@ -334,14 +334,14 @@ export class Agent extends Person {
     return routes.sort((a, b) => a.profit < b.profit ? 1 : -1);
   }
 
-  findAlternateMarket() {
+  async findAlternateMarket() {
     const navComp = new NavComp(this, this.here.body);
     navComp.dt = 10;
 
     let best: TransitPlan | undefined;
 
     for (const dest of t.bodies) {
-      const transit = navComp.guestimate(dest);
+      const transit = await navComp.guestimate(dest);
 
       if (transit == undefined)
         continue;

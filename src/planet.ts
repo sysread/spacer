@@ -282,8 +282,8 @@ export class Planet {
     return system.position(this.body);
   }
 
-  distance(toBody: t.body): number {
-    return system.distance(this.body, toBody);
+  async distance(toBody: t.body) {
+    return await system.distance(this.body, toBody);
   }
 
   hasTrait(trait: string) {
@@ -435,14 +435,14 @@ export class Planet {
     return true;
   }
 
-  fabricationFee(item: t.resource, count=1, player: Person) {
+  async fabricationFee(item: t.resource, count=1, player: Person) {
     const resource = resources[item];
 
     if (!isCraft(resource)) {
       throw new Error(`${item} is not craftable`);
     }
 
-    const rate = data.craft_fee * this.sellPrice(item);
+    const rate = data.craft_fee * await this.sellPrice(item);
     const reduction = this.fabricationReductionRate();
 
     let health = this.fab_health;
@@ -482,10 +482,10 @@ export class Planet {
     return turns_taken;
   }
 
-  replenishFabricators() {
+  async replenishFabricators() {
     if (this.fab_health < this.max_fab_health / 2) {
       const want = Math.ceil((this.max_fab_health - this.fab_health) / data.fab_health);
-      const [bought, price] = this.buy('cybernetics', want);
+      const [bought, price] = await this.buy('cybernetics', want);
       this.fab_health += bought * data.fab_health;
     }
   }
@@ -673,7 +673,7 @@ export class Planet {
    * net exporter of the item. Returns a decimal percentage where 1.0 means no
    * adjustment.
    */
-  getAvailabilityMarkup(item: t.resource) {
+  async getAvailabilityMarkup(item: t.resource) {
     // If this planet is a net exporter of the item, easy access results in a
     // lower price.
     if (this.isNetExporter(item)) {
@@ -693,7 +693,7 @@ export class Planet {
         continue;
       }
 
-      const d = system.distance(this.body, body);
+      const d = await system.distance(this.body, body);
 
       if (distance == undefined || distance > d) {
         nearest  = body;
@@ -755,7 +755,7 @@ export class Planet {
     return markup;
   }
 
-  price(item: t.resource) {
+  async price(item: t.resource) {
     if (this._price[item] == undefined) {
       const value = resources[item].value;
       const need  = this.getNeed(item);
@@ -787,7 +787,7 @@ export class Planet {
       price = resources[item].clampPrice(price);
 
       // Post-clamp adjustments due to distance
-      price *= this.getAvailabilityMarkup(item);
+      price *= await this.getAvailabilityMarkup(item);
 
       // Add a bit of "unaccounted for local influences"
       price = util.fuzz(price, 0.05);
@@ -798,20 +798,20 @@ export class Planet {
     return this._price[item];
   }
 
-  sellPrice(item: t.resource) {
-    return this.price(item);
+  async sellPrice(item: t.resource) {
+    return await this.price(item);
   }
 
-  buyPrice(item: t.resource, player?: Person): number {
-    const price = this.price(item) * (1 + this.faction.sales_tax);
+  async buyPrice(item: t.resource, player?: Person) {
+    const price = (await this.price(item)) * (1 + this.faction.sales_tax);
     return player
       ? Math.ceil(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
       : Math.ceil(price);
   }
 
-  buy(item: t.resource, amount: number, player?: Person) {
+  async buy(item: t.resource, amount: number, player?: Person) {
     const bought = Math.min(amount, this.getStock(item));
-    const price  = bought * this.buyPrice(item, player);
+    const price  = bought * await this.buyPrice(item, player);
 
     this.incDemand(item, amount);
     this.stock.dec(item, bought);
@@ -835,9 +835,9 @@ export class Planet {
     return [bought, price];
   }
 
-  sell(item: t.resource, amount: number, player?: Person) {
+  async sell(item: t.resource, amount: number, player?: Person) {
     const hasShortage = this.hasShortage(item);
-    const price = amount * this.sellPrice(item);
+    const price = amount * await this.sellPrice(item);
     this.stock.inc(item, amount);
 
     let standing = 0;
@@ -914,7 +914,7 @@ export class Planet {
     return Math.max(Math.ceil(amount), 0);
   }
 
-  neededResources(): NeededResources {
+  async neededResources(): Promise<NeededResources> {
     const amounts: { [key: string]: number } = {}; // Calculate how many of each item we want
     const need:    { [key: string]: number } = {}; // Pre-calculate each item's need
 
@@ -923,7 +923,7 @@ export class Planet {
 
       if (amount > 0) {
         amounts[item] = amount;
-        need[item] = Math.log(this.price(item)) * this.getNeed(item);
+        need[item] = Math.log(await this.price(item)) * this.getNeed(item);
       }
     }
 
@@ -951,8 +951,8 @@ export class Planet {
     });
   }
 
-  selectExporter(item: t.resource, amount: number): t.body | void {
-    const exporters = this.exporters(item);
+  async selectExporter(item: t.resource, amount: number): Promise<t.body | void> {
+    const exporters = await this.exporters(item);
 
     if (exporters.length === 0)
       return;
@@ -965,7 +965,7 @@ export class Planet {
       if (window.game.planets[body].hasTradeBan)
         continue;
 
-      dist[body]  = this.distance(body) / Physics.AU * window.game.planets[body].buyPrice('fuel');
+      dist[body]  = await this.distance(body) / Physics.AU * window.game.planets[body].buyPrice('fuel');
       price[body] = window.game.planets[body].buyPrice(item);
       stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
     }
@@ -1052,13 +1052,13 @@ export class Planet {
     return data.max_crafts - this.queue.filter(t => isCraftTask(t)).length;
   }
 
-  manufacture() {
+  async manufacture() {
     let slots = this.manufactureSlots();
 
     if (slots <= 0)
       return;
 
-    const needed = this.neededResources();
+    const needed = await this.neededResources();
 
     for (const item of needed.prioritized) {
       const res = resources[item];
@@ -1098,13 +1098,13 @@ export class Planet {
     return data.max_imports - this.queue.filter(t => isImportTask(t)).length;
   }
 
-  imports() {
+  async imports() {
     let slots = this.importSlots();
 
     if (slots <= 0)
       return;
 
-    const need = this.neededResources();
+    const need = await this.neededResources();
     const want = need.amounts;
 
     const list = need.prioritized.filter(i => {
@@ -1121,16 +1121,16 @@ export class Planet {
       // clamp max amount to the size of a hauler's cargo bay, with a minimum
       // of 2 units for deliveries
       const amount = util.clamp(want[item], 2, data.shipclass.hauler.cargo);
-      const planet = this.selectExporter(item, amount);
+      const planet = await this.selectExporter(item, amount);
 
       if (!planet) {
         continue;
       }
 
-      const [bought, price] = window.game.planets[planet].buy(item, amount);
+      const [bought, price] = await window.game.planets[planet].buy(item, amount);
 
       if (bought > 0) {
-        const distance = this.distance(planet) / Physics.AU;
+        const distance = await this.distance(planet) / Physics.AU;
         const turns = Math.max(3, Math.ceil(Math.log(distance) * 2)) * data.turns_per_day;
         window.game.planets[planet].buy('fuel', distance);
 
@@ -1249,7 +1249,7 @@ export class Planet {
     this.refreshSmugglerContracts();
   }
 
-  refreshSmugglerContracts() {
+  async refreshSmugglerContracts() {
     const hasTradeBan = this.hasTradeBan;
 
     // If the trade ban is over, remove smuggling contracts
@@ -1258,7 +1258,7 @@ export class Planet {
     }
 
     if (hasTradeBan) {
-      const needed   = this.neededResources();
+      const needed   = await this.neededResources();
       const missions = [];
 
       for (const item of needed.prioritized) {

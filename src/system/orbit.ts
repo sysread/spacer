@@ -13,11 +13,11 @@ export class Frame {
     return this.position;
   }
 
-  get absolute(): V.Point {
+  async absolute() {
     let ref: V.Point = [0, 0, 0];
 
     if (this.central != undefined)
-      ref = this.central.getPositionAtTime(this.time).position;
+      ref = (await this.central.getPositionAtTimeSoon(this.time)).position;
 
     return V.add(this.position, ref);
   }
@@ -33,8 +33,11 @@ export class Path {
     public frames: Frame[],
   ) {}
 
-  get relative(): V.Point[]  { return this.frames.map(p => p.position) }
-  get absolute(): V.Point[]  { return this.frames.map(p => p.absolute) }
+  get relative() { return this.frames.map(p => p.position) }
+
+  async absolute() {
+    return this.frames.map(async (p) => await p.absolute);
+  }
 
   relativeToTime(time: number): Path {
     return new Path(this.frames.map(f => f.relativeToTime(time)));
@@ -64,14 +67,14 @@ export class Orbit {
     return;
   }
 
-  get frames(): Frame[] {
+  async frames() {
     if (!this._frames) {
       const central = this.central;
       const path = [];
       let date = this.start;
 
       for (let i = 0; i < 360; ++i) {
-        path.push(this.body.getPositionAtTime(date));
+        path.push(await this.body.getPositionAtTimeSoon(date));
         date += this.msPerRadian;
       }
 
@@ -81,11 +84,12 @@ export class Orbit {
     return this._frames;
   }
 
-  get path(): Path { return new Path(this.frames) }
-  get relative(): V.Point[] { return this.path.relative }
-  get absolute(): V.Point[] { return this.path.absolute }
+  async path() { return new Path(await this.frames()) }
+  async relative() { return (await this.path()).relative }
+  async absolute() { return await (await this.path()).absolute() }
 
-  relativeToTime(time: number): Path {
-    return new Path(this.frames.map(f => f.relativeToTime(time)));
+  async relativeToTime(time: number) {
+    const frames = await this.frames()
+    return new Path(frames.map(f => f.relativeToTime(time)));
   }
 }
