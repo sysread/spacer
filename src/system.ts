@@ -193,20 +193,11 @@ class System {
     }
 
     date = date || this.time;
-    const key = date.valueOf();
+    const body = this.body(name);
+    const t = date instanceof Date ? date.getTime() : date;
+    let pos = await body.getPositionAtTimeSoon(t);
 
-    if (this.pos[key] == undefined) {
-      this.pos[key] = {};
-    }
-
-    if (this.pos[key][name] == undefined) {
-      const body = this.body(name);
-      const t = date instanceof Date ? date.getTime() : date;
-      let pos = await body.getPositionAtTimeSoon(t);
-      this.pos[key][name] = await pos.absolute();
-    }
-
-    return this.pos[key][name];
+    return await pos.absolute();
   }
 
   // turns, relative to sun

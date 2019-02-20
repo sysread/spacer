@@ -110,9 +110,9 @@ define(function(require, exports, module) {
     },
 
     watch: {
-      dest() {
+      async dest() {
         if (this.dest) {
-          const transits = this.navcomp.getTransitsTo(this.dest);
+          const transits = await this.navcomp.getTransitsTo(this.dest);
 
           if (transits.length > 0) {
             this.transit = transits[0];
@@ -142,6 +142,91 @@ define(function(require, exports, module) {
       },
     },
 
+    asyncComputed: {
+      async map_center_point() {
+        if (this.dest) {
+          return await this.map_center_point_transit;
+        }
+
+        const central = this.system.central(this.game.locus);
+        const is_moon = central != 'sun';
+        return is_moon ? (await this.system.position(central)) : [0, 0];
+      },
+
+      async map_center_point_transit() {
+        if (this.dest) {
+          let center;
+
+          const dest_central = this.system.central(this.dest);
+          const orig_central = this.system.central(this.game.locus);
+          const bodies = [];
+
+          if (this.isSubSystemTransit) {
+            bodies.push(await this.system.position(dest_central));
+          }
+          else {
+            bodies.push(await this.system.position(this.dest));
+            bodies.push(await this.system.position(this.game.locus));
+          }
+
+          // Figure in transit
+          if (this.transit) {
+            bodies.push(this.transit.flip_point);
+            bodies.push(this.transit.start);
+            bodies.push(this.transit.end);
+          }
+
+          return Physics.centroid(...bodies);
+        }
+      },
+
+      async map_fov_au() {
+        if (this.dest) {
+          return this.map_fov_au_transit;
+        }
+
+        const distance = await this.system.distance(this.game.locus, 'sun');
+        return distance / Physics.AU * 1.5;
+      },
+
+      async map_fov_au_transit() {
+        if (this.dest) {
+          const points = [];
+          const dest_central = this.system.central(this.dest);
+          const orig_central = this.system.central(this.game.locus);
+
+          if (this.isSubSystemTransit) {
+            for (const body of this.system.all_bodies()) {
+              if (system.central(body) == dest_central) {
+                points.push(await this.system.position(body));
+              }
+            }
+          }
+          // Cross system path
+          else {
+            points.push(await this.system.position(this.game.locus));
+            points.push(await this.system.position(this.dest));
+          }
+
+          if (this.transit) {
+            points.push(this.transit.end);
+            points.push(this.transit.start);
+          }
+
+          // Lop off z to prevent it from affecting the distance calculation
+          const points_2d = points.map(p => [p[0], p[1], 0]);
+          const center = await this.map_center_point;
+          const distances = points_2d.map(p => Physics.distance(p, center));
+          const max = Math.max(...distances);
+
+          if (this.isSubSystemTransit)
+            return max / (Physics.AU * 2);
+          else
+            return max / Physics.AU;
+        }
+      },
+    },
+
     computed: {
       show_map()       { return this.show == 'map' },
       show_dest_menu() { return this.show == 'dest' },
@@ -155,7 +240,7 @@ define(function(require, exports, module) {
       },
 
       isSubSystemTransit() {
-        if (this.dest) {
+        if (this.transit) {
           const dest_central = system.central(this.transit.dest);
           const orig_central = system.central(this.transit.origin);
 
@@ -169,85 +254,6 @@ define(function(require, exports, module) {
 
         return false;
       },
-
-      map_center_point() {
-        if (this.dest) {
-          return this.map_center_point_transit;
-        }
-
-        const central = this.system.central(this.game.locus);
-        const is_moon = central != 'sun';
-        return is_moon ? this.system.position(central) : [0, 0];
-      },
-
-      map_center_point_transit() {
-        let center;
-
-        const dest_central = this.system.central(this.dest);
-        const orig_central = this.system.central(this.game.locus);
-        const bodies = [];
-
-        if (this.isSubSystemTransit) {
-          bodies.push(this.system.position(dest_central));
-        }
-        else {
-          bodies.push(this.system.position(this.dest));
-          bodies.push(this.system.position(this.game.locus));
-        }
-
-        // Figure in transit
-        if (this.transit) {
-          bodies.push(this.transit.flip_point);
-          bodies.push(this.transit.start);
-          bodies.push(this.transit.end);
-        }
-
-        return Physics.centroid(...bodies);
-      },
-
-      map_fov_au() {
-        if (this.dest) {
-          return this.map_fov_au_transit;
-        }
-
-        const distance = this.system.distance(this.game.locus, 'sun');
-        return distance / Physics.AU * 1.5;
-      },
-
-      map_fov_au_transit() {
-        const points = [];
-        const dest_central = this.system.central(this.dest);
-        const orig_central = this.system.central(this.game.locus);
-
-        if (this.isSubSystemTransit) {
-          for (const body of this.system.all_bodies()) {
-            if (system.central(body) == dest_central) {
-              points.push(this.system.position(body));
-            }
-          }
-        }
-        // Cross system path
-        else {
-          points.push(this.system.position(this.game.locus));
-          points.push(this.system.position(this.dest));
-        }
-
-        if (this.transit) {
-          points.push(this.transit.end);
-          points.push(this.transit.start);
-        }
-
-        // Lop off z to prevent it from affecting the distance calculation
-        const points_2d = points.map(p => [p[0], p[1], 0]);
-        const center = this.map_center_point;
-        const distances = points_2d.map(p => Physics.distance(p, center));
-        const max = Math.max(...distances);
-
-        if (this.isSubSystemTransit)
-          return max / (Physics.AU * 2);
-        else
-          return max / Physics.AU;
-      },
     },
 
     methods: {
@@ -260,8 +266,10 @@ define(function(require, exports, module) {
       },
 
       reflow_plot() {
-        this.layout.set_center(this.map_center_point);
-        this.layout.set_fov_au(this.map_fov_au);
+        if (this.map_center_point) {
+          this.layout.set_center(this.map_center_point);
+          this.layout.set_fov_au(this.map_fov_au);
+        }
       },
 
       go_map() {
@@ -295,7 +303,7 @@ define(function(require, exports, module) {
         this.set_transit(transit, true);
       },
 
-      set_dest(dest) {
+      async set_dest(dest) {
         // Player clicked on central body from wide fov; find the next dest for
         // that sub-system.
         if (!dest
@@ -316,7 +324,7 @@ define(function(require, exports, module) {
 
           if (this.dest) {
             // Select the first transit path for that destination
-            this.transit = this.navcomp.getFastestTransitTo(this.dest);
+            this.transit = await this.navcomp.getFastestTransitTo(this.dest);
 
             if (this.transit) {
               this.go_map();
@@ -582,18 +590,23 @@ define(function(require, exports, module) {
 
     computed: {
       color() { return '#333333' },
-      path()  { return this.layout.scale_path(this.orbit) },
-      last()  { return this.path[ this.path.length - 1 ] },
+    },
 
-      orbit() {
-        return this.system.orbit(this.body)
+    asyncComputed: {
+      async path() { if (this.orbit) return this.layout.scale_path(this.orbit) },
+      async last() { if (this.path)  return this.path[ this.path.length - 1 ] },
+
+      async orbit() {
+        return (await this.system.orbit(this.body))
           .relativeToTime(this.game.date.getTime())
           .absolute
       },
     },
 
     template: `
-      <SvgPath :points="path" :color="color" line="0.75px" smooth=1 />
+      <g>
+        <SvgPath v-if="path" :points="path" :color="color" line="0.75px" smooth=1 />
+      </g>
     `,
   });
 
@@ -608,7 +621,7 @@ define(function(require, exports, module) {
 
     asyncComputed: {
       async dest_path() {
-        const orbit = await this.system.orbit_by_turns_soon(this.transit.dest);
+        const orbit = await this.system.orbit_by_turns(this.transit.dest);
         const path = orbit.slice(0, this.transit.turns + 1);
         return this.layout.scale_path(path);
       },
@@ -627,33 +640,34 @@ define(function(require, exports, module) {
     props: ['layout', 'body', 'label', 'img', 'focus', 'coords', 'intvl'],
 
     data() {
-      const [x, y] = this.layout.scale_point(system.position(this.body));
       return {
-        x: x,
-        y: y,
-        d: this.diameter,
+        x: 0,
+        y: 0,
+        d: 0,
         label_x: 0,
         label_y: 0,
         tween: null,
       };
     },
 
-    computed: {
-      label_class() { return this.focus ? 'plot-label-hi' : 'plot-label' },
-      diameter()    { return this.layout.scale_body_diameter(this.body) },
-
-      point() {
+    asyncComputed: {
+      async point() {
         if (this.layout) {
           if (this.coords) {
             return this.layout.scale_point(this.coords);
           } else {
-            return this.layout.scale_point(this.system.position(this.body))
+            return this.layout.scale_point(await this.system.position(this.body))
           }
         }
         else {
           return [0, 0];
         }
       },
+    },
+
+    computed: {
+      label_class() { return this.focus ? 'plot-label-hi' : 'plot-label' },
+      diameter()    { return this.layout.scale_body_diameter(this.body) },
 
       show_label() {
         if (this.label) {
@@ -673,23 +687,25 @@ define(function(require, exports, module) {
         this.$emit('click');
       },
 
-      update() {
-        const [x, y] = this.point;
-        const d = this.diameter;
+      async update() {
+        if (this.point) {
+          const [x, y] = await this.point;
+          const d = this.diameter;
 
-        if (this.tween)
-          this.tween.kill();
+          if (this.tween)
+            this.tween.kill();
 
-        this.tween = TweenMax.to(this.$data, this.intvl || 0, {
-          x: x - (d / 2),
-          y: y - (d / 2),
-          d: d,
-          label_x: x + d + 10,
-          label_y: y + d / 3,
-          ease: Linear.easeNone,
-        });
+          this.tween = TweenMax.to(this.$data, this.intvl || 0, {
+            x: x - (d / 2),
+            y: y - (d / 2),
+            d: d,
+            label_x: x + d + 10,
+            label_y: y + d / 3,
+            ease: Linear.easeNone,
+          });
 
-        this.tween.play();
+          this.tween.play();
+        }
       },
     },
 
@@ -700,9 +716,9 @@ define(function(require, exports, module) {
 
     template: `
       <g @click="click">
-        <SvgImg v-if="img" :src="img" :height="diameter" :width="diameter" :x="x" :y="y" />
+        <SvgImg v-if="point && img" :src="img" :height="diameter" :width="diameter" :x="x" :y="y" />
 
-        <SvgText v-if="show_label" :class="label_class" :x="label_x" :y="label_y">
+        <SvgText v-if="point && show_label" :class="label_class" :x="label_x" :y="label_y">
           {{body|caps}}
         </SvgText>
       </g>
@@ -787,8 +803,8 @@ define(function(require, exports, module) {
     },
 
     methods: {
-      is_visible(body) {
-        return this.system.orbit(body).absolute
+      async is_visible(body) {
+        return (await this.system.orbit(body).absolute())
           .some(p => this.layout.is_visible(p));
       },
 

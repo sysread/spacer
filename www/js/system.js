@@ -290,31 +290,21 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
         };
         System.prototype.position = function (name, date) {
             return __awaiter(this, void 0, void 0, function () {
-                var key, body, t_1, pos, _a, _b;
-                return __generator(this, function (_c) {
-                    switch (_c.label) {
+                var body, t, pos;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
                         case 0:
                             if (name == 'sun') {
                                 return [2 /*return*/, [0, 0, 0]];
                             }
                             date = date || this.time;
-                            key = date.valueOf();
-                            if (this.pos[key] == undefined) {
-                                this.pos[key] = {};
-                            }
-                            if (!(this.pos[key][name] == undefined)) return [3 /*break*/, 3];
                             body = this.body(name);
-                            t_1 = date instanceof Date ? date.getTime() : date;
-                            return [4 /*yield*/, body.getPositionAtTimeSoon(t_1)];
+                            t = date instanceof Date ? date.getTime() : date;
+                            return [4 /*yield*/, body.getPositionAtTimeSoon(t)];
                         case 1:
-                            pos = _c.sent();
-                            _a = this.pos[key];
-                            _b = name;
+                            pos = _a.sent();
                             return [4 /*yield*/, pos.absolute()];
-                        case 2:
-                            _a[_b] = _c.sent();
-                            _c.label = 3;
-                        case 3: return [2 /*return*/, this.pos[key][name]];
+                        case 2: return [2 /*return*/, _a.sent()];
                     }
                 });
             });
