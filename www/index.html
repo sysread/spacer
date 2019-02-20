@@ -83,7 +83,8 @@
                       return;
                     }
 
-                    this.page = page;
+                    this.page = null;
+                    this.$nextTick(() => this.page = page);
                   },
 
                   dismiss(msg) {
