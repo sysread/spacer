@@ -794,7 +794,17 @@ define(function(require, exports, module) {
         return this.system.central(body) != 'sun';
       },
 
+      show_patrol_radius(body) {
+        if (this.game.options.hidePatrolRadius)
+          return false;
+
+        return !this.is_zoomed;
+      },
+
       show_orbit(body) {
+        if (this.game.options.hideOrbitPaths)
+          return false;
+
         if (body == 'trojans')
           return false; // same as jupiter's
 
@@ -834,7 +844,7 @@ define(function(require, exports, module) {
       <g>
         <g v-for="body of bodies">
           <SvgOrbitPath v-if="show_orbit(body)" :key="body+'-orbit'" :body="body" :layout="layout" />
-          <SvgPatrolRadius v-if="!is_zoomed" :key="body + '-patrol'" :body="body" :layout="layout" />
+          <SvgPatrolRadius v-if="show_patrol_radius(body)" :key="body + '-patrol'" :body="body" :layout="layout" />
         </g>
 
         <SvgPlotPoint

@@ -38,9 +38,23 @@ define(function(require, exports, module) {
           <btn @click="save" :disabled="!changed" class="float-right">Save</btn>
         </card-title>
 
-        <def term="Hide map background">
-          <input type="checkbox" :checked="options.hideMapBackground" @change="update('hideMapBackground', !options.hideMapBackground)" />
-        </def>
+        <card title="Graphics" class="my-1">
+          <card-text>
+            Changing these values may improve performance on slower devices.
+          </card-text>
+
+          <def term="Hide map background" info="Disables the Milky Way background in the map." split=8>
+            <input type="checkbox" :checked="options.hideMapBackground" @change="update('hideMapBackground', !options.hideMapBackground)" />
+          </def>
+
+          <def term="Hide patrol radius" info="Disables the patrol radius bubbles in the map." split=8>
+            <input type="checkbox" :checked="options.hidePatrolRadius" @change="update('hidePatrolRadius', !options.hidePatrolRadius)" />
+          </def>
+
+          <def term="Hide orbit paths" info="Disables the display of orbits in the map." split=8>
+            <input type="checkbox" :checked="options.hideOrbitPaths" @change="update('hideOrbitPaths', !options.hideOrbitPaths)" />
+          </def>
+        </card>
       </card>
     `,
   });

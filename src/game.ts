@@ -30,6 +30,8 @@ declare var console: any;
 
 interface Options {
   hideMapBackground?: boolean;
+  hidePatrolRadius?:  boolean;
+  hideOrbitPaths?:    boolean;
 };
 
 

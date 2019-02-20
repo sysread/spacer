@@ -71,7 +71,7 @@ define(function(require, exports, module) {
       distance()        { return util.R(this.plan.auRemaining()) },
       is_next_day()     { return this.plan.current_turn % data.turns_per_day == 0 },
       is_zoomed_in()    { return this.plan.turns < (10 * data.turns_per_day) },
-      showPatrolRadii() { return !this.isSubSystemTransit },
+      showPatrolRadii() { return !this.game.options.hidePatrolRadius && !this.isSubSystemTransit },
       intvl_ms()        { return this.intvl * 1000 },
 
       isSubSystemTransit() {
