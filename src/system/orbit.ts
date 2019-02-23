@@ -70,10 +70,12 @@ export class Orbit {
       const path = [];
       let date = this.start;
 
-      for (let i = 0; i < 360; ++i) {
+      for (let i = 0; i < 359; ++i) {
         path.push(this.body.getPositionAtTime(date));
         date += this.msPerRadian;
       }
+
+      path.push(this.body.getPositionAtTime(this.start));
 
       this._frames = path;
     }
