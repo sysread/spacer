@@ -81,10 +81,11 @@ define(["require", "exports", "./CelestialBody", "../vector"], function (require
                     var central = this.central;
                     var path = [];
                     var date = this.start;
-                    for (var i = 0; i < 360; ++i) {
+                    for (var i = 0; i < 359; ++i) {
                         path.push(this.body.getPositionAtTime(date));
                         date += this.msPerRadian;
                     }
+                    path.push(this.body.getPositionAtTime(this.start));
                     this._frames = path;
                 }
                 return this._frames;
