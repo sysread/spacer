@@ -18,6 +18,19 @@ define(function(require, exports, module) {
   require('component/svg');
 
 
+  function transit_display_distance(transit) {
+    if (!transit)
+      return;
+
+    const au = util.R(transit.au, 2);
+
+    if (au > 0)
+      return au + ' AU';
+    else
+      return util.csn(util.R(transit.km, 0)) + ' km';
+  }
+
+
   Vue.component('NavBtn', {
     props: ['name', 'active', 'disabled'],
 
@@ -238,15 +251,16 @@ define(function(require, exports, module) {
         }
 
         // Lop off z to prevent it from affecting the distance calculation
+        const center    = this.map_center_point;
+        const center_2d = [center[0], center[1], 0];
         const points_2d = points.map(p => [p[0], p[1], 0]);
-        const center = this.map_center_point;
-        const distances = points_2d.map(p => Physics.distance(p, center));
-        const max = Math.max(...distances);
+        const distances = points_2d.map(p => Physics.distance(p, center_2d));
+        const max       = Math.max(...distances);
+        return 1.1 * (max / Physics.AU);
+      },
 
-        if (this.isSubSystemTransit)
-          return max / (Physics.AU * 2);
-        else
-          return max / Physics.AU;
+      transit_display_distance() {
+        return transit_display_distance(this.transit);
       },
     },
 
@@ -414,7 +428,7 @@ define(function(require, exports, module) {
         <confirm v-if="confirm" yes="Yes" no="No" @confirm="confirm_transit">
           <h4>{{game.here.name}} to {{planet.name|caps}}</h4>
           <def split=4 term="Duration"     :def="transit.str_arrival" />
-          <def split=4 term="Distance"     :def="transit.auRemaining()|R(2)|unit('AU')" />
+          <def split=4 term="Distance"     :def="transit_display_distance" />
           <def split=4 term="Max Velocity" :def="(transit.maxVelocity/1000)|R|csn|unit('km/s')" />
           <def split=4 term="Acceleration" :def="transit.accel_g|R(3)|unit('G')" />
           <def split=4 term="Fuel"         :def="transit.fuel|R(2)|unit('tonnes')" />
@@ -525,7 +539,7 @@ define(function(require, exports, module) {
       has_route()      { return this.transits.length > 0 },
       num_routes()     { return this.transits.length },
       transit()        { if (this.has_route) return this.transits[this.selected] },
-      distance()       { if (this.has_route) return this.transit.au },
+      distance()       { return transit_display_distance(this.transit) },
     },
 
     'template': `
@@ -551,7 +565,7 @@ define(function(require, exports, module) {
 
         <div v-if="has_route">
           <def split="4" term="Destination"  :def="transit.dest|caps" />
-          <def split="4" term="Distance"     :def="distance|R(2)|unit('AU')" />
+          <def split="4" term="Distance"     :def="distance" />
           <def split="4" term="Acceleration" :def="transit.accel_g|R(3)|unit('G')" />
           <def split="4" term="Max velocity" :def="(transit.maxVelocity/1000)|R|csn|unit('km/s')" />
           <def split="4" term="Fuel"         :def="transit.fuel|R(2)|unit('tonnes')" />
@@ -581,9 +595,8 @@ define(function(require, exports, module) {
     props: ['layout', 'body'],
 
     computed: {
-      color() { return '#333333' },
       path()  { return this.layout.scale_path(this.orbit) },
-      last()  { return this.path[ this.path.length - 1 ] },
+      color() { return '#333333' },
 
       orbit() {
         return this.system.orbit(this.body)
@@ -801,13 +814,10 @@ define(function(require, exports, module) {
         if (body == 'trojans')
           return false; // same as jupiter's
 
-        if (!this.is_moon(body))
-          return true;
+        if (this.is_moon(body))
+          return this.is_zoomed;
 
-        if (this.is_zoomed)
-          return true;
-
-        return false;
+        return !this.is_zoomed;
       },
 
       show_label(body) {

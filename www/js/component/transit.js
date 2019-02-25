@@ -22,6 +22,47 @@ define(function(require, exports, module) {
   require('component/svg');
 
 
+  Vue.component('SvgShip', {
+    props: ['layout', 'transit', 'init', 'intvl'],
+
+    data() {
+      return {
+        x: 0,
+        y: 0,
+        tween: null,
+      };
+    },
+
+    watch: {
+      'init': function() { this.update() },
+      'transit.current_turn': function() { this.update() },
+    },
+
+    methods: {
+      update() {
+        const [x, y] = this.layout.scale_point(this.transit.coords);
+
+        if (this.tween)
+          this.tween.kill();
+
+        this.tween = TweenMax.to(this.$data, this.intvl, {
+          ease: Linear.easeNone,
+          x: x,
+          y: y,
+        }).play();
+      },
+    },
+
+    template: `
+      <text text-anchor="middle" alignment-baseline="middle"
+          style="fill: yellow; font: bold 14px monospace;"
+          :x="x" :y="y">
+        &tridot;
+      </text>
+    `,
+  });
+
+
   Vue.component('Transit', {
     mixins: [ Layout ],
 
@@ -30,6 +71,8 @@ define(function(require, exports, module) {
       for (const body of system.all_bodies())
         orbits[body] = system.orbit_by_turns(body);
 
+      const turns = game.transit_plan.turns;
+
       return {
         layout_target_id: 'transit-plot-root',
         transit:   null,
@@ -37,26 +80,26 @@ define(function(require, exports, module) {
         stoppedBy: {'pirate': 0, 'police': 0},
         encounter: null,
         orbits:    orbits,
+        started:   false,
         // animated values
         patrolpct: 0,
         piracypct: 0,
-        ship_x:    0,
-        ship_y:    0,
       };
     },
 
     watch: {
+      'started': function() {
+        console.log('transit starting');
+        setTimeout(() => this.resume(), 300);
+      },
+
       'plan.current_turn': function() {
-        if (!this.isSubSystemTransit) {
+        if (!this.isSubSystemTransit && !this.is_zoomed_in) {
           this.layout.set_center(this.center());
           this.layout.set_fov_au(this.fov());
         }
 
-        const [x, y] = this.layout.scale_point(this.plan.coords);
-
-        TweenMax.to(this.$data, this.intvl || 0, {
-          ship_x:     x,
-          ship_y:     y,
+        TweenMax.to(this.$data, this.intvl, {
           patrolpct:  this.patrolRate,
           piracypct:  this.piracyRate,
           ease:       Linear.easeNone,
@@ -86,16 +129,14 @@ define(function(require, exports, module) {
       },
 
       intvl() {
-        if (this.plan.current_turn == 0)
+        if (!this.started || this.plan.current_turn == 0)
           return 0;
-        if (this.isSubSystemTransit)
-          return 0.6;
-        else if (this.layout.fov_au < 0.1)
-          return 0.8;
-        else if (this.layout.fov_au < 0.35)
-          return 0.6;
-        else
-          return 0.4;
+
+        const turns = this.plan.turns;
+        const base  = util.clamp(turns, 10, 60) / turns;
+        const pct   = 1.0 - (this.plan.velocity / this.plan.maxVelocity);
+
+        return util.clamp(base * pct, 0.3, 1.0);
       },
 
       displayFoV() {
@@ -273,22 +314,28 @@ define(function(require, exports, module) {
         }
 
         // Lop off z to prevent it from affecting the distance calculation
+        const center    = this.center();
+        const center_2d = [center[0], center[1], 0];
         const points_2d = points.map(p => [p[0], p[1], 0]);
-        const center = this.center();
-        const distances = points_2d.map(p => Physics.distance(p, center));
-        const max = Math.max(...distances);
-
-        if (this.isSubSystemTransit)
-          return max / (Physics.AU * 2);
-        else
-          return max / Physics.AU;
+        const distances = points_2d.map(p => Physics.distance(p, center_2d));
+        const max       = Math.max(...distances);
+        return 1.1 * (max / Physics.AU);
       },
 
       center() {
-        if (this.isSubSystemTransit) // center on the common central body
+        return Physics.segment(this.plan.end, this.plan.start, this.plan.distanceRemaining());
+        // center on the common central body
+        if (this.isSubSystemTransit) {
+          const central = system.central(this.plan.dest)
+          const start   = this.orbits[central][0];
+          const end     = this.orbits[central][this.plan.turns - 1];
+          return Physics.centroid(start, end);
           return this.orbits[ system.central(this.plan.dest) ][0];
-        else // cross system path
+        }
+        // cross system path
+        else {
           return Physics.segment(this.plan.end, this.plan.start, this.plan.distanceRemaining());
+        }
       },
 
       layout_scale() {
@@ -302,12 +349,7 @@ define(function(require, exports, module) {
       layout_set() {
         this.layout.set_center(this.center());
         this.layout.set_fov_au(this.fov());
-
-        const [x, y] = this.layout.scale_point(this.plan.coords);
-        this.ship_x = x;
-        this.ship_y = y;
-
-        setTimeout(() => this.resume(), 300);
+        this.started = true;
       },
 
       bg_css() {
@@ -512,13 +554,7 @@ define(function(require, exports, module) {
               <SvgPlotPoint :body="body" :coords="orbits[body][0]" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" />
             </g>
 
-            <text text-anchor="middle"
-                alignment-baseline="middle"
-                style="fill: yellow; font: bold 14px monospace;"
-                :x="ship_x"
-                :y="ship_y">
-              &tridot;
-            </text>
+            <SvgShip :init="started" :layout="layout" :transit="plan" :intvl="intvl" />
           </SvgPlot>
         </div>
 
