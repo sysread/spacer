@@ -606,7 +606,7 @@ define(function(require, exports, module) {
     },
 
     template: `
-      <SvgPath :points="path" :color="color" line="0.75px" smooth=1 />
+      <SvgPath :points="path" :color="color" line="0.75px" :smooth="true" />
     `,
   });
 
@@ -627,8 +627,8 @@ define(function(require, exports, module) {
 
     template: `
       <g>
-        <SvgPath :points="dest_path" color="red" smooth=1 />
-        <SvgPath :points="path" color="green" smooth=1 />
+        <SvgPath :points="dest_path" color="red" :smooth="true" />
+        <SvgPath :points="path" color="green" :smooth="true" />
       </g>
     `,
   });
