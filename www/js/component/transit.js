@@ -20,6 +20,7 @@ define(function(require, exports, module) {
   require('component/combat');
   require('component/navcomp');
   require('component/svg');
+  require('component/summary');
 
 
   Vue.component('SvgShip', {
@@ -558,7 +559,7 @@ define(function(require, exports, module) {
           </SvgPlot>
         </div>
 
-        <transit-inspection
+        <PatrolEncounter
             v-if="encounter && encounter.type == 'inspection'"
             @done="complete_encounter"
             @dead="dead"
@@ -579,7 +580,7 @@ define(function(require, exports, module) {
     `,
   });
 
-  Vue.component('transit-inspection', {
+  Vue.component('PatrolEncounter', {
     props: ['faction', 'body', 'distance', 'dest'],
 
     data() {
@@ -600,9 +601,9 @@ define(function(require, exports, module) {
     },
 
     computed: {
-      planet()         { return this.game.planets[this.body]                    },
+      planet()         { return this.game.planets[this.body] },
       bribeAmount()    { return Math.ceil(this.game.player.ship.price() * 0.03) },
-      canAffordBribe() { return this.bribeAmount <= this.game.player.money      },
+      canAffordBribe() { return this.bribeAmount <= this.game.player.money },
 
       // true if the inspection's faction holds a trade ban against the
       // destination's faction
@@ -706,20 +707,26 @@ define(function(require, exports, module) {
 
     template: `
 <div class="p-3">
-  <h5>Police inspection: {{faction}}</h5>
+  <h5>
+    <Flag :faction="faction" width="75" />
+    Police inspection:
+    {{body|caps}}
+  </h5>
 
-  <div v-if="choice=='ready'">
+  <template v-if="choice=='ready'">
     <card-text>
       You have been hailed by a {{faction}} patrol ship operating {{distance}} AU
       out of {{body|caps}}. The captain orders you to cease acceleration and
       peacefully submit to an inspection.
     </card-text>
 
-    <btn block=1 @click="submit">Submit</btn>
-    <btn block=1 @click="setChoice('bribe')">Bribe</btn>
-    <btn block=1 @click="setChoice('flee-confirm')">Flee</btn>
-    <btn block=1 @click="setChoice('attack-confirm')">Attack</btn>
-  </div>
+    <div>
+      <btn block=1 @click="submit">Submit</btn>
+      <btn block=1 @click="setChoice('bribe')">Bribe</btn>
+      <btn block=1 @click="setChoice('flee-confirm')">Flee</btn>
+      <btn block=1 @click="setChoice('attack-confirm')">Attack</btn>
+    </div>
+  </template>
 
   <ask v-if="choice=='flee-confirm'" @pick="setChoice" :choices="{'flee': 'Yes', 'ready': 'Nevermind'}">
     Are you sure you wish to flee from the police?
