@@ -10,8 +10,9 @@ declare var window: {
   addEventListener: (ev: string, cb: Function) => void;
 
   game: {
-    date:  Date;
     turns: number;
+    date: Date;
+    start_date: () => Date;
   };
 }
 
@@ -199,6 +200,12 @@ class System {
     }
 
     return this.pos[key][name];
+  }
+
+  position_on_turn(name: string, turn: number) {
+    const dt = new Date(window.game.date);
+    dt.setHours(dt.getHours() + ((turn - window.game.turns) * data.hours_per_turn));
+    return this.position(name, dt);
   }
 
   orbit(name: string) {

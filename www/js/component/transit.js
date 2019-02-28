@@ -76,15 +76,15 @@ define(function(require, exports, module) {
 
       return {
         layout_target_id: 'transit-plot-root',
-        transit:   null,
-        paused:    true,
-        stoppedBy: {'pirate': 0, 'police': 0},
-        encounter: null,
-        orbits:    orbits,
-        started:   false,
+        transit:    null,
+        paused:     true,
+        encounter:  null,
+        encounters: 0,
+        orbits:     orbits,
+        started:    false,
         // animated values
-        patrolpct: 0,
-        piracypct: 0,
+        patrolpct:  0,
+        piracypct:  0,
       };
     },
 
@@ -96,7 +96,6 @@ define(function(require, exports, module) {
 
       'plan.current_turn': function() {
         if (!this.isSubSystemTransit && !this.is_zoomed_in) {
-          this.layout.set_center(this.center());
           this.layout.set_fov_au(this.fov());
         }
 
@@ -114,7 +113,7 @@ define(function(require, exports, module) {
       percent()         { return this.plan.pct_complete },
       distance()        { return util.R(this.plan.auRemaining()) },
       is_next_day()     { return this.plan.current_turn % data.turns_per_day == 0 },
-      is_zoomed_in()    { return this.plan.turns < (10 * data.turns_per_day) },
+      is_zoomed_in()    { return this.plan.left < data.turns_per_day },
       intvl_ms()        { return this.intvl * 1000 },
 
       isSubSystemTransit() {
@@ -133,11 +132,16 @@ define(function(require, exports, module) {
         if (!this.started || this.plan.current_turn == 0)
           return 0;
 
+        const min_total_time = 10;
+        const max_total_time = 60;
+        const min_intvl      = 0.3;
+        const max_intvl      = 1.5;
+
         const turns = this.plan.turns;
-        const base  = util.clamp(turns, 10, 60) / turns;
+        const base  = util.clamp(turns, min_total_time, max_total_time) / turns;
         const pct   = 1.0 - (this.plan.velocity / this.plan.maxVelocity);
 
-        return util.clamp(base * pct, 0.3, 1.0);
+        return util.clamp(base * pct, min_intvl, max_intvl);
       },
 
       displayFoV() {
@@ -150,6 +154,14 @@ define(function(require, exports, module) {
         }
       },
 
+      center() {
+        const body = this.isSubSystemTransit
+          ? system.central(this.plan.dest)
+          : this.plan.dest;
+
+        return system.position_on_turn(body, this.game.turns + this.plan.left);
+      },
+
       patrolRates() {
         const ranges = this.nearby();
         const rates  = {};
@@ -157,28 +169,6 @@ define(function(require, exports, module) {
         for (const body of Object.keys(ranges)) {
           const au = ranges[body] / Physics.AU;
           rates[body] = this.game.planets[body].patrolRate(au);
-        }
-
-        const bans = this.game.get_conflicts({name: 'trade ban'});
-
-        if (bans.length > 0) {
-          // for nearby bodies
-          for (const body of Object.keys(ranges)) {
-            // for bans targeting this nearby body's faction
-            for (const ban of bans.filter(c => c.target == this.data.bodies[body].faction)) {
-              // distance to nearby body
-              const au = ranges[body] / Physics.AU;
-
-              // bodies implementing the ban
-              for (const banner of t.bodies.filter(b => this.data.bodies[body].faction == ban.target)) {
-                // Set banning body's patrol rate to a fractioon of their home
-                // rate (the rate around the banning body itself) using the
-                // distance to the banned body, rather than the distance to the
-                // banner's planet.
-                rates[banner] += this.game.planets[banner].patrolRate(au) / 4;
-              }
-            }
-          }
         }
 
         return rates;
@@ -267,9 +257,8 @@ define(function(require, exports, module) {
         chance -= stealth    // Reduce based on ship's own stealth rating;
 
         // Reduce chances for each previous encounter this trip
-        for (let i = 0; i < this.stoppedBy.pirate; ++i) {
+        for (let i = 0; i < this.encounters; ++i)
           chance /= 2;
-        }
 
         return util.clamp(chance, 0, 1);
       },
@@ -297,7 +286,7 @@ define(function(require, exports, module) {
 
       fov() {
         const central = system.central(this.plan.dest);
-        const points = [this.plan.end];
+        const points = [this.plan.end, this.plan.coords];
 
         // For sub-system transits, center on the common central body.
         if (this.isSubSystemTransit) {
@@ -307,36 +296,26 @@ define(function(require, exports, module) {
             }
           }
         }
-        // Cross system path
         else {
-          points.push(this.orbits[ central == 'sun' ? this.plan.dest : central ][0]);
-          points.push(this.plan.coords);
-          points.push(this.plan.end);
+          const closest = this.system.all_bodies()
+            .filter(b => b != this.plan.dest && system.central(b) != this.plan.dest)
+            .reduce((a, b) => {
+              if (a == undefined) return b;
+              const da = Physics.distance(this.orbits[a][0], this.plan.coords);
+              const db = Physics.distance(this.orbits[b][0], this.plan.coords);
+              return da < db ? a : b;
+            }, undefined);
+
+          points.push(this.orbits[closest][0]);
         }
 
         // Lop off z to prevent it from affecting the distance calculation
-        const center    = this.center();
+        const center    = this.center;
         const center_2d = [center[0], center[1], 0];
         const points_2d = points.map(p => [p[0], p[1], 0]);
         const distances = points_2d.map(p => Physics.distance(p, center_2d));
         const max       = Math.max(...distances);
-        return 1.1 * (max / Physics.AU);
-      },
-
-      center() {
-        return Physics.segment(this.plan.end, this.plan.start, this.plan.distanceRemaining());
-        // center on the common central body
-        if (this.isSubSystemTransit) {
-          const central = system.central(this.plan.dest)
-          const start   = this.orbits[central][0];
-          const end     = this.orbits[central][this.plan.turns - 1];
-          return Physics.centroid(start, end);
-          return this.orbits[ system.central(this.plan.dest) ][0];
-        }
-        // cross system path
-        else {
-          return Physics.segment(this.plan.end, this.plan.start, this.plan.distanceRemaining());
-        }
+        return 1.2 * (max / Physics.AU);
       },
 
       layout_scale() {
@@ -348,7 +327,7 @@ define(function(require, exports, module) {
       },
 
       layout_set() {
-        this.layout.set_center(this.center());
+        this.layout.set_center(this.center);
         this.layout.set_fov_au(this.fov());
         this.started = true;
       },
@@ -403,7 +382,7 @@ define(function(require, exports, module) {
         }
 
         if (this.plan.is_started && this.is_next_day) {
-          if (this.inspectionChance() || this.piracyChance()) {
+          if (this.inspectionChance() || this.piracyChance() || this.privateerChance()) {
             this.pause();
             return;
           }
@@ -448,45 +427,69 @@ define(function(require, exports, module) {
         return bodies;
       },
 
-      inspectionChance() {
-        const patrols = this.patrolRates;
+      privateerChance() {
+        const rates = this.privateerRates;
 
-        if (this.plan.current_turn == 0) {
-          return false;
+        for (const body of Object.keys(rates)) {
+          let rate = rates[body];
+
+          // Apply evasion bonus due to stealth
+          rate *= 1 - this.game.player.ship.stealth;
+
+          // Apply evasion bonus for each time the player has already been stopped
+          for (let i = 0; i < this.encounters; ++i)
+            rate /= 2;
+
+          if (rate > 0 && util.chance(rate)) {
+            ++this.encounters;
+
+            this.encounter = {
+              type: 'pirate',
+              faction: this.data.bodies[body].faction,
+            };
+
+            return true;
+          }
         }
 
+        return false;
+      },
+
+      inspectionChance() {
+        if (this.plan.current_turn == 0)
+          return false;
+
+        const patrols = this.patrolRates;
+
         for (const body of Object.keys(patrols)) {
-          const faction = this.data.bodies[body].faction;
-          const pos     = this.system.position(body);
-          const range   = Physics.distance(this.plan.coords, pos) / Physics.AU;
+          const pos = this.system.position(body);
+          const range = Physics.distance(this.plan.coords, pos) / Physics.AU;
 
           // No inspections outside of jurisdiction, even if there are patrols
           // out that far to keep down pirates.
-          if (range > this.data.jurisdiction) {
+          if (range > this.data.jurisdiction)
             continue;
-          }
+
+          const faction = this.data.bodies[body].faction;
 
           let rate = patrols[body];
           rate *= 1 - this.game.player.ship.stealth;
 
           // Reduce chances for each previous encounter this trip
-          for (let i = 0; i < this.stoppedBy.police; ++i) {
+          for (let i = 0; i < this.encounters; ++i)
             rate /= 2;
-          }
 
           if (rate > 0) {
             // Encountered a patrol
             if (util.chance(rate)) {
               let inspection = this.game.planets[body].inspectionRate(this.game.player);
 
-              for (let i = 0; i < this.stoppedBy.police; ++i) {
+              for (let i = 0; i < this.encounters; ++i)
                 inspection /= 2;
-              }
 
               if (util.chance(inspection)) {
-                ++this.stoppedBy.police;
+                ++this.encounters;
                 const dist = util.R(Physics.distance(this.plan.coords, this.system.position(body)) / Physics.AU, 3);
-                this.stoppedBy[faction] = true;
                 this.encounter = {
                   type:     'inspection',
                   body:     body,
@@ -504,8 +507,11 @@ define(function(require, exports, module) {
       },
 
       piracyChance() {
+        if (this.plan.current_turn == 0)
+          return false;
+
         if (util.chance(this.adjustedPiracyRate)) {
-          ++this.stoppedBy.pirate;
+          ++this.encounters;
           this.encounter = {type: 'pirate'};
           return true;
         }
@@ -574,6 +580,7 @@ define(function(require, exports, module) {
             @done="complete_encounter"
             @dead="dead"
             :nearest="nearest"
+            :faction="encounter.faction"
             class="my-3" />
 
       </card>
@@ -774,10 +781,10 @@ define(function(require, exports, module) {
 
 
   Vue.component('PirateEncounter', {
-    props: ['nearest'],
+    props: ['nearest', 'faction'],
 
     data() {
-      const faction = util.oneOf(['UN', 'MC', 'CERES', 'JFT', 'TRANSA']);
+      const faction = this.faction || util.oneOf(['UN', 'MC', 'CERES', 'JFT', 'TRANSA']);
 
       const npc = new NPC({
         name:          'Pirate',

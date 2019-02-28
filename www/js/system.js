@@ -202,6 +202,11 @@ define(["require", "exports", "./data", "./physics", "./system/SolarSystem", "./
             }
             return this.pos[key][name];
         };
+        System.prototype.position_on_turn = function (name, turn) {
+            var dt = new Date(window.game.date);
+            dt.setHours(dt.getHours() + ((turn - window.game.turns) * data_1.default.hours_per_turn));
+            return this.position(name, dt);
+        };
         System.prototype.orbit = function (name) {
             if (!this.orbits[name]) {
                 this.orbits[name] = this.body(name).orbit(this.time.getTime());
