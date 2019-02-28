@@ -691,10 +691,12 @@ define(function(require, exports, module) {
         if (this.tween)
           this.tween.kill();
 
+        // this is too jerky to do in the main tween which may be killed
+        TweenMax.to(this.$data, this.intvl || 0, {d: d, ease: Linear.easeNone});
+
         this.tween = TweenMax.to(this.$data, this.intvl || 0, {
           x: x - (d / 2),
           y: y - (d / 2),
-          d: d,
           label_x: x + d + 10,
           label_y: y + d / 3,
           ease: Linear.easeNone,

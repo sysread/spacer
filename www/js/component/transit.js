@@ -186,22 +186,27 @@ define(function(require, exports, module) {
         const ranges = this.nearby();
         const rates  = {};
 
-        for (const body of Object.keys(this.data.bodies))
-          rates[body] = 0;
-
         if (bans.length > 0) {
           // for nearby bodies
           for (const body of Object.keys(ranges).filter(b => this.game.planets[b].hasTradeBan)) {
-            // for bans targeting this nearby body's faction
-            for (const ban of bans.filter(c => c.target == this.data.bodies[body].faction)) {
-              // distance to nearby body
-              const au = ranges[body] / Physics.AU;
+            // distance to nearby body
+            const au = ranges[body] / Physics.AU;
 
-              // bodies implementing the ban
-              for (const banner of t.bodies.filter(b => this.data.bodies[body].faction == ban.target)) {
-                // use the nearby body's piracy rate as the base, since it is
-                // calculated based on its patrol rate at this range.
-                rates[banner] += game.planets[body].piracyRate(au);
+            // use the nearby body's piracy rate as the base, since it is
+            // calculated based on its patrol rate at this range.
+            const rate = game.planets[body].piracyRate(au);
+
+            // targeted faction
+            const target = this.data.bodies[body].faction;
+
+            for (const ban of bans.filter(c => c.target == target)) {
+              const faction = ban.proponent;
+
+              if (rates[faction] == undefined || rates[faction] < rate) {
+                rates[faction] = {
+                  rate:   rate,
+                  target: target,
+                }
               }
             }
           }
@@ -297,8 +302,9 @@ define(function(require, exports, module) {
           }
         }
         else {
+          const frame = system.central(this.plan.dest) == 'sun' ? this.plan.dest : system.central(this.plan.dest);
           const closest = this.system.all_bodies()
-            .filter(b => b != this.plan.dest && system.central(b) != this.plan.dest)
+            .filter(b => b != this.plan.dest && system.central(b) != frame)
             .reduce((a, b) => {
               if (a == undefined) return b;
               const da = Physics.distance(this.orbits[a][0], this.plan.coords);
@@ -315,7 +321,7 @@ define(function(require, exports, module) {
         const points_2d = points.map(p => [p[0], p[1], 0]);
         const distances = points_2d.map(p => Physics.distance(p, center_2d));
         const max       = Math.max(...distances);
-        return 1.2 * (max / Physics.AU);
+        return 1.1 * (max / Physics.AU);
       },
 
       layout_scale() {
@@ -430,8 +436,8 @@ define(function(require, exports, module) {
       privateerChance() {
         const rates = this.privateerRates;
 
-        for (const body of Object.keys(rates)) {
-          let rate = rates[body];
+        for (const faction of Object.keys(rates)) {
+          let {target, rate} = rates[faction];
 
           // Apply evasion bonus due to stealth
           rate *= 1 - this.game.player.ship.stealth;
@@ -444,8 +450,10 @@ define(function(require, exports, module) {
             ++this.encounters;
 
             this.encounter = {
-              type: 'pirate',
-              faction: this.data.bodies[body].faction,
+              type:    'privateer',
+              faction: faction,
+              target:  target,
+              body:    this.data.factions[faction].capital,
             };
 
             return true;
@@ -566,12 +574,13 @@ define(function(require, exports, module) {
         </div>
 
         <PatrolEncounter
-            v-if="encounter && encounter.type == 'inspection'"
+            v-if="encounter && (encounter.type == 'inspection' || encounter.type == 'privateer')"
             @done="complete_encounter"
             @dead="dead"
             :body="encounter.body"
             :faction="encounter.faction"
             :distance="encounter.distance"
+            :target="encounter.target"
             :dest="plan.dest"
             class="my-3" />
 
@@ -588,7 +597,7 @@ define(function(require, exports, module) {
   });
 
   Vue.component('PatrolEncounter', {
-    props: ['faction', 'body', 'distance', 'dest'],
+    props: ['faction', 'body', 'distance', 'dest', 'target'],
 
     data() {
       return {
@@ -608,20 +617,18 @@ define(function(require, exports, module) {
     },
 
     computed: {
-      planet()         { return this.game.planets[this.body] },
-      bribeAmount()    { return Math.ceil(this.game.player.ship.price() * 0.03) },
+      planet() { return this.game.planets[this.body] },
       canAffordBribe() { return this.bribeAmount <= this.game.player.money },
+
+      bribeAmount() {
+        const base = Math.ceil(this.game.player.ship.price(false, this.planet) * 0.03);
+        return this.isBlockade ? base * 2 : base;
+      },
 
       // true if the inspection's faction holds a trade ban against the
       // destination's faction
       isBlockade() {
-        const bans = this.game.get_conflicts({
-          name:      'trade ban',
-          target:    this.data.bodies[this.dest].faction,
-          proponent: this.faction,
-        });
-
-        return bans.length != 0;
+        return this.target != undefined;
       },
 
       hasContraband() {
@@ -716,15 +723,22 @@ define(function(require, exports, module) {
 <div class="p-3">
   <h5>
     <Flag :faction="faction" width="75" />
-    Police inspection:
-    {{body|caps}}
+    <template v-if="isBlockade">Blockade: {{faction}}</template>
+    <template v-else>Police inspection: {{body|caps}}</template>
   </h5>
 
   <template v-if="choice=='ready'">
-    <card-text>
-      You have been hailed by a {{faction}} patrol ship operating {{distance}} AU
+    <card-text v-if="isBlockade">
+      You are hailed by a {{faction}} military patrol ship enforcing a blockade
+      against {{target}}. You are ordered to heave to and prepare to be boarded.
+      If there are any trade goods on board, they will be seized and result in
+      a large fine and loss of standing with {{faction}}.
+    </card-text>
+    <card-text v-else>
+      You are being hailed by a {{faction}} patrol ship operating {{distance}} AU
       out of {{body|caps}}. The captain orders you to cease acceleration and
-      peacefully submit to an inspection.
+      peacefully submit to an inspection. Any contraband on board will be seized
+      and result in a fine and loss of standing with {{faction}}.
     </card-text>
 
     <div>
