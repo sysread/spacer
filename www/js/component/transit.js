@@ -23,47 +23,6 @@ define(function(require, exports, module) {
   require('component/summary');
 
 
-  Vue.component('SvgShip', {
-    props: ['layout', 'transit', 'init', 'intvl'],
-
-    data() {
-      return {
-        x: 0,
-        y: 0,
-        tween: null,
-      };
-    },
-
-    watch: {
-      'init': function() { this.update() },
-      'transit.current_turn': function() { this.update() },
-    },
-
-    methods: {
-      update() {
-        const [x, y] = this.layout.scale_point(this.transit.coords);
-
-        if (this.tween)
-          this.tween.kill();
-
-        this.tween = TweenMax.to(this.$data, this.intvl, {
-          ease: Linear.easeNone,
-          x: x,
-          y: y,
-        }).play();
-      },
-    },
-
-    template: `
-      <text text-anchor="middle" alignment-baseline="middle"
-          style="fill: yellow; font: bold 14px monospace;"
-          :x="x" :y="y">
-        &tridot;
-      </text>
-    `,
-  });
-
-
   Vue.component('Transit', {
     mixins: [ Layout ],
 
@@ -82,39 +41,39 @@ define(function(require, exports, module) {
         encounters: 0,
         orbits:     orbits,
         started:    false,
+
         // animated values
         patrolpct:  0,
         piracypct:  0,
+        shipx:      0,
+        shipy:      0,
       };
     },
 
     watch: {
       'started': function() {
+        const [x, y] = this.layout.scale_point(this.plan.coords);
+        this.shipx = x;
+        this.shipy = y;
         console.log('transit starting');
         setTimeout(() => this.resume(), 300);
       },
 
       'plan.current_turn': function() {
-        if (!this.isSubSystemTransit && !this.is_zoomed_in) {
+        if (!this.isSubSystemTransit && !this.is_zoomed_in)
           this.layout.set_fov_au(this.fov());
-        }
 
-        TweenMax.to(this.$data, this.intvl, {
-          patrolpct:  this.patrolRate,
-          piracypct:  this.piracyRate,
-          ease:       Linear.easeNone,
-          onComplete: () => this.interval(),
-        }).play();
+        this.update();
       },
     },
 
     computed: {
-      plan()            { return this.game.transit_plan },
-      percent()         { return this.plan.pct_complete },
-      distance()        { return util.R(this.plan.auRemaining()) },
-      is_next_day()     { return this.plan.current_turn % data.turns_per_day == 0 },
-      is_zoomed_in()    { return this.plan.left < data.turns_per_day },
-      intvl_ms()        { return this.intvl * 1000 },
+      plan()         { return this.game.transit_plan },
+      percent()      { return this.plan.pct_complete },
+      distance()     { return util.R(this.plan.auRemaining()) },
+      is_next_day()  { return this.plan.current_turn % data.turns_per_day == 0 },
+      is_zoomed_in() { return this.plan.left < data.turns_per_day },
+      intvl_ms()     { return this.intvl * 1000 },
 
       isSubSystemTransit() {
         const dest_central = system.central(this.plan.dest);
@@ -288,6 +247,19 @@ define(function(require, exports, module) {
     methods: {
       dead()      { this.$emit('open', 'newgame') },
       show_plot() { return this.layout && !this.encounter },
+
+      update() {
+        const [x, y] = this.layout.scale_point(this.plan.coords);
+
+        TweenMax.to(this.$data, this.intvl, {
+          patrolpct:  this.patrolRate,
+          piracypct:  this.piracyRate,
+          shipx:      x,
+          shipy:      y,
+          ease:       Linear.easeNone,
+          onComplete: () => this.interval(),
+        }).play();
+      },
 
       fov() {
         const central = system.central(this.plan.dest);
@@ -569,7 +541,11 @@ define(function(require, exports, module) {
               <SvgPlotPoint :body="body" :coords="orbits[body][0]" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" />
             </g>
 
-            <SvgShip :init="started" :layout="layout" :transit="plan" :intvl="intvl" />
+            <text text-anchor="middle" alignment-baseline="middle"
+                style="fill: yellow; font: bold 14px monospace;"
+                :x="shipx" :y="shipy">
+              &tridot;
+            </text>
           </SvgPlot>
         </div>
 
