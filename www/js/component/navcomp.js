@@ -801,8 +801,15 @@ define(function(require, exports, module) {
 
     methods: {
       is_visible(body) {
-        return this.system.orbit(body).absolute
-          .some(p => this.layout.is_visible(p));
+        const orbit = this.system.orbit(body).absolute;
+
+        for (let i = 0; i < orbit.length; ++i) {
+          if (this.layout.is_visible(orbit[i])) {
+            return true;
+          }
+        }
+
+        return false;
       },
 
       is_moon(body) {

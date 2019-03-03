@@ -1,9 +1,12 @@
 "use strict"
 
 define(function(require, exports, module) {
+  const util   = require('util');
   const Vue    = require('vendor/vue');
   const Hammer = require('vendor/hammer.min');
   const Layout = require('layout').Layout;
+
+  require('vendor/TweenMax.min');
 
   return {
     data() {
@@ -62,26 +65,33 @@ define(function(require, exports, module) {
       layout_resize() { },
 
       layout_install_handlers() {
-        window.addEventListener('resize', () => {
-          this.layout.update_width();
-        });
+        window.addEventListener('resize', () => this.layout.update_width());
 
-        if (!this.layout_scaling) {
+        if (!this.layout_scaling)
           return;
-        }
 
+
+        let wheel_tween;
         this.layout.elt.addEventListener('wheel', ev => {
           ev.stopPropagation();
 
-          const inc    = this.layout.fov_au / 15;
+          const inc = this.layout.fov_au / 10;
           const amount = ((ev.deltaX + ev.deltaY) / 2) > 0 ? inc : -inc;
 
-          this.layout.set_fov_au(this.layout.fov_au + amount);
-        }, {passive: true});
+          if (wheel_tween)
+            wheel_tween.kill();
+
+          wheel_tween = TweenMax.to(this.layout, 0.1, {
+            fov_au: util.clamp(this.layout.fov_au + amount, Layout.SCALE_MIN_AU, Layout.SCALE_MAX_AU),
+            ease: Linear.easeNone,
+          });
+        });
+
 
         // Scale the map on pinch and wheel events
         this.layout_mc.get('pinch').set({ enable: true });
 
+        let pinch_tween;
         this.layout_mc.on('pinch', ev => {
           let amount = ev.scale;
 
@@ -91,10 +101,17 @@ define(function(require, exports, module) {
             amount = 1 - amount;    // zooms out by increasing the scale to a larger value in AU
           }
 
-          amount = amount * this.layout.fov_au / 15; // reduce to a reasonable fractional value
+          amount = amount * this.layout.fov_au / 10; // reduce to a reasonable fractional value
 
-          this.layout.set_fov_au(this.layout.fov_au + amount);
+          if (pinch_tween)
+            pinch_tween.kill();
+
+          pinch_tween = TweenMax.to(this.layout, 0.1, {
+            fov_au: util.clamp(this.layout.fov_au + amount, Layout.SCALE_MIN_AU, Layout.SCALE_MAX_AU),
+            ease: Linear.easeNone,
+          });
         });
+
 
         // Drag the map on pan events
         this.layout_mc.get('pan').set({
@@ -104,15 +121,22 @@ define(function(require, exports, module) {
                    | Hammer.DIRECTION_RIGHT,
         });
 
+        let pan_tween;
         this.layout_mc.on('pan', ev => {
           if (ev.isFirst) {
             this.layout.init_x = this.layout.offset_x;
             this.layout.init_y = this.layout.offset_y;
           }
 
+          if (pan_tween)
+            pan_tween.kill();
+
           // Update the node's offset values
-          this.layout.offset_x = this.layout.init_x + ev.deltaX;
-          this.layout.offset_y = this.layout.init_y + ev.deltaY;
+          pan_tween = TweenMax.to(this.layout, 0.1, {
+            offset_x: this.layout.init_x + ev.deltaX,
+            offset_y: this.layout.init_y + ev.deltaY,
+            ease: Linear.easeNone,
+          });
 
           // Reset initial positions on final event
           if (ev.isFinal) {
@@ -120,6 +144,7 @@ define(function(require, exports, module) {
             this.layout.init_y = this.layout.offset_y;
           }
         });
+
 
         console.debug('layout: handlers installed');
       },

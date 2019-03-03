@@ -111,11 +111,7 @@ define(["require", "exports", "./orbit", "./helpers/units", "./data/constants", 
             if (!this.central)
                 return 0;
             var a = this.getElementAtTime('a', t);
-            var period = 0;
-            if (this.central) {
-                period = 2 * Math.PI * Math.sqrt((a * a * a) / this.central.mu);
-            }
-            return period;
+            return 2 * Math.PI * Math.sqrt((a * a * a) / this.central.mu);
         };
         CelestialBody.prototype.getElementAtTime = function (name, t) {
             if (!this.elements)

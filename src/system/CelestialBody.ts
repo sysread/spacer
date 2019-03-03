@@ -123,12 +123,7 @@ export class CelestialBody extends SpaceThing {
 
     const a = this.getElementAtTime('a', t);
 
-    let period = 0;
-    if (this.central) {
-      period = 2 * Math.PI * Math.sqrt((a * a * a) / this.central.mu);
-    }
-
-    return period;
+    return 2 * Math.PI * Math.sqrt((a * a * a) / this.central.mu);
   }
 
   getElementAtTime(name: keyof ElementsBase, t: number): number {
