@@ -357,13 +357,15 @@ define(["require", "exports"], function (require, exports) {
         },
         shipclass: {
             /* Civilian */
-            shuttle: { hull: 2, armor: 1, cargo: 2, hardpoints: 1, mass: 100, tank: 1, drives: 1, drive: 'ion', restricted: false, desc: '' },
-            schooner: { hull: 4, armor: 2, cargo: 14, hardpoints: 1, mass: 400, tank: 3, drives: 2, drive: 'ion', restricted: false, desc: '' },
+            shuttle: { hull: 2, armor: 1, cargo: 6, hardpoints: 1, mass: 100, tank: 1, drives: 1, drive: 'ion', restricted: false, desc: '' },
+            schooner: { hull: 4, armor: 2, cargo: 14, hardpoints: 1, mass: 400, tank: 3, drives: 3, drive: 'ion', restricted: false, desc: '' },
+            cutter: { hull: 6, armor: 3, cargo: 20, hardpoints: 2, mass: 600, tank: 5, drives: 6, drive: 'ion', restricted: false, desc: '' },
             /* Merchant */
-            hauler: { hull: 4, armor: 2, cargo: 30, hardpoints: 2, mass: 500, tank: 4, drives: 4, drive: 'ion', restricted: false, desc: '' },
-            merchantman: { hull: 6, armor: 4, cargo: 40, hardpoints: 3, mass: 700, tank: 6, drives: 6, drive: 'ion', restricted: false, desc: '' },
-            freighter: { hull: 8, armor: 6, cargo: 50, hardpoints: 3, mass: 900, tank: 8, drives: 10, drive: 'ion', restricted: false, desc: '' },
+            hauler: { hull: 6, armor: 2, cargo: 30, hardpoints: 2, mass: 500, tank: 4, drives: 4, drive: 'ion', restricted: false, desc: '' },
+            merchantman: { hull: 8, armor: 4, cargo: 40, hardpoints: 3, mass: 700, tank: 6, drives: 6, drive: 'ion', restricted: false, desc: '' },
+            freighter: { hull: 12, armor: 6, cargo: 50, hardpoints: 3, mass: 900, tank: 8, drives: 10, drive: 'ion', restricted: false, desc: '' },
             /* Military */
+            guardian: { hull: 8, armor: 6, cargo: 10, hardpoints: 3, mass: 550, tank: 4, drives: 8, drive: 'ion', restricted: 'Friendly', markets: ['capital', 'military'], desc: '' },
             corvette: { hull: 10, armor: 10, cargo: 10, hardpoints: 4, mass: 450, tank: 4, drives: 1, drive: 'fusion', restricted: 'Trusted', markets: ['capital', 'military'], desc: '' },
             cruiser: { hull: 20, armor: 15, cargo: 15, hardpoints: 8, mass: 900, tank: 12, drives: 3, drive: 'fusion', restricted: 'Admired', markets: ['capital', 'military'], desc: '' },
             battleship: { hull: 30, armor: 20, cargo: 20, hardpoints: 10, mass: 1200, tank: 14, drives: 6, drive: 'fusion', restricted: 'Admired', markets: ['capital', 'military'], desc: '' },
@@ -371,7 +373,7 @@ define(["require", "exports"], function (require, exports) {
             fortuna: { hull: 8, armor: 6, cargo: 60, hardpoints: 2, mass: 1000, tank: 8, drives: 14, drive: 'ion', restricted: 'Friendly', faction: 'JFT', desc: '' },
             neptune: { hull: 14, armor: 10, cargo: 40, hardpoints: 4, mass: 700, tank: 10, drives: 10, drive: 'ion', restricted: 'Trusted', faction: 'TRANSA', markets: ['capital', 'military'], stealth: 0.05, desc: '' },
             barsoom: { hull: 20, armor: 20, cargo: 25, hardpoints: 5, mass: 600, tank: 8, drives: 2, drive: 'fusion', restricted: 'Admired', faction: 'MC', markets: ['capital', 'military'], desc: '' },
-            'rock-hopper': { hull: 6, armor: 4, cargo: 35, hardpoints: 3, mass: 500, tank: 4, drives: 1, drive: 'fusion', restricted: 'Respected', faction: 'CERES', burn_rate: -0.015, desc: '' },
+            rockhopper: { hull: 6, armor: 4, cargo: 35, hardpoints: 3, mass: 500, tank: 4, drives: 1, drive: 'fusion', restricted: 'Respected', faction: 'CERES', burn_rate: -0.015, desc: '' },
         },
         ship: {
             hull: { repair: 50 },
@@ -588,6 +590,6 @@ define(["require", "exports"], function (require, exports) {
     data.shipclass.fortuna.desc = "Named for the daughter of Jupiter, the Fortuna is a container ship optimized to carry larger loads at higher efficiency than a typical freighter.";
     data.shipclass.barsoom.desc = "The Barsoomian class frigate adopts the latest advances in Martian technology resulting in a frigate class ship with more range, speed, and enough firepower to act as its own escort.";
     data.shipclass.neptune.desc = "Designed and built in TRANSA's own shipyards, the Neptune class cargo hauler has the longest range of any vessel while retaining low mass and reasonable cargo space. A favorite of traders and smugglers on the Long Haul alike due to its low albedo design, it has the armor and hard points to defend itself in the unguarded outer oribts.";
-    data.shipclass['rock-hopper'].desc = "In the true spirit of the belt, the Rock Hopper is a rebuilt schooner class, retrofitted with upgraded armor, increased thrust, and after market hacks to boost fuel efficiency, making it great for hauling moderate sized loads of the heavy materials for which it is named.";
+    data.shipclass.rockhopper.desc = "In the true spirit of the belt, the Rock Hopper is a rebuilt schooner class, retrofitted with upgraded armor, increased thrust, and after market hacks to boost fuel efficiency, making it great for hauling moderate sized loads of the heavy materials for which it is named.";
     return data;
 });

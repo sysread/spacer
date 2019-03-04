@@ -589,7 +589,7 @@ define(function(require, exports, module) {
         npc: new NPC({
           name:          'Police Patrol',
           faction:       this.faction,
-          ship:          ['schooner', 'corvette', 'cruiser', 'battleship', 'barsoom', 'neptune'],
+          ship:          ['shuttle', 'schooner', 'cutter', 'corvette', 'guardian', 'cruiser', 'battleship'],
           addons:        ['armor', 'railgun_turret', 'light_torpedo', 'medium_torpedo', 'ecm'],
           always_addons: ['pds'],
           min_addons:    3,
@@ -784,7 +784,7 @@ define(function(require, exports, module) {
       const npc = new NPC({
         name:          'Pirate',
         faction:       faction,
-        ship:          ['schooner', 'corvette', 'neptune'],
+        ship:          ['shuttle', 'schooner', 'cutter', 'guardian', 'corvette'],
         always_addons: ['pds'],
         addons:        ['railgun_turret', 'light_torpedo', 'ecm', 'armor'],
         min_addons:    2,
