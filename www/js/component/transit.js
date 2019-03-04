@@ -148,23 +148,28 @@ define(function(require, exports, module) {
         if (bans.length > 0) {
           // for nearby bodies
           for (const body of Object.keys(ranges).filter(b => this.game.planets[b].hasTradeBan)) {
-            // distance to nearby body
-            const au = ranges[body] / Physics.AU;
-
-            // use the nearby body's piracy rate as the base, since it is
-            // calculated based on its patrol rate at this range.
-            const rate = game.planets[body].piracyRate(au);
-
             // targeted faction
-            const target = this.data.bodies[body].faction;
+            const target          = this.data.bodies[body].faction;
+            const isPlayerFaction = target == this.game.player.faction.abbrev;
+            const isDestFaction   = target == this.data.bodies[this.plan.dest].faction;
+            const isOriginFaction = target == this.data.bodies[this.plan.origin].faction;
 
-            for (const ban of bans.filter(c => c.target == target)) {
-              const faction = ban.proponent;
+            if (isPlayerFaction || isDestFaction || isOriginFaction) {
+              // distance to nearby body
+              const au = ranges[body] / Physics.AU;
 
-              if (rates[faction] == undefined || rates[faction] < rate) {
-                rates[faction] = {
-                  rate:   rate,
-                  target: target,
+              // use the nearby body's piracy rate as the base, since it is
+              // calculated based on its patrol rate at this range.
+              const rate = game.planets[body].piracyRate(au);
+
+              for (const ban of bans.filter(c => c.target == target)) {
+                const faction = ban.proponent;
+
+                if (rates[faction] == undefined || rates[faction] < rate) {
+                  rates[faction] = {
+                    rate:   rate,
+                    target: target,
+                  }
                 }
               }
             }
