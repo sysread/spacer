@@ -692,9 +692,10 @@ define(function(require, exports, module) {
           this.tween.kill();
 
         // this is too jerky to do in the main tween which may be killed
-        TweenMax.to(this.$data, this.intvl || 0, {d: d, ease: Linear.easeNone});
+        //TweenMax.to(this.$data, this.intvl || 0, {d: d, ease: Linear.easeNone});
 
         this.tween = TweenMax.to(this.$data, this.intvl || 0, {
+          d: d,
           x: x - (d / 2),
           y: y - (d / 2),
           label_x: x + d + 10,
@@ -713,7 +714,7 @@ define(function(require, exports, module) {
 
     template: `
       <g @click="click">
-        <SvgImg v-if="img" :src="img" :height="diameter" :width="diameter" :x="x" :y="y" />
+        <SvgImg v-if="img" :src="img" :height="d" :width="d" :x="x" :y="y" />
 
         <SvgText v-if="show_label" :class="label_class" :x="label_x" :y="label_y">
           {{body|caps}}
