@@ -72,14 +72,12 @@ define(function(require, exports, module) {
         </div>
 
         <div class="form-row">
-          <div class="col-5">
+          <div class="col-6">
             <span @click="setMin" v-if="minmax" class="input-group-btn float-left"><btn class="font-weight-bold btn">Min</btn></span>
             <span @click="dec" class="input-group-btn float-left mx-2"><btn class="font-weight-bold btn">-1</btn></span>
           </div>
 
-          <div class="col-2">&nbsp;</div>
-
-          <div class="col-5">
+          <div class="col-6">
             <span @click="setMax" v-if="minmax" class="input-group-btn float-right"><btn class="font-weight-bold btn">Max</btn></span>
             <span @click="inc" class="input-group-btn float-right mx-2"><btn class="font-weight-bold btn">+1</btn></span>
             <slot name="post" />
