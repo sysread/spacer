@@ -639,10 +639,11 @@ define(function(require, exports, module) {
 
     data() {
       const [x, y] = this.layout.scale_point(system.position(this.body));
+      const d = this.layout.scale_body_diameter(this.body);
       return {
         x: x,
         y: y,
-        d: this.diameter,
+        d: d,
         label_x: 0,
         label_y: 0,
         tween: null,
