@@ -71,6 +71,9 @@ define(function(require, exports, module) {
           return;
 
 
+        /*
+         * Scale the map using the mouse wheel
+         */
         let wheel_tween;
         this.layout.elt.addEventListener('wheel', ev => {
           ev.stopPropagation();
@@ -88,7 +91,9 @@ define(function(require, exports, module) {
         });
 
 
-        // Scale the map on pinch and wheel events
+        /*
+         * Scale the map on pinch and wheel events
+         */
         this.layout_mc.get('pinch').set({ enable: true });
 
         let pinch_tween;
@@ -113,7 +118,9 @@ define(function(require, exports, module) {
         });
 
 
-        // Drag the map on pan events
+        /*
+         * Pan the map using dragging
+         */
         this.layout_mc.get('pan').set({
           direction: Hammer.DIRECTION_UP
                    | Hammer.DIRECTION_DOWN

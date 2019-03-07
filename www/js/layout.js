@@ -37,7 +37,7 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
             this.on_scale = on_scale;
             this.on_pan = on_pan;
             this.on_resize = on_resize;
-            this.fov_au = Layout.SCALE_DEFAULT_AU;
+            this._fov_au = Layout.SCALE_DEFAULT_AU;
             this.width_px = 0;
             this.height_px = 0;
             this.init_x = 0;
@@ -107,6 +107,16 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Layout.prototype, "fov_au", {
+            get: function () {
+                return this._fov_au;
+            },
+            set: function (au) {
+                this.set_fov_au(au);
+            },
+            enumerable: true,
+            configurable: true
+        });
         Layout.prototype.set_fov_au = function (au) {
             var new_fov;
             if (au === undefined) {
@@ -116,7 +126,7 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
                 new_fov = util.R(util.clamp(au, Layout.SCALE_MIN_AU, Layout.SCALE_MAX_AU), 6);
             }
             var old_fov = this.fov_au;
-            this.fov_au = new_fov;
+            this._fov_au = new_fov;
             this.offset_x -= ((this.offset_x * new_fov) - (this.offset_x * old_fov)) / new_fov;
             this.offset_y -= ((this.offset_y * new_fov) - (this.offset_y * old_fov)) / new_fov;
             this.init_x = this.offset_x;

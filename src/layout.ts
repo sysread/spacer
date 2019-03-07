@@ -16,7 +16,7 @@ export class Layout {
   on_pan?:    Function;
   on_resize?: Function;
 
-  fov_au:     number; // *radius* of field of view in meters
+  _fov_au:    number; // *radius* of field of view in meters
 
   width_px:   number;
   height_px:  number;
@@ -38,7 +38,7 @@ export class Layout {
     this.on_scale  = on_scale;
     this.on_pan    = on_pan;
     this.on_resize = on_resize;
-    this.fov_au    = Layout.SCALE_DEFAULT_AU;
+    this._fov_au   = Layout.SCALE_DEFAULT_AU;
     this.width_px  = 0;
     this.height_px = 0;
     this.init_x    = 0;
@@ -92,6 +92,14 @@ export class Layout {
     return [this.offset_x, this.offset_y, 0];
   }
 
+  get fov_au() {
+    return this._fov_au;
+  }
+
+  set fov_au(au: number) {
+    this.set_fov_au(au);
+  }
+
   set_fov_au(au: number) {
     let new_fov;
     if (au === undefined) {
@@ -101,7 +109,7 @@ export class Layout {
     }
 
     const old_fov  = this.fov_au;
-    this.fov_au    = new_fov;
+    this._fov_au    = new_fov;
     this.offset_x -= ((this.offset_x * new_fov) - (this.offset_x * old_fov)) / new_fov;
     this.offset_y -= ((this.offset_y * new_fov) - (this.offset_y * old_fov)) / new_fov;
     this.init_x    = this.offset_x;
