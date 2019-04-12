@@ -53,8 +53,11 @@ define(function(require, exports, module) {
   <card-title>
     <Flag :width="50" :faction="person.faction.abbrev" class="m-1" />
     {{name}}
-    <btn @click="openOptions" class="float-right">Options</btn>
-    <btn @click="newGameConfirm" class="mx-2 float-right">New Game</btn>
+
+    <div class="float-sm-right">
+      <btn @click="openOptions">Options</btn>
+      <btn @click="newGameConfirm" class="mx-2">New Game</btn>
+    </div>
   </card-title>
 
   <div>
