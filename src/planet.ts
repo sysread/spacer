@@ -907,11 +907,14 @@ export class Planet {
     }
   }
 
+  minStockWanted(item: t.resource) {
+    const consumption = this.consumption(item);
+    return this.min_stock * (1 + consumption);
+  }
+
   neededResourceAmount(item: Resource) {
-    if (this.getStock(item.name) > data.min_stock_count)
-      return 0;
     const amount = this.getDemand(item.name) - this.getSupply(item.name) - this.pending.get(item.name);
-    return Math.max(Math.ceil(amount), 0);
+    return Math.max(Math.ceil(amount), this.minStockWanted(item.name));
   }
 
   neededResources(): NeededResources {

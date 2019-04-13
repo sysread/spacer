@@ -97,14 +97,14 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
             this.maxPrice = Math.ceil(this.calcMaxPrice());
         }
         Resource.prototype.calcMaxPrice = function () {
-            var factor = 6;
+            var factor = 8; //6;
             for (var i = 10; i < this.value; i *= 10) {
                 factor /= 1.8;
             }
             return this.value * Math.max(1.2, factor);
         };
         Resource.prototype.calcMinPrice = function () {
-            var factor = 3;
+            var factor = 5; //3;
             for (var i = 10; i < this.value; i *= 10) {
                 factor /= 1.8;
             }

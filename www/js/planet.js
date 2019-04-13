@@ -943,11 +943,13 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 finally { if (e_21) throw e_21.error; }
             }
         };
+        Planet.prototype.minStockWanted = function (item) {
+            var consumption = this.consumption(item);
+            return this.min_stock * (1 + consumption);
+        };
         Planet.prototype.neededResourceAmount = function (item) {
-            if (this.getStock(item.name) > data_1.default.min_stock_count)
-                return 0;
             var amount = this.getDemand(item.name) - this.getSupply(item.name) - this.pending.get(item.name);
-            return Math.max(Math.ceil(amount), 0);
+            return Math.max(Math.ceil(amount), this.minStockWanted(item.name));
         };
         Planet.prototype.neededResources = function () {
             var e_22, _a;
