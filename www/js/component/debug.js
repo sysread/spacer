@@ -53,6 +53,10 @@ define(function(require, exports, module) {
     },
 
     methods: {
+      itemValue(item) {
+        return Math.floor(resources[item].value);
+      },
+
       gameTurns(turns) {
         let left = turns;
         let intvl;
@@ -104,7 +108,7 @@ define(function(require, exports, module) {
     <option value="">Resource</option>
     <option v-for="item in resources" :key="item" :value="item">
       {{item|caps}}
-      [ {{value}} c ]
+      [ {{itemValue(item)}} c ]
     </option>
   </select>
 
