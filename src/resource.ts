@@ -67,20 +67,20 @@ export abstract class Resource {
   }
 
   calcMaxPrice() {
-    let factor = 8;//6;
+    let factor = data.necessity[this.name] ? 9 : 3;
 
     for (let i = 10; i < this.value; i *= 10) {
-      factor /= 1.8;
+      factor /= 2;
     }
 
     return this.value * Math.max(1.2, factor);
   }
 
   calcMinPrice() {
-    let factor = 5;//3;
+    let factor = data.necessity[this.name] ? 3 : 9;
 
     for (let i = 10; i < this.value; i *= 10) {
-      factor /= 1.8;
+      factor /= 2;
     }
 
     return this.value / Math.max(1.2, factor);

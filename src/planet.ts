@@ -93,6 +93,7 @@ export class Planet {
   readonly produces:  Store;
   readonly consumes:  Store;
   readonly min_stock: number;
+  readonly avg_stock: number;
 
   conditions:         Condition[];
   work_tasks:         string[];
@@ -190,6 +191,7 @@ export class Planet {
     this.pending   = new Store(init.pending);
     this.queue     = init.queue || [];
     this.min_stock = this.scale(data.min_stock_count);
+    this.avg_stock = this.scale(data.avg_stock_count);
 
     this.produces = new Store;
     this.consumes = new Store;
@@ -907,14 +909,14 @@ export class Planet {
     }
   }
 
-  minStockWanted(item: t.resource) {
-    const consumption = this.consumption(item);
-    return this.min_stock * (1 + consumption);
+  avgStockWanted(item: t.resource) {
+    const amount = Math.ceil(this.avg_stock * this.consumption(item));
+    return Math.max(this.min_stock, amount);
   }
 
   neededResourceAmount(item: Resource) {
     const amount = this.getDemand(item.name) - this.getSupply(item.name) - this.pending.get(item.name);
-    return Math.max(Math.ceil(amount), this.minStockWanted(item.name));
+    return Math.max(Math.ceil(amount), this.avgStockWanted(item.name));
   }
 
   neededResources(): NeededResources {

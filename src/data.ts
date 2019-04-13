@@ -17,7 +17,8 @@ const data = {
   market_history:      10 * turnsPerDay,
   scarcity_markup:     0.25,
   min_stock_count:     10,
-  max_imports:         3, // per market
+  avg_stock_count:     50,
+  max_imports:         5, // per market
   max_crafts:          10, // per market
   max_agents:          2, // total
   max_agent_money:     5000, // after which they buy luxuries
@@ -52,7 +53,7 @@ const data = {
     metal:        {mass:  40, recipe: {tics: 2, materials: {ore: 3}}},
     ceramics:     {mass:  25, recipe: {tics: 2, materials: {minerals: 3}}},
     medicine:     {mass:   5, recipe: {tics: 3, materials: {food: 1, hydrocarbons: 2}}},
-    machines:     {mass:  35, recipe: {tics: 3, materials: {metal: 3}}},
+    machines:     {mass:  35, recipe: {tics: 3, materials: {metal: 2}}},
     electronics:  {mass:  20, recipe: {tics: 3, materials: {ceramics: 5}}},
     cybernetics:  {mass:  60, recipe: {tics: 4, materials: {machines: 2, electronics: 2}}},
     narcotics:    {mass:   5, recipe: {tics: 2, materials: {medicine: 1, hydrocarbons: 1, water: 1}}, contraband: 5},

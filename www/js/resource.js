@@ -97,16 +97,16 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
             this.maxPrice = Math.ceil(this.calcMaxPrice());
         }
         Resource.prototype.calcMaxPrice = function () {
-            var factor = 8; //6;
+            var factor = data_1.default.necessity[this.name] ? 9 : 3;
             for (var i = 10; i < this.value; i *= 10) {
-                factor /= 1.8;
+                factor /= 2;
             }
             return this.value * Math.max(1.2, factor);
         };
         Resource.prototype.calcMinPrice = function () {
-            var factor = 5; //3;
+            var factor = data_1.default.necessity[this.name] ? 3 : 9;
             for (var i = 10; i < this.value; i *= 10) {
-                factor /= 1.8;
+                factor /= 2;
             }
             return this.value / Math.max(1.2, factor);
         };
