@@ -46,9 +46,14 @@ interface ImportReport {
   };
 };
 
+type notification = [string, number];
+
 const planets: {[key: string]: Planet} = {};
 
 class Game {
+  static readonly NOTIFY_SHORT = 3;
+  static readonly NOTIFY_LONG  = 8;
+
   turns:         number = 0;
   date:          Date = new Date(data.start_date);
   _player:       Person | null = null;
@@ -58,7 +63,7 @@ class Game {
   transit_plan?: TransitPlan;
   agents:        Agent[] = [];
   conflicts:     {[key: string]: Conflict} = {};
-  notifications: string[] = [];
+  notifications: notification[] = [];
   options:       Options = {};
 
   constructor() {
@@ -332,14 +337,15 @@ class Game {
   }
 
 
-  notify(msg: string) {
+  notify(msg: string, long: boolean = false) {
     if (!this.is_starting) {
-      this.notifications.push(msg);
+      const dismiss = long ? Game.NOTIFY_LONG : Game.NOTIFY_SHORT;
+      this.notifications.push([msg, dismiss]);
     }
   }
 
   dismiss(msg: string) {
-    this.notifications = this.notifications.filter(n => n != msg);
+    this.notifications = this.notifications.filter(n => n[0] != msg);
   }
 
 

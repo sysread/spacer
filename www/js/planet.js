@@ -840,7 +840,56 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 ? Math.ceil(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
                 : Math.ceil(price);
         };
+        /*
+         * When the player buys or sells an item, this method determines whether an
+         * inspection occurs. Returns true if no inspection is performed.
+         *
+         * If an inspection is performed and the player is caught, the player's
+         * contraband cargo is confiscated, the player is fined, and their standing
+         * with the market's faction is decreased. The method then sends a
+         * notification of the fine.
+         */
+        Planet.prototype.transactionInspection = function (item, amount, player) {
+            // the relative level of severity of trading in this item
+            var contraband = data_1.default.resources[item].contraband;
+            // item is not contraband
+            if (!contraband)
+                return false;
+            // Math.abs() is used because amount is negative when selling to market,
+            // positive when buying from market. Fine is per unit of contraband.
+            var fine = Math.abs(contraband * amount * this.inspectionFine(player));
+            var rate = this.inspectionRate(player);
+            for (var i = 0; i < contraband; ++i) {
+                if (util.chance(rate)) {
+                    var totalFine = Math.min(player.money, fine);
+                    var csnFine = util.csn(totalFine);
+                    var csnAmt = util.csn(amount);
+                    // fine the player
+                    player.debit(totalFine);
+                    // decrease standing
+                    player.decStanding(this.faction.abbrev, contraband);
+                    // confiscate contraband
+                    var verb = void 0;
+                    if (amount < 0) {
+                        player.ship.cargo.set(item, 0);
+                        verb = 'selling';
+                    }
+                    else {
+                        this.stock.dec(item, amount);
+                        verb = 'buying';
+                    }
+                    // trigger notification
+                    var msg = "Busted! " + this.faction.abbrev + " agents were tracking your movements and observed you " + verb + " " + csnAmt + " units of " + item + ". "
+                        + ("You have been fined " + csnFine + " credits and your standing wtih this faction has decreased by " + contraband + ".");
+                    window.game.notify(msg, true);
+                    return false;
+                }
+            }
+            return true;
+        };
         Planet.prototype.buy = function (item, amount, player) {
+            if (player && !this.transactionInspection(item, amount, player))
+                return [0, 0];
             var bought = Math.min(amount, this.getStock(item));
             var price = bought * this.buyPrice(item, player);
             this.incDemand(item, amount);
@@ -863,6 +912,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.sell = function (item, amount, player) {
             var e_20, _a;
+            if (player && !this.transactionInspection(item, amount, player))
+                return [0, 0, 0];
             var hasShortage = this.hasShortage(item);
             var price = amount * this.sellPrice(item);
             this.stock.inc(item, amount);

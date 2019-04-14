@@ -333,13 +333,15 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
             }
             return trade;
         };
-        Game.prototype.notify = function (msg) {
+        Game.prototype.notify = function (msg, long) {
+            if (long === void 0) { long = false; }
             if (!this.is_starting) {
-                this.notifications.push(msg);
+                var dismiss = long ? Game.NOTIFY_LONG : Game.NOTIFY_SHORT;
+                this.notifications.push([msg, dismiss]);
             }
         };
         Game.prototype.dismiss = function (msg) {
-            this.notifications = this.notifications.filter(function (n) { return n != msg; });
+            this.notifications = this.notifications.filter(function (n) { return n[0] != msg; });
         };
         /*
          * Conflicts
@@ -413,6 +415,8 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                 return true;
             });
         };
+        Game.NOTIFY_SHORT = 3;
+        Game.NOTIFY_LONG = 8;
         return Game;
     }());
     ;

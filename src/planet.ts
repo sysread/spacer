@@ -811,7 +811,68 @@ export class Planet {
       : Math.ceil(price);
   }
 
+  /*
+   * When the player buys or sells an item, this method determines whether an
+   * inspection occurs. Returns true if no inspection is performed.
+   *
+   * If an inspection is performed and the player is caught, the player's
+   * contraband cargo is confiscated, the player is fined, and their standing
+   * with the market's faction is decreased. The method then sends a
+   * notification of the fine.
+   */
+  transactionInspection(item: t.resource, amount: number, player: Person) {
+    // the relative level of severity of trading in this item
+    const contraband = data.resources[item].contraband;
+
+    // item is not contraband
+    if (!contraband)
+      return false;
+
+    // Math.abs() is used because amount is negative when selling to market,
+    // positive when buying from market. Fine is per unit of contraband.
+    const fine = Math.abs(contraband * amount * this.inspectionFine(player));
+    const rate = this.inspectionRate(player);
+
+    for (let i = 0; i < contraband; ++i) {
+      if (util.chance(rate)) {
+        const totalFine = Math.min(player.money, fine);
+        const csnFine = util.csn(totalFine);
+        const csnAmt = util.csn(amount);
+
+        // fine the player
+        player.debit(totalFine);
+
+        // decrease standing
+        player.decStanding(this.faction.abbrev, contraband);
+
+        // confiscate contraband
+        let verb;
+        if (amount < 0) {
+          player.ship.cargo.set(item, 0);
+          verb = 'selling';
+        }
+        else {
+          this.stock.dec(item, amount);
+          verb = 'buying';
+        }
+
+        // trigger notification
+        const msg = `Busted! ${this.faction.abbrev} agents were tracking your movements and observed you ${verb} ${csnAmt} units of ${item}. `
+                  + `You have been fined ${csnFine} credits and your standing wtih this faction has decreased by ${contraband}.`;
+
+        window.game.notify(msg, true);
+
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   buy(item: t.resource, amount: number, player?: Person) {
+    if (player && !this.transactionInspection(item, amount, player))
+      return [0, 0];
+
     const bought = Math.min(amount, this.getStock(item));
     const price  = bought * this.buyPrice(item, player);
 
@@ -838,6 +899,9 @@ export class Planet {
   }
 
   sell(item: t.resource, amount: number, player?: Person) {
+    if (player && !this.transactionInspection(item, amount, player))
+      return [0, 0, 0];
+
     const hasShortage = this.hasShortage(item);
     const price = amount * this.sellPrice(item);
     this.stock.inc(item, amount);

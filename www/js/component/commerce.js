@@ -85,7 +85,6 @@ define(function(require, exports, module) {
         tx_hold:    null,
         tx_credits: null,
         tx_cargo:   null,
-        busted:     false,
         standing:   false,
       };
     },
@@ -122,7 +121,6 @@ define(function(require, exports, module) {
 
       credits: {
         get() {
-          //if (this.tx_credits === null) this.tx_credits = this.game.player.money;
           this.tx_credits = this.tx_credits || 0;
           return this.tx_credits;
         },
@@ -180,40 +178,21 @@ define(function(require, exports, module) {
       },
 
       complete: function() {
-        if (this.contraband && Math.random() < this.planet.inspectionRate(this.player)) {
-          this.player.debit(this.fine);
-          this.player.decStanding(this.faction.abbrev, this.contraband);
+        let bought, price, standing;
 
-          if (this.count < 0) {
-            this.player.ship.cargo.set(this.item, 0);
-          }
-          else {
-            this.planet.stock.dec(this.item, this.count);
-          }
-
-          this.busted = true;
+        if (this.count > 0) {
+          [bought, price] = this.game.here.buy(this.item, this.count, this.player);
         }
         else {
-          if (this.count > 0) {
-            const [bought, price] = this.game.here.buy(this.item, this.count, this.player);
-          }
-          else {
-            const [bought, price, standing] = this.game.here.sell(this.item, -this.count, this.player);
-            if (standing > 3) {
-              this.standing = true;
-            }
-          }
+          [bought, price, standing] = this.game.here.sell(this.item, -this.count, this.player);
+          this.standing = standing >= 3;
         }
 
+        this.close_trade();
         this.game.save_game();
-
-        if (!this.busted && !this.standing) {
-          this.close_trade();
-        }
       },
 
       close_trade: function() {
-        this.busted = false;
         this.standing = false;
         this.$emit('update:item', null);
       },
@@ -272,14 +251,6 @@ define(function(require, exports, module) {
       </td>
     </tr>
   </table>
-
-  <ok v-if="busted" @ok="close_trade">
-    As you complete your exchange, {{faction.abbrev}} agents in powered armor
-    smash their way into the room. A {{agentGender()}} with a corporal's
-    stripes informs you that your cargo has been confiscated and you have been
-    fined {{fine|csn}} credits. Your reputation with this faction has decreased
-    by {{contraband}}.
-  </ok>
 
   <ok v-if="standing" @ok="close_trade">
     You ended the local supply shortage of {{item}}!

@@ -87,7 +87,7 @@
                     this.$nextTick(() => this.page = page);
                   },
 
-                  dismiss(msg) {
+                  dismissNotification(msg) {
                     this.game.dismiss(msg);
                   },
                 },
@@ -99,7 +99,7 @@
                     <NavBar  @open="open" :page="page" :disabled="nav_disabled" />
 
                     <div v-if="game.notifications.length > 0" class="fixed-top m-3">
-                      <Notification v-for="msg in game.notifications" :key="msg" :msg="msg" @dismiss="dismiss" dismiss="3" />
+                      <Notification v-for="[msg, dismiss] in game.notifications" :key="msg" :msg="msg" @dismiss="dismissNotification(msg)" :dismiss="dismiss" />
                     </div>
                   </div>
                 `,
