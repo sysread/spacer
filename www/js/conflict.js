@@ -118,10 +118,10 @@ define(["require", "exports", "./data", "./util"], function (require, exports, d
                 var _a = event.detail, body = _a.body, item = _a.item, count = _a.count;
                 _this.violation(body, item, count);
             });
-            window.addEventListener("itemsSold", function (event) {
-                var _a = event.detail, body = _a.body, item = _a.item, count = _a.count;
-                _this.violation(body, item, count);
-            });
+            /*window.addEventListener("itemsSold", (event: CustomEvent) => {
+              const {body, item, count} = event.detail;
+              this.violation(body, item, count);
+            });*/
         };
         Embargo.prototype.violation = function (body, item, count) {
             if (!this.is_started || this.is_over)
