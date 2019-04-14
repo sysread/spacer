@@ -146,8 +146,8 @@ define(function(require, exports, module) {
   <thead>
     <tr>
       <th>Loc</th>
-      <th class="text-right">Stock</th>
       <th class="text-right">Price</th>
+      <th class="text-right">Stock</th>
       <th class="text-right">Demand</th>
       <th class="text-right">Supply</th>
       <th class="text-right">Need</th>
@@ -159,8 +159,8 @@ define(function(require, exports, module) {
     <template v-for="place in places">
     <tr :class="{'text-info': place.isNetExporter(item)}">
       <td>{{place.name|caps}}</td>
-      <td class="text-right">{{place.getStock(item)}}</td>
       <td class="text-right">{{place.price(item)|csn}}</td>
+      <td class="text-right">{{place.getStock(item)}}</td>
       <td class="text-right">{{place.getDemand(item)|R(2)}}</td>
       <td class="text-right">{{place.getSupply(item)|R(2)}}</td>
       <td class="text-right" :class="{'text-success': place.hasSurplus(item), 'text-danger': place.hasShortage(item)}">{{place.getNeed(item)|R(2)}}</td>
@@ -175,8 +175,8 @@ define(function(require, exports, module) {
   <thead>
     <tr>
       <th>Item</th>
-      <th class="text-right">Stock</th>
       <th class="text-right">Price</th>
+      <th class="text-right">Stock</th>
       <th class="text-right">Demand</th>
       <th class="text-right">Supply</th>
       <th class="text-right">Need</th>
@@ -188,8 +188,8 @@ define(function(require, exports, module) {
     <template v-for="item in resources">
     <tr :class="{'text-info': place.isNetExporter(item)}">
       <td>{{item|caps}}</td>
-      <td class="text-right">{{place.getStock(item)}}</td>
       <td class="text-right">{{place.price(item)|csn}}</td>
+      <td class="text-right">{{place.getStock(item)}}</td>
       <td class="text-right">{{place.getDemand(item)|R(2)}}</td>
       <td class="text-right">{{place.getSupply(item)|R(2)}}</td>
       <td class="text-right" :class="{'text-success': place.hasSurplus(item), 'text-danger': place.hasShortage(item)}">{{place.getNeed(item)|R(2)}}</td>
