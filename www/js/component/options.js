@@ -28,6 +28,11 @@ define(function(require, exports, module) {
       save() {
         this.game.save_game();
         this.changed = false;
+        this.back();
+      },
+
+      back() {
+        this.$emit('open', 'status');
       },
     },
 
@@ -35,14 +40,13 @@ define(function(require, exports, module) {
       <card class="my-2">
         <card-title>
           Options
-          <btn @click="save" :disabled="!changed" class="float-right">Save</btn>
+          <div class="float-sm-right">
+            <btn @click="back">Back</btn>
+            <btn @click="save" :disabled="!changed" class="mx-2">Save</btn>
+          </div>
         </card-title>
 
-        <card title="Graphics" class="my-1">
-          <card-text>
-            Changing these values may improve performance on slower devices.
-          </card-text>
-
+        <div>
           <def term="Hide map background" info="Disables the Milky Way background in the map." split=8>
             <input type="checkbox" :checked="options.hideMapBackground" @change="update('hideMapBackground', !options.hideMapBackground)" />
           </def>
@@ -54,7 +58,7 @@ define(function(require, exports, module) {
           <def term="Hide orbit paths" info="Disables the display of orbits in the map." split=8>
             <input type="checkbox" :checked="options.hideOrbitPaths" @change="update('hideOrbitPaths', !options.hideOrbitPaths)" />
           </def>
-        </card>
+        </div>
       </card>
     `,
   });

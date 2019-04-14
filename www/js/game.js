@@ -24,6 +24,9 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
     t = __importStar(t);
     util = __importStar(util);
     ;
+    var DefaultOptions = {
+        hideOrbitPaths: true,
+    };
     ;
     var planets = {};
     var Game = /** @class */ (function () {
@@ -37,7 +40,7 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
             this.agents = [];
             this.conflicts = {};
             this.notifications = [];
-            this.options = {};
+            this.options = DefaultOptions;
             this.reset_date();
         }
         Game.prototype.init = function () {
@@ -47,7 +50,7 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                 try {
                     this.turns = init.turns;
                     this.locus = init.locus;
-                    this.options = init.options || {};
+                    this.options = init.options || DefaultOptions;
                     this._player = new person_1.Person(init.player);
                     this.date.setHours(this.date.getHours() + (this.turns * data_1.default.hours_per_turn));
                     console.log('setting system date', this.date);
@@ -59,6 +62,7 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                     console.warn('initialization error:', e);
                     this.locus = null;
                     this.turns = 0;
+                    this.options = DefaultOptions;
                     this._player = null;
                     this.build_planets();
                     this.build_agents();
@@ -66,6 +70,7 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                 }
             }
             else {
+                this.options = DefaultOptions;
                 this.build_planets();
                 this.build_agents();
             }

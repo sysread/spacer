@@ -34,6 +34,10 @@ interface Options {
   hideOrbitPaths?:    boolean;
 };
 
+const DefaultOptions = {
+  hideOrbitPaths: true,
+}
+
 
 interface ImportReport {
   [key: string]: {
@@ -64,7 +68,7 @@ class Game {
   agents:        Agent[] = [];
   conflicts:     {[key: string]: Conflict} = {};
   notifications: notification[] = [];
-  options:       Options = {};
+  options:       Options = DefaultOptions;
 
   constructor() {
     this.reset_date();
@@ -78,7 +82,7 @@ class Game {
       try {
         this.turns   = init.turns;
         this.locus   = init.locus;
-        this.options = init.options || {};
+        this.options = init.options || DefaultOptions;
         this._player = new Person(init.player);
 
         this.date.setHours(this.date.getHours() + (this.turns * data.hours_per_turn));
@@ -92,6 +96,7 @@ class Game {
         console.warn('initialization error:', e);
         this.locus = null;
         this.turns = 0;
+        this.options = DefaultOptions;
         this._player = null;
         this.build_planets();
         this.build_agents();
@@ -99,6 +104,7 @@ class Game {
       }
     }
     else {
+      this.options = DefaultOptions;
       this.build_planets();
       this.build_agents();
     }
