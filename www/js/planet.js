@@ -888,7 +888,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return true;
         };
         Planet.prototype.buy = function (item, amount, player) {
-            if (player && !this.transactionInspection(item, amount, player))
+            if (player && player === window.game.player && !this.transactionInspection(item, amount, player))
                 return [0, 0];
             var bought = Math.min(amount, this.getStock(item));
             var price = bought * this.buyPrice(item, player);
@@ -912,7 +912,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Planet.prototype.sell = function (item, amount, player) {
             var e_20, _a;
-            if (player && !this.transactionInspection(item, amount, player))
+            if (player && player === window.game.player && !this.transactionInspection(item, amount, player))
                 return [0, 0, 0];
             var hasShortage = this.hasShortage(item);
             var price = amount * this.sellPrice(item);
@@ -1481,10 +1481,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         var item = _c.value;
                         if (missions.length > 3)
                             break;
+                        var batch = util.clamp(needed.amounts[item], 1, window.game.player.ship.cargoSpace);
+                        var amount = util.clamp(util.fuzz(batch, 1.00), 1); // between 1 and 2 * cargo space
                         var mission = new mission_1.Smuggler({
                             issuer: this.body,
                             item: item,
-                            amt: needed.amounts[item],
+                            amt: util.R(amount),
                         });
                         missions.push({
                             valid_until: util.getRandomInt(10, 30) * data_1.default.turns_per_day,

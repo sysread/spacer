@@ -144,11 +144,6 @@ export class Embargo extends Conflict {
       const {body, item, count} = event.detail;
       this.violation(body, item, count);
     });
-
-    /*window.addEventListener("itemsSold", (event: CustomEvent) => {
-      const {body, item, count} = event.detail;
-      this.violation(body, item, count);
-    });*/
   }
 
   violation(body: t.body, item: t.resource, count: number) {

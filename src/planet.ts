@@ -870,7 +870,7 @@ export class Planet {
   }
 
   buy(item: t.resource, amount: number, player?: Person) {
-    if (player && !this.transactionInspection(item, amount, player))
+    if (player && player === window.game.player && !this.transactionInspection(item, amount, player))
       return [0, 0];
 
     const bought = Math.min(amount, this.getStock(item));
@@ -899,7 +899,7 @@ export class Planet {
   }
 
   sell(item: t.resource, amount: number, player?: Person) {
-    if (player && !this.transactionInspection(item, amount, player))
+    if (player && player === window.game.player && !this.transactionInspection(item, amount, player))
       return [0, 0, 0];
 
     const hasShortage = this.hasShortage(item);
@@ -1334,10 +1334,13 @@ export class Planet {
         if (missions.length > 3)
           break;
 
+        const batch  = util.clamp(needed.amounts[item], 1, window.game.player.ship.cargoSpace);
+        const amount = util.clamp(util.fuzz(batch, 1.00), 1); // between 1 and 2 * cargo space
+
         const mission = new Smuggler({
           issuer: this.body,
           item:   item,
-          amt:    needed.amounts[item],
+          amt:    util.R(amount),
         })
 
         missions.push({
