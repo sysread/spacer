@@ -773,9 +773,8 @@ export class Planet {
       }
 
       // Linear adjustments for market classifications
-      for (const trait of this.traits) {
+      for (const trait of this.traits)
         price -= price * (trait.price[item] || 0);
-      }
 
       // Scarcity adjustment for items necessary to survival
       price *= this.getScarcityMarkup(item);

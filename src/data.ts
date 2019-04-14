@@ -89,11 +89,11 @@ const data = {
     'subterranean':      {produces: {food: 0.25, hydrocarbons: 0.25}, consumes: {metal: 0.6, fuel: 0.3, electronics: 0.5, machines: 0.5, water: 0.3, hydrocarbons: 0.75, weapons: 0.35}},
     'orbital':           {produces: {food: 0.1, hydrocarbons: 0.1}, consumes: {metal: 1, fuel: 1.5, electronics: 0.75, machines: 0.75, water: 0.15, hydrocarbons: 0.25, weapons: 0.2}},
 
-    'black market':      {produces: {narcotics: 0.5, weapons: 0.5}, price: {narcotics: 0.5, weapons: 0.7}},
-    'tech hub':          {produces: {electronics: 0.5, luxuries: 0.25}, price: {machines: 0.9, electronics: 0.65, cybernetics: 0.8, addons: 0.9}},
-    'manufacturing hub': {produces: {machines: 0.5, luxuries: 0.5}, price: {machines: 0.7, cybernetics: 0.9, addons: 0.8}},
-    'capital':           {produces: {medicine: 0.25}, consumes: {weapons: 0.1, luxuries: 0.25}, price: {addons: 0.9}},
-    'military':          {produces: {}, consumes: {weapons: 1, machines: 0.5, electronics: 0.5, medicine: 0.5}, price: {addons: 0.75}},
+    'black market':      {produces: {narcotics: 2, weapons: 1}, price: {narcotics: 0.35, weapons: 0.5}},
+    'tech hub':          {produces: {electronics: 2, luxuries: 0.5}, price: {machines: 0.5, electronics: 0.3, cybernetics: 0.4, addons: 0.9}},
+    'manufacturing hub': {produces: {machines: 2, luxuries: 0.5}, price: {machines: 0.3, cybernetics: 0.25, addons: 0.8}},
+    'capital':           {produces: {medicine: 0.5}, consumes: {weapons: 0.1, luxuries: 0.25}, price: {addons: 0.9}},
+    'military':          {produces: {weapons: 2}, consumes: {weapons: 0.5, machines: 0.5, electronics: 0.5, medicine: 0.5}, price: {addons: 0.75}},
   },
 
   conditions: {
