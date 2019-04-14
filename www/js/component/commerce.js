@@ -60,8 +60,8 @@ define(function(require, exports, module) {
       <cell size=8 brkpt="sm" y=0>
         <table class="table table-sm table-mini table-noborder">
           <tr>
-            <th scope="col" class="w-25">Buy</th><td class="w-25">{{buy(item)|csn}}</td>
-            <th scope="col" class="w-25">Sell</th><td class="w-25">{{sell(item)|csn}}</td>
+            <th scope="col" class="w-25">Buy</th><td class="w-25">{{buy(item)|csn}} c</td>
+            <th scope="col" class="w-25">Sell</th><td class="w-25">{{sell(item)|csn}} c</td>
           </tr>
           <tr>
             <th scope="col" class="w-25">Dock</th><td class="w-25" :class="{'text-warning': dock(item) > 0}">{{dock(item)}}</td>
