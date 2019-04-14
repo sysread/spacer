@@ -27,6 +27,15 @@ define(["require", "exports", "./data"], function (require, exports, data_1) {
             configurable: true
         });
         Faction.prototype.toString = function () { return this.abbrev; };
+        Faction.prototype.isContraband = function (item, player) {
+            // item is not contraband
+            if (!data_1.default.resources[item].contraband)
+                return false;
+            // special case: weapons are not contraband if local standing is Admired
+            if (item == 'weapons' && player.hasStanding(this, 'Admired'))
+                return false;
+            return true;
+        };
         return Faction;
     }());
     exports.Faction = Faction;

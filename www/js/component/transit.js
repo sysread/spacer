@@ -613,15 +613,15 @@ define(function(require, exports, module) {
       },
 
       hasContraband() {
-        for (const item of Object.keys(this.data.resources)) {
-          if (this.data.resources[item].contraband) {
-            if (this.game.player.ship.cargo.get(item) > 0) {
-              return true;
-            }
-          }
-        }
+        if (this.isBlockade)
+          return true;
 
-        return this.isBlockade;
+        const faction = new Faction(this.faction);
+        for (const item of Object.keys(this.data.resources))
+          if (faction.isContraband(item, this.game.player))
+            return true;
+
+        return false;
       },
 
       isHostile() {
@@ -647,7 +647,8 @@ define(function(require, exports, module) {
         let fine = 0;
 
         const isBlockade = this.isBlockade;
-        const isContraband = (item) => isBlockade || this.data.resources[item].contraband;
+        const faction = new Faction(this.faction);
+        const isContraband = (item) => isBlockade || faction.isContraband(item, this.game.player);
 
         for (const item of this.game.player.ship.cargo.keys()) {
           if (isContraband(item)) {

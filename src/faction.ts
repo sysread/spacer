@@ -1,5 +1,9 @@
 import data from './data';
+
+import { Person } from './person';
+
 import * as t from './common';
+
 
 export class Faction implements t.Faction {
   abbrev:     t.faction;
@@ -33,4 +37,16 @@ export class Faction implements t.Faction {
   get desc() { return data.factions[this.abbrev].desc }
 
   toString() { return this.abbrev }
+
+  isContraband(item: t.resource, player: Person) {
+    // item is not contraband
+    if (!data.resources[item].contraband)
+      return false;
+
+    // special case: weapons are not contraband if local standing is Admired
+    if (item == 'weapons' && player.hasStanding(this, 'Admired')) 
+      return false;
+
+    return true;
+  }
 }

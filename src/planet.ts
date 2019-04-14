@@ -820,12 +820,11 @@ export class Planet {
    * notification of the fine.
    */
   transactionInspection(item: t.resource, amount: number, player: Person) {
-    // the relative level of severity of trading in this item
-    const contraband = data.resources[item].contraband;
-
-    // item is not contraband
-    if (!contraband)
+    if (!player || !this.faction.isContraband(item, player))
       return false;
+
+    // the relative level of severity of trading in this item
+    const contraband = data.resources[item].contraband || 0;
 
     // Math.abs() is used because amount is negative when selling to market,
     // positive when buying from market. Fine is per unit of contraband.

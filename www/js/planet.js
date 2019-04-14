@@ -850,11 +850,10 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * notification of the fine.
          */
         Planet.prototype.transactionInspection = function (item, amount, player) {
-            // the relative level of severity of trading in this item
-            var contraband = data_1.default.resources[item].contraband;
-            // item is not contraband
-            if (!contraband)
+            if (!player || !this.faction.isContraband(item, player))
                 return false;
+            // the relative level of severity of trading in this item
+            var contraband = data_1.default.resources[item].contraband || 0;
             // Math.abs() is used because amount is negative when selling to market,
             // positive when buying from market. Fine is per unit of contraband.
             var fine = Math.abs(contraband * amount * this.inspectionFine(player));
