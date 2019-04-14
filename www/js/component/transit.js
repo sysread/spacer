@@ -547,7 +547,7 @@ define(function(require, exports, module) {
             </g>
 
             <text text-anchor="middle" alignment-baseline="middle"
-                style="fill: yellow; font: bold 14px monospace;"
+                style="fill: yellow; font: bold 8px monospace;"
                 :x="shipx" :y="shipy">
               &tridot;
             </text>
