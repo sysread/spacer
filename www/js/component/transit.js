@@ -613,7 +613,7 @@ define(function(require, exports, module) {
       },
 
       hasContraband() {
-        if (this.isBlockade)
+        if (this.isBlockade && !this.game.player.ship.holdIsEmpty)
           return true;
 
         const faction = new Faction(this.faction);
