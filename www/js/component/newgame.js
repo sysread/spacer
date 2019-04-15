@@ -58,11 +58,11 @@ define(function(require, exports, module) {
 
         this.game.new_game(
           new Person({
-            name:    this.name,
-            home:    this.home,
-            faction: this.body.faction,
-            ship:    new Ship({type: this.data.initial_ship}),
-            money:   this.data.initial_money,
+            name:  this.name,
+            home:  this.home,
+            ship:  new Ship({type: this.data.initial_ship}),
+            money: this.data.initial_money,
+            faction_name: this.body.faction,
           }),
           this.home
         );
