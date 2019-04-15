@@ -823,7 +823,7 @@ export class Planet {
    */
   transactionInspection(item: t.resource, amount: number, player: Person) {
     if (!player || !this.faction.isContraband(item, player))
-      return false;
+      return true;
 
     // the relative level of severity of trading in this item
     const contraband = data.resources[item].contraband || 0;

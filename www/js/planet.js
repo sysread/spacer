@@ -857,7 +857,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          */
         Planet.prototype.transactionInspection = function (item, amount, player) {
             if (!player || !this.faction.isContraband(item, player))
-                return false;
+                return true;
             // the relative level of severity of trading in this item
             var contraband = data_1.default.resources[item].contraband || 0;
             // Math.abs() is used because amount is negative when selling to market,
