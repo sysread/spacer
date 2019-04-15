@@ -5,7 +5,7 @@ import Physics from './physics';
 
 import * as t from './common';
 import * as util from './util';
-import { Faction } from './faction';
+import { factions, Faction } from './faction';
 import { resources, isCraft, isRaw } from './resource';
 import { SavedMission, Mission, Status, restoreMission } from './mission';
 
@@ -30,54 +30,47 @@ interface SavedShip {
 }
 
 export interface SavedPerson {
-  name:       string;
-  ship:       SavedShip;
-  faction:    t.faction;
-  home:       t.body;
-  money:      number;
-  standing:   t.StandingCounter;
-  contracts?: SavedMission[];
+  name:         string;
+  ship:         SavedShip;
+  faction_name: t.faction;
+  home:         t.body;
+  money:        number;
+  standing:     t.StandingCounter;
+  contracts?:   SavedMission[];
 };
 
 
 export class Person {
-  name:        string;
-  ship:        Ship;
-  faction:     Faction;
-  home:        t.body;
-  money:       number;
-  standing:    t.StandingCounter;
-  homeGravity: number;
-  contracts:   Mission[] = [];
+  name:         string;
+  ship:         Ship;
+  home:         t.body;
+  faction_name: t.faction;
+  money:        number;
+  standing:     t.StandingCounter;
+  homeGravity:  number;
+  contracts:    Mission[] = [];
 
   constructor(init?: SavedPerson) {
     if (init == undefined) {
-      this.name     = 'Marco Solo';
-      this.ship     = new Ship({type: data.initial_ship});
-      this.faction  = new Faction('MC');
-      this.home     = 'mars';
-      this.money    = data.initial_money;
+      this.name  = 'Marco Solo';
+      this.ship  = new Ship({type: data.initial_ship});
+      this.home  = 'mars';
+      this.money = data.initial_money;
+      this.faction_name = 'MC';
     }
     else {
-      this.name     = init.name;
-      this.ship     = new Ship(init.ship);
-      this.faction  = new Faction(init.faction);
-      this.home     = init.home;
-      this.money    = Math.floor(init.money);
+      this.name  = init.name;
+      this.ship  = new Ship(init.ship);
+      this.home  = init.home;
+      this.money = Math.floor(init.money);
+      this.faction_name = init.faction_name;
 
       if (init.contracts) {
         for (const c of init.contracts) {
-
           window.addEventListener("gameLoaded", () => {
             const contract = restoreMission(c);
             contract.accept();
           });
-
-          // TODO chicken and the egg problem: contract gets watchers assigned
-          // once accept() is called, but accept() needs game.turns, which is
-          // not yet defined while initializing the game.
-          //this.contracts.push(contract);
-          //contract.accept();
         }
       }
     }
@@ -94,6 +87,10 @@ export class Person {
     }
 
     this.homeGravity = system.gravity(this.home);
+  }
+
+  get faction() {
+    return factions[this.faction_name];
   }
 
   get localStanding() {

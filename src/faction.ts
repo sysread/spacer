@@ -5,6 +5,12 @@ import { Person } from './person';
 import * as t from './common';
 
 
+declare var window: {
+  game: any;
+  addEventListener: (ev: string, cb: Function) => void;
+}
+
+
 export class Faction implements t.Faction {
   abbrev:     t.faction;
   full_name:  string;
@@ -32,11 +38,26 @@ export class Faction implements t.Faction {
     this.standing   = data.factions[this.abbrev].standing;
     this.consumes   = data.factions[this.abbrev].consumes;
     this.produces   = data.factions[this.abbrev].produces;
+
+    window.addEventListener("caughtSmuggling", (ev: CustomEvent) => this.onCaughtSmuggling(ev));
   }
 
-  get desc() { return data.factions[this.abbrev].desc }
+  get desc() {
+    return data.factions[this.abbrev].desc;
+  }
 
-  toString() { return this.abbrev }
+  get hasTradeBan() {
+    const trade_bans = window.game.get_conflicts({
+      target: this.abbrev,
+      name:   'blockade',
+    });
+
+    return trade_bans.length > 0;
+  }
+
+  toString() {
+    return this.abbrev;
+  }
 
   isContraband(item: t.resource, player: Person) {
     // item is not contraband
@@ -49,4 +70,40 @@ export class Faction implements t.Faction {
 
     return true;
   }
+
+  inspectionFine(player: Person) {
+    return Math.max(10, data.max_abs_standing - player.getStanding(this));
+  }
+
+  onCaughtSmuggling(ev: CustomEvent) {
+    const {faction, found} = ev.detail;
+
+    if (faction != this.abbrev)
+      return;
+
+    if (this.hasTradeBan)
+      return;
+
+    let loss = 0;
+    let fine = 0;
+
+    for (let item of Object.keys(found) as t.resource[]) {
+      let count = found[item] || 0;
+      fine += count * factions[faction].inspectionFine(window.game.player);
+      loss += count * 2;
+    }
+
+    window.game.player.debit(fine);
+    window.game.player.decStanding(this.abbrev, loss);
+    window.game.notify(`Busted! You have been fined ${fine} credits and your standing decreased by ${loss}.`);
+
+    return false;
+  }
+}
+
+
+export const factions: { [key: string]: Faction } = {};
+
+for (const abbrev of t.factions) {
+  factions[abbrev] = new Faction(abbrev);
 }

@@ -76,12 +76,12 @@ class NPC extends Person {
     }
 
     const init = {
-      name:     opt.name,
-      faction:  opt.faction,
-      home:     data.factions[opt.faction].capital,
-      standing: {},
-      money:    0,
-      ship:     {
+      name:         opt.name,
+      faction_name: opt.faction,
+      home:         data.factions[opt.faction].capital,
+      standing:     {},
+      money:        0,
+      ship:         {
         type:   ship.type,
         addons: ship.addons,
         cargo:  ship.cargo.store,

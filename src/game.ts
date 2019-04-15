@@ -5,7 +5,7 @@ import { TransitPlan } from './transitplan';
 import { Person, SavedPerson } from './person';
 import { Planet, SavedPlanet, isImportTask } from './planet';
 import { Agent, SavedAgent } from './agent';
-import { Conflict, Embargo } from './conflict';
+import { Conflict, Blockade } from './conflict';
 
 import * as t from './common';
 import * as util from './util';
@@ -184,12 +184,12 @@ class Game {
         const body = data.factions[faction].capital;
 
         const agent = new Agent({
-          name:     'Merchant from ' + data.bodies[body].name,
-          ship:     { type: 'schooner' },
-          faction:  faction,
-          home:     body,
-          money:    1000,
-          standing: data.factions[faction].standing,
+          name:         'Merchant from ' + data.bodies[body].name,
+          ship:         { type: 'schooner' },
+          faction_name: faction,
+          home:         body,
+          money:        1000,
+          standing:     data.factions[faction].standing,
         });
 
         this.agents.push(agent);
@@ -202,7 +202,7 @@ class Game {
 
     if (init != undefined) {
       for (const c of Object.keys(init)) {
-        this.conflicts[c] = new Embargo(init[c]);
+        this.conflicts[c] = new Blockade(init[c]);
       }
     }
   }
@@ -365,16 +365,16 @@ class Game {
     // TODO notifications when conflicts start
     for (const pro of t.factions) {
       for (const target of t.factions) {
-        // Embargos
-        const embargo = new Embargo({proponent: pro, target: target});
+        // Blockades
+        const blockade = new Blockade({proponent: pro, target: target});
 
-        if (this.conflicts[ embargo.key ] == undefined && embargo.chance()) {
-          this.conflicts[ embargo.key ] = embargo;
+        if (this.conflicts[ blockade.key ] == undefined && blockade.chance()) {
+          this.conflicts[ blockade.key ] = blockade;
 
           const turns = Math.ceil(util.getRandomNum(data.turns_per_day * 7, data.turns_per_day * 60));
-          embargo.start(turns);
+          blockade.start(turns);
 
-          this.notify(`${pro} has declared a ${embargo.name} against ${target}`);
+          this.notify(`${pro} has declared a ${blockade.name} against ${target}`);
         }
       }
     }

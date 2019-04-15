@@ -50,16 +50,16 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
             if (init == undefined) {
                 this.name = 'Marco Solo';
                 this.ship = new ship_1.default({ type: data_1.default.initial_ship });
-                this.faction = new faction_1.Faction('MC');
                 this.home = 'mars';
                 this.money = data_1.default.initial_money;
+                this.faction_name = 'MC';
             }
             else {
                 this.name = init.name;
                 this.ship = new ship_1.default(init.ship);
-                this.faction = new faction_1.Faction(init.faction);
                 this.home = init.home;
                 this.money = Math.floor(init.money);
+                this.faction_name = init.faction_name;
                 if (init.contracts) {
                     var _loop_1 = function (c) {
                         window.addEventListener("gameLoaded", function () {
@@ -103,6 +103,13 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
             }
             this.homeGravity = system_1.default.gravity(this.home);
         }
+        Object.defineProperty(Person.prototype, "faction", {
+            get: function () {
+                return faction_1.factions[this.faction_name];
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Person.prototype, "localStanding", {
             get: function () {
                 return this.getStanding(window.game.here.faction);

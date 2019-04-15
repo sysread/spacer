@@ -101,7 +101,7 @@ define(["require", "exports", "./data", "./ship", "./person", "./common", "./uti
             }
             var init = {
                 name: opt.name,
-                faction: opt.faction,
+                faction_name: opt.faction,
                 home: data_1.default.factions[opt.faction].capital,
                 standing: {},
                 money: 0,

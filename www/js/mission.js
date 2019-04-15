@@ -348,7 +348,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             get: function () {
                 var reward = util.csn(this.price);
                 var factions = window.game.get_conflicts({
-                    name: 'trade ban',
+                    name: 'blockade',
                     target: this.issuer,
                 }).map(function (c) { return c.proponent; });
                 return [

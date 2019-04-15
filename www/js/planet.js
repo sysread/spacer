@@ -67,7 +67,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.kind = system_1.default.kind(this.body);
             this.central = system_1.default.central(this.body);
             this.gravity = system_1.default.gravity(this.body);
-            this.faction = new faction_1.Faction(data_1.default.bodies[body].faction);
             this.traits = data_1.default.bodies[body].traits.map(function (t) { return new trait_1.Trait(t); });
             /*
              * Temporary conditions
@@ -209,6 +208,13 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this._exporter = {};
             window.addEventListener("turn", function () { return _this.turn(window.game.turns); });
         }
+        Object.defineProperty(Planet.prototype, "faction", {
+            get: function () {
+                return faction_1.factions[data_1.default.bodies[this.body].faction];
+            },
+            enumerable: true,
+            configurable: true
+        });
         Planet.prototype.turn = function (turn) {
             // Spread expensive daily procedures out over multiple turns; note the
             // fall-through in each case to default, which are actions called on every
@@ -404,7 +410,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return this.scale(this.faction.inspection) * standing;
         };
         Planet.prototype.inspectionFine = function (player) {
-            return Math.max(10, data_1.default.max_abs_standing - player.getStanding(this.faction));
+            return this.faction.inspectionFine(player);
         };
         /*
          * Fabrication
@@ -1103,7 +1109,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             try {
                 for (var exporters_3 = __values(exporters), exporters_3_1 = exporters_3.next(); !exporters_3_1.done; exporters_3_1 = exporters_3.next()) {
                     var body = exporters_3_1.value;
-                    // no trade ban violations from unaligned markets
+                    // no blockade violations from unaligned markets
                     if (hasTradeBan && data_1.default.bodies[body].faction != this.faction.abbrev)
                         continue;
                     var rating = priceRating[body] * stockRating[body] * distRating[body];
@@ -1468,7 +1474,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         Planet.prototype.refreshSmugglerContracts = function () {
             var e_40, _a;
             var hasTradeBan = this.hasTradeBan;
-            // If the trade ban is over, remove smuggling contracts
+            // If the blockade is over, remove smuggling contracts
             if (this.contracts.length > 0 && window.game) {
                 this.contracts = this.contracts.filter(function (c) { return !(c instanceof mission_1.Smuggler) || hasTradeBan; });
             }
@@ -1551,11 +1557,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         };
         Object.defineProperty(Planet.prototype, "hasTradeBan", {
             get: function () {
-                var trade_bans = window.game.get_conflicts({
-                    target: this.faction.abbrev,
-                    name: 'trade ban',
-                });
-                return trade_bans.length > 0;
+                return this.faction.hasTradeBan;
             },
             enumerable: true,
             configurable: true

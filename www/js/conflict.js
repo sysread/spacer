@@ -1,10 +1,3 @@
-/*
- * TODO
- *  * new conflict types
- *  * Trade ban:
- *    * notifications when player violates trade ban
- *    * standing loss when player violates trade ban
- */
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -18,6 +11,16 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __values = (this && this.__values) || function (o) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+    if (m) return m.call(o);
+    return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -28,7 +31,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./util"], function (require, exports, data_1, util) {
+define(["require", "exports", "./data", "./faction", "./util"], function (require, exports, data_1, faction_1, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
@@ -91,12 +94,12 @@ define(["require", "exports", "./data", "./util"], function (require, exports, d
         return Conflict;
     }(Condition));
     exports.Conflict = Conflict;
-    var Embargo = /** @class */ (function (_super) {
-        __extends(Embargo, _super);
-        function Embargo(init) {
-            return _super.call(this, 'trade ban', init) || this;
+    var Blockade = /** @class */ (function (_super) {
+        __extends(Blockade, _super);
+        function Blockade(init) {
+            return _super.call(this, 'blockade', init) || this;
         }
-        Embargo.prototype.chance = function () {
+        Blockade.prototype.chance = function () {
             if (this.proponent == this.target)
                 return false;
             var standing = data_1.default.factions[this.proponent].standing[this.target] || 0;
@@ -112,26 +115,44 @@ define(["require", "exports", "./data", "./util"], function (require, exports, d
             }
             return util.chance(chance);
         };
-        Embargo.prototype.install_event_watchers = function () {
+        Blockade.prototype.install_event_watchers = function () {
             var _this = this;
-            window.addEventListener("itemsBought", function (event) {
-                var _a = event.detail, body = _a.body, item = _a.item, count = _a.count;
-                _this.violation(body, item, count);
+            window.addEventListener("caughtSmuggling", function (event) {
+                var _a = event.detail, faction = _a.faction, found = _a.found;
+                _this.violation(faction, found);
             });
         };
-        Embargo.prototype.violation = function (body, item, count) {
+        Blockade.prototype.violation = function (faction_name, found) {
+            var e_1, _a;
             if (!this.is_started || this.is_over)
                 return true;
-            if (this.target != data_1.default.bodies[body].faction)
+            if (this.target != faction_name)
                 return false;
-            var loss = count * 2;
-            if (item == 'weapons')
-                loss *= 2;
+            var faction = faction_1.factions[faction_name];
+            var loss = 0;
+            var fine = 0;
+            try {
+                for (var _b = __values(Object.keys(found)), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var item = _c.value;
+                    var count = found[item] || 0;
+                    loss += (item == 'weapons') ? count * 4 : count * 2;
+                    fine += count * faction.inspectionFine(window.game.player);
+                    window.game.player.ship.unloadCargo(item, count);
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+            window.game.player.debit(fine);
             window.game.player.decStanding(this.proponent, loss);
-            window.game.notify("You are in violation of " + this.proponent + "'s trade ban against " + this.target + ". Your standing has decreased by " + loss + ".");
+            window.game.notify("You are in violation of " + this.proponent + "'s blockade against " + this.target + ". You have been fined " + fine + " credits and your standing decreased by " + loss + ".");
             return false;
         };
-        return Embargo;
+        return Blockade;
     }(Conflict));
-    exports.Embargo = Embargo;
+    exports.Blockade = Blockade;
 });

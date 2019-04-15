@@ -365,7 +365,7 @@ export class Smuggler extends Mission {
     const reward = util.csn(this.price);
 
     const factions = window.game.get_conflicts({
-      name: 'trade ban',
+      name: 'blockade',
       target: this.issuer,
     }).map((c: Conflict) => c.proponent);
 

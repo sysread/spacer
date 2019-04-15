@@ -11,6 +11,7 @@ define(function(require, exports, module) {
   const util     = require('util');
   const t        = require('common');
   const resource = require('resource');
+  const factions = require('faction').factions;
   const Layout   = require('component/layout');
 
   require('vendor/TweenMax.min');
@@ -141,13 +142,17 @@ define(function(require, exports, module) {
       // TODO implement this as its own version of the pirate encounter and
       // remove trade bans from inspection/patrol rates.
       privateerRates() {
-        const bans   = this.game.get_conflicts({name: 'trade ban'});
-        const ranges = this.nearby();
-        const rates  = {};
+        const bans  = this.game.get_conflicts({name: 'blockade'});
+        const rates = {};
 
         if (bans.length > 0) {
+          const ranges = this.nearby();
+
           // for nearby bodies
-          for (const body of Object.keys(ranges).filter(b => this.game.planets[b].hasTradeBan)) {
+          for (const body of Object.keys(ranges)) {
+            if (!game.planets[body].hasTradeBan)
+              continue;
+
             // targeted faction
             const target          = this.data.bodies[body].faction;
             const isPlayerFaction = target == this.game.player.faction.abbrev;
@@ -158,16 +163,21 @@ define(function(require, exports, module) {
               // distance to nearby body
               const au = ranges[body] / Physics.AU;
 
-              // use the nearby body's piracy rate as the base, since it is
+              // Use the nearby body's piracy rate as the base, since it is
               // calculated based on its patrol rate at this range.
               const rate = game.planets[body].piracyRate(au);
 
               for (const ban of bans.filter(c => c.target == target)) {
                 const faction = ban.proponent;
+                const patrol = data.factions[faction].patrol;
 
-                if (rates[faction] == undefined || rates[faction] < rate) {
+                // Add half the banning faction's patrol rate to the piracy
+                // rate to get the privateering rate.
+                const total = rate + (patrol / 2);
+
+                if (rates[faction] == undefined || rates[faction] < total) {
                   rates[faction] = {
-                    rate:   rate,
+                    rate:   total,
                     target: target,
                   }
                 }
@@ -616,7 +626,7 @@ define(function(require, exports, module) {
         if (this.isBlockade && !this.game.player.ship.holdIsEmpty)
           return true;
 
-        const faction = new Faction(this.faction);
+        const faction = factions[this.faction];
         for (const item of Object.keys(this.data.resources))
           if (faction.isContraband(item, this.game.player))
             return true;
@@ -644,39 +654,32 @@ define(function(require, exports, module) {
       },
 
       submit() {
-        let fine = 0;
-
         const isBlockade = this.isBlockade;
-        const faction = new Faction(this.faction);
+        const faction = factions[this.faction];
         const isContraband = (item) => isBlockade || faction.isContraband(item, this.game.player);
 
+        const found = {};
+        let busted = false;
+
         for (const item of this.game.player.ship.cargo.keys()) {
-          if (isContraband(item)) {
+          if (this.game.player.ship.cargo.get(item) > 0 && (isBlockade || isContraband(item))) {
             const amt = this.game.player.ship.cargo.count(item);
-            fine += amt * this.planet.inspectionFine(this.game.player);
+            found[item] = found[item] || 0;
+            found[item] += amt;
+            busted = true;
           }
         }
 
-        this.fine = Math.min(fine, this.game.player.money);
-
-        if (this.fine > 0) {
-          if (isBlockade) {
-            window.dispatchEvent("caughtSmuggling", {detail: {by: this.faction}});
-            find *= 2;
-          }
-
-          this.game.player.debit(this.fine);
-
-          for (const [item, amt] of this.game.player.ship.cargo.entries()) {
-            if (amt > 0 && isContraband(item)) {
-              this.game.player.ship.cargo.dec(item, amt);
-              this.game.player.decStanding(this.faction, this.data.resources[item].contraband);
-            }
-          }
+        if (busted) {
+          window.dispatchEvent(new CustomEvent("caughtSmuggling", {
+            detail: {
+              faction: this.faction,
+              found: found,
+            },
+          }));
 
           this.setChoice('submit-fined');
-        }
-        else {
+        } else {
           this.setChoice('submit-done');
         }
       },

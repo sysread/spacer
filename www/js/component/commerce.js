@@ -156,11 +156,6 @@ define(function(require, exports, module) {
         const cargo = this.player.ship.cargoLeft;
         return hold + Math.min(dock, Math.floor(cred / this.buy), cargo);
       },
-
-      fine: function() {
-        const base = this.planet.inspectionFine(this.player);
-        return Math.min(this.player.money, base * Math.abs(this.count));
-      },
     },
     methods: {
       agentGender: function() {

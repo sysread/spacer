@@ -1,12 +1,6 @@
-/*
- * TODO
- *  * new conflict types
- *  * Trade ban:
- *    * notifications when player violates trade ban
- *    * standing loss when player violates trade ban
- */
-
 import data from './data';
+
+import { factions } from './faction';
 
 import * as t from './common';
 import * as util from './util';
@@ -116,9 +110,9 @@ export abstract class Conflict extends Condition {
 }
 
 
-export class Embargo extends Conflict {
+export class Blockade extends Conflict {
   constructor(init: any) {
-    super('trade ban', init);
+    super('blockade', init);
   }
 
   chance(): boolean {
@@ -140,23 +134,33 @@ export class Embargo extends Conflict {
   }
 
   install_event_watchers() {
-    window.addEventListener("itemsBought", (event: CustomEvent) => {
-      const {body, item, count} = event.detail;
-      this.violation(body, item, count);
+    window.addEventListener("caughtSmuggling", (event: CustomEvent) => {
+      const {faction, found} = event.detail;
+      this.violation(faction, found);
     });
   }
 
-  violation(body: t.body, item: t.resource, count: number) {
-    if (!this.is_started || this.is_over) return true;
-    if (this.target != data.bodies[body].faction) return false;
+  violation(faction_name: t.faction, found: t.ResourceCounter) {
+    if (!this.is_started || this.is_over)
+      return true;
 
-    let loss = count * 2;
+    if (this.target != faction_name)
+      return false;
 
-    if (item == 'weapons')
-      loss *= 2;
+    const faction = factions[faction_name];
+    let loss = 0;
+    let fine = 0;
 
+    for (let item of Object.keys(found) as t.resource[]) {
+      let count = found[item] || 0;
+      loss += (item == 'weapons') ? count * 4 : count * 2;
+      fine += count * faction.inspectionFine(window.game.player);
+      window.game.player.ship.unloadCargo(item, count);
+    }
+
+    window.game.player.debit(fine);
     window.game.player.decStanding(this.proponent, loss);
-    window.game.notify(`You are in violation of ${this.proponent}'s trade ban against ${this.target}. Your standing has decreased by ${loss}.`);
+    window.game.notify(`You are in violation of ${this.proponent}'s blockade against ${this.target}. You have been fined ${fine} credits and your standing decreased by ${loss}.`);
 
     return false;
   }

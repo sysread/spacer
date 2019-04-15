@@ -6,11 +6,11 @@ import History from './history';
 
 import { Resource, Raw, Craft, isRaw, isCraft, resources } from './resource';
 import { Trait } from './trait';
-import { Faction } from './faction';
+import { factions } from './faction';
 import { Condition, SavedCondition } from './condition';
 import { Mission, SavedMission, restoreMission, Passengers, Smuggler } from './mission';
 import { Person } from './person';
-import { Conflict, Embargo } from './conflict';
+import { Conflict, Blockade } from './conflict';
 
 import * as t from './common';
 import * as util from './util';
@@ -87,7 +87,6 @@ export class Planet {
   readonly kind:      string;
   readonly central:   string;
   readonly gravity:   number;
-  readonly faction:   Faction;
   readonly traits:    Trait[];
 
   readonly produces:  Store;
@@ -127,7 +126,6 @@ export class Planet {
     this.kind    = system.kind(this.body);
     this.central = system.central(this.body);
     this.gravity = system.gravity(this.body);
-    this.faction = new Faction(data.bodies[body].faction);
     this.traits  = data.bodies[body].traits.map(t => new Trait(t));
 
     /*
@@ -217,6 +215,10 @@ export class Planet {
     this._exporter = {};
 
     window.addEventListener("turn", () => this.turn(window.game.turns));
+  }
+
+  get faction() {
+    return factions[data.bodies[this.body].faction];
   }
 
   turn(turn: number) {
@@ -374,7 +376,7 @@ export class Planet {
   }
 
   inspectionFine(player: Person) {
-    return Math.max(10, data.max_abs_standing - player.getStanding(this.faction));
+    return this.faction.inspectionFine(player);
   }
 
   /*
@@ -1066,7 +1068,7 @@ export class Planet {
     const hasTradeBan = this.hasTradeBan;
 
     for (const body of exporters) {
-      // no trade ban violations from unaligned markets
+      // no blockade violations from unaligned markets
       if (hasTradeBan && data.bodies[body].faction != this.faction.abbrev)
         continue;
 
@@ -1319,7 +1321,7 @@ export class Planet {
   refreshSmugglerContracts() {
     const hasTradeBan = this.hasTradeBan;
 
-    // If the trade ban is over, remove smuggling contracts
+    // If the blockade is over, remove smuggling contracts
     if (this.contracts.length > 0 && window.game) {
       this.contracts = this.contracts.filter(c => !(c instanceof Smuggler) || hasTradeBan);
     }
@@ -1389,12 +1391,7 @@ export class Planet {
   }
 
   get hasTradeBan(): boolean {
-    const trade_bans = window.game.get_conflicts({
-      target: this.faction.abbrev,
-      name:   'trade ban',
-    });
-
-    return trade_bans.length > 0;
+    return this.faction.hasTradeBan;
   }
 
   /*

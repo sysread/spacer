@@ -175,7 +175,7 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                     var agent = new agent_1.Agent({
                         name: 'Merchant from ' + data_1.default.bodies[body].name,
                         ship: { type: 'schooner' },
-                        faction: faction,
+                        faction_name: faction,
                         home: body,
                         money: 1000,
                         standing: data_1.default.factions[faction].standing,
@@ -191,7 +191,7 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                 try {
                     for (var _b = __values(Object.keys(init)), _c = _b.next(); !_c.done; _c = _b.next()) {
                         var c = _c.value;
-                        this.conflicts[c] = new conflict_1.Embargo(init[c]);
+                        this.conflicts[c] = new conflict_1.Blockade(init[c]);
                     }
                 }
                 catch (e_3_1) { e_3 = { error: e_3_1 }; }
@@ -362,13 +362,13 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                     try {
                         for (var _e = __values(t.factions), _f = _e.next(); !_f.done; _f = _e.next()) {
                             var target = _f.value;
-                            // Embargos
-                            var embargo = new conflict_1.Embargo({ proponent: pro, target: target });
-                            if (this.conflicts[embargo.key] == undefined && embargo.chance()) {
-                                this.conflicts[embargo.key] = embargo;
+                            // Blockades
+                            var blockade = new conflict_1.Blockade({ proponent: pro, target: target });
+                            if (this.conflicts[blockade.key] == undefined && blockade.chance()) {
+                                this.conflicts[blockade.key] = blockade;
                                 var turns = Math.ceil(util.getRandomNum(data_1.default.turns_per_day * 7, data_1.default.turns_per_day * 60));
-                                embargo.start(turns);
-                                this.notify(pro + " has declared a " + embargo.name + " against " + target);
+                                blockade.start(turns);
+                                this.notify(pro + " has declared a " + blockade.name + " against " + target);
                             }
                         }
                     }

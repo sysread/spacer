@@ -169,12 +169,12 @@ define(function(require, exports, module) {
 
       isSubSystemTransit() {
         if (this.dest) {
-          const dest_central = system.central(this.transit.dest);
-          const orig_central = system.central(this.transit.origin);
+          const dest_central = system.central(this.dest);
+          const orig_central = system.central(this.game.locus);
 
           if ((dest_central == orig_central && dest_central != 'sun') // moon to moon in same system
               || window.game.locus == dest_central                    // central to its own moon
-              || this.transit.dest == orig_central)                   // moon to its host planet
+              || this.dest == orig_central)                           // moon to its host planet
             return true;
           else
             return false;
