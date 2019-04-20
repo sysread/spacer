@@ -4,6 +4,7 @@ import Physics from './physics';
 import { resources } from './resource';
 import { Conflict } from './conflict';
 import { NavComp } from './navcomp';
+import { trigger, watch, Arrived, CaughtSmuggling } from "./events";
 
 import * as t from './common';
 import * as util from './util';
@@ -13,22 +14,6 @@ import * as util from './util';
 declare var console: any;
 declare var window: {
   game: any;
-  addEventListener: (ev: string, cb: any, opt?: any) => void;
-  removeEventListener: (ev: string, cb: any) => void;
-}
-
-
-function watch(event: string, cb: Function) {
-  const opt = {
-    passive: true,
-    once: true,
-  };
-
-  window.addEventListener(event, (ev: any) => {
-    if (cb(ev)) {
-      watch(event, cb);
-    }
-  }, opt);
 }
 
 
@@ -212,10 +197,10 @@ export abstract class Mission {
       if (this.turns_left == 0) {
         console.log('mission over:', this.title);
         this.complete();
-        return false;
+        return {complete: true};
       }
 
-      return true;
+      return {complete: false};
     });
   }
 
@@ -321,14 +306,14 @@ export class Passengers extends Mission {
   accept() {
     super.accept();
 
-    watch('arrived', (event: CustomEvent) => {
-      if (!this.is_expired && event.detail.dest == this.dest) {
+    watch('arrived', (ev: Arrived) => {
+      if (!this.is_expired && ev.detail.dest == this.dest) {
         console.log("passengers mission complete:", this.short_title);
         this.finish();
-        return false;
+        return {complete: true};
       }
 
-      return true;
+      return {complete: false};
     });
   }
 }
@@ -388,7 +373,7 @@ export class Smuggler extends Mission {
   accept() {
     super.accept();
 
-    watch('arrived', (event: CustomEvent) => {
+    watch('arrived', (event: Arrived) => {
       if (!this.is_expired && !this.is_complete && event.detail.dest == this.issuer) {
         const amt = Math.min(this.amt_left, window.game.player.ship.cargo.count(this.item));
 
@@ -400,25 +385,25 @@ export class Smuggler extends Mission {
           if (this.amt_left == 0) {
             window.game.notify(`All promised units of ${this.item} have been delivered.`);
             this.finish();
-            return false;
+            return {complete: true};
           }
           else {
             window.game.notify(`You have delivered ${amt} units of ${this.item}. ${this.description_remaining}.`);
-            return true;
+            return {complete: false};
           }
         }
       }
 
-      return true;
+      return {complete: false};
     });
 
-    watch('caughtSmuggling', (event: CustomEvent) => {
+    watch('caughtSmuggling', (event: CaughtSmuggling) => {
       if (!this.is_expired && !this.is_complete) {
         this.cancel();
-        return false;
+        return {complete: true};
       }
 
-      return true;
+      return {complete: false};
     });
   }
 }

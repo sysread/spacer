@@ -12,7 +12,7 @@ define(["require", "exports", "./mercury", "./earth", "./mars", "./ceres", "./ju
     uranus_1 = __importDefault(uranus_1);
     neptune_1 = __importDefault(neptune_1);
     pluto_1 = __importDefault(pluto_1);
-    var sun = {
+    const sun = {
         name: 'The Sun',
         type: 'star',
         radius: 6.955e5,

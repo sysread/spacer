@@ -1,6 +1,6 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    var earth = {
+    const earth = {
         name: 'Earth',
         type: 'planet',
         radius: 6371.01,

@@ -11,12 +11,12 @@
     "license": "Apache-2.0",
     "dependencies": {
         "cordova": "^8.1.2",
-        "cordova-android": "^7.1.1",
+        "cordova-android": "^7.1.4",
         "cordova-browser": "^5.0.4",
         "cordova-plugin-device": "^2.0.2",
         "cordova-plugin-statusbar": "^2.4.2",
-        "npm": "^6.4.1",
-        "sprintf-js": "^1.1.1",
+        "npm": "^6.9.0",
+        "sprintf-js": "^1.1.2",
         "statusbar": "^0.2.0"
     },
     "cordova": {
@@ -31,7 +31,7 @@
     },
     "devDependencies": {
         "@types/jquery": "^3.3.29",
-        "typescript": "^3.2.2",
+        "typescript": "^3.4.4",
         "vue-async-computed": "^3.6.1"
     }
 }

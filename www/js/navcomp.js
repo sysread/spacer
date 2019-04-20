@@ -1,40 +1,3 @@
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var __values = (this && this.__values) || function (o) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
-    if (m) return m.call(o);
-    return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -52,13 +15,13 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     system_1 = __importDefault(system_1);
     physics_1 = __importDefault(physics_1);
     Vec = __importStar(Vec);
-    var SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
-    var DT = 200; // frames per turn for euler integration
-    var TI = SPT / DT; // seconds per frame
-    var POSITION = 0;
-    var VELOCITY = 1;
-    var Course = /** @class */ (function () {
-        function Course(target, agent, maxAccel, turns, dt) {
+    const SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
+    const DT = 200; // frames per turn for euler integration
+    const TI = SPT / DT; // seconds per frame
+    const POSITION = 0;
+    const VELOCITY = 1;
+    class Course {
+        constructor(target, agent, maxAccel, turns, dt) {
             this.target = target;
             this.agent = agent;
             this.maxAccel = maxAccel;
@@ -68,7 +31,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             this.dt = dt || DT;
             this._path = null;
         }
-        Course.prototype.export = function () {
+        export() {
             return {
                 target: this.target,
                 agent: this.agent,
@@ -76,66 +39,61 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 maxAccel: this.maxAccel,
                 turns: this.turns,
             };
-        };
-        Course.import = function (opt) {
+        }
+        static import(opt) {
             return new Course(opt.target, opt.agent, opt.maxAccel, opt.turns);
-        };
-        Object.defineProperty(Course.prototype, "acc", {
-            get: function () { return Vec.clone(this.accel); },
-            enumerable: true,
-            configurable: true
-        });
+        }
+        get acc() { return Vec.clone(this.accel); }
         // a = (2s / t^2) - (2v / t)
-        Course.prototype.calculateAcceleration = function () {
+        calculateAcceleration() {
             // Calculate portion of target velocity to match by flip point
-            var dvf = Vec.mul_scalar(this.target[VELOCITY], 2 / this.tflip);
+            const dvf = Vec.mul_scalar(this.target[VELOCITY], 2 / this.tflip);
             // Calculate portion of total change in velocity to apply by flip point
-            var dvi = Vec.mul_scalar(Vec.sub(this.agent[VELOCITY], dvf), 2 / this.tflip);
-            var acc = Vec.sub(this.target[POSITION], this.agent[POSITION]); // (2s / 2) for flip point
+            const dvi = Vec.mul_scalar(Vec.sub(this.agent[VELOCITY], dvf), 2 / this.tflip);
+            let acc = Vec.sub(this.target[POSITION], this.agent[POSITION]); // (2s / 2) for flip point
             acc = Vec.div_scalar(acc, this.tflip * this.tflip); // t^2
             acc = Vec.sub(acc, dvi); // less the change in velocity
             return acc;
-        };
-        Course.prototype.maxVelocity = function () {
-            var t = this.tflip;
+        }
+        maxVelocity() {
+            const t = this.tflip;
             return Vec.length(Vec.mul_scalar(this.accel, t));
-        };
-        Course.prototype.path = function () {
+        }
+        path() {
             if (!this._path) {
-                var p = this.agent[POSITION]; // initial position
-                var v = this.agent[VELOCITY]; // initial velocity
-                var TI_1 = SPT / this.dt;
-                var vax = Vec.mul_scalar(this.acc, TI_1); // static portion of change in velocity each TI
-                var dax = Vec.mul_scalar(this.acc, TI_1 * TI_1 / 2); // static portion of change in position each TI
-                var path = [];
-                var t_1 = 0;
+                let p = this.agent[POSITION]; // initial position
+                let v = this.agent[VELOCITY]; // initial velocity
+                const TI = SPT / this.dt;
+                const vax = Vec.mul_scalar(this.acc, TI); // static portion of change in velocity each TI
+                const dax = Vec.mul_scalar(this.acc, TI * TI / 2); // static portion of change in position each TI
+                const path = [];
+                let t = 0;
                 // Start with initial position
                 path.push({ position: p, velocity: Vec.length(v) });
-                for (var turn = 0; turn < this.turns; ++turn) {
+                for (let turn = 0; turn < this.turns; ++turn) {
                     // Split turn's updates into DT increments to prevent inaccuracies
                     // creeping into the final result.
-                    for (var i = 0; i < this.dt; ++i) {
-                        t_1 += TI_1;
-                        if (t_1 > this.tflip) {
+                    for (let i = 0; i < this.dt; ++i) {
+                        t += TI;
+                        if (t > this.tflip) {
                             v = Vec.sub(v, vax); // decelerate after flip
                         }
-                        else if (t_1 < this.tflip) {
+                        else if (t < this.tflip) {
                             v = Vec.add(v, vax); // accelerate before flip
                         }
                         // Update position
-                        p = Vec.add(p, Vec.add(Vec.mul_scalar(v, TI_1), dax));
+                        p = Vec.add(p, Vec.add(Vec.mul_scalar(v, TI), dax));
                     }
                     path.push({ position: p, velocity: Vec.length(v) });
                 }
                 this._path = path;
             }
             return this._path;
-        };
-        return Course;
-    }());
+        }
+    }
     exports.Course = Course;
-    var NavComp = /** @class */ (function () {
-        function NavComp(player, orig, showAll, fuelTarget, nominal) {
+    class NavComp {
+        constructor(player, orig, showAll, fuelTarget, nominal) {
             this.player = player;
             this.orig = orig;
             this.showAll = showAll || false;
@@ -151,47 +109,36 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 this.fuelTarget = this.player.ship.fuel;
             }
         }
-        NavComp.prototype.getTransitsTo = function (dest) {
-            var e_1, _a;
+        getTransitsTo(dest) {
             if (!this.data) {
                 this.data = {};
             }
             if (!this.data[dest]) {
                 this.data[dest] = [];
-                var transits = this.astrogator(dest);
-                try {
-                    for (var transits_1 = __values(transits), transits_1_1 = transits_1.next(); !transits_1_1.done; transits_1_1 = transits_1.next()) {
-                        var transit = transits_1_1.value;
-                        this.data[dest].push(transit);
-                    }
-                }
-                catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                finally {
-                    try {
-                        if (transits_1_1 && !transits_1_1.done && (_a = transits_1.return)) _a.call(transits_1);
-                    }
-                    finally { if (e_1) throw e_1.error; }
+                const transits = this.astrogator(dest);
+                for (const transit of transits) {
+                    this.data[dest].push(transit);
                 }
             }
             return this.data[dest];
-        };
+        }
         // TODO this does not match Course.calculateAcceleration() in the slightest.
-        NavComp.prototype.guestimate = function (dest) {
-            var max_turns = data_1.default.turns_per_day * 365;
-            var start_pos = system_1.default.position(this.orig);
-            var start_time = system_1.default.time.getTime();
-            for (var i = 1; i < max_turns; ++i) {
-                var t_2 = i * data_1.default.hours_per_turn * 3600;
-                var end = system_1.default.position(dest, start_time + t_2);
-                var s = physics_1.default.distance(start_pos, end);
-                var t_flip = Math.ceil(t_2 / 2);
-                var s_flip = s / 2;
-                var v = (2 * s_flip) / t_flip;
-                var a = Math.abs(((2 * s_flip) / (t_flip * t_flip)) - ((2 * v) / t_flip));
+        guestimate(dest) {
+            const max_turns = data_1.default.turns_per_day * 365;
+            const start_pos = system_1.default.position(this.orig);
+            const start_time = system_1.default.time.getTime();
+            for (let i = 1; i < max_turns; ++i) {
+                const t = i * data_1.default.hours_per_turn * 3600;
+                const end = system_1.default.position(dest, start_time + t);
+                const s = physics_1.default.distance(start_pos, end);
+                const t_flip = Math.ceil(t / 2);
+                const s_flip = s / 2;
+                const v = (2 * s_flip) / t_flip;
+                const a = Math.abs(((2 * s_flip) / (t_flip * t_flip)) - ((2 * v) / t_flip));
                 if (a <= this.max) {
-                    var target = [end, [0, 0, 0]];
-                    var agent = [start_pos, [0, 0, 0]];
-                    var course = new Course(target, agent, a, i, this.dt);
+                    const target = [end, [0, 0, 0]];
+                    const agent = [start_pos, [0, 0, 0]];
+                    const course = new Course(target, agent, a, i, this.dt);
                     return new transitplan_1.TransitPlan({
                         origin: this.orig,
                         dest: dest,
@@ -203,33 +150,22 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                     });
                 }
             }
-        };
-        NavComp.prototype.getFastestTransitTo = function (dest) {
-            var e_2, _a;
-            var transits = this.astrogator(dest);
-            try {
-                for (var transits_2 = __values(transits), transits_2_1 = transits_2.next(); !transits_2_1.done; transits_2_1 = transits_2.next()) {
-                    var transit = transits_2_1.value;
-                    return transit;
-                }
+        }
+        getFastestTransitTo(dest) {
+            const transits = this.astrogator(dest);
+            for (const transit of transits) {
+                return transit;
             }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (transits_2_1 && !transits_2_1.done && (_a = transits_2.return)) _a.call(transits_2);
-                }
-                finally { if (e_2) throw e_2.error; }
-            }
-        };
-        NavComp.prototype.getShipAcceleration = function () {
+        }
+        getShipAcceleration() {
             if (this.nominal) {
                 return physics_1.default.deltav(this.player.ship.thrust, this.player.ship.currentMass());
             }
             else {
                 return this.player.shipAcceleration();
             }
-        };
-        NavComp.prototype.getShipMass = function () {
+        }
+        getShipMass() {
             if (this.nominal) {
                 return this.player.ship.nominalMass(true);
                 ;
@@ -237,66 +173,51 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             else {
                 return this.player.ship.currentMass();
             }
-        };
-        NavComp.prototype.astrogator = function (destination) {
-            var orig, dest, vInit, bestAcc, fuelrate, thrust, fuel, mass, prevFuelUsed, turns, distance, fuelPerTurn, thrustPerTurn, availAcc, maxAccel, vFinal, target, agent, course, a, fuelUsed, fuelUsedPerTurn;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        orig = system_1.default.orbit_by_turns(this.orig);
-                        dest = system_1.default.orbit_by_turns(destination);
-                        vInit = Vec.div_scalar(Vec.sub(orig[1], orig[0]), SPT);
-                        bestAcc = Math.min(this.player.maxAcceleration(), this.getShipAcceleration());
-                        fuelrate = this.player.ship.fuelrate;
-                        thrust = this.player.ship.thrust;
-                        fuel = this.fuelTarget;
-                        mass = this.getShipMass();
-                        turns = 1;
-                        _a.label = 1;
-                    case 1:
-                        if (!(turns < dest.length)) return [3 /*break*/, 4];
-                        distance = physics_1.default.distance(orig[0], dest[turns]);
-                        fuelPerTurn = Math.min(fuel / turns, fuelrate);
-                        thrustPerTurn = thrust * fuelPerTurn / fuelrate;
-                        availAcc = thrustPerTurn / mass;
-                        maxAccel = Math.min(bestAcc, availAcc);
-                        vFinal = Vec.div_scalar(Vec.sub(dest[turns], dest[turns - 1]), SPT);
-                        target = [dest[turns], vFinal];
-                        agent = [orig[0], vInit];
-                        course = new Course(target, agent, maxAccel, turns, this.dt);
-                        a = Vec.length(course.accel);
-                        if (a > maxAccel)
-                            return [3 /*break*/, 3];
-                        fuelUsed = a / availAcc * fuelPerTurn * turns * 0.99;
-                        fuelUsedPerTurn = fuelUsed / turns;
-                        if (fuelUsed > fuel)
-                            return [3 /*break*/, 3];
-                        if (prevFuelUsed === undefined || prevFuelUsed >= fuelUsed) {
-                            prevFuelUsed = fuelUsed;
-                        }
-                        else {
-                            return [3 /*break*/, 3];
-                        }
-                        return [4 /*yield*/, new transitplan_1.TransitPlan({
-                                origin: this.orig,
-                                dest: destination,
-                                start: orig[0],
-                                end: dest[turns],
-                                dist: distance,
-                                fuel: fuelUsed,
-                                course: course,
-                            })];
-                    case 2:
-                        _a.sent();
-                        _a.label = 3;
-                    case 3:
-                        ++turns;
-                        return [3 /*break*/, 1];
-                    case 4: return [2 /*return*/];
+        }
+        *astrogator(destination) {
+            const orig = system_1.default.orbit_by_turns(this.orig);
+            const dest = system_1.default.orbit_by_turns(destination);
+            const vInit = Vec.div_scalar(Vec.sub(orig[1], orig[0]), SPT);
+            const bestAcc = Math.min(this.player.maxAcceleration(), this.getShipAcceleration());
+            const fuelrate = this.player.ship.fuelrate;
+            const thrust = this.player.ship.thrust;
+            const fuel = this.fuelTarget;
+            const mass = this.getShipMass();
+            let prevFuelUsed;
+            for (let turns = 1; turns < dest.length; ++turns) {
+                const distance = physics_1.default.distance(orig[0], dest[turns]);
+                const fuelPerTurn = Math.min(fuel / turns, fuelrate);
+                const thrustPerTurn = thrust * fuelPerTurn / fuelrate;
+                const availAcc = thrustPerTurn / mass;
+                const maxAccel = Math.min(bestAcc, availAcc);
+                const vFinal = Vec.div_scalar(Vec.sub(dest[turns], dest[turns - 1]), SPT);
+                const target = [dest[turns], vFinal];
+                const agent = [orig[0], vInit];
+                const course = new Course(target, agent, maxAccel, turns, this.dt);
+                const a = Vec.length(course.accel);
+                if (a > maxAccel)
+                    continue;
+                const fuelUsed = a / availAcc * fuelPerTurn * turns * 0.99; // `* 0.99` to work around rounding error
+                const fuelUsedPerTurn = fuelUsed / turns;
+                if (fuelUsed > fuel)
+                    continue;
+                if (prevFuelUsed === undefined || prevFuelUsed >= fuelUsed) {
+                    prevFuelUsed = fuelUsed;
                 }
-            });
-        };
-        return NavComp;
-    }());
+                else {
+                    continue;
+                }
+                yield new transitplan_1.TransitPlan({
+                    origin: this.orig,
+                    dest: destination,
+                    start: orig[0],
+                    end: dest[turns],
+                    dist: distance,
+                    fuel: fuelUsed,
+                    course: course,
+                });
+            }
+        }
+    }
     exports.NavComp = NavComp;
 });

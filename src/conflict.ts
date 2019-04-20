@@ -1,6 +1,7 @@
 import data from './data';
 
 import { factions } from './faction';
+import { watch, CaughtSmuggling } from "./events";
 
 import * as t from './common';
 import * as util from './util';
@@ -8,7 +9,6 @@ import * as util from './util';
 
 declare var window: {
   game: any;
-  addEventListener: (ev: string, cb: Function) => void;
 }
 
 
@@ -134,9 +134,10 @@ export class Blockade extends Conflict {
   }
 
   install_event_watchers() {
-    window.addEventListener("caughtSmuggling", (event: CustomEvent) => {
-      const {faction, found} = event.detail;
+    watch("caughtSmuggling", (ev: CaughtSmuggling) => {
+      const {faction, found} = ev.detail;
       this.violation(faction, found);
+      return {complete: true};
     });
   }
 

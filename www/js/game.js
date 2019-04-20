@@ -1,13 +1,3 @@
-var __values = (this && this.__values) || function (o) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
-    if (m) return m.call(o);
-    return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -18,19 +8,19 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./person", "./planet", "./agent", "./conflict", "./common", "./util"], function (require, exports, data_1, person_1, planet_1, agent_1, conflict_1, t, util) {
+define(["require", "exports", "./data", "./person", "./planet", "./agent", "./conflict", "./events", "./common", "./util"], function (require, exports, data_1, person_1, planet_1, agent_1, conflict_1, events_1, t, util) {
     "use strict";
     data_1 = __importDefault(data_1);
     t = __importStar(t);
     util = __importStar(util);
     ;
-    var DefaultOptions = {
+    const DefaultOptions = {
         hideOrbitPaths: true,
     };
     ;
-    var planets = {};
-    var Game = /** @class */ (function () {
-        function Game() {
+    const planets = {};
+    class Game {
+        constructor() {
             this.turns = 0;
             this.date = new Date(data_1.default.start_date);
             this._player = null;
@@ -43,9 +33,9 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
             this.options = DefaultOptions;
             this.reset_date();
         }
-        Game.prototype.init = function () {
-            var saved = window.localStorage.getItem('game');
-            var init = saved == null ? null : JSON.parse(saved);
+        init() {
+            const saved = window.localStorage.getItem('game');
+            const init = saved == null ? null : JSON.parse(saved);
             if (init) {
                 try {
                     this.turns = init.turns;
@@ -74,105 +64,67 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                 this.build_planets();
                 this.build_agents();
             }
-            window.dispatchEvent(new CustomEvent('gameLoaded'));
-        };
-        Object.defineProperty(Game.prototype, "planets", {
-            get: function () {
-                return planets;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Game.prototype, "player", {
-            get: function () {
-                if (!this._player) {
-                    throw new Error('player is not available before the game has started');
-                }
-                return this._player;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Game.prototype, "here", {
-            get: function () {
-                if (!this.locus) {
-                    throw new Error('here is not available before the game has started');
-                }
-                return this.planets[this.locus];
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Game.prototype, "is_frozen", {
-            get: function () {
-                return this.frozen;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Game.prototype.start_date = function () {
-            var date = new Date(data_1.default.start_date);
+            events_1.trigger(new events_1.GameLoaded);
+        }
+        get planets() {
+            return planets;
+        }
+        get player() {
+            if (!this._player) {
+                throw new Error('player is not available before the game has started');
+            }
+            return this._player;
+        }
+        get here() {
+            if (!this.locus) {
+                throw new Error('here is not available before the game has started');
+            }
+            return this.planets[this.locus];
+        }
+        get is_frozen() {
+            return this.frozen;
+        }
+        start_date() {
+            const date = new Date(data_1.default.start_date);
             date.setDate(date.getDate() - data_1.default.initial_days);
             return date;
-        };
-        Game.prototype.reset_date = function () {
+        }
+        reset_date() {
             this.date = this.start_date();
             console.log('resetting system date', this.date);
-        };
-        Game.prototype.strdate = function (date) {
+        }
+        strdate(date) {
             date = date || this.date;
-            var y = date.getFullYear();
-            var m = date.getMonth() + 1;
-            var d = date.getDate();
-            return [y, m < 10 ? "0" + m : m, d < 10 ? "0" + d : d].join('-');
-        };
-        Game.prototype.status_date = function (date) {
+            let y = date.getFullYear();
+            let m = date.getMonth() + 1;
+            let d = date.getDate();
+            return [y, m < 10 ? `0${m}` : m, d < 10 ? `0${d}` : d].join('-');
+        }
+        status_date(date) {
             return this.strdate(date).replace(/-/g, '.');
-        };
-        Game.prototype.build_planets = function (init) {
-            var e_1, _a;
-            try {
-                for (var _b = __values(t.bodies), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var body = _c.value;
-                    if (init && init[body]) {
-                        planets[body] = new planet_1.Planet(body, init[body]);
-                    }
-                    else {
-                        planets[body] = new planet_1.Planet(body);
-                    }
+        }
+        build_planets(init) {
+            for (const body of t.bodies) {
+                if (init && init[body]) {
+                    planets[body] = new planet_1.Planet(body, init[body]);
+                }
+                else {
+                    planets[body] = new planet_1.Planet(body);
                 }
             }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
-        };
-        Game.prototype.build_agents = function (init) {
-            var e_2, _a;
+        }
+        build_agents(init) {
             this.agents = [];
             if (init && init.length > 0 && init.length == data_1.default.max_agents) {
-                try {
-                    for (var init_1 = __values(init), init_1_1 = init_1.next(); !init_1_1.done; init_1_1 = init_1.next()) {
-                        var opt = init_1_1.value;
-                        this.agents.push(new agent_1.Agent(opt));
-                    }
-                }
-                catch (e_2_1) { e_2 = { error: e_2_1 }; }
-                finally {
-                    try {
-                        if (init_1_1 && !init_1_1.done && (_a = init_1.return)) _a.call(init_1);
-                    }
-                    finally { if (e_2) throw e_2.error; }
+                for (const opt of init) {
+                    this.agents.push(new agent_1.Agent(opt));
                 }
             }
             else {
-                for (var i = 0; i < data_1.default.max_agents; ++i) {
-                    var faction = util.oneOf(t.factions);
-                    var body = data_1.default.factions[faction].capital;
-                    var agent = new agent_1.Agent({
+                for (let i = 0; i < data_1.default.max_agents; ++i) {
+                    const faction = util.oneOf(t.factions);
+                    const body = data_1.default.factions[faction].capital;
+                    const agent = new agent_1.Agent({
                         name: 'Merchant from ' + data_1.default.bodies[body].name,
                         ship: { type: 'schooner' },
                         faction_name: faction,
@@ -183,27 +135,16 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                     this.agents.push(agent);
                 }
             }
-        };
-        Game.prototype.build_conflicts = function (init) {
-            var e_3, _a;
+        }
+        build_conflicts(init) {
             this.conflicts = {};
             if (init != undefined) {
-                try {
-                    for (var _b = __values(Object.keys(init)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                        var c = _c.value;
-                        this.conflicts[c] = new conflict_1.Blockade(init[c]);
-                    }
-                }
-                catch (e_3_1) { e_3 = { error: e_3_1 }; }
-                finally {
-                    try {
-                        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                    }
-                    finally { if (e_3) throw e_3.error; }
+                for (const c of Object.keys(init)) {
+                    this.conflicts[c] = new conflict_1.Blockade(init[c]);
                 }
             }
-        };
-        Game.prototype.new_game = function (player, home) {
+        }
+        new_game(player, home) {
             window.localStorage.removeItem('game');
             this._player = player;
             this.locus = home;
@@ -214,9 +155,9 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
             this.build_agents();
             this.build_conflicts();
             this.save_game();
-        };
-        Game.prototype.save_game = function () {
-            var data = {
+        }
+        save_game() {
+            const data = {
                 turns: this.turns,
                 locus: this.locus,
                 player: this._player,
@@ -226,21 +167,15 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                 options: this.options,
             };
             window.localStorage.setItem('game', JSON.stringify(data));
-        };
-        Game.prototype.delete_game = function () {
+        }
+        delete_game() {
             window.localStorage.removeItem('game');
-        };
-        Object.defineProperty(Game.prototype, "is_starting", {
-            get: function () {
-                return this.turns < (data_1.default.initial_days * data_1.default.turns_per_day);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Game.prototype.turn = function (n, no_save) {
-            if (n === void 0) { n = 1; }
-            if (no_save === void 0) { no_save = false; }
-            for (var i = 0; i < n; ++i) {
+        }
+        get is_starting() {
+            return this.turns < (data_1.default.initial_days * data_1.default.turns_per_day);
+        }
+        turn(n = 1, no_save = false) {
+            for (let i = 0; i < n; ++i) {
                 ++this.turns;
                 // Update game and system date
                 this.date.setHours(this.date.getHours() + data_1.default.hours_per_turn);
@@ -251,164 +186,99 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                 // Remove finished conflicts
                 this.finish_conflicts();
                 // Dispatch events
-                window.dispatchEvent(new CustomEvent("turn", {
-                    detail: {
-                        turn: this.turns,
-                        isNewDay: this.turns % data_1.default.turns_per_day == 0,
-                    }
-                }));
-                if (this.turns % data_1.default.turns_per_day) {
-                    window.dispatchEvent(new CustomEvent("day", {
-                        detail: {
-                            turn: this.turns,
-                            isNewDay: this.turns % data_1.default.turns_per_day == 0,
-                        }
-                    }));
+                const isNewDay = this.turns % data_1.default.turns_per_day == 0;
+                events_1.trigger(new events_1.GameTurn({ turn: this.turns, isNewDay: isNewDay }));
+                if (isNewDay) {
+                    events_1.trigger(new events_1.NewDay({ turn: this.turns, isNewDay: isNewDay }));
                 }
             }
             if (!no_save) {
                 this.save_game();
             }
-        };
-        Game.prototype.freeze = function () {
+        }
+        freeze() {
             this.frozen = true;
-        };
-        Game.prototype.unfreeze = function () {
+        }
+        unfreeze() {
             this.frozen = false;
-        };
-        Game.prototype.set_transit_plan = function (transit_plan) {
+        }
+        set_transit_plan(transit_plan) {
             this.transit_plan = transit_plan;
-        };
-        Game.prototype.arrive = function () {
+        }
+        arrive() {
             if (this.transit_plan) {
                 console.log('arrived:', this.transit_plan.dest);
                 this.locus = this.transit_plan.dest;
                 this.transit_plan = undefined;
             }
             if (this.locus) { // game has started
-                window.dispatchEvent(new CustomEvent('arrived', {
-                    detail: { dest: this.locus }
-                }));
+                events_1.trigger(new events_1.Arrived({ dest: this.locus }));
             }
-        };
-        Game.prototype.trade_routes = function () {
-            var e_4, _a, e_5, _b;
-            var trade = {};
-            try {
-                for (var _c = __values(Object.values(this.planets)), _d = _c.next(); !_d.done; _d = _c.next()) {
-                    var planet = _d.value;
-                    try {
-                        for (var _e = __values(planet.queue), _f = _e.next(); !_f.done; _f = _e.next()) {
-                            var task = _f.value;
-                            if (planet_1.isImportTask(task)) {
-                                var item = task.item;
-                                var to = task.to;
-                                var from = task.from;
-                                if (trade[item] == null) {
-                                    trade[item] = {};
-                                }
-                                if (trade[item][to] == null) {
-                                    trade[item][to] = {};
-                                }
-                                if (trade[item][to][from] == null) {
-                                    trade[item][to][from] = [];
-                                }
-                                trade[item][to][from].push({
-                                    hours: task.turns * data_1.default.hours_per_turn,
-                                    amount: task.count,
-                                });
-                            }
+        }
+        trade_routes() {
+            const trade = {};
+            for (const planet of Object.values(this.planets)) {
+                for (const task of planet.queue) {
+                    if (planet_1.isImportTask(task)) {
+                        const item = task.item;
+                        const to = task.to;
+                        const from = task.from;
+                        if (trade[item] == null) {
+                            trade[item] = {};
                         }
-                    }
-                    catch (e_5_1) { e_5 = { error: e_5_1 }; }
-                    finally {
-                        try {
-                            if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                        if (trade[item][to] == null) {
+                            trade[item][to] = {};
                         }
-                        finally { if (e_5) throw e_5.error; }
+                        if (trade[item][to][from] == null) {
+                            trade[item][to][from] = [];
+                        }
+                        trade[item][to][from].push({
+                            hours: task.turns * data_1.default.hours_per_turn,
+                            amount: task.count,
+                        });
                     }
                 }
-            }
-            catch (e_4_1) { e_4 = { error: e_4_1 }; }
-            finally {
-                try {
-                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
-                }
-                finally { if (e_4) throw e_4.error; }
             }
             return trade;
-        };
-        Game.prototype.notify = function (msg, long) {
-            if (long === void 0) { long = false; }
+        }
+        notify(msg, long = false) {
             if (!this.is_starting) {
-                var dismiss = long ? Game.NOTIFY_LONG : Game.NOTIFY_SHORT;
+                const dismiss = long ? Game.NOTIFY_LONG : Game.NOTIFY_SHORT;
                 this.notifications.push([msg, dismiss]);
             }
-        };
-        Game.prototype.dismiss = function (msg) {
-            this.notifications = this.notifications.filter(function (n) { return n[0] != msg; });
-        };
+        }
+        dismiss(msg) {
+            this.notifications = this.notifications.filter(n => n[0] != msg);
+        }
         /*
          * Conflicts
          */
-        Game.prototype.start_conflicts = function () {
-            var e_6, _a, e_7, _b;
+        start_conflicts() {
             if (Object.keys(this.conflicts).length >= 2)
                 return;
-            try {
-                // TODO notifications when conflicts start
-                for (var _c = __values(t.factions), _d = _c.next(); !_d.done; _d = _c.next()) {
-                    var pro = _d.value;
-                    try {
-                        for (var _e = __values(t.factions), _f = _e.next(); !_f.done; _f = _e.next()) {
-                            var target = _f.value;
-                            // Blockades
-                            var blockade = new conflict_1.Blockade({ proponent: pro, target: target });
-                            if (this.conflicts[blockade.key] == undefined && blockade.chance()) {
-                                this.conflicts[blockade.key] = blockade;
-                                var turns = Math.ceil(util.getRandomNum(data_1.default.turns_per_day * 7, data_1.default.turns_per_day * 60));
-                                blockade.start(turns);
-                                this.notify(pro + " has declared a " + blockade.name + " against " + target);
-                            }
-                        }
-                    }
-                    catch (e_7_1) { e_7 = { error: e_7_1 }; }
-                    finally {
-                        try {
-                            if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
-                        }
-                        finally { if (e_7) throw e_7.error; }
+            // TODO notifications when conflicts start
+            for (const pro of t.factions) {
+                for (const target of t.factions) {
+                    // Blockades
+                    const blockade = new conflict_1.Blockade({ proponent: pro, target: target });
+                    if (this.conflicts[blockade.key] == undefined && blockade.chance()) {
+                        this.conflicts[blockade.key] = blockade;
+                        const turns = Math.ceil(util.getRandomNum(data_1.default.turns_per_day * 7, data_1.default.turns_per_day * 60));
+                        blockade.start(turns);
+                        this.notify(`${pro} has declared a ${blockade.name} against ${target}`);
                     }
                 }
             }
-            catch (e_6_1) { e_6 = { error: e_6_1 }; }
-            finally {
-                try {
-                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
-                }
-                finally { if (e_6) throw e_6.error; }
-            }
-        };
-        Game.prototype.finish_conflicts = function () {
-            var e_8, _a;
-            try {
-                for (var _b = __values(Object.keys(this.conflicts)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var k = _c.value;
-                    if (this.conflicts[k].is_over) {
-                        delete this.conflicts[k];
-                    }
+        }
+        finish_conflicts() {
+            for (const k of Object.keys(this.conflicts)) {
+                if (this.conflicts[k].is_over) {
+                    delete this.conflicts[k];
                 }
             }
-            catch (e_8_1) { e_8 = { error: e_8_1 }; }
-            finally {
-                try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                }
-                finally { if (e_8) throw e_8.error; }
-            }
-        };
-        Game.prototype.get_conflicts = function (opt) {
-            return Object.values(this.conflicts).filter(function (c) {
+        }
+        get_conflicts(opt) {
+            return Object.values(this.conflicts).filter(c => {
                 if (opt) {
                     if (opt.target && c.target != opt.target)
                         return false;
@@ -419,14 +289,13 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                 }
                 return true;
             });
-        };
-        Game.NOTIFY_SHORT = 3;
-        Game.NOTIFY_LONG = 8;
-        return Game;
-    }());
+        }
+    }
+    Game.NOTIFY_SHORT = 3;
+    Game.NOTIFY_LONG = 8;
     ;
     console.log('Spacer is starting');
-    var game = new Game;
+    const game = new Game;
     window.game = game;
     window.game.init();
     window.game.arrive();

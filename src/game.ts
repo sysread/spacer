@@ -6,6 +6,7 @@ import { Person, SavedPerson } from './person';
 import { Planet, SavedPlanet, isImportTask } from './planet';
 import { Agent, SavedAgent } from './agent';
 import { Conflict, Blockade } from './conflict';
+import { trigger, GameLoaded, GameTurn, NewDay, Arrived } from "./events";
 
 import * as t from './common';
 import * as util from './util';
@@ -21,8 +22,6 @@ interface localStorage {
 declare var window: {
   game: Game;
   localStorage: localStorage;
-  dispatchEvent(ev: Event): void;
-  addEventListener: (ev: string, cb: Function) => void;
 }
 
 declare var console: any;
@@ -109,7 +108,7 @@ class Game {
       this.build_agents();
     }
 
-    window.dispatchEvent(new CustomEvent('gameLoaded'));
+    trigger(new GameLoaded);
   }
 
   get planets() {
@@ -259,20 +258,12 @@ class Game {
       this.finish_conflicts();
 
       // Dispatch events
-      window.dispatchEvent(new CustomEvent("turn", {
-        detail: {
-          turn:     this.turns,
-          isNewDay: this.turns % data.turns_per_day == 0,
-        }
-      }));
+      const isNewDay = this.turns % data.turns_per_day == 0;
 
-      if (this.turns % data.turns_per_day) {
-        window.dispatchEvent(new CustomEvent("day", {
-          detail: {
-            turn:     this.turns,
-            isNewDay: this.turns % data.turns_per_day == 0,
-          }
-        }))
+      trigger(new GameTurn({turn: this.turns, isNewDay: isNewDay}));
+
+      if (isNewDay) {
+        trigger(new NewDay({turn: this.turns, isNewDay: isNewDay}));
       }
     }
 
@@ -302,9 +293,7 @@ class Game {
     }
 
     if (this.locus) { // game has started
-      window.dispatchEvent(new CustomEvent('arrived', {
-        detail: {dest: this.locus}
-      }));
+      trigger(new Arrived({dest: this.locus}));
     }
   }
 

@@ -2,13 +2,14 @@ import data from './data';
 import Physics from './physics';
 import Store from './store';
 
+import { watch, Arrived } from "./events";
+
 import * as util from './util';
 import * as t from './common';
 
 
 declare var window: {
   game: any;
-  addEventListener: (ev: string, cb: Function) => void;
 }
 
 
@@ -51,7 +52,7 @@ class Ship {
      * related to ship's maintenance (fuel, metal) that are not currently
      * available.
      */
-    window.addEventListener("arrived", (event: CustomEvent) => {
+    watch("arrived", (event: Arrived) => {
       // only trigger for player ship
       if (window && this === window.game.player.ship) {
         // metal to repair damage to the ship
@@ -66,6 +67,8 @@ class Ship {
           window.game.here.requestResource('fuel', want);
         }
       }
+
+      return {complete: false};
     });
   }
 

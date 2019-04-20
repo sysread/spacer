@@ -1,14 +1,15 @@
 import data from './data';
 import Physics from './physics';
 import SolarSystem from './system/SolarSystem';
+
 import { CelestialBody, LaGrangePoint, isCelestialBody, isLaGrangePoint } from './system/CelestialBody';
+import { Orbit } from "./system/orbit";
+import { watch, GameTurn } from "./events";
+
 import * as t from './common';
 import * as V from './vector';
-import { Orbit } from "./system/orbit";
 
 declare var window: {
-  addEventListener: (ev: string, cb: Function) => void;
-
   game: {
     turns: number;
     date: Date;
@@ -39,7 +40,7 @@ class System {
   orbits:  {[key: string]: Orbit} = {};
 
   constructor() {
-    window.addEventListener("turn", () => {
+    watch("turn", (ev: GameTurn) => {
       this.orbits = {};
       this.pos = {};
 
@@ -56,6 +57,8 @@ class System {
           this.cache[key].push(this.position(body, date));
         }
       }
+
+      return {complete: false};
     });
   }
 

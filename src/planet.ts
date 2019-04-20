@@ -11,6 +11,7 @@ import { Condition, SavedCondition } from './condition';
 import { Mission, SavedMission, restoreMission, Passengers, Smuggler } from './mission';
 import { Person } from './person';
 import { Conflict, Blockade } from './conflict';
+import { watch, trigger, GameTurn, Arrived, ItemsBought, ItemsSold } from './events';
 
 import * as t from './common';
 import * as util from './util';
@@ -20,8 +21,6 @@ import * as util from './util';
 declare var console: any;
 declare var window: {
   game: any;
-  dispatchEvent(ev: Event): void;
-  addEventListener: (ev: string, cb: Function) => void;
 }
 
 
@@ -164,7 +163,7 @@ export class Planet {
     // ever done. I *really* hope you are not a potential employer
     // reading this hack.
     if (init.contracts) {
-      window.addEventListener('arrived', () => {
+      watch("arrived", (ev: Arrived) => {
         if (init && init.contracts) {
           for (const info of init.contracts) {
             this.contracts.push({
@@ -175,6 +174,8 @@ export class Planet {
 
           delete init.contracts;
         }
+
+        return {complete: false};
       });
     }
     // END shame
@@ -214,7 +215,10 @@ export class Planet {
     this._need     = {};
     this._exporter = {};
 
-    window.addEventListener("turn", () => this.turn(window.game.turns));
+    watch("turn", (ev: GameTurn) => {
+      this.turn(ev.detail.turn);
+      return {complete: false};
+    });
   }
 
   get faction() {
@@ -884,13 +888,11 @@ export class Planet {
       player.ship.loadCargo(item, bought);
 
       if (player === window.game.player) {
-        window.dispatchEvent(new CustomEvent("itemsBought", {
-          detail: {
-            count: bought,
-            body: this.body,
-            item: item,
-            price: price
-          }
+        trigger(new ItemsBought({
+          count: bought,
+          body: this.body,
+          item: item,
+          price: price
         }));
       }
     }
@@ -936,14 +938,12 @@ export class Planet {
 
       // only trigger for the player, not for agents
       if (player === window.game.player) {
-        window.dispatchEvent(new CustomEvent("itemsSold", {
-          detail: {
-            count:    amount,
-            body:     this.body,
-            item:     item,
-            price:    price,
-            standing: standing,
-          },
+        trigger(new ItemsSold({
+          count:    amount,
+          body:     this.body,
+          item:     item,
+          price:    price,
+          standing: standing,
         }));
       }
     }

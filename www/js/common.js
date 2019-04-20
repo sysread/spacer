@@ -1,7 +1,7 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var _resource = {
+    const _resource = {
         water: true,
         ore: true,
         minerals: true,
@@ -18,14 +18,14 @@ define(["require", "exports"], function (require, exports) {
         narcotics: true,
         weapons: true,
     };
-    var _faction = {
+    const _faction = {
         UN: true,
         MC: true,
         CERES: true,
         JFT: true,
         TRANSA: true,
     };
-    var _body = {
+    const _body = {
         mercury: true,
         earth: true,
         moon: true,
@@ -43,15 +43,15 @@ define(["require", "exports"], function (require, exports) {
         titania: true,
         pluto: true,
     };
-    var _drive = {
+    const _drive = {
         ion: true,
         fusion: true,
     };
-    var _shipdmg = {
+    const _shipdmg = {
         armor: true,
         hull: true,
     };
-    var _shiptype = {
+    const _shiptype = {
         shuttle: true,
         schooner: true,
         hauler: true,
@@ -65,7 +65,7 @@ define(["require", "exports"], function (require, exports) {
         barsoom: true,
         'rock-hopper': true,
     };
-    var _addon = {
+    const _addon = {
         cargo_pod: true,
         fuel_tank: true,
         heat_reclaimer: true,
@@ -82,7 +82,7 @@ define(["require", "exports"], function (require, exports) {
         ecm: true,
         stealthPlating: true,
     };
-    var _trait = {
+    const _trait = {
         'mineral rich': true,
         'mineral poor': true,
         'water rich': true,
@@ -124,9 +124,9 @@ define(["require", "exports"], function (require, exports) {
     exports.addons = Object.keys(_addon);
     exports.traits = Object.keys(_trait);
     exports.standings = Object.keys(exports.Standing);
-    exports.isRaw = function (res) { return res.mine !== undefined; };
-    exports.isCraft = function (res) { return res.recipe !== undefined; };
-    exports.isOffensive = function (addon) { return addon.is_offensive; };
-    exports.isDefensive = function (addon) { return addon.is_defensive; };
-    exports.isMisc = function (addon) { return addon.is_misc; };
+    exports.isRaw = (res) => res.mine !== undefined;
+    exports.isCraft = (res) => res.recipe !== undefined;
+    exports.isOffensive = (addon) => addon.is_offensive;
+    exports.isDefensive = (addon) => addon.is_defensive;
+    exports.isMisc = (addon) => addon.is_misc;
 });

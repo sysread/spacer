@@ -8,13 +8,13 @@ import * as util from './util';
 import { factions, Faction } from './faction';
 import { resources, isCraft, isRaw } from './resource';
 import { SavedMission, Mission, Status, restoreMission } from './mission';
+import { watch, GameLoaded } from "./events";
 
 
 // Shims for global browser objects
 declare var console: any;
 declare var window: {
   game: any;
-  addEventListener: (ev: string, cb: Function) => void;
 }
 
 
@@ -67,9 +67,10 @@ export class Person {
 
       if (init.contracts) {
         for (const c of init.contracts) {
-          window.addEventListener("gameLoaded", () => {
+          watch("gameLoaded", (ev: GameLoaded) => {
             const contract = restoreMission(c);
             contract.accept();
+            return {complete: true};
           });
         }
       }

@@ -12,6 +12,7 @@ define(function(require, exports, module) {
   const t        = require('common');
   const resource = require('resource');
   const factions = require('faction').factions;
+  const Event    = require('events');
   const Layout   = require('component/layout');
 
   require('vendor/TweenMax.min');
@@ -671,13 +672,7 @@ define(function(require, exports, module) {
         }
 
         if (busted) {
-          window.dispatchEvent(new CustomEvent("caughtSmuggling", {
-            detail: {
-              faction: this.faction,
-              found: found,
-            },
-          }));
-
+          Event.trigger(new CaughtSmuggling({faction: this.faction, found: found}));
           this.setChoice('submit-fined');
         } else {
           this.setChoice('submit-done');

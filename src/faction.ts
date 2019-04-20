@@ -1,13 +1,13 @@
 import data from './data';
 
 import { Person } from './person';
+import { watch, CaughtSmuggling } from "./events";
 
 import * as t from './common';
 
 
 declare var window: {
   game: any;
-  addEventListener: (ev: string, cb: Function) => void;
 }
 
 
@@ -39,7 +39,7 @@ export class Faction implements t.Faction {
     this.consumes   = data.factions[this.abbrev].consumes;
     this.produces   = data.factions[this.abbrev].produces;
 
-    window.addEventListener("caughtSmuggling", (ev: CustomEvent) => this.onCaughtSmuggling(ev));
+    watch("caughtSmuggling", (ev: CaughtSmuggling) => this.onCaughtSmuggling(ev));
   }
 
   get desc() {
@@ -75,29 +75,25 @@ export class Faction implements t.Faction {
     return Math.max(10, data.max_abs_standing - player.getStanding(this));
   }
 
-  onCaughtSmuggling(ev: CustomEvent) {
+  onCaughtSmuggling(ev: CaughtSmuggling) {
     const {faction, found} = ev.detail;
 
-    if (faction != this.abbrev)
-      return;
+    if (faction == this.abbrev && !this.hasTradeBan) {
+      let loss = 0;
+      let fine = 0;
 
-    if (this.hasTradeBan)
-      return;
+      for (let item of Object.keys(found) as t.resource[]) {
+        let count = found[item] || 0;
+        fine += count * factions[faction].inspectionFine(window.game.player);
+        loss += count * 2;
+      }
 
-    let loss = 0;
-    let fine = 0;
-
-    for (let item of Object.keys(found) as t.resource[]) {
-      let count = found[item] || 0;
-      fine += count * factions[faction].inspectionFine(window.game.player);
-      loss += count * 2;
+      window.game.player.debit(fine);
+      window.game.player.decStanding(this.abbrev, loss);
+      window.game.notify(`Busted! You have been fined ${fine} credits and your standing decreased by ${loss}.`);
     }
 
-    window.game.player.debit(fine);
-    window.game.player.decStanding(this.abbrev, loss);
-    window.game.notify(`Busted! You have been fined ${fine} credits and your standing decreased by ${loss}.`);
-
-    return false;
+    return {complete: false};
   }
 }
 
