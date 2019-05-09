@@ -7,7 +7,6 @@ define(function(require, exports, module) {
 
   require('component/global');
   require('component/common');
-  require('component/card');
   require('component/modal');
   require('component/row');
   require('component/status');
@@ -49,29 +48,24 @@ define(function(require, exports, module) {
     },
 
     template: `
-<card>
-  <card-title>
-    <Flag :width="50" :faction="person.faction.abbrev" class="m-1" />
-    {{name}}
+<Section title="Player">
+  <Flag slot="title-pre" :width="50" :faction="person.faction.abbrev" class="m-1" />
 
-    <div class="float-sm-right">
-      <btn @click="openOptions">Options</btn>
-      <btn @click="newGameConfirm" class="mx-2">New Game</btn>
-    </div>
-  </card-title>
+  <def term="Name" :def="name" />
+  <def term="Money" :def="money|csn|unit('c')" />
+  <def term="Home" :def="home|caps" />
+  <def term="Faction" :def="faction|caps" />
+  <def term="Thrust endurance" :def="accel|R(2)|unit('G')" />
 
-  <div>
-    <def term="Name" :def="name" />
-    <def term="Money" :def="money|csn|unit('c')" />
-    <def term="Home" :def="home|caps" />
-    <def term="Faction" :def="faction|caps" />
-    <def term="Thrust endurance" :def="accel|R(2)|unit('G')" />
+  <div class="my-2">
+    <btn @click="openOptions">Options</btn>
+    <btn @click="newGameConfirm" class="mx-2">New Game</btn>
   </div>
 
   <confirm v-if="show_confirm" yes="Yes" no="No" @confirm="newGame">
     Delete this game and begin a new game? This cannot be undone.
   </confirm>
-</card>
+</Section>
     `,
   });
 
@@ -103,11 +97,12 @@ define(function(require, exports, module) {
     },
 
     template: `
-<card title="Contracts">
-  <div v-if="person.contracts.length > 0">
-    <card v-for="(contract, idx) of person.contracts" :key="idx" :title="contract.short_title">
-      <card-text>{{contract.description}}</card-text>
-      <card-text>{{contract.description_remaining}}</card-text>
+<Section title="Contracts">
+  <template v-if="person.contracts.length > 0">
+    <Section v-for="(contract, idx) of person.contracts" :key="idx" :title="contract.short_title">
+      <p>{{contract.description}}</p>
+      <p>{{contract.description_remaining}}</p>
+
       <btn @click="cancel(contract)" block=1 class="my-3">Cancel contract</btn>
 
       <confirm v-if="show_confirm" yes="Yes" no="No" @confirm="cancel(contract, $event)">
@@ -115,12 +110,12 @@ define(function(require, exports, module) {
         Breaking a contract may result in loss of standing or monetary penalties.
         Are you sure you wish to cancel this contract?
       </confirm>
-    </card>
-  </div>
-  <div v-else>
+    </Section>
+  </template>
+  <template v-else>
     No active contracts.
-  </div>
-</card>
+  </template>
+</Section>
     `,
   });
 
@@ -144,16 +139,14 @@ define(function(require, exports, module) {
       },
     },
     template: `
-<card title="Politics">
-  <div>
-    <def v-for="faction of factions" :key="faction" caps="true" :term="faction">
-      <span slot="def">
-        {{label(faction)}}
-        <span class="badge badge-pill ml-2">{{standing(faction)|R}}</span>
-      </span>
-    </def>
-  </div>
-</card>
+<Section title="Politics">
+  <def v-for="faction of factions" :key="faction" caps="true" :term="faction">
+    <span slot="def">
+      {{label(faction)}}
+      <span class="badge badge-pill ml-2">{{standing(faction)|R}}</span>
+    </span>
+  </def>
+</Section>
     `,
   });
 
@@ -202,50 +195,47 @@ define(function(require, exports, module) {
       },
     },
     template: `
-<card :title="ship.type|caps">
-  <card class="my-3">
-    <div>
-      <def term="Cargo" info="Cargo is measured in cargo units (cu), each enough to hold a standard-sized container of material. Mass for one cu varies by material.">
-        <div slot="def">
-          {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
-          <div v-if="ship.cargoUsed" v-for="item in cargo" :key="item.name">
-            {{item.amount|csn}} units of {{item.name}} ({{item.mass|csn}} tonnes)
-          </div>
+<Section title="Ship">
+  <Section notitle=1>
+    <def term="Class" :info="ship.type|caps" />
+    <def term="Cargo" info="Cargo is measured in cargo units (cu), each enough to hold a standard-sized container of material. Mass for one cu varies by material.">
+      <div slot="def">
+        {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
+        <div v-if="ship.cargoUsed" v-for="item in cargo" :key="item.name">
+          {{item.amount|csn}} units of {{item.name}} ({{item.mass|csn}} tonnes)
         </div>
-      </def>
+      </div>
+    </def>
 
-      <def term="Mass" :def="mass|unit('tonnes')" />
-      <def term="Thrust" :def="thrust|unit('kN')" />
-      <def term="Max Acc." :def="acc|unit('G')" />
-      <def term="Fuel" :def="tank|unit('tonnes')" />
-      <def term="Drive" :def="ship.drives|unit(ship.drive.name)" />
-      <def term="Range" :def="burn|unit('hours at max thrust')" />
-      <def term="Fuel rate" :def="fuelRate|R(4)|unit('tonnes/hr at max thrust')" />
-    </div>
-  </card>
+    <def term="Mass" :def="mass|unit('tonnes')" />
+    <def term="Thrust" :def="thrust|unit('kN')" />
+    <def term="Max Acc." :def="acc|unit('G')" />
+    <def term="Fuel" :def="tank|unit('tonnes')" />
+    <def term="Drive" :def="ship.drives|unit(ship.drive.name)" />
+    <def term="Range" :def="burn|unit('hours at max thrust')" />
+    <def term="Fuel rate" :def="fuelRate|R(4)|unit('tonnes/hr at max thrust')" />
+  </Section>
 
-  <card class="my-3">
-    <div>
-      <def term="Hull">{{ship.hull|R(2)}} / {{ship.fullHull}}</def>
-      <def term="Armor">{{ship.armor|R(2)}} / {{ship.fullArmor}}</def>
-      <def term="Hard points">{{ship.hardpoints - ship.availableHardPoints()}} / {{ship.hardpoints}}</def>
-      <def term="Stealth" :def="stealth + '%'" info="Reduction in the chance of being noticed by patrols and pirates while en route" />
-      <def term="Intercept" :def="intercept + '%'" info="The chance of intercepting a missile attack with defensive armaments" />
-      <def term="Evasion" :def="dodge + '%'" info="The chance of dodging an attack based on the mass to thrust ratio of the ship" />
+  <Section notitle=1>
+    <def term="Hull">{{ship.hull|R(2)}} / {{ship.fullHull}}</def>
+    <def term="Armor">{{ship.armor|R(2)}} / {{ship.fullArmor}}</def>
+    <def term="Hard points">{{ship.hardpoints - ship.availableHardPoints()}} / {{ship.hardpoints}}</def>
+    <def term="Stealth" :def="stealth + '%'" info="Reduction in the chance of being noticed by patrols and pirates while en route" />
+    <def term="Intercept" :def="intercept + '%'" info="The chance of intercepting a missile attack with defensive armaments" />
+    <def term="Evasion" :def="dodge + '%'" info="The chance of dodging an attack based on the mass to thrust ratio of the ship" />
 
-      <def term="Upgrades">
-        <div slot="def" v-if="ship.addons.length > 0">
-          <btn v-for="(addon, idx) of addons" :key="idx" block=1 @click="toggleAddOn(addon)">{{addOnName(addon)|caps}}</btn>
-          <modal v-if="showAddOn" @close="toggleAddOn(showAddOn)" close="Close" :title="addOnName(showAddOn)">
-            <def v-for="(value, key) of addOnData" v-if="key != 'price' && key != 'markets'" :key="key" :term="key|caps|name" :def="value" />
-            <def term="Price" :def="addOnData.price|csn" />
-          </modal>
-        </div>
-        <span slot="def" v-else>None</span>
-      </def>
-    </div>
-  </card>
-</card>
+    <def term="Upgrades">
+      <div slot="def" v-if="ship.addons.length > 0">
+        <btn v-for="(addon, idx) of addons" :key="idx" block=1 @click="toggleAddOn(addon)">{{addOnName(addon)|caps}}</btn>
+        <modal v-if="showAddOn" @close="toggleAddOn(showAddOn)" close="Close" :title="addOnName(showAddOn)">
+          <def v-for="(value, key) of addOnData" v-if="key != 'price' && key != 'markets' && !key.startsWith('is_')" :key="key" :term="key|caps|name" :def="value" />
+          <def term="Price" :def="addOnData.price|csn" />
+        </modal>
+      </div>
+      <span slot="def" v-else>None</span>
+    </def>
+  </Section>
+</Section>
     `,
   });
 
@@ -264,11 +254,11 @@ define(function(require, exports, module) {
     },
 
     template: `
-<div>
-  <person-status :person="person" class="my-3" @open="open" />
-  <faction-status :person="person" class="my-3" />
-  <contract-status :person="person" class="my-3" />
-  <ship-status :ship="person.ship" class="my-3" />
+<div class="row">
+  <person-status :person="person" class="my-3 col-md-6 col-12" @open="open" />
+  <contract-status :person="person" class="my-3 col-md-6 col-12" />
+  <faction-status :person="person" class="my-3 col-md-6 col-12" />
+  <ship-status :ship="person.ship" class="my-3 col-md-6 col-12" />
 </div>
     `,
   });

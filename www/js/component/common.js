@@ -202,7 +202,7 @@ define(function(require, exports, module) {
     props: ['title', 'notitle', 'back'],
 
     template: `
-<div>
+<div class="section-wrapper">
   <h4 v-if="!notitle" class="section-title">
     <slot name="title-pre" />
     {{title}}

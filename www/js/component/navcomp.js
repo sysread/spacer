@@ -413,10 +413,7 @@ define(function(require, exports, module) {
               :navcomp="navcomp"
               @route="set_transit_return" />
 
-          <div v-if="show_info">
-            <h5>{{planet.name}}</h5>
-            <planet-summary :planet="planet" />
-          </div>
+          <planet-summary v-if="show_info" :planet="planet" showtitle=1 />
 
           <div v-if="show_market">
             <btn block=1 v-if="rel" @click="rel=false">Relative prices</btn>

@@ -80,18 +80,19 @@ define(function(require, exports, module) {
 
     computed: {
       is_home()      { return this.planet.body == this.game.player.home },
-      desc()         { return this.planet.desc.split('|')                                         },
-      isThere()      { return this.planet.body === this.game.locus                                },
-      distance()     { return this.planet.distance(this.game.locus) / Physics.AU                  },
-      kind()         { return this.planet.kind                                                    },
-      faction()      { return this.planet.faction.full_name                                       },
-      faction_abbr() { return this.planet.faction.abbrev                                          },
-      standing()     { return this.game.player.getStandingLabel(this.faction_abbr)                },
+      desc()         { return this.planet.desc.split('|') },
+      isThere()      { return this.planet.body === this.game.locus },
+      distance()     { return this.planet.distance(this.game.locus) / Physics.AU },
+      kind()         { return this.planet.kind },
+      faction()      { return this.planet.faction.full_name },
+      faction_abbr() { return this.planet.faction.abbrev },
+      standing()     { return this.game.player.getStandingLabel(this.faction_abbr) },
       is_hostile()   { return this.game.player.hasStandingOrLower(this.faction_abbr, 'Untrusted') },
-      is_dubious()   { return this.game.player.hasStandingOrLower(this.faction_abbr, 'Dubious')   },
-      is_neutral()   { return this.game.player.hasStandingOrLower(this.faction_abbr, 'Neutral')   },
-      is_friendly()  { return this.game.player.hasStanding(this.faction_abbr, 'Friendly')         },
-      img()          { return 'img/' + this.planet.body + '.png'                                  },
+      is_dubious()   { return this.game.player.hasStandingOrLower(this.faction_abbr, 'Dubious') },
+      is_neutral()   { return this.game.player.hasStandingOrLower(this.faction_abbr, 'Neutral') },
+      is_friendly()  { return this.game.player.hasStanding(this.faction_abbr, 'Friendly') },
+      img()          { return 'img/' + this.planet.body + '.png' },
+      traits()       { return this.planet.traits.map(t => t.name).sort() },
 
       img_css() {
         return `
@@ -124,25 +125,26 @@ define(function(require, exports, module) {
     <div :style="img_css"></div>
 
     <Section :notitle="!showtitle" :title="planet.name" class="col-12 col-md-6">
-      <Flag v-if="showtitle" slot="title-pre" :faction="planet.faction.abbrev" :width="50" class="m-1" />
-      <img v-if="showtitle && is_home" slot="title-post" src="img/home.png" class="circle-thingy circle-thingy-big mx-2 float-right" />
+      <Flag slot="title-pre" v-if="showtitle" :faction="planet.faction.abbrev" :width="50" class="m-1" />
+      <img slot="title-post" v-if="showtitle && is_home" src="img/home.png" class="circle-thingy circle-thingy-big mx-2 float-right" />
 
       <def y=1 v-if="isThere" term="Location" def="Docked" />
       <def y=1 v-else term="Distance" :def="distance|R(2)|csn|unit('AU')" />
 
-      <def y=1 term="Environ" :def="kind|caps" />
       <def y=1 term="Faction" :def="faction|caps" />
-      <def y=1 term="Economy" :def="planet.size|caps" />
-
-      <def y=1 term="Details">
-        <row y=0 slot="def" v-if="planet.traits.length">
-          <cell y=0 class="col-sm-6 font-italic" v-for="trait in planet.traits" :key="trait.name">{{trait.name|caps}}</cell>
-        </row>
-        <span v-else slot="def">N/A</span>
-      </def>
 
       <def y=1 term="Standing">
-        Your standing with this faction is <span :class="standing_color_class">{{standing|lower}}</span>.
+        Your standing with this faction is <span :class="standing_color_class">{{standing|lower}}</span>
+      </def>
+
+      <def y=1 term="Economy" :def="planet.size|caps" />
+      <def y=1 term="Environ" :def="kind|caps" />
+
+      <def y=1 term="Details">
+        <div slot="def" v-if="traits" v-for="trait in traits" :key="trait" class="font-italic">
+          {{trait|caps}}
+        </div>
+        <span v-else slot="def">N/A</span>
       </def>
     </Section>
 
