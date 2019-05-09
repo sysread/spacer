@@ -159,6 +159,7 @@ define(function(require, exports, module) {
       };
     },
     computed: {
+      type:      function() {return util.ucfirst(this.ship.type)},
       mass:      function() {return util.csn(Math.floor(this.ship.currentMass()))},
       thrust:    function() {return util.csn(this.ship.thrust)},
       acc:       function() {return util.R(this.ship.currentAcceleration() / Physics.G, 2)},
@@ -197,7 +198,7 @@ define(function(require, exports, module) {
     template: `
 <Section title="Ship">
   <Section notitle=1>
-    <def term="Class" :info="ship.type|caps" />
+    <def term="Class" :def="type" />
     <def term="Cargo" info="Cargo is measured in cargo units (cu), each enough to hold a standard-sized container of material. Mass for one cu varies by material.">
       <div slot="def">
         {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
