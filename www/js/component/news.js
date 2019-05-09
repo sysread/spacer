@@ -6,7 +6,6 @@ define(function(require, exports, module) {
 
   require('component/global');
   require('component/common');
-  require('component/card');
 
 
   Vue.component('NewsFeeds', {
@@ -41,13 +40,13 @@ define(function(require, exports, module) {
     },
 
     template: `
-      <card title="News feeds">
-        <card-text>
+      <Section title="News feeds">
+        <p>
           As you walk through the public concourse, your eye is drawn to an ad,
           which proceeds to follow you from screen to screen. Between impassioned
           pleas for your hard-earned scrip, you are able to glean a few tidbits
           from the public news feeds.
-        </card-text>
+        </p>
 
         <btn block=1 @click="next_body" class="text-left">
           {{name}}
@@ -57,7 +56,7 @@ define(function(require, exports, module) {
         </btn>
 
         <News :body="body" />
-      </card>
+      </Section>
     `,
   });
 
@@ -173,7 +172,7 @@ define(function(require, exports, module) {
     },
 
     template: `
-      <card class="my-2" :title="title">
+      <Section :title="title" :notitle="!title">
         <template v-if="hasNews">
           <div v-if="hasConditions" v-for="cond of conditions[body]" class="my-2">
             <h6 class="text-danger">{{cond.name|caps}}</h6>
@@ -218,10 +217,10 @@ define(function(require, exports, module) {
           </div>
         </template>
 
-        <card-text v-else>
+        <p v-else>
           Nothing significant to report.
-        </card-text>
-      </card>
+        </p>
+      </Section>
     `,
   });
 });

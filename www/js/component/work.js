@@ -7,7 +7,6 @@ define(function(require, exports, module) {
   require('component/global');
   require('component/common');
   require('component/modal');
-  require('component/card');
   require('component/row');
   require('component/exchange');
 
@@ -114,41 +113,39 @@ define(function(require, exports, module) {
     },
 
     template: `
-<div>
-  <card title="Work crews">
-    <card-text>
-      <p>Despite ever-growing levels of automation, there are many tasks for which
-      it is not possible or cost effective to employ machines. Sometimes all a
-      task requires a warm body to sit in the seat, push the button, and take the
-      blame.</p>
+<div class="row">
+  <Section title="Work crews" class="col-12 col-md-6">
+    <p>Despite ever-growing levels of automation, there are many tasks for which
+    it is not possible or cost effective to employ machines. Sometimes all a
+    task requires a warm body to sit in the seat, push the button, and take the
+    blame.</p>
 
-      <p>The recruiting terminal displays a number of work crews looking for day
-      laborers to fill in gaps or for a short term production boost. The work is
-      often strenuous, the hours typically long, and the pay is generally low,
-      with the only real benefit being the opportunity to keep any materials
-      harvested over the daily quota.</p>
-    </card-text>
+    <p>The recruiting terminal displays a number of work crews looking for day
+    laborers to fill in gaps or for a short term production boost. The work is
+    often strenuous, the hours typically long, and the pay is generally low,
+    with the only real benefit being the opportunity to keep any materials
+    harvested over the daily quota.</p>
 
-    <card-text v-if="hasPicketLine" class="font-italic text-warning">
+    <p v-if="hasPicketLine" class="font-italic text-warning">
       Preventing access to the terminal, a sizable group of local workers are
       lined up to form a physical barrier. A few security personal are in
       evidence, hanging around the edges and ensuring that the protests do not
       get out of hand. Being a union member yourself, you do not feel that you
       can cross the picket line. If you want work, you will have to find it
       elsewhere.
-    </card-text>
+    </p>
 
-    <card-text v-else-if="tasks.length > 0">
+    <p v-else-if="tasks.length > 0">
       <btn v-for="t in tasks" :key="t.name" @click="setTask(t)" block=1>
         {{t.name}} <badge right=1>{{getPayRate(t)}}c</badge>
       </btn>
-    </card-text>
+    </p>
 
-    <card-text v-else class="font-italic text-warning">
+    <p v-else class="font-italic text-warning">
       There are no jobs currently available. A wall screen displays the face of a
       local council member assuring you that another soon-to-be-passed tax cut
       for job producers practically guarantees more jobs in the future.
-    </card-text>
+    </p>
 
     <modal v-if="task" @close="completeTask()" :xclose="isReady" :title="task.name" footer=1 :static="isReady">
       <div v-if="isReady">
@@ -176,25 +173,25 @@ define(function(require, exports, module) {
       <btn slot="footer" v-if="isFinished && hitQuota" close=1>Complete transfer</btn>
       <btn slot="footer" v-if="isFinished && !hitQuota" close=1>Grumble, grumble...</btn>
     </modal>
-  </card>
+  </Section>
 
-  <card title="Contracts" class="my-3">
-    <card-text v-if="planet.contracts.length == 0" class="font-italic text-warning">
+  <Section title="Contracts" class="col-12 col-md-6">
+    <p v-if="planet.contracts.length == 0" class="font-italic text-warning">
       There are no contracts available at this time.
-    </card-text>
+    </p>
 
     <template v-else>
-      <card-text>
+      <p>
         There are several long term contracts are posted on the local job
         boards accessible on your personal comm.
-      </card-text>
+      </p>
 
-      <card-text>
+      <p>
         <btn v-for="c in planet.contracts" :key="c.mission.title" @click="setContract(c)" block=1>
           {{c.mission.short_title}}
           <badge right=1>{{c.mission.price|csn}}c</badge>
         </btn>
-      </card-text>
+      </p>
 
       <modal v-if="contract" @close="clearContract()" footer=1 xclose=1 title="Contract Details">
         <h5>{{contract.mission.title}}</h5>
@@ -204,7 +201,7 @@ define(function(require, exports, module) {
         <btn slot="footer" @click="clearContract" close=1>No thank you</btn>
       </modal>
     </template>
-  </card>
+  </Section>
 </div>
     `,
   });

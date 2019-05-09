@@ -196,4 +196,23 @@ define(function(require, exports, module) {
 </div>
     `,
   });
+
+
+  Vue.component('Section', {
+    props: ['title', 'notitle', 'back'],
+
+    template: `
+<div>
+  <h4 v-if="!notitle" class="section-title">
+    <slot name="title-pre" />
+    {{title}}
+    <slot name="title-post" />
+  </h4>
+
+  <div class="section-content">
+    <slot />
+  </div>
+</div>
+    `,
+  });
 });

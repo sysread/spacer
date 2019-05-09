@@ -23,7 +23,7 @@ define(function(require, exports, module) {
       planet()    { return this.game.here },
       player()    { return this.game.player },
       resources() { return Object.keys(this.data.resources) },
-      title()     { return this.trade || 'Commerce' },
+      title()     { return util.ucfirst(this.trade || 'Commerce') },
     },
     methods: {
       dock(item)          { return this.planet.getStock(item) },
@@ -33,24 +33,21 @@ define(function(require, exports, module) {
       is_contraband(item) { return this.data.resources[item].contraband },
     },
     template: `
-<card>
-  <card-title>
-    <span v-if="trade" class="d-none d-sm-inline">Exchange of</span>
-    {{title|caps}}
-    <btn v-if="trade" class="float-right" @click="trade=null">Back</btn>
-  </card-title>
+<Section :title="title">
+  <span slot="title-pre" v-if="trade" class="d-none d-sm-inline">Exchange of</span>
+  <btn slot="title-post" v-if="trade" class="float-right" @click="trade=null">Back</btn>
 
-  <card-text v-show="!trade">
+  <p v-show="!trade">
     There are endless warehouses along the docks. As you approach the resource
     exchange, you are approached by several warehouse managers and sales people
     eager to do business with you. Moving here and there among the throng you
     notice the occasional security agent or inspector watching for evidence of
     contraband.
-  </card-text>
+  </p>
 
   <market-trade v-if="trade" :item.sync="trade" />
 
-  <div class="container" v-else>
+  <div class="container-fluid" v-else>
     <row v-for="item of resources" :key="item" class="p-1 rounded" :style="{'background-color': hold(item) > 0 ? '#400A0A' : '#000000'}">   <!-- :class="{'text-muted':dock(item) == 0 && hold(item) == 0}">-->
       <cell size=4 brkpt="sm" y=0 class="px-0 my-1">
         <btn @click="trade=item" block=1 :class="{'btn-secondary': dock(item) == 0 && hold(item) == 0, 'text-warning': is_contraband(item)}">
@@ -71,7 +68,7 @@ define(function(require, exports, module) {
       </cell>
     </row>
   </div>
-</card>
+</Section>
     `
   });
 

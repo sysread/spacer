@@ -6,7 +6,6 @@ define(function(require, exports, module) {
 
   require('component/global');
   require('component/common');
-  require('component/card');
   require('component/row');
   require('component/news');
 
@@ -39,7 +38,7 @@ define(function(require, exports, module) {
 
       css() {
         const top    = 62 + (this.top || 0);   // status bar is 47.62px + 15px body padding
-        const right  = 35 + (this.right || 0); // 15px body padding, 20px card padding
+        const right  = 31 + (this.right || 0); // 15px body padding, 16px card padding
         const width  = this.width || 100;
         const height = width * 0.625;
 
@@ -67,28 +66,20 @@ define(function(require, exports, module) {
 
   Vue.component('SummaryPage', {
     computed: {
-      planet()  { return this.game.here },
-      is_home() { return this.planet.body == this.game.player.home },
+      planet() { return this.game.here },
     },
 
     template: `
-      <card>
-        <card-title>
-          <Flag :faction="planet.faction.abbrev" :width="50" class="m-1" />
-          {{planet.name}}
-          <img v-if="is_home" src="img/home.png" class="circle-thingy circle-thingy-big mx-2 float-right" />
-        </card-title>
-
-        <planet-summary :planet="planet" />
-      </card>
+      <planet-summary :planet="planet" showtitle=1 />
     `,
   });
 
 
   Vue.component('planet-summary', {
-    props: ['planet', 'mini'],
+    props: ['planet', 'mini', 'showtitle'],
 
     computed: {
+      is_home()      { return this.planet.body == this.game.player.home },
       desc()         { return this.planet.desc.split('|')                                         },
       isThere()      { return this.planet.body === this.game.locus                                },
       distance()     { return this.planet.distance(this.game.locus) / Physics.AU                  },
@@ -129,31 +120,40 @@ define(function(require, exports, module) {
 
     template: `
 <div>
-  <div :style="img_css"></div>
+  <div class="row">
+    <div :style="img_css"></div>
 
-  <def y=1 v-if="isThere" term="Location" def="Docked" />
-  <def y=1 v-else term="Distance" :def="distance|R(2)|csn|unit('AU')" />
+    <Section :notitle="!showtitle" :title="planet.name" class="col-12 col-md-6">
+      <Flag v-if="showtitle" slot="title-pre" :faction="planet.faction.abbrev" :width="50" class="m-1" />
+      <img v-if="showtitle && is_home" slot="title-post" src="img/home.png" class="circle-thingy circle-thingy-big mx-2 float-right" />
 
-  <def y=1 term="Environ" :def="kind|caps" />
-  <def y=1 term="Faction" :def="faction|caps" />
-  <def y=1 term="Economy" :def="planet.size|caps" />
+      <def y=1 v-if="isThere" term="Location" def="Docked" />
+      <def y=1 v-else term="Distance" :def="distance|R(2)|csn|unit('AU')" />
 
-  <def y=1 term="Details">
-    <row y=0 slot="def" v-if="planet.traits.length">
-      <cell y=0 class="col-sm-6 font-italic" v-for="trait in planet.traits" :key="trait.name">{{trait.name|caps}}</cell>
-    </row>
-    <span v-else slot="def">N/A</span>
-  </def>
+      <def y=1 term="Environ" :def="kind|caps" />
+      <def y=1 term="Faction" :def="faction|caps" />
+      <def y=1 term="Economy" :def="planet.size|caps" />
 
-  <def y=1 term="Standing">
-    Your standing with this faction is <span :class="standing_color_class">{{standing|lower}}</span>.
-  </def>
+      <def y=1 term="Details">
+        <row y=0 slot="def" v-if="planet.traits.length">
+          <cell y=0 class="col-sm-6 font-italic" v-for="trait in planet.traits" :key="trait.name">{{trait.name|caps}}</cell>
+        </row>
+        <span v-else slot="def">N/A</span>
+      </def>
 
-  <News :body="planet.body" title="Local news" />
+      <def y=1 term="Standing">
+        Your standing with this faction is <span :class="standing_color_class">{{standing|lower}}</span>.
+      </def>
+    </Section>
 
-  <card v-if="!mini" class="my-3" :title="'About ' + planet.name">
-    <card-text v-for="(line, idx) of desc" :key="idx" class="font-italic">{{line}}</card-text>
-  </card>
+    <div class="col-12 col-md-6">
+      <News :body="planet.body" title="Local news" />
+
+      <Section v-if="!mini" :title="'About ' + planet.name">
+        <div v-for="(line, idx) of desc" :key="idx" class="font-italic">{{line}}</div>
+      </Section>
+    </div>
+  </div>
 </div>
     `,
   });
