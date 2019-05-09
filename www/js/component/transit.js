@@ -18,7 +18,6 @@ define(function(require, exports, module) {
   require('vendor/TweenMax.min');
   require('component/global');
   require('component/common');
-  require('component/card');
   require('component/combat');
   require('component/navcomp');
   require('component/svg');
@@ -517,7 +516,7 @@ define(function(require, exports, module) {
     },
 
     template: `
-      <card nopad=1>
+      <Section notitle=1>
         <div v-if="inDev" class="btn-toolbar" id="navcomp-toolbar">
           <div class="btn-group">
             <btn v-if="paused" :disabled="encounter" @click="resume()">Resume</btn>
@@ -584,7 +583,7 @@ define(function(require, exports, module) {
             :faction="encounter.faction"
             class="my-3" />
 
-      </card>
+      </Section>
     `,
   });
 
@@ -708,18 +707,18 @@ define(function(require, exports, module) {
   </h5>
 
   <template v-if="choice=='ready'">
-    <card-text v-if="isBlockade">
+    <p v-if="isBlockade">
       You are hailed by a {{faction}} military patrol ship enforcing a blockade
       against {{target}}. You are ordered to heave to and prepare to be boarded.
       If there are any trade goods on board, they will be seized and result in
       a large fine and loss of standing with {{faction}}.
-    </card-text>
-    <card-text v-else>
+    </p>
+    <p v-else>
       You are being hailed by a {{faction}} patrol ship operating {{distance}} AU
       out of {{body|caps}}. The captain orders you to cease acceleration and
       peacefully submit to an inspection. Any contraband on board will be seized
       and result in a fine and loss of standing with {{faction}}.
-    </card-text>
+    </p>
 
     <div>
       <btn block=1 @click="submit">Submit</btn>
@@ -919,7 +918,7 @@ define(function(require, exports, module) {
     template: `
       <div class="p-3">
         <div v-if="choice=='ready'">
-          <card-text>
+          <p>
             The lights go dim as an emergency klaxxon warns you that your ship has been
             targeted by an incoming pirate <b class="text-warning">{{npc.ship.type|caps}}</b>.
             Its transponder is off, but its make and markings suggest that may be aligned
@@ -927,7 +926,7 @@ define(function(require, exports, module) {
             the ship could just as easily have been stolen.
 
             Before long, the radio begins to chirp, notifying you of the pirate's ultimatum.
-          </card-text>
+          </p>
 
           <button type="button" class="btn btn-dark btn-block" @click="setChoice('flee')">Flee</button>
           <button type="button" class="btn btn-dark btn-block" @click="setChoice('submit')">Surrender ship</button>

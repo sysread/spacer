@@ -11,7 +11,6 @@ define(function(require, exports, module) {
   require('vendor/TweenMax.min');
   require('component/global');
   require('component/common');
-  require('component/card');
   require('component/modal');
   require('component/commerce');
   require('component/summary');
@@ -388,7 +387,7 @@ define(function(require, exports, module) {
     },
 
     template: `
-      <card id="navcomp" nopad=1>
+      <Section id="navcomp" notitle=1>
         <div class="btn-toolbar" id="navcomp-toolbar">
           <div class="btn-group">
             <NavBtn :active="show_map" name="compass"  @click="go_map" />
@@ -438,7 +437,7 @@ define(function(require, exports, module) {
           </template>
         </NavPlot>
 
-      </card>
+      </Section>
     `,
   });
 
