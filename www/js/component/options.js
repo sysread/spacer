@@ -5,7 +5,6 @@ define(function(require, exports, module) {
 
   require('component/global');
   require('component/common');
-  require('component/card');
 
 
   Vue.component('Options', {
@@ -37,14 +36,11 @@ define(function(require, exports, module) {
     },
 
     template: `
-      <card class="my-2">
-        <card-title>
-          Options
-          <div class="float-sm-right">
-            <btn @click="back">Back</btn>
-            <btn @click="save" :disabled="!changed" class="mx-2">Save</btn>
-          </div>
-        </card-title>
+      <Section title="Options">
+        <div class="my-2">
+          <btn @click="back">Back</btn>
+          <btn @click="save" :disabled="!changed" class="mx-2">Save</btn>
+        </div>
 
         <div>
           <def term="Hide map background" info="Disables the Milky Way background in the map." split=8>
@@ -59,7 +55,7 @@ define(function(require, exports, module) {
             <input type="checkbox" :checked="options.hideOrbitPaths" @change="update('hideOrbitPaths', !options.hideOrbitPaths)" />
           </def>
         </div>
-      </card>
+      </Section>
     `,
   });
 });
