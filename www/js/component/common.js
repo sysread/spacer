@@ -104,7 +104,7 @@ define(function(require, exports, module) {
     template: `
 <modal @close="$emit('pick', choice)" static=true>
   <p><slot/></p>
-  <btn v-for="(msg, id) in choices" :key="choice" @click="choice=id" block=1 close=1>
+  <btn v-for="(msg, id) in choices" :key="id" @click="choice=id" block=1 close=1>
     {{msg}}
   </btn>
 </modal>
@@ -122,8 +122,16 @@ define(function(require, exports, module) {
 
   Vue.component('confirm', {
     props: ['yes', 'no'],
-    methods: { trigger(choice) { this.$emit('confirm', choice === 'Y') } },
-    template: `<ask :choices="{Y: yes, N: no}" @pick="trigger"><slot /></ask>`,
+
+    methods: {
+      trigger(choice) { this.$emit('confirm', choice === 'Y') },
+    },
+
+    computed: {
+      choices() { return {'Y': this.yes, 'N': this.no } }
+    },
+
+    template: `<ask :choices="choices" @pick="trigger"><slot /></ask>`,
   });
 
 
