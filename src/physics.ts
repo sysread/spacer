@@ -49,7 +49,7 @@ class Physics {
    *  a = (2s / t^2) - (2v / t)
    */
   static requiredDeltaV(t: number, d: number, v: number=0): number {
-    return ((2 * d) / (t * t)) - ((2 * v) / t);
+    return ((2 * d) / Math.pow(t, 2)) - ((2 * v) / t);
   }
 
   /*

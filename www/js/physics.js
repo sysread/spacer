@@ -35,7 +35,7 @@ define(["require", "exports"], function (require, exports) {
          *  a = (2s / t^2) - (2v / t)
          */
         static requiredDeltaV(t, d, v = 0) {
-            return ((2 * d) / (t * t)) - ((2 * v) / t);
+            return ((2 * d) / Math.pow(t, 2)) - ((2 * v) / t);
         }
         /*
          * velocity(s, m/s, m/s/s) -> m/s

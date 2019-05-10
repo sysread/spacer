@@ -13,7 +13,7 @@ define(["require", "exports"], function (require, exports) {
         // Properties of the opposed-line
         const x = next[0] - prev[0];
         const y = next[1] - prev[1];
-        const length = Math.sqrt((x * x) + (y * y)) * smoothing;
+        const length = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) * smoothing;
         const angle = Math.atan2(y, x) + (reverse ? Math.PI : 0); // if end-control-point, add PI to the angle to go backward
         // The control point position is relative to the current point
         return (current[0] + Math.cos(angle) * length) + ',' + (current[1] + Math.sin(angle) * length);

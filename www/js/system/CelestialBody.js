@@ -79,7 +79,7 @@ define(["require", "exports", "./orbit", "./helpers/units", "./data/constants", 
             if (!this.central)
                 return 0;
             const a = this.getElementAtTime('a', t);
-            return 2 * Math.PI * Math.sqrt((a * a * a) / this.central.mu);
+            return 2 * Math.PI * Math.sqrt(Math.pow(a, 3) / this.central.mu);
         }
         getElementAtTime(name, t) {
             if (!this.elements)
@@ -117,7 +117,7 @@ define(["require", "exports", "./orbit", "./helpers/units", "./data/constants", 
                     const s = this.elements.aug.s;
                     const f = this.elements.aug.f;
                     if (b != undefined) {
-                        M += T * T * b;
+                        M += Math.pow(T, 2) * b;
                     }
                     if (f != undefined) {
                         if (c != undefined) {
@@ -153,7 +153,7 @@ define(["require", "exports", "./orbit", "./helpers/units", "./data/constants", 
             M = nrad(M);
             E = nrad(E);
             const x = a * (Math.cos(E) - e);
-            const y = a * Math.sin(E) * Math.sqrt(1 - (e * e));
+            const y = a * Math.sin(E) * Math.sqrt(1 - Math.pow(e, 2));
             const p = Q.rotate_vector(Q.mul(Q.from_euler(node, this.central.tilt, 0), Q.from_euler(w, i, 0)), [x, y, 0]);
             return new orbit_1.Frame(p, this.central, t);
         }

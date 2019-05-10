@@ -43,7 +43,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
         static import(opt) {
             return new Course(opt.target, opt.agent, opt.maxAccel, opt.turns);
         }
-        get acc() { return Vec.clone(this.accel); }
+        get acc() {
+            const out = [0, 0, 0];
+            Vec.clone(out, this.accel);
+            return out;
+        }
         // a = (2s / t^2) - (2v / t)
         calculateAcceleration() {
             // Calculate portion of target velocity to match by flip point
@@ -65,7 +69,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 let v = this.agent[VELOCITY]; // initial velocity
                 const TI = SPT / this.dt;
                 const vax = Vec.mul_scalar(this.acc, TI); // static portion of change in velocity each TI
-                const dax = Vec.mul_scalar(this.acc, TI * TI / 2); // static portion of change in position each TI
+                const dax = Vec.mul_scalar(this.acc, Math.pow(TI, 2) / 2); // static portion of change in position each TI
                 const path = [];
                 let t = 0;
                 // Start with initial position
@@ -134,7 +138,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 const t_flip = Math.ceil(t / 2);
                 const s_flip = s / 2;
                 const v = (2 * s_flip) / t_flip;
-                const a = Math.abs(((2 * s_flip) / (t_flip * t_flip)) - ((2 * v) / t_flip));
+                const a = Math.abs(((2 * s_flip) / Math.pow(t_flip, 2)) - ((2 * v) / t_flip));
                 if (a <= this.max) {
                     const target = [end, [0, 0, 0]];
                     const agent = [start_pos, [0, 0, 0]];

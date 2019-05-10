@@ -1,8 +1,10 @@
 export type Point = [number, number, number];
 
-
-export const clone = (p: Point): Point =>
-  [ p[0], p[1], p[2] ]
+export function clone(p_out: Point, p_in: Point) {
+  p_out[0] = p_in[0];
+  p_out[1] = p_in[1];
+  p_out[2] = p_in[2];
+}
 
 
 export const add_scalar = (p: Point, n: number): Point =>
@@ -38,7 +40,7 @@ export const div = (a: Point, b: Point): Point =>
 
 
 export const length_squared = (p: Point): number =>
-  p[0] * p[0] + p[1] * p[1] + p[2] * p[2]
+  Math.pow(p[0], 2) + Math.pow(p[1], 2) + Math.pow(p[2], 2);
 
 
 export const length = (p: Point): number =>

@@ -1,7 +1,12 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.clone = (p) => [p[0], p[1], p[2]];
+    function clone(p_out, p_in) {
+        p_out[0] = p_in[0];
+        p_out[1] = p_in[1];
+        p_out[2] = p_in[2];
+    }
+    exports.clone = clone;
     exports.add_scalar = (p, n) => [p[0] + n, p[1] + n, p[2] + n];
     exports.sub_scalar = (p, n) => [p[0] - n, p[1] - n, p[2] - n];
     exports.mul_scalar = (p, n) => [p[0] * n, p[1] * n, p[2] * n];
@@ -10,6 +15,6 @@ define(["require", "exports"], function (require, exports) {
     exports.sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
     exports.mul = (a, b) => [a[0] * b[0], a[1] * b[1], a[2] * b[2]];
     exports.div = (a, b) => [a[0] / b[0], a[1] / b[1], a[2] / b[2]];
-    exports.length_squared = (p) => p[0] * p[0] + p[1] * p[1] + p[2] * p[2];
+    exports.length_squared = (p) => Math.pow(p[0], 2) + Math.pow(p[1], 2) + Math.pow(p[2], 2);
     exports.length = (p) => Math.sqrt(exports.length_squared(p));
 });

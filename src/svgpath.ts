@@ -16,7 +16,7 @@ function control_point(current: point, prev?: point, next?: point, reverse?: tru
   const x = next[0] - prev[0];
   const y = next[1] - prev[1];
 
-  const length = Math.sqrt((x * x) + (y * y)) * smoothing;
+  const length = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) * smoothing;
   const angle  = Math.atan2(y, x) + (reverse ? Math.PI : 0); // if end-control-point, add PI to the angle to go backward
 
   // The control point position is relative to the current point

@@ -70,7 +70,11 @@ export class Course {
     return new Course(opt.target, opt.agent, opt.maxAccel, opt.turns);
   }
 
-  get acc(): Point { return Vec.clone(this.accel) }
+  get acc(): Point {
+    const out: Point = [0, 0, 0];
+    Vec.clone(out, this.accel);
+    return out;
+  }
 
   // a = (2s / t^2) - (2v / t)
   calculateAcceleration(): Point {
@@ -94,11 +98,11 @@ export class Course {
 
   path(): PathSegment[] {
     if (!this._path) {
-      let p      = this.agent[POSITION];                   // initial position
-      let v      = this.agent[VELOCITY];                   // initial velocity
+      let p      = this.agent[POSITION]; // initial position
+      let v      = this.agent[VELOCITY]; // initial velocity
       const TI   = SPT / this.dt;
-      const vax  = Vec.mul_scalar(this.acc, TI);           // static portion of change in velocity each TI
-      const dax  = Vec.mul_scalar(this.acc, TI * TI / 2);  // static portion of change in position each TI
+      const vax  = Vec.mul_scalar(this.acc, TI); // static portion of change in velocity each TI
+      const dax  = Vec.mul_scalar(this.acc, Math.pow(TI, 2) / 2); // static portion of change in position each TI
       const path = [];
 
       let t = 0;
@@ -190,7 +194,7 @@ export class NavComp {
       const t_flip = Math.ceil(t / 2);
       const s_flip = s / 2;
       const v      = (2 * s_flip) / t_flip;
-      const a      = Math.abs(((2 * s_flip) / (t_flip * t_flip)) - ((2 * v) / t_flip));
+      const a      = Math.abs(((2 * s_flip) / Math.pow(t_flip, 2)) - ((2 * v) / t_flip));
 
       if (a <= this.max) {
         const target: Body = [end, [0, 0, 0]];

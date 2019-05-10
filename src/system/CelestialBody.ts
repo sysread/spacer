@@ -3,7 +3,6 @@ import { Orbit, Frame } from "./orbit";
 import Physics from '../physics';
 import * as units     from './helpers/units';
 import * as constants from './data/constants';
-import * as V         from '../vector';
 import * as Q         from '../quaternion';
 
 
@@ -123,7 +122,7 @@ export class CelestialBody extends SpaceThing {
 
     const a = this.getElementAtTime('a', t);
 
-    return 2 * Math.PI * Math.sqrt((a * a * a) / this.central.mu);
+    return 2 * Math.PI * Math.sqrt(Math.pow(a, 3) / this.central.mu);
   }
 
   getElementAtTime(name: keyof ElementsBase, t: number): number {
@@ -170,7 +169,7 @@ export class CelestialBody extends SpaceThing {
         const f = this.elements.aug.f;
 
         if (b != undefined) {
-          M += T * T * b;
+          M += Math.pow(T, 2) * b;
         }
 
         if (f != undefined) {
@@ -217,7 +216,7 @@ export class CelestialBody extends SpaceThing {
     E    = nrad(E);
 
     const x = a * (Math.cos(E) - e);
-    const y = a * Math.sin(E) * Math.sqrt(1 - (e * e));
+    const y = a * Math.sin(E) * Math.sqrt(1 - Math.pow(e, 2));
 
     const p = Q.rotate_vector(
       Q.mul(
