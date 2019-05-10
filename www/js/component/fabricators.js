@@ -8,7 +8,6 @@ define(function(require, exports, module) {
 
   require('component/global');
   require('component/common');
-  require('component/card');
   require('component/exchange');
   require('component/modal');
   require('component/row');
@@ -218,90 +217,81 @@ define(function(require, exports, module) {
       reset() {
         this.queue.set_goal(1);
       },
-
-      complete() {
-        this.reset();
-        this.$emit('done');
-      },
     },
 
     template: `
-      <card :title="item|caps">
-        <ok v-if="queue.result" @ok="complete">
-          <span :class="{'text-warning': !queue.success}">
-            {{ queue.result }}
-          </span>
-        </ok>
+      <modal :title="item|caps" close="Close" xclose=1 size="lg" @close="$emit('close')">
+        <p v-if="queue.result">
+          {{queue.result}}
+        </p>
+
+        <p v-else-if="amount == 0" class="font-italic text-warning">
+          You do not have the resources necessary to fabricate this item.
+        </p>
 
         <template v-else>
-          <card-text v-if="amount == 0" class="font-italic text-warning">
-            You do not have the resources necessary to fabricate this item.
-          </card-text>
+          <p class="font-italic text-success">
+            You have the resources and cargo space to fabricate {{amount|csn}} of this item.
+          </p>
 
-          <template v-else>
-            <card-text class="font-italic text-success">
-              You have the resources and cargo space to fabricate {{amount|csn}} of this item.
-            </card-text>
+          <p>
+            The fabricators may be scheduled to continuously create as many items as you have the resources for.
+            Each use of the fabricators reduces their available capacity, resulting in higher fees and fabrication times.
+            As cybernetics become available in the market, they may be used to replenish the fabricators.
+          </p>
 
-            <card-text>
-              The fabricators may be scheduled to continuously create as many items as you have the resources for.
-              Each use of the fabricators reduces their available capacity, resulting in higher fees and fabrication times.
-              As cybernetics become available in the market, they may be used to replenish the fabricators.
-            </card-text>
-
-            <template v-if="show_confirm">
-              <confirm yes="Confirm" no="Cancel" @confirm="confirm_start">
-                The fabricators are too low on resources to complete the full batch. Unless replenished,
-                they will need to be supplemented with more traditional, less efficient techniques, resulting
-                in higher fees and a longer fabrication time.
-              </confirm>
-            </template>
-
-            <template v-if="!running">
-              <slider class="my-3" :value.sync="queue.goal" min=1 :max="amount" minmax=1 step=1 />
-              <btn block=1 @click="confirm" class="my-3">Push the big red button</btn>
-            </template>
-
-            <template v-else>
-              <progress-bar :percent="percent" @ready="turn" />
-              <btn block=1 @click="finish" class="my-3">Stop</btn>
-            </template>
+          <template v-if="show_confirm">
+            <confirm yes="Confirm" no="Cancel" @confirm="confirm_start">
+              The fabricators are too low on resources to complete the full batch. Unless replenished,
+              they will need to be supplemented with more traditional, less efficient techniques, resulting
+              in higher fees and a longer fabrication time.
+            </confirm>
           </template>
 
-          <table class="table my-2">
-            <tr v-if="amount">
-              <th>&nbsp;</th>
-              <th>Each</th>
-              <th>Total (est)</th>
-            </tr>
-            <tr v-if="amount">
-              <th>Count</th>
-              <td>{{queue.goal|csn}}</td>
-              <td>{{left|csn}}</td>
-            </tr>
-            <tr>
-              <th>Market value</th>
-              <td>{{price|csn|unit('credits')}}</td>
-              <td v-if="amount" class="text-success">{{price*queue.goal|csn|unit('credits')}}</td>
-            </tr>
-            <tr>
-              <th>Fee</th>
-              <td>{{fee|csn|unit('credits')}}</td>
-              <td v-if="amount" class="text-success">{{fee*queue.goal|csn|unit('credits')}}</td>
-            </tr>
-            <tr>
-              <th>Time</th>
-              <td>{{hours|csn|unit('hours')}}</td>
-              <td v-if="amount" class="text-success">{{hours*queue.goal|csn|unit('hours')}}</td>
-            </tr>
-            <tr v-for="(amt, item) of queue.recipe">
-              <th>{{item|caps}}</th>
-              <td>{{amt|csn}}</td>
-              <td v-if="amount" class="text-success">{{amt*queue.goal|csn}}</td>
-            </tr>
-          </table>
+          <template v-if="!running">
+            <slider class="my-3" :value.sync="queue.goal" min=1 :max="amount" minmax=1 step=1 />
+            <btn block=1 @click="confirm" class="my-3">Push the big red button</btn>
+          </template>
+
+          <template v-else>
+            <progress-bar :percent="percent" @ready="turn" />
+            <btn block=1 @click="finish" class="my-3">Stop</btn>
+          </template>
         </template>
-      </card>
+
+        <table v-if="!queue.result" class="table my-2">
+          <tr v-if="amount">
+            <th>&nbsp;</th>
+            <th>Each</th>
+            <th>Total (est)</th>
+          </tr>
+          <tr v-if="amount">
+            <th>Count</th>
+            <td>{{queue.goal|csn}}</td>
+            <td>{{left|csn}}</td>
+          </tr>
+          <tr>
+            <th>Market value</th>
+            <td>{{price|csn|unit('credits')}}</td>
+            <td v-if="amount" class="text-success">{{price*queue.goal|csn|unit('credits')}}</td>
+          </tr>
+          <tr>
+            <th>Fee</th>
+            <td>{{fee|csn|unit('credits')}}</td>
+            <td v-if="amount" class="text-success">{{fee*queue.goal|csn|unit('credits')}}</td>
+          </tr>
+          <tr>
+            <th>Time</th>
+            <td>{{hours|csn|unit('hours')}}</td>
+            <td v-if="amount" class="text-success">{{hours*queue.goal|csn|unit('hours')}}</td>
+          </tr>
+          <tr v-for="(amt, item) of queue.recipe">
+            <th>{{item|caps}}</th>
+            <td>{{amt|csn}}</td>
+            <td v-if="amount" class="text-success">{{amt*queue.goal|csn}}</td>
+          </tr>
+        </table>
+      </modal>
     `,
   });
 
@@ -338,44 +328,40 @@ define(function(require, exports, module) {
     },
 
     template: `
-      <card title="Fabricators" class="my-3">
-        <template slot="header" v-if="selected">
-          <btn @click="clear">Back to fabricators</btn>
-        </template>
-
+      <Section title="Fabricators">
         <template v-if="!selected">
-          <card-text>
+          <p>
             A triumph of cybernetics, the von Neumann fabricators are able to
             manufacture nearly anything, given the necessary materials and plans...
             and a small fee, of course.
-          </card-text>
+          </p>
 
-          <card-text>
+          <p>
             Use of the fabricators is based on the value of the resource being
             manufactured and increases based on the availability of fabricator
             resources themselves, faction tax rate, a small usage fee, and
             faction standing.
-          </card-text>
+          </p>
 
-          <card-text>
+          <p>
             {{availability}}% of fabricator capacity is available at this time.
-          </card-text>
+          </p>
 
           <template v-for="item of resources">
-            <card-btn block=1 @click="select(item)" class="my-2 py-2" :muted="!can_craft(item)">
+            <btn block=1 @click="select(item)" class="my-2 py-2" :muted="!can_craft(item)">
               {{item|caps}}
-            </card-btn>
+            </btn>
           </template>
         </template>
 
         <template v-else>
-          <card-text>
+          <p>
             {{availability}}% of fabricator capacity is available at this time.
-          </card-text>
+          </p>
 
-          <fabrication :item="selected" @done="clear" />
+          <fabrication :item="selected" @close="clear" />
         </template>
-      </card>
+      </Section>
     `,
   });
 });
