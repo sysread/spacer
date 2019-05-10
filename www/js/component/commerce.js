@@ -35,7 +35,6 @@ define(function(require, exports, module) {
     template: `
 <Section :title="title">
   <span slot="title-pre" v-if="trade" class="d-none d-sm-inline">Exchange of</span>
-  <btn slot="title-post" v-if="trade" class="float-right" @click="trade=null">Back</btn>
 
   <p v-show="!trade">
     There are endless warehouses along the docks. As you approach the resource
@@ -239,7 +238,8 @@ define(function(require, exports, module) {
     <tr>
       <td colspan=4>
         <btn block=1 @click="complete" highlight=1 :disabled="count == 0">Confirm exchange</btn>
-        <btn block=1 @click="report=true" class="my-3">Market report</btn>
+        <btn block=1 @click="report=true" class="my-2">Market report</btn>
+        <btn block=1 @click="close_trade" class="my-2">Back</btn>
       </td>
     </tr>
   </table>
