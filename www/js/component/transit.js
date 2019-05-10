@@ -671,7 +671,7 @@ define(function(require, exports, module) {
         }
 
         if (busted) {
-          Event.trigger(new CaughtSmuggling({faction: this.faction, found: found}));
+          Event.trigger(new Event.CaughtSmuggling({faction: this.faction, found: found}));
           this.setChoice('submit-fined');
         } else {
           this.setChoice('submit-done');
@@ -734,11 +734,12 @@ define(function(require, exports, module) {
   </ask>
 
   <div v-if="choice=='submit-fined'">
-    Your contraband cargo was found and confiscated.
+    <!--Your contraband cargo was found and confiscated.
     You have been fined {{fine|csn}} credits.
-    Your reputation with {{faction}} has taken a serious hit.
+    Your reputation with {{faction}} has taken a serious hit.-->
     <btn block=1 @click="done">Ok</btn>
   </div>
+
   <div v-if="choice=='submit-done'">
     No contraband was found.
     <template v-if="isHostile">
