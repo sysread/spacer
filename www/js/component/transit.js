@@ -526,9 +526,9 @@ define(function(require, exports, module) {
 
         <table id="navcomp-transit-info" class="table table-sm m-0" :style="{width: show_plot() && layout ? layout.width_px + 'px' : '100%'}">
           <tr>
-            <td class="text-left">{{plan.days_left|unit('days')}}</td>
-            <td class="text-center">{{plan.velocity/1000|R|csn|unit('km/s')}}</td>
-            <td class="text-right">{{plan.auRemaining()|R(2)|sprintf('%0.2f')|unit('AU')}}</td>
+            <td class="text-left border-0">{{plan.days_left|unit('days')}}</td>
+            <td class="text-center border-0">{{plan.velocity/1000|R|csn|unit('km/s')}}</td>
+            <td class="text-right border-0">{{plan.auRemaining()|R(2)|sprintf('%0.2f')|unit('AU')}}</td>
           </tr>
           <tr v-if="!show_plot()">
             <td colspan="3">
