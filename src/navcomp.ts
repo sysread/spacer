@@ -71,9 +71,7 @@ export class Course {
   }
 
   get acc(): Point {
-    const out: Point = [0, 0, 0];
-    Vec.clone(out, this.accel);
-    return out;
+    return Vec.clone(this.accel);
   }
 
   // a = (2s / t^2) - (2v / t)

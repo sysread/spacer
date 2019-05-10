@@ -1,12 +1,7 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    function clone(p_out, p_in) {
-        p_out[0] = p_in[0];
-        p_out[1] = p_in[1];
-        p_out[2] = p_in[2];
-    }
-    exports.clone = clone;
+    exports.clone = (p) => [p[0], p[1], p[2]];
     exports.add_scalar = (p, n) => [p[0] + n, p[1] + n, p[2] + n];
     exports.sub_scalar = (p, n) => [p[0] - n, p[1] - n, p[2] - n];
     exports.mul_scalar = (p, n) => [p[0] * n, p[1] * n, p[2] * n];

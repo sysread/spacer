@@ -1,10 +1,8 @@
 export type Point = [number, number, number];
 
-export function clone(p_out: Point, p_in: Point) {
-  p_out[0] = p_in[0];
-  p_out[1] = p_in[1];
-  p_out[2] = p_in[2];
-}
+
+export const clone = (p: Point): Point =>
+  [ p[0], p[1], p[2] ]
 
 
 export const add_scalar = (p: Point, n: number): Point =>

@@ -44,9 +44,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             return new Course(opt.target, opt.agent, opt.maxAccel, opt.turns);
         }
         get acc() {
-            const out = [0, 0, 0];
-            Vec.clone(out, this.accel);
-            return out;
+            return Vec.clone(this.accel);
         }
         // a = (2s / t^2) - (2v / t)
         calculateAcceleration() {
