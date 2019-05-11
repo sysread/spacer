@@ -13,6 +13,7 @@ const data = {
   hours_per_turn:      hoursPerTurn,
   turns_per_day:       turnsPerDay,
   initial_days:        365,
+  resource_scale:      5, // when scaling numbers of resources below, multiply by this value
   initial_stock:       20,
   market_history:      10 * turnsPerDay,
   scarcity_markup:     0.25,

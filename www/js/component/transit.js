@@ -671,7 +671,8 @@ define(function(require, exports, module) {
         }
 
         if (busted) {
-          Event.trigger(new Event.CaughtSmuggling({faction: this.faction, found: found}));
+          const dest_faction = this.data.bodies[this.dest].faction;
+          Event.trigger(new Event.CaughtSmuggling({faction: dest_faction, found: found}));
           this.setChoice('submit-fined');
         } else {
           this.setChoice('submit-done');

@@ -85,7 +85,7 @@ define(["require", "exports", "./data", "./faction", "./events", "./util"], func
         violation(faction_name, found) {
             if (!this.is_started || this.is_over)
                 return true;
-            if (this.target == faction_name)
+            if (this.target != faction_name)
                 return false;
             const faction = faction_1.factions[faction_name];
             let loss = 0;

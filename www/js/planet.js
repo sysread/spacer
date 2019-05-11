@@ -379,7 +379,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * Economics
          */
         scale(n = 0) {
-            return data_1.default.scales[this.size] * n;
+            return data_1.default.scales[this.size] * n * data_1.default.resource_scale;
         }
         getStock(item) {
             return this.stock.count(item);
@@ -1050,6 +1050,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
             while (this.contracts.length < want) {
                 const dest = util.oneOf(dests.filter(d => !this.contracts.find(c => c.mission.dest == d)));
+                if (!dest) {
+                    break;
+                }
                 const mission = new mission_1.Passengers({ issuer: this.body, dest: dest });
                 if (this.contracts.find(c => c.mission.title == mission.title)) {
                     continue;

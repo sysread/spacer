@@ -540,7 +540,7 @@ export class Planet {
    * Economics
    */
   scale(n=0) {
-    return data.scales[this.size] * n;
+    return data.scales[this.size] * n * data.resource_scale;
   }
 
   getStock(item: t.resource) {
@@ -1373,6 +1373,11 @@ export class Planet {
 
     while (this.contracts.length < want) {
       const dest = util.oneOf(dests.filter(d => !this.contracts.find(c => (<Passengers>c.mission).dest == d)));
+
+      if (!dest) {
+        break;
+      }
+
       const mission = new Passengers({issuer: this.body, dest: dest});
 
       if (this.contracts.find(c => c.mission.title == mission.title)) {
