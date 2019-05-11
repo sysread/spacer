@@ -102,7 +102,7 @@ export class ItemsSold extends EventBase<ItemsSoldInit> {
 
 
 interface CaughtSmugglingInit {
-  faction: t.faction;
+  faction: t.faction; // destination faction
   found:   t.ResourceCounter;
 }
 

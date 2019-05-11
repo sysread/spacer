@@ -145,7 +145,7 @@ export class Blockade extends Conflict {
     if (!this.is_started || this.is_over)
       return true;
 
-    if (this.target == faction_name)
+    if (this.target != faction_name)
       return false;
 
     const faction = factions[faction_name];
