@@ -540,7 +540,7 @@ export class Planet {
    * Economics
    */
   scale(n=0) {
-    return data.scales[this.size] * n * data.resource_scale;
+    return data.scales[this.size] * n;
   }
 
   getStock(item: t.resource) {
@@ -590,7 +590,7 @@ export class Planet {
       amount += this.scale(condition.produces[item] || 0);
     }
 
-    return amount;
+    return amount * data.resource_scale;
   }
 
   consumption(item: t.resource) {
@@ -600,7 +600,7 @@ export class Planet {
       amount += this.scale(condition.consumes[item] || 0);
     }
 
-    return amount;
+    return amount * data.resource_scale;
   }
 
   // Increases demand by the number of units of item less than amt that

@@ -379,7 +379,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
          * Economics
          */
         scale(n = 0) {
-            return data_1.default.scales[this.size] * n * data_1.default.resource_scale;
+            return data_1.default.scales[this.size] * n;
         }
         getStock(item) {
             return this.stock.count(item);
@@ -416,14 +416,14 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             for (const condition of this.conditions) {
                 amount += this.scale(condition.produces[item] || 0);
             }
-            return amount;
+            return amount * data_1.default.resource_scale;
         }
         consumption(item) {
             let amount = this.consumes.get(item) / data_1.default.turns_per_day;
             for (const condition of this.conditions) {
                 amount += this.scale(condition.consumes[item] || 0);
             }
-            return amount;
+            return amount * data_1.default.resource_scale;
         }
         // Increases demand by the number of units of item less than amt that
         // there are in the market. For example, if requesting 5 units of fuel
