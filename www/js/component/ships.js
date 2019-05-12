@@ -8,42 +8,48 @@ define(function(require, exports, module) {
 
   require('component/global');
   require('component/common');
-  require('component/card');
   require('component/exchange');
   require('component/modal');
   require('component/row');
 
   Vue.component('ships', {
-    data: function() {
+    data() {
       return {
         selected: null,
       };
     },
+
     computed: {
-      ships: function() { return Object.keys(this.data.shipclass) },
+      ships() { return Object.keys(this.data.shipclass) },
     },
+
     methods: {
-      returnToShipyard: function() {
+      returnToShipyard() {
         this.$emit('open', 'shipyard');
       },
 
-      selectShip: function(ship) {
+      selectShip(ship) {
         if (this.selected == ship) {
           this.selected = null;
         } else {
           this.selected = ship;
         }
       },
-    },
-    template: `
-<card title="Ships">
-  <btn slot="header" @click="returnToShipyard">Return to shipyard</btn>
 
-  <div v-for="ship in ships">
-    <ship v-if="!selected || selected == ship" :key="ship" :type="ship" :detail="ship == selected" @click="selectShip(ship)" />
+      clearSelection() {
+        this.selected = null;
+      },
+    },
+
+    template: `
+<Section title="Ships">
+  <div>
+    <btn @click="returnToShipyard">Shipyard</btn>
+    <btn @click="clearSelection" v-if="selected">Show room</btn>
   </div>
 
-</card>
+  <ship v-for="ship in ships" v-if="!selected || selected == ship" :key="ship" :type="ship" :detail="ship == selected" @click="selectShip(ship)" />
+</Section>
     `,
   });
 
@@ -139,22 +145,18 @@ define(function(require, exports, module) {
 
     template: `
 <div>
-  <btn v-if="detail" @click="$emit('click')" :block=1 class="my-2">
-    Back to the show room
-  </btn>
-
-  <btn v-else @click="$emit('click')" :block=1 :muted="!isAvailable" class="my-2">
+  <btn v-if="!detail" @click="$emit('click')" :block=1 :muted="!isAvailable" class="my-2">
     {{name|caps}} <span class="badge badge-pill float-right">{{price|csn}}</span>
   </btn>
 
-  <card v-if="detail" :title="name|caps">
+  <Section v-else :title="name|caps" class="m-3">
     <p v-if="isAvailable">
       <button @click="buy=true" type="button" class="btn btn-dark">Purchase</button>
     </p>
 
-    <card-text v-if="shipClass.desc" class="font-italic">{{shipClass.desc}}</card-text>
+    <p v-if="shipClass.desc" class="font-italic">{{shipClass.desc}}</p>
 
-    <card-text v-if="!isAvailable" class="text-warning font-italic">
+    <p v-if="!isAvailable" class="text-warning font-italic">
       <span v-if="!hasShip || isNonFaction">This ship is not available here.</span>
       <span v-else-if="isRestricted">
         Your reputation with this faction precludes the sale of this ship to you.
@@ -163,7 +165,7 @@ define(function(require, exports, module) {
       </span>
       <span v-else-if="isPlayerShip">You already own a ship of this class.</span>
       <span v-else-if="!canAfford">You cannot afford this ship.</span>
-    </card-text>
+    </p>
 
     <def y=1 brkpt="sm" term="Price">
       <span slot="def">
@@ -200,7 +202,7 @@ define(function(require, exports, module) {
         <def split=4 term="Range" :def="maxRange()|R(2)|unit('AU')" />
       </div>
     </def>
-  </card>
+  </Section>
 
   <modal v-if="buy" title="Purchase" @close="buy=false" close="Cancel" xclose=true>
     <p>You will pay {{price|csn}} credits for a shiny, new {{type}}.</p>

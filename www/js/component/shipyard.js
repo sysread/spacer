@@ -26,36 +26,34 @@ define(function(require, exports, module) {
     },
     template: `
 <div>
-  <card title="Shipyard">
-    <card-text>
+  <Section title="Shipyard">
+    <p>
       The shipyard is like shipyards everywhere. There are piles of vaguely
       forgotten things, robotic lifters trundling around, "gently used" ships
       parked in distant berths, the occassional newly laid vessel standing
       out for its lack of patches and hull corrosion.
-    </card-text>
+    </p>
 
-    <card-text>
+    <p>
       And, of course, the yard manager who is only too happy to top off your
       fuel tank, repair any damage your ship might have sustained, no
       questions asked, just my little joke, heh, heh, and perform maintenance
       that cannot easily be done while underway.
-    </card-text>
+    </p>
 
-    <card-text>
+    <p>
       For a nominal fee, they will throw in an invisible corrosion protectant
       coating, too. If you are looking for something new, they have a hauler
       just came in, very good condition, barely a nick on her, pilot was a
       nice older lady...
-    </card-text>
+    </p>
 
-    <row>
-      <btn :muted="!needsFuel() || !affordFuel()" :block=1 class="m-1" @click="modal='refuel'">Refuel</btn>
-      <btn :muted="!needsFuel() || !hasFuel()" :block=1 class="m-1" @click="modal='transfer'">Transfer fuel</btn>
-      <btn :muted="!hasDamage()" :block=1 class="m-1" @click="modal='repair'">Repairs</btn>
-      <btn :block=1 class="m-1" @click="open('ships')">Ships</btn>
-      <btn :block=1 class="m-1" @click="open('addons')">Upgrades</btn>
-    </row>
-  </card>
+    <btn :muted="!needsFuel() || !affordFuel()" @click="modal='refuel'">Refuel</btn>
+    <btn :muted="!needsFuel() || !hasFuel()" @click="modal='transfer'">Transfer fuel</btn>
+    <btn :muted="!hasDamage()" @click="modal='repair'">Repairs</btn>
+    <btn @click="open('ships')">Ships</btn>
+    <btn @click="open('addons')">Upgrades</btn>
+  </Section>
 
   <shipyard-refuel v-if="modal=='refuel'" @close="modal=''" />
   <shipyard-transfer v-if="modal=='transfer'" @close="modal=''" />

@@ -24,15 +24,15 @@ define(function(require, exports, module) {
     },
 
     template: `
-<card title="Equipment and upgrades">
-  <btn slot="header" @click="returnToShipyard">Back to shipyard</btn>
+<Section title="Equipment and upgrades">
+  <btn @click="returnToShipyard">Shipyard</btn>
 
-  <card-text>
+  <p class="my-3">
     You have {{hardpoints}} unused hard points to which upgrades may be installed.
-  </card-text>
+  </p>
 
   <addon v-for="addon in addons" :key="addon" :type="addon" />
-</card>
+</Section>
     `,
   });
 
@@ -129,14 +129,14 @@ define(function(require, exports, module) {
       <span class="badge badge-pill float-right">{{price|csn}}</span>
   </button>
 
-  <card v-if="detail" class="my-3" :title="info.name|caps">
-    <card-text class="font-italic">{{info.desc}}</card-text>
+  <Section v-if="detail" class="my-3" :notitle=1 :title="info.name|caps">
+    <p class="font-italic">{{info.desc}}</p>
 
-    <card-text v-if="!marketHasUpgrade" class="text-warning font-italic">
+    <p v-if="!marketHasUpgrade" class="text-warning font-italic">
       This upgrade is not available here.
-    </card-text>
+    </p>
 
-    <card-text v-if="marketHasUpgrade && !isAvailable" class="text-warning font-italic">
+    <p v-if="marketHasUpgrade && !isAvailable" class="text-warning font-italic">
       <span v-if="isRestricted">
         Your reputation with this faction precludes the sale of this equipment to you.
         That does not prevent you from salivating from the show room window, however.
@@ -144,12 +144,12 @@ define(function(require, exports, module) {
       </span>
       <span v-else-if="!canAfford">You do not have enough money for this upgrade.</span>
       <span v-else-if="!hasRoom">Your ship does not have and available free hard point for this upgrade.</span>
-    </card-text>
+    </p>
 
-    <card-text>
+    <p>
       <button :disabled="!isAvailable" @click="buy=true" type="button" class="btn btn-dark">Purchase</button>
       <button :disabled="!hasUpgrade"  @click="sell=true" type="button" class="btn btn-dark">Sell</button>
-    </card-text>
+    </p>
 
     <def y=0 split="5" term="Buy" :def="price|csn" />
     <def y=0 split="5" term="Sell" :def="sellPrice|csn" />
@@ -174,7 +174,7 @@ define(function(require, exports, module) {
     <def v-if="info.dodge" y=0 split="5" term="Dodge" :def="info.dodge|pct(2)" />
     <def v-if="info.intercept" y=0 split="5" term="Intercept" :def="info.intercept|pct(2)" />
     <def v-if="info.stealth" y=0 split=5 term="Stealth" :def="info.stealth|pct(2)" />
-  </card>
+  </Section>
 
   <modal v-if="buy" @close="buy=false" close='No'>
     Purchase and install <b>{{info.name}}</b> for {{price|csn}} credits?
