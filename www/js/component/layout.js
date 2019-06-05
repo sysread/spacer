@@ -2,11 +2,11 @@
 
 define(function(require, exports, module) {
   const util   = require('util');
-  const Vue    = require('vendor/vue');
+  const Vue    = require('vue');
   const Hammer = require('vendor/hammer.min');
   const Layout = require('layout').Layout;
 
-  require('vendor/TweenMax.min');
+  require('gsap');
 
   return {
     data() {

@@ -3,7 +3,7 @@
 define(function(require, exports, module) {
   const util    = require('util');
   const Physics = require('physics');
-  const Vue     = require('vendor/vue');
+  const Vue     = require('vue');
 
   require('component/global');
   require('component/common');

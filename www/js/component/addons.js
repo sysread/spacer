@@ -1,29 +1,28 @@
-define(function(require, exports, module) {
-  "use strict"
-
-  const Physics = require('physics');
-  const Ship    = require('ship');
-  const Vue     = require('vendor/vue');
-  const util    = require('util');
-
-  require('component/global');
-  require('component/common');
-  require('component/card');
-  require('component/exchange');
-  require('component/modal');
-  require('component/row');
-
-  Vue.component('addons', {
-    computed: {
-      addons()     { return Object.keys(this.data.addons) },
-      hardpoints() { return this.game.player.ship.availableHardPoints() },
-    },
-
-    methods: {
-      returnToShipyard() { this.$emit('open', 'shipyard') },
-    },
-
-    template: `
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+define(["require", "exports", "vue", "../data", "../common", "./global", "./common", "./exchange", "./modal", "./row"], function (require, exports, vue_1, data_1, t) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    vue_1 = __importDefault(vue_1);
+    data_1 = __importDefault(data_1);
+    t = __importStar(t);
+    vue_1.default.component('addons', {
+        computed: {
+            addons() { return Object.keys(data_1.default.addons); },
+            hardpoints() { return window.game.player.ship.availableHardPoints(); },
+        },
+        methods: {
+            returnToShipyard() { this.$emit('open', 'shipyard'); },
+        },
+        template: `
 <Section title="Equipment and upgrades">
   <btn @click="returnToShipyard">Shipyard</btn>
 
@@ -33,90 +32,79 @@ define(function(require, exports, module) {
 
   <addon v-for="addon in addons" :key="addon" :type="addon" />
 </Section>
-    `,
-  });
-
-  Vue.component('addon', {
-    props: ['type'],
-
-    data() {
-      return {
-        detail: false,
-        buy:    false,
-        sell:   false,
-      };
-    },
-
-    computed: {
-      planet()     { return this.game.here              },
-      player()     { return this.game.player            },
-      ship()       { return this.player.ship            },
-      info()       { return this.data.addons[this.type] },
-      sellPrice()  { return Math.ceil(0.7 * this.price) },
-
-      fuelRate() {
-        if (this.info.burn_rate) {
-          return (this.info.burn_rate / this.data.hours_per_turn) + ' tonnes/hour';
-        }
-        else if (this.info.burn_rate_pct) {
-          return (this.info.burn_rate_pct * 100) + '% reduction';
-        }
-      },
-
-      price() {
-        return Math.ceil(this.planet.addonPrice(this.type, this.player));
-      },
-
-      isRestricted() {
-        return this.info.restricted && !this.player.hasStanding(this.planet.faction.abbrev, this.info.restricted);
-      },
-
-      canAfford() {
-        return this.player.money >= this.price;
-      },
-
-      hasRoom() {
-        return this.ship.availableHardPoints() > 0;
-      },
-
-      marketHasUpgrade() {
-        if (this.info.hasOwnProperty('markets')) {
-          for (const trait of this.info.markets) {
-            if (this.planet.hasTrait(trait)) {
-              return true;
-            }
-          }
-
-          return false;
-        }
-
-        return true;
-      },
-
-      isAvailable() {
-        return !this.isRestricted && this.canAfford && this.hasRoom && this.marketHasUpgrade;
-      },
-
-      hasUpgrade() {
-        return this.ship.hasAddOn(this.type);
-      },
-    },
-
-    methods: {
-      buyAddOn() {
-        this.player.debit(this.price);
-        this.player.ship.installAddOn(this.type);
-        this.game.save_game();
-      },
-
-      sellAddOn() {
-        this.player.ship.removeAddOn(this.type);
-        this.player.credit(this.sellPrice);
-        this.game.save_game();
-      },
-    },
-
-    template: `
+  `,
+    });
+    vue_1.default.component('addon', {
+        props: ['type'],
+        data() {
+            return {
+                detail: false,
+                buy: false,
+                sell: false,
+            };
+        },
+        computed: {
+            planet() { return window.game.here; },
+            player() { return window.game.player; },
+            ship() { return window.game.player.ship; },
+            info() { return data_1.default.addons[this.type]; },
+            sellPrice() { return Math.ceil(0.7 * this.price); },
+            fuelRate() {
+                const info = this.info;
+                if (t.isPropulsion(info)) {
+                    if (info.burn_rate) {
+                        return (info.burn_rate / data_1.default.hours_per_turn) + ' tonnes/hour';
+                    }
+                    else if (info.burn_rate_pct) {
+                        return (info.burn_rate_pct * 100) + '% reduction';
+                    }
+                }
+                return '';
+            },
+            price() {
+                return Math.ceil(this.planet.addonPrice(this.type, this.player));
+            },
+            isRestricted() {
+                return !!this.info.restricted
+                    && !this.player.hasStanding(this.planet.faction.abbrev, this.info.restricted);
+            },
+            canAfford() {
+                return this.player.money >= this.price;
+            },
+            hasRoom() {
+                return this.ship.availableHardPoints() > 0;
+            },
+            marketHasUpgrade() {
+                if (this.info.hasOwnProperty('markets')) {
+                    for (const trait of (this.info.markets || [])) {
+                        if (this.planet.hasTrait(trait)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                return true;
+            },
+            isAvailable() {
+                return !this.isRestricted && this.canAfford && this.hasRoom && this.marketHasUpgrade;
+            },
+            hasUpgrade() {
+                return this.ship.hasAddOn(this.type);
+            },
+        },
+        methods: {
+            buyAddOn() {
+                this.player.debit(this.price);
+                this.player.ship.installAddOn(this.type);
+                window.game.save_game();
+            },
+            sellAddOn() {
+                this.player.ship.removeAddOn(this.type);
+                this.player.credit(this.sellPrice);
+                window.game.save_game();
+            },
+        },
+        template: `
 <div>
   <button @click="detail=!detail" type="button" class="btn btn-block my-3"
     :class="{
@@ -186,6 +174,6 @@ define(function(require, exports, module) {
     <button @click="sellAddOn" slot="footer" data-dismiss="modal" class="btn btn-dark">Yes</button>
   </modal>
 </div>
-    `,
-  });
+  `,
+    });
 });

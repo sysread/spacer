@@ -5,7 +5,7 @@ define(function(require, exports, module) {
   const Ship     = require('ship');
   const Physics  = require('physics');
   const system   = require('system');
-  const Vue      = require('vendor/vue');
+  const Vue      = require('vue');
   const data     = require('data');
   const game     = require('game');
   const util     = require('util');
@@ -15,7 +15,7 @@ define(function(require, exports, module) {
   const Event    = require('events');
   const Layout   = require('component/layout');
 
-  require('vendor/TweenMax.min');
+  require('gsap');
   require('component/global');
   require('component/common');
   require('component/combat');
@@ -528,7 +528,7 @@ define(function(require, exports, module) {
           <tr>
             <td class="text-left border-0">{{plan.days_left|unit('days')}}</td>
             <td class="text-center border-0">{{plan.velocity/1000|R|csn|unit('km/s')}}</td>
-            <td class="text-right border-0">{{plan.auRemaining()|R(2)|sprintf('%0.2f')|unit('AU')}}</td>
+            <td class="text-right border-0">{{plan.auRemaining()|R(2)|unit('AU')}}</td>
           </tr>
           <tr v-if="!show_plot()">
             <td colspan="3">

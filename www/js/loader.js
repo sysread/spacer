@@ -39,7 +39,8 @@ requirejs([],
 
       requirejs.config({
         paths: {
-          'vendor/vue': vue
+          'vendor/vue': vue,
+          'gsap': 'vendor/TweenMax.min',
         }
       });
     });

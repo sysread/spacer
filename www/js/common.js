@@ -126,6 +126,7 @@ define(["require", "exports"], function (require, exports) {
     exports.standings = Object.keys(exports.Standing);
     exports.isRaw = (res) => res.mine !== undefined;
     exports.isCraft = (res) => res.recipe !== undefined;
+    exports.isPropulsion = (addon) => addon.is_propulsion;
     exports.isOffensive = (addon) => addon.is_offensive;
     exports.isDefensive = (addon) => addon.is_defensive;
     exports.isMisc = (addon) => addon.is_misc;

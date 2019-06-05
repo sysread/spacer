@@ -1,22 +1,50 @@
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-define(["require", "exports", "vue", "../physics", "../system", "./global", "./common", "./card", "./newgame", "./summary", "./news", "./work", "./commerce", "./fabricators", "./shipyard", "./ships", "./addons", "./navcomp", "./options", "./transit", "./status", "./debug"], function (require, exports, vue_1, physics_1, system_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    vue_1 = __importDefault(vue_1);
-    physics_1 = __importDefault(physics_1);
-    system_1 = __importDefault(system_1);
-    window.Physics = physics_1.default;
-    window.System = system_1.default;
-    vue_1.default.component('Content', {
-        props: ['page'],
-        methods: {
-            open(page) {
-                this.$emit('open', page);
-            },
-        },
-        template: `
+import Vue from "vue";
+import * as util from "../util";
+import * as t from "../common";
+import { resources } from "../resource";
+
+import Physics from "../physics";
+import System from "../system";
+
+declare var window: {
+  game:    any;
+  Physics: Physics;
+  System:  any;
+}
+
+window.Physics = Physics;
+window.System  = System;
+
+import "./global";
+import "./common";
+import "./card";
+
+import "./newgame";
+import "./summary";
+import "./news";
+import "./work";
+import "./commerce";
+import "./fabricators";
+import "./shipyard";
+import "./ships";
+import "./addons";
+import "./navcomp";
+import "./options";
+import "./transit";
+import "./status";
+import "./debug";
+
+
+Vue.component('Content', {
+  props: ['page'],
+
+  methods: {
+    open(page:string) {
+      this.$emit('open', page);
+    },
+  },
+
+  template: `
     <div id="spacer-content" class="container-fluid pt-3 pb-1 mt-5">
       <new-game           v-if="page == 'newgame'"     @open="open" />
       <SummaryPage        v-if="page == 'summary'"     @open="open" />
@@ -34,5 +62,4 @@ define(["require", "exports", "vue", "../physics", "../system", "./global", "./c
       <Debug         v-else-if="page == 'debug'"       @open="open" />
     </div>
   `,
-    });
 });

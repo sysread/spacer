@@ -1,118 +1,102 @@
-define(function(require, exports, module) {
-  "use strict"
-
-  const util = require('util');
-  const Vue  = require('vendor/vue');
-
-  require('component/global');
-  require('component/common');
-  require('component/modal');
-  require('component/row');
-  require('component/exchange');
-
-  Vue.component('work', {
-    data: function() {
-      return {
-        days:        1,
-        task:        null,
-        result:      null,
-        hitQuota:    false,
-        isReady:     false,
-        isFinished:  false,
-        turnsWorked: 0,
-        contract:    null,
-      };
-    },
-
-    computed: {
-      player()        { return this.game.player },
-      raise()         { return this.player.getStandingPriceAdjustment(this.planet.faction.abbrev) },
-      planet()        { return this.game.here },
-      tasks()         { return this.planet.work_tasks.map(name => this.data.work.find(work => work.name == name)) },
-      payRate()       { if (this.task) return this.getPayRate(this.task) },
-      pay()           { if (this.task) return this.payRate * this.days },
-      turns()         { return this.days * (24 / this.data.hours_per_turn) },
-      percent()       { return Math.min(100, Math.ceil(this.turnsWorked / this.turns * 100)) },
-      timeSpent()     { return Math.floor(this.turnsWorked / this.data.turns_per_day) },
-      hasPicketLine() { return this.planet.hasPicketLine() },
-    },
-
-    methods: {
-      getPayRate: function(task) {
-        return this.planet.payRate(this.player, task);
-      },
-
-      hasTask: function(task) {
-        if (this.task === null) return false;
-        return task ? this.task.name === task.name : true;
-      },
-
-      clearTask: function() {
-        this.days        = 1;
-        this.task        = null;
-        this.result      = null;
-        this.hitQuota    = false;
-        this.isReady     = false;
-        this.isFinished  = false;
-        this.turnsWorked = 0;
-      },
-
-      setTask: function(task) {
-        this.clearTask();
-        this.task = task;
-        this.isReady = true;
-      },
-
-      performWork: function() {
-        if (this.isReady && !this.isFinished) {
-          this.isReady = false;
-          const reward = this.planet.work(this.player, this.task, this.days);
-          this.hitQuota = Math.floor(reward.items.sum()) > 0 ? true : false;
-
-          let timer; timer = window.setInterval(() => {
-            ++this.turnsWorked;
-
-            if (this.turnsWorked == this.turns) {
-              window.clearTimeout(timer);
-              this.isFinished = true;
-              this.player.credit(reward.pay);
-              this.result = reward.items;
-
-              // Working increases standing no higher than "Respected"
-              if (!this.player.hasStanding(this.planet.faction.abbrev, 'Admired')) {
-                this.player.incStanding(this.planet.faction.abbrev, 1);
-              }
-
-              this.game.turn(this.turns);
-            }
-          }, 350);
-        }
-      },
-
-      completeTask: function() {
-        this.clearTask();
-        this.game.save_game();
-      },
-
-      setContract: function(contract) {
-        this.contract = contract;
-      },
-
-      clearContract: function() {
-        this.contract = null;
-      },
-
-      acceptContract: function() {
-        if (this.contract) {
-          this.contract.mission.accept();
-          this.game.save_game();
-        }
-
-        this.clearContract();
-      },
-    },
-
-    template: `
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+define(["require", "exports", "vue", "../data", "./global", "./common", "./modal", "./row", "./exchange"], function (require, exports, vue_1, data_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    vue_1 = __importDefault(vue_1);
+    data_1 = __importDefault(data_1);
+    vue_1.default.component('work', {
+        data() {
+            return {
+                days: 1,
+                task: undefined,
+                result: undefined,
+                hitQuota: false,
+                isReady: false,
+                isFinished: false,
+                turnsWorked: 0,
+                contract: undefined,
+            };
+        },
+        computed: {
+            player() { return window.game.player; },
+            planet() { return window.game.here; },
+            percent() { return Math.min(100, Math.ceil(this.turnsWorked / this.turns * 100)); },
+            timeSpent() { return Math.floor(this.turnsWorked / data_1.default.turns_per_day); },
+            hasPicketLine() { return this.planet.hasPicketLine(); },
+            turns() { return this.days * (24 / data_1.default.hours_per_turn); },
+            pay() { return (this.task) ? this.payRate * this.days : 0; },
+            payRate() { return this.task ? this.getPayRate(this.task) : 0; },
+            tasks() {
+                const planet = this.planet;
+                return planet.work_tasks.map(name => data_1.default.work.find(work => work.name == name));
+            },
+            raise() {
+                const player = this.player;
+                const planet = this.planet;
+                return player.getStandingPriceAdjustment(planet.faction);
+            },
+        },
+        methods: {
+            getPayRate(task) {
+                return this.planet.payRate(this.player, task);
+            },
+            clearTask() {
+                this.days = 1;
+                this.task = undefined;
+                this.result = undefined;
+                this.hitQuota = false;
+                this.isReady = false;
+                this.isFinished = false;
+                this.turnsWorked = 0;
+            },
+            setTask(task) {
+                this.clearTask();
+                this.task = task;
+                this.isReady = true;
+            },
+            performWork() {
+                if (this.task && this.isReady && !this.isFinished) {
+                    this.isReady = false;
+                    const reward = this.planet.work(this.player, this.task, this.days);
+                    this.hitQuota = Math.floor(reward.items.sum()) > 0 ? true : false;
+                    let timer;
+                    timer = window.setInterval(() => {
+                        ++this.turnsWorked;
+                        if (this.turnsWorked == this.turns) {
+                            window.clearTimeout(timer);
+                            this.isFinished = true;
+                            this.player.credit(reward.pay);
+                            this.result = reward.items;
+                            // Working increases standing no higher than "Respected"
+                            if (!this.player.hasStanding(this.planet.faction.abbrev, 'Admired')) {
+                                this.player.incStanding(this.planet.faction.abbrev, 1);
+                            }
+                            window.game.turn(this.turns);
+                        }
+                    }, 350);
+                }
+            },
+            completeTask() {
+                this.clearTask();
+                window.game.save_game();
+            },
+            setContract(contract) {
+                this.contract = contract;
+            },
+            clearContract() {
+                this.contract = undefined;
+            },
+            acceptContract() {
+                if (this.contract) {
+                    this.contract.mission.accept();
+                    window.game.save_game();
+                }
+                this.clearContract();
+            },
+        },
+        template: `
 <div class="row">
   <Section title="Work crews" class="col-12 col-md-6">
     <p>Despite ever-growing levels of automation, there are many tasks for which
@@ -203,6 +187,6 @@ define(function(require, exports, module) {
     </template>
   </Section>
 </div>
-    `,
-  });
+  `,
+    });
 });

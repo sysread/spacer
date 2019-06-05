@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "ES2015",
     "module": "AMD",
+    "moduleResolution": "node",
     "outDir": "./www/js",
     "allowJs": true,
     "strict": true,
@@ -15,6 +16,8 @@
     "src"
   ],
   "types": [
-    "jquery"
+    "greensock",
+    "jquery",
+    "vue"
   ]
 }

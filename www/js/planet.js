@@ -352,6 +352,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return this.hasCondition("workers' strike");
         }
         payRate(player, task) {
+            if (!task)
+                return 0;
             let rate = this.scale(task.pay);
             rate += rate * player.getStandingPriceAdjustment(this.faction.abbrev);
             rate -= rate * this.faction.sales_tax;

@@ -270,7 +270,7 @@ define(["require", "exports", "./data", "./physics", "./store", "./events", "./u
                     ++count;
                 }
             }
-            return count;
+            return count > 0;
         }
         removeAddOn(addon) {
             this.addons = this.addons.filter(x => { return x !== addon; });
