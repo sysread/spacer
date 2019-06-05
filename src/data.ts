@@ -26,8 +26,8 @@ const data = {
   min_agent_profit:    100, // min credits net profit before a route is attractive
   necessity:           {water: true, food: true, medicine: true, fuel: true},
   craft_fee:           0.2,
-  fabricators:         10, // number of fabricators, each equates to 1 unit of cybernetics
-  fab_health:          30, // number of tics each fabricator can handle before needing to be replaced. be sure to make this higher than the total tics needed to craft a cybernetics unit.
+  fabricators:         5, // number of fabricators, each equates to 1 unit of cybernetics
+  fab_health:          5, // number of tics each fabricator can handle before needing to be replaced. be sure to make this higher than the total tics needed to craft a cybernetics unit.
   grav_deltav_factor:  1.75, // factor by which native gravity is multiplied to get player's sustained deltav tolerance
   initial_ship:        'schooner',
   initial_money:       500,
