@@ -57,6 +57,16 @@ define(function(require, exports, module) {
         return Math.floor(resources[item].value);
       },
 
+      fabHealth() {
+        const place = this.place;
+        if (place) {
+          return util.R((place.fab_health / place.max_fab_health) * 100);
+        }
+        else {
+          return 0;
+        }
+      },
+
       gameTurns(turns) {
         let left = turns;
         let intvl;
@@ -116,6 +126,9 @@ define(function(require, exports, module) {
     Min: {{ minPrice }}
     <br />
     Max: {{ maxPrice }}
+  </span>
+  <span v-else>
+    Fab health: {{ fabHealth() }}%
   </span>
 </div>
 
