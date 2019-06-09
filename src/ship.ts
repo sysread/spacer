@@ -338,7 +338,7 @@ class Ship {
     this.addons.push(addon);
   }
 
-  hasAddOn(addon: t.addon): boolean {
+  hasAddOn(addon: t.addon) {
     let count = 0;
     for (let a of this.addons) {
       if (a === addon) {
@@ -346,7 +346,7 @@ class Ship {
       }
     }
 
-    return count > 0;
+    return count;
   }
 
   removeAddOn(addon: t.addon) {

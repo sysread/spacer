@@ -93,4 +93,5 @@ class Physics {
 }
 
 window.Physics = Physics;
-export = Physics
+
+export = Physics;

@@ -461,7 +461,6 @@ const data = {
     },
     heat_reclaimer:  {
       is_misc:       true,
-      is_propulsion: true,
       is_defensive:  true,
       name:          'Waste heat reclaimation system',
       desc:          "Boosts drive efficiency by 10% by recycling waste heat from the drive and internal electrical systems. A fortunate side benefit is a reduction in visibility to infrared systems, making this a popular an relatively inexpensive way to mask a civilian ship's signature from pirates... and inspectors.",
@@ -472,7 +471,6 @@ const data = {
     },
     ion:             {
       is_misc:       true,
-      is_propulsion: true,
       name:          'Ion drive',
       desc:          'Adds an additional pair of ion drives to the hull, increasing thrust. Care must be taken not to unbalance the ship, however.',
       mass:          20,
@@ -482,7 +480,6 @@ const data = {
     },
     fusion:          {
       is_misc:       true,
-      is_propulsion: true,
       name:          'Fusion drive',
       desc:          'Somewhat reduced in efficiency when installed as a set of external pods, adding a fusion drive to an existing craft can drastically increase thrust and manuevering.',
       mass:          80,

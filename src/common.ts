@@ -269,23 +269,18 @@ export interface DefensiveAddon extends BaseAddon {
   armor?:         number;
 }
 
-export interface PropulsionAddon extends BaseAddon {
-  is_propulsion:  true;
+export interface MiscAddon extends BaseAddon {
+  is_misc:        true;
+  cargo?:         number;
   burn_rate?:     number;
   burn_rate_pct?: number;
   thrust?:        number;
 }
 
-export interface MiscAddon extends BaseAddon {
-  is_misc:        true;
-  cargo?:         number;
-}
-
-export type Addon = OffensiveAddon | DefensiveAddon | PropulsionAddon | MiscAddon;
-export const isPropulsion = (addon: Addon): addon is PropulsionAddon => (<PropulsionAddon>addon).is_propulsion;
-export const isOffensive  = (addon: Addon): addon is OffensiveAddon  => (<OffensiveAddon>addon).is_offensive;
-export const isDefensive  = (addon: Addon): addon is DefensiveAddon  => (<DefensiveAddon>addon).is_defensive;
-export const isMisc       = (addon: Addon): addon is MiscAddon       => (<MiscAddon>addon).is_misc;
+export type Addon = OffensiveAddon | DefensiveAddon | MiscAddon;
+export const isOffensive = (addon: Addon): addon is OffensiveAddon => (<OffensiveAddon>addon).is_offensive;
+export const isDefensive = (addon: Addon): addon is DefensiveAddon => (<DefensiveAddon>addon).is_defensive;
+export const isMisc      = (addon: Addon): addon is MiscAddon      => (<MiscAddon>addon).is_misc;
 
 
 export interface Trait {

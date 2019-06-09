@@ -57,7 +57,7 @@ export function isCraftTask(task: EconTask): task is ImportTask {
 }
 
 
-export interface Contract {
+interface Contract {
   valid_until: number;  // game.turns after which offering expires
   mission:     Mission; // offered mission
 }
@@ -507,10 +507,7 @@ export class Planet {
     return this.hasCondition("workers' strike");
   }
 
-  payRate(player: Person, task?: t.Work) {
-    if (!task)
-      return 0;
-
+  payRate(player: Person, task: t.Work) {
     let rate = this.scale(task.pay);
     rate += rate * player.getStandingPriceAdjustment(this.faction.abbrev);
     rate -= rate * this.faction.sales_tax;

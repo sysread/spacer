@@ -3,7 +3,7 @@
 define(function(require, exports, module) {
   const Person = require('person').Person;
   const Ship   = require('ship');
-  const Vue    = require('vue');
+  const Vue    = require('vendor/vue');
   const util   = require('util');
   const data   = require('data');
 

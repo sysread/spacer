@@ -1,7 +1,7 @@
 define(function(require, exports, module) {
   "use strict"
 
-  const Vue     = require('vue');
+  const Vue     = require('vendor/vue');
   const Physics = require('physics');
 
   require('component/global');

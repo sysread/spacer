@@ -1,7 +1,7 @@
 "use strict"
 
 define(function(require, exports, module) {
-  const Vue     = require('vue');
+  const Vue     = require('vendor/vue');
   const util    = require('util');
   const Physics = require('physics');
   const t       = require('common');

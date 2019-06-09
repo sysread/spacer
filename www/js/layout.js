@@ -8,7 +8,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./physics", "./system", "./util"], function (require, exports, physics_1, system_1, util) {
+define(["require", "exports", "./physics", "system", "./util"], function (require, exports, physics_1, system_1, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     physics_1 = __importDefault(physics_1);

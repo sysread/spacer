@@ -1,7 +1,7 @@
 define(function(require, exports, module) {
   "use strict"
 
-  const Vue  = require('vue');
+  const Vue  = require('vendor/vue');
   const data = require('data');
   const game = require('game');
   const util = require('util');

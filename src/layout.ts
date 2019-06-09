@@ -1,5 +1,5 @@
 import Physics from './physics';
-import system from './system';
+import system from 'system';
 import game from './game';
 import { Point } from './vector';
 import * as util from './util';

@@ -1,14 +1,14 @@
 define(function(require, exports, module) {
   "use strict"
 
-  const Vue     = require('vue');
+  const Vue     = require('vendor/vue');
   const Physics = require('physics');
   const system  = require('system');
   const util    = require('util');
   const NavComp = require('navcomp').NavComp;
   const Layout  = require('component/layout');
 
-  require('gsap');
+  require('vendor/TweenMax.min');
   require('component/global');
   require('component/common');
   require('component/modal');
