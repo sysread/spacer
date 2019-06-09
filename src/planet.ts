@@ -480,7 +480,7 @@ export class Planet {
 
     if (this.fab_health > 0) {
       turns += reduction;
-      this.fab_health -= reduction;
+      this.fab_health -= Math.min(this.fab_health, reduction);
     }
     else {
       turns += resource.craftTurns;

@@ -329,7 +329,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             let turns = 0;
             if (this.fab_health > 0) {
                 turns += reduction;
-                this.fab_health -= reduction;
+                this.fab_health -= Math.min(this.fab_health, reduction);
             }
             else {
                 turns += resource.craftTurns;

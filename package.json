@@ -31,7 +31,6 @@
     },
     "devDependencies": {
         "@types/jquery": "^3.3.29",
-        "typescript": "^3.4.4",
-        "vue-async-computed": "^3.6.1"
+        "typescript": "^3.4.4"
     }
 }
