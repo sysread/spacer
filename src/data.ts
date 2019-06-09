@@ -463,7 +463,7 @@ const data = {
       is_misc:       true,
       is_defensive:  true,
       name:          'Waste heat reclaimation system',
-      desc:          "Boosts drive efficiency by 10% by recycling waste heat from the drive and internal electrical systems. A fortunate side benefit is a reduction in visibility to infrared systems, making this a popular an relatively inexpensive way to mask a civilian ship's signature from pirates... and inspectors.",
+      desc:          "Boosts drive efficiency by 10% by recycling waste heat from the drive and internal electrical systems. A fortunate side benefit is a reduction in visibility to infrared systems, making this a popular and relatively inexpensive way to mask a civilian ship's signature from pirates... and inspectors.",
       mass:          1,
       stealth:       0.08,
       burn_rate_pct: 0.10,
