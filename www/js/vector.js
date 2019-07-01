@@ -11,5 +11,5 @@ define(["require", "exports"], function (require, exports) {
     exports.mul = (a, b) => [a[0] * b[0], a[1] * b[1], a[2] * b[2]];
     exports.div = (a, b) => [a[0] / b[0], a[1] / b[1], a[2] / b[2]];
     exports.length_squared = (p) => Math.pow(p[0], 2) + Math.pow(p[1], 2) + Math.pow(p[2], 2);
-    exports.length = (p) => Math.sqrt(exports.length_squared(p));
+    exports.length = (p) => Math.hypot(p[0], p[1], p[2]);
 });

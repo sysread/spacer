@@ -25,6 +25,18 @@
     <div id="content" />
 
     <script>
+      /*
+      var svgpath;
+      fetch('wasm/svgpath.wasm')
+        .then(response => response.arrayBuffer())
+        .then(bytes => WebAssembly.instantiate(bytes, {
+        }))
+        .then(result => {
+          console.log(result);
+          svgpath=result.instance;
+        });
+      */
+
       // configure requirejs
       require(['js/loader'], () => {
         // wait on deviceready, which configures requirejs to find the correct

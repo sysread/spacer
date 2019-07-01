@@ -1,37 +1,39 @@
 {
-    "name": "com.sysread.spacer",
-    "displayName": "Spacer",
-    "version": "1.0.0",
-    "description": "A thing named Spacer",
-    "main": "index.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "author": "Jeff Ober",
-    "license": "Apache-2.0",
-    "dependencies": {
-        "cordova": "^8.1.2",
-        "cordova-android": "^7.1.4",
-        "cordova-browser": "^5.0.4",
-        "cordova-plugin-device": "^2.0.2",
-        "cordova-plugin-statusbar": "^2.4.2",
-        "npm": "^6.9.0",
-        "sprintf-js": "^1.1.2",
-        "statusbar": "^0.2.0"
-    },
-    "cordova": {
-        "platforms": [
-            "browser",
-            "android"
-        ],
-        "plugins": {
-            "cordova-plugin-statusbar": {},
-            "cordova-plugin-device": {}
-        }
-    },
-    "devDependencies": {
-        "@types/jquery": "^3.3.29",
-        "typescript": "^3.4.4",
-        "vue-async-computed": "^3.6.1"
+  "name": "com.sysread.spacer",
+  "displayName": "Spacer",
+  "version": "1.0.0",
+  "description": "A thing named Spacer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "asbuild:untouched": "asc assembly/index.ts -b build/untouched.wasm -t build/untouched.wat --sourceMap --validate --debug",
+    "asbuild:optimized": "asc assembly/index.ts -b build/optimized.wasm -t build/optimized.wat --sourceMap --validate --optimize",
+    "asbuild": "npm run asbuild:untouched && npm run asbuild:optimized"
+  },
+  "author": "Jeff Ober",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "cordova": "^8.1.2",
+    "cordova-android": "^7.1.4",
+    "cordova-browser": "^5.0.4",
+    "cordova-plugin-device": "^2.0.2",
+    "cordova-plugin-statusbar": "^2.4.2",
+    "npm": "^6.9.0",
+    "sprintf-js": "^1.1.2",
+    "statusbar": "^0.2.0"
+  },
+  "cordova": {
+    "platforms": [
+      "browser",
+      "android"
+    ],
+    "plugins": {
+      "cordova-plugin-statusbar": {},
+      "cordova-plugin-device": {}
     }
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.3.29",
+    "typescript": "^3.4.4"
+  }
 }
