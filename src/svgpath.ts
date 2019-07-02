@@ -1,52 +1,48 @@
-// Adopted from:
-//   https://medium.com/@francoisromain/smooth-a-svg-path-with-cubic-bezier-curves-e37b49d46c74
+// adapted from https://medium.com/@francoisromain/smooth-a-svg-path-with-cubic-bezier-curves-e37b49d46c74
+
+declare var wasm: {
+  svgpath: {
+    ctrlpt_x:      (x: number, length: number, angle: number) => number;
+    ctrlpt_y:      (y: number, length: number, angle: number) => number;
+    ctrlpt_length: (px: number, py: number, nx: number, ny: number) => number;
+    ctrlpt_angle:  (px: number, py: number, nx: number, ny: number, reverse: boolean) => number;
+  }
+}
 
 type point = [number, number];
 
-// The smoothing ratio
-const smoothing = 0.2;
-
 function control_point(current: point, prev: point, next: point, reverse: boolean): string {
-  // When 'current' is the first or last point of the array 'previous' or
-  // 'next' don't exist. Replace with 'current'.
-  prev = prev || current;
-  next = next || current;
-
-  // Properties of the opposed-line
-  const x = next[0] - prev[0];
-  const y = next[1] - prev[1];
-
-  const length = Math.hypot(x, y) * smoothing;
-
-  let angle = Math.atan2(y, x);
-  if (reverse) {
-    angle += Math.PI;
-  }
-
-  // The control point position is relative to the current point
-  const cx = current[0] + Math.cos(angle) * length;
-  const cy = current[1] + Math.sin(angle) * length;
-  return cx + ',' + cy;
+  const length = wasm.svgpath.ctrlpt_length(prev[0], prev[1], next[0], next[1]);
+  const angle  = wasm.svgpath.ctrlpt_angle(prev[0], prev[1], next[0], next[1], false);
+  const x      = wasm.svgpath.ctrlpt_x(current[0], length, angle);
+  const y      = wasm.svgpath.ctrlpt_y(current[1], length, angle);
+  return x + ' ' + y;
 }
 
 export function bezier(points: point[]): string {
   let path = 'M ' + points[0][0] + ',' + points[0][1];
 
-  // add bezier curve command
   for (let i = 1; i < points.length; ++i) {
-    const c1 = control_point(points[i - 1], points[i - 2], points[i], false); // start control point
-    const c2 = control_point(points[i], points[i - 1], points[i + 1], true);  // end control point
-    path += ' C ' + c1 + ' ' + c2 + ' ' + points[i][0] + ',' + points[i][1];
-  }
+    const current = points[i-1];
+    const prev    = points[i-2] || current;
+    const next    = points[i]   || current;
+    const nnext   = points[i+1] || current;
 
-  return path;
-}
+    const c1 = control_point(
+      points[i - 1],
+      points[i - 2] || points[i - 1],
+      points[i],
+      false,
+    );
 
-export function line(points: point[]): string {
-  let path = 'M ' + points[0][0] + ',' + points[0][1];
+    const c2 = control_point(
+      points[i],
+      points[i - 1],
+      points[i + 1] || points[i],
+      true,
+    );
 
-  for (let i = 1; i < points.length; ++i) {
-    path += ' L ' + points[i][0] + ' ' + points[i][1];
+    path += ' C ' + c1 + ',' + c2 + ',' + points[i][0] + ' ' + points[i][1];
   }
 
   return path;

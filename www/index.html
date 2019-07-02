@@ -25,17 +25,15 @@
     <div id="content" />
 
     <script>
-      /*
-      var svgpath;
-      fetch('wasm/svgpath.wasm')
-        .then(response => response.arrayBuffer())
-        .then(bytes => WebAssembly.instantiate(bytes, {
-        }))
-        .then(result => {
-          console.log(result);
-          svgpath=result.instance;
-        });
-      */
+      var wasm = {};
+      function fetch_wasm(label) {
+        fetch('./wasm/' + label + '.wasm')
+          .then(response => response.arrayBuffer())
+          .then(bytes => WebAssembly.instantiate(bytes, {}))
+          .then(result => wasm[label] = result.instance.exports);
+      }
+
+      fetch_wasm('svgpath');
 
       // configure requirejs
       require(['js/loader'], () => {
