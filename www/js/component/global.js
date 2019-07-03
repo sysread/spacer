@@ -6,9 +6,6 @@ define(function(require, exports, module) {
   const data   = require('data');
   const system = require('system');
 
-  const AsyncComputed = require('vendor/vue-async-computed');
-  Vue.use(AsyncComputed);
-
   Vue.mixin({
     data() {
       return {

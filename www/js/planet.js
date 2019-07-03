@@ -324,12 +324,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             if (!resource_1.isCraft(resource)) {
                 throw new Error(`${item} is not craftable`);
             }
-            const reduction = this.fabricationReductionRate();
+            const reduction = this.fabricationReductionRate() * resource.craftTurns;
             let health = this.fab_health;
             let turns = 0;
             if (this.fab_health > 0) {
-                turns += resource.craftTurns * reduction;
-                this.fab_health -= resource.craftTurns * reduction;
+                turns += reduction;
+                this.fab_health -= Math.min(this.fab_health, reduction);
             }
             else {
                 turns += resource.craftTurns;
@@ -343,6 +343,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 const [bought, price] = this.buy('cybernetics', want);
                 this.fab_health += bought * data_1.default.fab_health;
             }
+            this.fab_health = Math.min(this.fab_health, this.max_fab_health);
         }
         /*
          * Work
