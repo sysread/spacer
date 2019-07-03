@@ -5,7 +5,7 @@
   "description": "A thing named Spacer",
   "main": "index.js",
   "scripts": {
-    "build-wasm": "zig build-lib src/*.zig -target wasm32-freestanding --output-dir www/wasm --release-fast --single-threaded && rm www/wasm/*.h && rm www/wasm/*.o"
+    "build-wasm": "cd src; for file in $(ls *.zig); do zig build-lib $file -target wasm32-freestanding --output-dir ../www/wasm --single-threaded; done; cd ..; rm www/wasm/*.h && rm www/wasm/*.o"
   },
   "author": "Jeff Ober",
   "license": "Apache-2.0",

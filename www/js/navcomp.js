@@ -21,74 +21,37 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     const POSITION = 0;
     const VELOCITY = 1;
     class Course {
-        constructor(target, agent, maxAccel, turns, dt) {
+        constructor(target, agent, turns) {
+            this.key = wasm.vector.course_new(turns);
+            this.turns = turns;
             this.target = target;
             this.agent = agent;
-            this.maxAccel = maxAccel;
-            this.turns = turns;
-            this.tflip = (SPT * this.turns) / 2; // seconds to flip point
-            this.accel = this.calculateAcceleration();
-            this.dt = dt || DT;
+            wasm.vector.course_set_initial_position(this.key, agent[POSITION][0], agent[POSITION][1], agent[POSITION][2]);
+            wasm.vector.course_set_initial_velocity(this.key, agent[VELOCITY][0], agent[VELOCITY][1], agent[VELOCITY][2]);
+            wasm.vector.course_set_final_position(this.key, target[POSITION][0], target[POSITION][1], target[POSITION][2]);
+            wasm.vector.course_set_final_velocity(this.key, target[VELOCITY][0], target[VELOCITY][1], target[VELOCITY][2]);
+            this.acc = wasm.vector.course_acceleration(this.key);
+            this.accel = [
+                wasm.vector.course_acceleration_x(this.key),
+                wasm.vector.course_acceleration_y(this.key),
+                wasm.vector.course_acceleration_z(this.key),
+            ];
             this._path = null;
         }
-        export() {
-            return {
-                target: this.target,
-                agent: this.agent,
-                accel: this.accel,
-                maxAccel: this.maxAccel,
-                turns: this.turns,
-            };
-        }
         static import(opt) {
-            return new Course(opt.target, opt.agent, opt.maxAccel, opt.turns);
-        }
-        get acc() {
-            return Vec.clone(this.accel);
-        }
-        // a = (2s / t^2) - (2v / t)
-        calculateAcceleration() {
-            // Calculate portion of target velocity to match by flip point
-            const dvf = Vec.mul_scalar(this.target[VELOCITY], 2 / this.tflip);
-            // Calculate portion of total change in velocity to apply by flip point
-            const dvi = Vec.mul_scalar(Vec.sub(this.agent[VELOCITY], dvf), 2 / this.tflip);
-            let acc = Vec.sub(this.target[POSITION], this.agent[POSITION]); // (2s / 2) for flip point
-            acc = Vec.div_scalar(acc, this.tflip * this.tflip); // t^2
-            acc = Vec.sub(acc, dvi); // less the change in velocity
-            return acc;
+            return new Course(opt.target, opt.agent, opt.turns);
         }
         maxVelocity() {
-            const t = this.tflip;
-            return Vec.length(Vec.mul_scalar(this.accel, t));
+            return wasm.vector.course_max_velocity(this.key);
         }
         path() {
+            wasm.vector.course_build_path(this.key);
             if (!this._path) {
-                let p = this.agent[POSITION]; // initial position
-                let v = this.agent[VELOCITY]; // initial velocity
-                const TI = SPT / this.dt;
-                const vax = Vec.mul_scalar(this.acc, TI); // static portion of change in velocity each TI
-                const dax = Vec.mul_scalar(this.acc, Math.pow(TI, 2) / 2); // static portion of change in position each TI
-                const path = [];
-                let t = 0;
-                // Start with initial position
-                path.push({ position: p, velocity: Vec.length(v) });
-                for (let turn = 0; turn < this.turns; ++turn) {
-                    // Split turn's updates into DT increments to prevent inaccuracies
-                    // creeping into the final result.
-                    for (let i = 0; i < this.dt; ++i) {
-                        t += TI;
-                        if (t > this.tflip) {
-                            v = Vec.sub(v, vax); // decelerate after flip
-                        }
-                        else if (t < this.tflip) {
-                            v = Vec.add(v, vax); // accelerate before flip
-                        }
-                        // Update position
-                        p = Vec.add(p, Vec.add(Vec.mul_scalar(v, TI), dax));
-                    }
-                    path.push({ position: p, velocity: Vec.length(v) });
+                this._path = [];
+                while (wasm.vector.course_next_segment(this.key)) {
+                    const px = wasm.vector.course_segment_position_x(this.key), py = wasm.vector.course_segment_position_y(this.key), pz = wasm.vector.course_segment_position_z(this.key), v = wasm.vector.course_segment_velocity(this.key);
+                    this._path.push({ position: [px, py, pz], velocity: v });
                 }
-                this._path = path;
             }
             return this._path;
         }
@@ -140,7 +103,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 if (a <= this.max) {
                     const target = [end, [0, 0, 0]];
                     const agent = [start_pos, [0, 0, 0]];
-                    const course = new Course(target, agent, a, i, this.dt);
+                    //const course = new Course(target, agent, a, i, this.dt);
+                    const course = new Course(target, agent, i);
                     return new transitplan_1.TransitPlan({
                         origin: this.orig,
                         dest: dest,
@@ -195,7 +159,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 const vFinal = Vec.div_scalar(Vec.sub(dest[turns], dest[turns - 1]), SPT);
                 const target = [dest[turns], vFinal];
                 const agent = [orig[0], vInit];
-                const course = new Course(target, agent, maxAccel, turns, this.dt);
+                //const course        = new Course(target, agent, maxAccel, turns, this.dt);
+                const course = new Course(target, agent, turns);
                 const a = Vec.length(course.accel);
                 if (a > maxAccel)
                     continue;

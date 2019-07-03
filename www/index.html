@@ -27,13 +27,14 @@
     <script>
       var wasm = {};
       function fetch_wasm(label) {
-        fetch('./wasm/' + label + '.wasm')
+        return fetch("./wasm/" + label + ".wasm")
           .then(response => response.arrayBuffer())
           .then(bytes => WebAssembly.instantiate(bytes, {}))
           .then(result => wasm[label] = result.instance.exports);
       }
 
-      fetch_wasm('svgpath');
+      fetch_wasm("svgpath");
+      fetch_wasm("vector");
 
       // configure requirejs
       require(['js/loader'], () => {
