@@ -13,7 +13,7 @@ type point = [number, number];
 
 function control_point(current: point, prev: point, next: point, reverse: boolean): string {
   const length = wasm.svgpath.ctrlpt_length(prev[0], prev[1], next[0], next[1]);
-  const angle  = wasm.svgpath.ctrlpt_angle(prev[0], prev[1], next[0], next[1], false);
+  const angle  = wasm.svgpath.ctrlpt_angle(prev[0], prev[1], next[0], next[1], reverse);
   const x      = wasm.svgpath.ctrlpt_x(current[0], length, angle);
   const y      = wasm.svgpath.ctrlpt_y(current[1], length, angle);
   return x + ' ' + y;
