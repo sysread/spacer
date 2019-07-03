@@ -63,28 +63,22 @@ pub const Course = struct {
 
         var t: f64 = 0;
         var turn: f64 = 0;
-        while (turn < self.turns) {
+        while (turn < self.turns) : (turn += 1) {
             // Split turn's updates into DT increments to prevent inaccuracies
             // creeping into the final result.
             var i: f64 = 0;
-            while (i < DT) {
+            while (i < DT) : (i += 1) {
                 t += TI;
 
                 // Update velocity
-                if (t < self.tflip) {
-                    v = v.add(vax); // accelerate before the flip
-                } else {
-                    v = v.sub(vax); // decelerate after the flip
-                }
+                v = if (t < self.tflip) v.add(vax) // accelerate before the flip
+                    else v.sub(vax); // decelerate after the flip
 
                 // Update position
                 p = p.add(v.mul_scalar(TI).add(dax));
-
-                i += 1;
             }
 
             self.path.append(Segment{ .position = p.clone(), .velocity = v.clone() }) catch unreachable;
-            turn += 1;
         }
 
         self.iter = self.path.iterator();
