@@ -1035,7 +1035,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
         }
         refreshPassengerContracts() {
-            const want = util.getRandomInt(0, this.scale(5));
+            const want = util.getRandomInt(0, this.scale(3));
             const dests = t.bodies.filter(t => t != this.body);
             for (const body of t.bodies) {
                 if (body != this.body) {

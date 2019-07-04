@@ -124,13 +124,8 @@ define(function(require, exports, module) {
     watch: {
       dest() {
         if (this.dest) {
-          const transits = this.navcomp.getTransitsTo(this.dest);
-
-          if (transits.length > 0) {
-            this.transit = transits[0];
-          }
-        }
-        else {
+          this.transit = this.navcomp.getFastestTransitTo(this.dest) || null;
+        } else {
           this.transit = null;
         }
 

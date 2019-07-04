@@ -223,7 +223,7 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                         if (profitPerUnit <= 0) {
                             continue;
                         }
-                        const transit = navComp.guestimate(dest);
+                        const transit = navComp.getFastestTransitTo(dest);
                         if (transit == undefined) {
                             continue;
                         }
@@ -251,7 +251,7 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
             navComp.dt = 10;
             let best;
             for (const dest of t.bodies) {
-                const transit = navComp.guestimate(dest);
+                const transit = navComp.getFastestTransitTo(dest);
                 if (transit == undefined)
                     continue;
                 if (best != undefined && best.turns > transit.turns) {

@@ -32,7 +32,7 @@ pub const Course = struct {
             var dvi = self.initial.velocity.sub(dvf).mul_scalar(2).div_scalar(t);
 
             var a = self.final.position.sub(self.initial.position) // (2s / 2 = s) for flip point
-                .div_scalar(math.pow(f64, self.tflip, 2)) // t^2
+                .div_scalar(self.tflip * self.tflip) // t^2
                 .sub(dvi); // less the change in velocity
 
             self.accel = a;
@@ -58,7 +58,7 @@ pub const Course = struct {
         var v = self.initial.velocity; // initial velocity
 
         var vax = self.accel.mul_scalar(TI); // static portion of change in velocity each TI
-        var dax = self.accel.mul_scalar(math.pow(f64, TI, 2)).div_scalar(2); // static portion of change in position each TI
+        var dax = self.accel.mul_scalar(TI * TI).div_scalar(2); // static portion of change in position each TI
 
         // Start with initial position
         self.path.append(Segment{ .position = p.clone(), .velocity = v.clone() }) catch unreachable;
@@ -82,6 +82,11 @@ pub const Course = struct {
 
             self.path.append(Segment{ .position = p.clone(), .velocity = v.clone() }) catch unreachable;
         }
+
+        self.path.append(Segment{
+            .position = self.final.position.clone(),
+            .velocity = self.final.velocity.clone(),
+        }) catch unreachable;
 
         self.iter = self.path.iterator();
     }
@@ -155,7 +160,7 @@ pub const Vector = struct {
     }
 
     pub fn length_squared(self: *Vector) f64 {
-        return math.pow(f64, self.x, 2) + math.pow(f64, self.y, 2) + math.pow(f64, self.z, 2);
+        return self.x * self.x + self.y * self.y + self.z * self.z;
     }
 
     pub fn length(self: *Vector) f64 {
@@ -232,13 +237,57 @@ export fn course_max_velocity(key: usize) f64 {
     return course_get(key).max_velocity();
 }
 
+// Boy, this is ugly, but it sure is faster with stack variables than
+// allocating heap space for parameters to be passed as an array from JS.
+export fn course_accel_fast(turns: f64, pxi: f64, pyi: f64, pzi: f64, vxi: f64, vyi: f64, vzi: f64, pxf: f64, pyf: f64, pzf: f64, vxf: f64, vyf: f64, vzf: f64, ptr: *[*]f64, len: *usize) bool {
+    const path = ArrayList(Segment).init(A);
+    defer path.deinit();
+
+    var course = Course{
+        .initial = Segment{
+            .position = Vector{ .x = pxi, .y = pyi, .z = pzi },
+            .velocity = Vector{ .x = vxi, .y = vyi, .z = vzi },
+        },
+        .final = Segment{
+            .position = Vector{ .x = pxf, .y = pyf, .z = pzf },
+            .velocity = Vector{ .x = vxf, .y = vyf, .z = vzf },
+        },
+        .turns = turns,
+        .tflip = (SPT * turns) / 2,
+        .accel_set = false,
+        .accel = Vector{ .x = 0, .y = 0, .z = 0 },
+        .iter = null,
+        .current = null,
+        .path = path,
+    };
+
+    course.set_required_acceleration();
+
+    var accel = course.accel;
+    const out = [5]f64{
+        course.max_velocity(),
+        accel.length(),
+        accel.x,
+        accel.y,
+        accel.z,
+    };
+
+    const result = A.alloc(f64, 5) catch unreachable;
+    std.mem.copy(f64, result, out[0..5]);
+
+    ptr.* = result.ptr;
+    len.* = result.len;
+
+    return true;
+}
+
 export fn course_accel(key: usize, ptr: *[*]f64, len: *usize) bool {
     const course = course_get(key);
     course.set_required_acceleration();
 
-    const accel = course.accel;
+    var accel = course.accel;
     const out = [4]f64{
-        course_get(key).accel.length(),
+        accel.length(),
         accel.x,
         accel.y,
         accel.z,

@@ -1,28 +1,32 @@
 import data  from './data';
 import Physics from './physics';
-import { NavComp, Course, SavedCourse } from './navcomp';
+import { NavComp, Trajectory, Acceleration, Body, calculate_trajectory } from './navcomp';
 import { Point, length } from './vector';
 import * as util from './util';
 import * as t from './common';
 
 export interface NewTransitPlanArgs {
-  course: Course;
+  turns:  number;
+  acc:    Acceleration;
   fuel:   number;
   start:  Point;
   end:    Point;
   origin: t.body;
   dest:   t.body;
   dist:   number;
+  initial: Body;
+  final:   Body;
 }
 
 export interface SavedTransitPlan extends NewTransitPlanArgs {
   current_turn: number;
+  _course: Trajectory;
 }
 
 type TransitPlanArgs = SavedTransitPlan | NewTransitPlanArgs;
 
 function isNewTransitPlan(opt: TransitPlanArgs): opt is NewTransitPlanArgs {
-  return (<NewTransitPlanArgs>opt).course != undefined;
+  return (<SavedTransitPlan>opt).current_turn == undefined;
 }
 
 function isSavedTransitPlan(opt: TransitPlanArgs): opt is SavedTransitPlan {
@@ -30,41 +34,44 @@ function isSavedTransitPlan(opt: TransitPlanArgs): opt is SavedTransitPlan {
 }
 
 export class TransitPlan {
-  course:       Course;
+  turns:        number;
   fuel:         number;
   start:        Point;
   end:          Point;
   origin:       t.body;
   dest:         t.body;
   dist:         number;
+  acc:          Acceleration;
+  _course?:     Trajectory;
   current_turn: number;
 
+  initial: Body;
+  final:   Body;
+
   constructor(opt: TransitPlanArgs) {
-    this.fuel   = opt.fuel;   // fuel used during trip
-    this.start  = opt.start;  // start point of transit
-    this.end    = opt.end;    // final point of transit
-    this.origin = opt.origin; // origin body name
-    this.dest   = opt.dest;   // destination body name
-    this.dist   = opt.dist;   // trip distance in meters
+    this.turns        = opt.turns;  // total turns to complete trip
+    this.fuel         = opt.fuel;   // fuel used during trip
+    this.start        = opt.start;  // start point of transit
+    this.end          = opt.end;    // final point of transit
+    this.origin       = opt.origin; // origin body name
+    this.dest         = opt.dest;   // destination body name
+    this.dist         = opt.dist;   // trip distance in meters
+    this.acc          = opt.acc;
+    this.current_turn = 0;
+
+    this.initial = opt.initial;
+    this.final   = opt.final;
 
     if (isSavedTransitPlan(opt)) {
-      this.course = Course.import(opt.course);
       this.current_turn = opt.current_turn;
-    }
-    else if (isNewTransitPlan(opt)) {
-      this.course = opt.course;
-      this.current_turn = 0;
-    }
-    else {
-      throw new Error('invalid transit plan args');
+      this._course = opt._course;
     }
   }
 
-  get turns()        { return this.course.turns } // turns
-  get accel()        { return length(this.course.accel) } // m/s/s
+  get maxVelocity()  { return this.course.max_velocity }
+  get path()         { return this.course.path }
+  get accel()        { return this.acc.length } // m/s/s
   get accel_g()      { return this.accel / Physics.G }
-  get path()         { return this.course.path() }
-  get maxVelocity()  { return this.course.maxVelocity() }
   get hours()        { return this.turns * data.hours_per_turn } // hours
   get left()         { return this.turns - this.current_turn }
   get currentTurn()  { return this.current_turn }
@@ -79,6 +86,14 @@ export class TransitPlan {
   get velocity()     { return this.path[this.current_turn].velocity }
   get au()           { return this.dist / Physics.AU }
   get km()           { return this.dist / 1000 }
+
+  get course() {
+    if (this._course == undefined) {
+      this._course = calculate_trajectory(this.turns, this.initial, this.final);
+    }
+
+    return this._course;
+  }
 
   get days_left() {
     return Math.ceil(this.left * data.hours_per_turn / 24);

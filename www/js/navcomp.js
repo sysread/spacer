@@ -15,117 +15,76 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     system_1 = __importDefault(system_1);
     physics_1 = __importDefault(physics_1);
     Vec = __importStar(Vec);
+    const ARG_2_U32 = 2 * Uint32Array.BYTES_PER_ELEMENT;
+    const RES_4_F64 = 4 * Float64Array.BYTES_PER_ELEMENT;
+    const RES_5_F64 = 5 * Float64Array.BYTES_PER_ELEMENT;
+    const SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
+    const DT = 200; // frames per turn for euler integration
+    const TI = SPT / DT; // seconds per frame
+    const POSITION = 0;
+    const VELOCITY = 1;
+    // See comment about ugliness in navcomp.zig
+    function calculate_acceleration_fast(turns, initial, final) {
+        wasm.navcomp.course_accel_fast(turns, initial.position[0], initial.position[1], initial.position[2], initial.velocity[0], initial.velocity[1], initial.velocity[2], final.position[0], final.position[1], final.position[2], final.velocity[0], final.velocity[1], final.velocity[2], ptr, RES_5_F64);
+        const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + ARG_2_U32));
+        const [maxvel, len, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + RES_5_F64));
+        return {
+            vector: [x, y, z],
+            length: len,
+            maxvel: maxvel,
+        };
+    }
+    exports.calculate_acceleration_fast = calculate_acceleration_fast;
+    const ptr = wasm.navcomp.alloc(RES_4_F64);
     function calculate_acceleration(turns, initial, final) {
         const key = wasm.navcomp.course_new(turns);
-        wasm.navcomp.course_set_initial_position(key, ...initial[POSITION]);
-        wasm.navcomp.course_set_initial_velocity(key, ...initial[VELOCITY]);
-        wasm.navcomp.course_set_final_position(key, ...final[POSITION]);
-        wasm.navcomp.course_set_final_velocity(key, ...final[VELOCITY]);
-        const size_arg = 2 * Uint32Array.BYTES_PER_ELEMENT;
-        const size_res = 4 * Float64Array.BYTES_PER_ELEMENT;
-        const ptr = wasm.navcomp.alloc(size_res);
-        wasm.navcomp.course_accel(key, ptr, size_res);
-        const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + size_arg));
-        const [len, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + size_res));
-        wasm.navcomp.free(ptr, size_arg);
+        wasm.navcomp.course_set_initial_position(key, ...initial.position);
+        wasm.navcomp.course_set_initial_velocity(key, ...initial.velocity);
+        wasm.navcomp.course_set_final_position(key, ...final.position);
+        wasm.navcomp.course_set_final_velocity(key, ...final.velocity);
+        const maxvel = wasm.navcomp.course_max_velocity(key);
+        //const ptr = wasm.navcomp.alloc(RES_4_F64);
+        wasm.navcomp.course_accel(key, ptr, RES_4_F64);
+        const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + ARG_2_U32));
+        const [len, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + RES_4_F64));
+        //wasm.navcomp.free(ptr, ARG_4_F64);
         wasm.navcomp.course_del(key);
         return {
-            length: len,
             vector: [x, y, z],
+            length: len,
+            maxvel: maxvel,
         };
     }
     exports.calculate_acceleration = calculate_acceleration;
-    function calculate_path(turns, initial, final) {
+    function calculate_trajectory(turns, initial, final) {
         const key = wasm.navcomp.course_new(turns);
-        wasm.navcomp.course_set_initial_position(key, ...initial[POSITION]);
-        wasm.navcomp.course_set_initial_velocity(key, ...initial[VELOCITY]);
-        wasm.navcomp.course_set_final_position(key, ...final[POSITION]);
-        wasm.navcomp.course_set_final_velocity(key, ...final[VELOCITY]);
+        wasm.navcomp.course_set_initial_position(key, ...initial.position);
+        wasm.navcomp.course_set_initial_velocity(key, ...initial.velocity);
+        wasm.navcomp.course_set_final_position(key, ...final.position);
+        wasm.navcomp.course_set_final_velocity(key, ...final.velocity);
         wasm.navcomp.course_build_path(key);
-        const size_arg = 2 * Uint32Array.BYTES_PER_ELEMENT;
-        const size_res = 4 * Float64Array.BYTES_PER_ELEMENT;
-        const ptr = wasm.navcomp.alloc(size_res);
+        const max_velocity = wasm.navcomp.course_max_velocity(key);
+        //const ptr = wasm.navcomp.alloc(RES_4_F64);
         const path = [];
-        for (let i = 0; i < turns + 1; ++i) { // turns+1 because initial position is the first segment
-            const result = wasm.navcomp.course_segment(key, ptr, size_res);
+        for (let i = 0; i < turns + 2; ++i) { // turns+2 because initial is first, final is last, path is in the middle
+            const result = wasm.navcomp.course_segment(key, ptr, RES_4_F64);
             if (result) {
-                const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + size_arg));
-                const [vel, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + size_res));
+                const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + ARG_2_U32));
+                const [vel, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + RES_4_F64));
                 path.push({
                     position: [x, y, z],
                     velocity: vel,
                 });
             }
         }
-        wasm.navcomp.free(ptr, size_arg);
+        //wasm.navcomp.free(ptr, ARG_4_F64);
         wasm.navcomp.course_del(key);
-        return path;
+        return {
+            max_velocity: max_velocity,
+            path: path,
+        };
     }
-    exports.calculate_path = calculate_path;
-    const SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
-    const DT = 200; // frames per turn for euler integration
-    const TI = SPT / DT; // seconds per frame
-    const POSITION = 0;
-    const VELOCITY = 1;
-    class Course {
-        constructor(target, agent, turns) {
-            this.key = wasm.navcomp.course_new(turns);
-            this.turns = turns;
-            this.target = target;
-            this.agent = agent;
-            wasm.navcomp.course_set_initial_position(this.key, agent[POSITION][0], agent[POSITION][1], agent[POSITION][2]);
-            wasm.navcomp.course_set_initial_velocity(this.key, agent[VELOCITY][0], agent[VELOCITY][1], agent[VELOCITY][2]);
-            wasm.navcomp.course_set_final_position(this.key, target[POSITION][0], target[POSITION][1], target[POSITION][2]);
-            wasm.navcomp.course_set_final_velocity(this.key, target[VELOCITY][0], target[VELOCITY][1], target[VELOCITY][2]);
-            [this.acc, this.accel] = Course.fetch_accel(this.key);
-            this._path = null;
-        }
-        static import(opt) {
-            return new Course(opt.target, opt.agent, opt.turns);
-        }
-        static fetch_accel(key) {
-            const size_arg = 2 * Uint32Array.BYTES_PER_ELEMENT;
-            const size_res = 4 * Float64Array.BYTES_PER_ELEMENT;
-            const ptr = wasm.navcomp.alloc(size_res);
-            wasm.navcomp.course_accel(key, ptr, size_res);
-            const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + size_arg));
-            const [len, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + size_res));
-            wasm.navcomp.free(ptr, size_arg);
-            return [len, [x, y, z]];
-        }
-        static fetch_next_segment(key) {
-            const size_arg = 2 * Uint32Array.BYTES_PER_ELEMENT;
-            const size_res = 4 * Float64Array.BYTES_PER_ELEMENT;
-            const ptr = wasm.navcomp.alloc(size_res);
-            const result = wasm.navcomp.course_segment(key, ptr, size_res);
-            const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + size_arg));
-            const [vel, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + size_res));
-            wasm.navcomp.free(ptr, size_arg);
-            if (result) {
-                return {
-                    position: [x, y, z],
-                    velocity: vel,
-                };
-            }
-            //wasm.navcomp.course_del(key);
-            return null;
-        }
-        maxVelocity() {
-            return wasm.navcomp.course_max_velocity(this.key);
-        }
-        path() {
-            wasm.navcomp.course_build_path(this.key);
-            if (!this._path) {
-                this._path = [];
-                let segment;
-                while ((segment = Course.fetch_next_segment(this.key)) != null) {
-                    this._path.push(segment);
-                }
-            }
-            return this._path;
-        }
-    }
-    exports.Course = Course;
+    exports.calculate_trajectory = calculate_trajectory;
     class NavComp {
         constructor(player, orig, showAll, fuelTarget, nominal) {
             this.player = player;
@@ -155,36 +114,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 }
             }
             return this.data[dest];
-        }
-        // TODO this does not match Course.calculateAcceleration() in the slightest.
-        guestimate(dest) {
-            const max_turns = data_1.default.turns_per_day * 365;
-            const start_pos = system_1.default.position(this.orig);
-            const start_time = system_1.default.time.getTime();
-            for (let i = 1; i < max_turns; ++i) {
-                const t = i * data_1.default.hours_per_turn * 3600;
-                const end = system_1.default.position(dest, start_time + t);
-                const s = physics_1.default.distance(start_pos, end);
-                const t_flip = Math.ceil(t / 2);
-                const s_flip = s / 2;
-                const v = (2 * s_flip) / t_flip;
-                const a = Math.abs(((2 * s_flip) / Math.pow(t_flip, 2)) - ((2 * v) / t_flip));
-                if (a <= this.max) {
-                    const target = [end, [0, 0, 0]];
-                    const agent = [start_pos, [0, 0, 0]];
-                    //const course = new Course(target, agent, a, i, this.dt);
-                    const course = new Course(target, agent, i);
-                    return new transitplan_1.TransitPlan({
-                        origin: this.orig,
-                        dest: dest,
-                        start: start_pos,
-                        end: end,
-                        dist: s,
-                        fuel: this.player.ship.burnRate(a) * i,
-                        course: course,
-                    });
-                }
-            }
         }
         getFastestTransitTo(dest) {
             const transits = this.astrogator(dest);
@@ -226,13 +155,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 const availAcc = thrustPerTurn / mass;
                 const maxAccel = Math.min(bestAcc, availAcc);
                 const vFinal = Vec.div_scalar(Vec.sub(dest[turns], dest[turns - 1]), SPT);
-                const target = [dest[turns], vFinal];
-                const agent = [orig[0], vInit];
-                const course = new Course(target, agent, turns);
-                const a = Vec.length(course.accel);
-                if (a > maxAccel)
+                const target = { position: dest[turns], velocity: vFinal };
+                const agent = { position: orig[0], velocity: vInit };
+                const a = calculate_acceleration_fast(turns, agent, target);
+                if (a.length > maxAccel)
                     continue;
-                const fuelUsed = a / availAcc * fuelPerTurn * turns * 0.99; // `* 0.99` to work around rounding error
+                const fuelUsed = a.length / availAcc * fuelPerTurn * turns * 0.99; // `* 0.99` to work around rounding error
                 const fuelUsedPerTurn = fuelUsed / turns;
                 if (fuelUsed > fuel)
                     continue;
@@ -243,13 +171,16 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                     continue;
                 }
                 yield new transitplan_1.TransitPlan({
+                    turns: turns,
+                    initial: agent,
+                    final: target,
                     origin: this.orig,
                     dest: destination,
                     start: orig[0],
                     end: dest[turns],
                     dist: distance,
                     fuel: fuelUsed,
-                    course: course,
+                    acc: a,
                 });
             }
         }

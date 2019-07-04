@@ -305,7 +305,7 @@ export class Agent extends Person {
             continue;
           }
 
-          const transit = navComp.guestimate(dest);
+          const transit = navComp.getFastestTransitTo(dest);
 
           if (transit == undefined) {
             continue;
@@ -340,7 +340,7 @@ export class Agent extends Person {
     let best: TransitPlan | undefined;
 
     for (const dest of t.bodies) {
-      const transit = navComp.guestimate(dest);
+      const transit = navComp.getFastestTransitTo(dest);
 
       if (transit == undefined)
         continue;

@@ -8,43 +8,40 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./physics", "./navcomp", "./vector", "./util"], function (require, exports, data_1, physics_1, navcomp_1, vector_1, util) {
+define(["require", "exports", "./data", "./physics", "./navcomp", "./util"], function (require, exports, data_1, physics_1, navcomp_1, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     physics_1 = __importDefault(physics_1);
     util = __importStar(util);
     function isNewTransitPlan(opt) {
-        return opt.course != undefined;
+        return opt.current_turn == undefined;
     }
     function isSavedTransitPlan(opt) {
         return opt.current_turn != undefined;
     }
     class TransitPlan {
         constructor(opt) {
+            this.turns = opt.turns; // total turns to complete trip
             this.fuel = opt.fuel; // fuel used during trip
             this.start = opt.start; // start point of transit
             this.end = opt.end; // final point of transit
             this.origin = opt.origin; // origin body name
             this.dest = opt.dest; // destination body name
             this.dist = opt.dist; // trip distance in meters
+            this.acc = opt.acc;
+            this.current_turn = 0;
+            this.initial = opt.initial;
+            this.final = opt.final;
             if (isSavedTransitPlan(opt)) {
-                this.course = navcomp_1.Course.import(opt.course);
                 this.current_turn = opt.current_turn;
-            }
-            else if (isNewTransitPlan(opt)) {
-                this.course = opt.course;
-                this.current_turn = 0;
-            }
-            else {
-                throw new Error('invalid transit plan args');
+                this._course = opt._course;
             }
         }
-        get turns() { return this.course.turns; } // turns
-        get accel() { return vector_1.length(this.course.accel); } // m/s/s
+        get maxVelocity() { return this.course.max_velocity; }
+        get path() { return this.course.path; }
+        get accel() { return this.acc.length; } // m/s/s
         get accel_g() { return this.accel / physics_1.default.G; }
-        get path() { return this.course.path(); }
-        get maxVelocity() { return this.course.maxVelocity(); }
         get hours() { return this.turns * data_1.default.hours_per_turn; } // hours
         get left() { return this.turns - this.current_turn; }
         get currentTurn() { return this.current_turn; }
@@ -59,6 +56,12 @@ define(["require", "exports", "./data", "./physics", "./navcomp", "./vector", ".
         get velocity() { return this.path[this.current_turn].velocity; }
         get au() { return this.dist / physics_1.default.AU; }
         get km() { return this.dist / 1000; }
+        get course() {
+            if (this._course == undefined) {
+                this._course = navcomp_1.calculate_trajectory(this.turns, this.initial, this.final);
+            }
+            return this._course;
+        }
         get days_left() {
             return Math.ceil(this.left * data_1.default.hours_per_turn / 24);
         }
