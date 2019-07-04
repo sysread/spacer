@@ -1,3 +1,5 @@
+usingnamespace @import("allocator.zig");
+
 const std = @import("std");
 const math = std.math;
 const ArrayList = std.ArrayList;
@@ -226,58 +228,50 @@ export fn course_build_path(key: usize) void {
     course_get(key).build_path();
 }
 
-export fn course_acceleration(key: usize) f64 {
-    course_get(key).set_required_acceleration();
-    return course_get(key).accel.length();
-}
-
-export fn course_acceleration_x(key: usize) f64 {
-    course_get(key).set_required_acceleration();
-    return course_get(key).accel.x;
-}
-
-export fn course_acceleration_y(key: usize) f64 {
-    course_get(key).set_required_acceleration();
-    return course_get(key).accel.y;
-}
-
-export fn course_acceleration_z(key: usize) f64 {
-    course_get(key).set_required_acceleration();
-    return course_get(key).accel.z;
-}
-
 export fn course_max_velocity(key: usize) f64 {
     return course_get(key).max_velocity();
 }
 
-export fn course_next_segment(key: usize) bool {
-    return course_get(key).iter_next();
+export fn course_accel(key: usize, ptr: *[*]f64, len: *usize) bool {
+    const course = course_get(key);
+    course.set_required_acceleration();
+
+    const accel = course.accel;
+    const out = [4]f64{
+        course_get(key).accel.length(),
+        accel.x,
+        accel.y,
+        accel.z,
+    };
+
+    const result = A.alloc(f64, 4) catch unreachable;
+    std.mem.copy(f64, result, out[0..4]);
+
+    ptr.* = result.ptr;
+    len.* = result.len;
+
+    return true;
 }
 
-export fn course_segment_position_x(key: usize) f64 {
-    return course_get(key).current.?.position.x;
-}
+export fn course_segment(key: usize, ptr: *[*]f64, len: *usize) bool {
+    const course = course_get(key);
 
-export fn course_segment_position_y(key: usize) f64 {
-    return course_get(key).current.?.position.y;
-}
+    if (course.iter_next()) {
+        const out = [4]f64{
+            course.current.?.velocity.length(),
+            course.current.?.position.x,
+            course.current.?.position.y,
+            course.current.?.position.z,
+        };
 
-export fn course_segment_position_z(key: usize) f64 {
-    return course_get(key).current.?.position.z;
-}
+        const result = A.alloc(f64, 4) catch unreachable;
+        std.mem.copy(f64, result, out[0..4]);
 
-export fn course_segment_velocity_x(key: usize) f64 {
-    return course_get(key).current.?.velocity.x;
-}
+        ptr.* = result.ptr;
+        len.* = result.len;
 
-export fn course_segment_velocity_y(key: usize) f64 {
-    return course_get(key).current.?.velocity.y;
-}
+        return true;
+    }
 
-export fn course_segment_velocity_z(key: usize) f64 {
-    return course_get(key).current.?.velocity.z;
-}
-
-export fn course_segment_velocity(key: usize) f64 {
-    return course_get(key).current.?.velocity.length();
+    return false;
 }

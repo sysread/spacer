@@ -8,35 +8,90 @@ import * as Vec from './vector';
 import * as util from './util';
 import * as t from './common';
 
-
 declare var wasm: {
-  vector: {
+  navcomp: {
+    memory: {
+      buffer: ArrayBuffer;
+    },
+
+    alloc: (size: number) => number;
+    free: (ptr: number, len: number) => void;
+
     course_new: (turns: number) => number;
+    course_del: (key: number) => void;
+
     course_set_final_position: (key: number, x: number, y: number, z: number) => void;
     course_set_final_velocity: (key: number, x: number, y: number, z: number) => void;
     course_set_initial_position: (key: number, x: number, y: number, z: number) => void;
     course_set_initial_velocity: (key: number, x: number, y: number, z: number) => void;
 
     course_build_path: (key: number) => void;
-
     course_max_velocity: (key: number) => number;
-
-    course_acceleration: (key: number) => number;
-    course_acceleration_x: (key: number) => number;
-    course_acceleration_y: (key: number) => number;
-    course_acceleration_z: (key: number) => number;
-
-    course_next_segment: (key: number) => boolean;
-    course_segment_position_x: (key: number) => number;
-    course_segment_position_y: (key: number) => number;
-    course_segment_position_z: (key: number) => number;
-    course_segment_velocity_x: (key: number) => number;
-    course_segment_velocity_y: (key: number) => number;
-    course_segment_velocity_z: (key: number) => number;
-    course_segment_velocity: (key: number) => number;
-  }
+    course_accel: (key: number, ptr: number, len: number) => number;
+    course_segment: (key: number, ptr: number, len: number) => boolean;
+  };
 }
 
+export function calculate_acceleration(turns: number, initial: Body, final: Body): Acceleration {
+  const key = wasm.navcomp.course_new(turns);
+
+  wasm.navcomp.course_set_initial_position(key, ...initial[POSITION]);
+  wasm.navcomp.course_set_initial_velocity(key, ...initial[VELOCITY]);
+  wasm.navcomp.course_set_final_position(key, ...final[POSITION]);
+  wasm.navcomp.course_set_final_velocity(key, ...final[VELOCITY]);
+
+  const size_arg = 2 * Uint32Array.BYTES_PER_ELEMENT;
+  const size_res = 4 * Float64Array.BYTES_PER_ELEMENT;
+
+  const ptr = wasm.navcomp.alloc(size_res);
+  wasm.navcomp.course_accel(key, ptr, size_res);
+
+  const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + size_arg));
+  const [len, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + size_res));
+
+  wasm.navcomp.free(ptr, size_arg);
+  wasm.navcomp.course_del(key);
+
+  return {
+    length: len,
+    vector: [x, y, z],
+  };
+}
+
+export function calculate_path(turns: number, initial: Body, final: Body): Trajectory {
+  const key = wasm.navcomp.course_new(turns);
+
+  wasm.navcomp.course_set_initial_position(key, ...initial[POSITION]);
+  wasm.navcomp.course_set_initial_velocity(key, ...initial[VELOCITY]);
+  wasm.navcomp.course_set_final_position(key, ...final[POSITION]);
+  wasm.navcomp.course_set_final_velocity(key, ...final[VELOCITY]);
+  wasm.navcomp.course_build_path(key);
+
+  const size_arg = 2 * Uint32Array.BYTES_PER_ELEMENT;
+  const size_res = 4 * Float64Array.BYTES_PER_ELEMENT;
+
+  const ptr = wasm.navcomp.alloc(size_res);
+  const path: Trajectory = [];
+
+  for (let i = 0; i < turns + 1; ++i) { // turns+1 because initial position is the first segment
+    const result = wasm.navcomp.course_segment(key, ptr, size_res);
+
+    if (result) {
+      const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + size_arg));
+      const [vel, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + size_res));
+
+      path.push({
+        position: [x, y, z],
+        velocity: vel,
+      });
+    }
+  }
+
+  wasm.navcomp.free(ptr, size_arg);
+  wasm.navcomp.course_del(key);
+
+  return path;
+}
 
 const SPT = data.hours_per_turn * 3600; // seconds per turn
 const DT  = 200;                        // frames per turn for euler integration
@@ -47,13 +102,19 @@ export interface SavedCourse {
   target:   Body;
   agent:    Body;
   accel:    Point;
-  //maxAccel: number;
   turns:    number;
 }
 
 export interface PathSegment {
   position: Point;
   velocity: number;
+}
+
+export type Trajectory = PathSegment[];
+
+export interface Acceleration {
+  length: number;
+  vector: Point;
 }
 
 export type Body = [
@@ -66,31 +127,26 @@ const VELOCITY = 1;
 
 
 export class Course {
-  key: number;
-  turns: number;
+  key:    number;
+  turns:  number;
   target: Body;
-  agent: Body;
-  acc: number;
-  accel: Point;
-  _path: null | PathSegment[];
+  agent:  Body;
+  acc:    number;
+  accel:  Point;
+  _path:  null | PathSegment[];
 
   constructor(target: Body, agent: Body, turns: number) {
-    this.key = wasm.vector.course_new(turns);
-    this.turns = turns;
+    this.key    = wasm.navcomp.course_new(turns);
+    this.turns  = turns;
     this.target = target;
-    this.agent = agent;
+    this.agent  = agent;
 
-    wasm.vector.course_set_initial_position(this.key, agent[POSITION][0], agent[POSITION][1], agent[POSITION][2]);
-    wasm.vector.course_set_initial_velocity(this.key, agent[VELOCITY][0], agent[VELOCITY][1], agent[VELOCITY][2]);
-    wasm.vector.course_set_final_position(this.key, target[POSITION][0], target[POSITION][1], target[POSITION][2]);
-    wasm.vector.course_set_final_velocity(this.key, target[VELOCITY][0], target[VELOCITY][1], target[VELOCITY][2]);
+    wasm.navcomp.course_set_initial_position(this.key, agent[POSITION][0], agent[POSITION][1], agent[POSITION][2]);
+    wasm.navcomp.course_set_initial_velocity(this.key, agent[VELOCITY][0], agent[VELOCITY][1], agent[VELOCITY][2]);
+    wasm.navcomp.course_set_final_position(this.key, target[POSITION][0], target[POSITION][1], target[POSITION][2]);
+    wasm.navcomp.course_set_final_velocity(this.key, target[VELOCITY][0], target[VELOCITY][1], target[VELOCITY][2]);
 
-    this.acc = wasm.vector.course_acceleration(this.key);
-    this.accel = [
-      wasm.vector.course_acceleration_x(this.key),
-      wasm.vector.course_acceleration_y(this.key),
-      wasm.vector.course_acceleration_z(this.key),
-    ];
+    [this.acc, this.accel] = Course.fetch_accel(this.key);
 
     this._path = null;
   }
@@ -99,22 +155,55 @@ export class Course {
     return new Course(opt.target, opt.agent, opt.turns);
   }
 
+  static fetch_accel(key: number): [number, Point] {
+    const size_arg = 2 * Uint32Array.BYTES_PER_ELEMENT;
+    const size_res = 4 * Float64Array.BYTES_PER_ELEMENT;
+
+    const ptr = wasm.navcomp.alloc(size_res);
+    wasm.navcomp.course_accel(key, ptr, size_res);
+
+    const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + size_arg));
+    const [len, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + size_res));
+    wasm.navcomp.free(ptr, size_arg);
+
+    return [len, [x, y, z]];
+  }
+
+  static fetch_next_segment(key: number): PathSegment|null {
+    const size_arg = 2 * Uint32Array.BYTES_PER_ELEMENT;
+    const size_res = 4 * Float64Array.BYTES_PER_ELEMENT;
+
+    const ptr = wasm.navcomp.alloc(size_res);
+    const result = wasm.navcomp.course_segment(key, ptr, size_res);
+
+    const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + size_arg));
+    const [vel, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + size_res));
+    wasm.navcomp.free(ptr, size_arg);
+
+    if (result) {
+      return {
+        position: [x, y, z],
+        velocity: vel,
+      };
+    }
+
+    //wasm.navcomp.course_del(key);
+    return null;
+  }
+
   maxVelocity(): number {
-    return wasm.vector.course_max_velocity(this.key);
+    return wasm.navcomp.course_max_velocity(this.key);
   }
 
   path(): PathSegment[] {
-    wasm.vector.course_build_path(this.key);
+    wasm.navcomp.course_build_path(this.key);
 
     if (!this._path) {
       this._path = [];
-      while (wasm.vector.course_next_segment(this.key)) {
-        const px = wasm.vector.course_segment_position_x(this.key),
-              py = wasm.vector.course_segment_position_y(this.key),
-              pz = wasm.vector.course_segment_position_z(this.key),
-              v = wasm.vector.course_segment_velocity(this.key);
 
-        this._path.push({position: [px, py, pz], velocity: v});
+      let segment: PathSegment | null;
+      while ((segment = Course.fetch_next_segment(this.key)) != null) {
+        this._path.push(segment);
       }
     }
 
@@ -245,7 +334,6 @@ export class NavComp {
       const vFinal        = Vec.div_scalar( Vec.sub(dest[turns], dest[turns - 1]), SPT );
       const target: Body  = [ dest[turns], vFinal ];
       const agent: Body   = [ orig[0], vInit ];
-      //const course        = new Course(target, agent, maxAccel, turns, this.dt);
       const course        = new Course(target, agent, turns);
       const a             = Vec.length(course.accel);
 

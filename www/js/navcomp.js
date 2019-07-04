@@ -15,6 +15,53 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     system_1 = __importDefault(system_1);
     physics_1 = __importDefault(physics_1);
     Vec = __importStar(Vec);
+    function calculate_acceleration(turns, initial, final) {
+        const key = wasm.navcomp.course_new(turns);
+        wasm.navcomp.course_set_initial_position(key, ...initial[POSITION]);
+        wasm.navcomp.course_set_initial_velocity(key, ...initial[VELOCITY]);
+        wasm.navcomp.course_set_final_position(key, ...final[POSITION]);
+        wasm.navcomp.course_set_final_velocity(key, ...final[VELOCITY]);
+        const size_arg = 2 * Uint32Array.BYTES_PER_ELEMENT;
+        const size_res = 4 * Float64Array.BYTES_PER_ELEMENT;
+        const ptr = wasm.navcomp.alloc(size_res);
+        wasm.navcomp.course_accel(key, ptr, size_res);
+        const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + size_arg));
+        const [len, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + size_res));
+        wasm.navcomp.free(ptr, size_arg);
+        wasm.navcomp.course_del(key);
+        return {
+            length: len,
+            vector: [x, y, z],
+        };
+    }
+    exports.calculate_acceleration = calculate_acceleration;
+    function calculate_path(turns, initial, final) {
+        const key = wasm.navcomp.course_new(turns);
+        wasm.navcomp.course_set_initial_position(key, ...initial[POSITION]);
+        wasm.navcomp.course_set_initial_velocity(key, ...initial[VELOCITY]);
+        wasm.navcomp.course_set_final_position(key, ...final[POSITION]);
+        wasm.navcomp.course_set_final_velocity(key, ...final[VELOCITY]);
+        wasm.navcomp.course_build_path(key);
+        const size_arg = 2 * Uint32Array.BYTES_PER_ELEMENT;
+        const size_res = 4 * Float64Array.BYTES_PER_ELEMENT;
+        const ptr = wasm.navcomp.alloc(size_res);
+        const path = [];
+        for (let i = 0; i < turns + 1; ++i) { // turns+1 because initial position is the first segment
+            const result = wasm.navcomp.course_segment(key, ptr, size_res);
+            if (result) {
+                const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + size_arg));
+                const [vel, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + size_res));
+                path.push({
+                    position: [x, y, z],
+                    velocity: vel,
+                });
+            }
+        }
+        wasm.navcomp.free(ptr, size_arg);
+        wasm.navcomp.course_del(key);
+        return path;
+    }
+    exports.calculate_path = calculate_path;
     const SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
     const DT = 200; // frames per turn for euler integration
     const TI = SPT / DT; // seconds per frame
@@ -22,35 +69,57 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     const VELOCITY = 1;
     class Course {
         constructor(target, agent, turns) {
-            this.key = wasm.vector.course_new(turns);
+            this.key = wasm.navcomp.course_new(turns);
             this.turns = turns;
             this.target = target;
             this.agent = agent;
-            wasm.vector.course_set_initial_position(this.key, agent[POSITION][0], agent[POSITION][1], agent[POSITION][2]);
-            wasm.vector.course_set_initial_velocity(this.key, agent[VELOCITY][0], agent[VELOCITY][1], agent[VELOCITY][2]);
-            wasm.vector.course_set_final_position(this.key, target[POSITION][0], target[POSITION][1], target[POSITION][2]);
-            wasm.vector.course_set_final_velocity(this.key, target[VELOCITY][0], target[VELOCITY][1], target[VELOCITY][2]);
-            this.acc = wasm.vector.course_acceleration(this.key);
-            this.accel = [
-                wasm.vector.course_acceleration_x(this.key),
-                wasm.vector.course_acceleration_y(this.key),
-                wasm.vector.course_acceleration_z(this.key),
-            ];
+            wasm.navcomp.course_set_initial_position(this.key, agent[POSITION][0], agent[POSITION][1], agent[POSITION][2]);
+            wasm.navcomp.course_set_initial_velocity(this.key, agent[VELOCITY][0], agent[VELOCITY][1], agent[VELOCITY][2]);
+            wasm.navcomp.course_set_final_position(this.key, target[POSITION][0], target[POSITION][1], target[POSITION][2]);
+            wasm.navcomp.course_set_final_velocity(this.key, target[VELOCITY][0], target[VELOCITY][1], target[VELOCITY][2]);
+            [this.acc, this.accel] = Course.fetch_accel(this.key);
             this._path = null;
         }
         static import(opt) {
             return new Course(opt.target, opt.agent, opt.turns);
         }
+        static fetch_accel(key) {
+            const size_arg = 2 * Uint32Array.BYTES_PER_ELEMENT;
+            const size_res = 4 * Float64Array.BYTES_PER_ELEMENT;
+            const ptr = wasm.navcomp.alloc(size_res);
+            wasm.navcomp.course_accel(key, ptr, size_res);
+            const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + size_arg));
+            const [len, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + size_res));
+            wasm.navcomp.free(ptr, size_arg);
+            return [len, [x, y, z]];
+        }
+        static fetch_next_segment(key) {
+            const size_arg = 2 * Uint32Array.BYTES_PER_ELEMENT;
+            const size_res = 4 * Float64Array.BYTES_PER_ELEMENT;
+            const ptr = wasm.navcomp.alloc(size_res);
+            const result = wasm.navcomp.course_segment(key, ptr, size_res);
+            const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + size_arg));
+            const [vel, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + size_res));
+            wasm.navcomp.free(ptr, size_arg);
+            if (result) {
+                return {
+                    position: [x, y, z],
+                    velocity: vel,
+                };
+            }
+            //wasm.navcomp.course_del(key);
+            return null;
+        }
         maxVelocity() {
-            return wasm.vector.course_max_velocity(this.key);
+            return wasm.navcomp.course_max_velocity(this.key);
         }
         path() {
-            wasm.vector.course_build_path(this.key);
+            wasm.navcomp.course_build_path(this.key);
             if (!this._path) {
                 this._path = [];
-                while (wasm.vector.course_next_segment(this.key)) {
-                    const px = wasm.vector.course_segment_position_x(this.key), py = wasm.vector.course_segment_position_y(this.key), pz = wasm.vector.course_segment_position_z(this.key), v = wasm.vector.course_segment_velocity(this.key);
-                    this._path.push({ position: [px, py, pz], velocity: v });
+                let segment;
+                while ((segment = Course.fetch_next_segment(this.key)) != null) {
+                    this._path.push(segment);
                 }
             }
             return this._path;
@@ -159,7 +228,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 const vFinal = Vec.div_scalar(Vec.sub(dest[turns], dest[turns - 1]), SPT);
                 const target = [dest[turns], vFinal];
                 const agent = [orig[0], vInit];
-                //const course        = new Course(target, agent, maxAccel, turns, this.dt);
                 const course = new Course(target, agent, turns);
                 const a = Vec.length(course.accel);
                 if (a > maxAccel)

@@ -15,9 +15,5 @@ export fn ctrlpt_length(px: f64, py: f64, nx: f64, ny: f64) f64 {
 
 export fn ctrlpt_angle(px: f64, py: f64, nx: f64, ny: f64, reverse: bool) f64 {
     const angle = math.atan2(f64, ny - py, nx - px);
-    if (reverse) {
-        return angle + math.pi;
-    } else {
-        return angle;
-    }
+    return if (reverse) angle + math.pi else angle;
 }
