@@ -1,7 +1,7 @@
 const std = @import("std");
 
 export fn alloc(len: usize) u32 {
-    var buf = std.heap.wasm_allocator.alloc(f64, len) catch |err| return 0;
+    var buf = std.heap.wasm_allocator.alloc(u8, len) catch |err| return 0;
     return @ptrToInt(buf.ptr);
 }
 

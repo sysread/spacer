@@ -1,4 +1,5 @@
-const math = @import("std").math;
+const std = @import("std");
+const math = std.math;
 const smoothing = 0.2;
 
 export fn ctrlpt_x(x: f64, length: f64, angle: f64) f64 {

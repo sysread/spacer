@@ -14,11 +14,11 @@ define(["require", "exports"], function (require, exports) {
         for (let i = 1; i < points.length; ++i) {
             const current = points[i - 1];
             const prev = points[i - 2] || current;
-            const next = points[i] || current;
+            const next = points[i];
             const nnext = points[i + 1] || current;
-            const c1 = control_point(points[i - 1], points[i - 2] || points[i - 1], points[i], false);
-            const c2 = control_point(points[i], points[i - 1], points[i + 1] || points[i], true);
-            path += ' C ' + c1 + ',' + c2 + ',' + points[i][0] + ' ' + points[i][1];
+            const c1 = control_point(current, prev, next, false);
+            const c2 = control_point(next, current, nnext, true);
+            path += ' C ' + c1 + ',' + c2 + ',' + next[0] + ' ' + next[1];
         }
         return path;
     }
