@@ -272,7 +272,7 @@ export fn course_accel(turns: f64, pxi: f64, pyi: f64, pzi: f64, vxi: f64, vyi: 
         accel.z,
     };
 
-    const result = A.alloc(f64, 5) catch unreachable;
+    const result = A.alloc(f64, 5) catch return false;
     std.mem.copy(f64, result, out[0..5]);
 
     ptr.* = result.ptr;
@@ -292,7 +292,7 @@ export fn course_segment(key: usize, ptr: *[*]f64, len: *usize) bool {
             course.current.?.position.z,
         };
 
-        const result = A.alloc(f64, 4) catch unreachable;
+        const result = A.alloc(f64, 4) catch return false;
         std.mem.copy(f64, result, out[0..4]);
 
         ptr.* = result.ptr;

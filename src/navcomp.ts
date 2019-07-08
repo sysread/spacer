@@ -69,29 +69,34 @@ export interface Body {
 export function calculate_acceleration(turns: number, initial: Body, final: Body): Acceleration {
   wasm.navcomp.course_accel(
     turns,
+
     initial.position[0],
     initial.position[1],
     initial.position[2],
+
     initial.velocity[0],
     initial.velocity[1],
     initial.velocity[2],
+
     final.position[0],
     final.position[1],
     final.position[2],
+
     final.velocity[0],
     final.velocity[1],
     final.velocity[2],
+
     ptr,
     RES_5_F64,
   );
 
-  const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + ARG_2_U32));
-  const [maxvel, len, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + RES_5_F64));
+  const [res_ptr, res_len]  = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + ARG_2_U32));
+  const [vel, acc, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + RES_5_F64));
 
   return {
+    maxvel: vel,
+    length: acc,
     vector: [x, y, z],
-    length: len,
-    maxvel: maxvel,
   };
 }
 
