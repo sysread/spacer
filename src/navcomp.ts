@@ -27,10 +27,9 @@ declare var wasm: {
 
     course_build_path: (key: number) => void;
     course_max_velocity: (key: number) => number;
-    course_accel: (key: number, ptr: number, len: number) => boolean;
     course_segment: (key: number, ptr: number, len: number) => boolean;
 
-    course_accel_fast: (turns: number, pxi: number, pyi: number, pzi: number, vxi: number, vyi: number, vzi: number, pxf: number, pyf: number, pzf: number, vxf: number, vyf: number, vzf: number, ptr: number, len: number) => boolean;
+    course_accel: (turns: number, pxi: number, pyi: number, pzi: number, vxi: number, vyi: number, vzi: number, pxf: number, pyf: number, pzf: number, vxf: number, vyf: number, vzf: number, ptr: number, len: number) => boolean;
   };
 }
 
@@ -67,8 +66,8 @@ export interface Body {
 
 
 // See comment about ugliness in navcomp.zig
-export function calculate_acceleration_fast(turns: number, initial: Body, final: Body): Acceleration {
-  wasm.navcomp.course_accel_fast(
+export function calculate_acceleration(turns: number, initial: Body, final: Body): Acceleration {
+  wasm.navcomp.course_accel(
     turns,
     initial.position[0],
     initial.position[1],
@@ -98,33 +97,6 @@ export function calculate_acceleration_fast(turns: number, initial: Body, final:
 
 
 const ptr = wasm.navcomp.alloc(RES_4_F64);
-
-export function calculate_acceleration(turns: number, initial: Body, final: Body): Acceleration {
-  const key = wasm.navcomp.course_new(turns);
-
-  wasm.navcomp.course_set_initial_position(key, ...initial.position);
-  wasm.navcomp.course_set_initial_velocity(key, ...initial.velocity);
-  wasm.navcomp.course_set_final_position(key, ...final.position);
-  wasm.navcomp.course_set_final_velocity(key, ...final.velocity);
-
-  const maxvel = wasm.navcomp.course_max_velocity(key);
-
-  //const ptr = wasm.navcomp.alloc(RES_4_F64);
-  wasm.navcomp.course_accel(key, ptr, RES_4_F64);
-
-  const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + ARG_2_U32));
-  const [len, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + RES_4_F64));
-
-  //wasm.navcomp.free(ptr, ARG_4_F64);
-  wasm.navcomp.course_del(key);
-
-  return {
-    vector: [x, y, z],
-    length: len,
-    maxvel: maxvel,
-  };
-}
-
 export function calculate_trajectory(turns: number, initial: Body, final: Body): Trajectory {
   const key = wasm.navcomp.course_new(turns);
 
@@ -251,7 +223,7 @@ export class NavComp {
       const vFinal        = Vec.div_scalar( Vec.sub(dest[turns], dest[turns - 1]), SPT );
       const target: Body  = { position: dest[turns], velocity: vFinal };
       const agent: Body   = { position: orig[0], velocity: vInit };
-      const a             = calculate_acceleration_fast(turns, agent, target);
+      const a             = calculate_acceleration(turns, agent, target);
 
       if (a.length > maxAccel)
         continue;

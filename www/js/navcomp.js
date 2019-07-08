@@ -24,8 +24,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     const POSITION = 0;
     const VELOCITY = 1;
     // See comment about ugliness in navcomp.zig
-    function calculate_acceleration_fast(turns, initial, final) {
-        wasm.navcomp.course_accel_fast(turns, initial.position[0], initial.position[1], initial.position[2], initial.velocity[0], initial.velocity[1], initial.velocity[2], final.position[0], final.position[1], final.position[2], final.velocity[0], final.velocity[1], final.velocity[2], ptr, RES_5_F64);
+    function calculate_acceleration(turns, initial, final) {
+        wasm.navcomp.course_accel(turns, initial.position[0], initial.position[1], initial.position[2], initial.velocity[0], initial.velocity[1], initial.velocity[2], final.position[0], final.position[1], final.position[2], final.velocity[0], final.velocity[1], final.velocity[2], ptr, RES_5_F64);
         const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + ARG_2_U32));
         const [maxvel, len, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + RES_5_F64));
         return {
@@ -34,28 +34,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             maxvel: maxvel,
         };
     }
-    exports.calculate_acceleration_fast = calculate_acceleration_fast;
-    const ptr = wasm.navcomp.alloc(RES_4_F64);
-    function calculate_acceleration(turns, initial, final) {
-        const key = wasm.navcomp.course_new(turns);
-        wasm.navcomp.course_set_initial_position(key, ...initial.position);
-        wasm.navcomp.course_set_initial_velocity(key, ...initial.velocity);
-        wasm.navcomp.course_set_final_position(key, ...final.position);
-        wasm.navcomp.course_set_final_velocity(key, ...final.velocity);
-        const maxvel = wasm.navcomp.course_max_velocity(key);
-        //const ptr = wasm.navcomp.alloc(RES_4_F64);
-        wasm.navcomp.course_accel(key, ptr, RES_4_F64);
-        const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + ARG_2_U32));
-        const [len, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + RES_4_F64));
-        //wasm.navcomp.free(ptr, ARG_4_F64);
-        wasm.navcomp.course_del(key);
-        return {
-            vector: [x, y, z],
-            length: len,
-            maxvel: maxvel,
-        };
-    }
     exports.calculate_acceleration = calculate_acceleration;
+    const ptr = wasm.navcomp.alloc(RES_4_F64);
     function calculate_trajectory(turns, initial, final) {
         const key = wasm.navcomp.course_new(turns);
         wasm.navcomp.course_set_initial_position(key, ...initial.position);
@@ -157,7 +137,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 const vFinal = Vec.div_scalar(Vec.sub(dest[turns], dest[turns - 1]), SPT);
                 const target = { position: dest[turns], velocity: vFinal };
                 const agent = { position: orig[0], velocity: vInit };
-                const a = calculate_acceleration_fast(turns, agent, target);
+                const a = calculate_acceleration(turns, agent, target);
                 if (a.length > maxAccel)
                     continue;
                 const fuelUsed = a.length / availAcc * fuelPerTurn * turns * 0.99; // `* 0.99` to work around rounding error

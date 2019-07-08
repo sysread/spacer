@@ -239,7 +239,7 @@ export fn course_max_velocity(key: usize) f64 {
 
 // Boy, this is ugly, but it sure is faster with stack variables than
 // allocating heap space for parameters to be passed as an array from JS.
-export fn course_accel_fast(turns: f64, pxi: f64, pyi: f64, pzi: f64, vxi: f64, vyi: f64, vzi: f64, pxf: f64, pyf: f64, pzf: f64, vxf: f64, vyf: f64, vzf: f64, ptr: *[*]f64, len: *usize) bool {
+export fn course_accel(turns: f64, pxi: f64, pyi: f64, pzi: f64, vxi: f64, vyi: f64, vzi: f64, pxf: f64, pyf: f64, pzf: f64, vxf: f64, vyf: f64, vzf: f64, ptr: *[*]f64, len: *usize) bool {
     const path = ArrayList(Segment).init(A);
     defer path.deinit();
 
@@ -274,27 +274,6 @@ export fn course_accel_fast(turns: f64, pxi: f64, pyi: f64, pzi: f64, vxi: f64, 
 
     const result = A.alloc(f64, 5) catch unreachable;
     std.mem.copy(f64, result, out[0..5]);
-
-    ptr.* = result.ptr;
-    len.* = result.len;
-
-    return true;
-}
-
-export fn course_accel(key: usize, ptr: *[*]f64, len: *usize) bool {
-    const course = course_get(key);
-    course.set_required_acceleration();
-
-    var accel = course.accel;
-    const out = [4]f64{
-        accel.length(),
-        accel.x,
-        accel.y,
-        accel.z,
-    };
-
-    const result = A.alloc(f64, 4) catch unreachable;
-    std.mem.copy(f64, result, out[0..4]);
 
     ptr.* = result.ptr;
     len.* = result.len;
