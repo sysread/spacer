@@ -2,8 +2,6 @@
 
 declare var wasm: {
   svgpath: {
-    alloc:         (size: number) => number;
-    free:          (ptr: number, len: number) => void;
     ctrlpt_x:      (x: number, length: number, angle: number) => number;
     ctrlpt_y:      (y: number, length: number, angle: number) => number;
     ctrlpt_length: (px: number, py: number, nx: number, ny: number) => number;
@@ -13,11 +11,16 @@ declare var wasm: {
 
 type point = [number, number];
 
+const ctrlpt_x      = wasm.svgpath.ctrlpt_x;
+const ctrlpt_y      = wasm.svgpath.ctrlpt_y;
+const ctrlpt_length = wasm.svgpath.ctrlpt_length;
+const ctrlpt_angle  = wasm.svgpath.ctrlpt_angle;
+
 function control_point(current: point, prev: point, next: point, reverse: boolean): string {
-  const length = wasm.svgpath.ctrlpt_length(prev[0], prev[1], next[0], next[1]);
-  const angle  = wasm.svgpath.ctrlpt_angle(prev[0], prev[1], next[0], next[1], reverse);
-  const x      = wasm.svgpath.ctrlpt_x(current[0], length, angle);
-  const y      = wasm.svgpath.ctrlpt_y(current[1], length, angle);
+  const length = ctrlpt_length(prev[0], prev[1], next[0], next[1]);
+  const angle = ctrlpt_angle(prev[0], prev[1], next[0], next[1], reverse);
+  const x = ctrlpt_x(current[0], length, angle);
+  const y = ctrlpt_y(current[1], length, angle);
   return x + ' ' + y;
 }
 
