@@ -8,17 +8,6 @@ const DT = 500; // frames per segment for euler integration
 const SPT = 8 * 3600; // seconds per turn
 const TI = SPT / DT; // seconds per euler integration frame
 
-// a = (2s / t^2) - (2v / t)
-inline fn linear_acceleration(tt: f64, pi: f64, pf: f64, vi: f64, vf: f64) f64 {
-    const t = tt / 2; // time to flip point
-    const dvf = vf * 2 / t; // portion of final velocity to match by flip point
-    const dvi = (vi - dvf) * 2 / t; // portion of total change in velocity to apply by flip point
-    const a = (pf - pi) // (2s / 2 = s) for displacement to flip point
-        / (t * t) // t^2
-        - dvi; // less the change in velocity
-    return a;
-}
-
 pub const Course = struct {
     pub final: Segment, // final position and velocity
     pub initial: Segment, // starting position and velocity
@@ -30,6 +19,7 @@ pub const Course = struct {
     pub iter: ?ArrayList(Segment).Iterator,
     pub current: ?Segment,
 
+    // a = (2s / t^2) - (2v / t)
     pub fn set_required_acceleration(self: *Course) void {
         if (!self.accel_set) {
             const t = (SPT * self.turns) / 2;

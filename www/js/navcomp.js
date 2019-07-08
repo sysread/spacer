@@ -18,6 +18,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     const ARG_2_U32 = 2 * Uint32Array.BYTES_PER_ELEMENT;
     const RES_4_F64 = 4 * Float64Array.BYTES_PER_ELEMENT;
     const RES_5_F64 = 5 * Float64Array.BYTES_PER_ELEMENT;
+    const ptr = wasm.navcomp.alloc(RES_4_F64);
     const SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
     const DT = 200; // frames per turn for euler integration
     const TI = SPT / DT; // seconds per frame
@@ -35,7 +36,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
         };
     }
     exports.calculate_acceleration = calculate_acceleration;
-    const ptr = wasm.navcomp.alloc(RES_4_F64);
     function calculate_trajectory(turns, initial, final) {
         const key = wasm.navcomp.course_new(turns);
         wasm.navcomp.course_set_initial_position(key, ...initial.position);

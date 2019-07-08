@@ -36,6 +36,8 @@ declare var wasm: {
 const ARG_2_U32 = 2 * Uint32Array.BYTES_PER_ELEMENT;
 const RES_4_F64 = 4 * Float64Array.BYTES_PER_ELEMENT;
 const RES_5_F64 = 5 * Float64Array.BYTES_PER_ELEMENT;
+const ptr = wasm.navcomp.alloc(RES_4_F64);
+
 const SPT       = data.hours_per_turn * 3600; // seconds per turn
 const DT        = 200;                        // frames per turn for euler integration
 const TI        = SPT / DT;                   // seconds per frame
@@ -100,7 +102,6 @@ export function calculate_acceleration(turns: number, initial: Body, final: Body
 }
 
 
-const ptr = wasm.navcomp.alloc(RES_4_F64);
 export function calculate_trajectory(turns: number, initial: Body, final: Body): Trajectory {
   const key = wasm.navcomp.course_new(turns);
 
