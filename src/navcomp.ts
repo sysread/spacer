@@ -64,7 +64,6 @@ export interface Body {
   velocity: Point;
 }
 
-
 // See comment about ugliness in navcomp.zig
 export function calculate_acceleration(turns: number, initial: Body, final: Body): Acceleration {
   wasm.navcomp.course_accel(

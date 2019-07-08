@@ -8,6 +8,17 @@ const DT = 500; // frames per segment for euler integration
 const SPT = 8 * 3600; // seconds per turn
 const TI = SPT / DT; // seconds per euler integration frame
 
+// a = (2s / t^2) - (2v / t)
+inline fn linear_acceleration(tt: f64, pi: f64, pf: f64, vi: f64, vf: f64) f64 {
+    const t = tt / 2; // time to flip point
+    const dvf = vf * 2 / t; // portion of final velocity to match by flip point
+    const dvi = (vi - dvf) * 2 / t; // portion of total change in velocity to apply by flip point
+    const a = (pf - pi) // (2s / 2 = s) for displacement to flip point
+        / (t * t) // t^2
+        - dvi; // less the change in velocity
+    return a;
+}
+
 pub const Course = struct {
     pub final: Segment, // final position and velocity
     pub initial: Segment, // starting position and velocity
@@ -19,23 +30,23 @@ pub const Course = struct {
     pub iter: ?ArrayList(Segment).Iterator,
     pub current: ?Segment,
 
-    // a = (2s / t^2) - (2v / t)
     pub fn set_required_acceleration(self: *Course) void {
         if (!self.accel_set) {
-            const t = self.tflip;
+            const t = (SPT * self.turns) / 2;
+            const t2 = t * t;
 
-            // Calculate portion of final velocity to match by flip point
-            //var dvf = self.final.velocity.mul_scalar(2).div_scalar(t);
-            var dvf = self.final.velocity.mul_scalar(2).div_scalar(t);
+            const dvxf = self.final.velocity.x * 2 / t; // portion of final velocity to match by flip point
+            const dvxi = (self.initial.velocity.x - dvxf) * 2 / t; // portion of total change in velocity to apply by flip point
+            self.accel.x = (self.final.position.x - self.initial.position.x) / t2 - dvxi;
 
-            // Calculate portion of total change in velocity to apply by flip point
-            var dvi = self.initial.velocity.sub(dvf).mul_scalar(2).div_scalar(t);
+            const dvyf = self.final.velocity.y * 2 / t;
+            const dvyi = (self.initial.velocity.y - dvyf) * 2 / t;
+            self.accel.y = (self.final.position.y - self.initial.position.y) / t2 - dvyi;
 
-            var a = self.final.position.sub(self.initial.position) // (2s / 2 = s) for flip point
-                .div_scalar(self.tflip * self.tflip) // t^2
-                .sub(dvi); // less the change in velocity
+            const dvzf = self.final.velocity.z * 2 / t;
+            const dvzi = (self.initial.velocity.z - dvzf) * 2 / t;
+            self.accel.z = (self.final.position.z - self.initial.position.z) / t2 - dvzi;
 
-            self.accel = a;
             self.accel_set = true;
         }
     }
@@ -57,8 +68,8 @@ pub const Course = struct {
         var p = self.initial.position; // initial position
         var v = self.initial.velocity; // initial velocity
 
-        var vax = self.accel.mul_scalar(TI); // static portion of change in velocity each TI
-        var dax = self.accel.mul_scalar(TI * TI).div_scalar(2); // static portion of change in position each TI
+        var vx = self.accel.mul_scalar(TI); // static portion of change in velocity each TI
+        var dx = self.accel.mul_scalar(TI * TI).div_scalar(2); // static portion of change in position each TI
 
         // Start with initial position
         self.path.append(Segment{ .position = p.clone(), .velocity = v.clone() }) catch unreachable;
@@ -73,11 +84,13 @@ pub const Course = struct {
                 t += TI;
 
                 // Update velocity
-                v = if (t < self.tflip) v.add(vax) // accelerate before the flip
-                    else v.sub(vax); // decelerate after the flip
+                v = if (t < self.tflip)
+                    v.add(vx) // accelerate before the flip
+                else
+                    v.sub(vx); // decelerate after the flip
 
                 // Update position
-                p = p.add(v.mul_scalar(TI).add(dax));
+                p = p.add(v.mul_scalar(TI).add(dx));
             }
 
             self.path.append(Segment{ .position = p.clone(), .velocity = v.clone() }) catch unreachable;
@@ -239,44 +252,39 @@ export fn course_max_velocity(key: usize) f64 {
 
 // Boy, this is ugly, but it sure is faster with stack variables than
 // allocating heap space for parameters to be passed as an array from JS.
-export fn course_accel(turns: f64, pxi: f64, pyi: f64, pzi: f64, vxi: f64, vyi: f64, vzi: f64, pxf: f64, pyf: f64, pzf: f64, vxf: f64, vyf: f64, vzf: f64, ptr: *[*]f64, len: *usize) bool {
-    const path = ArrayList(Segment).init(A);
-    defer path.deinit();
+// Calculating linearly in this function is also significantly faster than a
+// compiler-enforced @inlineCall to do the same. And storing the result in a
+// global makes retrieval seriously fast compared to allocating a new array off
+// the heap for each call, given that this is called in a number of very large
+// loops.
+var accel_retval = [5]f64{ 0, 0, 0, 0, 0 };
+export fn course_accel(turns: f64, pxi: f64, pyi: f64, pzi: f64, vxi: f64, vyi: f64, vzi: f64, pxf: f64, pyf: f64, pzf: f64, vxf: f64, vyf: f64, vzf: f64, ptr: ?*[*]f64, len: ?*usize) bool {
+    const t = (SPT * turns) / 2;
+    const t2 = t * t;
 
-    var course = Course{
-        .initial = Segment{
-            .position = Vector{ .x = pxi, .y = pyi, .z = pzi },
-            .velocity = Vector{ .x = vxi, .y = vyi, .z = vzi },
-        },
-        .final = Segment{
-            .position = Vector{ .x = pxf, .y = pyf, .z = pzf },
-            .velocity = Vector{ .x = vxf, .y = vyf, .z = vzf },
-        },
-        .turns = turns,
-        .tflip = (SPT * turns) / 2,
-        .accel_set = false,
-        .accel = Vector{ .x = 0, .y = 0, .z = 0 },
-        .iter = null,
-        .current = null,
-        .path = path,
-    };
+    const dvxf = vxf * 2 / t; // portion of final velocity to match by flip point
+    const dvxi = (vxi - dvxf) * 2 / t; // portion of total change in velocity to apply by flip point
+    const ax = (pxf - pxi) / t2 - dvxi;
 
-    course.set_required_acceleration();
+    const dvyf = vyf * 2 / t;
+    const dvyi = (vyi - dvyf) * 2 / t;
+    const ay = (pyf - pyi) / t2 - dvyi;
 
-    var accel = course.accel;
-    const out = [5]f64{
-        course.max_velocity(),
-        accel.length(),
-        accel.x,
-        accel.y,
-        accel.z,
-    };
+    const dvzf = vzf * 2 / t;
+    const dvzi = (vzi - dvzf) * 2 / t;
+    const az = (pzf - pzi) / t2 - dvzi;
 
-    const result = A.alloc(f64, 5) catch return false;
-    std.mem.copy(f64, result, out[0..5]);
+    const a = math.sqrt(ax * ax + ay * ay + az * az);
 
-    ptr.* = result.ptr;
-    len.* = result.len;
+    const vx = ax * t;
+    const vy = ay * t;
+    const vz = az * t;
+    const v = math.sqrt(vx * vx + vy * vy + vz * vz);
+
+    accel_retval = [5]f64{ v, a, ax, ay, az };
+
+    ptr.?.* = &accel_retval;
+    len.?.* = accel_retval.len;
 
     return true;
 }
