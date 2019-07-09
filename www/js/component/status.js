@@ -159,20 +159,38 @@ define(function(require, exports, module) {
       };
     },
     computed: {
-      type:      function() {return util.ucfirst(this.ship.type)},
-      mass:      function() {return util.csn(Math.floor(this.ship.currentMass()))},
-      thrust:    function() {return util.csn(this.ship.thrust)},
-      acc:       function() {return util.R(this.ship.currentAcceleration() / Physics.G, 2)},
-      tank:      function() {return util.R(this.ship.fuel, 2) + '/' + this.ship.tank},
-      burn:      function() {return util.csn(this.ship.maxBurnTime() * this.data.hours_per_turn)},
-      addons:    function() {return this.ship.addons},
-      addOnData: function() {return this.data.addons[this.showAddOn]},
-      fuelRate:  function() {return this.ship.fuelrate / this.data.hours_per_turn},
-      stealth:   function() {return util.R(this.ship.stealth * 100, 2)},
-      intercept: function() {return util.R(this.ship.intercept * 100, 2)},
-      dodge:     function() {return util.R(this.ship.dodge * 100, 2)},
+      type()      { return util.ucfirst(this.ship.type) },
+      mass()      { return util.csn(Math.floor(this.ship.currentMass())) },
+      thrust()    { return util.csn(this.ship.thrust) },
+      acc()       { return util.R(this.ship.currentAcceleration() / Physics.G, 2) },
+      tank()      { return util.R(this.ship.fuel, 2) + '/' + this.ship.tank },
+      burn()      { return util.csn(this.ship.maxBurnTime() * this.data.hours_per_turn) },
+      //addons()    { return this.ship.addons },
+      addOnData() { return this.data.addons[this.showAddOn] },
+      fuelRate()  { return this.ship.fuelrate / this.data.hours_per_turn },
+      stealth()   { return util.R(this.ship.stealth * 100, 2) },
+      intercept() { return util.R(this.ship.intercept * 100, 2) },
+      dodge()     { return util.R(this.ship.dodge * 100, 2) },
 
-      cargo:     function() {
+      addons() {
+        const addons = {};
+
+        for (const a of this.ship.addons) {
+          addons[a] = this.addOnName(a);
+        }
+
+        return Object.keys(addons).sort((a, b) => {
+          if (addons[a] > addons[b]) {
+            return 1;
+          } else if (addons[a] < addons[b]) {
+            return -1;
+          } else {
+            return 0;
+          }
+        });
+      },
+
+      cargo() {
         const cargo = [];
         for (const item of this.ship.cargo.keys()) {
           const amt = this.ship.cargo.get(item);
@@ -184,11 +202,23 @@ define(function(require, exports, module) {
       },
     },
     methods: {
-      addOnName: function(addon) {
+      addOnCount(addon) {
+        let count = 0;
+
+        for (const a of this.ship.addons) {
+          if (a == addon) {
+            ++count;
+          }
+        }
+
+        return count;
+      },
+
+      addOnName(addon) {
         return this.data.addons[addon].name;
       },
 
-      toggleAddOn: function(addon) {
+      toggleAddOn(addon) {
         if (this.showAddOn === addon)
           this.showAddOn = false;
         else
@@ -226,9 +256,13 @@ define(function(require, exports, module) {
     <def term="Evasion" :def="dodge + '%'" info="The chance of dodging an attack based on the mass to thrust ratio of the ship" />
 
     <def term="Upgrades">
-      <div slot="def" v-if="ship.addons.length > 0">
-        <btn v-for="(addon, idx) of addons" :key="idx" block=1 @click="toggleAddOn(addon)" class="text-truncate">{{addOnName(addon)|caps}}</btn>
+      <div slot="def" v-if="Object.keys(addons).length > 0">
+        <btn v-for="addon of addons" :key="addon" block=1 @click="toggleAddOn(addon)" class="text-truncate">
+          <template v-if="addOnCount(addon) > 1">[{{addOnCount(addon)}}]</template>
+          {{addOnName(addon)|caps}}
+        </btn>
         <modal v-if="showAddOn" @close="toggleAddOn(showAddOn)" close="Close" :title="addOnName(showAddOn)">
+          <def term="Installed" :def="addOnCount(showAddOn)" />
           <def v-for="(value, key) of addOnData" v-if="key != 'price' && key != 'markets' && !key.startsWith('is_')" :key="key" :term="key|caps|name" :def="value" />
           <def term="Price" :def="addOnData.price|csn" />
         </modal>
