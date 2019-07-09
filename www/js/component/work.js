@@ -37,12 +37,13 @@ define(function(require, exports, module) {
       timeSpent()     { return Math.floor(this.turnsWorked / this.data.turns_per_day) },
       hasPicketLine() { return this.planet.hasPicketLine() },
 
-      contracts() {
+      allContracts() {
         const contracts = [...this.planet.contracts];
 
-        if (this.planet.hasTrait('black market')) {
-          for (const planet of Object.values(this.game.planets)) {
-            if (planet.body != this.planet.body) {
+        for (const planet of Object.values(this.game.planets)) {
+          if (planet.body != this.planet.body) {
+            if (this.planet.hasTrait('black market')
+             || this.planet.faction.abbrev == planet.faction.abbrev) {
               contracts.push(...planet.contracts.filter(c => c.mission instanceof Smuggler));
             }
           }
@@ -55,6 +56,22 @@ define(function(require, exports, module) {
                : a_key > b_key ?  1
                                :  0;
         });
+      },
+
+      contracts() {
+        const contract = {};
+
+        for (const c of this.allContracts) {
+          const type = c.mission.mission_type;
+
+          if (!contract[type]) {
+            contract[type] = [];
+          }
+
+          contract[type].push(c);
+        }
+
+        return contract;
       },
     },
 
@@ -197,7 +214,7 @@ define(function(require, exports, module) {
   </Section>
 
   <Section title="Contracts" class="col-12 col-md-6">
-    <p v-if="contracts.length == 0" class="font-italic text-warning">
+    <p v-if="allContracts.length == 0" class="font-italic text-warning">
       There are no contracts available at this time.
     </p>
 
@@ -207,12 +224,15 @@ define(function(require, exports, module) {
         boards accessible on your personal comm.
       </p>
 
-      <p>
-        <btn v-for="c in contracts" :key="c.mission.title" @click="setContract(c)" block=1>
-          {{c.mission.short_title}}
-          <badge right=1>{{c.mission.price|csn}}c</badge>
-        </btn>
-      </p>
+      <div v-for="(list, type) in contracts" :key="type">
+        <h4>{{type}}</h4>
+        <p>
+          <btn v-for="c in list" :key="c.mission.title" @click="setContract(c)" block=1>
+            {{c.mission.short_title}}
+            <badge right=1>{{c.mission.price|csn}}c</badge>
+          </btn>
+        </p>
+      </div>
 
       <modal v-if="contract" @close="clearContract()" footer=1 xclose=1 title="Contract Details">
         <h5>{{contract.mission.title}}</h5>
@@ -221,6 +241,7 @@ define(function(require, exports, module) {
         <btn slot="footer" @click="acceptContract" close=1>Accept contract</btn>
         <btn slot="footer" @click="clearContract" close=1>No thank you</btn>
       </modal>
+
     </template>
   </Section>
 </div>

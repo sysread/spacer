@@ -104,6 +104,7 @@ export abstract class Mission {
   abstract get short_title(): string;
   abstract get description(): string;
   abstract get description_remaining(): string;
+  abstract get mission_type(): string;
 
   get faction(): t.faction {
     return data.bodies[this.issuer].faction;
@@ -273,6 +274,10 @@ export class Passengers extends Mission {
     return data.bodies[this.dest].name;
   }
 
+  get mission_type(): string {
+    return 'Passenger';
+  }
+
   get title(): string {
     const reward = util.csn(this.price);
     return `Passengers to ${this.destination} in ${this.time_left} for ${reward}c`;
@@ -326,7 +331,7 @@ export class Smuggler extends Mission {
 
   constructor(opt: SavedSmuggler) {
     opt.turns    = 2 * Math.max(data.turns_per_day * 3, estimateTransitTimeAU(10));
-    opt.reward   = 4 * resources[opt.item].value * opt.amt;
+    opt.reward   = 1.5 * resources[opt.item].value * opt.amt;
     opt.standing = Math.ceil(Math.log10(opt.reward));
 
     super(opt);
@@ -334,6 +339,10 @@ export class Smuggler extends Mission {
     this.item     = opt.item;
     this.amt      = opt.amt;
     this.amt_left = opt.amt_left || opt.amt;
+  }
+
+  get mission_type(): string {
+    return 'Smuggling';
   }
 
   get title(): string {
@@ -354,13 +363,21 @@ export class Smuggler extends Mission {
       target: this.issuer,
     }).map((c: Conflict) => c.proponent);
 
-    return [
-      `There is currently a ban in trade against our faction.`,
-      `As a result, we are in desparate need of ${this.item} as our supplies dwindle.`,
+    const lines: string[] = [];
+
+    if (data.resources[this.item].contraband) {
+      lines.push(`We wish to acquire some ${this.item} in a quiet fashion. We heard that you were a person of tact who may be able to assist us.`);
+    } else if (window.game.planets[this.issuer].hasTradeBan) {
+      lines.push(`There is currently a ban in trade against our faction. As a result, we are in desparate need of ${this.item} as our supplies dwindle.`);
+    }
+
+    lines.push(
       `We are asking you to acquire ${this.amt} units of ${this.item} and return them here within ${this.time_total} by ${this.end_date}.`,
       `These goods will be quietly removed from your hold by our people when you arrive at the dock.`,
       `We will offer you ${reward} credits you for the completion of this contract in a timely fashion.`,
-    ].join(' ');
+    );
+    
+    return lines.join(' ');
   }
 
   get description_remaining(): string {

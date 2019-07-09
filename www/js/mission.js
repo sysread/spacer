@@ -195,6 +195,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
         get destination() {
             return data_1.default.bodies[this.dest].name;
         }
+        get mission_type() {
+            return 'Passenger';
+        }
         get title() {
             const reward = util.csn(this.price);
             return `Passengers to ${this.destination} in ${this.time_left} for ${reward}c`;
@@ -235,12 +238,15 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
     class Smuggler extends Mission {
         constructor(opt) {
             opt.turns = 2 * Math.max(data_1.default.turns_per_day * 3, estimateTransitTimeAU(10));
-            opt.reward = 4 * resource_1.resources[opt.item].value * opt.amt;
+            opt.reward = 1.5 * resource_1.resources[opt.item].value * opt.amt;
             opt.standing = Math.ceil(Math.log10(opt.reward));
             super(opt);
             this.item = opt.item;
             this.amt = opt.amt;
             this.amt_left = opt.amt_left || opt.amt;
+        }
+        get mission_type() {
+            return 'Smuggling';
         }
         get title() {
             const name = window.game.planets[this.issuer].name;
@@ -256,13 +262,15 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
                 name: 'blockade',
                 target: this.issuer,
             }).map((c) => c.proponent);
-            return [
-                `There is currently a ban in trade against our faction.`,
-                `As a result, we are in desparate need of ${this.item} as our supplies dwindle.`,
-                `We are asking you to acquire ${this.amt} units of ${this.item} and return them here within ${this.time_total} by ${this.end_date}.`,
-                `These goods will be quietly removed from your hold by our people when you arrive at the dock.`,
-                `We will offer you ${reward} credits you for the completion of this contract in a timely fashion.`,
-            ].join(' ');
+            const lines = [];
+            if (data_1.default.resources[this.item].contraband) {
+                lines.push(`We wish to acquire some ${this.item} in a quiet fashion. We heard that you were a person of tact who may be able to assist us.`);
+            }
+            else if (window.game.planets[this.issuer].hasTradeBan) {
+                lines.push(`There is currently a ban in trade against our faction. As a result, we are in desparate need of ${this.item} as our supplies dwindle.`);
+            }
+            lines.push(`We are asking you to acquire ${this.amt} units of ${this.item} and return them here within ${this.time_total} by ${this.end_date}.`, `These goods will be quietly removed from your hold by our people when you arrive at the dock.`, `We will offer you ${reward} credits you for the completion of this contract in a timely fashion.`);
+            return lines.join(' ');
         }
         get description_remaining() {
             return [
