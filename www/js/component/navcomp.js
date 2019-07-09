@@ -111,6 +111,12 @@ define(function(require, exports, module) {
     mounted() {
       this.navcomp = new NavComp(this.game.player, game.locus);
 
+      for (const contract of game.player.contracts) {
+        if (contract.dest) {
+          this.dest = contract.dest;
+        }
+      }
+
       if ($('#spacer-nav').hasClass('collapsing')) {
         $('#spacer-nav').one('hidden.bs.collapse', () => {
           this.is_ready = true;
