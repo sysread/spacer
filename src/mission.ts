@@ -370,28 +370,39 @@ export class Smuggler extends Mission {
     ].join(' ');
   }
 
+  checkMissionStatus() {
+    if (!this.is_expired && !this.is_complete && window.game.locus == this.issuer) {
+      const amt = Math.min(this.amt_left, window.game.player.ship.cargo.count(this.item));
+
+      if (amt > 0) {
+        this.amt_left -= amt;
+        window.game.player.ship.unloadCargo(this.item, amt);
+        window.game.planets[this.issuer].sell(this.item, amt);
+
+        if (this.amt_left == 0) {
+          window.game.notify(`All promised units of ${this.item} have been delivered.`);
+          this.finish();
+          return true;
+        }
+        else {
+          window.game.notify(`You have delivered ${amt} units of ${this.item}. ${this.description_remaining}.`);
+          return false;
+        }
+      }
+    }
+
+    return false;
+  }
+
   accept() {
     super.accept();
 
+    // maybe the player already has some of the goods in the ship's hold
+    this.checkMissionStatus();
+
     watch('arrived', (event: Arrived) => {
-      if (!this.is_expired && !this.is_complete && event.detail.dest == this.issuer) {
-        const amt = Math.min(this.amt_left, window.game.player.ship.cargo.count(this.item));
-
-        if (amt > 0) {
-          this.amt_left -= amt;
-          window.game.player.ship.unloadCargo(this.item, amt);
-          window.game.planets[this.issuer].sell(this.item, amt);
-
-          if (this.amt_left == 0) {
-            window.game.notify(`All promised units of ${this.item} have been delivered.`);
-            this.finish();
-            return {complete: true};
-          }
-          else {
-            window.game.notify(`You have delivered ${amt} units of ${this.item}. ${this.description_remaining}.`);
-            return {complete: false};
-          }
-        }
+      if (this.checkMissionStatus()) {
+        return {complete: true};
       }
 
       return {complete: false};
