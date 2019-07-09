@@ -192,6 +192,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
                 throw new Error(`no transits possible between ${orig} and ${dest}`);
             }
         }
+        get required_standing() {
+            return 'Neutral';
+        }
         get destination() {
             return data_1.default.bodies[this.dest].name;
         }
@@ -241,6 +244,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             this.item = opt.item;
             this.amt = opt.amt;
             this.amt_left = opt.amt_left || opt.amt;
+        }
+        get required_standing() {
+            return 'Friendly';
         }
         get title() {
             const name = window.game.planets[this.issuer].name;

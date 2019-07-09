@@ -989,8 +989,9 @@ export class Planet {
   }
 
   neededResourceAmount(item: Resource) {
-    const amount = this.getDemand(item.name) - this.getSupply(item.name) - this.pending.get(item.name);
-    return Math.max(Math.ceil(amount), this.avgStockWanted(item.name));
+    //const amount = this.getDemand(item.name) - this.getSupply(item.name) - this.pending.get(item.name);
+    //return Math.max(Math.ceil(amount), this.avgStockWanted(item.name));
+    return Math.ceil(this.getNeed(item.name) * 2);
   }
 
   neededResources(): NeededResources {
@@ -1306,29 +1307,33 @@ export class Planet {
       });
     }
 
-    const missions = this.contracts.filter(c => c instanceof Smuggler);
+    const max_count = Math.ceil(this.scale(1));
+    const missions = this.contracts.filter(c => c instanceof Smuggler).slice(0, max_count);
+
     this.contracts = this.contracts.filter(c => !(c instanceof Smuggler));
 
-    const needed = this.neededResources();
+    if (missions.length < max_count) {
+      const needed = this.neededResources();
 
-    for (const item of needed.prioritized) {
-      if (missions.length > 3)
-        break;
+      for (const item of needed.prioritized) {
+        if (missions.length >= max_count)
+          break;
 
-      if (hasTradeBan || data.resources[item].contraband) {
-        const batch  = util.clamp(needed.amounts[item], 1, window.game.player.ship.cargoSpace);
-        const amount = util.clamp(util.fuzz(batch, 1.00), 1); // between 1 and 2 * cargo space
+        if (hasTradeBan || data.resources[item].contraband) {
+          const batch  = util.clamp(needed.amounts[item], 1, window.game.player.ship.cargoSpace);
+          const amount = util.clamp(util.fuzz(batch, 1.00), 1); // between 1 and 2 * cargo space
 
-        const mission = new Smuggler({
-          issuer: this.body,
-          item:   item,
-          amt:    util.R(amount),
-        })
+          const mission = new Smuggler({
+            issuer: this.body,
+            item:   item,
+            amt:    util.R(amount),
+          })
 
-        missions.push({
-          valid_until: util.getRandomInt(30, 60) * data.turns_per_day,
-          mission: mission,
-        });
+          missions.push({
+            valid_until: util.getRandomInt(30, 60) * data.turns_per_day,
+            mission: mission,
+          });
+        }
       }
     }
 

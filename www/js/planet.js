@@ -739,8 +739,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return Math.max(this.min_stock, amount);
         }
         neededResourceAmount(item) {
-            const amount = this.getDemand(item.name) - this.getSupply(item.name) - this.pending.get(item.name);
-            return Math.max(Math.ceil(amount), this.avgStockWanted(item.name));
+            //const amount = this.getDemand(item.name) - this.getSupply(item.name) - this.pending.get(item.name);
+            //return Math.max(Math.ceil(amount), this.avgStockWanted(item.name));
+            return Math.ceil(this.getNeed(item.name) * 2);
         }
         neededResources() {
             const amounts = {}; // Calculate how many of each item we want
@@ -991,24 +992,27 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 });
             }
-            const missions = this.contracts.filter(c => c instanceof mission_1.Smuggler);
+            const max_count = Math.ceil(this.scale(1));
+            const missions = this.contracts.filter(c => c instanceof mission_1.Smuggler).slice(0, max_count);
             this.contracts = this.contracts.filter(c => !(c instanceof mission_1.Smuggler));
-            const needed = this.neededResources();
-            for (const item of needed.prioritized) {
-                if (missions.length > 3)
-                    break;
-                if (hasTradeBan || data_1.default.resources[item].contraband) {
-                    const batch = util.clamp(needed.amounts[item], 1, window.game.player.ship.cargoSpace);
-                    const amount = util.clamp(util.fuzz(batch, 1.00), 1); // between 1 and 2 * cargo space
-                    const mission = new mission_1.Smuggler({
-                        issuer: this.body,
-                        item: item,
-                        amt: util.R(amount),
-                    });
-                    missions.push({
-                        valid_until: util.getRandomInt(30, 60) * data_1.default.turns_per_day,
-                        mission: mission,
-                    });
+            if (missions.length < max_count) {
+                const needed = this.neededResources();
+                for (const item of needed.prioritized) {
+                    if (missions.length >= max_count)
+                        break;
+                    if (hasTradeBan || data_1.default.resources[item].contraband) {
+                        const batch = util.clamp(needed.amounts[item], 1, window.game.player.ship.cargoSpace);
+                        const amount = util.clamp(util.fuzz(batch, 1.00), 1); // between 1 and 2 * cargo space
+                        const mission = new mission_1.Smuggler({
+                            issuer: this.body,
+                            item: item,
+                            amt: util.R(amount),
+                        });
+                        missions.push({
+                            valid_until: util.getRandomInt(30, 60) * data_1.default.turns_per_day,
+                            mission: mission,
+                        });
+                    }
                 }
             }
             this.contracts = this.contracts.concat(missions);
