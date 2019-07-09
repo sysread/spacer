@@ -48,11 +48,11 @@ define(function(require, exports, module) {
       nice older lady...
     </p>
 
-    <btn :muted="!needsFuel() || !affordFuel()" @click="modal='refuel'">Refuel</btn>
-    <btn :muted="!needsFuel() || !hasFuel()" @click="modal='transfer'">Transfer fuel</btn>
-    <btn :muted="!hasDamage()" @click="modal='repair'">Repairs</btn>
-    <btn @click="open('ships')">Ships</btn>
-    <btn @click="open('addons')">Upgrades</btn>
+    <btn block=1 :muted="!needsFuel() || !affordFuel()" @click="modal='refuel'">Refuel</btn>
+    <btn block=1 :muted="!needsFuel() || !hasFuel()" @click="modal='transfer'">Transfer fuel</btn>
+    <btn block=1 :muted="!hasDamage()" @click="modal='repair'">Repairs</btn>
+    <btn block=1 @click="open('ships')">Ships</btn>
+    <btn block=1 @click="open('addons')">Upgrades</btn>
   </Section>
 
   <shipyard-refuel v-if="modal=='refuel'" @close="modal=''" />
