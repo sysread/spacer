@@ -991,7 +991,7 @@ export class Planet {
   neededResourceAmount(item: Resource) {
     //const amount = this.getDemand(item.name) - this.getSupply(item.name) - this.pending.get(item.name);
     //return Math.max(Math.ceil(amount), this.avgStockWanted(item.name));
-    return Math.ceil(this.getNeed(item.name) * 2);
+    return Math.ceil(this.getNeed(item.name) * 1.5);
   }
 
   neededResources(): NeededResources {
