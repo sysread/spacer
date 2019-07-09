@@ -8,42 +8,10 @@ import * as Vec from './vector';
 import * as util from './util';
 import * as t from './common';
 
-declare var wasm: {
-  navcomp: {
-    memory: {
-      buffer: ArrayBuffer;
-    },
-
-    alloc: (size: number) => number;
-    free: (ptr: number, len: number) => void;
-
-    course_new: (turns: number) => number;
-    course_del: (key: number) => void;
-
-    course_set_final_position: (key: number, x: number, y: number, z: number) => void;
-    course_set_final_velocity: (key: number, x: number, y: number, z: number) => void;
-    course_set_initial_position: (key: number, x: number, y: number, z: number) => void;
-    course_set_initial_velocity: (key: number, x: number, y: number, z: number) => void;
-
-    course_build_path: (key: number) => void;
-    course_max_velocity: (key: number) => number;
-    course_segment: (key: number, ptr: number, len: number) => boolean;
-
-    course_accel: (turns: number, pxi: number, pyi: number, pzi: number, vxi: number, vyi: number, vzi: number, pxf: number, pyf: number, pzf: number, vxf: number, vyf: number, vzf: number, ptr: number, len: number) => boolean;
-  };
-}
-
-const ARG_2_U32 = 2 * Uint32Array.BYTES_PER_ELEMENT;
-const RES_4_F64 = 4 * Float64Array.BYTES_PER_ELEMENT;
-const RES_5_F64 = 5 * Float64Array.BYTES_PER_ELEMENT;
-const ptr = wasm.navcomp.alloc(RES_4_F64);
-
-const SPT       = data.hours_per_turn * 3600; // seconds per turn
-const DT        = 200;                        // frames per turn for euler integration
-const TI        = SPT / DT;                   // seconds per frame
-const POSITION  = 0;
-const VELOCITY  = 1;
-
+const hypot = Math.hypot;
+const SPT = data.hours_per_turn * 3600; // seconds per turn
+const DT = 200; // frames per turn for euler integration
+const TI = SPT / DT; // seconds per frame
 
 export interface PathSegment {
   position: Point;
@@ -66,79 +34,135 @@ export interface Body {
   velocity: Point;
 }
 
-// See comment about ugliness in navcomp.zig
-export function calculate_acceleration(turns: number, initial: Body, final: Body): Acceleration {
-  wasm.navcomp.course_accel(
-    turns,
 
-    initial.position[0],
-    initial.position[1],
-    initial.position[2],
+function Motion() {
+  "use asm";
 
-    initial.velocity[0],
-    initial.velocity[1],
-    initial.velocity[2],
+  /*
+   * tt: total time
+   * pi: initial position
+   * pf: final position
+   * vi: initial velocity
+   * vf: final velocity
+   */
+  function linear_acceleration(tt: number, pi: number, pf: number, vi: number, vf: number): number {
+    tt = +tt;
+    pi = +pi;
+    pf = +pf;
+    vi = +vi;
+    vf = +vf;
 
-    final.position[0],
-    final.position[1],
-    final.position[2],
+    var t = 0.0,
+        dvf = 0.0,
+        dvi = 0.0,
+        a = 0.0;
 
-    final.velocity[0],
-    final.velocity[1],
-    final.velocity[2],
+    // time to flip point
+    t = tt / 2.0;
 
-    ptr,
-    RES_5_F64,
-  );
+    // portion of final velocity to match by flip point
+    dvf = vf * 2.0 / t;
 
-  const [res_ptr, res_len]  = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + ARG_2_U32));
-  const [vel, acc, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + RES_5_F64));
+    // portion of total change in velocity to apply by flip point
+    dvi = (vi - dvf) * 2.0 / t;
+
+    // calculate linear acceleration
+    a = (pf - pi) / (t * t) - dvi;
+
+    return +a;
+  }
 
   return {
-    maxvel: vel,
-    length: acc,
-    vector: [x, y, z],
+    linear_acceleration: linear_acceleration,
   };
 }
 
+const motion = Motion();
 
-export function calculate_trajectory(turns: number, initial: Body, final: Body): Trajectory {
-  const key = wasm.navcomp.course_new(turns);
 
-  wasm.navcomp.course_set_initial_position(key, ...initial.position);
-  wasm.navcomp.course_set_initial_velocity(key, ...initial.velocity);
-  wasm.navcomp.course_set_final_position(key, ...final.position);
-  wasm.navcomp.course_set_final_velocity(key, ...final.velocity);
-  wasm.navcomp.course_build_path(key);
+/**
+ * Calculates the acceleration vector required for a given transit.
+ *
+ * Note: calculating linearly in 3 axes is significantly faster (and uglier)
+ * than using a vector.
+ */
+export function calculate_acceleration(turns: number, initial: Body, final: Body): Acceleration {
+  const t = SPT * turns;
 
-  const max_velocity = wasm.navcomp.course_max_velocity(key);
+  const ax = motion.linear_acceleration(t, initial.position[0], final.position[0], initial.velocity[0], final.velocity[0]);
+  const ay = motion.linear_acceleration(t, initial.position[1], final.position[1], initial.velocity[1], final.velocity[1]);
+  const az = motion.linear_acceleration(t, initial.position[2], final.position[2], initial.velocity[2], final.velocity[2]);
 
-  //const ptr = wasm.navcomp.alloc(RES_4_F64);
-  const path: PathSegment[] = [];
+  const a = Math.sqrt(ax * ax + ay * ay + az * az);
 
-  for (let i = 0; i < turns + 2; ++i) { // turns+2 because initial is first, final is last, path is in the middle
-    const result = wasm.navcomp.course_segment(key, ptr, RES_4_F64);
-
-    if (result) {
-      const [res_ptr, res_len] = new Uint32Array(wasm.navcomp.memory.buffer.slice(ptr, ptr + ARG_2_U32));
-      const [vel, x, y, z] = new Float64Array(wasm.navcomp.memory.buffer.slice(res_ptr, res_ptr + RES_4_F64));
-
-      path.push({
-        position: [x, y, z],
-        velocity: vel,
-      });
-    }
-  }
-
-  //wasm.navcomp.free(ptr, ARG_4_F64);
-  wasm.navcomp.course_del(key);
+  const vx = ax * t;
+  const vy = ay * t;
+  const vz = az * t;
+  const v = Math.sqrt(vx * vx + vy * vy + vz * vz);
 
   return {
-    max_velocity: max_velocity,
+    maxvel: v,
+    length: a,
+    vector: [ax, ay, az],
+  };
+}
+
+/**
+ * Calculates the trajector for a given transit.
+ *
+ * Note: calculating linearly in three axes is significantly faster (and
+ * uglier) than using a vector.
+ */
+export function calculate_trajectory(turns: number, initial: Body, final: Body): Trajectory {
+  const tflip = turns * SPT / 2;
+
+  const acc = calculate_acceleration(turns, initial, final);
+  const [ax, ay, az] = acc.vector;
+
+  const dvx = ax * TI;
+  const dvy = ay * TI;
+  const dvz = az * TI;
+
+  const dsx = ax * (TI * TI) / 2;
+  const dsy = ay * (TI * TI) / 2;
+  const dsz = az * (TI * TI) / 2;
+
+  let [px, py, pz] = initial.position.slice(0);
+  let [vx, vy, vz] = initial.velocity.slice(0);
+
+  const path: PathSegment[] = [
+    {position: [px, py, pz], velocity: hypot(vx, vy, vz)}
+  ];
+
+  for (let turn = 1, t = 0; turn < turns; ++turn) {
+    for (let e = 0; e < DT; ++e) {
+      t += TI;
+
+      if (t < tflip) {
+        vx += dvx, vy += dvy, vz += dvz;
+      }
+      else {
+        vx -= dvx, vy -= dvy, vz -= dvz;
+      }
+
+      px += dsx + vx * TI;
+      py += dsy + vy * TI;
+      pz += dsz + vz * TI;
+    }
+
+    path.push({position: [px, py, pz], velocity: hypot(vx, vy, vz)});
+  }
+
+  path.push({
+    position: [final.position[0], final.position[1], final.position[2]],
+    velocity: hypot(vx, vy, vz)},
+  );
+
+  return {
+    max_velocity: acc.maxvel,
     path: path,
   };
 }
-
 
 export class NavComp {
   player:     Person;

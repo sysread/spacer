@@ -107,7 +107,13 @@ const _trait = {
   'manufacturing hub': true,
   'capital':           true,
   'military':          true,
-}
+};
+
+const _condition_trigger = {
+  shortage:  true,
+  surplus:   true,
+  condition: true,
+};
 
 export const Standing = {
   Criminal:   [-100, -50],
@@ -148,6 +154,9 @@ export const traits = Object.keys(_trait) as trait[];
 
 export type standing = keyof typeof Standing;
 export const standings = Object.keys(Standing) as standing[];
+
+export type condition_trigger = keyof typeof _condition_trigger;
+export const condition_triggers = Object.keys(_condition_trigger) as condition_trigger[];
 
 
 export interface Counter {
@@ -242,7 +251,7 @@ export interface Drive {
 
 
 interface BaseAddon {
-  [key:           string]:  any;
+  [key: string]:  any;
   name:           string;
   mass:           number;
   price:          number;
@@ -291,6 +300,7 @@ export interface Trait {
 
 
 export interface ConditionTriggers {
+  //[key in condition_trigger]?: Counter;
   shortage:  Counter;
   surplus:   Counter;
   condition: Counter;

@@ -19,27 +19,83 @@ define(["require", "exports", "./data", "./util"], function (require, exports, d
             this.produces = data_1.default.conditions[this.name].produces || {};
             this.consumes = data_1.default.conditions[this.name].consumes || {};
             this.triggers = data_1.default.conditions[this.name].triggers || {};
+            this.affectedResources = {};
+            Object.assign(this.affectedResources, this.produces, this.consumes);
             if (init) {
                 this.turns_total = init.turns_total;
                 this.turns_done = init.turns_done;
             }
             else {
-                this.turns_total = data_1.default.turns_per_day * util.getRandomInt(this.min_days, this.max_days);
+                this.turns_total = this.randomDuration();
                 this.turns_done = 0;
             }
         }
-        get min_days() { return data_1.default.conditions[this.name].days[0]; }
-        get max_days() { return data_1.default.conditions[this.name].days[1]; }
-        get on_shortage() { return this.triggers.shortage || {}; }
-        get on_surplus() { return this.triggers.surplus || {}; }
-        get on_condition() { return this.triggers.condition || {}; }
-        get turns_left() { return this.turns_total - this.turns_done; }
-        get is_over() { return this.turns_done >= this.turns_total; }
-        inc_turns() { ++this.turns_done; }
-        mul_turns(f) {
-            this.turns_total = Math.ceil(this.turns_total * f);
+        get minDays() { return data_1.default.conditions[this.name].days[0]; }
+        get maxDays() { return data_1.default.conditions[this.name].days[1]; }
+        get turnsLeft() { return this.turns_total - this.turns_done; }
+        get isOver() { return this.turns_done >= this.turns_total; }
+        randomDuration() {
+            return data_1.default.turns_per_day * util.getRandomInt(this.minDays, this.maxDays);
+        }
+        reduceDuration(fraction) {
+            this.turns_total = Math.ceil(this.turns_total * fraction);
+        }
+        turn(p) {
+            for (const item of Object.keys(this.triggers.shortage)) {
+                if (!p.hasShortage(item)) {
+                    this.reduceDuration(0.8);
+                }
+            }
+            for (const item of Object.keys(this.triggers.surplus)) {
+                if (!p.hasSurplus(item)) {
+                    this.reduceDuration(0.8);
+                }
+            }
+            for (const cond of Object.keys(this.triggers.condition)) {
+                if (!p.hasCondition(cond) && !p.hasTrait(cond)) {
+                    this.reduceDuration(0.8);
+                }
+            }
+            ++this.turns_done;
+        }
+        /**
+         * Tests for the chance that this condition might befall a market. Always
+         * false if the market is already suffering from the condition. Otherwise,
+         * the chance is based on the probability for the given resource
+         * shortage/surplus or existence of another condition for trait (see
+         * data.conditions.triggers).
+         */
+        testForChance(p) {
+            // False if already active
+            if (p.hasCondition(this.name)) {
+                return false;
+            }
+            // Shortages
+            for (const item of Object.keys(this.triggers.shortage)) {
+                if (p.hasShortage(item)) {
+                    if (util.chance(this.triggers.shortage[item])) {
+                        return true;
+                    }
+                }
+            }
+            // Surpluses
+            for (const item of Object.keys(this.triggers.surplus)) {
+                if (p.hasSurplus(item)) {
+                    if (util.chance(this.triggers.surplus[item])) {
+                        return true;
+                    }
+                }
+            }
+            // Conditions
+            for (const cond of Object.keys(this.triggers.condition)) {
+                if (p.hasCondition(cond) || p.hasTrait(cond)) {
+                    if (util.chance(this.triggers.condition[cond])) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
     exports.Condition = Condition;
-    ;
 });

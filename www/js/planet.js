@@ -159,7 +159,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             for (const item of this.need.keys())
                 this.need.inc(item, this.getNeed(item));
             this.need.rollup();
-            this._exporter = {};
+            // this is only affected by conditions, so it may be cleared as needed
+            //this._exporter = {};
             this._need = {};
             // randomly cycle updates to price
             for (const item of t.resources) {
@@ -169,6 +170,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     // set a new turn modulus for 3-12 days
                     this._cycle[item] = util.getRandomInt(3, 12) * data_1.default.turns_per_day;
                 }
+            }
+        }
+        clearNetExporterCache(items) {
+            for (const item of Object.keys(items)) {
+                delete this._exporter[item];
             }
         }
         get desc() {
@@ -947,53 +953,18 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             // longer active. Where condition triggers no longer exist, conditions'
             // duration is reduced.
             this.conditions = this.conditions.filter(c => {
-                for (const item of Object.keys(c.triggers.shortage)) {
-                    if (!this.hasShortage(item)) {
-                        c.mul_turns(0.8);
-                    }
+                c.turn(this);
+                if (c.isOver) {
+                    this.clearNetExporterCache(c.affectedResources);
                 }
-                for (const item of Object.keys(c.triggers.surplus)) {
-                    if (!this.hasSurplus(item)) {
-                        c.mul_turns(0.8);
-                    }
-                }
-                for (const cond of Object.keys(c.triggers.condition)) {
-                    if (!this.hasCondition(cond)) {
-                        c.mul_turns(0.8);
-                    }
-                }
-                c.inc_turns();
-                return !c.is_over;
+                return !c.isOver;
             });
             // Test for chance of new conditions
-            for (const c of Object.keys(data_1.default.conditions)) {
-                // Skip conditions that are already active
-                if (this.hasCondition(c)) {
-                    continue;
-                }
-                // Shortages
-                for (const item of Object.keys(data_1.default.conditions[c].triggers.shortage)) {
-                    if (this.hasShortage(item)) {
-                        if (util.chance(data_1.default.conditions[c].triggers.shortage[item])) {
-                            this.conditions.push(new condition_1.Condition(c));
-                        }
-                    }
-                }
-                // Surpluses
-                for (const item of Object.keys(data_1.default.conditions[c].triggers.surplus)) {
-                    if (this.hasSurplus(item)) {
-                        if (util.chance(data_1.default.conditions[c].triggers.surplus[item])) {
-                            this.conditions.push(new condition_1.Condition(c));
-                        }
-                    }
-                }
-                // Conditions
-                for (const cond of Object.keys(data_1.default.conditions[c].triggers.condition)) {
-                    if (this.hasCondition(cond) || this.hasTrait(cond)) {
-                        if (util.chance(data_1.default.conditions[c].triggers.condition[cond])) {
-                            this.conditions.push(new condition_1.Condition(c));
-                        }
-                    }
+            for (const cond of Object.keys(data_1.default.conditions)) {
+                const c = new condition_1.Condition(cond);
+                if (c.testForChance(this)) {
+                    this.conditions.push(c);
+                    this.clearNetExporterCache(c.affectedResources);
                 }
             }
         }

@@ -104,6 +104,11 @@ define(["require", "exports"], function (require, exports) {
         'capital': true,
         'military': true,
     };
+    const _condition_trigger = {
+        shortage: true,
+        surplus: true,
+        condition: true,
+    };
     exports.Standing = {
         Criminal: [-100, -50],
         Untrusted: [-49, -30],
@@ -124,6 +129,7 @@ define(["require", "exports"], function (require, exports) {
     exports.addons = Object.keys(_addon);
     exports.traits = Object.keys(_trait);
     exports.standings = Object.keys(exports.Standing);
+    exports.condition_triggers = Object.keys(_condition_trigger);
     exports.isRaw = (res) => res.mine !== undefined;
     exports.isCraft = (res) => res.recipe !== undefined;
     exports.isOffensive = (addon) => addon.is_offensive;

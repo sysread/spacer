@@ -267,7 +267,9 @@ export class Planet {
 
     this.need.rollup()
 
-    this._exporter = {};
+    // this is only affected by conditions, so it may be cleared as needed
+    //this._exporter = {};
+
     this._need = {};
 
     // randomly cycle updates to price
@@ -279,6 +281,12 @@ export class Planet {
         // set a new turn modulus for 3-12 days
         this._cycle[item] = util.getRandomInt(3, 12) * data.turns_per_day;
       }
+    }
+  }
+
+  clearNetExporterCache(items: t.ResourceCounter) {
+    for (const item of Object.keys(items)) {
+      delete this._exporter[item];
     }
   }
 
@@ -1250,60 +1258,22 @@ export class Planet {
     // longer active. Where condition triggers no longer exist, conditions'
     // duration is reduced.
     this.conditions = this.conditions.filter(c => {
-      for (const item of Object.keys(c.triggers.shortage) as t.resource[]) {
-        if (!this.hasShortage(item)) {
-          c.mul_turns(0.8);
-        }
+      c.turn(this);
+
+      if (c.isOver) {
+        this.clearNetExporterCache(c.affectedResources);
       }
 
-      for (const item of Object.keys(c.triggers.surplus) as t.resource[]) {
-        if (!this.hasSurplus(item)) {
-          c.mul_turns(0.8);
-        }
-      }
-
-      for (const cond of Object.keys(c.triggers.condition)) {
-        if (!this.hasCondition(cond)) {
-          c.mul_turns(0.8);
-        }
-      }
-
-      c.inc_turns();
-      return !c.is_over;
+      return !c.isOver;
     });
 
     // Test for chance of new conditions
-    for (const c of Object.keys(data.conditions)) {
-      // Skip conditions that are already active
-      if (this.hasCondition(c)) {
-        continue;
-      }
+    for (const cond of Object.keys(data.conditions)) {
+      const c = new Condition(cond);
 
-      // Shortages
-      for (const item of Object.keys(data.conditions[c].triggers.shortage)) {
-        if (this.hasShortage(item as t.resource)) {
-          if (util.chance( data.conditions[c].triggers.shortage[item] )) {
-            this.conditions.push(new Condition(c));
-          }
-        }
-      }
-
-      // Surpluses
-      for (const item of Object.keys(data.conditions[c].triggers.surplus)) {
-        if (this.hasSurplus(item as t.resource)) {
-          if (util.chance( data.conditions[c].triggers.surplus[item] )) {
-            this.conditions.push(new Condition(c));
-          }
-        }
-      }
-
-      // Conditions
-      for (const cond of Object.keys(data.conditions[c].triggers.condition)) {
-        if (this.hasCondition(cond) || this.hasTrait(cond)) {
-          if (util.chance( data.conditions[c].triggers.condition[cond] )) {
-            this.conditions.push(new Condition(c));
-          }
-        }
+      if (c.testForChance(this)) {
+        this.conditions.push(c);
+        this.clearNetExporterCache(c.affectedResources);
       }
     }
   }

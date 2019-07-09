@@ -53,7 +53,6 @@
 
       fetch_wasm("allocator")
         .then(_ => fetch_wasm("svgpath"))
-        .then(_ => fetch_wasm("navcomp"))
         .then(_ => {
           // configure requirejs
           require(['js/loader'], () => {

@@ -58,8 +58,8 @@ pub const Course = struct {
         var p = self.initial.position; // initial position
         var v = self.initial.velocity; // initial velocity
 
-        var vx = self.accel.mul_scalar(TI); // static portion of change in velocity each TI
-        var dx = self.accel.mul_scalar(TI * TI).div_scalar(2); // static portion of change in position each TI
+        var dv = self.accel.mul_scalar(TI); // delta-v: static portion of change in velocity each TI
+        var ds = self.accel.mul_scalar(TI * TI).div_scalar(2); // delta-displacement: static portion of change in position each TI
 
         // Start with initial position
         self.path.append(Segment{ .position = p.clone(), .velocity = v.clone() }) catch unreachable;
@@ -75,12 +75,12 @@ pub const Course = struct {
 
                 // Update velocity
                 v = if (t < self.tflip)
-                    v.add(vx) // accelerate before the flip
+                    v.add(dv) // accelerate before the flip
                 else
-                    v.sub(vx); // decelerate after the flip
+                    v.sub(dv); // decelerate after the flip
 
                 // Update position
-                p = p.add(v.mul_scalar(TI).add(dx));
+                p = p.add(v.mul_scalar(TI).add(ds));
             }
 
             self.path.append(Segment{ .position = p.clone(), .velocity = v.clone() }) catch unreachable;

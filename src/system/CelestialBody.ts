@@ -126,15 +126,17 @@ export class CelestialBody extends SpaceThing {
   }
 
   getElementAtTime(name: keyof ElementsBase, t: number): number {
-    if (!this.elements)
+    if (!this.elements) {
       throw new Error(`getElementAtTime called with no elements defined on ${this.name}`);
+    }
 
-    let value = this.elements.base[name];
+    const base = this.elements.base[name];
 
-    if (this.elements.cy !== undefined && this.elements.cy[name] !== undefined)
-      value += this.elements.cy[name] * centuriesBetween(t, J2000);
-
-    return value;
+    if (this.elements.cy && this.elements.cy[name] != null) {
+      return base + this.elements.cy[name] * centuriesBetween(t, J2000);
+    } else {
+      return base;
+    }
   }
 
   getElementsAtTime(t: number): ElementsAtTime {

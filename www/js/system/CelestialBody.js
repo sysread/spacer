@@ -82,12 +82,16 @@ define(["require", "exports", "./orbit", "./helpers/units", "./data/constants", 
             return 2 * Math.PI * Math.sqrt(Math.pow(a, 3) / this.central.mu);
         }
         getElementAtTime(name, t) {
-            if (!this.elements)
+            if (!this.elements) {
                 throw new Error(`getElementAtTime called with no elements defined on ${this.name}`);
-            let value = this.elements.base[name];
-            if (this.elements.cy !== undefined && this.elements.cy[name] !== undefined)
-                value += this.elements.cy[name] * centuriesBetween(t, J2000);
-            return value;
+            }
+            const base = this.elements.base[name];
+            if (this.elements.cy && this.elements.cy[name] != null) {
+                return base + this.elements.cy[name] * centuriesBetween(t, J2000);
+            }
+            else {
+                return base;
+            }
         }
         getElementsAtTime(t) {
             const a = this.getElementAtTime('a', t);
