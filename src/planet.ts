@@ -1295,17 +1295,27 @@ export class Planet {
 
     // If the blockade is over, remove smuggling contracts
     if (this.contracts.length > 0 && window.game) {
-      this.contracts = this.contracts.filter(c => !(c instanceof Smuggler) || hasTradeBan);
+      this.contracts = this.contracts.filter(c => {
+        if (c instanceof Smuggler) {
+          if (hasTradeBan || data.resources[c.item].contraband) {
+            return true;
+          }
+
+          return false;
+        }
+      });
     }
 
-    if (hasTradeBan) {
-      const needed   = this.neededResources();
-      const missions = [];
+    const missions = this.contracts.filter(c => c instanceof Smuggler);
+    this.contracts = this.contracts.filter(c => !(c instanceof Smuggler));
 
-      for (const item of needed.prioritized) {
-        if (missions.length > 3)
-          break;
+    const needed = this.neededResources();
 
+    for (const item of needed.prioritized) {
+      if (missions.length > 3)
+        break;
+
+      if (hasTradeBan || data.resources[item].contraband) {
         const batch  = util.clamp(needed.amounts[item], 1, window.game.player.ship.cargoSpace);
         const amount = util.clamp(util.fuzz(batch, 1.00), 1); // between 1 and 2 * cargo space
 
@@ -1316,13 +1326,13 @@ export class Planet {
         })
 
         missions.push({
-          valid_until: util.getRandomInt(10, 30) * data.turns_per_day,
+          valid_until: util.getRandomInt(30, 60) * data.turns_per_day,
           mission: mission,
         });
       }
-
-      this.contracts = this.contracts.concat(missions);
     }
+
+    this.contracts = this.contracts.concat(missions);
   }
 
   refreshPassengerContracts() {
