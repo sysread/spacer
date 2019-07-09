@@ -35,8 +35,10 @@ export interface Body {
 }
 
 
-function Motion() {
+export function Motion(stdlib: any = null, foreign: any = null, heap: any = null) {
   "use asm";
+
+  var sqrt = stdlib.Math.sqrt;
 
   /*
    * tt: total time
@@ -72,12 +74,31 @@ function Motion() {
     return +a;
   }
 
+  /**
+   * ts: total distance
+   * a:  acceleration
+   */
+  function travel_time(ts: number, a: number): number {
+    a = +a;
+
+    var s = 0.0,
+        v = 0.0,
+        t = 0.0;
+
+    s = ts / 2.0;
+    v = sqrt(2 * a * s);
+    t = v / a;
+
+    return t * 2;
+  }
+
   return {
     linear_acceleration: linear_acceleration,
+    travel_time: travel_time,
   };
 }
 
-const motion = Motion();
+export const motion = Motion({Math: Math});
 
 
 /**

@@ -19,8 +19,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     const SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
     const DT = 200; // frames per turn for euler integration
     const TI = SPT / DT; // seconds per frame
-    function Motion() {
+    function Motion(stdlib = null, foreign = null, heap = null) {
         "use asm";
+        var sqrt = stdlib.Math.sqrt;
         /*
          * tt: total time
          * pi: initial position
@@ -45,11 +46,25 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             a = (pf - pi) / (t * t) - dvi;
             return +a;
         }
+        /**
+         * ts: total distance
+         * a:  acceleration
+         */
+        function travel_time(ts, a) {
+            a = +a;
+            var s = 0.0, v = 0.0, t = 0.0;
+            s = ts / 2.0;
+            v = sqrt(2 * a * s);
+            t = v / a;
+            return t * 2;
+        }
         return {
             linear_acceleration: linear_acceleration,
+            travel_time: travel_time,
         };
     }
-    const motion = Motion();
+    exports.Motion = Motion;
+    exports.motion = Motion({ Math: Math });
     /**
      * Calculates the acceleration vector required for a given transit.
      *
@@ -58,9 +73,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
      */
     function calculate_acceleration(turns, initial, final) {
         const t = SPT * turns;
-        const ax = motion.linear_acceleration(t, initial.position[0], final.position[0], initial.velocity[0], final.velocity[0]);
-        const ay = motion.linear_acceleration(t, initial.position[1], final.position[1], initial.velocity[1], final.velocity[1]);
-        const az = motion.linear_acceleration(t, initial.position[2], final.position[2], initial.velocity[2], final.velocity[2]);
+        const ax = exports.motion.linear_acceleration(t, initial.position[0], final.position[0], initial.velocity[0], final.velocity[0]);
+        const ay = exports.motion.linear_acceleration(t, initial.position[1], final.position[1], initial.velocity[1], final.velocity[1]);
+        const az = exports.motion.linear_acceleration(t, initial.position[2], final.position[2], initial.velocity[2], final.velocity[2]);
         const a = Math.sqrt(ax * ax + ay * ay + az * az);
         const vx = ax * t;
         const vy = ay * t;

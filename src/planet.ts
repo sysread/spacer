@@ -1332,7 +1332,7 @@ export class Planet {
           })
 
           missions.push({
-            valid_until: util.getRandomInt(30, 60) * data.turns_per_day,
+            valid_until: util.getRandomInt(10, 30) * data.turns_per_day,
             mission: mission,
           });
         }

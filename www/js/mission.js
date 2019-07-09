@@ -16,11 +16,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
     physics_1 = __importDefault(physics_1);
     util = __importStar(util);
     function estimateTransitTimeAU(au) {
-        let turns = 0;
-        for (let i = 0, inc = 15; i < au; ++i, inc *= 0.8) {
-            turns += inc * data_1.default.turns_per_day;
-        }
-        return Math.ceil(turns);
+        const s = au * physics_1.default.AU;
+        const a = 0.05 * physics_1.default.G;
+        const t = navcomp_1.motion.travel_time(s, a);
+        const spt = data_1.default.hours_per_turn * 3600;
+        return Math.ceil(t / spt);
     }
     exports.estimateTransitTimeAU = estimateTransitTimeAU;
     function estimateTransitTime(orig, dest) {
@@ -237,7 +237,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
     exports.Passengers = Passengers;
     class Smuggler extends Mission {
         constructor(opt) {
-            opt.turns = 2 * Math.max(data_1.default.turns_per_day * 3, estimateTransitTimeAU(10));
+            opt.turns = Math.ceil(1.5 * estimateTransitTimeAU(util.getRandomInt(5, 10)));
             opt.reward = 1.5 * resource_1.resources[opt.item].value * opt.amt;
             opt.standing = Math.ceil(Math.log10(opt.reward));
             super(opt);

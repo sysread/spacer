@@ -3,7 +3,7 @@ import system from './system';
 import Physics from './physics';
 import { resources } from './resource';
 import { Conflict } from './conflict';
-import { NavComp } from './navcomp';
+import { NavComp, motion } from './navcomp';
 import { trigger, watch, Arrived, CaughtSmuggling } from "./events";
 
 import * as t from './common';
@@ -18,12 +18,11 @@ declare var window: {
 
 
 export function estimateTransitTimeAU(au: number): number {
-  let turns = 0;
-  for (let i = 0, inc = 15; i < au; ++i, inc *= 0.8) {
-    turns += inc * data.turns_per_day;
-  }
-
-  return Math.ceil(turns);
+  const s = au * Physics.AU;
+  const a = 0.05 * Physics.G;
+  const t = motion.travel_time(s, a);
+  const spt = data.hours_per_turn * 3600;
+  return Math.ceil(t / spt);
 }
 
 
@@ -330,7 +329,7 @@ export class Smuggler extends Mission {
   amt_left: number;
 
   constructor(opt: SavedSmuggler) {
-    opt.turns    = 2 * Math.max(data.turns_per_day * 3, estimateTransitTimeAU(10));
+    opt.turns    = Math.ceil(1.5 * estimateTransitTimeAU(util.getRandomInt(5, 10)));
     opt.reward   = 1.5 * resources[opt.item].value * opt.amt;
     opt.standing = Math.ceil(Math.log10(opt.reward));
 
