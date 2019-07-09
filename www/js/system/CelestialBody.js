@@ -5,33 +5,66 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./orbit", "./helpers/units", "./data/constants", "../quaternion"], function (require, exports, orbit_1, units, constants, Q) {
+define(["require", "exports", "./orbit", "../quaternion"], function (require, exports, orbit_1, Q) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    units = __importStar(units);
-    constants = __importStar(constants);
     Q = __importStar(Q);
-    /*
-     * Convenience functions to convert degrees to normalized radians.
-     */
-    const circleInRadians = 2 * Math.PI;
-    const ratioDegToRad = Math.PI / 180;
-    const rad = (n) => n * ratioDegToRad;
-    const nrad = (n) => (n * ratioDegToRad) % circleInRadians;
-    /*
-     * Convenience functions to work with time stamps
-     */
+    function Helpers(stdlib, foreign = null, heap = null) {
+        "use asm";
+        var PI = stdlib.Math.PI;
+        function daysBetween(a, b) {
+            a = +a;
+            b = +b;
+            return (a - b) / (24 * 60 * 60 * 1000);
+        }
+        function centuriesBetween(a, b) {
+            a = +a;
+            b = +b;
+            return (a - b) / (100 * 365.24 * 24 * 60 * 60 * 1000);
+        }
+        function degreesToRadians(n) {
+            n = +n;
+            return n * (PI / 180);
+        }
+        function normalizeRadians(n) {
+            n = +n;
+            return (n * (PI / 180)) % (2 * PI);
+        }
+        function kmToMeters(v) {
+            v = +v;
+            return v * 1000;
+        }
+        function metersToKM(v) {
+            v = +v;
+            return v / 1000;
+        }
+        function AUToMeters(v) {
+            v = +v;
+            return v * 149597870700;
+        }
+        function metersToAU(v) {
+            v = +v;
+            return v / 149597870700;
+        }
+        return {
+            daysBetween: daysBetween,
+            centuriesBetween: centuriesBetween,
+            degreesToRadians: degreesToRadians,
+            normalizeRadians: normalizeRadians,
+            kmToMeters: kmToMeters,
+            metersToKM: metersToKM,
+            AUToMeters: AUToMeters,
+            metersToAU: metersToAU,
+        };
+    }
+    const helpers = Helpers({ Math: Math });
     const J2000 = Date.UTC(2000, 0, 1, 12, 0, 0);
-    const DayInMS = 24 * 60 * 60 * 1000;
-    const CenturyInMS = 100 * 365.24 * DayInMS;
-    const daysBetween = (a, b) => (a - b) / DayInMS;
-    const centuriesBetween = (a, b) => (a - b) / CenturyInMS;
     class SpaceThing {
         constructor(key, name, type, radius) {
             this.key = key;
             this.name = name;
             this.type = type;
-            this.radius = units.kmToMeters(radius);
+            this.radius = helpers.kmToMeters(radius);
         }
         orbit(start) {
             return new orbit_1.Orbit(this, start);
@@ -48,27 +81,27 @@ define(["require", "exports", "./orbit", "./helpers/units", "./data/constants", 
             this.mass = init.mass || 1;
             this.ring = init.ring;
             this.position = init.position;
-            this.mu = constants.G * this.mass; // m^3/s^2
-            this.tilt = init.tilt == undefined ? 0 : rad(-init.tilt);
+            this.mu = this.mass * 6.67408e-11; // *G, in m^3/s^2
+            this.tilt = init.tilt == undefined ? 0 : helpers.degreesToRadians(-init.tilt);
         }
         static adaptData(body) {
             // deep clone the body data, which is ro
             const data = JSON.parse(JSON.stringify(body));
             data.mass = data.mass || 1;
             if (data.ring) {
-                data.ring.innerRadius = units.kmToMeters(data.ring.innerRadius);
-                data.ring.outerRadius = units.kmToMeters(data.ring.outerRadius);
+                data.ring.innerRadius = helpers.kmToMeters(data.ring.innerRadius);
+                data.ring.outerRadius = helpers.kmToMeters(data.ring.outerRadius);
             }
             if (data.elements) { // not the sun or another static body
                 switch (data.elements.format) {
                     case 'jpl-satellites-table':
                     case 'heavens-above':
-                        data.elements.base.a = units.kmToMeters(data.elements.base.a);
+                        data.elements.base.a = helpers.kmToMeters(data.elements.base.a);
                         break;
                     default:
-                        data.elements.base.a = units.AUToMeters(data.elements.base.a);
+                        data.elements.base.a = helpers.AUToMeters(data.elements.base.a);
                         if (data.elements.cy) {
-                            data.elements.cy.a = units.AUToMeters(data.elements.cy.a);
+                            data.elements.cy.a = helpers.AUToMeters(data.elements.cy.a);
                         }
                         break;
                 }
@@ -87,7 +120,7 @@ define(["require", "exports", "./orbit", "./helpers/units", "./data/constants", 
             }
             const base = this.elements.base[name];
             if (this.elements.cy && this.elements.cy[name] != null) {
-                return base + this.elements.cy[name] * centuriesBetween(t, J2000);
+                return base + this.elements.cy[name] * helpers.centuriesBetween(t, J2000);
             }
             else {
                 return base;
@@ -110,12 +143,12 @@ define(["require", "exports", "./orbit", "./helpers/units", "./data/constants", 
             let M = L - lp;
             if (this.elements) {
                 if (this.elements.day) {
-                    M += this.elements.day.M * daysBetween(t, J2000);
+                    M += this.elements.day.M * helpers.daysBetween(t, J2000);
                 }
                 // augmentation for outer planets per:
                 //   https://ssd.jpl.nasa.gov/txt/aprx_pos_planets.pdf
                 if (this.elements.aug) {
-                    const T = centuriesBetween(t, J2000);
+                    const T = helpers.centuriesBetween(t, J2000);
                     const b = this.elements.aug.b;
                     const c = this.elements.aug.c;
                     const s = this.elements.aug.s;
@@ -151,11 +184,11 @@ define(["require", "exports", "./orbit", "./helpers/units", "./data/constants", 
                 return new orbit_1.Frame([0, 0, 0], undefined, t);
             }
             let { a, e, i, L, lp, node, w, M, E } = this.getElementsAtTime(t);
-            i = nrad(i);
-            node = nrad(node);
-            w = nrad(w);
-            M = nrad(M);
-            E = nrad(E);
+            i = helpers.normalizeRadians(i);
+            node = helpers.normalizeRadians(node);
+            w = helpers.normalizeRadians(w);
+            M = helpers.normalizeRadians(M);
+            E = helpers.normalizeRadians(E);
             const x = a * (Math.cos(E) - e);
             const y = a * Math.sin(E) * Math.sqrt(1 - Math.pow(e, 2));
             const p = Q.rotate_vector(Q.mul(Q.from_euler(node, this.central.tilt, 0), Q.from_euler(w, i, 0)), [x, y, 0]);

@@ -1,5 +1,30 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
+    function Helpers(stdlib, foreign = null, heap = null) {
+        "use asm";
+        var hypot = stdlib.Math.hypot;
+        function distance(x1, y1, z1, x2, y2, z2) {
+            x1 = +x1;
+            y1 = +y1;
+            z1 = +z1;
+            x2 = +x2;
+            y2 = +y2;
+            z2 = +z2;
+            return hypot(x2 - x1, y2 - y1, z2 - z1);
+        }
+        function range(t, v, a) {
+            t = +t;
+            v = +v;
+            a = +a;
+            // S = (v * t) + (0.5 * a * t^2)
+            return (v * t) + (0.5 * a * t * t);
+        }
+        return {
+            distance: distance,
+            range: range,
+        };
+    }
+    const helpers = Helpers({ Math: Math });
     class Physics {
         static get C() { return 299792458; } // m/s
         static get G() { return 9.80665; } // m/s/s
@@ -8,40 +33,13 @@ define(["require", "exports"], function (require, exports) {
          * distance([m,m,m], [m,m,m]) -> m
          */
         static distance(p0, p1) {
-            return Math.hypot(p1[0] - p0[0], p1[1] - p0[1], (p1[2] || 0) - (p0[2] || 0));
-        }
-        /*
-         * deltav(kN, kg) -> m/s/s
-         */
-        static deltav(kn, kg) {
-            return kn / kg;
-        }
-        /*
-         * force(kg, m/s/s) -> kN
-         */
-        static force(kg, dv) {
-            return kg * dv;
+            return helpers.distance(p0[0], p0[1], p0[2] || 0, p1[0], p1[1], p1[2] || 0);
         }
         /*
          * range(s, m/s, m/s/s) -> m
          */
         static range(t, v, a) {
-            // S = (v * t) + (0.5 * a * t^2)
-            return (v * t) + (0.5 * a * Math.pow(t, 2));
-        }
-        /*
-         * requiredDeltaV(s, m) -> m/s/s
-         *
-         *  a = (2s / t^2) - (2v / t)
-         */
-        static requiredDeltaV(t, d, v = 0) {
-            return ((2 * d) / Math.pow(t, 2)) - ((2 * v) / t);
-        }
-        /*
-         * velocity(s, m/s, m/s/s) -> m/s
-         */
-        static velocity(t, v, a) {
-            return v + (a * t);
+            return helpers.range(t, v, a);
         }
         /*
          * segment(p0: [x,y,z], p1: [x,y,z], m)

@@ -238,7 +238,7 @@ export class NavComp {
 
   getShipAcceleration() {
     if (this.nominal) {
-      return Physics.deltav(this.player.ship.thrust, this.player.ship.currentMass())
+      return this.player.ship.thrust / this.player.ship.currentMass();
     } else {
       return this.player.shipAcceleration();
     }

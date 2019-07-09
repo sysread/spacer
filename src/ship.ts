@@ -1,5 +1,4 @@
 import data from './data';
-import Physics from './physics';
 import Store from './store';
 
 import { watch, Arrived } from "./events";
@@ -81,7 +80,7 @@ class Ship {
   get restricted()     { return this.shipclass.restricted }
   get faction()        { return this.shipclass.faction }
   get thrust()         { return this.drives * this.drive.thrust + Math.max(0, this.attr('thrust', true)) }
-  get acceleration()   { return Physics.deltav(this.thrust, this.mass) }
+  get acceleration()   { return this.thrust / this.mass }
   get tank()           { return Math.max(0,    this.attr('tank', true)) }
   get fullHull()       { return Math.max(0,    this.attr('hull', true)) }
   get fullArmor()      { return Math.max(0,    this.attr('armor', true)) }
@@ -172,7 +171,7 @@ class Ship {
     if (mass === undefined) mass = this.currentMass();
 
     // Calculate thrust required to accelerate our mass at deltav
-    let thrust = Physics.force(mass, deltav);
+    const thrust = mass * deltav;
 
     // Calculate fraction of full thrust required
     return thrust / this.thrust;
@@ -192,7 +191,7 @@ class Ship {
     if (nominal) {
       fuel = this.tank;
       mass = this.nominalMass(true) + extra_mass;
-      if (accel === undefined) accel = Physics.deltav(this.thrust, mass);
+      if (accel === undefined) accel = this.thrust / mass;
     }
     else {
       fuel = this.fuel;
@@ -227,11 +226,11 @@ class Ship {
   }
 
   currentAcceleration(extra_mass=0) {
-    return Physics.deltav(this.thrust, this.currentMass() + extra_mass);
+    return this.thrust / this.currentMass() + extra_mass;
   }
 
   accelerationWithMass(mass: number) {
-    return Physics.deltav(this.thrust, this.currentMass() + mass);
+    return this.thrust / this.currentMass() + mass;
   }
 
   refuelUnits() {return Math.ceil(this.tank - this.fuel)}

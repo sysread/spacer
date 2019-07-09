@@ -172,7 +172,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
         }
         getShipAcceleration() {
             if (this.nominal) {
-                return physics_1.default.deltav(this.player.ship.thrust, this.player.ship.currentMass());
+                return this.player.ship.thrust / this.player.ship.currentMass();
             }
             else {
                 return this.player.shipAcceleration();

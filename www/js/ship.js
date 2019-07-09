@@ -8,10 +8,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./physics", "./store", "./events", "./util", "./common"], function (require, exports, data_1, physics_1, store_1, events_1, util, t) {
+define(["require", "exports", "./data", "./store", "./events", "./util", "./common"], function (require, exports, data_1, store_1, events_1, util, t) {
     "use strict";
     data_1 = __importDefault(data_1);
-    physics_1 = __importDefault(physics_1);
     store_1 = __importDefault(store_1);
     util = __importStar(util);
     t = __importStar(t);
@@ -57,7 +56,7 @@ define(["require", "exports", "./data", "./physics", "./store", "./events", "./u
         get restricted() { return this.shipclass.restricted; }
         get faction() { return this.shipclass.faction; }
         get thrust() { return this.drives * this.drive.thrust + Math.max(0, this.attr('thrust', true)); }
-        get acceleration() { return physics_1.default.deltav(this.thrust, this.mass); }
+        get acceleration() { return this.thrust / this.mass; }
         get tank() { return Math.max(0, this.attr('tank', true)); }
         get fullHull() { return Math.max(0, this.attr('hull', true)); }
         get fullArmor() { return Math.max(0, this.attr('armor', true)); }
@@ -133,7 +132,7 @@ define(["require", "exports", "./data", "./physics", "./store", "./events", "./u
             if (mass === undefined)
                 mass = this.currentMass();
             // Calculate thrust required to accelerate our mass at deltav
-            let thrust = physics_1.default.force(mass, deltav);
+            const thrust = mass * deltav;
             // Calculate fraction of full thrust required
             return thrust / this.thrust;
         }
@@ -149,7 +148,7 @@ define(["require", "exports", "./data", "./physics", "./store", "./events", "./u
                 fuel = this.tank;
                 mass = this.nominalMass(true) + extra_mass;
                 if (accel === undefined)
-                    accel = physics_1.default.deltav(this.thrust, mass);
+                    accel = this.thrust / mass;
             }
             else {
                 fuel = this.fuel;
@@ -179,10 +178,10 @@ define(["require", "exports", "./data", "./physics", "./store", "./events", "./u
             return this.mass + this.cargoMass() + this.addOnMass() + this.fuel;
         }
         currentAcceleration(extra_mass = 0) {
-            return physics_1.default.deltav(this.thrust, this.currentMass() + extra_mass);
+            return this.thrust / this.currentMass() + extra_mass;
         }
         accelerationWithMass(mass) {
-            return physics_1.default.deltav(this.thrust, this.currentMass() + mass);
+            return this.thrust / this.currentMass() + mass;
         }
         refuelUnits() { return Math.ceil(this.tank - this.fuel); }
         needsFuel() { return this.fuel < this.tank; }

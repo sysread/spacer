@@ -5,6 +5,37 @@ declare var window: {
   Physics: any;
 };
 
+function Helpers(stdlib: any, foreign: any = null, heap: any = null) {
+  "use asm";
+
+  var hypot = stdlib.Math.hypot;
+
+  function distance(x1: number, y1: number, z1: number, x2: number, y2: number, z2: number): number {
+    x1 = +x1;
+    y1 = +y1;
+    z1 = +z1;
+    x2 = +x2;
+    y2 = +y2;
+    z2 = +z2;
+    return hypot(x2 - x1, y2 - y1, z2 - z1);
+  }
+
+  function range(t: number, v: number, a: number): number {
+    t = +t;
+    v = +v;
+    a = +a;
+    // S = (v * t) + (0.5 * a * t^2)
+    return (v * t) + (0.5 * a * t * t);
+  }
+
+  return {
+    distance: distance,
+    range: range,
+  };
+}
+
+const helpers = Helpers({Math: Math});
+
 class Physics {
   static get C()  { return 299792458;    } // m/s
   static get G()  { return 9.80665;      } // m/s/s
@@ -14,49 +45,17 @@ class Physics {
    * distance([m,m,m], [m,m,m]) -> m
    */
   static distance(p0: point, p1: point): number {
-    return Math.hypot(
-      p1[0] - p0[0],
-      p1[1] - p0[1],
-      (p1[2] || 0) - (p0[2] || 0),
+    return helpers.distance(
+      p0[0], p0[1], p0[2] || 0,
+      p1[0], p1[1], p1[2] || 0,
     );
-  }
-
-  /*
-   * deltav(kN, kg) -> m/s/s
-   */
-  static deltav(kn: number, kg: number): number {
-    return kn / kg;
-  }
-
-  /*
-   * force(kg, m/s/s) -> kN
-   */
-  static force(kg: number, dv: number): number {
-    return kg * dv;
   }
 
   /*
    * range(s, m/s, m/s/s) -> m
    */
   static range(t: number, v: number, a: number): number {
-    // S = (v * t) + (0.5 * a * t^2)
-    return (v * t) + (0.5 * a * Math.pow(t, 2));
-  }
-
-  /*
-   * requiredDeltaV(s, m) -> m/s/s
-   *
-   *  a = (2s / t^2) - (2v / t)
-   */
-  static requiredDeltaV(t: number, d: number, v: number=0): number {
-    return ((2 * d) / Math.pow(t, 2)) - ((2 * v) / t);
-  }
-
-  /*
-   * velocity(s, m/s, m/s/s) -> m/s
-   */
-  static velocity(t: number, v: number, a: number): number {
-    return v + (a * t);
+    return helpers.range(t, v, a);
   }
 
   /*
