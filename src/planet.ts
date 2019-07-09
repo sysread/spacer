@@ -1304,6 +1304,8 @@ export class Planet {
 
           return false;
         }
+
+        return true;
       });
     }
 

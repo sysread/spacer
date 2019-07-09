@@ -38,13 +38,14 @@ define(function(require, exports, module) {
       hasPicketLine() { return this.planet.hasPicketLine() },
 
       contracts() {
-        const contracts = [];
+        const contracts = [...this.planet.contracts];
 
-        for (const planet of Object.values(this.game.planets)) {
-          contracts.push(...planet.contracts.filter(c => {
-            return c.mission instanceof Smuggler
-              && this.game.player.hasStanding(planet.faction, c.mission.required_standing);
-          }));
+        if (this.planet.hasTrait('black market')) {
+          for (const planet of Object.values(this.game.planets)) {
+            if (planet.body != this.planet.body) {
+              contracts.push(...planet.contracts.filter(c => c.mission instanceof Smuggler));
+            }
+          }
         }
 
         return contracts.sort((a, b) => {

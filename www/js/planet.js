@@ -990,6 +990,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         }
                         return false;
                     }
+                    return true;
                 });
             }
             const max_count = Math.ceil(this.scale(1));

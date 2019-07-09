@@ -104,7 +104,6 @@ export abstract class Mission {
   abstract get short_title(): string;
   abstract get description(): string;
   abstract get description_remaining(): string;
-  abstract get required_standing(): t.standing;
 
   get faction(): t.faction {
     return data.bodies[this.issuer].faction;
@@ -270,10 +269,6 @@ export class Passengers extends Mission {
     }
   }
 
-  get required_standing(): t.standing{
-    return 'Neutral';
-  }
-
   get destination(): string {
     return data.bodies[this.dest].name;
   }
@@ -285,7 +280,7 @@ export class Passengers extends Mission {
 
   get short_title(): string {
     const dest = util.ucfirst(this.dest);
-    return `Passengers to ${dest}`;
+    return `Passengers to ${this.destination}`;
   }
 
   get description(): string {
@@ -339,10 +334,6 @@ export class Smuggler extends Mission {
     this.item     = opt.item;
     this.amt      = opt.amt;
     this.amt_left = opt.amt_left || opt.amt;
-  }
-
-  get required_standing(): t.standing{
-    return 'Friendly';
   }
 
   get title(): string {
