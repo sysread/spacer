@@ -83,9 +83,7 @@ define(function(require, exports, module) {
       cancel(contract, confirmed) {
         if (this.show_confirm) {
           if (confirmed) {
-            this.$nextTick(() => {
-              contract.cancel();
-            });
+            this.$nextTick(() => contract.cancel());
           }
 
           this.show_confirm = false;
