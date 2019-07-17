@@ -132,6 +132,10 @@ export abstract class Mission {
     return Math.max(0, left);
   }
 
+  get is_accepted(): boolean {
+    return this.status == Status.Accepted;
+  }
+
   get is_expired(): boolean {
     return this.status != Status.Success
         && this.turns_left <= 0;
@@ -375,7 +379,7 @@ export class Smuggler extends Mission {
       `These goods will be quietly removed from your hold by our people when you arrive at the dock.`,
       `We will offer you ${reward} credits you for the completion of this contract in a timely fashion.`,
     );
-    
+
     return lines.join(' ');
   }
 

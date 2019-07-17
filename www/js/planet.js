@@ -972,6 +972,12 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         /*
          * Contracts
          */
+        get availableContracts() {
+            return this.contracts.filter(c => !c.mission.is_accepted);
+        }
+        get availableOffPlanetContracts() {
+            return this.availableContracts.filter(c => c.mission instanceof mission_1.Smuggler);
+        }
         refreshContracts() {
             if (this.contracts.length > 0 && window.game) {
                 this.contracts = this.contracts.filter(c => c.valid_until >= window.game.turns);

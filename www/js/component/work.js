@@ -37,41 +37,45 @@ define(function(require, exports, module) {
       timeSpent()     { return Math.floor(this.turnsWorked / this.data.turns_per_day) },
       hasPicketLine() { return this.planet.hasPicketLine() },
 
-      allContracts() {
-        const contracts = [...this.planet.contracts];
-
-        for (const planet of Object.values(this.game.planets)) {
-          if (planet.body != this.planet.body) {
-            if (this.planet.hasTrait('black market')
-             || this.planet.faction.abbrev == planet.faction.abbrev) {
-              contracts.push(...planet.contracts.filter(c => c.mission instanceof Smuggler));
-            }
-          }
-        }
-
-        return contracts.sort((a, b) => {
-          const a_key = this.planet.distance(a.mission.issuer);
-          const b_key = this.planet.distance(b.mission.issuer);
-          return a_key < b_key ? -1
-               : a_key > b_key ?  1
-                               :  0;
-        });
-      },
-
       contracts() {
-        const contract = {};
+        const contracts = {};
 
-        for (const c of this.allContracts) {
-          const type = c.mission.mission_type;
+        for (const c of this.planet.contracts) {
+          if (c.mission.is_accepted) continue;
 
-          if (!contract[type]) {
-            contract[type] = [];
+          if (!contracts[c.mission.mission_type]) {
+            contracts[c.mission.mission_type] = [];
           }
 
-          contract[type].push(c);
+          contracts[c.mission.mission_type].push(c);
         }
 
-        return contract;
+        for (const p of Object.values(this.game.planets)) {
+          if (p.body == this.planet.body) continue;
+          if (!this.planet.hasTrait('black market') && this.planet.faction.abbrev == p.faction.abbrev) continue;
+
+          for (const c of p.contracts) {
+            if (c.mission.is_accepted) continue;
+
+            if (!contracts[c.mission.mission_type]) {
+              contracts[c.mission.mission_type] = [];
+            }
+
+            contracts[c.mission.mission_type].push(c);
+          }
+        }
+
+        for (const type of Object.keys(contracts)) {
+          contracts[type] = contracts[type].sort((a, b) => {
+            const a_key = this.planet.distance(a.mission.issuer);
+            const b_key = this.planet.distance(b.mission.issuer);
+            return a_key < b_key ? -1
+                 : a_key > b_key ?  1
+                                 :  0;
+          });
+        }
+
+        return contracts;
       },
     },
 
@@ -214,7 +218,7 @@ define(function(require, exports, module) {
   </Section>
 
   <Section title="Contracts" class="col-12 col-md-6">
-    <p v-if="allContracts.length == 0" class="font-italic text-warning">
+    <p v-if="contracts.length == 0" class="font-italic text-warning">
       There are no contracts available at this time.
     </p>
 
@@ -227,7 +231,7 @@ define(function(require, exports, module) {
       <div v-for="(list, type) in contracts" :key="type">
         <h4>{{type}}</h4>
         <p>
-          <btn v-for="c in list" :key="c.mission.title" @click="setContract(c)" block=1>
+          <btn v-for="c in list" :key="c.mission.title" v-if="!c.mission.is_accepted" @click="setContract(c)" block=1>
             {{c.mission.short_title}}
             <badge right=1>{{c.mission.price|csn}}c</badge>
           </btn>

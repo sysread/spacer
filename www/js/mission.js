@@ -78,6 +78,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             }
             return Math.max(0, left);
         }
+        get is_accepted() {
+            return this.status == Status.Accepted;
+        }
         get is_expired() {
             return this.status != Status.Success
                 && this.turns_left <= 0;
