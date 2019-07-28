@@ -961,6 +961,9 @@ export class Planet {
     return [amount, price, standing];
   }
 
+  /*
+   * Task processing
+   */
   schedule(task: EconTask) {
     this.pending.inc(task.item, task.count);
     this.queue.push(task);

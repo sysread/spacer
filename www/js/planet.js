@@ -715,6 +715,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
             return [amount, price, standing];
         }
+        /*
+         * Task processing
+         */
         schedule(task) {
             this.pending.inc(task.item, task.count);
             this.queue.push(task);

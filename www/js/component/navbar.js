@@ -29,6 +29,7 @@ define(function(require, exports, module) {
           'Work':        'work',
           'Market':      'commerce',
           'Fabricators': 'fabricators',
+          'Government':  'government',
           'Shipyard':    'shipyard',
           'NavComp':     'navigation',
           'Status':      'status',

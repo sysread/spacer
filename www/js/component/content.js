@@ -19,6 +19,7 @@ define(function(require, exports, module) {
   require('component/work');
   require('component/commerce');
   require('component/fabricators');
+  require('component/gov');
   require('component/shipyard');
   require('component/ships');
   require('component/addons');
@@ -46,6 +47,7 @@ define(function(require, exports, module) {
         <work          v-else-if="page == 'work'"        @open="open" />
         <market        v-else-if="page == 'commerce'"    @open="open" />
         <fabricators   v-else-if="page == 'fabricators'" @open="open" />
+        <government    v-else-if="page == 'government'"  @open="open" />
         <shipyard      v-else-if="page == 'shipyard'"    @open="open" />
         <ships         v-else-if="page == 'ships'"       @open="open" />
         <addons        v-else-if="page == 'addons'"      @open="open" />

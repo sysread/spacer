@@ -40,6 +40,14 @@ define(["require", "exports", "./data", "./events", "./common"], function (requi
             });
             return trade_bans.length > 0;
         }
+        get properName() {
+            if (this.full_name.startsWith('The')) {
+                return this.full_name;
+            }
+            else {
+                return 'The ' + this.full_name;
+            }
+        }
         toString() {
             return this.abbrev;
         }
@@ -70,6 +78,30 @@ define(["require", "exports", "./data", "./events", "./common"], function (requi
                 window.game.notify(`Busted! You have been fined ${fine} credits and your standing decreased by ${loss}.`);
             }
             return { complete: false };
+        }
+        /*
+         * Returns the amount of money required to zero out a negative standing with
+         * this faction. The rate is based on the sales tax for this faction and the
+         * initial amount of money a player starts with. The rate should be higher
+         * for each successive standing level. If standing is non-negative, the fee
+         * is 0.
+         */
+        restitutionFee(player) {
+            const standing = player.getStanding(this);
+            if (standing >= 0) {
+                return 0;
+            }
+            const tax = this.sales_tax;
+            const base = data_1.default.initial_money;
+            const rate = standing / 10;
+            return Math.ceil(Math.abs(standing * rate * tax * base));
+        }
+        makeRestitution(player) {
+            const fee = this.restitutionFee(player);
+            if (fee > 0) {
+                player.debit(fee);
+                player.setStanding(this.abbrev, 0);
+            }
         }
     }
     exports.Faction = Faction;
