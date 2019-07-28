@@ -322,6 +322,10 @@ export class Planet {
     return false;
   }
 
+  isCapitol(): boolean {
+    return this.hasTrait('capital');
+  }
+
   /*
    * Piracy rates
    */

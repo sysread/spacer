@@ -202,6 +202,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             }
             return false;
         }
+        isCapitol() {
+            return this.hasTrait('capital');
+        }
         /*
          * Piracy rates
          */
