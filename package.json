@@ -10,7 +10,6 @@
   "author": "Jeff Ober",
   "license": "Apache-2.0",
   "dependencies": {
-    "cordova": "^8.1.2",
     "cordova-android": "^7.1.4",
     "cordova-browser": "^5.0.4",
     "cordova-plugin-device": "^2.0.3",
@@ -31,6 +30,7 @@
   },
   "devDependencies": {
     "@types/jquery": "^3.3.30",
+    "cordova": "^9.0.0",
     "typescript": "^3.5.3"
   }
 }
