@@ -23,16 +23,40 @@ define(function(require, exports, module) {
     props: ['page', 'disabled'],
 
     data: function() {
-      const pages = {
-          'Summary':     'summary',
-          'News':        'news',
-          'Work':        'work',
-          'Market':      'commerce',
-          'Fabricators': 'fabricators',
-          'Govt':        'government',
-          'Shipyard':    'shipyard',
-          'NavComp':     'navigation',
-          'Status':      'status',
+      const pages = [
+        'summary',
+        'news',
+        'work',
+        'commerce',
+        'fabricators',
+        'government',
+        'shipyard',
+        'navigation',
+        'status',
+      ];
+
+      const long_names = {
+        'summary':     'Summary',
+        'news':        'News',
+        'work':        'Work',
+        'commerce':    'Commerce',
+        'fabricators': 'Fabrication',
+        'government':  'Government Center',
+        'shipyard':    'Shipyard',
+        'navigation':  'Navigation Computer',
+        'status':      'Status',
+      };
+
+      const short_names = {
+        'summary':     'Summary',
+        'news':        'News',
+        'work':        'Work',
+        'commerce':    'Commerce',
+        'fabricators': 'Fab',
+        'government':  'Govt',
+        'shipyard':    'Shipyard',
+        'navigation':  'Nav',
+        'status':      'Status',
       };
 
       if (window.DEV) {
@@ -41,6 +65,8 @@ define(function(require, exports, module) {
 
       return {
         menu: pages,
+        long_names: long_names,
+        short_names: short_names,
       };
     },
 
@@ -100,8 +126,9 @@ define(function(require, exports, module) {
 
         <div class="collapse navbar-collapse" id="spacer-nav">
           <ul class="navbar-nav mr-auto">
-            <NavItem v-for="(target, label) of menu" :key="target" :active="is_open(target)" @click="open(target)">
-              {{label}}
+            <NavItem v-for="target of menu" :key="target" :active="is_open(target)" @click="open(target)">
+              <div class="d-sm-none">{{ long_names[target] }}</div>
+              <div class="d-none d-sm-block">{{ short_names[target] }}</div>
             </NavItem>
           </ul>
         </div>
