@@ -8,10 +8,30 @@ define(function(require, exports, module) {
   require('component/common');
 
 
+  Vue.component('Conflicts', {
+    computed: {
+      conflicts() {
+        return this.game.get_conflicts();
+      },
+    },
+
+    template: `
+      <ul>
+        <template v-for="conflict in conflicts">
+          <li>
+            {{conflict.proponent}} has declared a {{conflict.name}} against {{conflict.target}}
+          </li>
+        </template>
+      </ul>
+    `,
+  });
+
+
   Vue.component('NewsFeeds', {
     data() {
       return {
         index: null,
+        show_conflicts: false,
       };
     },
 
@@ -47,6 +67,11 @@ define(function(require, exports, module) {
           pleas for your hard-earned scrip, you are able to glean a few tidbits
           from the public news feeds.
         </p>
+
+        <btn block=1 @click="show_conflicts=true" class="my-3">Active Conflicts</btn>
+        <modal v-if="show_conflicts" xclose=1 title="Active Conflicts" @close="show_conflicts=false">
+          <Conflicts />
+        </modal>
 
         <btn block=1 @click="next_body" class="text-left">
           {{name}}
