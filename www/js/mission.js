@@ -195,6 +195,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
                 throw new Error(`no transits possible between ${orig} and ${dest}`);
             }
         }
+        get can_accept_remotely() {
+            return false;
+        }
         get destination() {
             return data_1.default.bodies[this.dest].name;
         }
@@ -247,6 +250,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             this.item = opt.item;
             this.amt = opt.amt;
             this.amt_left = opt.amt_left || opt.amt;
+        }
+        get can_accept_remotely() {
+            return true;
         }
         get mission_type() {
             return 'Smuggling';

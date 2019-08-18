@@ -67,6 +67,12 @@ export class Faction implements t.Faction {
     return this.abbrev;
   }
 
+  hasStanding(faction: Faction, label: t.standing) {
+    const [min, max] = t.Standing[label];
+    const standing = this.standing[faction.abbrev] || 0;
+    return standing >= min;
+  }
+
   isContraband(item: t.resource, player: Person) {
     // item is not contraband
     if (!data.resources[item].contraband)

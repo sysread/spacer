@@ -51,6 +51,11 @@ define(["require", "exports", "./data", "./events", "./common"], function (requi
         toString() {
             return this.abbrev;
         }
+        hasStanding(faction, label) {
+            const [min, max] = t.Standing[label];
+            const standing = this.standing[faction.abbrev] || 0;
+            return standing >= min;
+        }
         isContraband(item, player) {
             // item is not contraband
             if (!data_1.default.resources[item].contraband)

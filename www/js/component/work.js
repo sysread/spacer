@@ -50,12 +50,22 @@ define(function(require, exports, module) {
           contracts[c.mission.mission_type].push(c);
         }
 
+        // Include contracts that can be accepted remotely (like smuggling) for
+        // other friendly factions.
         for (const p of Object.values(this.game.planets)) {
-          if (p.body == this.planet.body) continue;
-          if (!this.planet.hasTrait('black market') && this.planet.faction.abbrev == p.faction.abbrev) continue;
+          if (p.body == this.planet.body)
+            continue;
+
+          if (!this.planet.hasTrait('black market')
+           && !this.planet.faction.hasStanding(p.faction, 'Friendly'))
+              continue;
 
           for (const c of p.contracts) {
-            if (c.mission.is_accepted) continue;
+            if (c.mission.is_accepted)
+              continue;
+
+            if (!c.mission.can_accept_remotely)
+              continue;
 
             if (!contracts[c.mission.mission_type]) {
               contracts[c.mission.mission_type] = [];

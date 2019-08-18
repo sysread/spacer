@@ -104,6 +104,7 @@ export abstract class Mission {
   abstract get description(): string;
   abstract get description_remaining(): string;
   abstract get mission_type(): string;
+  abstract get can_accept_remotely(): boolean;
 
   get faction(): t.faction {
     return data.bodies[this.issuer].faction;
@@ -273,6 +274,10 @@ export class Passengers extends Mission {
     }
   }
 
+  get can_accept_remotely(): boolean {
+    return false;
+  }
+
   get destination(): string {
     return data.bodies[this.dest].name;
   }
@@ -342,6 +347,10 @@ export class Smuggler extends Mission {
     this.item     = opt.item;
     this.amt      = opt.amt;
     this.amt_left = opt.amt_left || opt.amt;
+  }
+
+  get can_accept_remotely(): boolean {
+    return true;
   }
 
   get mission_type(): string {
