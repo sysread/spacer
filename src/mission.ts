@@ -264,9 +264,11 @@ export class Passengers extends Mission {
     const transit = nav.getFastestTransitTo(dest);
 
     if (transit) {
-      const rate  = 3 * window.game.planets[orig].buyPrice('fuel');
-      const cost  = Math.ceil(util.fuzz(Math.max(500, Math.ceil(transit.au * rate)), 0.05));
-      const turns = Math.ceil(transit.turns * 2);
+      const turns_fuzz = util.fuzz(2, 0.5);
+      const turns = Math.ceil(transit.turns * turns_fuzz);
+      const fuel  = window.game.player.ship.burnRate(transit.accel) * transit.turns;
+      const rate  = util.fuzz(3 * window.game.planets[orig].buyPrice('fuel'), 0.05);
+      const cost  = Math.ceil(fuel * rate * turns_fuzz);
       return {reward: cost, turns: turns};
     }
     else {

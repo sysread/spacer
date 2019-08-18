@@ -60,7 +60,9 @@ define(function(require, exports, module) {
       };
 
       if (window.DEV) {
-        pages.Debug = 'debug';
+        pages.push('debug');
+        long_names.debug = 'Debug';
+        short_names.debug = 'Debug';
       }
 
       return {
