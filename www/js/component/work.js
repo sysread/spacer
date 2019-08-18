@@ -4,6 +4,7 @@ define(function(require, exports, module) {
   const util = require('util');
   const Vue  = require('vendor/vue');
   const Smuggler = require('mission').Smuggler;
+  const Blockade = require('conflict').Blockade;
 
   require('component/global');
   require('component/common');
@@ -52,13 +53,22 @@ define(function(require, exports, module) {
 
         // Include contracts that can be accepted remotely (like smuggling) for
         // other friendly factions.
-        for (const p of Object.values(this.game.planets)) {
+        const conflicts = game.get_conflicts();
+        PLANET: for (const p of Object.values(this.game.planets)) {
           if (p.body == this.planet.body)
             continue;
 
           if (!this.planet.hasTrait('black market')
            && !this.planet.faction.hasStanding(p.faction, 'Friendly'))
               continue;
+
+          for (const conflict of conflicts) {
+            if (conflict.target == this.planet.faction.abbrev
+             && conflict.proponent == p.faction.abbrev
+             && conflict instanceof Blockade) {
+              continue PLANET;
+            }
+          }
 
           for (const c of p.contracts) {
             if (c.mission.is_accepted)
