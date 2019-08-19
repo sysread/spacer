@@ -8,10 +8,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./faction", "./events", "./util"], function (require, exports, data_1, faction_1, events_1, util) {
+define(["require", "exports", "./data", "./faction", "./events", "./mission", "./common", "./util"], function (require, exports, data_1, faction_1, events_1, mission_1, t, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
+    t = __importStar(t);
     util = __importStar(util);
     const isProductionEffect = (e) => e.production != undefined;
     const isConsumptionEffect = (e) => e.consumption != undefined;
@@ -58,6 +59,19 @@ define(["require", "exports", "./data", "./faction", "./events", "./util"], func
     class Blockade extends Conflict {
         constructor(init) {
             super('blockade', init);
+        }
+        get is_over() {
+            for (const body of t.bodies) {
+                const planet = window.game.planets[body];
+                for (const contract of planet.contracts) {
+                    if (contract.mission.is_accepted
+                        && data_1.default.bodies[contract.mission.issuer].faction == planet.faction.abbrev
+                        && contract.mission instanceof mission_1.Smuggler) {
+                        return false;
+                    }
+                }
+            }
+            return super.is_over;
         }
         chance() {
             if (this.proponent == this.target)

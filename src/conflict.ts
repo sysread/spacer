@@ -2,6 +2,7 @@ import data from './data';
 
 import { factions } from './faction';
 import { watch, CaughtSmuggling } from "./events";
+import { Smuggler } from './mission';
 
 import * as t from './common';
 import * as util from './util';
@@ -113,6 +114,22 @@ export abstract class Conflict extends Condition {
 export class Blockade extends Conflict {
   constructor(init: any) {
     super('blockade', init);
+  }
+
+  get is_over() {
+    for (const body of t.bodies) {
+      const planet = window.game.planets[body];
+
+      for (const contract of planet.contracts) {
+        if (contract.mission.is_accepted
+         && data.bodies[contract.mission.issuer].faction == planet.faction.abbrev
+         && contract.mission instanceof Smuggler) { 
+          return false;
+        }
+      }
+    }
+
+    return super.is_over;
   }
 
   chance(): boolean {
