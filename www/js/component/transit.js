@@ -12,6 +12,7 @@ define(function(require, exports, module) {
   const t        = require('common');
   const resource = require('resource');
   const factions = require('faction').factions;
+  const NavComp  = require('navcomp');
   const Event    = require('events');
   const Layout   = require('component/layout');
 
@@ -35,19 +36,23 @@ define(function(require, exports, module) {
       const turns = game.transit_plan.turns;
 
       return {
-        layout_target_id: 'transit-plot-root',
-        transit:    null,
-        paused:     true,
-        encounter:  null,
-        encounters: 0,
-        orbits:     orbits,
-        started:    false,
+        layout_target_id:  'transit-plot-root',
+        transit:           null,
+        paused:            true,
+        encounter:         null,
+        encounters:        0,
+        orbits:            orbits,
+        started:           false,
+
+        encounterTimeCost: null,
+        encounterDistCost: null,
+        encounterFuelCost: null,
 
         // animated values
-        patrolpct:  0,
-        piracypct:  0,
-        shipx:      0,
-        shipy:      0,
+        patrolpct:         0,
+        piracypct:         0,
+        shipx:             0,
+        shipy:             0,
       };
     },
 
@@ -404,8 +409,43 @@ define(function(require, exports, module) {
         this.$nextTick(() => this.interval());
       },
 
-      complete_encounter() {
+      complete_encounter(rounds) {
         this.encounter = null;
+
+        if (rounds > 0) {
+          const time = util.fuzz(rounds * 300, 1); // some fuzzing of 5m/round
+          const drift = this.plan.velocity * time;
+
+          const pos = this.plan.coords;
+          pos[0] += time * this.plan.current_velocity[0];
+          pos[1] += time * this.plan.current_velocity[1];
+          pos[2] += time * this.plan.current_velocity[2];
+
+          const vel = this.plan.current_velocity;
+          const nc  = new NavComp.NavComp(game.player, this.plan.origin);
+          const transits = nc.full_astrogator(
+            {position: pos, velocity: vel},
+            this.plan.dest,
+          );
+
+          for (const transit of transits) {
+            // remaining fuel cost from original plan
+            const fuel = this.plan.left * (this.plan.fuel / this.plan.turns);
+            this.encounterFuelCost = transit.fuel - fuel;
+            this.encounterTimeCost = time;
+            this.encounterDistCost = drift;
+            this.game.transit_plan = transit;
+            break;
+          }
+
+          if (this.encounterTimeCost != null && this.encounterTimeCost > 0)
+            return;
+        }
+
+        this.resume();
+      },
+
+      ackTimeCost() {
         this.resume();
       },
 
@@ -583,6 +623,12 @@ define(function(require, exports, module) {
             :faction="encounter.faction"
             class="my-3" />
 
+        <ok v-if="encounterTimeCost > 0" title="Consequences" @ok="ackTimeCost">
+          This encounter took {{encounterTimeCost/60|R(0)|csn}} minutes.
+          As a result, you drifted {{encounterDistCost/1000|R(0)|csn}} km off course.
+          Your course has been adjusted accordingly.
+        </ok>
+
       </Section>
     `,
   });
@@ -682,10 +728,10 @@ define(function(require, exports, module) {
       bribe() {
         this.game.player.debit(this.bribeAmount);
         this.game.player.decStanding(this.faction, 3);
-        this.done();
+        this.done(1);
       },
 
-      done(result) {
+      done(result, rounds) {
         if (result == 'destroyed') {
           this.$emit('dead');
         }
@@ -694,7 +740,7 @@ define(function(require, exports, module) {
         }
         else {
           this.choice = 'ready';
-          this.$emit('done');
+          this.$emit('done', Math.max(rounds || 0, 0));
         }
       },
     },
@@ -897,7 +943,7 @@ define(function(require, exports, module) {
         };
       },
 
-      done(result) {
+      done(result, rounds) {
         if (result == 'destroyed') {
           this.$emit('dead');
         }
@@ -912,7 +958,7 @@ define(function(require, exports, module) {
         }
         else {
           this.choice = 'ready';
-          this.$emit('done');
+          this.$emit('done', Math.max(rounds || 0, 0));
         }
       },
     },

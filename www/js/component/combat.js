@@ -102,13 +102,13 @@ define(function(require, exports, module) {
           this.game.save_game();
 
           if (this.combat.playerSurrendered) {
-            this.$emit('complete', 'player-surrendered');
+            this.$emit('complete', 'player-surrendered', this.tick);
           } else if (this.combat.opponentSurrendered) {
-            this.$emit('complete', 'opponent-surrendered');
+            this.$emit('complete', 'opponent-surrendered', this.tick);
           } else if (this.combat.opponentIsDestroyed) {
-            this.$emit('complete', 'won');
+            this.$emit('complete', 'won', this.tick);
           } else {
-            this.$emit('complete', 'fled'); // TODO this is brittle as hell
+            this.$emit('complete', 'fled', this.tick); // TODO this is brittle as hell
           }
         }
       },

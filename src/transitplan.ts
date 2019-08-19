@@ -68,24 +68,27 @@ export class TransitPlan {
     }
   }
 
-  get maxVelocity()  { return this.course.max_velocity }
-  get path()         { return this.course.path }
-  get accel()        { return this.acc.length } // m/s/s
-  get accel_g()      { return this.accel / Physics.G }
-  get hours()        { return this.turns * data.hours_per_turn } // hours
-  get left()         { return this.turns - this.current_turn }
-  get currentTurn()  { return this.current_turn }
-  get turnpct()      { return 100 / this.turns } // percent of trip per turn
-  get is_started()   { return this.current_turn > 0 }
-  get is_complete()  { return this.left <= 0 }
-  get pct_complete() { return 100 - (this.left * this.turnpct) }
-  get segment()      { return Physics.distance(this.start, this.end) }
-  get segment_au()   { return this.segment / Physics.AU }
-  get flip_point()   { return this.path[Math.floor(this.turns / 2)].position }
-  get coords()       { return this.path[this.current_turn].position }
-  get velocity()     { return this.path[this.current_turn].velocity }
-  get au()           { return this.dist / Physics.AU }
-  get km()           { return this.dist / 1000 }
+  get maxVelocity()      { return this.course.max_velocity }
+  get path()             { return this.course.path }
+  get accel()            { return this.acc.length } // m/s/s
+  get accel_g()          { return this.accel / Physics.G }
+  get hours()            { return this.turns * data.hours_per_turn } // hours
+  get left()             { return this.turns - this.current_turn }
+  get currentTurn()      { return this.current_turn }
+  get turnpct()          { return 100 / this.turns } // percent of trip per turn
+  get is_started()       { return this.current_turn > 0 }
+  get is_complete()      { return this.left <= 0 }
+  get pct_complete()     { return 100 - (this.left * this.turnpct) }
+  get segment()          { return Physics.distance(this.start, this.end) }
+  get segment_au()       { return this.segment / Physics.AU }
+  get flip_point()       { return this.path[Math.floor(this.turns / 2)].position }
+  get coords()           { return this.path[this.current_turn].position }
+  get velocity()         { return this.path[this.current_turn].velocity }
+  get au()               { return this.dist / Physics.AU }
+  get km()               { return this.dist / 1000 }
+  get initial_velocity() { return this.path[0].vector }
+  get final_velocity()   { return this.path[this.turns - 1].vector }
+  get current_velocity() { return this.path[this.current_turn].vector }
 
   get course() {
     if (this._course == undefined) {

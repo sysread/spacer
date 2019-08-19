@@ -56,6 +56,9 @@ define(["require", "exports", "./data", "./physics", "./navcomp", "./util"], fun
         get velocity() { return this.path[this.current_turn].velocity; }
         get au() { return this.dist / physics_1.default.AU; }
         get km() { return this.dist / 1000; }
+        get initial_velocity() { return this.path[0].vector; }
+        get final_velocity() { return this.path[this.turns - 1].vector; }
+        get current_velocity() { return this.path[this.current_turn].vector; }
         get course() {
             if (this._course == undefined) {
                 this._course = navcomp_1.calculate_trajectory(this.turns, this.initial, this.final);

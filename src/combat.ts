@@ -290,7 +290,7 @@ export class Combat {
   opponent:    Combatant;
   initiative:  string;
 
-  round:       number   = 1;
+  round:       number = 1;
   log:         LogEntry[] = [];
   escaped:     false | string;
   surrendered: false | string;
