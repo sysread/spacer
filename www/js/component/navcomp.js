@@ -176,8 +176,8 @@ define(function(require, exports, module) {
               || window.game.locus == dest_central                    // central to its own moon
               || this.dest == orig_central)                           // moon to its host planet
             return true;
-          else
-            return false;
+
+          return false;
         }
 
         return false;
@@ -201,7 +201,13 @@ define(function(require, exports, module) {
         const bodies = [];
 
         if (this.isSubSystemTransit) {
-          bodies.push(this.system.position(dest_central));
+          // For subsystem transits, center on the central body of the
+          // subsystem, rather than the entire solar system.
+          const central = dest_central == 'sun'
+            ? orig_central
+            : dest_central;
+
+          bodies.push(this.system.position(central));
         }
         else {
           bodies.push(this.system.position(this.dest));
@@ -233,8 +239,16 @@ define(function(require, exports, module) {
         const orig_central = this.system.central(this.game.locus);
 
         if (this.isSubSystemTransit) {
+          // Determine the central body of the subsystem transit
+          const central = dest_central == 'sun'
+            ? orig_central
+            : dest_central;
+
+          points.push(this.system.position(central));
+
+          // Select all of the bodies orbiting that central body
           for (const body of this.system.all_bodies()) {
-            if (system.central(body) == dest_central) {
+            if (system.central(body) == central) {
               points.push(this.system.position(body));
             }
           }
@@ -247,10 +261,10 @@ define(function(require, exports, module) {
 
         if (this.transit) {
           points.push(this.transit.end);
-          points.push(this.transit.start);
         }
 
         // Lop off z to prevent it from affecting the distance calculation
+        // since it's being displayed on a 2d map.
         const center    = this.map_center_point;
         const center_2d = [center[0], center[1], 0];
         const points_2d = points.map(p => [p[0], p[1], 0]);
