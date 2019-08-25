@@ -1008,11 +1008,14 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             const max_count = Math.ceil(this.scale(1));
             const missions = this.contracts.filter(c => c instanceof mission_1.Smuggler).slice(0, max_count);
             this.contracts = this.contracts.filter(c => !(c instanceof mission_1.Smuggler));
+            const threshold = Math.ceil(this.scale(6));
             if (missions.length < max_count) {
                 const needed = this.neededResources();
                 for (const item of needed.prioritized) {
                     if (missions.length >= max_count)
                         break;
+                    if (needed.amounts[item] < threshold)
+                        continue;
                     if (hasTradeBan || data_1.default.resources[item].contraband) {
                         const batch = util.clamp(needed.amounts[item], 1, window.game.player.ship.cargoSpace);
                         const amount = util.clamp(util.fuzz(batch, 1.00), 1); // between 1 and 2 * cargo space

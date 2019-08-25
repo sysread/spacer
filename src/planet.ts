@@ -1329,12 +1329,17 @@ export class Planet {
 
     this.contracts = this.contracts.filter(c => !(c instanceof Smuggler));
 
+    const threshold = Math.ceil(this.scale(6));
+
     if (missions.length < max_count) {
       const needed = this.neededResources();
 
       for (const item of needed.prioritized) {
         if (missions.length >= max_count)
           break;
+
+        if (needed.amounts[item] < threshold)
+          continue;
 
         if (hasTradeBan || data.resources[item].contraband) {
           const batch  = util.clamp(needed.amounts[item], 1, window.game.player.ship.cargoSpace);
