@@ -10,6 +10,12 @@ define(function(require, exports, module) {
   require('component/common');
 
   Vue.component('restitution', {
+    data() {
+      return {
+        state: 'ready',
+      };
+    },
+
     computed: {
       faction() {
         return game.here.faction;
@@ -29,6 +35,18 @@ define(function(require, exports, module) {
     },
 
     methods: {
+      getConfirmation() {
+        this.state = 'confirm';
+      },
+
+      confirmTransaction(confirmed) {
+        if (confirmed) {
+          this.makeRestitution();
+        }
+
+        this.state = 'ready';
+      },
+
       makeRestitution() {
         this.faction.makeRestitution(game.player);
         game.save_game();
@@ -49,8 +67,13 @@ define(function(require, exports, module) {
       annotated and your reputation cleared.
     </p>
 
-    <btn block=1 @click="makeRestitution" v-if="canAffordRestitution">Make restitution</btn>
-    <span v-else class="font-italic text-warning">You cannot afford to make restitution at this time.</span>
+    <btn block=1 @click="getConfirmation" v-if="canAffordRestitution">
+      Make restitution
+    </btn>
+
+    <span v-else class="font-italic text-warning">
+      You cannot afford to make restitution at this time.
+    </span>
   </template>
 
   <template v-else>
@@ -59,6 +82,11 @@ define(function(require, exports, module) {
       No restitution need be made at this time.
     </p>
   </template>
+
+  <confirm v-if="state=='confirm'" @confirm="confirmTransaction">
+    You are about to "donate" {{restitutionFee|csn|unit('credit')}} to {{faction.properName}}
+    to "make ammends". This transaction cannot be undone. Are you sure you wish to continue?
+  </confirm>
 </div>
     `,
   });
