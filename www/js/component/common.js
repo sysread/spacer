@@ -128,7 +128,7 @@ define(function(require, exports, module) {
     },
 
     computed: {
-      choices() { return {'Y': this.yes, 'N': this.no } }
+      choices() { return {'Y': this.yes || 'Yes', 'N': this.no || 'No' } }
     },
 
     template: `<ask :choices="choices" @pick="trigger"><slot /></ask>`,
