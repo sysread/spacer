@@ -51,23 +51,23 @@ define(["require", "exports"], function (require, exports) {
             var angle = +0.0;
             angle = atan2(ny - py, nx - px);
             if (reverse == 0) {
-                return angle;
+                return +angle;
             }
             else {
-                return angle + PI;
+                return +(angle + PI);
             }
         }
         function ctrlpt_x(x, length, angle) {
             x = +x;
             length = +length;
             angle = +angle;
-            return x + cos(angle) * length;
+            return +(x + cos(angle) * length);
         }
         function ctrlpt_y(y, length, angle) {
             y = +y;
             length = +length;
             angle = +angle;
-            return y + sin(angle) * length;
+            return +(y + sin(angle) * length);
         }
         return {
             length: length,

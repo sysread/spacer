@@ -636,8 +636,15 @@ define(function(require, exports, module) {
         const path  = orbit.slice(0, this.transit.turns + 1);
         return this.layout.scale_path(path);
       },
+
+      line() {
+        const points = this.layout.scale_path(this.transit.path.map(p => p.position));
+        return points.map(p => [p[0], p[1]]).map(p => p.join(',')).join(' ');
+      },
     },
 
+    // for troubleshooting paths:
+    //    <polyline :points="line" style="fill:none; stroke:green; stroke-width:1; stroke-linejoin:round" />
     template: `
       <g>
         <SvgPath :points="dest_path" color="red" :smooth="true" />

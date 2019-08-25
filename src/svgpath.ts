@@ -62,9 +62,9 @@ function Util(stdlib: any, foreign: any = null, heap: any = null) {
     angle = atan2(ny - py, nx - px);
 
     if (reverse == 0) {
-      return angle;
+      return +angle;
     } else {
-      return angle + PI;
+      return +(angle + PI);
     }
   }
 
@@ -72,14 +72,14 @@ function Util(stdlib: any, foreign: any = null, heap: any = null) {
     x      = +x;
     length = +length;
     angle  = +angle;
-    return x + cos(angle) * length;
+    return +(x + cos(angle) * length);
   }
 
   function ctrlpt_y(y: number, length: number, angle: number): number {
     y      = +y;
     length = +length;
     angle  = +angle;
-    return y + sin(angle) * length;
+    return +(y + sin(angle) * length);
   }
 
   return {

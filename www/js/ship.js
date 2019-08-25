@@ -14,6 +14,7 @@ define(["require", "exports", "./data", "./store", "./events", "./util", "./comm
     store_1 = __importDefault(store_1);
     util = __importStar(util);
     t = __importStar(t);
+    const TonnesInKg = 1000;
     class Ship {
         constructor(init) {
             init = init || { 'type': 'shuttle' };

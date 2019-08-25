@@ -101,7 +101,6 @@ export function Motion(stdlib: any = null, foreign: any = null, heap: any = null
 
 export const motion = Motion({Math: Math});
 
-
 /**
  * Calculates the acceleration vector required for a given transit.
  *
@@ -115,12 +114,12 @@ export function calculate_acceleration(turns: number, initial: Body, final: Body
   const ay = motion.linear_acceleration(t, initial.position[1], final.position[1], initial.velocity[1], final.velocity[1]);
   const az = motion.linear_acceleration(t, initial.position[2], final.position[2], initial.velocity[2], final.velocity[2]);
 
-  const a = Math.sqrt(ax * ax + ay * ay + az * az);
+  const vx = ax * (t / 2);
+  const vy = ay * (t / 2);
+  const vz = az * (t / 2);
 
-  const vx = ax * t;
-  const vy = ay * t;
-  const vz = az * t;
-  const v = Math.sqrt(vx * vx + vy * vy + vz * vz);
+  const a = hypot(ax, ay, az);
+  const v = hypot(vx, vy, vz);
 
   return {
     maxvel: v,
@@ -141,10 +140,16 @@ export function calculate_trajectory(turns: number, initial: Body, final: Body):
   const acc = calculate_acceleration(turns, initial, final);
   const [ax, ay, az] = acc.vector;
 
+  // Change in velocity per frame:
+  //     v = u + at
+  // We can calculate (at) aheaad of time
   const dvx = ax * TI;
   const dvy = ay * TI;
   const dvz = az * TI;
 
+  // Change in position per frame:
+  //    s = ut + (a * t^2) / 2
+  // We can calculate ((a * t^2) / 2) ahead of time
   const dsx = ax * (TI * TI) / 2;
   const dsy = ay * (TI * TI) / 2;
   const dsz = az * (TI * TI) / 2;
@@ -158,14 +163,13 @@ export function calculate_trajectory(turns: number, initial: Body, final: Body):
     vector:   [vx, vy, vz],
   }];
 
-  for (let turn = 1, t = 0; turn < turns; ++turn) {
+  for (let turn = 0, t = 0; turn < turns; ++turn) {
     for (let e = 0; e < DT; ++e) {
       t += TI;
 
       if (t < tflip) {
         vx += dvx, vy += dvy, vz += dvz;
-      }
-      else {
+      } else {
         vx -= dvx, vy -= dvy, vz -= dvz;
       }
 
@@ -174,18 +178,20 @@ export function calculate_trajectory(turns: number, initial: Body, final: Body):
       pz += dsz + vz * TI;
     }
 
+    // even with the integration, inaccuracies at the scale of several au can
+    // make the path be off significantly in the final approach, so we can
+    // fudge things a little since we know where it is supposed to be.
+    if (turn == (turns - 1)) {
+      [px, py, pz] = [final.position[0], final.position[1], final.position[2]];
+      [vx, vy, vz] = [final.velocity[0], final.velocity[1], final.velocity[2]];
+    }
+
     path.push({
       position: [px, py, pz],
       velocity: hypot(vx, vy, vz),
       vector:   [vx, vy, vz],
     });
   }
-
-  path.push({
-    position: [final.position[0], final.position[1], final.position[2]],
-    velocity: hypot(vx, vy, vz),
-    vector:   [vx, vy, vz],
-  });
 
   return {
     max_velocity: acc.maxvel,

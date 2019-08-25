@@ -7,6 +7,9 @@ import * as util from './util';
 import * as t from './common';
 
 
+const TonnesInKg = 1000;
+
+
 declare var window: {
   game: any;
 }
