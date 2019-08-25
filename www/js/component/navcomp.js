@@ -626,8 +626,10 @@ define(function(require, exports, module) {
     props: ['transit', 'layout'],
 
     computed: {
-      points() { return this.transit.path },
-      path()   { return this.layout.scale_path(this.points.map(p => p.position)) },
+      path() {
+        const points = this.transit.path.map(p => p.position);
+        return this.layout.scale_path(points);
+      },
 
       dest_path() {
         const orbit = this.system.orbit_by_turns(this.transit.dest);
