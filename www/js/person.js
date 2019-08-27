@@ -96,7 +96,7 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
             this.money += n;
         }
         debit(n) {
-            this.money -= n;
+            this.money = Math.max(0, this.money - n);
         }
         getStanding(faction) {
             faction = faction || this.faction;

@@ -708,7 +708,7 @@ define(function(require, exports, module) {
         let busted = false;
 
         for (const item of this.game.player.ship.cargo.keys()) {
-          if (this.game.player.ship.cargo.get(item) > 0 && (isBlockade || isContraband(item))) {
+          if (this.game.player.ship.cargo.get(item) > 0 && isContraband(item)) {
             const amt = this.game.player.ship.cargo.count(item);
             found[item] = found[item] || 0;
             found[item] += amt;

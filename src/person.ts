@@ -147,7 +147,7 @@ export class Person {
   }
 
   debit(n: number) {
-    this.money -= n;
+    this.money = Math.max(0, this.money - n);
   }
 
   getStanding(faction: factionesque): number {
