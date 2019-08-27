@@ -33,6 +33,8 @@ define(["require", "exports"], function (require, exports) {
         max_abs_standing: 100,
         jurisdiction: 0.28,
         piracy_max_velocity: 500,
+        passenger_mission_count: 3,
+        smuggler_mission_count: 2,
         scales: {
             tiny: 0.6,
             small: 0.8,

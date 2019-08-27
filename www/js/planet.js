@@ -1005,7 +1005,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     return true;
                 });
             }
-            const max_count = Math.ceil(this.scale(1));
+            const max_count = Math.ceil(this.scale(data_1.default.smuggler_mission_count));
             const missions = this.contracts.filter(c => c instanceof mission_1.Smuggler).slice(0, max_count);
             this.contracts = this.contracts.filter(c => !(c instanceof mission_1.Smuggler));
             const threshold = Math.ceil(this.scale(6));
@@ -1048,7 +1048,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 }
             }
             const existing = this.contracts.filter(c => !(c instanceof mission_1.Passengers));
-            const want = Math.max(0, util.getRandomInt(0, this.scale(3)) - existing.length);
+            const want = Math.max(0, util.getRandomInt(0, this.scale(data_1.default.passenger_mission_count)) - existing.length);
             while (this.contracts.length < want) {
                 const dest = util.oneOf(dests.filter(d => !this.contracts.find(c => c.mission.dest == d)));
                 if (!dest) {

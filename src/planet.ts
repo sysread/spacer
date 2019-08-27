@@ -1324,7 +1324,7 @@ export class Planet {
       });
     }
 
-    const max_count = Math.ceil(this.scale(1));
+    const max_count = Math.ceil(this.scale(data.smuggler_mission_count));
     const missions = this.contracts.filter(c => c instanceof Smuggler).slice(0, max_count);
 
     this.contracts = this.contracts.filter(c => !(c instanceof Smuggler));
@@ -1380,7 +1380,7 @@ export class Planet {
     }
 
     const existing = this.contracts.filter(c => !(c instanceof Passengers));
-    const want = Math.max(0, util.getRandomInt(0, this.scale(3)) - existing.length);
+    const want = Math.max(0, util.getRandomInt(0, this.scale(data.passenger_mission_count)) - existing.length);
 
     while (this.contracts.length < want) {
       const dest = util.oneOf(dests.filter(d => !this.contracts.find(c => (<Passengers>c.mission).dest == d)));
