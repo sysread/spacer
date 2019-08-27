@@ -1363,7 +1363,6 @@ export class Planet {
   }
 
   refreshPassengerContracts() {
-    const want  = util.getRandomInt(0, this.scale(3));
     const dests = t.bodies.filter(t => t != this.body);
 
     for (const body of t.bodies) {
@@ -1379,6 +1378,9 @@ export class Planet {
         }
       }
     }
+
+    const existing = this.contracts.filter(c => !(c instanceof Passengers));
+    const want = Math.max(0, util.getRandomInt(0, this.scale(3)) - existing.length);
 
     while (this.contracts.length < want) {
       const dest = util.oneOf(dests.filter(d => !this.contracts.find(c => (<Passengers>c.mission).dest == d)));

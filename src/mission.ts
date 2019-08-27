@@ -242,8 +242,6 @@ export class Passengers extends Mission {
   dest: t.body;
 
   constructor(opt: SavedPassengers) {
-    const est = estimateTransitTime(opt.issuer, opt.dest);
-
     // TODO race condition here; the orig and dest are moving so long as the
     // contract is offered, which may make the deadline impossible after
     // several days.

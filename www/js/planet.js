@@ -1034,7 +1034,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.contracts = this.contracts.concat(missions);
         }
         refreshPassengerContracts() {
-            const want = util.getRandomInt(0, this.scale(3));
             const dests = t.bodies.filter(t => t != this.body);
             for (const body of t.bodies) {
                 if (body != this.body) {
@@ -1048,6 +1047,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                     }
                 }
             }
+            const existing = this.contracts.filter(c => !(c instanceof mission_1.Passengers));
+            const want = Math.max(0, util.getRandomInt(0, this.scale(3)) - existing.length);
             while (this.contracts.length < want) {
                 const dest = util.oneOf(dests.filter(d => !this.contracts.find(c => c.mission.dest == d)));
                 if (!dest) {

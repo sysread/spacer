@@ -169,7 +169,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
     exports.Mission = Mission;
     class Passengers extends Mission {
         constructor(opt) {
-            const est = estimateTransitTime(opt.issuer, opt.dest);
             // TODO race condition here; the orig and dest are moving so long as the
             // contract is offered, which may make the deadline impossible after
             // several days.
