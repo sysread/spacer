@@ -1,4 +1,5 @@
 const _resource = {
+  atmospherics: true,
   water:        true,
   ore:          true,
   minerals:     true,

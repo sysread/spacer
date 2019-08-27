@@ -2,6 +2,7 @@ define(["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const _resource = {
+        atmospherics: true,
         water: true,
         ore: true,
         minerals: true,
