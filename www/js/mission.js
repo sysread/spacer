@@ -185,11 +185,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             const nav = new navcomp_1.NavComp(window.game.player, orig, false, data_1.default.shipclass.schooner.tank, true);
             const transit = nav.getFastestTransitTo(dest);
             if (transit) {
-                const turns_fuzz = util.fuzz(2, 0.5);
-                const turns = Math.ceil(transit.turns * turns_fuzz);
+                const fuzz = util.fuzz(2, 0.5);
+                const turns = Math.ceil(transit.turns * fuzz);
                 const fuel = window.game.player.ship.burnRate(transit.accel) * transit.turns;
-                const rate = util.fuzz(3 * window.game.planets[orig].buyPrice('fuel'), 0.05);
-                const cost = Math.ceil(fuel * rate * turns_fuzz);
+                const rate = util.fuzz(window.game.planets[orig].buyPrice('fuel') * 3, 0.1);
+                const cost = Math.ceil(fuel * rate * fuzz);
                 return { reward: cost, turns: turns };
             }
             else {
@@ -245,7 +245,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
     class Smuggler extends Mission {
         constructor(opt) {
             opt.turns = Math.ceil(1.5 * estimateTransitTimeAU(util.getRandomInt(5, 10)));
-            opt.reward = 1.5 * resource_1.resources[opt.item].value * opt.amt;
+            opt.reward = Math.ceil(1.5 * resource_1.resources[opt.item].value * opt.amt);
             opt.standing = Math.ceil(Math.log10(opt.reward));
             super(opt);
             this.item = opt.item;

@@ -262,11 +262,11 @@ export class Passengers extends Mission {
     const transit = nav.getFastestTransitTo(dest);
 
     if (transit) {
-      const turns_fuzz = util.fuzz(2, 0.5);
-      const turns = Math.ceil(transit.turns * turns_fuzz);
+      const fuzz  = util.fuzz(2, 0.5);
+      const turns = Math.ceil(transit.turns * fuzz);
       const fuel  = window.game.player.ship.burnRate(transit.accel) * transit.turns;
-      const rate  = util.fuzz(3 * window.game.planets[orig].buyPrice('fuel'), 0.05);
-      const cost  = Math.ceil(fuel * rate * turns_fuzz);
+      const rate  = util.fuzz(window.game.planets[orig].buyPrice('fuel') * 3, 0.1);
+      const cost  = Math.ceil(fuel * rate * fuzz);
       return {reward: cost, turns: turns};
     }
     else {
@@ -339,7 +339,7 @@ export class Smuggler extends Mission {
 
   constructor(opt: SavedSmuggler) {
     opt.turns    = Math.ceil(1.5 * estimateTransitTimeAU(util.getRandomInt(5, 10)));
-    opt.reward   = 1.5 * resources[opt.item].value * opt.amt;
+    opt.reward   = Math.ceil(1.5 * resources[opt.item].value * opt.amt);
     opt.standing = Math.ceil(Math.log10(opt.reward));
 
     super(opt);
