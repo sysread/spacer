@@ -45,7 +45,7 @@ export const rotate_vector = (q: quaternion, v: V.Point): V.Point => {
   const y3 = w1 * y2 + /*y1 * w2 +*/ z1 * x2 - x1 * z2;
   const z3 = w1 * z2 + /*z1 * w2 +*/ x1 * y2 - y1 * x2;
 
-  const w4 = w3 * w1 + x3 * x1 + y3 * y1 + z3 * z1;
+  //const w4 = w3 * w1 + x3 * x1 + y3 * y1 + z3 * z1;
   const x4 = x3 * w1 - w3 * x1 - y3 * z1 + z3 * y1;
   const y4 = y3 * w1 - w3 * y1 - z3 * x1 + x3 * z1;
   const z4 = z3 * w1 - w3 * z1 - x3 * y1 + y3 * x1;
