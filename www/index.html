@@ -25,119 +25,89 @@
     <div id="content" />
 
     <script>
-      function fetch_local(uri) {
-        return new Promise(function(resolve, reject) {
-          var xhr = new XMLHttpRequest;
+    // configure requirejs
+    require(['js/loader'], () => {
+      // wait on deviceready, which configures requirejs to find the correct
+      // vue.js for this environment
+      document.addEventListener("deviceready", (e) => {
+        require(
+          [
+            'vendor/vue',             // base framework
+            'game',                   // game state
+            'component/global',       // global state
+            'component/navbar',       // nav bar
+            'component/content',      // content div
+            'component/statusbar',    // top status bar
+            'component/notification', // notifications
+          ],
 
-          xhr.onload = function() {
-            resolve(new Response(xhr.response, {status: xhr.status}));
-          };
+          (Vue, game) => {
+            const initial_page
+              = game.turns == 0              ? 'newgame'
+              : game.player.ship.isDestroyed ? 'newgame'
+                                             : 'summary';
 
-          xhr.onerror = function() {
-            reject(new TypeError('Local request failed'));
-          };
+            const content_app = new Vue({
+              el: '#content',
 
-          xhr.open('GET', uri);
-          xhr.responseType = "blob";
-          xhr.send(null);
-        });
-      }
+              data: {
+                page: initial_page,
+              },
 
-      var wasm = {};
-      function fetch_wasm(label) {
-        return fetch_local("./wasm/" + label + ".wasm")
-          .then(response => response.arrayBuffer())
-          .then(bytes => WebAssembly.instantiate(bytes, {}))
-          .then(result => wasm[label] = result.instance.exports);
-      }
+              mounted() {
+                this.override_page();
+              },
 
-      fetch_wasm("allocator")
-        .then(_ => fetch_wasm("svgpath"))
-        .then(_ => {
-          // configure requirejs
-          require(['js/loader'], () => {
-            // wait on deviceready, which configures requirejs to find the correct
-            // vue.js for this environment
-            document.addEventListener("deviceready", (e) => {
-              require(
-                [
-                  'vendor/vue',             // base framework
-                  'game',                   // game state
-                  'component/global',       // global state
-                  'component/navbar',       // nav bar
-                  'component/content',      // content div
-                  'component/statusbar',    // top status bar
-                  'component/notification', // notifications
-                ],
-
-                (Vue, game) => {
-                  const initial_page
-                    = game.turns == 0              ? 'newgame'
-                    : game.player.ship.isDestroyed ? 'newgame'
-                                                   : 'summary';
-
-                  const content_app = new Vue({
-                    el: '#content',
-
-                    data: {
-                      page: initial_page,
-                    },
-
-                    mounted() {
-                      this.override_page();
-                    },
-
-                    watch: {
-                      page() {
-                        this.override_page();
-                      },
-                    },
-
-                    computed: {
-                      nav_disabled() { return this.game.is_frozen },
-                    },
-
-                    methods: {
-                      override_page() {
-                        if (this.game.turns == 0) {
-                          this.page = 'newgame';
-                        }
-                        else if (this.game.player.ship.isDestroyed) {
-                          this.page = 'newgame';
-                        }
-                      },
-
-                      open(page) {
-                        if (this.game.is_frozen && page != 'newgame') {
-                          return;
-                        }
-
-                        this.page = null;
-                        this.$nextTick(() => this.page = page);
-                      },
-
-                      dismissNotification(msg) {
-                        this.game.dismiss(msg);
-                      },
-                    },
-
-                    template: `
-                      <div>
-                        <StatusBar />
-                        <Content @open="open" :page="page" />
-                        <NavBar  @open="open" :page="page" :disabled="nav_disabled" />
-
-                        <div v-if="game.notifications.length > 0" class="fixed-top m-3">
-                          <Notification v-for="[msg, dismiss] in game.notifications" :key="msg" :msg="msg" @dismiss="dismissNotification(msg)" :dismiss="dismiss" />
-                        </div>
-                      </div>
-                    `,
-                  });
+              watch: {
+                page() {
+                  this.override_page();
                 },
-              );
+              },
+
+              computed: {
+                nav_disabled() { return this.game.is_frozen },
+              },
+
+              methods: {
+                override_page() {
+                  if (this.game.turns == 0) {
+                    this.page = 'newgame';
+                  }
+                  else if (this.game.player.ship.isDestroyed) {
+                    this.page = 'newgame';
+                  }
+                },
+
+                open(page) {
+                  if (this.game.is_frozen && page != 'newgame') {
+                    return;
+                  }
+
+                  this.page = null;
+                  this.$nextTick(() => this.page = page);
+                },
+
+                dismissNotification(msg) {
+                  this.game.dismiss(msg);
+                },
+              },
+
+              template: `
+                <div>
+                  <StatusBar />
+                  <Content @open="open" :page="page" />
+                  <NavBar  @open="open" :page="page" :disabled="nav_disabled" />
+
+                  <div v-if="game.notifications.length > 0" class="fixed-top m-3">
+                    <Notification v-for="[msg, dismiss] in game.notifications" :key="msg" :msg="msg" @dismiss="dismissNotification(msg)" :dismiss="dismiss" />
+                  </div>
+                </div>
+              `,
             });
-          });
-        });
+          },
+        );
+      });
+    });
     </script>
   </body>
 </html>
