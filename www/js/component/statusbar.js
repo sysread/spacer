@@ -11,7 +11,7 @@ define(function(require, exports, module) {
 
     computed: {
       inTransit()  { return this.game.is_frozen && this.game.transit_plan != null },
-      locus()      { return this.inTransit ? 'In transit' : this.game.locus },
+      locus()      { return this.inTransit ? 'En route' : this.game.locus },
       money()      { return this.game._player ? Math.floor(this.game.player.money) : 0 },
       cargoUsed()  { return this.game._player ? this.game.player.ship.cargoUsed : 0 },
       cargoSpace() { return this.game._player ? this.game.player.ship.cargoSpace : 0 },
