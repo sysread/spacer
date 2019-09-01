@@ -316,17 +316,19 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             if (!resource_1.isCraft(resource)) {
                 throw new Error(`${item} is not craftable`);
             }
-            const rate = data_1.default.craft_fee * this.sellPrice(item);
-            const reduction = this.fabricationReductionRate();
-            let health = this.fab_health;
-            let fee = 5 * rate * count;
-            for (let i = 0; i < count && health > 0; ++i) {
-                health -= resource.craftTurns * reduction;
-                fee -= rate * 4;
+            const price = this.sellPrice(item);
+            const turns = resource.craftTurns * count;
+            const discount = 1.0 - player.getStandingPriceAdjustment(this.faction);
+            let fee = 0;
+            for (let i = 0, health = this.fab_health; i < count; ++i, --health) {
+                if (health > 0) {
+                    fee += price * data_1.default.craft_fee;
+                }
+                else {
+                    fee += price * data_1.default.craft_fee_nofab;
+                }
             }
-            fee -= fee * player.getStandingPriceAdjustment(this.faction.abbrev);
-            fee += fee * this.faction.sales_tax;
-            return Math.max(1, Math.ceil(fee));
+            return Math.ceil(fee * discount);
         }
         fabricate(item) {
             const resource = resource_1.resources[item];

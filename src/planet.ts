@@ -455,28 +455,28 @@ export class Planet {
     return true;
   }
 
-  fabricationFee(item: t.resource, count=1, player: Person) {
+  fabricationFee(item: t.resource, count=1, player: Person): number {
     const resource = resources[item];
 
     if (!isCraft(resource)) {
       throw new Error(`${item} is not craftable`);
     }
 
-    const rate = data.craft_fee * this.sellPrice(item);
-    const reduction = this.fabricationReductionRate();
+    const price    = this.sellPrice(item);
+    const turns    = resource.craftTurns * count;
+    const discount = 1.0 - player.getStandingPriceAdjustment(this.faction);
 
-    let health = this.fab_health;
-    let fee = 5 * rate * count;
+    let fee = 0;
 
-    for (let i = 0; i < count && health > 0; ++i) {
-      health -= resource.craftTurns * reduction;
-      fee    -= rate * 4;
+    for (let i = 0, health = this.fab_health; i < count; ++i, --health) {
+      if (health > 0) {
+        fee += price * data.craft_fee;
+      } else {
+        fee += price * data.craft_fee_nofab;
+      }
     }
 
-    fee -= fee * player.getStandingPriceAdjustment(this.faction.abbrev);
-    fee += fee * this.faction.sales_tax;
-
-    return Math.max(1, Math.ceil(fee));
+    return Math.ceil(fee * discount);
   }
 
   fabricate(item: t.resource) {
