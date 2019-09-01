@@ -19,7 +19,7 @@ const data = {
   scarcity_markup:         0.25,
   min_stock_count:         50,
   avg_stock_count:         250,
-  max_imports:             5, // per market
+  max_imports:             3, // per market
   max_crafts:              10, // per market
   max_agents:              2, // total
   max_agent_money:         5000, // after which they buy luxuries
@@ -69,7 +69,7 @@ const data = {
     fabricators: 10,
     minability:  0.1,
     produces:    {},
-    consumes:    {atmospherics: 0.75, water: 3, food: 2, medicine: 0.5, narcotics: 0.1, weapons: 0.2},
+    consumes:    {atmospherics: 0.75, water: 4, food: 3, medicine: 0.5, narcotics: 0.1, weapons: 0.2},
   },
 
   traits: {
@@ -78,7 +78,7 @@ const data = {
     'mineral rich':       {produces: {ore: 1.5, minerals: 1}, consumes: {}, price: {minerals: 0.75, ore: 0.75}},
     'mineral poor':       {produces: {ore: -2, minerals: -1}, consumes: {}},
 
-    'water rich':         {produces: {water: 3}, consumes: {}},
+    'water rich':         {produces: {water: 2}, consumes: {}},
     'water poor':         {produces: {water: -1}, consumes: {}, price: {water: 2}},
 
     'hydrocarbon rich':   {produces: {hydrocarbons: 2}, consumes: {}},
@@ -88,9 +88,9 @@ const data = {
     'icy':                {produces: {water: 3, minerals: 1, hydrocarbons: 1}, consumes: {}},
 
     'asteroids':          {produces: {ore: 4, minerals: 4}, consumes: {fuel: 1.5, electronics: 0.3, machines: 1, cybernetics: 0.3}, price: {ore: 0.75, minerals: 0.75}},
-    'ringed system':      {produces: {water: 5, minerals: 1, hydrocarbons: 1}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
+    'ringed system':      {produces: {water: 4, minerals: 1, hydrocarbons: 1}, consumes: {fuel: 1.5, electronics: 0.3, machines: 0.5, cybernetics: 0.3}},
 
-    'agricultural':       {produces: {food: 4, hydrocarbons: 1}, consumes: {atmospherics: -0.25, machines: 0.5, fuel: 0.5, water: 2, hydrocarbons: 2}, price: {food: 0.75, hydrocarbons: 1.5, water: 1.25}},
+    'agricultural':       {produces: {food: 3, hydrocarbons: 1}, consumes: {atmospherics: -0.25, machines: 0.5, fuel: 0.5, water: 2, hydrocarbons: 2}, price: {food: 0.75, hydrocarbons: 1.5, water: 1.25}},
     'habitable':          {produces: {atmospherics: 3, food: 8, hydrocarbons: 3}, consumes: {atmospherics: -0.5, food: 4, narcotics: 0.25, weapons: 0.5}, price: {food: 0.5, hydrocarbons: 0.5, water: 1.25}},
     'domed':              {produces: {food: 0.5, hydrocarbons: 0.25}, consumes: {metal: 0.6, fuel: 0.6, electronics: 0.5, machines: 0.5, water: 0.75, hydrocarbons: 0.75, weapons: 0.5}},
     'subterranean':       {produces: {food: 0.25, hydrocarbons: 0.25}, consumes: {metal: 0.6, fuel: 0.3, electronics: 0.5, machines: 0.5, water: 0.3, hydrocarbons: 0.75, weapons: 0.35}},

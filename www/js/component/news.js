@@ -135,21 +135,6 @@ define(function(require, exports, module) {
         return data;
       },
 
-      shortage_factors() {
-        const data = {};
-
-        for (const item of this.resources) {
-          data[item] = Math.min(...this.bodies
-            .filter(body => !this.game.planets[body].isNetExporter(item))
-            .filter(body => this.game.planets[body].hasShortage(item))
-            .map(body => this.game.planets[body].getNeed(item))
-            .sort((a, b) => a > b ? -1 : 1)
-            .slice(0, 3));
-        }
-
-        return data;
-      },
-
       shortages() {
         const data = {};
 
@@ -157,12 +142,9 @@ define(function(require, exports, module) {
           if (this.data.resources[item].contraband)
             continue;
 
-          const factor = this.shortage_factors[item];
-
           for (const body of this.bodies) {
-            data[body] = data[body] || [];
-
-            if (this.game.planets[body].getNeed(item) >= factor) {
+            if (this.game.planets[body].hasShortage(item)) {
+              data[body] = data[body] || [];
               data[body].push(item);
             }
           }
