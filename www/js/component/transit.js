@@ -229,6 +229,10 @@ define(function(require, exports, module) {
       },
 
       adjustedPiracyRate() {
+        if (this.game.player.ship.holdIsEmpty) {
+          return 0;
+        }
+
         const baseRate   = this.piracyRate;
         const stealth    = this.game.player.ship.stealth;
         const cargoMalus = this.piracyEvasionMalusCargo;
