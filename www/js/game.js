@@ -8,9 +8,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./person", "./planet", "./agent", "./conflict", "./events", "./common", "./util"], function (require, exports, data_1, person_1, planet_1, agent_1, conflict_1, events_1, t, util) {
+define(["require", "exports", "./data", "./system", "./person", "./planet", "./agent", "./conflict", "./events", "./common", "./util"], function (require, exports, data_1, system_1, person_1, planet_1, agent_1, conflict_1, events_1, t, util) {
     "use strict";
     data_1 = __importDefault(data_1);
+    system_1 = __importDefault(system_1);
     t = __importStar(t);
     util = __importStar(util);
     ;
@@ -179,17 +180,22 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
                 ++this.turns;
                 // Update game and system date
                 this.date.setHours(this.date.getHours() + data_1.default.hours_per_turn);
-                // Start new conflicts
-                if (this.turns % (data_1.default.turns_per_day * 3) == 0) {
-                    this.start_conflicts();
-                }
-                // Remove finished conflicts
-                this.finish_conflicts();
-                // Dispatch events
                 const isNewDay = this.turns % data_1.default.turns_per_day == 0;
-                events_1.trigger(new events_1.GameTurn({ turn: this.turns, isNewDay: isNewDay }));
-                if (isNewDay) {
-                    events_1.trigger(new events_1.NewDay({ turn: this.turns, isNewDay: isNewDay }));
+                if (this.frozen) {
+                    system_1.default.reset_orbit_cache();
+                }
+                else {
+                    // Start new conflicts
+                    if (this.turns % (data_1.default.turns_per_day * 3) == 0) {
+                        this.start_conflicts();
+                    }
+                    // Remove finished conflicts
+                    this.finish_conflicts();
+                    // Dispatch events
+                    events_1.trigger(new events_1.GameTurn({ turn: this.turns, isNewDay: isNewDay }));
+                    if (isNewDay) {
+                        events_1.trigger(new events_1.NewDay({ turn: this.turns, isNewDay: isNewDay }));
+                    }
                 }
             }
             if (!no_save) {
@@ -197,10 +203,21 @@ define(["require", "exports", "./data", "./person", "./planet", "./agent", "./co
             }
         }
         freeze() {
+            this.frozen_date = this.date.getTime();
             this.frozen = true;
         }
         unfreeze() {
-            this.frozen = false;
+            if (this.frozen_date) {
+                const end = this.date.getTime();
+                const turns = Math.abs(end - this.frozen_date) / 3600000 / data_1.default.hours_per_turn;
+                this.turns -= turns;
+                this.date = new Date();
+                this.date.setTime(this.frozen_date);
+                system_1.default.reset_orbit_cache();
+                this.frozen_date = undefined;
+                this.frozen = false;
+                this.turn(turns);
+            }
         }
         set_transit_plan(transit_plan) {
             this.transit_plan = transit_plan;

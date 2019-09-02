@@ -396,8 +396,8 @@ define(function(require, exports, module) {
       },
 
       complete() {
-        this.game.arrive();
         this.game.unfreeze();
+        this.game.arrive();
         this.game.save_game();
         this.$emit('open', 'summary');
       },

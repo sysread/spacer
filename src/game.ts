@@ -63,6 +63,7 @@ class Game {
   locus:         t.body | null = null;
   page:          string = 'summary';
   frozen:        boolean = false;
+  frozen_date?:  number;
   transit_plan?: TransitPlan;
   agents:        Agent[] = [];
   conflicts:     {[key: string]: Conflict} = {};
@@ -249,21 +250,25 @@ class Game {
       // Update game and system date
       this.date.setHours(this.date.getHours() + data.hours_per_turn);
 
-      // Start new conflicts
-      if (this.turns % (data.turns_per_day * 3) == 0) {
-        this.start_conflicts();
-      }
-
-      // Remove finished conflicts
-      this.finish_conflicts();
-
-      // Dispatch events
       const isNewDay = this.turns % data.turns_per_day == 0;
 
-      trigger(new GameTurn({turn: this.turns, isNewDay: isNewDay}));
+      if (this.frozen) {
+        system.reset_orbit_cache();
+      } else {
+        // Start new conflicts
+        if (this.turns % (data.turns_per_day * 3) == 0) {
+          this.start_conflicts();
+        }
 
-      if (isNewDay) {
-        trigger(new NewDay({turn: this.turns, isNewDay: isNewDay}));
+        // Remove finished conflicts
+        this.finish_conflicts();
+
+        // Dispatch events
+        trigger(new GameTurn({turn: this.turns, isNewDay: isNewDay}));
+
+        if (isNewDay) {
+          trigger(new NewDay({turn: this.turns, isNewDay: isNewDay}));
+        }
       }
     }
 
@@ -274,11 +279,25 @@ class Game {
 
 
   freeze() {
+    this.frozen_date = this.date.getTime();
     this.frozen = true;
   }
 
   unfreeze() {
-    this.frozen = false;
+    if (this.frozen_date) {
+      const end = this.date.getTime();
+      const turns = Math.abs(end - this.frozen_date) / 3600000 / data.hours_per_turn;
+
+      this.turns -= turns;
+      this.date = new Date();
+      this.date.setTime(this.frozen_date);
+      system.reset_orbit_cache();
+
+      this.frozen_date = undefined;
+      this.frozen = false;
+
+      this.turn(turns);
+    }
   }
 
   set_transit_plan(transit_plan: TransitPlan) {

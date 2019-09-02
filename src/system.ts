@@ -41,25 +41,28 @@ class System {
 
   constructor() {
     watch("turn", (ev: GameTurn) => {
-      this.orbits = {};
-      this.pos = {};
-
-      const turns = data.turns_per_day * 365 - 1;
-      const date  = turns * ms_per_turn + this.time.getTime();
-
-      for (const body of this.all_bodies()) {
-        const key = `${body}.orbit.turns`;
-
-        if (this.cache[key] == undefined) {
-          this.orbit_by_turns(body);
-        } else {
-          this.cache[key].shift();
-          this.cache[key].push(this.position(body, date));
-        }
-      }
-
+      this.reset_orbit_cache();
       return {complete: false};
     });
+  }
+
+  reset_orbit_cache() {
+    this.orbits = {};
+    this.pos = {};
+
+    const turns = data.turns_per_day * 365 - 1;
+    const date  = turns * ms_per_turn + this.time.getTime();
+
+    for (const body of this.all_bodies()) {
+      const key = `${body}.orbit.turns`;
+
+      if (this.cache[key] == undefined) {
+        this.orbit_by_turns(body);
+      } else {
+        this.cache[key].shift();
+        this.cache[key].push(this.position(body, date));
+      }
+    }
   }
 
   get time() {

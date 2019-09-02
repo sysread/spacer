@@ -19,9 +19,9 @@ const data = {
   scarcity_markup:         0.25,
   min_stock_count:         50,
   avg_stock_count:         250,
-  max_imports:             3, // per market
+  max_imports:             4, // per market
   max_crafts:              10, // per market
-  max_agents:              2, // total
+  max_agents:              3, // total
   max_agent_money:         5000, // after which they buy luxuries
   min_agent_profit:        100, // min credits net profit before a route is attractive
   necessity:               {water: true, food: true, medicine: true, fuel: true},
