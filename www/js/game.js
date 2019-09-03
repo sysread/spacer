@@ -14,6 +14,8 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
     system_1 = __importDefault(system_1);
     t = __importStar(t);
     util = __importStar(util);
+    const HourInMs = 1000 * 60 * 60;
+    const TurnInMs = HourInMs * data_1.default.hours_per_turn;
     ;
     const DefaultOptions = {
         hideOrbitPaths: true,
@@ -39,7 +41,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
             const init = saved == null ? null : JSON.parse(saved);
             if (init) {
                 try {
-                    this.turns = init.turns;
+                    this.turns = Math.ceil(init.turns || 0);
                     this.locus = init.locus;
                     this.options = init.options || DefaultOptions;
                     this._player = new person_1.Person(init.player);
@@ -51,8 +53,8 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                 }
                 catch (e) {
                     console.warn('initialization error:', e);
-                    this.locus = null;
                     this.turns = 0;
+                    this.locus = null;
                     this.options = DefaultOptions;
                     this._player = null;
                     this.build_planets();
@@ -179,27 +181,32 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
             return this.frozen
                 && this.transit_plan != undefined;
         }
+        set_turns(turn) {
+            this.turns = Math.ceil(turn);
+            this.date.setHours(this.date.getHours() + data_1.default.hours_per_turn);
+        }
+        inc_turns(count) {
+            this.set_turns(this.turns + count);
+        }
+        dec_turns(count) {
+            this.set_turns(this.turns - count);
+        }
         turn(n = 1, no_save = false) {
+            n = Math.ceil(n); // backstop against bugs resulting in fractional turns
             for (let i = 0; i < n; ++i) {
-                ++this.turns;
-                // Update game and system date
-                this.date.setHours(this.date.getHours() + data_1.default.hours_per_turn);
-                const isNewDay = this.turns % data_1.default.turns_per_day == 0;
+                this.inc_turns(1);
                 if (this.in_transit) {
                     system_1.default.reset_orbit_cache();
                 }
                 else {
-                    // Start new conflicts
+                    // Start new conflicts every 3 days
                     if (this.turns % (data_1.default.turns_per_day * 3) == 0) {
                         this.start_conflicts();
                     }
                     // Remove finished conflicts
                     this.finish_conflicts();
                     // Dispatch events
-                    events_1.trigger(new events_1.GameTurn({ turn: this.turns, isNewDay: isNewDay }));
-                    if (isNewDay) {
-                        events_1.trigger(new events_1.NewDay({ turn: this.turns, isNewDay: isNewDay }));
-                    }
+                    events_1.trigger(new events_1.GameTurn({ turn: this.turns }));
                 }
             }
             if (!no_save) {
@@ -207,20 +214,29 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
             }
         }
         freeze() {
-            this.frozen_date = this.date.getTime();
             this.frozen = true;
         }
         unfreeze() {
-            if (this.frozen_date) {
-                const end = this.date.getTime();
-                const turns = Math.abs(end - this.frozen_date) / 3600000 / data_1.default.hours_per_turn;
-                this.turns -= turns;
-                this.date = new Date();
-                this.date.setTime(this.frozen_date);
-                system_1.default.reset_orbit_cache();
-                this.frozen_date = undefined;
+            if (this.frozen) {
                 this.frozen = false;
-                setTimeout(() => this.turn(turns), 200);
+                if (this.transit_plan) {
+                    // set back the turns counter
+                    this.dec_turns(this.transit_plan.turns);
+                    // reset the system orbital cache to pick up the positions and orbits
+                    // at the new game date
+                    system_1.default.reset_orbit_cache();
+                    // replay turns in unfrozen state, one day at a time
+                    const batch = 24 / data_1.default.hours_per_turn;
+                    let left = this.transit_plan.turns;
+                    let intvl = setInterval(() => {
+                        const todo = Math.min(batch, left);
+                        this.turn(todo);
+                        left -= todo;
+                        if (left <= 0) {
+                            clearInterval(intvl);
+                        }
+                    });
+                }
             }
         }
         set_transit_plan(transit_plan) {

@@ -399,8 +399,8 @@ define(function(require, exports, module) {
       complete() {
         this.arriving = true;
         this.$nextTick(() => {
-          this.game.unfreeze();
           this.game.arrive();
+          this.game.unfreeze();
           this.game.save_game();
           this.$emit('open', 'summary');
         });

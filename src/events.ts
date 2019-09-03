@@ -1,3 +1,4 @@
+import data from './data';
 import * as t from "./common";
 
 
@@ -11,7 +12,6 @@ declare var window: {
 export type SpacerEvent =
     GameLoaded
   | GameTurn
-  | NewDay
   | Arrived
   | ItemsBought
   | ItemsSold
@@ -51,22 +51,16 @@ export class GameLoaded extends EventBase<null> {
 
 
 interface GameTurnInit {
-  turn:     number;
-  isNewDay: boolean;
+  turn: number;
+  isNewDay?: boolean;
 }
 
 export class GameTurn extends EventBase<GameTurnInit> {
-  constructor(detail: GameTurnInit) { super("turn", detail) }
+  constructor(detail: GameTurnInit) {
+    super("turn", detail);
+    this.detail.isNewDay = this.detail.turn % data.turns_per_day == 0;
+  }
 }
-
-
-interface NewDayInit extends GameTurnInit {
-}
-
-export class NewDay extends EventBase<NewDayInit> {
-  constructor(detail: NewDayInit) { super("day", detail) }
-}
-
 
 interface ArrivedInit {
   dest: t.body;
