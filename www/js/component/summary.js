@@ -152,7 +152,7 @@ define(function(require, exports, module) {
       <News :body="planet.body" title="Local news" />
 
       <Section v-if="!mini" :title="'About ' + planet.name">
-        <div v-for="(line, idx) of desc" :key="idx" class="font-italic">{{line}}</div>
+        <p v-for="(line, idx) of desc" :key="idx" class="font-italic">{{line}}</p>
       </Section>
     </div>
   </div>
