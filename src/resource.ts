@@ -32,7 +32,7 @@ function resourceValue(name: t.resource): number {
   }
 
   // Adjust value due to expense in reaction mass to move it
-  value += value * (0.01 * item.mass);
+  value += value * (0.005 * item.mass);
 
   return value;
 }
