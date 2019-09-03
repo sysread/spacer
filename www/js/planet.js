@@ -799,7 +799,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             for (const body of exporters) {
                 if (window.game.planets[body].hasTradeBan)
                     continue;
-                dist[body] = this.distance(body) / physics_1.default.AU * window.game.planets[body].buyPrice('fuel');
+                dist[body] = this.distance(body) / physics_1.default.AU * window.game.planets[body].fuelPricePerTonne();
                 price[body] = window.game.planets[body].buyPrice(item);
                 stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
             }

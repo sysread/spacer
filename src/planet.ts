@@ -1060,7 +1060,7 @@ export class Planet {
       if (window.game.planets[body].hasTradeBan)
         continue;
 
-      dist[body]  = this.distance(body) / Physics.AU * window.game.planets[body].buyPrice('fuel');
+      dist[body]  = this.distance(body) / Physics.AU * window.game.planets[body].fuelPricePerTonne();
       price[body] = window.game.planets[body].buyPrice(item);
       stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
     }

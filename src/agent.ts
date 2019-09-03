@@ -174,7 +174,7 @@ export class Agent extends Person {
   refuel() {
     if (isDocked(this.action)) {
       const fuelNeeded = this.ship.refuelUnits();
-      const price      = this.here.buyPrice('fuel', this);
+      const price      = this.here.fuelPricePerTonne(this);
 
       if (fuelNeeded > 0 && this.money > (fuelNeeded * price)) {
         const [bought, paid] = this.here.buy('fuel', fuelNeeded);
@@ -311,7 +311,7 @@ export class Agent extends Person {
             continue;
           }
 
-          const fuelPrice   = game.planets[dest].buyPrice('fuel', this);
+          const fuelPrice   = game.planets[dest].fuelPricePerTonne(this);
           const fuelCost    = transit.fuel * fuelPrice;
           const grossProfit = profitPerUnit * canBuy;
           const netProfit   = (grossProfit - fuelCost) / transit.turns;
