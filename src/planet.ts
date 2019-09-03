@@ -585,6 +585,10 @@ export class Planet {
     return this.getNeed(item) >= this.shortageFactor(item);
   }
 
+  hasSuperShortage(item: t.resource) {
+    return this.getNeed(item) >= (this.shortageFactor(item) * 1.5);
+  }
+
   surplusFactor(item: t.resource) {
     return this.isNetExporter(item) ? 0.3 : 0.6;
   }

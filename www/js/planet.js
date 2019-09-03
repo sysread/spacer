@@ -414,6 +414,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
         hasShortage(item) {
             return this.getNeed(item) >= this.shortageFactor(item);
         }
+        hasSuperShortage(item) {
+            return this.getNeed(item) >= (this.shortageFactor(item) * 1.5);
+        }
         surplusFactor(item) {
             return this.isNetExporter(item) ? 0.3 : 0.6;
         }

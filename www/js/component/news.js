@@ -138,16 +138,11 @@ define(function(require, exports, module) {
       shortages() {
         const data = {};
 
-        for (const item of this.resources) {
-          if (this.data.resources[item].contraband)
-            continue;
-
-          for (const body of this.bodies) {
-            if (this.game.planets[body].hasShortage(item)) {
-              data[body] = data[body] || [];
-              data[body].push(item);
-            }
-          }
+        for (const body of this.bodies) {
+          data[body] = this.resources
+            .filter(i => !this.data.resources[i].contraband)
+            .filter(i => game.planets[body].hasSuperShortage(i))
+            .filter(i => game.planets[body].getStock(i) == 0);
         }
 
         return data;
@@ -159,7 +154,7 @@ define(function(require, exports, module) {
         for (const body of this.bodies) {
           data[body] = this.resources
             .filter(i => !this.data.resources[i].contraband)
-            .filter(i => game.planets[body].hasSurplus(i))
+            .filter(i => game.planets[body].hasSuperSurplus(i))
             .filter(i => game.planets[body].getStock(i) > 0);
         }
 
