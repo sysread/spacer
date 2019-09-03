@@ -43,6 +43,7 @@ define(function(require, exports, module) {
         encounters:        0,
         orbits:            orbits,
         started:           false,
+        arriving:          false,
 
         encounterTimeCost: null,
         encounterDistCost: null,
@@ -392,14 +393,17 @@ define(function(require, exports, module) {
 
         this.plan.turn();
         this.game.player.ship.burn(this.plan.accel);
-        setTimeout(() => this.game.turn(1, true), 50);
+        this.$nextTick(() => this.game.turn(1, true));
       },
 
       complete() {
-        this.game.unfreeze();
-        this.game.arrive();
-        this.game.save_game();
-        this.$emit('open', 'summary');
+        this.arriving = true;
+        this.$nextTick(() => {
+          this.game.unfreeze();
+          this.game.arrive();
+          this.game.save_game();
+          this.$emit('open', 'summary');
+        });
       },
 
       pause() {
@@ -568,71 +572,77 @@ define(function(require, exports, module) {
           </div>
         </div>
 
-        <table id="navcomp-transit-info" class="table table-sm m-0" :style="{width: show_plot() && layout ? layout.width_px + 'px' : '100%'}">
-          <tr>
-            <td class="text-left border-0">{{plan.days_left|unit('days')}}</td>
-            <td class="text-center border-0">{{plan.velocity/1000|R|csn|unit('km/s')}}</td>
-            <td class="text-right border-0">{{plan.auRemaining()|R(2)|sprintf('%0.2f')|unit('AU')}}</td>
-          </tr>
-          <tr v-if="!show_plot()">
-            <td colspan="3">
-              <progress-bar width=100 :percent="percent" :frame_rate="intvl_ms" />
-            </td>
-          </tr>
-        </table>
+        <card v-if="arriving" title="Arriving">
+          <h4>Docking at your reserved berth</h4>
+        </card>
 
-        <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
-          <div class="plot-root-bg" :class="bg_class()" :style="bg_css()"></div>
+        <template v-else>
+          <table id="navcomp-transit-info" class="table table-sm m-0" :style="{width: show_plot() && layout ? layout.width_px + 'px' : '100%'}">
+            <tr>
+              <td class="text-left border-0">{{plan.days_left|unit('days')}}</td>
+              <td class="text-center border-0">{{plan.velocity/1000|R|csn|unit('km/s')}}</td>
+              <td class="text-right border-0">{{plan.auRemaining()|R(2)|sprintf('%0.2f')|unit('AU')}}</td>
+            </tr>
+            <tr v-if="!show_plot()">
+              <td colspan="3">
+                <progress-bar width=100 :percent="percent" :frame_rate="intvl_ms" />
+              </td>
+            </tr>
+          </table>
 
-          <SvgPlot v-if="layout" :width="layout.width_px" :height="layout.height_px">
-            <line x1=130 y1=13 :x2="patrolpct * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
-            <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{patrolRate|pct(2)}}</text>
+          <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
+            <div class="plot-root-bg" :class="bg_class()" :style="bg_css()"></div>
 
-            <line x1=130 y1=30 :x2="piracypct * layout.width_px + 130" y2=30 stroke="red" stroke-width="14" />
-            <text style="fill:red; font:12px monospace" x=5 y=34>Piracy:&nbsp;{{piracyRate|pct(2)}}</text>
+            <SvgPlot v-if="layout" :width="layout.width_px" :height="layout.height_px">
+              <line x1=130 y1=13 :x2="patrolpct * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
+              <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{patrolRate|pct(2)}}</text>
 
-            <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{displayFoV}}</text>
-            <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{displayFoV}}</text>
-            <text style="fill:red; font:12px monospace" x=5 y=68>&Delta;V:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{plan.accel_g|R(3)|unit('G')}}</text>
+              <line x1=130 y1=30 :x2="piracypct * layout.width_px + 130" y2=30 stroke="red" stroke-width="14" />
+              <text style="fill:red; font:12px monospace" x=5 y=34>Piracy:&nbsp;{{piracyRate|pct(2)}}</text>
 
-            <g v-for="body in system.all_bodies()" :key="body">
-              <SvgPatrolRadius :body="body" :coords="orbits[body][0]" :layout="layout" :intvl="intvl" />
-              <SvgPlotPoint :body="body" :coords="orbits[body][0]" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" />
-            </g>
+              <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{displayFoV}}</text>
+              <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{displayFoV}}</text>
+              <text style="fill:red; font:12px monospace" x=5 y=68>&Delta;V:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{plan.accel_g|R(3)|unit('G')}}</text>
 
-            <text text-anchor="middle" alignment-baseline="middle"
-                style="fill: yellow; font: bold 8px monospace;"
-                :x="shipx" :y="shipy">
-              &tridot;
-            </text>
-          </SvgPlot>
-        </div>
+              <g v-for="body in system.all_bodies()" :key="body">
+                <SvgPatrolRadius :body="body" :coords="orbits[body][0]" :layout="layout" :intvl="intvl" />
+                <SvgPlotPoint :body="body" :coords="orbits[body][0]" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" />
+              </g>
 
-        <PatrolEncounter
-            v-if="encounter && (encounter.type == 'inspection' || encounter.type == 'privateer')"
-            @done="complete_encounter"
-            @dead="dead"
-            :body="encounter.body"
-            :faction="encounter.faction"
-            :distance="encounter.distance"
-            :target="encounter.target"
-            :dest="plan.dest"
-            class="my-3" />
+              <text text-anchor="middle" alignment-baseline="middle"
+                  style="fill: yellow; font: bold 8px monospace;"
+                  :x="shipx" :y="shipy">
+                &tridot;
+              </text>
+            </SvgPlot>
+          </div>
 
-        <PirateEncounter
-            v-if="encounter && encounter.type == 'pirate'"
-            @done="complete_encounter"
-            @dead="dead"
-            :nearest="nearest"
-            :faction="encounter.faction"
-            class="my-3" />
+          <PatrolEncounter
+              v-if="encounter && (encounter.type == 'inspection' || encounter.type == 'privateer')"
+              @done="complete_encounter"
+              @dead="dead"
+              :body="encounter.body"
+              :faction="encounter.faction"
+              :distance="encounter.distance"
+              :target="encounter.target"
+              :dest="plan.dest"
+              class="my-3" />
 
-        <ok v-if="encounterTimeCost > 0" title="Consequences" @ok="ackTimeCost">
-          This encounter took {{encounterTimeCost/60|R(0)|csn}} minutes.
-          As a result, you drifted {{encounterDistCost/1000|R(0)|csn}} km off course.
-          Your course has been adjusted accordingly.
-        </ok>
+          <PirateEncounter
+              v-if="encounter && encounter.type == 'pirate'"
+              @done="complete_encounter"
+              @dead="dead"
+              :nearest="nearest"
+              :faction="encounter.faction"
+              class="my-3" />
 
+          <ok v-if="encounterTimeCost > 0" title="Consequences" @ok="ackTimeCost">
+            This encounter took {{encounterTimeCost/60|R(0)|csn}} minutes.
+            As a result, you drifted {{encounterDistCost/1000|R(0)|csn}} km off course.
+            Your course has been adjusted accordingly.
+          </ok>
+
+        </template>
       </Section>
     `,
   });

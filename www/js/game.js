@@ -175,13 +175,17 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
         get is_starting() {
             return this.turns < (data_1.default.initial_days * data_1.default.turns_per_day);
         }
+        get in_transit() {
+            return this.frozen
+                && this.transit_plan != undefined;
+        }
         turn(n = 1, no_save = false) {
             for (let i = 0; i < n; ++i) {
                 ++this.turns;
                 // Update game and system date
                 this.date.setHours(this.date.getHours() + data_1.default.hours_per_turn);
                 const isNewDay = this.turns % data_1.default.turns_per_day == 0;
-                if (this.frozen) {
+                if (this.in_transit) {
                     system_1.default.reset_orbit_cache();
                 }
                 else {
@@ -216,7 +220,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                 system_1.default.reset_orbit_cache();
                 this.frozen_date = undefined;
                 this.frozen = false;
-                this.turn(turns);
+                setTimeout(() => this.turn(turns), 200);
             }
         }
         set_transit_plan(transit_plan) {

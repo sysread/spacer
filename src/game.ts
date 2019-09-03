@@ -242,6 +242,11 @@ class Game {
     return this.turns < (data.initial_days * data.turns_per_day);
   }
 
+  get in_transit() {
+    return this.frozen
+        && this.transit_plan != undefined;
+  }
+
 
   turn(n=1, no_save=false) {
     for (let i = 0; i < n; ++i) {
@@ -252,7 +257,7 @@ class Game {
 
       const isNewDay = this.turns % data.turns_per_day == 0;
 
-      if (this.frozen) {
+      if (this.in_transit) {
         system.reset_orbit_cache();
       } else {
         // Start new conflicts
@@ -296,7 +301,7 @@ class Game {
       this.frozen_date = undefined;
       this.frozen = false;
 
-      this.turn(turns);
+      setTimeout(() => this.turn(turns), 200);
     }
   }
 
