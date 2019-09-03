@@ -179,10 +179,7 @@ define(["require", "exports", "./data", "./store", "./events", "./util", "./comm
             return this.mass + this.cargoMass() + this.addOnMass() + this.fuel;
         }
         currentAcceleration(extra_mass = 0) {
-            return this.thrust / this.currentMass() + extra_mass;
-        }
-        accelerationWithMass(mass) {
-            return this.thrust / this.currentMass() + mass;
+            return this.thrust / (this.currentMass() + extra_mass);
         }
         refuelUnits() { return Math.ceil(this.tank - this.fuel); }
         needsFuel() { return this.fuel < this.tank; }

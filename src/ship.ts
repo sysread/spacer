@@ -229,11 +229,7 @@ class Ship {
   }
 
   currentAcceleration(extra_mass=0) {
-    return this.thrust / this.currentMass() + extra_mass;
-  }
-
-  accelerationWithMass(mass: number) {
-    return this.thrust / this.currentMass() + mass;
+    return this.thrust / (this.currentMass() + extra_mass);
   }
 
   refuelUnits() {return Math.ceil(this.tank - this.fuel)}
