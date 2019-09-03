@@ -11,7 +11,7 @@ define(function(require, exports, module) {
 
     computed: {
       inTransit()  { return this.game.is_frozen && this.game.transit_plan != null },
-      locus()      { return this.inTransit ? 'En route' : this.game.locus },
+      locus()      { return this.game.locus },
       money()      { return this.game._player ? Math.floor(this.game.player.money) : 0 },
       cargoUsed()  { return this.game._player ? this.game.player.ship.cargoUsed : 0 },
       cargoSpace() { return this.game._player ? this.game.player.ship.cargoSpace : 0 },
@@ -33,7 +33,11 @@ define(function(require, exports, module) {
 
     template: `
 <nav id="spacer-status" class="spacer-header fixed-top navbar navbar-dark">
-  <span class="navbar-text text-capitalize" id="spacer-location">{{locus}}</span>
+  <span class="navbar-text text-capitalize" id="spacer-location">
+    <template v-if="inTransit">&#10147;</template>
+    {{locus}}
+  </span>
+
   <span class="navbar-text">{{money|csn}} c</span>
   <span class="navbar-text">{{cargoUsed}}/{{cargoSpace}} cu</span>
   <span class="navbar-text d-none d-sm-inline">{{mass|csn}} tonnes</span>
