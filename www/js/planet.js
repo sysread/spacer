@@ -614,6 +614,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 ? Math.ceil(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
                 : Math.ceil(price);
         }
+        fuelPricePerTonne(player) {
+            return Math.ceil(this.buyPrice('fuel', player) * 1.035 / data_1.default.resources.fuel.mass);
+        }
         /*
          * When the player buys or sells an item, this method determines whether an
          * inspection occurs. Returns true if no inspection is performed.

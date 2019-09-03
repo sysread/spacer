@@ -3,6 +3,7 @@
 define(function(require, exports, module) {
   const Vue  = require('vendor/vue');
   const util = require('util');
+  const data = require('data');
 
   require('component/global');
   require('component/common');
@@ -11,6 +12,8 @@ define(function(require, exports, module) {
   require('component/modal');
   require('component/row');
 
+  const FuelMass = data.resources.fuel.mass;
+
   Vue.component('shipyard', {
     data() {
       return {
@@ -18,11 +21,11 @@ define(function(require, exports, module) {
       };
     },
     methods: {
-      affordFuel()    { return this.game.player.money >= this.game.here.buyPrice('fuel') * 1.035 },
-      needsFuel()    { return !this.game.player.ship.tankIsFull() },
+      affordFuel() { return this.game.player.money >= this.game.here.fuelPricePerTonne(this.game.player) },
+      needsFuel()  { return !this.game.player.ship.tankIsFull() },
       hasFuel()    { return this.game.player.ship.cargo.count('fuel') > 0 },
-      hasDamage()    { return this.game.player.ship.hasDamage() },
-      open(loc) { this.$emit('open', loc) },
+      hasDamage()  { return this.game.player.ship.hasDamage() },
+      open(loc)    { this.$emit('open', loc) },
     },
     template: `
 <div>
@@ -71,7 +74,7 @@ define(function(require, exports, module) {
     computed: {
       need()  { return this.game.player.ship.refuelUnits() },
       max()   { return Math.min(this.need, Math.floor(this.game.player.money / this.price)) },
-      price() { return Math.ceil((this.game.here.buyPrice('fuel') / this.data.resources.fuel.mass) * 1.035) },
+      price() { return this.game.here.fuelPricePerTonne(this.game.player) },
     },
 
     methods: {
@@ -90,9 +93,9 @@ define(function(require, exports, module) {
     A dock worker wearing worn, grey coveralls approaches gingerly. A patch on
     his uniform identifies him as "Ray". He nods at your ship, "Fill 'er up?"
   </p>
-  <def term="Price / tonne" :def="price|csn" />
-  <def term="Fuel" :def="change" />
-  <def term="Total" :def="(price * change)|csn" />
+  <def term="Price" :def="price|csn|unit('cr / tonne')" />
+  <def term="Fuel" :def="change|csn|unit('tonnes')" />
+  <def term="Total" :def="(price * change)|csn|unit('cr')" />
   <slider class="my-3" :value.sync="change" min=0 :max="max" step="1" minmax=true />
   <btn slot="footer" @click="fillHerUp" close=1>Purchase fuel</btn>
 </modal>
@@ -105,17 +108,25 @@ define(function(require, exports, module) {
       return { change: 0 };
     },
     computed: {
-      need()  { return this.game.player.ship.refuelUnits() },
-      have()  { return this.game.player.ship.cargo.count('fuel') },
+      ship()  { return this.game.player.ship },
+
+      // cargo units
+      need()  { return Math.ceil(this.ship.refuelUnits() / FuelMass) },
+      have()  { return this.ship.cargo.count('fuel') },
       max()   { return Math.min(this.have, this.need) },
-      tank()  { return Math.min(this.game.player.ship.tank, this.game.player.ship.fuel + this.change) },
-      cargo() { return this.game.player.ship.cargo.count('fuel') - this.change },
+      used()  { return this.change },
+      left()  { return this.have - this.used },
+
+      // tonnes
+      tank()  { return Math.min(this.ship.tank, this.ship.fuel + (this.change * FuelMass)) },
+      hold()  { return this.left * FuelMass },
+      waste() { return Math.max(0, (this.used * FuelMass) - this.ship.refuelUnits()) },
     },
     methods: {
       fillHerUp() {
         if (this.change !== NaN && this.change > 0 && this.change <= this.max) {
           this.game.player.ship.refuel(this.change);
-          this.game.player.ship.cargo.dec('fuel', this.change);
+          this.game.player.ship.cargo.dec('fuel', this.used);
           this.game.turn();
         }
       },
@@ -123,9 +134,20 @@ define(function(require, exports, module) {
     template: `
 <modal title="Transfer fuel to tank" close="Nevermind" xclose=true @close="$emit('close')">
   <p>You may transfer fuel purchased in the market from your cargo hold to your ship's fuel tank here.</p>
-  <def term="Cargo" :def="Math.floor(cargo)" />
-  <def term="Tank" :def="Math.floor(tank)" />
-  <slider class="my-3" :value.sync="change" min=0 :max="max" step="1" minmax=true />
+
+  <def term="Cargo">
+    {{hold|R(2)|unit('tonnes')}} ({{left|R(2)|unit('cu')}})
+  </def>
+
+  <def term="Tank">
+    {{tank|R(2)|unit('tonnes')}} ({{used|R(2)|unit('cu')}})
+  </def>
+
+  <def term="Waste">
+    {{waste|R(2)|unit('tonnes')}}
+  </def>
+
+  <slider class="my-3" :value.sync="change" min=0 :max="max" step=1 minmax=true />
   <btn slot="footer" @click="fillHerUp" close=1>Transfer fuel</btn>
 </modal>
     `,

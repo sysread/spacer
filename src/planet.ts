@@ -834,6 +834,10 @@ export class Planet {
       : Math.ceil(price);
   }
 
+  fuelPricePerTonne(player?: Person): number {
+    return Math.ceil(this.buyPrice('fuel', player) * 1.035 / data.resources.fuel.mass);
+  }
+
   /*
    * When the player buys or sells an item, this method determines whether an
    * inspection occurs. Returns true if no inspection is performed.
