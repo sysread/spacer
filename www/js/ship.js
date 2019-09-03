@@ -159,6 +159,9 @@ define(["require", "exports", "./data", "./store", "./events", "./util", "./comm
             }
             return Math.floor(fuel / this.burnRate(accel, mass));
         }
+        fuelMass() {
+            return this.fuel;
+        }
         cargoMass() {
             let mass = 0;
             for (const item of this.cargo.keys()) {
@@ -176,7 +179,7 @@ define(["require", "exports", "./data", "./store", "./events", "./util", "./comm
             return m;
         }
         currentMass() {
-            return this.mass + this.cargoMass() + this.addOnMass() + this.fuel;
+            return this.mass + this.cargoMass() + this.addOnMass() + this.fuelMass();
         }
         currentAcceleration(extra_mass = 0) {
             return this.thrust / (this.currentMass() + extra_mass);

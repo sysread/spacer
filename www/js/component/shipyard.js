@@ -12,17 +12,17 @@ define(function(require, exports, module) {
   require('component/row');
 
   Vue.component('shipyard', {
-    data: function() {
+    data() {
       return {
         modal: '',
       };
     },
     methods: {
-      affordFuel: function()    { return this.game.player.money >= this.game.here.buyPrice('fuel') * 1.035 },
-      needsFuel:  function()    { return !this.game.player.ship.tankIsFull() },
-      hasFuel:    function()    { return this.game.player.ship.cargo.count('fuel') > 0 },
-      hasDamage:  function()    { return this.game.player.ship.hasDamage() },
-      open:       function(loc) { this.$emit('open', loc) },
+      affordFuel()    { return this.game.player.money >= this.game.here.buyPrice('fuel') * 1.035 },
+      needsFuel()    { return !this.game.player.ship.tankIsFull() },
+      hasFuel()    { return this.game.player.ship.cargo.count('fuel') > 0 },
+      hasDamage()    { return this.game.player.ship.hasDamage() },
+      open(loc) { this.$emit('open', loc) },
     },
     template: `
 <div>
@@ -64,14 +64,18 @@ define(function(require, exports, module) {
 
 
   Vue.component('shipyard-refuel', {
-    data: function() { return { change: 0 } },
-    computed: {
-      need:  function() { return this.game.player.ship.refuelUnits() },
-      max:   function() { return Math.min(this.need, Math.floor(this.game.player.money / this.price)) },
-      price: function() { return Math.ceil(this.game.here.buyPrice('fuel') * 1.035) },
+    data() {
+      return { change: 0 };
     },
+
+    computed: {
+      need()  { return this.game.player.ship.refuelUnits() },
+      max()   { return Math.min(this.need, Math.floor(this.game.player.money / this.price)) },
+      price() { return Math.ceil((this.game.here.buyPrice('fuel') / this.data.resources.fuel.mass) * 1.035) },
+    },
+
     methods: {
-      fillHerUp: function() {
+      fillHerUp() {
         if (this.change !== NaN && this.change > 0 && this.change <= this.max) {
           this.game.player.debit(this.change * this.price);
           this.game.player.ship.refuel(this.change);
@@ -79,13 +83,14 @@ define(function(require, exports, module) {
         }
       },
     },
+
     template: `
 <modal title="Refuel" close="Nevermind" xclose=true @close="$emit('close')">
   <p>
     A dock worker wearing worn, grey coveralls approaches gingerly. A patch on
     his uniform identifies him as "Ray". He nods at your ship, "Fill 'er up?"
   </p>
-  <def term="Price/tonne" :def="price|csn" />
+  <def term="Price / tonne" :def="price|csn" />
   <def term="Fuel" :def="change" />
   <def term="Total" :def="(price * change)|csn" />
   <slider class="my-3" :value.sync="change" min=0 :max="max" step="1" minmax=true />
@@ -96,7 +101,7 @@ define(function(require, exports, module) {
 
 
   Vue.component('shipyard-transfer', {
-    data: function() {
+    data() {
       return { change: 0 };
     },
     computed: {

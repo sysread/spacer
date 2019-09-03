@@ -205,6 +205,10 @@ class Ship {
     return Math.floor(fuel / this.burnRate(accel, mass));
   }
 
+  fuelMass() {
+    return this.fuel;
+  }
+
   cargoMass() {
     let mass = 0;
     for (const item of this.cargo.keys()) {
@@ -225,7 +229,7 @@ class Ship {
   }
 
   currentMass() {
-    return this.mass + this.cargoMass() + this.addOnMass() + this.fuel;
+    return this.mass + this.cargoMass() + this.addOnMass() + this.fuelMass();
   }
 
   currentAcceleration(extra_mass=0) {
