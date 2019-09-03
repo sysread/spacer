@@ -438,7 +438,8 @@ define(function(require, exports, module) {
 
         <confirm v-if="confirm" yes="Yes" no="No" @confirm="confirm_transit">
           <h4>{{game.here.name}} to {{planet.name|caps}}</h4>
-          <def split=4 term="Duration"     :def="transit.str_arrival" />
+
+          <def split=4 term="Arrival"      :def="transit.str_arrival_date" />
           <def split=4 term="Distance"     :def="transit_display_distance" />
           <def split=4 term="Max Velocity" :def="(transit.maxVelocity/1000)|R|csn|unit('km/s')" />
           <def split=4 term="Acceleration" :def="transit.accel_g|R(3)|unit('G')" />
@@ -575,12 +576,12 @@ define(function(require, exports, module) {
         </p>
 
         <div v-if="has_route">
-          <def split="4" term="Destination"  :def="transit.dest|caps" />
-          <def split="4" term="Distance"     :def="distance" />
-          <def split="4" term="Acceleration" :def="transit.accel_g|R(3)|unit('G')" />
-          <def split="4" term="Max velocity" :def="(transit.maxVelocity/1000)|R|csn|unit('km/s')" />
-          <def split="4" term="Fuel"         :def="transit.fuel|R(2)|unit('tonnes')" />
-          <def split="4" term="Time"         :def="transit.str_arrival" />
+          <def split=4 term="Destination"  :def="transit.dest|caps" />
+          <def split=4 term="Distance"     :def="distance" />
+          <def split=4 term="Acceleration" :def="transit.accel_g|R(3)|unit('G')" />
+          <def split=4 term="Max velocity" :def="(transit.maxVelocity/1000)|R|csn|unit('km/s')" />
+          <def split=4 term="Fuel"         :def="transit.fuel|R(2)|unit('tonnes')" />
+          <def split=4 term="Arrival"      :def="transit.str_arrival_date" />
 
           <row y=1>
             <cell size=12>

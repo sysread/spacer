@@ -1,9 +1,16 @@
-import data  from './data';
+import data from './data';
 import Physics from './physics';
 import { NavComp, Trajectory, Acceleration, Body, calculate_trajectory } from './navcomp';
 import { Point, length } from './vector';
 import * as util from './util';
 import * as t from './common';
+
+declare var window: {
+  game: {
+    date: Date;
+    strdate: (date: Date) => string;
+  };
+}
 
 export interface NewTransitPlanArgs {
   turns:  number;
@@ -111,6 +118,14 @@ export class TransitPlan {
   get str_arrival() {
     const [d, h] = this.days_hours;
     return `${d} days, ${h} hours`;
+  }
+
+  get str_arrival_date() {
+    const date = new Date();
+    const left = this.days_left * 24 * 60 * 60 * 1000; // ms
+    date.setTime(window.game.date.getTime() + left);
+    const strdate = window.game.strdate(date);
+    return `${this.str_arrival} [ ${strdate} ]`;
   }
 
   turn() {

@@ -77,6 +77,13 @@ define(["require", "exports", "./data", "./physics", "./navcomp", "./util"], fun
             const [d, h] = this.days_hours;
             return `${d} days, ${h} hours`;
         }
+        get str_arrival_date() {
+            const date = new Date();
+            const left = this.days_left * 24 * 60 * 60 * 1000; // ms
+            date.setTime(window.game.date.getTime() + left);
+            const strdate = window.game.strdate(date);
+            return `${this.str_arrival} [ ${strdate} ]`;
+        }
         turn() {
             if (!this.is_complete) {
                 ++this.current_turn;
