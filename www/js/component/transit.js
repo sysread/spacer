@@ -98,16 +98,9 @@ define(function(require, exports, module) {
         if (!this.started || this.plan.current_turn == 0)
           return 0;
 
-        const min_total_time = 10;
-        const max_total_time = 60;
-        const min_intvl      = 0.3;
-        const max_intvl      = 1.5;
-
-        const turns = this.plan.turns;
-        const base  = util.clamp(turns, min_total_time, max_total_time) / turns;
-        const pct   = 1.0 - (this.plan.velocity / this.plan.maxVelocity);
-
-        return util.clamp(base * pct, min_intvl, max_intvl);
+        const min = 0.1;
+        const max = 0.8;
+        return util.clamp((max / (this.layout.fov_au * 2)), min, max);
       },
 
       displayFoV() {
@@ -293,7 +286,7 @@ define(function(require, exports, module) {
         // For sub-system transits, center on the common central body.
         if (this.isSubSystemTransit) {
           for (const body of this.system.all_bodies()) {
-            if (system.central(body) == central) {
+            if (system.central(body) == central || body == central) {
               points.push(this.orbits[body][0]);
             }
           }
