@@ -246,18 +246,11 @@ export class Layout {
       - ($('#navcomp-toolbar').height() || 0)
       - ($('#navcomp-transit-info').outerHeight() || 0);
 
-    /*
-    const height = window.innerHeight
-      - ($('#spacer-status').outerHeight() || 0)
-      - ($('#spacer-navbar').outerHeight() || 0)
-      - ($('#navcomp-toolbar').outerHeight() || 0)
-    */
-
-    const width   = $(this.elt).parent().width() || 0;
+    const width = $(this.elt).parent().width() || 0;
     const changed = width != this.width_px || height != this.height_px;
 
     this.clear_zero();
-    this.width_px  = width;
+    this.width_px = width;
     this.height_px = height;
 
     console.debug('layout: width updated to', this.width_px, 'x', this.height_px);

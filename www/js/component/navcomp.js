@@ -5,10 +5,10 @@ define(function(require, exports, module) {
   const Physics = require('physics');
   const system  = require('system');
   const util    = require('util');
+  const Tween   = require('tween').default;
   const NavComp = require('navcomp').NavComp;
   const Layout  = require('component/layout');
 
-  require('vendor/TweenMax.min');
   require('component/global');
   require('component/common');
   require('component/modal');
@@ -713,16 +713,12 @@ define(function(require, exports, module) {
         if (this.tween)
           this.tween.kill();
 
-        // this is too jerky to do in the main tween which may be killed
-        //TweenMax.to(this.$data, this.intvl || 0, {d: d, ease: Linear.easeNone});
-
-        this.tween = TweenMax.to(this.$data, this.intvl || 0, {
+        this.tween = Tween(this.$data, this.intvl || 0, {
           d: d,
           x: x - (d / 2),
           y: y - (d / 2),
           label_x: x + d + 10,
           label_y: y + d / 3,
-          ease: Linear.easeNone,
         });
 
         this.tween.play();
@@ -982,13 +978,7 @@ define(function(require, exports, module) {
         if (this.tween)
           this.tween.kill();
 
-        this.tween = TweenMax.to(this.$data, this.intvl || 0, {
-          x: x,
-          y: y,
-          r: r,
-          ease: Linear.easeNone,
-        });
-
+        this.tween = Tween(this.$data, this.intvl || 0, {x: x, y: y, r: r});
         this.tween.play();
       },
     },

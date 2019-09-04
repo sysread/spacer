@@ -5,8 +5,7 @@ define(function(require, exports, module) {
   const Vue    = require('vendor/vue');
   const Hammer = require('vendor/hammer.min');
   const Layout = require('layout').Layout;
-
-  require('vendor/TweenMax.min');
+  const Tween  = require('tween').default;
 
   return {
     data() {
@@ -84,9 +83,8 @@ define(function(require, exports, module) {
           if (wheel_tween)
             wheel_tween.kill();
 
-          wheel_tween = TweenMax.to(this.layout, 0.1, {
+          wheel_tween = Tween(this.layout, 1, {
             fov_au: util.clamp(this.layout.fov_au + amount, Layout.SCALE_MIN_AU, Layout.SCALE_MAX_AU),
-            ease: Linear.easeNone,
           });
         });
 
@@ -111,9 +109,8 @@ define(function(require, exports, module) {
           if (pinch_tween)
             pinch_tween.kill();
 
-          pinch_tween = TweenMax.to(this.layout, 0.1, {
+          pinch_tween = Tween(this.layout, 1, {
             fov_au: util.clamp(this.layout.fov_au + amount, Layout.SCALE_MIN_AU, Layout.SCALE_MAX_AU),
-            ease: Linear.easeNone,
           });
         });
 
@@ -139,10 +136,9 @@ define(function(require, exports, module) {
             pan_tween.kill();
 
           // Update the node's offset values
-          pan_tween = TweenMax.to(this.layout, 0.1, {
+          pan_tween = Tween(this.layout, 1, {
             offset_x: this.layout.init_x + ev.deltaX,
             offset_y: this.layout.init_y + ev.deltaY,
-            ease: Linear.easeNone,
           });
 
           // Reset initial positions on final event

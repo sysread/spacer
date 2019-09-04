@@ -184,12 +184,6 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
                 - ($('#spacer-navbar').height() || 0)
                 - ($('#navcomp-toolbar').height() || 0)
                 - ($('#navcomp-transit-info').outerHeight() || 0);
-            /*
-            const height = window.innerHeight
-              - ($('#spacer-status').outerHeight() || 0)
-              - ($('#spacer-navbar').outerHeight() || 0)
-              - ($('#navcomp-toolbar').outerHeight() || 0)
-            */
             const width = $(this.elt).parent().width() || 0;
             const changed = width != this.width_px || height != this.height_px;
             this.clear_zero();

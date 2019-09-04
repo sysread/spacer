@@ -14,9 +14,9 @@ define(function(require, exports, module) {
   const factions = require('faction').factions;
   const NavComp  = require('navcomp');
   const Event    = require('events');
+  const Tween    = require('tween').default;
   const Layout   = require('component/layout');
 
-  require('vendor/TweenMax.min');
   require('component/global');
   require('component/common');
   require('component/combat');
@@ -98,9 +98,11 @@ define(function(require, exports, module) {
         if (!this.started || this.plan.current_turn == 0)
           return 0;
 
-        const min = 0.1;
-        const max = 0.8;
-        return util.clamp((max / (this.layout.fov_au * 2)), min, max);
+        const min = 1;
+        const max = 10;
+        const intvl = util.clamp((max / (this.layout.fov_au * 2)), min, max);
+
+        return Math.ceil(intvl);
       },
 
       displayFoV() {
@@ -118,7 +120,9 @@ define(function(require, exports, module) {
           ? system.central(this.plan.dest)
           : this.plan.dest;
 
-        return system.position_on_turn(body, this.game.turns + this.plan.left);
+        // use system.position_on_turn so vuejs picks up that this property
+        // changes on each turn
+        return system.position_on_turn(body, this.game.turns);
       },
 
       patrolRates() {
@@ -263,22 +267,24 @@ define(function(require, exports, module) {
     },
 
     methods: {
-      dead()      { this.$emit('open', 'newgame') },
+      dead() { this.$emit('open', 'newgame') },
       show_plot() { return this.layout && !this.encounter },
 
       update() {
-        this.layout.set_center(this.center);
-        this.layout.set_fov_au(this.fov());
-
         const [x, y] = this.layout.scale_point(this.plan.coords);
 
-        TweenMax.to(this.$data, this.intvl, {
+        Tween(this.$data, this.intvl || 0, {
           patrolpct:  this.patrolRate,
           piracypct:  this.piracyRate,
           shipx:      x,
           shipy:      y,
-          ease:       Linear.easeNone,
-          onComplete: () => this.interval(),
+          onComplete: () => {
+            this.$nextTick(() => {
+              this.layout.set_center(this.center);
+              this.layout.set_fov_au(this.fov());
+              this.interval();
+            });
+          },
         }).play();
       },
 
@@ -317,11 +323,7 @@ define(function(require, exports, module) {
         return 1.1 * (max / Physics.AU);
       },
 
-      layout_scale() {
-        this.layout.update_width();
-      },
-
-      layout_pan() {
+      layout_resize() {
         this.layout.update_width();
       },
 

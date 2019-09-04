@@ -4,10 +4,10 @@ define(function(require, exports, module) {
   const Vue     = require('vendor/vue');
   const util    = require('util');
   const Physics = require('physics');
+  const Tween   = require('tween').default;
 
   require('component/modal');
   require('vendor/sprintf.min');
-  require('vendor/TweenMax.min');
 
   Vue.filter('sprintf', (value, format, ...args) => sprintf(format, value, ...args));
 
@@ -42,9 +42,8 @@ define(function(require, exports, module) {
 
     watch: {
       percent() {
-        TweenLite.to(this.$el, this.rate, {
-          value:      this.percent,
-          ease:       Sine.easeInOut,
+        Tween(this.$el, this.rate, {
+          value: this.percent,
           onComplete: () => { this.$emit('ready') },
         }).play();
       },
