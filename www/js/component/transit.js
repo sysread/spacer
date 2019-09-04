@@ -267,6 +267,9 @@ define(function(require, exports, module) {
       show_plot() { return this.layout && !this.encounter },
 
       update() {
+        this.layout.set_center(this.center);
+        this.layout.set_fov_au(this.fov());
+
         const [x, y] = this.layout.scale_point(this.plan.coords);
 
         TweenMax.to(this.$data, this.intvl, {
