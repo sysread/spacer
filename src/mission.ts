@@ -44,7 +44,7 @@ export enum Status {
 
 interface BaseSavedMission {
   [key: string]: any;
-  issuer:    t.body;
+  issuer?:   t.body;
   status?:   number;
   deadline?: number;
   standing?: number;
@@ -53,6 +53,7 @@ interface BaseSavedMission {
 }
 
 export interface SavedPassengers extends BaseSavedMission {
+  orig: t.body;
   dest: t.body;
 }
 
@@ -68,8 +69,9 @@ export type SavedMission =
 ;
 
 
-export function restoreMission(opt: SavedMission): Mission {
+export function restoreMission(opt: SavedMission, body: t.body): Mission {
   if ((<SavedPassengers>opt).dest) {
+    opt.orig = opt.orig || body; // update old missions without an origin
     return new Passengers( <SavedPassengers>opt );
   }
 
@@ -239,6 +241,7 @@ export abstract class Mission {
 
 
 export class Passengers extends Mission {
+  orig: t.body;
   dest: t.body;
 
   constructor(opt: SavedPassengers) {
@@ -247,7 +250,9 @@ export class Passengers extends Mission {
     // several days.
     // NOTE these are NOT restored from opt when reinitialized from game data.
     // they should always be fresh.
-    const params = Passengers.mission_parameters(opt.issuer, opt.dest);
+    opt.issuer   = opt.issuer || util.oneOf(t.bodies);
+    opt.orig     = opt.orig || opt.issuer; // for old missions before orig was added
+    const params = Passengers.mission_parameters(opt.orig, opt.dest);
     opt.turns    = params.turns;
     opt.reward   = params.reward;
     opt.standing = Math.ceil(Math.log10(params.reward));
@@ -255,6 +260,7 @@ export class Passengers extends Mission {
     super(opt);
 
     this.dest = opt.dest;
+    this.orig = opt.orig;
   }
 
   static mission_parameters(orig: t.body, dest: t.body) {

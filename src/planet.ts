@@ -168,7 +168,7 @@ export class Planet {
           for (const info of init.contracts) {
             this.contracts.push({
               valid_until: info.valid_until,
-              mission: restoreMission(info.mission),
+              mission: restoreMission(info.mission, this.body),
             });
           }
 
@@ -1397,7 +1397,10 @@ export class Planet {
         break;
       }
 
-      const mission = new Passengers({issuer: this.body, dest: dest});
+      const mission = new Passengers({
+        orig: this.body,
+        dest: dest,
+      });
 
       if (this.contracts.find(c => c.mission.title == mission.title)) {
         continue;

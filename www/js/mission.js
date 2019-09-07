@@ -8,12 +8,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./physics", "./resource", "./navcomp", "./events", "./util"], function (require, exports, data_1, system_1, physics_1, resource_1, navcomp_1, events_1, util) {
+define(["require", "exports", "./data", "./system", "./physics", "./resource", "./navcomp", "./events", "./common", "./util"], function (require, exports, data_1, system_1, physics_1, resource_1, navcomp_1, events_1, t, util) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
     physics_1 = __importDefault(physics_1);
+    t = __importStar(t);
     util = __importStar(util);
     function estimateTransitTimeAU(au) {
         const s = au * physics_1.default.AU;
@@ -36,8 +37,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
         Status[Status["Success"] = 3] = "Success";
         Status[Status["Failure"] = 4] = "Failure";
     })(Status = exports.Status || (exports.Status = {}));
-    function restoreMission(opt) {
+    function restoreMission(opt, body) {
         if (opt.dest) {
+            opt.orig = opt.orig || body; // update old missions without an origin
             return new Passengers(opt);
         }
         if (opt.item) {
@@ -174,12 +176,15 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             // several days.
             // NOTE these are NOT restored from opt when reinitialized from game data.
             // they should always be fresh.
-            const params = Passengers.mission_parameters(opt.issuer, opt.dest);
+            opt.issuer = opt.issuer || util.oneOf(t.bodies);
+            opt.orig = opt.orig || opt.issuer; // for old missions before orig was added
+            const params = Passengers.mission_parameters(opt.orig, opt.dest);
             opt.turns = params.turns;
             opt.reward = params.reward;
             opt.standing = Math.ceil(Math.log10(params.reward));
             super(opt);
             this.dest = opt.dest;
+            this.orig = opt.orig;
         }
         static mission_parameters(orig, dest) {
             const nav = new navcomp_1.NavComp(window.game.player, orig, false, data_1.default.shipclass.schooner.tank, true);

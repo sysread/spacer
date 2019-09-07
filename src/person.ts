@@ -68,7 +68,7 @@ export class Person {
       if (init.contracts) {
         for (const c of init.contracts) {
           watch("gameLoaded", (ev: GameLoaded) => {
-            const contract = restoreMission(c);
+            const contract = restoreMission(c, window.game.locus);
             contract.accept();
             return {complete: true};
           });

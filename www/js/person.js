@@ -36,7 +36,7 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
                 if (init.contracts) {
                     for (const c of init.contracts) {
                         events_1.watch("gameLoaded", (ev) => {
-                            const contract = mission_1.restoreMission(c);
+                            const contract = mission_1.restoreMission(c, window.game.locus);
                             contract.accept();
                             return { complete: true };
                         });

@@ -79,7 +79,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                         for (const info of init.contracts) {
                             this.contracts.push({
                                 valid_until: info.valid_until,
-                                mission: mission_1.restoreMission(info.mission),
+                                mission: mission_1.restoreMission(info.mission, this.body),
                             });
                         }
                         delete init.contracts;
@@ -1062,7 +1062,10 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 if (!dest) {
                     break;
                 }
-                const mission = new mission_1.Passengers({ issuer: this.body, dest: dest });
+                const mission = new mission_1.Passengers({
+                    orig: this.body,
+                    dest: dest,
+                });
                 if (this.contracts.find(c => c.mission.title == mission.title)) {
                     continue;
                 }
