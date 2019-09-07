@@ -38,36 +38,18 @@ define(function(require, exports, module) {
 
 
   Vue.component('progress-bar', {
-    props: ['percent', 'width', 'frame_rate', 'hide_pct'],
-
-    data() {
-      return {
-        pct_value:   this.percent || 0,
-        pct_display: this.percent || 0,
-      };
-    },
+    props: ['percent', 'width', 'hide_pct'],
 
     watch: {
       percent() {
-        Tween(this, this.rate, {
-          pct_value: this.percent,
-          onComplete: () => {
-            this.pct_display = this.percent;
-            window.setTimeout(() => this.$emit('ready'), 50);
-            //this.$emit('ready');
-          },
-        }).play();
+        this.$nextTick(() => this.$emit('ready'));
       },
-    },
-
-    computed: {
-      rate() { return this.frame_rate == undefined ? 20 : this.frame_rate }
     },
 
     template: `
       <div class="progress bg-dark">
-        <div class="progress-bar bg-warning text-dark" :style="{'width': pct_value + '%'}">
-          <template v-if="!hide_pct">{{(pct_display||0)|R}}%</template>
+        <div class="progress-bar bg-warning text-dark" :style="{'width': percent + '%'}">
+          <template v-if="!hide_pct">{{(percent||0)|R}}%</template>
           <slot />
         </div>
       </div>

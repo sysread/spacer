@@ -72,10 +72,12 @@ define(function(require, exports, module) {
       },
 
       turn() {
-        this.running = this.queue.fabricate();
-        if (!this.running) {
-          this.finish();
-        }
+        setTimeout(() => {
+          this.running = this.queue.fabricate();
+          if (!this.running) {
+            this.finish();
+          }
+        }, 400);
       },
 
       reset() {
@@ -118,7 +120,7 @@ define(function(require, exports, module) {
           </template>
 
           <template v-else>
-            <progress-bar :percent="percent" @ready="turn" frame_rate=30 />
+            <progress-bar :percent="percent" @ready="turn" />
             <btn block=1 @click="finish" class="my-3">Stop</btn>
           </template>
         </template>
