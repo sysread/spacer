@@ -10,7 +10,7 @@ define(function(require, exports, module) {
     props: [],
 
     computed: {
-      inTransit()  { return this.game.is_frozen && this.game.transit_plan != null },
+      inTransit()  { return this.game.is_frozen && this.game.transit_plan != undefined },
       locus()      { return this.inTransit ? this.game.transit_plan.dest : this.game.locus },
       money()      { return this.game._player ? Math.floor(this.game.player.money) : 0 },
       cargoUsed()  { return this.game._player ? this.game.player.ship.cargoUsed : 0 },

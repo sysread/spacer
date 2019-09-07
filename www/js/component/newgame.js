@@ -38,18 +38,17 @@ define(function(require, exports, module) {
 
     methods: {
       processBatch() {
-        this.$nextTick(function() {
+        setTimeout(() => {
           if (this.turnsComplete < this.startTurns) {
             const count = Math.min(this.startTurns - this.turnsComplete, this.step);
             this.turnsComplete += count;
             this.game.turn(count, true);
-          }
-          else {
+          } else {
             this.game.save_game();
             this.game.unfreeze();
             this.$nextTick(() => this.$emit('open', 'summary'));
           }
-        });
+        }, 100);
       },
 
       startGame() {
