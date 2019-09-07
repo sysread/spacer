@@ -24,7 +24,7 @@ const data = {
   max_agents:              6, // total
   max_agent_money:         5000, // after which they buy luxuries
   min_agent_profit:        100, // min credits net profit before a route is attractive
-  necessity:               {water: true, food: true, medicine: true, fuel: true},
+  necessity:               {water: true, atmospherics: true, food: true, medicine: true, fuel: true},
   craft_fee_nofab:         0.20, // percentage of sell price when crafted without fabricators
   craft_fee:               0.05, // percentage of sell price when crafted with fabricators
   fabricators:             5, // number of fabricators, each equates to 1 unit of cybernetics
@@ -35,7 +35,7 @@ const data = {
   max_abs_standing:        100,
   jurisdiction:            0.28, // au from body
   piracy_max_velocity:     500,
-  passenger_mission_count: 3,
+  passenger_mission_count: 4,
   smuggler_mission_count:  2,
 
   scales: {

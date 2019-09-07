@@ -23,7 +23,7 @@ define(["require", "exports"], function (require, exports) {
         max_agents: 6,
         max_agent_money: 5000,
         min_agent_profit: 100,
-        necessity: { water: true, food: true, medicine: true, fuel: true },
+        necessity: { water: true, atmospherics: true, food: true, medicine: true, fuel: true },
         craft_fee_nofab: 0.20,
         craft_fee: 0.05,
         fabricators: 5,
@@ -34,7 +34,7 @@ define(["require", "exports"], function (require, exports) {
         max_abs_standing: 100,
         jurisdiction: 0.28,
         piracy_max_velocity: 500,
-        passenger_mission_count: 3,
+        passenger_mission_count: 4,
         smuggler_mission_count: 2,
         scales: {
             tiny: 0.6,
