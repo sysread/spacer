@@ -50,7 +50,7 @@ define(function(require, exports, module) {
     },
 
     computed: {
-      rate() { return this.frame_rate === undefined ? 0.5 : this.frame_rate }
+      rate() { return this.frame_rate === undefined ? 1 : this.frame_rate }
     },
 
     template: `

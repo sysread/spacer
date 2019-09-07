@@ -118,7 +118,7 @@ define(function(require, exports, module) {
           </template>
 
           <template v-else>
-            <progress-bar :percent="percent" @ready="turn" />
+            <progress-bar :percent="percent" @ready="turn" frame_rate=30 />
             <btn block=1 @click="finish" class="my-3">Stop</btn>
           </template>
         </template>
