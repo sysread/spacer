@@ -19,52 +19,31 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     const SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
     const DT = 200; // frames per turn for euler integration
     const TI = SPT / DT; // seconds per frame
-    function Motion(stdlib = null, foreign = null, heap = null) {
-        "use asm";
-        var sqrt = stdlib.Math.sqrt;
-        /*
-         * tt: total time
-         * pi: initial position
-         * pf: final position
-         * vi: initial velocity
-         * vf: final velocity
-         */
-        function linear_acceleration(tt, pi, pf, vi, vf) {
-            tt = +tt;
-            pi = +pi;
-            pf = +pf;
-            vi = +vi;
-            vf = +vf;
-            var t = 0.0, dvf = 0.0, dvi = 0.0, a = 0.0;
-            // time to flip point
-            t = tt / 2.0;
-            // portion of final velocity to match by flip point
-            dvf = vf * 2.0 / t;
-            // portion of total change in velocity to apply by flip point
-            dvi = (vi - dvf) * 2.0 / t;
-            // calculate linear acceleration
-            a = (pf - pi) / (t * t) - dvi;
-            return +a;
-        }
-        /**
-         * ts: total distance
-         * a:  acceleration
-         */
-        function travel_time(ts, a) {
-            a = +a;
-            var s = 0.0, v = 0.0, t = 0.0;
-            s = ts / 2.0;
-            v = sqrt(2 * a * s);
-            t = v / a;
-            return t * 2;
-        }
-        return {
-            linear_acceleration: linear_acceleration,
-            travel_time: travel_time,
-        };
+    /*
+     * tt: total time
+     * pi: initial position
+     * pf: final position
+     * vi: initial velocity
+     * vf: final velocity
+     */
+    function linear_acceleration(tt, pi, pf, vi, vf) {
+        // time to flip point
+        const t = tt / 2;
+        // portion of final velocity to match by flip point
+        const dvf = vf * 2 / t;
+        // portion of total change in velocity to apply by flip point
+        const dvi = (vi - dvf) * 2 / t;
+        // calculate linear acceleration
+        return (pf - pi) / (t * t) - dvi;
     }
-    exports.Motion = Motion;
-    exports.motion = Motion({ Math: Math });
+    /**
+     * ts: total distance
+     * a:  acceleration
+     */
+    function travel_time(ts, a) {
+        return 2 * Math.sqrt(a * ts) / a;
+    }
+    exports.travel_time = travel_time;
     /**
      * Calculates the acceleration vector required for a given transit.
      *
@@ -73,9 +52,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
      */
     function calculate_acceleration(turns, initial, final) {
         const t = SPT * turns;
-        const ax = exports.motion.linear_acceleration(t, initial.position[0], final.position[0], initial.velocity[0], final.velocity[0]);
-        const ay = exports.motion.linear_acceleration(t, initial.position[1], final.position[1], initial.velocity[1], final.velocity[1]);
-        const az = exports.motion.linear_acceleration(t, initial.position[2], final.position[2], initial.velocity[2], final.velocity[2]);
+        const ax = linear_acceleration(t, initial.position[0], final.position[0], initial.velocity[0], final.velocity[0]);
+        const ay = linear_acceleration(t, initial.position[1], final.position[1], initial.velocity[1], final.velocity[1]);
+        const az = linear_acceleration(t, initial.position[2], final.position[2], initial.velocity[2], final.velocity[2]);
         const vx = ax * (t / 2);
         const vy = ay * (t / 2);
         const vz = az * (t / 2);
@@ -156,6 +135,15 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             this.showAll = showAll || false;
             this.max = player.maxAcceleration();
             this.nominal = nominal ? true : false;
+            if (this.nominal) {
+                this.bestAcc = this.player.ship.thrust / this.player.ship.currentMass();
+                this.shipMass = this.player.ship.nominalMass(true);
+            }
+            else {
+                this.bestAcc = this.player.shipAcceleration();
+                this.shipMass = this.player.ship.currentMass();
+            }
+            this.bestAcc = Math.min(this.player.maxAcceleration(), this.bestAcc);
             if (!this.nominal && fuelTarget !== undefined) {
                 this.fuelTarget = Math.min(fuelTarget, this.player.ship.fuel);
             }
@@ -185,23 +173,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 return transit;
             }
         }
-        getShipAcceleration() {
-            if (this.nominal) {
-                return this.player.ship.thrust / this.player.ship.currentMass();
-            }
-            else {
-                return this.player.shipAcceleration();
-            }
-        }
-        getShipMass() {
-            if (this.nominal) {
-                return this.player.ship.nominalMass(true);
-                ;
-            }
-            else {
-                return this.player.ship.currentMass();
-            }
-        }
         *astrogator(destination) {
             const orig = system_1.default.orbit_by_turns(this.orig);
             const vInit = Vec.div_scalar(Vec.sub(orig[1], orig[0]), SPT);
@@ -211,11 +182,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
         }
         *full_astrogator(origin, destination) {
             const dest = system_1.default.orbit_by_turns(destination);
-            const bestAcc = Math.min(this.player.maxAcceleration(), this.getShipAcceleration());
+            const bestAcc = this.bestAcc;
             const fuelrate = this.player.ship.fuelrate;
             const thrust = this.player.ship.thrust;
             const fuel = this.fuelTarget;
-            const mass = this.getShipMass();
+            const mass = this.shipMass;
             let prevFuelUsed;
             for (let turns = 1; turns < dest.length; ++turns) {
                 const distance = physics_1.default.distance(origin.position, dest[turns]);

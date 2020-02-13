@@ -36,70 +36,34 @@ export interface Body {
 }
 
 
-export function Motion(stdlib: any = null, foreign: any = null, heap: any = null) {
-  "use asm";
+/*
+ * tt: total time
+ * pi: initial position
+ * pf: final position
+ * vi: initial velocity
+ * vf: final velocity
+ */
+function linear_acceleration(tt: number, pi: number, pf: number, vi: number, vf: number): number {
+  // time to flip point
+  const t = tt / 2;
 
-  var sqrt = stdlib.Math.sqrt;
+  // portion of final velocity to match by flip point
+  const dvf = vf * 2 / t;
 
-  /*
-   * tt: total time
-   * pi: initial position
-   * pf: final position
-   * vi: initial velocity
-   * vf: final velocity
-   */
-  function linear_acceleration(tt: number, pi: number, pf: number, vi: number, vf: number): number {
-    tt = +tt;
-    pi = +pi;
-    pf = +pf;
-    vi = +vi;
-    vf = +vf;
+  // portion of total change in velocity to apply by flip point
+  const dvi = (vi - dvf) * 2 / t;
 
-    var t = 0.0,
-        dvf = 0.0,
-        dvi = 0.0,
-        a = 0.0;
-
-    // time to flip point
-    t = tt / 2.0;
-
-    // portion of final velocity to match by flip point
-    dvf = vf * 2.0 / t;
-
-    // portion of total change in velocity to apply by flip point
-    dvi = (vi - dvf) * 2.0 / t;
-
-    // calculate linear acceleration
-    a = (pf - pi) / (t * t) - dvi;
-
-    return +a;
-  }
-
-  /**
-   * ts: total distance
-   * a:  acceleration
-   */
-  function travel_time(ts: number, a: number): number {
-    a = +a;
-
-    var s = 0.0,
-        v = 0.0,
-        t = 0.0;
-
-    s = ts / 2.0;
-    v = sqrt(2 * a * s);
-    t = v / a;
-
-    return t * 2;
-  }
-
-  return {
-    linear_acceleration: linear_acceleration,
-    travel_time: travel_time,
-  };
+  // calculate linear acceleration
+  return (pf - pi) / (t * t) - dvi;
 }
 
-export const motion = Motion({Math: Math});
+/**
+ * ts: total distance
+ * a:  acceleration
+ */
+export function travel_time(ts: number, a: number): number {
+  return 2 * Math.sqrt(a * ts) / a;
+}
 
 /**
  * Calculates the acceleration vector required for a given transit.
@@ -110,9 +74,9 @@ export const motion = Motion({Math: Math});
 export function calculate_acceleration(turns: number, initial: Body, final: Body): Acceleration {
   const t = SPT * turns;
 
-  const ax = motion.linear_acceleration(t, initial.position[0], final.position[0], initial.velocity[0], final.velocity[0]);
-  const ay = motion.linear_acceleration(t, initial.position[1], final.position[1], initial.velocity[1], final.velocity[1]);
-  const az = motion.linear_acceleration(t, initial.position[2], final.position[2], initial.velocity[2], final.velocity[2]);
+  const ax = linear_acceleration(t, initial.position[0], final.position[0], initial.velocity[0], final.velocity[0]);
+  const ay = linear_acceleration(t, initial.position[1], final.position[1], initial.velocity[1], final.velocity[1]);
+  const az = linear_acceleration(t, initial.position[2], final.position[2], initial.velocity[2], final.velocity[2]);
 
   const vx = ax * (t / 2);
   const vy = ay * (t / 2);
@@ -209,12 +173,25 @@ export class NavComp {
   dt:         undefined | number;
   nominal:    boolean;
 
+  bestAcc:    number;
+  shipMass:   number;
+
   constructor(player: Person, orig: t.body, showAll?: boolean, fuelTarget?: number, nominal?: boolean) {
     this.player  = player;
     this.orig    = orig;
     this.showAll = showAll || false;
     this.max     = player.maxAcceleration();
     this.nominal = nominal ? true : false;
+
+    if (this.nominal) {
+      this.bestAcc  = this.player.ship.thrust / this.player.ship.currentMass();
+      this.shipMass = this.player.ship.nominalMass(true);
+    } else {
+      this.bestAcc  = this.player.shipAcceleration();
+      this.shipMass = this.player.ship.currentMass();
+    }
+
+    this.bestAcc = Math.min(this.player.maxAcceleration(), this.bestAcc);
 
     if (!this.nominal && fuelTarget !== undefined) {
       this.fuelTarget = Math.min(fuelTarget, this.player.ship.fuel);
@@ -250,22 +227,6 @@ export class NavComp {
     }
   }
 
-  getShipAcceleration() {
-    if (this.nominal) {
-      return this.player.ship.thrust / this.player.ship.currentMass();
-    } else {
-      return this.player.shipAcceleration();
-    }
-  }
-
-  getShipMass() {
-    if (this.nominal) {
-      return this.player.ship.nominalMass(true);;
-    } else {
-      return this.player.ship.currentMass();
-    }
-  }
-
   *astrogator(destination: t.body) {
     const orig = system.orbit_by_turns(this.orig);
     const vInit = Vec.div_scalar(Vec.sub(orig[1], orig[0]), SPT);
@@ -277,11 +238,11 @@ export class NavComp {
 
   *full_astrogator(origin: Body, destination: t.body) {
     const dest     = system.orbit_by_turns(destination);
-    const bestAcc  = Math.min(this.player.maxAcceleration(), this.getShipAcceleration());
+    const bestAcc  = this.bestAcc;
     const fuelrate = this.player.ship.fuelrate;
     const thrust   = this.player.ship.thrust;
     const fuel     = this.fuelTarget;
-    const mass     = this.getShipMass();
+    const mass     = this.shipMass;
 
     let prevFuelUsed;
 

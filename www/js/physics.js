@@ -1,45 +1,17 @@
 define(["require", "exports"], function (require, exports) {
     "use strict";
-    function Helpers(stdlib, foreign = null, heap = null) {
-        "use asm";
-        var hypot = stdlib.Math.hypot;
-        function distance(x1, y1, z1, x2, y2, z2) {
-            x1 = +x1;
-            y1 = +y1;
-            z1 = +z1;
-            x2 = +x2;
-            y2 = +y2;
-            z2 = +z2;
-            return hypot(x2 - x1, y2 - y1, z2 - z1);
-        }
-        function range(t, v, a) {
-            t = +t;
-            v = +v;
-            a = +a;
-            // S = (v * t) + (0.5 * a * t^2)
-            return (v * t) + (0.5 * a * t * t);
-        }
-        return {
-            distance: distance,
-            range: range,
-        };
-    }
-    const helpers = Helpers({ Math: Math });
     class Physics {
-        static get C() { return 299792458; } // m/s
-        static get G() { return 9.80665; } // m/s/s
-        static get AU() { return 149597870700; } // m
         /*
          * distance([m,m,m], [m,m,m]) -> m
          */
         static distance(p0, p1) {
-            return helpers.distance(p0[0], p0[1], p0[2] || 0, p1[0], p1[1], p1[2] || 0);
+            return Math.hypot(p1[0] - p0[0], p1[1] - p0[1], (p1[2] || 0) - (p0[2] || 0));
         }
         /*
          * range(s, m/s, m/s/s) -> m
          */
         static range(t, v, a) {
-            return helpers.range(t, v, a);
+            return (v * t) + (0.5 * a * t * t);
         }
         /*
          * segment(p0: [x,y,z], p1: [x,y,z], m)
@@ -72,6 +44,9 @@ define(["require", "exports"], function (require, exports) {
             ];
         }
     }
+    Physics.C = 299792458; // m/s
+    Physics.G = 9.80665; // m/s/s
+    Physics.AU = 149597870700; // m
     window.Physics = Physics;
     return Physics;
 });

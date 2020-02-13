@@ -3,7 +3,7 @@ import system from './system';
 import Physics from './physics';
 import { resources } from './resource';
 import { Conflict } from './conflict';
-import { NavComp, motion } from './navcomp';
+import { NavComp, travel_time } from './navcomp';
 import { trigger, watch, Arrived, CaughtSmuggling } from "./events";
 
 import * as t from './common';
@@ -20,7 +20,7 @@ declare var window: {
 export function estimateTransitTimeAU(au: number): number {
   const s = au * Physics.AU;
   const a = 0.05 * Physics.G;
-  const t = motion.travel_time(s, a);
+  const t = travel_time(s, a);
   const spt = data.hours_per_turn * 3600;
   return Math.ceil(t / spt);
 }

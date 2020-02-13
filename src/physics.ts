@@ -5,49 +5,19 @@ declare var window: {
   Physics: any;
 };
 
-function Helpers(stdlib: any, foreign: any = null, heap: any = null) {
-  "use asm";
-
-  var hypot = stdlib.Math.hypot;
-
-  function distance(x1: number, y1: number, z1: number, x2: number, y2: number, z2: number): number {
-    x1 = +x1;
-    y1 = +y1;
-    z1 = +z1;
-    x2 = +x2;
-    y2 = +y2;
-    z2 = +z2;
-    return hypot(x2 - x1, y2 - y1, z2 - z1);
-  }
-
-  function range(t: number, v: number, a: number): number {
-    t = +t;
-    v = +v;
-    a = +a;
-    // S = (v * t) + (0.5 * a * t^2)
-    return (v * t) + (0.5 * a * t * t);
-  }
-
-  return {
-    distance: distance,
-    range: range,
-  };
-}
-
-const helpers = Helpers({Math: Math});
-
 class Physics {
-  static get C()  { return 299792458;    } // m/s
-  static get G()  { return 9.80665;      } // m/s/s
-  static get AU() { return 149597870700; } // m
+  static readonly C  = 299792458;     // m/s
+  static readonly G  = 9.80665;       // m/s/s
+  static readonly AU = 149597870700;  // m
 
   /*
    * distance([m,m,m], [m,m,m]) -> m
    */
   static distance(p0: point, p1: point): number {
-    return helpers.distance(
-      p0[0], p0[1], p0[2] || 0,
-      p1[0], p1[1], p1[2] || 0,
+    return Math.hypot(
+      p1[0] - p0[0],
+      p1[1] - p0[1], 
+      (p1[2] || 0) - (p0[2] || 0), 
     );
   }
 
@@ -55,7 +25,7 @@ class Physics {
    * range(s, m/s, m/s/s) -> m
    */
   static range(t: number, v: number, a: number): number {
-    return helpers.range(t, v, a);
+    return (v * t) + (0.5 * a * t * t);
   }
 
   /*

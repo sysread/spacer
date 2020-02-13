@@ -19,7 +19,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
     function estimateTransitTimeAU(au) {
         const s = au * physics_1.default.AU;
         const a = 0.05 * physics_1.default.G;
-        const t = navcomp_1.motion.travel_time(s, a);
+        const t = navcomp_1.travel_time(s, a);
         const spt = data_1.default.hours_per_turn * 3600;
         return Math.ceil(t / spt);
     }
