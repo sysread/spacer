@@ -73,14 +73,15 @@ define(function(require, exports, module) {
 
         <div class="form-row">
           <div class="col-6">
+            <slot name="pre" />
             <span @click="setMin" v-if="minmax" class="input-group-btn float-left"><btn class="font-weight-bold btn">Min</btn></span>
             <span @click="dec" class="input-group-btn float-left mx-2"><btn class="font-weight-bold btn">-1</btn></span>
           </div>
 
           <div class="col-6">
+            <slot name="post" />
             <span @click="setMax" v-if="minmax" class="input-group-btn float-right"><btn class="font-weight-bold btn">Max</btn></span>
             <span @click="inc" class="input-group-btn float-right mx-2"><btn class="font-weight-bold btn">+1</btn></span>
-            <slot name="post" />
           </div>
         </div>
       </div>
@@ -140,13 +141,13 @@ define(function(require, exports, module) {
     template: `
 <div>
   <def brkpt="sm" term="Cargo"><span slot="def">{{cargoUsed}} / {{cargoSpace}}</span></def>
-  <def v-for="item in items" :key="item" brkpt="sm" v-if="count(item) > 0">
-    <span slot="term" class="text-capitalize">{{item}}</span>
-    <slider slot="def" @update:value="amt => update(item, amt)" minmax=true :value="cargo.count(item)" min=0 :max="count(item)" step=1>
-      <span class="btn btn-dark" slot="pre">{{store.count(item)}}</span>
-      <span class="btn btn-dark" slot="post">{{cargo.count(item)}}</span>
+  <div v-for="item in items" :key="item" v-if="count(item) > 0" class="my-3">
+    <h4 class="text-capitalize">{{item}}</h4>
+    <slider @update:value="amt => update(item, amt)" minmax=true :value="cargo.count(item)" min=0 :max="count(item)" step=1>
+      <span slot="pre" class="float-left input-group-btn mx-2"><btn class="font-weight-bold btn">{{store.count(item)}}</btn></span>
+      <span slot="post" class="float-right input-group-btn mx-2"><btn class="font-weight-bold btn">{{cargo.count(item)}}</btn></span>
     </slider>
-  </def>
+  </div>
 </div>
     `
   });

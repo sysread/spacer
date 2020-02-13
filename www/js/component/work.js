@@ -147,7 +147,7 @@ define(function(require, exports, module) {
 
               this.game.turn(this.turns);
             }
-          }, 350);
+          }, 200);
         }
       },
 
@@ -209,7 +209,7 @@ define(function(require, exports, module) {
       for job producers practically guarantees more jobs in the future.
     </p>
 
-    <modal v-if="task" @close="completeTask()" :xclose="isReady" :title="task.name" footer=1 :static="isReady">
+    <modal v-if="task" @close="completeTask()" :xclose="isReady" :title="task.name" size="lg" footer=1 :static="isReady">
       <div v-if="isReady">
         <p><i>{{task.desc}}</i></p>
         <p>Working at a daily wage of <gold>{{payRate}}</gold> credits for <gold>{{days}}</gold> days will earn <gold>{{pay}}</gold> credits.</p>
