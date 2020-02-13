@@ -196,8 +196,8 @@ define(["require", "exports", "./physics", "system", "./util"], function (requir
             this.init_set = true;
         }
     }
+    exports.Layout = Layout;
     Layout.SCALE_DEFAULT_AU = 2;
     Layout.SCALE_MIN_AU = 0.00001; // 1/2 true value which is per quadrant
     Layout.SCALE_MAX_AU = 35; // 1/2 true value which is per quadrant
-    exports.Layout = Layout;
 });
