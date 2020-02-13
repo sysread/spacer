@@ -1,10 +1,18 @@
-// adapted from https://medium.com/@francoisromain/smooth-a-svg-path-with-cubic-bezier-curves-e37b49d46c74
-define(["require", "exports"], function (require, exports) {
+define(["require", "exports", "./util", "./strbuf"], function (require, exports, util_1, strbuf_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const smoothing = 0.2;
+    const rounding = 2;
+    function round(n) {
+        return util_1.R(n, rounding);
+    }
     function bezier(points) {
-        let path = 'M ' + points[0][0] + ',' + points[0][1];
+        //let path = 'M ' + round(points[0][0]) + ',' + round(points[0][1]);
+        const path = strbuf_1.builder();
+        path.append('M ');
+        path.append(round(points[0][0]));
+        path.append(',');
+        path.append(round(points[0][1]));
         for (let i = 1; i < points.length; ++i) {
             const current = points[i - 1];
             const prev = points[i - 2] || current;
@@ -18,14 +26,29 @@ define(["require", "exports"], function (require, exports) {
             const a2 = exports.util.angle(current[0], current[1], nnext[0], nnext[1], 1);
             const x2 = exports.util.ctrlpt_x(next[0], l2, a2);
             const y2 = exports.util.ctrlpt_y(next[1], l2, a2);
-            path += ' C '
-                + x1 + ' ' + y1
-                + ','
-                + x2 + ' ' + y2
-                + ','
-                + next[0] + ' ' + next[1];
+            path.append(' C ');
+            path.append(round(x1));
+            path.append(' ');
+            path.append(round(y1));
+            path.append(',');
+            path.append(round(x2));
+            path.append(' ');
+            path.append(round(y2));
+            path.append(',');
+            path.append(round(next[0]));
+            path.append(' ');
+            path.append(round(next[1]));
+            /*let buff = ' C ';
+            buff += round(x1) + ' ';
+            buff += round(y1) + ',';
+            buff += round(x2) + ' ';
+            buff += round(y2) + ',';
+            buff += round(next[0]) + ' ';
+            buff += round(next[1]);
+            path += buff;*/
         }
-        return path;
+        return path.getbuffer();
+        //return path;
     }
     exports.bezier = bezier;
     function Util(stdlib, foreign = null, heap = null) {
