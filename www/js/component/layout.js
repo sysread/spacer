@@ -6,6 +6,7 @@ define(function(require, exports, module) {
   const Hammer = require('vendor/hammer.min');
   const Layout = require('layout').Layout;
   const Tween  = require('tween').default;
+  const intvl  = 0.05;
 
   return {
     data() {
@@ -83,7 +84,7 @@ define(function(require, exports, module) {
           if (wheel_tween)
             wheel_tween.kill();
 
-          wheel_tween = Tween(this.layout, 1, {
+          wheel_tween = Tween(this.layout, intvl, {
             fov_au: util.clamp(this.layout.fov_au + amount, Layout.SCALE_MIN_AU, Layout.SCALE_MAX_AU),
           });
         });
@@ -109,7 +110,7 @@ define(function(require, exports, module) {
           if (pinch_tween)
             pinch_tween.kill();
 
-          pinch_tween = Tween(this.layout, 1, {
+          pinch_tween = Tween(this.layout, intvl, {
             fov_au: util.clamp(this.layout.fov_au + amount, Layout.SCALE_MIN_AU, Layout.SCALE_MAX_AU),
           });
         });
@@ -136,7 +137,7 @@ define(function(require, exports, module) {
             pan_tween.kill();
 
           // Update the node's offset values
-          pan_tween = Tween(this.layout, 1, {
+          pan_tween = Tween(this.layout, intvl, {
             offset_x: this.layout.init_x + ev.deltaX,
             offset_y: this.layout.init_y + ev.deltaY,
           });

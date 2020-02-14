@@ -80,7 +80,6 @@ define(function(require, exports, module) {
       distance()     { return util.R(this.plan.auRemaining()) },
       is_next_day()  { return this.plan.current_turn % data.turns_per_day == 0 },
       is_zoomed_in() { return this.plan.left < data.turns_per_day },
-      intvl_ms()     { return this.intvl * 1000 },
 
       isSubSystemTransit() {
         const dest_central = system.central(this.plan.dest);
@@ -95,14 +94,14 @@ define(function(require, exports, module) {
       },
 
       intvl() {
-        if (!this.started || this.plan.current_turn == 0)
+        if (!this.started || this.plan.current_turn == 0) {
           return 0;
+        }
 
-        const min = 1;
-        const max = 10;
-        const intvl = util.clamp((max / (this.layout.fov_au * 2)), min, max);
-
-        return Math.ceil(intvl);
+        const min   = 0.05;
+        const max   = 1.00;
+        const intvl = max / (this.layout.fov_au * 2);
+        return util.clamp(intvl, min, max);
       },
 
       displayFoV() {
@@ -273,7 +272,7 @@ define(function(require, exports, module) {
       update() {
         const [x, y] = this.layout.scale_point(this.plan.coords);
 
-        Tween(this.$data, this.intvl || 0, {
+        Tween(this.$data, this.intvl, {
           patrolpct:  this.patrolRate,
           piracypct:  this.piracyRate,
           shipx:      x,
@@ -583,7 +582,7 @@ define(function(require, exports, module) {
             </tr>
             <tr v-if="!show_plot()">
               <td colspan="3">
-                <progress-bar width=100 :percent="percent" :frame_rate="intvl_ms" />
+                <progress-bar width=100 :percent="percent" />
               </td>
             </tr>
           </table>

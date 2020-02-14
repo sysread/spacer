@@ -4,7 +4,6 @@ define(function(require, exports, module) {
   const Vue     = require('vendor/vue');
   const util    = require('util');
   const Physics = require('physics');
-  const Tween   = require('tween').default;
 
   require('component/modal');
   require('vendor/sprintf.min');

@@ -8,11 +8,11 @@ interface TweenArgs {
   [key: string]: any;
   ease: Easing;
   lazy: boolean;
-  useFrames: boolean;
+  duration: number;
 }
 
-declare var TweenMax: {
-  to: (elt: any, intvl: number, vars: TweenArgs) => any;
+declare var gsap: {
+  to: (elt: any, vars: TweenArgs) => any;
   play: () => void;
   kill: () => void;
 }
@@ -20,6 +20,6 @@ declare var TweenMax: {
 export default function tween(elt: any, intvl: number, vars: TweenArgs) : any {
   vars.ease = Linear.easeNone;
   vars.lazy = true;
-  vars.useFrames = true;
-  return TweenMax.to(elt, intvl || 0, vars);
+  vars.duration = intvl || 0;
+  return gsap.to(elt, vars);
 }

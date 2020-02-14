@@ -713,7 +713,7 @@ define(function(require, exports, module) {
         if (this.tween)
           this.tween.kill();
 
-        this.tween = Tween(this.$data, this.intvl || 0, {
+        this.tween = Tween(this.$data, this.intvl, {
           d: d,
           x: x - (d / 2),
           y: y - (d / 2),
@@ -978,7 +978,7 @@ define(function(require, exports, module) {
         if (this.tween)
           this.tween.kill();
 
-        this.tween = Tween(this.$data, this.intvl || 0, {x: x, y: y, r: r});
+        this.tween = Tween(this.$data, this.intvl, {x: x, y: y, r: r});
         this.tween.play();
       },
     },

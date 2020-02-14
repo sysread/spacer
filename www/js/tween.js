@@ -4,8 +4,8 @@ define(["require", "exports"], function (require, exports) {
     function tween(elt, intvl, vars) {
         vars.ease = Linear.easeNone;
         vars.lazy = true;
-        vars.useFrames = true;
-        return TweenMax.to(elt, intvl || 0, vars);
+        vars.duration = intvl || 0;
+        return gsap.to(elt, vars);
     }
     exports.default = tween;
 });
