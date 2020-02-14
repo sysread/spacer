@@ -1042,37 +1042,42 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             this.contracts = this.contracts.concat(missions);
         }
         refreshPassengerContracts() {
-            const dests = t.bodies.filter(t => t != this.body);
+            const have = this.contracts.filter(c => !(c instanceof mission_1.Passengers)).length;
+            const max = Math.max(1, util.getRandomInt(0, this.scale(data_1.default.passenger_mission_count)));
+            const want = Math.max(0, max - have);
+            if (this.contracts.length >= want) {
+                return;
+            }
+            const skip = { [this.body]: true };
+            const dests = [];
+            for (const c of this.contracts) {
+                skip[c.mission.dest] = true;
+            }
             for (const body of t.bodies) {
-                if (body != this.body) {
-                    // add weight to destinations from our own faction
-                    if (data_1.default.bodies[body].faction == this.faction.abbrev) {
-                        dests.push(body);
-                    }
-                    // add weight to capitals
-                    if (data_1.default.factions[data_1.default.bodies[body].faction].capital == body) {
-                        dests.push(body);
-                    }
+                if (skip[body]) {
+                    continue;
+                }
+                dests.push(body);
+                // add weight to destinations from our own faction
+                if (data_1.default.bodies[body].faction == this.faction.abbrev) {
+                    dests.push(body);
+                }
+                // add weight to capitals
+                if (data_1.default.factions[data_1.default.bodies[body].faction].capital == body) {
+                    dests.push(body);
                 }
             }
-            const existing = this.contracts.filter(c => !(c instanceof mission_1.Passengers));
-            const want = Math.max(0, util.getRandomInt(0, this.scale(data_1.default.passenger_mission_count)) - existing.length);
-            while (this.contracts.length < want) {
-                const dest = util.oneOf(dests.filter(d => !this.contracts.find(c => c.mission.dest == d)));
+            for (let i = 0; i < want; ++i) {
+                const dest = util.oneOf(dests.filter(d => !skip[d]));
                 if (!dest) {
                     break;
                 }
-                const mission = new mission_1.Passengers({
-                    orig: this.body,
-                    dest: dest,
-                });
-                if (this.contracts.find(c => c.mission.title == mission.title)) {
-                    continue;
-                }
+                const mission = new mission_1.Passengers({ orig: this.body, dest: dest });
                 this.contracts.push({
                     valid_until: util.getRandomInt(10, 30) * data_1.default.turns_per_day,
                     mission: mission,
                 });
+                skip[dest] = true;
             }
         }
         acceptMission(mission) {

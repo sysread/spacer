@@ -1371,45 +1371,54 @@ export class Planet {
   }
 
   refreshPassengerContracts() {
-    const dests = t.bodies.filter(t => t != this.body);
+    const have = this.contracts.filter(c => !(c instanceof Passengers)).length;
+    const max  = Math.max(1, util.getRandomInt(0, this.scale(data.passenger_mission_count)));
+    const want = Math.max(0, max - have);
+
+    if (this.contracts.length >= want) {
+      return;
+    }
+
+    const skip:  {[key: string]: boolean} = { [this.body]: true };
+    const dests: t.body[] = [];
+
+    for (const c of this.contracts) {
+      skip[(<Passengers>c.mission).dest] = true;
+    }
 
     for (const body of t.bodies) {
-      if (body != this.body) {
-        // add weight to destinations from our own faction
-        if (data.bodies[body].faction == this.faction.abbrev) {
-          dests.push(body);
-        }
+      if (skip[body]) {
+        continue;
+      }
 
-        // add weight to capitals
-        if (data.factions[data.bodies[body].faction].capital == body) {
-          dests.push(body);
-        }
+      dests.push(body);
+
+      // add weight to destinations from our own faction
+      if (data.bodies[body].faction == this.faction.abbrev) {
+        dests.push(body);
+      }
+
+      // add weight to capitals
+      if (data.factions[data.bodies[body].faction].capital == body) {
+        dests.push(body);
       }
     }
 
-    const existing = this.contracts.filter(c => !(c instanceof Passengers));
-    const want = Math.max(0, util.getRandomInt(0, this.scale(data.passenger_mission_count)) - existing.length);
-
-    while (this.contracts.length < want) {
-      const dest = util.oneOf(dests.filter(d => !this.contracts.find(c => (<Passengers>c.mission).dest == d)));
+    for (let i = 0; i < want; ++i) {
+      const dest = util.oneOf(dests.filter(d => !skip[d]));
 
       if (!dest) {
         break;
       }
 
-      const mission = new Passengers({
-        orig: this.body,
-        dest: dest,
-      });
-
-      if (this.contracts.find(c => c.mission.title == mission.title)) {
-        continue;
-      }
+      const mission = new Passengers({ orig: this.body, dest: dest });
 
       this.contracts.push({
         valid_until: util.getRandomInt(10, 30) * data.turns_per_day,
-        mission: mission,
+        mission:     mission,
       });
+
+      skip[dest] = true;
     }
   }
 

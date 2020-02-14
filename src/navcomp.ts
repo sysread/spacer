@@ -8,10 +8,9 @@ import * as Vec from './vector';
 import * as util from './util';
 import * as t from './common';
 
-const hypot = Math.hypot;
 const SPT = data.hours_per_turn * 3600; // seconds per turn
-const DT = 200; // frames per turn for euler integration
-const TI = SPT / DT; // seconds per frame
+const DT  = 200; // frames per turn for euler integration
+const TI  = SPT / DT; // seconds per frame
 
 export interface PathSegment {
   position: Point;
@@ -82,8 +81,8 @@ export function calculate_acceleration(turns: number, initial: Body, final: Body
   const vy = ay * (t / 2);
   const vz = az * (t / 2);
 
-  const a = hypot(ax, ay, az);
-  const v = hypot(vx, vy, vz);
+  const a = Math.hypot(ax, ay, az);
+  const v = Math.hypot(vx, vy, vz);
 
   return {
     maxvel: v,
@@ -93,7 +92,7 @@ export function calculate_acceleration(turns: number, initial: Body, final: Body
 }
 
 /**
- * Calculates the trajector for a given transit.
+ * Calculates the trajectory for a given transit.
  *
  * Note: calculating linearly in three axes is significantly faster (and
  * uglier) than using a vector.
@@ -123,7 +122,7 @@ export function calculate_trajectory(turns: number, initial: Body, final: Body):
 
   const path: PathSegment[] = [{
     position: [px, py, pz],
-    velocity: hypot(vx, vy, vz),
+    velocity: Math.hypot(vx, vy, vz),
     vector:   [vx, vy, vz],
   }];
 
@@ -152,7 +151,7 @@ export function calculate_trajectory(turns: number, initial: Body, final: Body):
 
     path.push({
       position: [px, py, pz],
-      velocity: hypot(vx, vy, vz),
+      velocity: Math.hypot(vx, vy, vz),
       vector:   [vx, vy, vz],
     });
   }
@@ -237,12 +236,13 @@ export class NavComp {
   }
 
   *full_astrogator(origin: Body, destination: t.body) {
-    const dest     = system.orbit_by_turns(destination);
-    const bestAcc  = this.bestAcc;
-    const fuelrate = this.player.ship.fuelrate;
-    const thrust   = this.player.ship.thrust;
-    const fuel     = this.fuelTarget;
-    const mass     = this.shipMass;
+    const dest        = system.orbit_by_turns(destination);
+    const bestAcc     = this.bestAcc;
+    const fuelrate    = this.player.ship.fuelrate;
+    const thrust      = this.player.ship.thrust;
+    const fuel        = this.fuelTarget;
+    const mass        = this.shipMass;
+    const agent: Body = { position: origin.position, velocity: origin.velocity };
 
     let prevFuelUsed;
 
@@ -254,7 +254,6 @@ export class NavComp {
       const maxAccel      = Math.min(bestAcc, availAcc);
       const vFinal        = Vec.div_scalar( Vec.sub(dest[turns], dest[turns - 1]), SPT );
       const target: Body  = { position: dest[turns], velocity: vFinal };
-      const agent: Body   = { position: origin.position, velocity: origin.velocity };
       const a             = calculate_acceleration(turns, agent, target);
 
       if (a.length > maxAccel)

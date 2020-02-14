@@ -15,7 +15,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     system_1 = __importDefault(system_1);
     physics_1 = __importDefault(physics_1);
     Vec = __importStar(Vec);
-    const hypot = Math.hypot;
     const SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
     const DT = 200; // frames per turn for euler integration
     const TI = SPT / DT; // seconds per frame
@@ -58,8 +57,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
         const vx = ax * (t / 2);
         const vy = ay * (t / 2);
         const vz = az * (t / 2);
-        const a = hypot(ax, ay, az);
-        const v = hypot(vx, vy, vz);
+        const a = Math.hypot(ax, ay, az);
+        const v = Math.hypot(vx, vy, vz);
         return {
             maxvel: v,
             length: a,
@@ -68,7 +67,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     }
     exports.calculate_acceleration = calculate_acceleration;
     /**
-     * Calculates the trajector for a given transit.
+     * Calculates the trajectory for a given transit.
      *
      * Note: calculating linearly in three axes is significantly faster (and
      * uglier) than using a vector.
@@ -93,7 +92,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
         let [vx, vy, vz] = initial.velocity.slice(0);
         const path = [{
                 position: [px, py, pz],
-                velocity: hypot(vx, vy, vz),
+                velocity: Math.hypot(vx, vy, vz),
                 vector: [vx, vy, vz],
             }];
         for (let turn = 0, t = 0; turn < turns; ++turn) {
@@ -118,7 +117,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             }
             path.push({
                 position: [px, py, pz],
-                velocity: hypot(vx, vy, vz),
+                velocity: Math.hypot(vx, vy, vz),
                 vector: [vx, vy, vz],
             });
         }
@@ -187,6 +186,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             const thrust = this.player.ship.thrust;
             const fuel = this.fuelTarget;
             const mass = this.shipMass;
+            const agent = { position: origin.position, velocity: origin.velocity };
             let prevFuelUsed;
             for (let turns = 1; turns < dest.length; ++turns) {
                 const distance = physics_1.default.distance(origin.position, dest[turns]);
@@ -196,7 +196,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                 const maxAccel = Math.min(bestAcc, availAcc);
                 const vFinal = Vec.div_scalar(Vec.sub(dest[turns], dest[turns - 1]), SPT);
                 const target = { position: dest[turns], velocity: vFinal };
-                const agent = { position: origin.position, velocity: origin.velocity };
                 const a = calculate_acceleration(turns, agent, target);
                 if (a.length > maxAccel)
                     continue;
