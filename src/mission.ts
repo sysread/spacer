@@ -241,6 +241,7 @@ export abstract class Mission {
 
 
 export class Passengers extends Mission {
+  static navcomps: { [key: string]: NavComp } = {};
   orig: t.body;
   dest: t.body;
 
@@ -264,8 +265,12 @@ export class Passengers extends Mission {
   }
 
   static mission_parameters(orig: t.body, dest: t.body) {
-    const nav = new NavComp(window.game.player, orig, false, data.shipclass.schooner.tank, true);
-    const transit = nav.getFastestTransitTo(dest);
+    if (!this.navcomps[orig]) {
+      this.navcomps[orig] = new NavComp(window.game.player, orig, false, data.shipclass.schooner.tank, true);
+    }
+
+    //const nav = new NavComp(window.game.player, orig, false, data.shipclass.schooner.tank, true);
+    const transit = this.navcomps[orig].getFastestTransitTo(dest);
 
     if (transit) {
       const fuzz  = util.fuzz(2, 0.5);

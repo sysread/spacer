@@ -5,7 +5,7 @@ import { builder } from './strbuf';
 type point = [number, number];
 
 const smoothing = 0.2;
-const rounding  = 2;
+const rounding  = 1;
 
 function round(n: number): number {
   return R(n, rounding);

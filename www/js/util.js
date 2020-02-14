@@ -46,21 +46,19 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
      * Rounds `n` to `places` decimal places.
      */
     function R(n, places) {
-        if (places === undefined) {
-            return Math.round(n);
-        }
-        const factor = Math.pow(10, places);
-        return Math.round(n * factor) / factor;
+        const f = places === undefined ? 1 : Math.pow(10, places);
+        n *= f;
+        return ((n + (n > 0 ? 0.5 : -0.5)) << 0) / f;
     }
     exports.R = R;
     /*
      * Force n to be no less than min and no more than max.
      */
     function clamp(n, min, max) {
-        if (min !== undefined)
-            n = Math.max(min, n);
-        if (max !== undefined)
-            n = Math.min(max, n);
+        if (min !== undefined && n < min)
+            n = min;
+        if (max !== undefined && n > max)
+            n = max;
         return n;
     }
     exports.clamp = clamp;
@@ -73,13 +71,11 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
     exports.getRandomNum = getRandomNum;
     /*
      * Returns a random integer no lower than min and lower than max.
-     *
-     * Direct copy pasta from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+     * Note: ~~ is faster than Math.floor()
      */
     function getRandomInt(min, max) {
         min = Math.ceil(min);
-        max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min)) + min;
+        return (~~(Math.random() * (~~max - min))) + min;
     }
     exports.getRandomInt = getRandomInt;
     /*

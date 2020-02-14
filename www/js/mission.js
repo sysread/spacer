@@ -187,8 +187,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             this.orig = opt.orig;
         }
         static mission_parameters(orig, dest) {
-            const nav = new navcomp_1.NavComp(window.game.player, orig, false, data_1.default.shipclass.schooner.tank, true);
-            const transit = nav.getFastestTransitTo(dest);
+            if (!this.navcomps[orig]) {
+                this.navcomps[orig] = new navcomp_1.NavComp(window.game.player, orig, false, data_1.default.shipclass.schooner.tank, true);
+            }
+            //const nav = new NavComp(window.game.player, orig, false, data.shipclass.schooner.tank, true);
+            const transit = this.navcomps[orig].getFastestTransitTo(dest);
             if (transit) {
                 const fuzz = util.fuzz(2, 0.5);
                 const turns = Math.ceil(transit.turns * fuzz);
@@ -247,6 +250,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
         }
     }
     exports.Passengers = Passengers;
+    Passengers.navcomps = {};
     class Smuggler extends Mission {
         constructor(opt) {
             opt.turns = Math.ceil(1.5 * estimateTransitTimeAU(util.getRandomInt(5, 10)));

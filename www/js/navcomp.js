@@ -18,6 +18,14 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
     const SPT = data_1.default.hours_per_turn * 3600; // seconds per turn
     const DT = 200; // frames per turn for euler integration
     const TI = SPT / DT; // seconds per frame
+    /**
+     * ts: total distance
+     * a:  acceleration
+     */
+    function travel_time(ts, a) {
+        return 2 * Math.sqrt(a * ts) / a;
+    }
+    exports.travel_time = travel_time;
     /*
      * tt: total time
      * pi: initial position
@@ -36,14 +44,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
         return (pf - pi) / (t * t) - dvi;
     }
     /**
-     * ts: total distance
-     * a:  acceleration
-     */
-    function travel_time(ts, a) {
-        return 2 * Math.sqrt(a * ts) / a;
-    }
-    exports.travel_time = travel_time;
-    /**
      * Calculates the acceleration vector required for a given transit.
      *
      * Note: calculating linearly in 3 axes is significantly faster (and uglier)
@@ -51,12 +51,13 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
      */
     function calculate_acceleration(turns, initial, final) {
         const t = SPT * turns;
+        const t2 = t / 2;
         const ax = linear_acceleration(t, initial.position[0], final.position[0], initial.velocity[0], final.velocity[0]);
         const ay = linear_acceleration(t, initial.position[1], final.position[1], initial.velocity[1], final.velocity[1]);
         const az = linear_acceleration(t, initial.position[2], final.position[2], initial.velocity[2], final.velocity[2]);
-        const vx = ax * (t / 2);
-        const vy = ay * (t / 2);
-        const vz = az * (t / 2);
+        const vx = ax * t2;
+        const vy = ay * t2;
+        const vz = az * t2;
         const a = Math.hypot(ax, ay, az);
         const v = Math.hypot(vx, vy, vz);
         return {
@@ -65,7 +66,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             vector: [ax, ay, az],
         };
     }
-    exports.calculate_acceleration = calculate_acceleration;
     /**
      * Calculates the trajectory for a given transit.
      *
@@ -181,19 +181,17 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
         }
         *full_astrogator(origin, destination) {
             const dest = system_1.default.orbit_by_turns(destination);
-            const bestAcc = this.bestAcc;
+            const agent = { position: origin.position, velocity: origin.velocity };
+            // these are getters and calculated each call, so save them at the outset
             const fuelrate = this.player.ship.fuelrate;
             const thrust = this.player.ship.thrust;
-            const fuel = this.fuelTarget;
-            const mass = this.shipMass;
-            const agent = { position: origin.position, velocity: origin.velocity };
             let prevFuelUsed;
             for (let turns = 1; turns < dest.length; ++turns) {
                 const distance = physics_1.default.distance(origin.position, dest[turns]);
-                const fuelPerTurn = Math.min(fuel / turns, fuelrate);
+                const fuelPerTurn = Math.min(this.fuelTarget / turns, fuelrate);
                 const thrustPerTurn = thrust * fuelPerTurn / fuelrate;
-                const availAcc = thrustPerTurn / mass;
-                const maxAccel = Math.min(bestAcc, availAcc);
+                const availAcc = thrustPerTurn / this.shipMass;
+                const maxAccel = Math.min(this.bestAcc, availAcc);
                 const vFinal = Vec.div_scalar(Vec.sub(dest[turns], dest[turns - 1]), SPT);
                 const target = { position: dest[turns], velocity: vFinal };
                 const a = calculate_acceleration(turns, agent, target);
@@ -201,7 +199,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
                     continue;
                 const fuelUsed = a.length / availAcc * fuelPerTurn * turns * 0.99; // `* 0.99` to work around rounding error
                 const fuelUsedPerTurn = fuelUsed / turns;
-                if (fuelUsed > fuel)
+                if (fuelUsed > this.fuelTarget)
                     continue;
                 if (prevFuelUsed === undefined || prevFuelUsed >= fuelUsed) {
                     prevFuelUsed = fuelUsed;

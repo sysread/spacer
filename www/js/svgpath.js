@@ -2,7 +2,7 @@ define(["require", "exports", "./util", "./strbuf"], function (require, exports,
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const smoothing = 0.2;
-    const rounding = 2;
+    const rounding = 1;
     function round(n) {
         return util_1.R(n, rounding);
     }
