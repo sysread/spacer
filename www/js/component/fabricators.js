@@ -133,8 +133,8 @@ define(function(require, exports, module) {
           </tr>
           <tr v-if="amount">
             <th>Count</th>
-            <td>{{queue.goal|csn}}</td>
-            <td>{{left|csn}}</td>
+            <td>1</td>
+            <td>{{left|csn}} / {{queue.goal|csn}}</td>
           </tr>
           <tr>
             <th>Market value</th>
