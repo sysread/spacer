@@ -8,12 +8,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./store", "./events", "./util", "./common"], function (require, exports, data_1, store_1, events_1, util, t) {
+define(["require", "exports", "./data", "./store", "./events", "./util", "./common", "./fastmath"], function (require, exports, data_1, store_1, events_1, util, t, FastMath) {
     "use strict";
     data_1 = __importDefault(data_1);
     store_1 = __importDefault(store_1);
     util = __importStar(util);
     t = __importStar(t);
+    FastMath = __importStar(FastMath);
     const TonnesInKg = 1000;
     class Ship {
         constructor(init) {
@@ -157,7 +158,7 @@ define(["require", "exports", "./data", "./store", "./events", "./util", "./comm
                 if (accel === undefined)
                     accel = this.currentAcceleration(extra_mass);
             }
-            return Math.floor(fuel / this.burnRate(accel, mass));
+            return FastMath.floor(fuel / this.burnRate(accel, mass));
         }
         fuelMass() {
             return this.fuel;
@@ -184,9 +185,9 @@ define(["require", "exports", "./data", "./store", "./events", "./util", "./comm
         currentAcceleration(extra_mass = 0) {
             return this.thrust / (this.currentMass() + extra_mass);
         }
-        refuelUnits() { return Math.ceil(this.tank - this.fuel); }
+        refuelUnits() { return FastMath.ceil(this.tank - this.fuel); }
         needsFuel() { return this.fuel < this.tank; }
-        tankIsFull() { return Math.floor(this.fuel) >= this.tank; }
+        tankIsFull() { return FastMath.floor(this.fuel) >= this.tank; }
         tankIsEmpty() { return util.R(this.fuel) === 0; }
         refuel(units) {
             this.fuel = Math.min(this.tank, this.fuel + units);
@@ -218,7 +219,7 @@ define(["require", "exports", "./data", "./store", "./events", "./util", "./comm
             if (sc.restricted) {
                 price *= 1.5;
             }
-            return Math.ceil(price);
+            return FastMath.ceil(price);
         }
         cargoValue(market) {
             let price = 0;
@@ -228,7 +229,7 @@ define(["require", "exports", "./data", "./store", "./events", "./util", "./comm
             return price;
         }
         fuelValue(market) {
-            return market.sellPrice('fuel') * Math.floor(this.fuel);
+            return market.sellPrice('fuel') * FastMath.floor(this.fuel);
         }
         addOnValue() {
             let price = 0;
@@ -251,7 +252,7 @@ define(["require", "exports", "./data", "./store", "./events", "./util", "./comm
             const dmg = this.damageValue();
             let ship = this.shipValue(market) + this.addOnValue();
             if (tradein)
-                ship = Math.ceil(ship * 0.7);
+                ship = FastMath.ceil(ship * 0.7);
             return ship + cargo + fuel + dmg;
         }
         numAddOns() {

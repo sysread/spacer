@@ -2,6 +2,7 @@ import data from './data';
 import * as t from './common';
 import * as util from './util';
 import {Planet} from './planet';
+import * as FastMath from './fastmath';
 
 export interface SavedCondition {
   name:        string;
@@ -47,7 +48,7 @@ export class Condition {
   }
 
   reduceDuration(fraction: number) {
-    this.turns_total = Math.ceil(this.turns_total * fraction);
+    this.turns_total = FastMath.ceil(this.turns_total * fraction);
   }
 
   turn(p: Planet) {

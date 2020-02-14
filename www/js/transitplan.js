@@ -8,12 +8,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./physics", "./navcomp", "./util"], function (require, exports, data_1, physics_1, navcomp_1, util) {
+define(["require", "exports", "./data", "./physics", "./navcomp", "./util", "./fastmath"], function (require, exports, data_1, physics_1, navcomp_1, util, FastMath) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     physics_1 = __importDefault(physics_1);
     util = __importStar(util);
+    FastMath = __importStar(FastMath);
     function isNewTransitPlan(opt) {
         return opt.current_turn == undefined;
     }
@@ -51,7 +52,7 @@ define(["require", "exports", "./data", "./physics", "./navcomp", "./util"], fun
         get pct_complete() { return 100 - (this.left * this.turnpct); }
         get segment() { return physics_1.default.distance(this.start, this.end); }
         get segment_au() { return this.segment / physics_1.default.AU; }
-        get flip_point() { return this.path[Math.floor(this.turns / 2)].position; }
+        get flip_point() { return this.path[FastMath.floor(this.turns / 2)].position; }
         get coords() { return this.path[this.current_turn].position; }
         get velocity() { return this.path[this.current_turn].velocity; }
         get au() { return this.dist / physics_1.default.AU; }
@@ -66,7 +67,7 @@ define(["require", "exports", "./data", "./physics", "./navcomp", "./util"], fun
             return this._course;
         }
         get days_left() {
-            return Math.ceil(this.left * data_1.default.hours_per_turn / 24);
+            return FastMath.ceil(this.left * data_1.default.hours_per_turn / 24);
         }
         get days_hours() {
             const d = this.hours / 24;

@@ -8,6 +8,7 @@ import { trigger, watch, Arrived, CaughtSmuggling } from "./events";
 
 import * as t from './common';
 import * as util from './util';
+import * as FastMath from './fastmath';
 
 
 // Shims for global browser objects
@@ -22,7 +23,7 @@ export function estimateTransitTimeAU(au: number): number {
   const a = 0.05 * Physics.G;
   const t = travel_time(s, a);
   const spt = data.hours_per_turn * 3600;
-  return Math.ceil(t / spt);
+  return FastMath.ceil(t / spt);
 }
 
 
@@ -116,7 +117,7 @@ export abstract class Mission {
   get price(): number {
     if (window.game && window.game.player) {
       const bonus = window.game.player.getStandingPriceAdjustment(this.faction);
-      return Math.ceil(this.reward * (1 + bonus));
+      return FastMath.ceil(this.reward * (1 + bonus));
     }
     else {
       return this.reward;
@@ -149,8 +150,8 @@ export abstract class Mission {
   }
 
   get time_left(): string {
-    const days  = util.csn(Math.floor(this.turns_left / data.turns_per_day));
-    const hours = Math.floor((this.turns_left % data.turns_per_day) * data.hours_per_turn);
+    const days  = util.csn(FastMath.floor(this.turns_left / data.turns_per_day));
+    const hours = FastMath.floor((this.turns_left % data.turns_per_day) * data.hours_per_turn);
     if (hours) {
       return `${days} days, ${hours} hours`;
     } else {
@@ -159,8 +160,8 @@ export abstract class Mission {
   }
 
   get time_total(): string {
-    const days  = util.csn(Math.floor(this.turns / data.turns_per_day));
-    const hours = Math.floor((this.turns_left % data.turns_per_day) * data.hours_per_turn);
+    const days  = util.csn(FastMath.floor(this.turns / data.turns_per_day));
+    const hours = FastMath.floor((this.turns_left % data.turns_per_day) * data.hours_per_turn);
     if (hours) {
       return `${days} days, ${hours} hours`;
     } else {
@@ -256,7 +257,7 @@ export class Passengers extends Mission {
     const params = Passengers.mission_parameters(opt.orig, opt.dest);
     opt.turns    = params.turns;
     opt.reward   = params.reward;
-    opt.standing = Math.ceil(Math.log10(params.reward));
+    opt.standing = FastMath.ceil(Math.log10(params.reward));
 
     super(opt);
 
@@ -274,10 +275,10 @@ export class Passengers extends Mission {
 
     if (transit) {
       const fuzz  = util.fuzz(2, 0.5);
-      const turns = Math.ceil(transit.turns * fuzz);
+      const turns = FastMath.ceil(transit.turns * fuzz);
       const fuel  = window.game.player.ship.burnRate(transit.accel) * transit.turns;
       const rate  = util.fuzz(window.game.planets[orig].fuelPricePerTonne() * 3, 0.1);
-      const cost  = Math.ceil(fuel * rate * fuzz);
+      const cost  = FastMath.ceil(fuel * rate * fuzz);
       return {reward: cost, turns: turns};
     }
     else {
@@ -349,9 +350,9 @@ export class Smuggler extends Mission {
   amt_left: number;
 
   constructor(opt: SavedSmuggler) {
-    opt.turns    = Math.ceil(1.5 * estimateTransitTimeAU(util.getRandomInt(5, 10)));
-    opt.reward   = Math.ceil(1.5 * resources[opt.item].value * opt.amt);
-    opt.standing = Math.ceil(Math.log10(opt.reward));
+    opt.turns    = FastMath.ceil(1.5 * estimateTransitTimeAU(util.getRandomInt(5, 10)));
+    opt.reward   = FastMath.ceil(1.5 * resources[opt.item].value * opt.amt);
+    opt.standing = FastMath.ceil(Math.log10(opt.reward));
 
     super(opt);
 

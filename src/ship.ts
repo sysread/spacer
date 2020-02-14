@@ -5,6 +5,7 @@ import { watch, Arrived } from "./events";
 
 import * as util from './util';
 import * as t from './common';
+import * as FastMath from './fastmath';
 
 
 const TonnesInKg = 1000;
@@ -202,7 +203,7 @@ class Ship {
       if (accel === undefined) accel = this.currentAcceleration(extra_mass);
     }
 
-    return Math.floor(fuel / this.burnRate(accel, mass));
+    return FastMath.floor(fuel / this.burnRate(accel, mass));
   }
 
   fuelMass() {
@@ -236,9 +237,9 @@ class Ship {
     return this.thrust / (this.currentMass() + extra_mass);
   }
 
-  refuelUnits() {return Math.ceil(this.tank - this.fuel)}
+  refuelUnits() {return FastMath.ceil(this.tank - this.fuel)}
   needsFuel()   {return this.fuel < this.tank}
-  tankIsFull()  {return Math.floor(this.fuel) >= this.tank}
+  tankIsFull()  {return FastMath.floor(this.fuel) >= this.tank}
   tankIsEmpty() {return util.R(this.fuel) === 0}
 
   refuel(units: number) {
@@ -279,7 +280,7 @@ class Ship {
       price *= 1.5;
     }
 
-    return Math.ceil(price);
+    return FastMath.ceil(price);
   }
 
   cargoValue(market: MarketShim) {
@@ -292,7 +293,7 @@ class Ship {
   }
 
   fuelValue(market: MarketShim) {
-    return market.sellPrice('fuel') * Math.floor(this.fuel);
+    return market.sellPrice('fuel') * FastMath.floor(this.fuel);
   }
 
   addOnValue() {
@@ -323,7 +324,7 @@ class Ship {
     let ship = this.shipValue(market) + this.addOnValue();
 
     if (tradein)
-      ship = Math.ceil(ship * 0.7);
+      ship = FastMath.ceil(ship * 0.7);
 
     return ship + cargo + fuel + dmg;
   }

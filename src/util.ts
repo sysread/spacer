@@ -1,4 +1,5 @@
 import { resources } from './common';
+import * as FastMath from './fastmath';
 
 
 // Shims for global browser objects
@@ -24,7 +25,7 @@ export function shuffle(arr: Array<any>): Array<any> {
 export function csn(num: number): string {
   const sign = num < 0 ? '-' : '';
 
-  num = Math.abs(num);
+  num = FastMath.abs(num);
 
   const parts = [];
   const three = new RegExp(/(\d{3})$/);
@@ -65,7 +66,8 @@ export function uniq(items: string | string[], sep=' '): string {
 export function R(n: number, places?: number): number {
   const f = places === undefined ? 1 : Math.pow(10, places);
   n *= f;
-  return ((n + (n > 0 ? 0.5 : -0.5)) << 0) / f;
+  return FastMath.round(n) / f;
+  //return ((n + (n > 0 ? 0.5 : -0.5)) << 0) / f;
 }
 
 /*
@@ -86,11 +88,11 @@ export function getRandomNum(min: number, max: number): number {
 
 /*
  * Returns a random integer no lower than min and lower than max.
- * Note: ~~ is faster than Math.floor()
  */
 export function getRandomInt(min: number, max: number): number {
-  min = Math.ceil(min);
-  return (~~(Math.random() * (~~max - min))) + min;
+  min = FastMath.ceil(min);
+  max = FastMath.floor(max);
+  return (FastMath.floor(Math.random() * (max - min))) + min;
 }
 
 /*

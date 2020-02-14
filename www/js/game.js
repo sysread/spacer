@@ -8,12 +8,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./person", "./planet", "./agent", "./conflict", "./events", "./common", "./util"], function (require, exports, data_1, system_1, person_1, planet_1, agent_1, conflict_1, events_1, t, util) {
+define(["require", "exports", "./data", "./system", "./person", "./planet", "./agent", "./conflict", "./events", "./common", "./util", "./fastmath"], function (require, exports, data_1, system_1, person_1, planet_1, agent_1, conflict_1, events_1, t, util, FastMath) {
     "use strict";
     data_1 = __importDefault(data_1);
     system_1 = __importDefault(system_1);
     t = __importStar(t);
     util = __importStar(util);
+    FastMath = __importStar(FastMath);
     const HourInMs = 1000 * 60 * 60;
     const TurnInMs = HourInMs * data_1.default.hours_per_turn;
     ;
@@ -41,7 +42,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
             const init = saved == null ? null : JSON.parse(saved);
             if (init) {
                 try {
-                    this.turns = Math.ceil(init.turns || 0);
+                    this.turns = FastMath.ceil(init.turns || 0);
                     this.locus = init.locus;
                     this.options = init.options || DefaultOptions;
                     this._player = new person_1.Person(init.player);
@@ -182,7 +183,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                 && this.transit_plan != undefined;
         }
         set_turns(turn) {
-            this.turns = Math.ceil(turn);
+            this.turns = FastMath.ceil(turn);
             this.date.setHours(this.date.getHours() + data_1.default.hours_per_turn);
         }
         inc_turns(count) {
@@ -192,7 +193,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
             this.set_turns(this.turns - count);
         }
         turn(n = 1, no_save = false) {
-            n = Math.ceil(n); // backstop against bugs resulting in fractional turns
+            n = FastMath.ceil(n); // backstop against bugs resulting in fractional turns
             for (let i = 0; i < n; ++i) {
                 this.inc_turns(1);
                 if (this.in_transit) {
@@ -300,7 +301,7 @@ define(["require", "exports", "./data", "./system", "./person", "./planet", "./a
                     const blockade = new conflict_1.Blockade({ proponent: pro, target: target });
                     if (this.conflicts[blockade.key] == undefined && blockade.chance()) {
                         this.conflicts[blockade.key] = blockade;
-                        const turns = Math.ceil(util.getRandomNum(data_1.default.turns_per_day * 7, data_1.default.turns_per_day * 60));
+                        const turns = FastMath.ceil(util.getRandomNum(data_1.default.turns_per_day * 7, data_1.default.turns_per_day * 60));
                         blockade.start(turns);
                         this.notify(`${pro} has declared a ${blockade.name} against ${target}`);
                     }

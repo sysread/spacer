@@ -5,10 +5,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./orbit", "../quaternion"], function (require, exports, orbit_1, Q) {
+define(["require", "exports", "./orbit", "../quaternion", "../fastmath"], function (require, exports, orbit_1, Q, FastMath) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     Q = __importStar(Q);
+    FastMath = __importStar(FastMath);
     const G = 6.67408e-11; // G, in m^3/s^2
     const J2000 = Date.UTC(2000, 0, 1, 12, 0, 0);
     const DayInMS = 24 * 60 * 60 * 1000;
@@ -151,7 +152,7 @@ define(["require", "exports", "./orbit", "../quaternion"], function (require, ex
             while (true) {
                 const dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
                 E -= dE;
-                if (Math.abs(dE) < (1e-6)) {
+                if (FastMath.abs(dE) < (1e-6)) {
                     break;
                 }
             }

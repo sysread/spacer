@@ -8,11 +8,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./util"], function (require, exports, data_1, util) {
+define(["require", "exports", "./data", "./util", "./fastmath"], function (require, exports, data_1, util, FastMath) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     util = __importStar(util);
+    FastMath = __importStar(FastMath);
     class Condition {
         constructor(name, init) {
             this.name = name;
@@ -38,7 +39,7 @@ define(["require", "exports", "./data", "./util"], function (require, exports, d
             return data_1.default.turns_per_day * util.getRandomInt(this.minDays, this.maxDays);
         }
         reduceDuration(fraction) {
-            this.turns_total = Math.ceil(this.turns_total * fraction);
+            this.turns_total = FastMath.ceil(this.turns_total * fraction);
         }
         turn(p) {
             for (const item of Object.keys(this.triggers.shortage)) {

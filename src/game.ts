@@ -10,6 +10,7 @@ import { trigger, GameLoaded, GameTurn, Arrived } from "./events";
 
 import * as t from './common';
 import * as util from './util';
+import * as FastMath from './fastmath';
 
 const HourInMs = 1000 * 60 * 60;
 const TurnInMs = HourInMs * data.hours_per_turn;
@@ -81,7 +82,7 @@ class Game {
 
     if (init) {
       try {
-        this.turns   = Math.ceil(init.turns || 0);
+        this.turns   = FastMath.ceil(init.turns || 0);
         this.locus   = init.locus;
         this.options = init.options || DefaultOptions;
         this._player = new Person(init.player);
@@ -250,7 +251,7 @@ class Game {
 
 
   set_turns(turn: number) {
-    this.turns = Math.ceil(turn);
+    this.turns = FastMath.ceil(turn);
     this.date.setHours(this.date.getHours() + data.hours_per_turn);
   }
 
@@ -263,7 +264,7 @@ class Game {
   }
 
   turn(n=1, no_save=false) {
-    n = Math.ceil(n); // backstop against bugs resulting in fractional turns
+    n = FastMath.ceil(n); // backstop against bugs resulting in fractional turns
 
     for (let i = 0; i < n; ++i) {
       this.inc_turns(1);
@@ -402,7 +403,7 @@ class Game {
         if (this.conflicts[ blockade.key ] == undefined && blockade.chance()) {
           this.conflicts[ blockade.key ] = blockade;
 
-          const turns = Math.ceil(util.getRandomNum(data.turns_per_day * 7, data.turns_per_day * 60));
+          const turns = FastMath.ceil(util.getRandomNum(data.turns_per_day * 7, data.turns_per_day * 60));
           blockade.start(turns);
 
           this.notify(`${pro} has declared a ${blockade.name} against ${target}`);

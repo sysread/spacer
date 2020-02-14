@@ -8,7 +8,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./ship", "./physics", "./common", "./faction", "./resource", "./mission", "./events"], function (require, exports, data_1, system_1, ship_1, physics_1, t, faction_1, resource_1, mission_1, events_1) {
+define(["require", "exports", "./data", "./system", "./ship", "./physics", "./common", "./fastmath", "./faction", "./resource", "./mission", "./events"], function (require, exports, data_1, system_1, ship_1, physics_1, t, FastMath, faction_1, resource_1, mission_1, events_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
@@ -16,6 +16,7 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
     ship_1 = __importDefault(ship_1);
     physics_1 = __importDefault(physics_1);
     t = __importStar(t);
+    FastMath = __importStar(FastMath);
     ;
     class Person {
         constructor(init) {
@@ -31,7 +32,7 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
                 this.name = init.name;
                 this.ship = new ship_1.default(init.ship);
                 this.home = init.home;
-                this.money = Math.floor(init.money);
+                this.money = FastMath.floor(init.money);
                 this.faction_name = init.faction_name;
                 if (init.contracts) {
                     for (const c of init.contracts) {
@@ -74,7 +75,7 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
                     if (have < need) {
                         return 0;
                     }
-                    const count = Math.floor(have / need);
+                    const count = FastMath.floor(have / need);
                     if (max == undefined || max > count) {
                         max = count;
                     }
@@ -108,7 +109,7 @@ define(["require", "exports", "./data", "./system", "./ship", "./physics", "./co
                     this.standing[faction] = data_1.default.factions[this.faction.abbrev].standing[faction];
                 }
             }
-            return Math.floor(this.standing[faction] || 0);
+            return FastMath.floor(this.standing[faction] || 0);
         }
         hasStanding(faction, label) {
             const [min, max] = this.standingRange(label);

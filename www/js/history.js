@@ -28,7 +28,7 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
             return this.sum[item];
         }
         count(item) {
-            return Math.floor(this.sum[item]);
+            return ~~this.sum[item];
         }
         keys() {
             return common_1.resources;

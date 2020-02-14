@@ -8,7 +8,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./system", "./physics", "./resource", "./navcomp", "./events", "./common", "./util"], function (require, exports, data_1, system_1, physics_1, resource_1, navcomp_1, events_1, t, util) {
+define(["require", "exports", "./data", "./system", "./physics", "./resource", "./navcomp", "./events", "./common", "./util", "./fastmath"], function (require, exports, data_1, system_1, physics_1, resource_1, navcomp_1, events_1, t, util, FastMath) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
@@ -16,12 +16,13 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
     physics_1 = __importDefault(physics_1);
     t = __importStar(t);
     util = __importStar(util);
+    FastMath = __importStar(FastMath);
     function estimateTransitTimeAU(au) {
         const s = au * physics_1.default.AU;
         const a = 0.05 * physics_1.default.G;
         const t = navcomp_1.travel_time(s, a);
         const spt = data_1.default.hours_per_turn * 3600;
-        return Math.ceil(t / spt);
+        return FastMath.ceil(t / spt);
     }
     exports.estimateTransitTimeAU = estimateTransitTimeAU;
     function estimateTransitTime(orig, dest) {
@@ -64,7 +65,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
         get price() {
             if (window.game && window.game.player) {
                 const bonus = window.game.player.getStandingPriceAdjustment(this.faction);
-                return Math.ceil(this.reward * (1 + bonus));
+                return FastMath.ceil(this.reward * (1 + bonus));
             }
             else {
                 return this.reward;
@@ -91,8 +92,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             return this.status >= Status.Complete;
         }
         get time_left() {
-            const days = util.csn(Math.floor(this.turns_left / data_1.default.turns_per_day));
-            const hours = Math.floor((this.turns_left % data_1.default.turns_per_day) * data_1.default.hours_per_turn);
+            const days = util.csn(FastMath.floor(this.turns_left / data_1.default.turns_per_day));
+            const hours = FastMath.floor((this.turns_left % data_1.default.turns_per_day) * data_1.default.hours_per_turn);
             if (hours) {
                 return `${days} days, ${hours} hours`;
             }
@@ -101,8 +102,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             }
         }
         get time_total() {
-            const days = util.csn(Math.floor(this.turns / data_1.default.turns_per_day));
-            const hours = Math.floor((this.turns_left % data_1.default.turns_per_day) * data_1.default.hours_per_turn);
+            const days = util.csn(FastMath.floor(this.turns / data_1.default.turns_per_day));
+            const hours = FastMath.floor((this.turns_left % data_1.default.turns_per_day) * data_1.default.hours_per_turn);
             if (hours) {
                 return `${days} days, ${hours} hours`;
             }
@@ -181,7 +182,7 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             const params = Passengers.mission_parameters(opt.orig, opt.dest);
             opt.turns = params.turns;
             opt.reward = params.reward;
-            opt.standing = Math.ceil(Math.log10(params.reward));
+            opt.standing = FastMath.ceil(Math.log10(params.reward));
             super(opt);
             this.dest = opt.dest;
             this.orig = opt.orig;
@@ -194,10 +195,10 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
             const transit = this.navcomps[orig].getFastestTransitTo(dest);
             if (transit) {
                 const fuzz = util.fuzz(2, 0.5);
-                const turns = Math.ceil(transit.turns * fuzz);
+                const turns = FastMath.ceil(transit.turns * fuzz);
                 const fuel = window.game.player.ship.burnRate(transit.accel) * transit.turns;
                 const rate = util.fuzz(window.game.planets[orig].fuelPricePerTonne() * 3, 0.1);
-                const cost = Math.ceil(fuel * rate * fuzz);
+                const cost = FastMath.ceil(fuel * rate * fuzz);
                 return { reward: cost, turns: turns };
             }
             else {
@@ -253,9 +254,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./resource", "
     Passengers.navcomps = {};
     class Smuggler extends Mission {
         constructor(opt) {
-            opt.turns = Math.ceil(1.5 * estimateTransitTimeAU(util.getRandomInt(5, 10)));
-            opt.reward = Math.ceil(1.5 * resource_1.resources[opt.item].value * opt.amt);
-            opt.standing = Math.ceil(Math.log10(opt.reward));
+            opt.turns = FastMath.ceil(1.5 * estimateTransitTimeAU(util.getRandomInt(5, 10)));
+            opt.reward = FastMath.ceil(1.5 * resource_1.resources[opt.item].value * opt.amt);
+            opt.standing = FastMath.ceil(Math.log10(opt.reward));
             super(opt);
             this.item = opt.item;
             this.amt = opt.amt;

@@ -15,6 +15,7 @@ import { watch, trigger, GameTurn, Arrived, ItemsBought, ItemsSold } from './eve
 
 import * as t from './common';
 import * as util from './util';
+import * as FastMath from './fastmath';
 
 
 // Shims for global browser objects
@@ -139,7 +140,7 @@ export class Planet {
     /*
      * Fabrication
      */
-    this.max_fab_units  = Math.ceil(this.scale(data.fabricators));
+    this.max_fab_units  = FastMath.ceil(this.scale(data.fabricators));
     this.max_fab_health = this.max_fab_units * data.fab_health;
     this.fab_health     = this.max_fab_units * data.fab_health;
 
@@ -345,7 +346,7 @@ export class Planet {
   piracyRate(distance=0) {
     const radius = this.piracyRadius();
 
-    distance = Math.abs(distance - radius);
+    distance = FastMath.abs(distance - radius);
 
     let rate = this.scale(this.faction.piracy);
     const intvl = radius / 10;
@@ -399,7 +400,7 @@ export class Planet {
    * Fabrication
    */
   fabricationAvailability() {
-    return Math.ceil(Math.min(100, this.fab_health / this.max_fab_health * 100));
+    return FastMath.ceil(Math.min(100, this.fab_health / this.max_fab_health * 100));
   }
 
   fabricationReductionRate() {
@@ -431,7 +432,7 @@ export class Planet {
 
     turns += count * resource.craftTurns;
 
-    return Math.max(1, Math.ceil(turns));
+    return Math.max(1, FastMath.ceil(turns));
   }
 
   hasFabricationResources(item: t.resource, count=1) {
@@ -476,7 +477,7 @@ export class Planet {
       }
     }
 
-    return Math.ceil(fee * discount);
+    return FastMath.ceil(fee * discount);
   }
 
   fabricate(item: t.resource) {
@@ -498,13 +499,13 @@ export class Planet {
       turns += resource.craftTurns;
     }
 
-    const turns_taken = Math.max(1, Math.ceil(turns));
+    const turns_taken = Math.max(1, FastMath.ceil(turns));
     return turns_taken;
   }
 
   replenishFabricators() {
     if (this.fab_health < this.max_fab_health / 2) {
-      const want = Math.ceil((this.max_fab_health - this.fab_health) / data.fab_health);
+      const want = FastMath.ceil((this.max_fab_health - this.fab_health) / data.fab_health);
       const [bought, price] = this.buy('cybernetics', want);
       this.fab_health += bought * data.fab_health;
     }
@@ -523,7 +524,7 @@ export class Planet {
     let rate = this.scale(task.pay);
     rate += rate * player.getStandingPriceAdjustment(this.faction.abbrev);
     rate -= rate * this.faction.sales_tax;
-    return Math.ceil(rate);
+    return FastMath.ceil(rate);
   }
 
   work(player: Person, task: t.Work, days: number) {
@@ -736,7 +737,7 @@ export class Planet {
       }
 
       // Distance malus: compound 10% markup for each AU
-      const au = Math.ceil(distance / Physics.AU);
+      const au = FastMath.ceil(distance / Physics.AU);
       for (let i = 0; i < au; ++i) {
         markup *= 1.05;
       }
@@ -830,12 +831,12 @@ export class Planet {
   buyPrice(item: t.resource, player?: Person): number {
     const price = this.price(item) * (1 + this.faction.sales_tax);
     return player
-      ? Math.ceil(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
-      : Math.ceil(price);
+      ? FastMath.ceil(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
+      : FastMath.ceil(price);
   }
 
   fuelPricePerTonne(player?: Person): number {
-    return Math.ceil(this.buyPrice('fuel', player) * 1.035 / data.resources.fuel.mass);
+    return FastMath.ceil(this.buyPrice('fuel', player) * 1.035 / data.resources.fuel.mass);
   }
 
   /*
@@ -854,9 +855,9 @@ export class Planet {
     // the relative level of severity of trading in this item
     const contraband = data.resources[item].contraband || 0;
 
-    // Math.abs() is used because amount is negative when selling to market,
+    // FastMath.abs() is used because amount is negative when selling to market,
     // positive when buying from market. Fine is per unit of contraband.
-    const fine = Math.abs(contraband * amount * this.inspectionFine(player));
+    const fine = FastMath.abs(contraband * amount * this.inspectionFine(player));
     const rate = this.inspectionRate(player);
 
     for (let i = 0; i < contraband; ++i) {
@@ -999,14 +1000,14 @@ export class Planet {
   }
 
   avgStockWanted(item: t.resource) {
-    const amount = Math.ceil(this.avg_stock * this.consumption(item));
+    const amount = FastMath.ceil(this.avg_stock * this.consumption(item));
     return Math.max(this.min_stock, amount);
   }
 
   neededResourceAmount(item: Resource) {
     //const amount = this.getDemand(item.name) - this.getSupply(item.name) - this.pending.get(item.name);
-    //return Math.max(Math.ceil(amount), this.avgStockWanted(item.name));
-    return Math.ceil(this.getNeed(item.name) * 1.5);
+    //return Math.max(FastMath.ceil(amount), this.avgStockWanted(item.name));
+    return FastMath.ceil(this.getNeed(item.name) * 1.5);
   }
 
   neededResources(): NeededResources {
@@ -1131,7 +1132,7 @@ export class Planet {
           return 0;
         }
 
-        const amount = Math.floor(avail / (res.recipe.materials[mat] || 0));
+        const amount = FastMath.floor(avail / (res.recipe.materials[mat] || 0));
         counts.push(amount);
       }
     }
@@ -1226,7 +1227,7 @@ export class Planet {
 
       if (bought > 0) {
         const distance = this.distance(planet) / Physics.AU;
-        const turns = Math.max(3, Math.ceil(Math.log(distance) * 2)) * data.turns_per_day;
+        const turns = Math.max(3, FastMath.ceil(Math.log(distance) * 2)) * data.turns_per_day;
         window.game.planets[planet].buy('fuel', distance);
 
         this.schedule({
@@ -1332,12 +1333,12 @@ export class Planet {
       });
     }
 
-    const max_count = Math.ceil(this.scale(data.smuggler_mission_count));
+    const max_count = FastMath.ceil(this.scale(data.smuggler_mission_count));
     const missions = this.contracts.filter(c => c instanceof Smuggler).slice(0, max_count);
 
     this.contracts = this.contracts.filter(c => !(c instanceof Smuggler));
 
-    const threshold = Math.ceil(this.scale(6));
+    const threshold = FastMath.ceil(this.scale(6));
 
     if (missions.length < max_count) {
       const needed = this.neededResources();
@@ -1503,7 +1504,7 @@ export class Planet {
     const tax      = this.faction.sales_tax;
     const standing = player.getStandingPriceAdjustment(this.faction.abbrev);
     const scarcity = this.resourceDependencyPriceAdjustment('metal');
-    return Math.ceil((base + (base * tax) - (base * standing)) * scarcity);
+    return FastMath.ceil((base + (base * tax) - (base * standing)) * scarcity);
   }
 
   armorRepairPrice(player: Person) {
@@ -1511,6 +1512,6 @@ export class Planet {
     const tax      = this.faction.sales_tax;
     const standing = player.getStandingPriceAdjustment(this.faction.abbrev);
     const scarcity = this.resourceDependencyPriceAdjustment('metal');
-    return Math.ceil((base + (base * tax) - (base * standing)) * scarcity);
+    return FastMath.ceil((base + (base * tax) - (base * standing)) * scarcity);
   }
 }

@@ -6,6 +6,7 @@ import { Person, SavedPerson } from './person';
 import { watch, GameTurn } from "./events";
 import * as t from './common';
 import * as util from './util';
+import * as FastMath from './fastmath';
 
 
 // Shims for global browser objects
@@ -215,7 +216,7 @@ export class Agent extends Person {
   buyLuxuries() {
     if (isDocked(this.action)) {
       const here = window.game.planets[this.action.location];
-      const want = Math.ceil((this.money - 1000) / here.buyPrice('luxuries', this));
+      const want = FastMath.ceil((this.money - 1000) / here.buyPrice('luxuries', this));
       const [bought, price] = here.buy('luxuries', want);
       this.debit(price);
       //console.debug(`agent: bought ${bought} luxuries for ${price} on ${this.here.name}`);
@@ -288,7 +289,7 @@ export class Agent extends Person {
       for (const item of t.resources) {
         const stock    = here.getStock(item);
         const buyPrice = here.buyPrice(item, this);
-        const canBuy   = Math.min(stock, cargoSpace, Math.floor(this.money / buyPrice));
+        const canBuy   = Math.min(stock, cargoSpace, FastMath.floor(this.money / buyPrice));
 
         if (canBuy == 0) {
           continue;

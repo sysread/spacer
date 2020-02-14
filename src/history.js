@@ -36,7 +36,7 @@ export default class History {
   }
 
   count(item) {
-    return Math.floor(this.sum[item])
+    return ~~this.sum[item];
   }
 
   keys() {

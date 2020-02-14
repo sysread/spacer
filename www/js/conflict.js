@@ -8,12 +8,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./faction", "./events", "./mission", "./common", "./util"], function (require, exports, data_1, faction_1, events_1, mission_1, t, util) {
+define(["require", "exports", "./data", "./faction", "./events", "./mission", "./common", "./util", "./fastmath"], function (require, exports, data_1, faction_1, events_1, mission_1, t, util, FastMath) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     t = __importStar(t);
     util = __importStar(util);
+    FastMath = __importStar(FastMath);
     const isProductionEffect = (e) => e.production != undefined;
     const isConsumptionEffect = (e) => e.consumption != undefined;
     const isPatrolEffect = (e) => e.patrol_rate != undefined;
@@ -79,7 +80,7 @@ define(["require", "exports", "./data", "./faction", "./events", "./mission", ".
             const standing = data_1.default.factions[this.proponent].standing[this.target] || 0;
             let chance = 0;
             if (standing < 0) {
-                chance = Math.abs(standing) / 2000;
+                chance = FastMath.abs(standing) / 2000;
             }
             else if (standing > 0) {
                 chance = (Math.log(100) - Math.log(standing)) / 2000;

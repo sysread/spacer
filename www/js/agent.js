@@ -8,12 +8,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person", "./events", "./common", "./util"], function (require, exports, data_1, navcomp_1, transitplan_1, person_1, events_1, t, util) {
+define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person", "./events", "./common", "./util", "./fastmath"], function (require, exports, data_1, navcomp_1, transitplan_1, person_1, events_1, t, util, FastMath) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     t = __importStar(t);
     util = __importStar(util);
+    FastMath = __importStar(FastMath);
     function isDocked(action) {
         return action.action == 'docked';
     }
@@ -154,7 +155,7 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
         buyLuxuries() {
             if (isDocked(this.action)) {
                 const here = window.game.planets[this.action.location];
-                const want = Math.ceil((this.money - 1000) / here.buyPrice('luxuries', this));
+                const want = FastMath.ceil((this.money - 1000) / here.buyPrice('luxuries', this));
                 const [bought, price] = here.buy('luxuries', want);
                 this.debit(price);
                 //console.debug(`agent: bought ${bought} luxuries for ${price} on ${this.here.name}`);
@@ -211,7 +212,7 @@ define(["require", "exports", "./data", "./navcomp", "./transitplan", "./person"
                 for (const item of t.resources) {
                     const stock = here.getStock(item);
                     const buyPrice = here.buyPrice(item, this);
-                    const canBuy = Math.min(stock, cargoSpace, Math.floor(this.money / buyPrice));
+                    const canBuy = Math.min(stock, cargoSpace, FastMath.floor(this.money / buyPrice));
                     if (canBuy == 0) {
                         continue;
                     }

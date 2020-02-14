@@ -8,13 +8,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./store", "./util", "./common"], function (require, exports, data_1, store_1, util, t) {
+define(["require", "exports", "./data", "./store", "./util", "./common", "./fastmath"], function (require, exports, data_1, store_1, util, t, FastMath) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     store_1 = __importDefault(store_1);
     util = __importStar(util);
     t = __importStar(t);
+    FastMath = __importStar(FastMath);
     class Action {
         get isReady() { return true; }
         nextRound() { }
@@ -257,7 +258,7 @@ define(["require", "exports", "./data", "./store", "./util", "./common"], functi
             return;
         }
         get currentRound() {
-            return Math.ceil(this.round / 2);
+            return FastMath.ceil(this.round / 2);
         }
         get isPlayerTurn() {
             if (this.initiative === 'player') {

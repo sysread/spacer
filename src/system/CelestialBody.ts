@@ -2,6 +2,7 @@ import { Body, Elements, ElementsBase, Satellites, LaGrange, LaGranges, Rings, b
 import { Orbit, Frame } from "./orbit";
 import Physics from '../physics';
 import * as Q from '../quaternion';
+import * as FastMath from '../fastmath';
 
 
 const G           = 6.67408e-11; // G, in m^3/s^2
@@ -215,7 +216,7 @@ export class CelestialBody extends SpaceThing {
       const dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
       E -= dE;
 
-      if (Math.abs(dE) < (1e-6)) {
+      if (FastMath.abs(dE) < (1e-6)) {
         break;
       }
     }

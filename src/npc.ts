@@ -3,6 +3,7 @@ import Ship from './ship';
 import { Person } from './person';
 import * as t from './common';
 import * as util from './util';
+import * as FastMath from './fastmath';
 
 interface NPC_Opt {
   name:           string;
@@ -63,7 +64,7 @@ class NPC extends Person {
      * opt.options.min_cargo (default is 0).
      */
     const min_cargo = Math.min(opt.min_cargo || 0, ship.cargoLeft);
-    const amt_cargo = util.getRandomInt(min_cargo, Math.floor(ship.cargoLeft / 2));
+    const amt_cargo = util.getRandomInt(min_cargo, FastMath.floor(ship.cargoLeft / 2));
     const items     = opt.cargo || t.resources;
 
     while (ship.cargoUsed < amt_cargo) {

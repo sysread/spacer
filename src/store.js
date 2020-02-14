@@ -37,7 +37,7 @@ export default class Store {
 
   get(item) { return this.store[item] || 0 }
 
-  count(item) { return Math.floor(this.store[item] || 0) }
+  count(item) { return ~~(this.store[item] || 0) }
 
   dec(item, amt) { return this.set(item, (this.store[item] || 0) - amt) }
 

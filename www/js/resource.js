@@ -8,12 +8,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./common", "./util"], function (require, exports, data_1, t, util) {
+define(["require", "exports", "./data", "./common", "./util", "./fastmath"], function (require, exports, data_1, t, util, FastMath) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     t = __importStar(t);
     util = __importStar(util);
+    FastMath = __importStar(FastMath);
     function craftValue(item) {
         let value = 0;
         for (const mat of Object.keys(item.recipe.materials)) {
@@ -57,9 +58,9 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
             this.name = name;
             this.mass = data_1.default.resources[name].mass;
             this.contraband = data_1.default.resources[name].contraband;
-            this.value = Math.ceil(resourceValue(name));
-            this.minPrice = Math.ceil(this.calcMinPrice());
-            this.maxPrice = Math.ceil(this.calcMaxPrice());
+            this.value = FastMath.ceil(resourceValue(name));
+            this.minPrice = FastMath.ceil(this.calcMinPrice());
+            this.maxPrice = FastMath.ceil(this.calcMaxPrice());
         }
         calcMaxPrice() {
             let factor = data_1.default.necessity[this.name] ? 9 : 3;
@@ -76,7 +77,7 @@ define(["require", "exports", "./data", "./common", "./util"], function (require
             return this.value / Math.max(1.2, factor);
         }
         clampPrice(price) {
-            return Math.ceil(util.clamp(price, this.minPrice, this.maxPrice));
+            return FastMath.ceil(util.clamp(price, this.minPrice, this.maxPrice));
         }
     }
     exports.Resource = Resource;

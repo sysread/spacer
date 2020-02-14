@@ -4,6 +4,7 @@ import { Person } from './person';
 import { watch, CaughtSmuggling } from "./events";
 
 import * as t from './common';
+import * as FastMath from './fastmath';
 
 
 declare var window: {
@@ -128,7 +129,7 @@ export class Faction implements t.Faction {
     const base = data.initial_money;
     const rate = standing / 10;
 
-    return Math.ceil(Math.abs(standing * rate * tax * base));
+    return FastMath.ceil(FastMath.abs(standing * rate * tax * base));
   }
 
   makeRestitution(player: Person): void {

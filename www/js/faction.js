@@ -8,11 +8,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./events", "./common"], function (require, exports, data_1, events_1, t) {
+define(["require", "exports", "./data", "./events", "./common", "./fastmath"], function (require, exports, data_1, events_1, t, FastMath) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     data_1 = __importDefault(data_1);
     t = __importStar(t);
+    FastMath = __importStar(FastMath);
     class Faction {
         constructor(abbrev) {
             if (typeof abbrev == 'object') {
@@ -99,7 +100,7 @@ define(["require", "exports", "./data", "./events", "./common"], function (requi
             const tax = this.sales_tax;
             const base = data_1.default.initial_money;
             const rate = standing / 10;
-            return Math.ceil(Math.abs(standing * rate * tax * base));
+            return FastMath.ceil(FastMath.abs(standing * rate * tax * base));
         }
         makeRestitution(player) {
             const fee = this.restitutionFee(player);

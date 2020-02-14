@@ -26,7 +26,7 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
         }
         keys() { return common_1.resources; }
         get(item) { return this.store[item] || 0; }
-        count(item) { return Math.floor(this.store[item] || 0); }
+        count(item) { return ~~(this.store[item] || 0); }
         dec(item, amt) { return this.set(item, (this.store[item] || 0) - amt); }
         inc(item, amt) { return this.set(item, (this.store[item] || 0) + amt); }
     }

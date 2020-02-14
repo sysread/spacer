@@ -6,6 +6,7 @@ import { Smuggler } from './mission';
 
 import * as t from './common';
 import * as util from './util';
+import * as FastMath from './fastmath';
 
 
 declare var window: {
@@ -140,7 +141,7 @@ export class Blockade extends Conflict {
     let chance = 0;
 
     if (standing < 0) {
-      chance = Math.abs(standing) / 2000;
+      chance = FastMath.abs(standing) / 2000;
     } else if (standing > 0) {
       chance = (Math.log(100) - Math.log(standing)) / 2000;
     } else {

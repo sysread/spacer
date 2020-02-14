@@ -1,6 +1,7 @@
 import data from './data';
 import * as t from './common';
 import * as util from './util';
+import * as FastMath from './fastmath';
 
 function craftValue(item: t.Craft): number {
   let value = 0;
@@ -61,9 +62,9 @@ export abstract class Resource {
     this.name       = name;
     this.mass       = data.resources[name].mass;
     this.contraband = data.resources[name].contraband;
-    this.value      = Math.ceil(resourceValue(name));
-    this.minPrice   = Math.ceil(this.calcMinPrice());
-    this.maxPrice   = Math.ceil(this.calcMaxPrice());
+    this.value      = FastMath.ceil(resourceValue(name));
+    this.minPrice   = FastMath.ceil(this.calcMinPrice());
+    this.maxPrice   = FastMath.ceil(this.calcMaxPrice());
   }
 
   calcMaxPrice() {
@@ -87,7 +88,7 @@ export abstract class Resource {
   }
 
   clampPrice(price: number) {
-    return Math.ceil(util.clamp(price, this.minPrice, this.maxPrice));
+    return FastMath.ceil(util.clamp(price, this.minPrice, this.maxPrice));
   }
 }
 

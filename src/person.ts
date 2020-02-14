@@ -5,6 +5,7 @@ import Physics from './physics';
 
 import * as t from './common';
 import * as util from './util';
+import * as FastMath from './fastmath';
 import { factions, Faction } from './faction';
 import { resources, isCraft, isRaw } from './resource';
 import { SavedMission, Mission, Status, restoreMission } from './mission';
@@ -62,7 +63,7 @@ export class Person {
       this.name  = init.name;
       this.ship  = new Ship(init.ship);
       this.home  = init.home;
-      this.money = Math.floor(init.money);
+      this.money = FastMath.floor(init.money);
       this.faction_name = init.faction_name;
 
       if (init.contracts) {
@@ -117,7 +118,7 @@ export class Person {
           return 0;
         }
 
-        const count = Math.floor(have / need);
+        const count = FastMath.floor(have / need);
 
         if (max == undefined || max > count) {
           max = count;
@@ -163,7 +164,7 @@ export class Person {
       }
     }
 
-    return Math.floor(this.standing[faction] || 0);
+    return FastMath.floor(this.standing[faction] || 0);
   }
 
   hasStanding(faction: factionesque, label: t.standing) {

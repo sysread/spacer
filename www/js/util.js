@@ -1,6 +1,14 @@
-define(["require", "exports", "./common"], function (require, exports, common_1) {
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+define(["require", "exports", "./common", "./fastmath"], function (require, exports, common_1, FastMath) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    FastMath = __importStar(FastMath);
     function ucfirst(value) {
         return value.toString().replace(/\b([a-z])/g, (str) => str.toUpperCase());
     }
@@ -13,7 +21,7 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
     exports.shuffle = shuffle;
     function csn(num) {
         const sign = num < 0 ? '-' : '';
-        num = Math.abs(num);
+        num = FastMath.abs(num);
         const parts = [];
         const three = new RegExp(/(\d{3})$/);
         let [integer, decimal] = `${num}`.split('.', 2);
@@ -48,7 +56,8 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
     function R(n, places) {
         const f = places === undefined ? 1 : Math.pow(10, places);
         n *= f;
-        return ((n + (n > 0 ? 0.5 : -0.5)) << 0) / f;
+        return FastMath.round(n) / f;
+        //return ((n + (n > 0 ? 0.5 : -0.5)) << 0) / f;
     }
     exports.R = R;
     /*
@@ -71,11 +80,11 @@ define(["require", "exports", "./common"], function (require, exports, common_1)
     exports.getRandomNum = getRandomNum;
     /*
      * Returns a random integer no lower than min and lower than max.
-     * Note: ~~ is faster than Math.floor()
      */
     function getRandomInt(min, max) {
-        min = Math.ceil(min);
-        return (~~(Math.random() * (~~max - min))) + min;
+        min = FastMath.ceil(min);
+        max = FastMath.floor(max);
+        return (FastMath.floor(Math.random() * (max - min))) + min;
     }
     exports.getRandomInt = getRandomInt;
     /*

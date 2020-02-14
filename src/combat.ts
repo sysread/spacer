@@ -6,6 +6,7 @@ import { Person } from './person';
 
 import * as util from './util';
 import * as t from './common';
+import * as FastMath from './fastmath';
 
 
 // Shims for global browser objects
@@ -353,7 +354,7 @@ export class Combat {
   }
 
   get currentRound() {
-    return Math.ceil(this.round / 2);
+    return FastMath.ceil(this.round / 2);
   }
 
   get isPlayerTurn() {

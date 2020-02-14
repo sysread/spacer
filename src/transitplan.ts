@@ -4,6 +4,7 @@ import { NavComp, Trajectory, Acceleration, Body, calculate_trajectory } from '.
 import { Point, length } from './vector';
 import * as util from './util';
 import * as t from './common';
+import * as FastMath from './fastmath';
 
 declare var window: {
   game: {
@@ -88,7 +89,7 @@ export class TransitPlan {
   get pct_complete()     { return 100 - (this.left * this.turnpct) }
   get segment()          { return Physics.distance(this.start, this.end) }
   get segment_au()       { return this.segment / Physics.AU }
-  get flip_point()       { return this.path[Math.floor(this.turns / 2)].position }
+  get flip_point()       { return this.path[FastMath.floor(this.turns / 2)].position }
   get coords()           { return this.path[this.current_turn].position }
   get velocity()         { return this.path[this.current_turn].velocity }
   get au()               { return this.dist / Physics.AU }
@@ -106,7 +107,7 @@ export class TransitPlan {
   }
 
   get days_left() {
-    return Math.ceil(this.left * data.hours_per_turn / 24);
+    return FastMath.ceil(this.left * data.hours_per_turn / 24);
   }
 
   get days_hours() {

@@ -8,12 +8,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-define(["require", "exports", "./data", "./ship", "./person", "./common", "./util"], function (require, exports, data_1, ship_1, person_1, t, util) {
+define(["require", "exports", "./data", "./ship", "./person", "./common", "./util", "./fastmath"], function (require, exports, data_1, ship_1, person_1, t, util, FastMath) {
     "use strict";
     data_1 = __importDefault(data_1);
     ship_1 = __importDefault(ship_1);
     t = __importStar(t);
     util = __importStar(util);
+    FastMath = __importStar(FastMath);
     class NPC extends person_1.Person {
         constructor(opt) {
             /*
@@ -55,7 +56,7 @@ define(["require", "exports", "./data", "./ship", "./person", "./common", "./uti
              * opt.options.min_cargo (default is 0).
              */
             const min_cargo = Math.min(opt.min_cargo || 0, ship.cargoLeft);
-            const amt_cargo = util.getRandomInt(min_cargo, Math.floor(ship.cargoLeft / 2));
+            const amt_cargo = util.getRandomInt(min_cargo, FastMath.floor(ship.cargoLeft / 2));
             const items = opt.cargo || t.resources;
             while (ship.cargoUsed < amt_cargo) {
                 const item = util.oneOf(items);
