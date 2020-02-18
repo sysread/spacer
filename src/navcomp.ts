@@ -231,11 +231,12 @@ export class NavComp {
     const vInit = Vec.div_scalar(Vec.sub(orig[1], orig[0]), SPT);
     const transits = this.full_astrogator({position: orig[0], velocity: vInit}, destination);
 
-    for (const transit of transits)
+    for (let transit = transits(); transit != null; transit = transits()) {
       yield transit;
+    }
   }
 
-  *full_astrogator(origin: Body, destination: t.body) {
+  full_astrogator(origin: Body, destination: t.body): () => TransitPlan|null {
     const dest = system.orbit_by_turns(destination);
     const agent: Body = { position: origin.position, velocity: origin.velocity };
 
@@ -243,45 +244,52 @@ export class NavComp {
     const fuelrate = this.player.ship.fuelrate;
     const thrust   = this.player.ship.thrust;
 
-    let prevFuelUsed;
+    let prevFuelUsed: number;
+    let turns = 1;
+    let that = this;
 
-    for (let turns = 1; turns < dest.length; ++turns) {
-      const distance      = Physics.distance(origin.position, dest[turns]);
-      const fuelPerTurn   = Math.min(this.fuelTarget / turns, fuelrate);
-      const thrustPerTurn = thrust * fuelPerTurn / fuelrate;
-      const availAcc      = thrustPerTurn / this.shipMass;
-      const maxAccel      = Math.min(this.bestAcc, availAcc);
-      const vFinal        = Vec.div_scalar( Vec.sub(dest[turns], dest[turns - 1]), SPT );
-      const target: Body  = { position: dest[turns], velocity: vFinal };
-      const a             = calculate_acceleration(turns, agent, target);
+    return function(): TransitPlan|null {
+      while (turns < dest.length) {
+        const tturns        = turns++;
+        const distance      = Physics.distance(origin.position, dest[tturns]);
+        const fuelPerTurn   = Math.min(that.fuelTarget / tturns, fuelrate);
+        const thrustPerTurn = thrust * fuelPerTurn / fuelrate;
+        const availAcc      = thrustPerTurn / that.shipMass;
+        const maxAccel      = Math.min(that.bestAcc, availAcc);
+        const vFinal        = Vec.div_scalar( Vec.sub(dest[tturns], dest[tturns - 1]), SPT );
+        const target: Body  = { position: dest[tturns], velocity: vFinal };
+        const a             = calculate_acceleration(tturns, agent, target);
 
-      if (a.length > maxAccel)
-        continue;
+        if (a.length > maxAccel)
+          continue;
 
-      const fuelUsed = a.length / availAcc * fuelPerTurn * turns * 0.99; // `* 0.99` to work around rounding error
-      const fuelUsedPerTurn = fuelUsed / turns;
+        const fuelUsed = a.length / availAcc * fuelPerTurn * tturns * 0.99; // `* 0.99` to work around rounding error
+        const fuelUsedPerTurn = fuelUsed / tturns;
 
-      if (fuelUsed > this.fuelTarget)
-        continue;
+        if (fuelUsed > that.fuelTarget)
+          continue;
 
-      if (prevFuelUsed === undefined || prevFuelUsed >= fuelUsed) {
-        prevFuelUsed = fuelUsed;
-      } else {
-        continue;
+        if (prevFuelUsed === undefined || prevFuelUsed >= fuelUsed) {
+          prevFuelUsed = fuelUsed;
+        } else {
+          continue;
+        }
+
+        return new TransitPlan({
+          turns:   tturns,
+          initial: agent,
+          final:   target,
+          origin:  that.orig,
+          dest:    destination,
+          start:   origin.position,
+          end:     dest[turns],
+          dist:    distance,
+          fuel:    fuelUsed,
+          acc:     a,
+        });
       }
 
-      yield new TransitPlan({
-        turns:   turns,
-        initial: agent,
-        final:   target,
-        origin:  this.orig,
-        dest:    destination,
-        start:   origin.position,
-        end:     dest[turns],
-        dist:    distance,
-        fuel:    fuelUsed,
-        acc:     a,
-      });
-    }
+      return null;
+    };
   }
 }

@@ -176,50 +176,57 @@ define(["require", "exports", "./data", "./system", "./physics", "./transitplan"
             const orig = system_1.default.orbit_by_turns(this.orig);
             const vInit = Vec.div_scalar(Vec.sub(orig[1], orig[0]), SPT);
             const transits = this.full_astrogator({ position: orig[0], velocity: vInit }, destination);
-            for (const transit of transits)
+            for (let transit = transits(); transit != null; transit = transits()) {
                 yield transit;
+            }
         }
-        *full_astrogator(origin, destination) {
+        full_astrogator(origin, destination) {
             const dest = system_1.default.orbit_by_turns(destination);
             const agent = { position: origin.position, velocity: origin.velocity };
             // these are getters and calculated each call, so save them at the outset
             const fuelrate = this.player.ship.fuelrate;
             const thrust = this.player.ship.thrust;
             let prevFuelUsed;
-            for (let turns = 1; turns < dest.length; ++turns) {
-                const distance = physics_1.default.distance(origin.position, dest[turns]);
-                const fuelPerTurn = Math.min(this.fuelTarget / turns, fuelrate);
-                const thrustPerTurn = thrust * fuelPerTurn / fuelrate;
-                const availAcc = thrustPerTurn / this.shipMass;
-                const maxAccel = Math.min(this.bestAcc, availAcc);
-                const vFinal = Vec.div_scalar(Vec.sub(dest[turns], dest[turns - 1]), SPT);
-                const target = { position: dest[turns], velocity: vFinal };
-                const a = calculate_acceleration(turns, agent, target);
-                if (a.length > maxAccel)
-                    continue;
-                const fuelUsed = a.length / availAcc * fuelPerTurn * turns * 0.99; // `* 0.99` to work around rounding error
-                const fuelUsedPerTurn = fuelUsed / turns;
-                if (fuelUsed > this.fuelTarget)
-                    continue;
-                if (prevFuelUsed === undefined || prevFuelUsed >= fuelUsed) {
-                    prevFuelUsed = fuelUsed;
+            let turns = 1;
+            let that = this;
+            return function () {
+                while (turns < dest.length) {
+                    const tturns = turns++;
+                    const distance = physics_1.default.distance(origin.position, dest[tturns]);
+                    const fuelPerTurn = Math.min(that.fuelTarget / tturns, fuelrate);
+                    const thrustPerTurn = thrust * fuelPerTurn / fuelrate;
+                    const availAcc = thrustPerTurn / that.shipMass;
+                    const maxAccel = Math.min(that.bestAcc, availAcc);
+                    const vFinal = Vec.div_scalar(Vec.sub(dest[tturns], dest[tturns - 1]), SPT);
+                    const target = { position: dest[tturns], velocity: vFinal };
+                    const a = calculate_acceleration(tturns, agent, target);
+                    if (a.length > maxAccel)
+                        continue;
+                    const fuelUsed = a.length / availAcc * fuelPerTurn * tturns * 0.99; // `* 0.99` to work around rounding error
+                    const fuelUsedPerTurn = fuelUsed / tturns;
+                    if (fuelUsed > that.fuelTarget)
+                        continue;
+                    if (prevFuelUsed === undefined || prevFuelUsed >= fuelUsed) {
+                        prevFuelUsed = fuelUsed;
+                    }
+                    else {
+                        continue;
+                    }
+                    return new transitplan_1.TransitPlan({
+                        turns: tturns,
+                        initial: agent,
+                        final: target,
+                        origin: that.orig,
+                        dest: destination,
+                        start: origin.position,
+                        end: dest[turns],
+                        dist: distance,
+                        fuel: fuelUsed,
+                        acc: a,
+                    });
                 }
-                else {
-                    continue;
-                }
-                yield new transitplan_1.TransitPlan({
-                    turns: turns,
-                    initial: agent,
-                    final: target,
-                    origin: this.orig,
-                    dest: destination,
-                    start: origin.position,
-                    end: dest[turns],
-                    dist: distance,
-                    fuel: fuelUsed,
-                    acc: a,
-                });
-            }
+                return null;
+            };
         }
     }
     exports.NavComp = NavComp;

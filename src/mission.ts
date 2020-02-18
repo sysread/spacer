@@ -252,11 +252,13 @@ export class Passengers extends Mission {
     // several days.
     // NOTE these are NOT restored from opt when reinitialized from game data.
     // they should always be fresh.
-    opt.issuer   = opt.issuer || util.oneOf(t.bodies);
-    opt.orig     = opt.orig || opt.issuer; // for old missions before orig was added
+    opt.issuer = opt.issuer || util.oneOf(t.bodies);
+    opt.orig   = opt.orig || opt.issuer; // for old missions before orig was added
+
     const params = Passengers.mission_parameters(opt.orig, opt.dest);
-    opt.turns    = params.turns;
-    opt.reward   = params.reward;
+
+    opt.turns = params.turns;
+    opt.reward = params.reward;
     opt.standing = FastMath.ceil(Math.log10(params.reward));
 
     super(opt);
