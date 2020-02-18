@@ -36,6 +36,7 @@ define(function(require, exports, module) {
       const turns = game.transit_plan.turns;
 
       return {
+        layout_scaling:    false,
         layout_target_id:  'transit-plot-root',
         transit:           null,
         paused:            true,

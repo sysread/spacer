@@ -40,7 +40,7 @@ define(function(require, exports, module) {
 
     watch: {
       'layout.elt': function() {
-        if (this.layout.elt) {
+        if (this.layout.elt && this.layout_scaling) {
           this.layout_mc = new Hammer(this.layout.elt);
           this.layout_install_handlers();
         }
