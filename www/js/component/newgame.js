@@ -46,6 +46,7 @@ define(function(require, exports, module) {
           } else {
             this.game.save_game();
             this.game.unfreeze();
+            this.game.arrive();
             this.$nextTick(() => this.$emit('open', 'summary'));
           }
         }, 100);

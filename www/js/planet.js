@@ -71,9 +71,8 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 }
             }
             this.contracts = [];
-            // TODO This is perhaps the worst piece of programming I have
-            // ever done. I *really* hope you are not a potential employer
-            // reading this hack.
+            // This is perhaps the worst piece of programming I have ever done. I
+            // *really* hope you are not a potential employer reading this hack.
             if (init.contracts) {
                 events_1.watch("arrived", (ev) => {
                     if (init && init.contracts) {
@@ -141,9 +140,11 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 case 1:
                     this.imports();
                 case 2:
-                    // >= should catch the final turn of a new game being prepared so
-                    // the new game starts with a selection of jobs generated
-                    if (turn >= data_1.default.initial_days * data_1.default.turns_per_day) {
+                    // Refreshing contracts is expensive and generally unnecessary while
+                    // the single player is in transit. Instead, we do a single refresh per
+                    // market on arrival; the event watcher is registered in the
+                    // constructor.
+                    if (!window.game.frozen && !window.game.transit_plan) {
                         this.refreshContracts();
                     }
                     this.replenishFabricators();
@@ -998,9 +999,6 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return this.availableContracts.filter(c => c.mission instanceof mission_1.Smuggler);
         }
         refreshContracts() {
-            if (window.game.in_transit) {
-                return;
-            }
             if (this.contracts.length > 0 && window.game) {
                 this.contracts = this.contracts.filter(c => c.valid_until >= window.game.turns);
             }
