@@ -220,6 +220,11 @@ export class Planet {
       this.turn(ev.detail.turn);
       return {complete: false};
     });
+
+    watch("arrived", (ev: Arrived) => {
+      this.refreshContracts();
+      return {complete: false};
+    });
   }
 
   get faction() {
@@ -1307,6 +1312,10 @@ export class Planet {
   }
 
   refreshContracts() {
+    if (window.game.in_transit) {
+      return;
+    }
+
     if (this.contracts.length > 0 && window.game) {
       this.contracts = this.contracts.filter(c => c.valid_until >= window.game.turns);
     }

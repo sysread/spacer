@@ -123,6 +123,10 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
                 this.turn(ev.detail.turn);
                 return { complete: false };
             });
+            events_1.watch("arrived", (ev) => {
+                this.refreshContracts();
+                return { complete: false };
+            });
         }
         get faction() {
             return faction_1.factions[data_1.default.bodies[this.body].faction];
@@ -994,6 +998,9 @@ define(["require", "exports", "./data", "./system", "./physics", "./store", "./h
             return this.availableContracts.filter(c => c.mission instanceof mission_1.Smuggler);
         }
         refreshContracts() {
+            if (window.game.in_transit) {
+                return;
+            }
             if (this.contracts.length > 0 && window.game) {
                 this.contracts = this.contracts.filter(c => c.valid_until >= window.game.turns);
             }
