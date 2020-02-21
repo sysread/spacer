@@ -434,7 +434,7 @@ define(function(require, exports, module) {
             this.plan.dest,
           );
 
-          for (const transit of transits) {
+          for (let transit = transits(); transits != null; transit = transits()) {
             // remaining fuel cost from original plan
             const fuel = this.plan.left * (this.plan.fuel / this.plan.turns);
             this.encounterFuelCost = transit.fuel - fuel;
