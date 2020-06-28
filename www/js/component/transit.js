@@ -94,6 +94,30 @@ define(function(require, exports, module) {
           return false;
       },
 
+      show_label() {
+        let shown = {};
+
+        for (const body of system.all_bodies()) {
+          const central = this.system.central(body);
+
+          if (this.plan.dest == body && (central == 'sun' || this.is_zoomed_in))
+            return true;
+
+          if (this.plan.origin == body && (central == 'sun' || this.is_zoomed_in))
+            return true;
+
+          if (this.is_zoomed_in && central == 'sun' && central != this.plan.dest && central != this.plan.origin)
+            return false;
+
+          const position = this.orbits[body][this.plan.current_turn];
+          const center   = central == 'sun' ? [0, 0] : this.orbits[central][this.plan.current_turn];
+          const distance = Physics.distance(position, center) / Physics.AU;
+          shown[body] = distance > this.layout.fov_au / 5;
+        }
+
+        return shown;
+      },
+
       intvl() {
         if (!this.started || this.plan.current_turn == 0) {
           return 0;
@@ -346,6 +370,7 @@ define(function(require, exports, module) {
         };
       },
 
+/*
       show_label(body) {
         const central = this.system.central(body);
 
@@ -363,6 +388,7 @@ define(function(require, exports, module) {
         const distance = Physics.distance(position, center) / Physics.AU;
         return distance > this.layout.fov_au / 5;
       },
+*/
 
       /*
        * Runs a single turn and checks for the chance of in-transit events,
@@ -604,7 +630,7 @@ define(function(require, exports, module) {
 
               <g v-for="body in system.all_bodies()" :key="body">
                 <SvgPatrolRadius :body="body" :coords="orbits[body][0]" :layout="layout" :intvl="intvl" />
-                <SvgPlotPoint :body="body" :coords="orbits[body][0]" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" />
+                <SvgPlotPoint :body="body" :coords="orbits[body][0]" :layout="layout" :img="'img/'+body+'.png'" :label="show_label[body]" :intvl="intvl" />
               </g>
 
               <text text-anchor="middle" alignment-baseline="middle"
