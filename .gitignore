@@ -7,3 +7,4 @@ platform
 run
 Session.vim
 *.bak
+scratch/*
