@@ -8,3 +8,5 @@ run
 Session.vim
 *.bak
 scratch/*
+.claude
+.mcp.json
