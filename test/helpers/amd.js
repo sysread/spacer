@@ -10,8 +10,7 @@
  */
 
 import { readFileSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { resolve } from 'path';
 import vm from 'vm';
 
 export function loadAMD(filePath, injectedDeps = {}) {
@@ -35,14 +34,19 @@ export function loadAMD(filePath, injectedDeps = {}) {
       return require(dep);
     });
 
-    factory(...args);
-    moduleExports = exports;
+    // Some modules return their export directly; others assign to the exports object.
+    const result = factory(...args);
+    moduleExports = result !== undefined ? result : exports;
   };
 
   // AMD spec: define.amd marks a compliant loader.
   define.amd = {};
 
-  vm.runInNewContext(src, { define, Object });
+  // window stub absorbs legacy global assignments (e.g. window.Physics = Physics)
+  // without throwing in a Node context. Remove once those assignments are cleaned up.
+  const window = new Proxy({}, { set: () => true });
+
+  vm.runInNewContext(src, { define, Object, window });
 
   return moduleExports;
 }
