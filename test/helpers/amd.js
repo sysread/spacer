@@ -72,7 +72,7 @@ export function createLoader() {
 
     define.amd = {};
 
-    vm.runInNewContext(src, { define, Object, Math, Date, JSON, Error, window });
+    vm.runInNewContext(src, { define, Object, Math, Date, JSON, Error, Set, Map, Array, RegExp, parseInt, parseFloat, isNaN, isFinite, window });
 
     return registry.get(absPath);
   }
