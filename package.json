@@ -4,8 +4,11 @@
   "version": "1.0.0",
   "description": "A thing named Spacer",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "build-wasm": "cd src; for file in $(ls *.zig); do zig build-lib $file -target wasm32-freestanding --output-dir ../www/wasm --single-threaded; done; cd ..; rm www/wasm/*.h && rm www/wasm/*.o"
+    "build-wasm": "cd src; for file in $(ls *.zig); do zig build-lib $file -target wasm32-freestanding --output-dir ../www/wasm --single-threaded; done; cd ..; rm www/wasm/*.h && rm www/wasm/*.o",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "author": "Jeff Ober",
   "license": "Apache-2.0",
@@ -31,6 +34,7 @@
   "devDependencies": {
     "@types/jquery": "^3.3.32",
     "cordova": "^9.0.0",
-    "typescript": "^3.7.5"
+    "typescript": "^3.7.5",
+    "vitest": "^4.1.0"
   }
 }
