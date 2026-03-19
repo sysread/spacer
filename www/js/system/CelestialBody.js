@@ -193,6 +193,9 @@ define(["require", "exports", "./orbit", "../quaternion", "../fastmath"], functi
         }
     }
     exports.LaGrangePoint = LaGrangePoint;
+    // NOTE: LaGrangePoint also carries a type field ('lagrange'), so this guard
+    // returns true for both CelestialBody and LaGrangePoint. Use isLaGrangePoint
+    // to discriminate between the two - do not use !isCelestialBody as a proxy.
     function isCelestialBody(body) {
         return body.type != undefined;
     }
