@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createLoader } from '../helpers/amd.js';
+import { createLoader } from '../helpers/amd.mjs';
 
 const loader = createLoader();
 const { Frame, Path, Orbit } = loader.load('www/js/system/orbit.js');

@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "description": "A thing named Spacer",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "build-wasm": "cd src; for file in $(ls *.zig); do zig build-lib $file -target wasm32-freestanding --output-dir ../www/wasm --single-threaded; done; cd ..; rm www/wasm/*.h && rm www/wasm/*.o",
     "test": "vitest run",

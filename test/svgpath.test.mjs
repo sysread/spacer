@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createLoader } from './helpers/amd.js';
+import { createLoader } from './helpers/amd.mjs';
 
 const { bezier } = createLoader().load('www/js/svgpath.js');
 

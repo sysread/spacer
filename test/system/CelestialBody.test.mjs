@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createLoader } from '../helpers/amd.js';
+import { createLoader } from '../helpers/amd.mjs';
 
 // Each test file gets its own loader so module state doesn't leak between suites.
 const loader = createLoader();

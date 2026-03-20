@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { loadAMD } from '../helpers/amd.js';
+import { loadAMD } from '../helpers/amd.mjs';
 
 const { isBody, isLaGrange } = loadAMD('www/js/system/data/body.js');
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { createLoader } from './helpers/amd.js';
+import { createLoader } from './helpers/amd.mjs';
 
 const { getRandomNum, getRandomInt, chance, fuzz, oneOf } = createLoader().load('www/js/util.js');
 
