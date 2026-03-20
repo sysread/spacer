@@ -15,17 +15,17 @@ export type quaternion = [number, number, number, number];
 
 /**
  * Constructs a quaternion from three Euler angles (intrinsic ZXY convention).
- *   phi   - rotation around Z axis (longitude of ascending node / axial roll)
- *   theta - rotation around X axis (inclination / tilt)
- *   psi   - rotation around Y axis (argument of periapsis)
+ *   rz - rotation around Z axis (e.g. longitude of ascending node)
+ *   rx - rotation around X axis (e.g. inclination / axial tilt)
+ *   ry - rotation around Y axis (e.g. argument of periapsis)
  *
  * The result is a unit quaternion representing the composed rotation.
  * Used in CelestialBody.getPositionAtTime to orient orbital planes.
  */
-export const from_euler = (phi: number, theta: number, psi: number): quaternion => {
-  const _x = theta * 0.5;
-  const _y = psi * 0.5;
-  const _z = phi * 0.5;
+export const from_euler = (rz: number, rx: number, ry: number): quaternion => {
+  const _x = rx * 0.5;
+  const _y = ry * 0.5;
+  const _z = rz * 0.5;
 
   const cX = Math.cos(_x);
   const cY = Math.cos(_y);

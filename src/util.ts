@@ -4,18 +4,10 @@
  * Split into two concerns:
  *   - Pure functions: formatting, math, collection helpers (no side effects)
  *   - Random functions: non-deterministic helpers used for game variance
- *
- * Also contains `memoized`, a TypeScript method decorator written for a 2019
- * performance optimization that was never applied. It is dead code. Flagged
- * here for removal when util is migrated to ESM.
  */
 
 import { resources } from './common';
 import * as FastMath from './fastmath';
-
-
-// Required for memoized (dead code - see below) and resourceMap.
-declare var window: { game: any; memo_stats: any; }
 
 
 interface Counter {
@@ -166,53 +158,3 @@ export function resourceMap(dflt: number=0, entries?: Counter) {
 }
 
 
-// ---------------------------------------------------------------------------
-// Dead code below - memoized was written for a 2019 performance optimization
-// but was never applied with @memoized anywhere in the codebase. Remove when
-// util is migrated to ESM.
-// ---------------------------------------------------------------------------
-
-interface MemoOpts {
-  turns?: number; // cache lifetime in turns; randomized between 3-12 if omitted
-  key?:   string; // property name to use as the per-instance cache key
-}
-
-window.memo_stats = {hit: 0, miss: 0, clear: 0};
-
-/**
- * TypeScript method decorator that caches return values and clears the cache
- * every N turns (where N is either fixed or randomized to spread cache
- * invalidation across the turn clock). Never used - see dead code note above.
- */
-export function memoized(opt: MemoOpts) {
-  return function(target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
-    const orig    = descriptor.value;
-    const keyName = opt.key;
-    const getKey  = keyName == undefined
-      ? (obj: any) => obj.constructor.name
-      : (obj: any) => obj[keyName] || obj.constructor.name;
-
-    let memo: { [key: string]: any } = {};
-    let turns = opt.turns || getRandomInt(3, 12);
-
-    descriptor.value = function() {
-      if (window.game.turns % turns == 0) {
-        turns = opt.turns || getRandomInt(3, 12);
-        memo  = {};
-        ++window.memo_stats.clear;
-      }
-
-      const key = JSON.stringify([getKey(this), arguments]);
-      if (memo[key] == undefined) {
-        memo[key] = orig.apply(this, arguments);
-        ++window.memo_stats.miss;
-      } else {
-        ++window.memo_stats.hit;
-      }
-
-      return memo[key];
-    };
-
-    return descriptor;
-  }
-};
