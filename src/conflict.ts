@@ -1,3 +1,36 @@
+/**
+ * conflict - inter-faction blockade system.
+ *
+ * Conflicts are timed geopolitical events between two factions: a proponent
+ * (the aggressor) and a target (the faction being blockaded). While active,
+ * a Blockade prevents normal trade between the affected factions and creates
+ * smuggling opportunities via Smuggler missions.
+ *
+ * Architecture:
+ *   Condition (abstract) - base timed event with start/end turns and effect
+ *     Conflict (abstract) - adds proponent/target faction pair and a unique key
+ *       Blockade (concrete) - the only conflict type currently implemented
+ *
+ * The Effect and Trigger type systems describe what a conflict does and what
+ * causes it to fire, though the current implementation only uses them for
+ * Blockade. They are forward-looking stubs for future conflict variety.
+ *
+ * Blockade lifecycle:
+ *   1. game.start_conflicts() rolls Blockade.chance() every 3 days per pair
+ *   2. On success, blockade.start(turns) sets the duration and installs watchers
+ *   3. Active blockades intercept CaughtSmuggling events to apply special
+ *      penalties (weapons carry 2x the standing loss during a blockade)
+ *   4. Blockade.is_over() extends the parent check: a blockade persists as long
+ *      as any player is actively running a Smuggler mission for the target
+ *      faction, even past its nominal end turn
+ *
+ * Chance formula:
+ *   - Negative inter-faction standing: abs(standing) / 2000
+ *   - Positive inter-faction standing: (log(100) - log(standing)) / 2000
+ *   - Zero standing: fixed 0.00025
+ *   - A faction cannot blockade itself (proponent == target returns false)
+ */
+
 import data from './data';
 
 import { factions } from './faction';
@@ -14,6 +47,7 @@ declare var window: {
 }
 
 
+// Effects describe what an active conflict does to the game world.
 interface Production  { production: t.ResourceCounter }
 interface Consumption { consumption: t.ResourceCounter }
 interface Patrol      { patrol_rate: number, against?: t.faction }
@@ -38,10 +72,11 @@ const isTradeBan          = (e: Effect): e is TradeBan    => (<TradeBan>e).trade
 const isTariff            = (e: Effect): e is Tariff      => (<Tariff>e).tariff           != undefined;
 
 
+// Triggers describe what causes a conflict to start.
 interface ItemTrigger { item: t.resource; chance: number }
 interface Shortage extends ItemTrigger { shortage: true }
-interface Surplus extends ItemTrigger { surplus: true }
-interface Random { random: true, chance: number }
+interface Surplus  extends ItemTrigger { surplus: true }
+interface Random   { random: true, chance: number }
 
 type Trigger =
   | Shortage
@@ -55,8 +90,8 @@ const isRandomTrigger   = (tr: Trigger): tr is Random   => (<Random>tr).random;
 
 
 interface Duration {
-  starts: number;
-  ends:   number;
+  starts: number;  // game turn when conflict started
+  ends:   number;  // game turn when conflict nominally expires
 }
 
 
@@ -97,15 +132,16 @@ abstract class Condition {
 
 
 export abstract class Conflict extends Condition {
-  proponent: t.faction;
-  target:    t.faction;
+  proponent: t.faction;  // faction initiating the conflict
+  target:    t.faction;  // faction being targeted
 
   constructor(name: string, init: any) {
     super(name, init);
     this.proponent = init.proponent;
-    this.target = init.target;
+    this.target    = init.target;
   }
 
+  /** Unique key for this conflict instance: "name_proponent_target". */
   get key(): string {
     return [this.name, this.proponent, this.target].join('_');
   }
@@ -117,6 +153,12 @@ export class Blockade extends Conflict {
     super('blockade', init);
   }
 
+  /**
+   * A blockade remains active past its nominal end turn if the player has an
+   * accepted Smuggler mission originating from a planet controlled by the
+   * proponent faction - the blockade can't end while the player is actively
+   * running its contraband.
+   */
   get is_over() {
     for (const body of t.bodies) {
       const planet = window.game.planets[body];
@@ -124,7 +166,7 @@ export class Blockade extends Conflict {
       for (const contract of planet.contracts) {
         if (contract.mission.is_accepted
          && data.bodies[contract.mission.issuer].faction == planet.faction.abbrev
-         && contract.mission instanceof Smuggler) { 
+         && contract.mission instanceof Smuggler) {
           return false;
         }
       }
@@ -133,6 +175,11 @@ export class Blockade extends Conflict {
     return super.is_over;
   }
 
+  /**
+   * Returns true if this blockade should start between proponent and target.
+   * Probability scales with inter-faction hostility; a faction never blockades
+   * itself. See module doc for the full formula.
+   */
   chance(): boolean {
     if (this.proponent == this.target)
       return false;
@@ -151,6 +198,11 @@ export class Blockade extends Conflict {
     return util.chance(chance);
   }
 
+  /**
+   * Installs a one-shot CaughtSmuggling watcher for the duration of this
+   * blockade. The watcher fires penalties on the proponent's behalf when
+   * the player is caught carrying goods destined for the target.
+   */
   install_event_watchers() {
     watch("caughtSmuggling", (ev: CaughtSmuggling) => {
       const {faction, found} = ev.detail;
@@ -159,6 +211,12 @@ export class Blockade extends Conflict {
     });
   }
 
+  /**
+   * Applies blockade violation penalties when the player is caught smuggling
+   * to the target faction during an active blockade. Weapons carry double
+   * the standing loss versus standard contraband.
+   * Returns false to indicate the event should continue propagating.
+   */
   violation(faction_name: t.faction, found: t.ResourceCounter) {
     if (!this.is_started || this.is_over)
       return true;

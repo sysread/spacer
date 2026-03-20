@@ -1,3 +1,40 @@
+/**
+ * system - solar system singleton: body lookup, orbital positions, and caches.
+ *
+ * This module provides the runtime interface to the solar system. It wraps
+ * SolarSystem (which holds the static CelestialBody/LaGrangePoint tree) with
+ * position caching and the orbit_by_turns index that NavComp relies on.
+ *
+ * ## Caches
+ *
+ * pos cache (PositionCache):
+ *   Maps (date_ms, body_name) -> absolute 3D position. Cleared on every turn
+ *   via reset_orbit_cache() so positions are always current.
+ *
+ * orbits cache:
+ *   Maps body_name -> Orbit object (the full orbital ellipse). Also cleared
+ *   on each turn.
+ *
+ * orbit_by_turns cache (OrbitCache):
+ *   Maps "body.orbit.turns" -> array of 365*turns_per_day positions, one
+ *   per future turn. This is the look-ahead window NavComp uses for transit
+ *   planning. Unlike the position cache, it is rolled forward one step per
+ *   turn (shift + push) rather than being fully rebuilt, making it O(n bodies)
+ *   per turn instead of O(n bodies * n turns).
+ *
+ * ## Gravity
+ *
+ * gravity(name) returns surface gravity in g. For stations with artificial
+ * gravity (data.bodies[name].gravity is set), that value is returned directly.
+ * Otherwise, Newton's law of gravitation is used against the body's mass and
+ * radius from the CelestialBody object.
+ *
+ * ## Exports
+ *
+ * This module exports a singleton System instance (not the class). All callers
+ * share the same caches.
+ */
+
 import data from './data';
 import Physics from './physics';
 import SolarSystem from './system/SolarSystem';
@@ -17,7 +54,7 @@ declare var window: {
   };
 }
 
-const system = new SolarSystem;
+const system      = new SolarSystem;
 const ms_per_hour = 60 * 60 * 1000;
 const ms_per_turn = data.hours_per_turn * ms_per_hour;
 
@@ -35,17 +72,23 @@ interface PositionCache {
 
 class System {
   system:  SolarSystem   = system;
-  cache:   OrbitCache    = {};
-  pos:     PositionCache = {};
+  cache:   OrbitCache    = {};   // orbit_by_turns positions (rolling window)
+  pos:     PositionCache = {};   // per-date position cache
   orbits:  {[key: string]: Orbit} = {};
 
   constructor() {
+    // Clear the position and orbit caches on every turn so stale positions
+    // are never used. orbit_by_turns is rolled forward (not cleared).
     watch("turn", (ev: GameTurn) => {
       this.reset_orbit_cache();
       return {complete: false};
     });
   }
 
+  /**
+   * Rolls the orbit_by_turns cache forward by one turn and clears the
+   * per-date position and Orbit caches. Called once per game turn.
+   */
   reset_orbit_cache() {
     this.orbits = {};
     this.pos = {};
@@ -69,10 +112,16 @@ class System {
     return window.game.date;
   }
 
+  /** Returns the game-playable body keys (from data.ts, not all CelestialBodies). */
   bodies(): t.body[] {
     return Object.keys(data.bodies) as t.body[];
   }
 
+  /**
+   * Returns all body keys including orbital parents (e.g. Jupiter for the
+   * Jovian moons). Used to ensure the orbit cache covers central bodies that
+   * are not themselves playable destinations.
+   */
   all_bodies(): string[] {
     const bodies: {[index:string]: boolean} = {};
 
@@ -92,11 +141,13 @@ class System {
     return this.system.bodies[name];
   }
 
+  /** Returns the display name, with 'moon' mapped to 'Luna'. */
   short_name(name: string) {
     if (name === 'moon') return 'Luna';
     return this.body(name).name;
   }
 
+  /** Returns the display name from data.bodies if available, else from the CelestialBody. */
   name(name: string) {
     if (data.bodies.hasOwnProperty(name)) {
       return data.bodies[name].name;
@@ -113,6 +164,7 @@ class System {
     return this.body(name).type;
   }
 
+  /** Returns the key of the body that this body orbits. Defaults to 'sun'. */
   central(name: string): string {
     let body = this.body(name);
 
@@ -123,6 +175,11 @@ class System {
     return 'sun';
   }
 
+  /**
+   * Returns a human-readable category for a body:
+   *   'Planet' for top-level bodies, the central body's name for moons,
+   *   'Dwarf' for dwarf planets, 'LaGrange Point' for L-points.
+   */
   kind(name: string) {
     let body = this.body(name);
     let type: string = this.type(name);
@@ -143,8 +200,12 @@ class System {
     return type;
   }
 
+  /**
+   * Returns surface gravity in g. For stations/orbitals with artificial
+   * gravity set in data.bodies, returns that directly. Otherwise computes
+   * from mass and radius using Newton's law of gravitation.
+   */
   gravity(name: string): number {
-    // Artificial gravity (spun up, orbital)
     const artificial = data.bodies[name].gravity;
     if (artificial != undefined) {
       return artificial;
@@ -154,7 +215,7 @@ class System {
     const grav = 6.67e-11;
 
     if (isCelestialBody(body)) {
-      const mass = body.mass;
+      const mass   = body.mass;
       const radius = body.radius;
       return (grav * mass) / Math.pow(radius, 2) / Physics.G;
     }
@@ -162,6 +223,7 @@ class System {
     throw new Error(name + " does not have parameters for calculation of gravity");
   }
 
+  /** Returns a map of body -> distance in meters from the given point. */
   ranges(point: V.Point) {
     const ranges: { [key: string]: number } = {};
 
@@ -172,13 +234,14 @@ class System {
     return ranges;
   }
 
+  /** Returns the [body_key, distance] pair for the body closest to point. */
   closestBodyToPoint(point: V.Point) {
     let dist, closest;
 
     for (const body of this.bodies()) {
       const d = Physics.distance(point, this.position(body));
       if (dist === undefined || d < dist) {
-        dist = d;
+        dist    = d;
         closest = body;
       }
     }
@@ -186,6 +249,11 @@ class System {
     return [closest, dist];
   }
 
+  /**
+   * Returns the absolute 3D position of a body at a given date.
+   * Defaults to the current game date. Caches by (date_ms, body_name).
+   * The sun is always [0,0,0].
+   */
   position(name: string, date?: number | Date): V.Point {
     if (name == 'sun') {
       return [0, 0, 0];
@@ -200,20 +268,22 @@ class System {
 
     if (this.pos[key][name] == undefined) {
       const body = this.body(name);
-      const t = date instanceof Date ? date.getTime() : date;
-      let pos = body.getPositionAtTime(t);
+      const t    = date instanceof Date ? date.getTime() : date;
+      let pos    = body.getPositionAtTime(t);
       this.pos[key][name] = pos.absolute;
     }
 
     return this.pos[key][name];
   }
 
+  /** Returns the position of a body at a specific game turn number. */
   position_on_turn(name: string, turn: number) {
     const dt = new Date(window.game.date);
     dt.setHours(dt.getHours() + ((turn - window.game.turns) * data.hours_per_turn));
     return this.position(name, dt);
   }
 
+  /** Returns (and caches) the Orbit object for the current game date. */
   orbit(name: string) {
     if (!this.orbits[name]) {
       this.orbits[name] = this.body(name).orbit(this.time.getTime());
@@ -222,7 +292,12 @@ class System {
     return this.orbits[name];
   }
 
-  // turns, relative to sun
+  /**
+   * Returns the body's position for each of the next 365*turns_per_day turns.
+   * Computed once and cached as "body.orbit.turns". Rolled forward each turn
+   * by reset_orbit_cache(). This is the primary data source for NavComp's
+   * astrogation search.
+   */
   orbit_by_turns(name: string) {
     const key = `${name}.orbit.turns`;
 

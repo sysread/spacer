@@ -1,3 +1,31 @@
+/**
+ * combat - turn-based ship combat system.
+ *
+ * Combat is a sequence of alternating turns between the player and one NPC
+ * opponent. Initiative (who goes first) is randomized at the start. Each
+ * combatant chooses an action per turn; the opponent's AI chooses based on
+ * flight risk and available weapons.
+ *
+ * Action types:
+ *   Attack    - fires a weapon; handles magazine, reload, accuracy, intercept, dodge
+ *   Flight    - attempt to flee; success depends on dodge vs opponent's raw dodge
+ *   Surrender - combatant yields; opponent gets access to salvage
+ *   Pass      - do nothing (placeholder; currently unused by player UI)
+ *
+ * Damage model:
+ *   - Attacks roll accuracy per shot, then check intercept (PDS) and dodge
+ *   - Damage is applied to armor first, then hull
+ *   - isDestroyed is true when both armor and hull reach 0
+ *   - damageMalus() reduces effective intercept and dodge as the ship is damaged
+ *
+ * Combat.log records both actions per round as LogEntry objects, displayed
+ * by the combat UI component after each full round completes.
+ *
+ * Salvage:
+ *   When the opponent is destroyed or surrenders, a random portion of their
+ *   cargo survives (randomized if destroyed, full amount if surrendered).
+ */
+
 import data  from './data';
 import Store from './store';
 import NPC   from './npc';
@@ -14,24 +42,26 @@ declare var window: { game: any; }
 declare var console: any;
 
 
+/** All possible outcomes of a single combat action. */
 export type effect =
     'miss'
-  | 'intercepted'
-  | 'dodged'
-  | 'hit'
-  | 'destroyed'
-  | 'flee'
-  | 'chase'
-  | 'surrender'
-  | 'pass';
+  | 'intercepted'  // torpedo shot down by PDS
+  | 'dodged'       // attack evaded
+  | 'hit'          // damage applied
+  | 'destroyed'    // target destroyed
+  | 'flee'         // flight attempt succeeded
+  | 'chase'        // flight attempt failed (opponent is in pursuit)
+  | 'surrender'    // combatant yields
+  | 'pass'         // no action taken
+;
 
 interface ActionResult {
-  type:    string;
-  source:  string;
+  type:    string;   // weapon or action name
+  source:  string;   // name of the combatant who acted
   effect:  effect;
   hits?:   number;
   damage?: number;
-  pct?:    number;
+  pct?:    number;   // damage as % of full combined hull+armor
 }
 
 abstract class Action {
@@ -40,12 +70,17 @@ abstract class Action {
   nextRound(): void { };
 }
 
+/**
+ * A weapon attack action. Tracks magazine and reload state across rounds.
+ * Multiple installed copies of the same weapon addon are consolidated into
+ * a single Attack with count > 1, multiplying rate and magazine.
+ */
 export class Attack extends Action {
   public    opt:       t.OffensiveAddon;
-  public    count:     number;
+  public    count:     number;   // number of this weapon installed
   protected _round:    number;
-  protected _reload:   number;
-  protected _magazine: number;
+  protected _reload:   number;   // turns remaining until magazine is refilled
+  protected _magazine: number;   // shots remaining before reload
 
   constructor(opt: t.OffensiveAddon) {
     super();
@@ -57,29 +92,20 @@ export class Attack extends Action {
   }
 
   get name()          { return this.opt.name }
-  get rate()          { return this.count * this.opt.rate }
-  get magazine()      { return this.count * this.opt.magazine }
+  get rate()          { return this.count * this.opt.rate }       // shots per firing action
+  get magazine()      { return this.count * this.opt.magazine }   // total shots before reload
   get accuracy()      { return this.opt.accuracy }
-  get reload()        { return this.opt.reload }
+  get reload()        { return this.opt.reload }                  // turns to reload
   get damage()        { return this.opt.damage }
   get interceptable() { return this.opt.interceptable ? true : false }
 
-  get isReloading() {
-    return this._magazine === 0;
-  }
+  get isReloading() { return this._magazine === 0 }
+  get isReady()     { return this._magazine > 0 }
 
-  get isReady() {
-    return this._magazine > 0;
-  }
+  get roundsUntilReload() { return this._reload }
+  get magazineRemaining() { return this._magazine }
 
-  get roundsUntilReload() {
-    return this._reload;
-  }
-
-  get magazineRemaining() {
-    return this._magazine;
-  }
-
+  /** Called when a second copy of the same addon is installed. */
   addUnit() {
     this._magazine += this.magazine;
     ++this.count;
@@ -106,7 +132,7 @@ export class Attack extends Action {
     let dmg    = this.damage   || 0;
 
     for (let i = 0; i < rate; ++i) {
-      if (util.chance(acc)) { // TODO: modified by skill?
+      if (util.chance(acc)) { // TODO: modified by pilot skill?
         damage += Math.max(0.1, util.getRandomNum(0, dmg));
         ++hits;
       }
@@ -119,6 +145,7 @@ export class Attack extends Action {
       }
     }
 
+    // Resolution order: miss -> intercepted -> dodged -> hit/destroyed
     const effect = !hits                        ? 'miss'
       : this.interceptable && to.tryIntercept() ? 'intercepted'
       : to.tryDodge()                           ? 'dodged'
@@ -140,6 +167,7 @@ export class Attack extends Action {
   }
 }
 
+/** Attempt to disengage from combat. Success depends on relative dodge. */
 export class Flight extends Action {
   public name: string;
 
@@ -159,6 +187,7 @@ export class Flight extends Action {
   }
 }
 
+/** Yield combat. The surrendering combatant's cargo becomes salvage. */
 export class Surrender extends Action {
   public name: string;
 
@@ -176,6 +205,7 @@ export class Surrender extends Action {
   }
 }
 
+/** Take no action this turn. */
 export class Pass extends Action {
   public name: string;
 
@@ -194,6 +224,10 @@ export class Pass extends Action {
 }
 
 
+/**
+ * Wraps a Person for combat, aggregating their ship's weapons into Attack
+ * actions and computing derived combat stats (dodge, intercept, flight risk).
+ */
 export class Combatant {
   combatant: Person;
   flight:    Flight;
@@ -208,6 +242,8 @@ export class Combatant {
     this.pass      = new Pass;
     this._actions  = {};
 
+    // Consolidate duplicate weapons: multiple copies of the same addon share
+    // one Attack instance with count > 1.
     for (const addon of this.ship.addons) {
       const info = data.addons[addon];
 
@@ -234,19 +270,21 @@ export class Combatant {
   get isDestroyed() { return this.ship.isDestroyed }
   get ready()       { return this.actions.filter(a => a.isReady) }
   get attacks()     { return Object.values(this._actions).filter(a => a.isReady) }
-  get intercept()   { return Math.max(0, this.ship.intercept - this.ship.damageMalus()) }
 
-  get dodge() {
-    return Math.max(0, this.ship.dodge - this.ship.damageMalus());
-  }
+  /** Intercept chance, reduced by hull damage. */
+  get intercept() { return Math.max(0, this.ship.intercept - this.ship.damageMalus()) }
+
+  /** Dodge chance, reduced by hull damage. */
+  get dodge() { return Math.max(0, this.ship.dodge - this.ship.damageMalus()) }
 
   get actions(): Action[] {
     return [...Object.values(this._actions), this.flight, this.surrender, this.pass];
   };
 
-  /*
-   * The chance of flight is inversely proportional to the percentage of
-   * armor and hull remaining.
+  /**
+   * Probability that this combatant attempts flight, based on hull damage.
+   * A fully intact ship never attempts to flee; a nearly destroyed ship almost
+   * always will.
    */
   get flightRisk() {
     return (1 - this.pctHull) / 2;
@@ -261,13 +299,13 @@ export class Combatant {
   tryIntercept() { return util.chance(this.intercept) }
   tryDodge()     { return util.chance(this.dodge) }
 
-  /*
-   * Compares this combatant's dodge, which takes into account power/mass
-   * ratio and defensive gear which enhances dodge, like ecm, against the raw
-   * dodge abilit of an opponent (which does not include gear, since ecm
-   * would not help the chaser).
+  /**
+   * Attempts to disengage from the opponent.
+   * Compares this combatant's full dodge (including ECM gear) against the
+   * opponent's raw dodge (gear doesn't help a chaser). Divided by 5 to keep
+   * flight success rates reasonably low.
    *
-   * TODO adjust based on pilots' skill levels
+   * TODO: adjust based on pilot skill
    */
   tryFlight(opponent: Combatant) {
     const chance = this.dodge / opponent.rawDodge / 5;
@@ -286,15 +324,25 @@ interface LogEntry {
   opponent?: ActionResult;
 }
 
+/**
+ * Manages a complete combat encounter between the player and one NPC opponent.
+ *
+ * Rounds alternate between player and opponent. The internal round counter
+ * increments each half-round; currentRound shows the full-round number.
+ * isPlayerTurn is determined by initiative and the current round parity.
+ *
+ * The encounter ends when: someone escapes, someone surrenders, or either
+ * ship is destroyed.
+ */
 export class Combat {
   player:      Combatant;
   opponent:    Combatant;
-  initiative:  string;
+  initiative:  string;   // 'player' or 'opponent'
 
   round:       number = 1;
   log:         LogEntry[] = [];
-  escaped:     false | string;
-  surrendered: false | string;
+  escaped:     false | string;     // name of combatant who fled, or false
+  surrendered: false | string;     // name of combatant who surrendered, or false
   _salvage?:   Store;
 
   constructor(opt: CombatOpt) {
@@ -314,22 +362,17 @@ export class Combat {
         || this.opponent.isDestroyed;
   }
 
-  get playerSurrendered() {
-    return this.surrendered == this.player.name;
-  }
+  get playerSurrendered()   { return this.surrendered == this.player.name }
+  get opponentSurrendered() { return this.surrendered == this.opponent.name }
+  get playerDestroyed()     { return this.player.isDestroyed }
+  get opponentDestroyed()   { return this.opponent.isDestroyed }
 
-  get opponentSurrendered() {
-    return this.surrendered == this.opponent.name;
-  }
-
-  get playerDestroyed() {
-    return this.player.isDestroyed;
-  }
-
-  get opponentDestroyed() {
-    return this.opponent.isDestroyed;
-  }
-
+  /**
+   * Returns the salvageable cargo from a destroyed or surrendered opponent.
+   * If the opponent was destroyed, surviving cargo is randomized (some is lost).
+   * If the opponent surrendered, their full cargo is available.
+   * Cached after first access.
+   */
   get salvage() {
     if (this.opponent.isDestroyed || this.opponentSurrendered) {
       if (!this._salvage) {
@@ -338,7 +381,6 @@ export class Combat {
         for (const item of this.opponent.ship.cargo.keys()) {
           let amount = this.opponent.ship.cargo.count(item);
 
-          // Randomize the remaining cargo amounts that survived the encounter
           if (!this.surrendered) {
             amount = util.getRandomInt(0, this.opponent.ship.cargo.count(item));
           }
@@ -353,6 +395,7 @@ export class Combat {
     return;
   }
 
+  /** The current full-round number (each full round = 2 half-rounds). */
   get currentRound() {
     return FastMath.ceil(this.round / 2);
   }
@@ -378,6 +421,7 @@ export class Combat {
     this.log[0][this.isPlayerTurn ? 'player' : 'opponent'] = entry;
   }
 
+  /** If the opponent has initiative, fires their first action before the player acts. */
   start() {
     if (!this.isPlayerTurn) {
       this.opponentAction();
@@ -390,11 +434,15 @@ export class Combat {
     this.doAction(action, this.player, this.opponent);
   }
 
+  /**
+   * NPC AI: flees or surrenders based on flight risk, otherwise attacks.
+   * Surrenders instead of fleeing when hull is below 25%.
+   */
   opponentAction() {
     if (this.isPlayerTurn) throw new Error("It is not the opponents's turn");
     this.opponent.nextRound();
 
-    const risk = this.opponent.flightRisk;
+    const risk  = this.opponent.flightRisk;
     const chance = util.chance(risk);
 
     let action;

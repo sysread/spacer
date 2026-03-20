@@ -1,3 +1,42 @@
+/**
+ * layout - 2D viewport mapping from solar system space to screen pixels.
+ *
+ * Translates 3D orbital positions (in meters) into 2D pixel coordinates for
+ * the navcomp and transit SVG displays. Supports pan and zoom via offset and
+ * fov_au (field of view in AU).
+ *
+ * ## Coordinate system
+ *
+ * Solar system coordinates are in meters, centered on the sun at [0,0,0].
+ * Screen coordinates are in pixels, with [0,0] at the top-left of the element.
+ * The solar system origin maps to [zero_x, zero_y] (the center of the viewport).
+ *
+ * Positive Y in solar system space maps to negative Y on screen (Y is flipped).
+ * Pan is applied via offset_x/offset_y, which shift the origin from center.
+ *
+ * ## Scaling
+ *
+ * fov_au is the field-of-view radius in AU (half the visible width/height).
+ * px_per_meter = scale_px / (fov_au * AU), where scale_px = min(width, height).
+ * scale(meters) converts a distance in meters to pixels at the current zoom.
+ *
+ * ## Body diameter display
+ *
+ * scale_body_diameter applies non-linear scaling so that bodies remain visible
+ * at all zoom levels. Tiny bodies (< 3200km diameter) get a 200x boost; huge
+ * bodies (> 10000km) get a 10x boost. The sun uses no boost. All are clamped
+ * to [min_px, scale_px].
+ *
+ * ## Width management
+ *
+ * update_width() reads the DOM element's size, accounts for other fixed UI
+ * elements (status bar, navbar, toolbar), and fires on_resize if dimensions
+ * changed. Depends on jQuery ($) for element sizing.
+ *
+ * NOTE: layout.ts imports `game` directly - this creates a circular dependency
+ * risk that should be resolved when migrating to ESM.
+ */
+
 import Physics from './physics';
 import system from 'system';
 import game from './game';
@@ -8,29 +47,29 @@ import * as t from './common';
 
 export class Layout {
   static SCALE_DEFAULT_AU = 2;
-  static SCALE_MIN_AU     = 0.00001; // 1/2 true value which is per quadrant
-  static SCALE_MAX_AU     = 35;      // 1/2 true value which is per quadrant
+  static SCALE_MIN_AU     = 0.00001;  // minimum fov (zoomed in); note: half the true minimum
+  static SCALE_MAX_AU     = 35;       // maximum fov (zoomed out); note: half the true maximum
 
   id:         string;
-  on_scale?:  Function;
-  on_pan?:    Function;
-  on_resize?: Function;
+  on_scale?:  Function;   // callback fired when fov changes
+  on_pan?:    Function;   // callback fired when offset changes
+  on_resize?: Function;   // callback fired when viewport dimensions change
 
-  _fov_au:    number; // *radius* of field of view in meters
+  _fov_au:    number;     // field of view radius in AU
 
   width_px:   number;
   height_px:  number;
 
-  init_x:     number;
+  init_x:     number;     // initial offset_x (saved on pan/scale for reset)
   init_y:     number;
 
-  offset_x:   number;
+  offset_x:   number;     // pan offset in pixels from viewport center
   offset_y:   number;
 
-  init_set:   boolean=false;
+  init_set:   boolean=false;  // true after first update_width() call
 
-  _zero_x?:   number;
-  _zero_y?:   number;
+  _zero_x?:   number;     // cached center x (width/2)
+  _zero_y?:   number;     // cached center y (height/2)
   _elt?:      HTMLElement;
 
   constructor(id: string, on_scale?: Function, on_pan?: Function, on_resize?: Function) {
@@ -48,6 +87,7 @@ export class Layout {
     this.init_set  = false;
   }
 
+  /** The smaller of width and height; used as the base pixel scale. */
   get scale_px() {
     return Math.min(this.width_px, this.height_px);
   }
@@ -68,6 +108,7 @@ export class Layout {
     return this._zero_y;
   }
 
+  /** The smaller of zero_x and zero_y; the effective viewport radius. */
   get zero() {
     return Math.min(this.zero_x, this.zero_y);
   }
@@ -84,10 +125,12 @@ export class Layout {
     return this._elt;
   }
 
+  /** Pixels per meter at current zoom level. */
   get px_per_meter() {
     return this.scale_px / (this.fov_au * Physics.AU);
   }
 
+  /** Current viewport center as a 3D point [offset_x, offset_y, 0]. */
   get center(): Point {
     return [this.offset_x, this.offset_y, 0];
   }
@@ -100,6 +143,11 @@ export class Layout {
     this.set_fov_au(au);
   }
 
+  /**
+   * Sets the field of view, clamped to [SCALE_MIN_AU, SCALE_MAX_AU].
+   * Adjusts offsets proportionally so the viewport center stays stable
+   * during zoom.
+   */
   set_fov_au(au: number) {
     let new_fov;
     if (au === undefined) {
@@ -120,6 +168,10 @@ export class Layout {
     }
   }
 
+  /**
+   * Pans the viewport so that the given solar system point is centered.
+   * Updates offset and fires on_pan.
+   */
   set_center(point: Point) {
     const [x, y]  = this.scale_point(point, true);
     this.offset_x = this.zero_x - x;
@@ -132,11 +184,13 @@ export class Layout {
     }
   }
 
+  /** Invalidates the cached center coordinates. Call after viewport resize. */
   clear_zero() {
     this._zero_x = undefined;
     this._zero_y = undefined;
   }
 
+  /** Converts a distance in meters to pixels at the current zoom level. */
   scale(n: number): number {
     const fov_m = this.fov_au * Physics.AU;
     return n / fov_m * this.zero;
@@ -148,7 +202,7 @@ export class Layout {
   }
 
   scale_y(n: number, no_offset: boolean=false): number {
-    const n_scaled = this.zero_y - this.scale(n);
+    const n_scaled = this.zero_y - this.scale(n);  // Y axis flipped
     return no_offset ? n_scaled : n_scaled + this.offset_y;
   }
 
@@ -160,6 +214,11 @@ export class Layout {
     ];
   }
 
+  /**
+   * Scales a path of 3D points to screen coordinates, decimating to at most
+   * `max` points if the path is longer. This keeps SVG path strings manageable
+   * when rendering full orbital tracks at high resolution.
+   */
   scale_path(points: Point[], max?: number) {
     if (max === undefined) {
       max = points.length;
@@ -192,6 +251,13 @@ export class Layout {
     return meters * this.px_per_meter;
   }
 
+  /**
+   * Computes a display-appropriate pixel diameter for a body.
+   * Real diameters are far too small to see at system scale, so this applies
+   * non-linear boosts based on body size and current zoom level. The sun uses
+   * its true scaled size; moons and asteroids get a large boost to remain
+   * visible when zoomed out.
+   */
   scale_body_diameter(body: string) {
     const diameter = system.body(body).radius * 2;
     const is_tiny  = diameter < 3200000;
@@ -209,6 +275,7 @@ export class Layout {
     return result;
   }
 
+  /** Returns true if the scaled screen position is within the viewport bounds. */
   is_visible(pos: Point): boolean {
     const p = this.scale_point(pos);
 
@@ -233,6 +300,11 @@ export class Layout {
     return true;
   }
 
+  /**
+   * Reads the DOM element's current pixel dimensions, subtracting fixed UI
+   * elements (status bar, navbar, toolbar) from the available height.
+   * Fires on_resize if dimensions changed. Uses jQuery for element sizing.
+   */
   update_width() {
     if (!this.elt)
       return 0;
@@ -246,11 +318,11 @@ export class Layout {
       - ($('#navcomp-toolbar').height() || 0)
       - ($('#navcomp-transit-info').outerHeight() || 0);
 
-    const width = $(this.elt).parent().width() || 0;
+    const width   = $(this.elt).parent().width() || 0;
     const changed = width != this.width_px || height != this.height_px;
 
     this.clear_zero();
-    this.width_px = width;
+    this.width_px  = width;
     this.height_px = height;
 
     console.debug('layout: width updated to', this.width_px, 'x', this.height_px);

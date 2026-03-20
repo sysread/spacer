@@ -1,3 +1,49 @@
+/**
+ * navcomp - navigation computer: trajectory planning and transit enumeration.
+ *
+ * This module handles the physics of getting from one body to another.
+ * It produces TransitPlan objects that describe the full path, fuel cost,
+ * and turn count for a given transit.
+ *
+ * ## Physics model
+ *
+ * Transits use a flip-and-burn trajectory: accelerate for the first half,
+ * then decelerate for the second half. The ship ends at the destination's
+ * position AND velocity (so it's actually in orbit, not just passing through).
+ *
+ * calculate_trajectory() integrates the equations of motion using Euler
+ * integration with DT=200 sub-frames per turn. At scales of several AU the
+ * accumulated error is non-trivial, so the final position/velocity are clamped
+ * to the known destination values rather than trusting the integration result.
+ *
+ * calculate_acceleration() solves for the constant acceleration vector needed
+ * to travel from (initial.position, initial.velocity) to
+ * (final.position, final.velocity) in exactly `turns` turns. It treats each
+ * axis independently (linear_acceleration) then composes into a 3D vector.
+ *
+ * ## Orbit sampling
+ *
+ * The destination body's position moves during transit. full_astrogator()
+ * iterates over the body's orbit_by_turns cache (one position per future turn)
+ * and finds the earliest turn at which the required acceleration fits within
+ * the ship's capability and fuel budget.
+ *
+ * ## NavComp class
+ *
+ * NavComp is constructed with a player, origin body, and optional flags:
+ *   showAll     - include transits that exceed fuel capacity (for display)
+ *   fuelTarget  - override the fuel budget (used by mission estimation)
+ *   nominal     - use nominal (full-tank, undamaged) ship stats instead of
+ *                 current stats (used by agent route planning)
+ *
+ * getTransitsTo(dest)    - lazily computes and caches all valid transits
+ * getFastestTransitTo()  - returns the first (fastest) valid transit
+ * astrogator()           - generator that yields TransitPlans in turn order
+ *
+ * dt is a stride for full_astrogator: setting it > 1 skips turns to trade
+ * accuracy for speed (used by agents to avoid expensive full searches).
+ */
+
 import data  from './data';
 import system from './system';
 import Physics from './physics';
@@ -9,65 +55,60 @@ import * as util from './util';
 import * as t from './common';
 
 const SPT = data.hours_per_turn * 3600; // seconds per turn
-const DT  = 200; // frames per turn for euler integration
-const TI  = SPT / DT; // seconds per frame
+const DT  = 200;                        // Euler integration sub-frames per turn
+const TI  = SPT / DT;                   // seconds per sub-frame
 
 export interface PathSegment {
   position: Point;
-  velocity: number;
-  vector:   Point,
+  velocity: number;  // scalar speed (m/s)
+  vector:   Point;   // velocity vector (m/s per axis)
 }
 
 export interface Trajectory {
-  max_velocity: number;
-  path: PathSegment[];
+  max_velocity: number;  // peak speed during transit (m/s)
+  path: PathSegment[];   // one entry per turn, index 0 = departure
 }
 
 export interface Acceleration {
-  vector: Point;
-  length: number;
-  maxvel: number;
+  vector: Point;   // acceleration vector [ax, ay, az] in m/s²
+  length: number;  // magnitude of acceleration (m/s²)
+  maxvel: number;  // peak velocity at flip point (m/s)
 }
 
 export interface Body {
-  position: Point;
-  velocity: Point;
+  position: Point;  // 3D position in meters
+  velocity: Point;  // 3D velocity in m/s
 }
 
 /**
- * ts: total distance
- * a:  acceleration
+ * Minimum transit time for a given distance at constant acceleration.
+ * Formula: t = 2 * sqrt(a * s) / a, derived from d = 0.5 * a * (t/2)^2 * 2
+ * (symmetric flip-and-burn: accelerate for sqrt(s/a), then decelerate).
+ *
+ * @param ts - total distance in meters
+ * @param a  - acceleration in m/s²
+ * @returns  - time in seconds
  */
 export function travel_time(ts: number, a: number): number {
   return 2 * Math.sqrt(a * ts) / a;
 }
 
-/*
- * tt: total time
- * pi: initial position
- * pf: final position
- * vi: initial velocity
- * vf: final velocity
+/**
+ * Solves for the constant acceleration needed along one axis to travel from
+ * pi to pf in total time tt, matching initial velocity vi and final velocity vf.
+ * Uses the flip-point (tt/2) as the reference for velocity matching.
  */
 function linear_acceleration(tt: number, pi: number, pf: number, vi: number, vf: number): number {
-  // time to flip point
-  const t = tt / 2;
-
-  // portion of final velocity to match by flip point
-  const dvf = vf * 2 / t;
-
-  // portion of total change in velocity to apply by flip point
-  const dvi = (vi - dvf) * 2 / t;
-
-  // calculate linear acceleration
+  const t   = tt / 2;        // time to flip point
+  const dvf = vf * 2 / t;    // portion of final velocity to match by flip point
+  const dvi = (vi - dvf) * 2 / t; // portion of initial velocity change to apply
   return (pf - pi) / (t * t) - dvi;
 }
 
 /**
- * Calculates the acceleration vector required for a given transit.
- *
- * Note: calculating linearly in 3 axes is significantly faster (and uglier)
- * than using a vector.
+ * Computes the 3D acceleration vector needed to travel from `initial` to
+ * `final` in exactly `turns` turns. Solves each axis independently for speed.
+ * Returns the vector, its magnitude, and the peak velocity at the flip point.
  */
 function calculate_acceleration(turns: number, initial: Body, final: Body): Acceleration {
   const t  = SPT * turns;
@@ -81,8 +122,8 @@ function calculate_acceleration(turns: number, initial: Body, final: Body): Acce
   const vy = ay * t2;
   const vz = az * t2;
 
-  const a  = Math.hypot(ax, ay, az);
-  const v  = Math.hypot(vx, vy, vz);
+  const a = Math.hypot(ax, ay, az);
+  const v = Math.hypot(vx, vy, vz);
 
   return {
     maxvel: v,
@@ -92,10 +133,12 @@ function calculate_acceleration(turns: number, initial: Body, final: Body): Acce
 }
 
 /**
- * Calculates the trajectory for a given transit.
+ * Integrates the trajectory for a transit using Euler integration.
+ * Each turn is subdivided into DT frames. Acceleration is applied forward
+ * before the flip point and reversed after.
  *
- * Note: calculating linearly in three axes is significantly faster (and
- * uglier) than using a vector.
+ * The final position/velocity are forced to match the destination exactly,
+ * correcting for integration error that accumulates at multi-AU distances.
  */
 export function calculate_trajectory(turns: number, initial: Body, final: Body): Trajectory {
   const tflip = turns * SPT / 2;
@@ -103,16 +146,11 @@ export function calculate_trajectory(turns: number, initial: Body, final: Body):
   const acc = calculate_acceleration(turns, initial, final);
   const [ax, ay, az] = acc.vector;
 
-  // Change in velocity per frame:
-  //     v = u + at
-  // We can calculate (at) aheaad of time
+  // Pre-compute per-frame deltas for efficiency in the inner loop.
   const dvx = ax * TI;
   const dvy = ay * TI;
   const dvz = az * TI;
 
-  // Change in position per frame:
-  //    s = ut + (a * t^2) / 2
-  // We can calculate ((a * t^2) / 2) ahead of time
   const dsx = ax * (TI * TI) / 2;
   const dsy = ay * (TI * TI) / 2;
   const dsz = az * (TI * TI) / 2;
@@ -130,6 +168,7 @@ export function calculate_trajectory(turns: number, initial: Body, final: Body):
     for (let e = 0; e < DT; ++e) {
       t += TI;
 
+      // Flip at the midpoint: decelerate for the second half.
       if (t < tflip) {
         vx += dvx, vy += dvy, vz += dvz;
       } else {
@@ -141,9 +180,7 @@ export function calculate_trajectory(turns: number, initial: Body, final: Body):
       pz += dsz + vz * TI;
     }
 
-    // even with the integration, inaccuracies at the scale of several au can
-    // make the path be off significantly in the final approach, so we can
-    // fudge things a little since we know where it is supposed to be.
+    // Clamp final position/velocity to destination to correct integration error.
     if (turn == (turns - 1)) {
       [px, py, pz] = [final.position[0], final.position[1], final.position[2]];
       [vx, vy, vz] = [final.velocity[0], final.velocity[1], final.velocity[2]];
@@ -167,13 +204,13 @@ export class NavComp {
   orig:       t.body;
   showAll:    boolean;
   fuelTarget: number;
-  max:        number;
+  max:        number;   // physiological acceleration limit for this player
   data:       undefined | any;
-  dt:         undefined | number;
+  dt:         undefined | number; // orbit sampling stride (1 = every turn, >1 = skip turns)
   nominal:    boolean;
 
-  bestAcc:    number;
-  shipMass:   number;
+  bestAcc:    number;   // effective acceleration (capped by physiology)
+  shipMass:   number;   // ship mass used for fuel calculations
 
   constructor(player: Person, orig: t.body, showAll?: boolean, fuelTarget?: number, nominal?: boolean) {
     this.player  = player;
@@ -201,6 +238,7 @@ export class NavComp {
     }
   }
 
+  /** Returns all valid TransitPlans to dest, lazily computed and cached. */
   getTransitsTo(dest: t.body) {
     if (!this.data) {
       this.data = {};
@@ -219,6 +257,7 @@ export class NavComp {
     return this.data[dest];
   }
 
+  /** Returns the fastest (fewest turns) TransitPlan to dest, or undefined if none. */
   getFastestTransitTo(dest: t.body) {
     const transits = this.astrogator(dest);
     for (const transit of transits) {
@@ -226,8 +265,13 @@ export class NavComp {
     }
   }
 
+  /**
+   * Generator that yields TransitPlans to destination in turn order.
+   * Samples the destination's orbital positions using orbit_by_turns and
+   * delegates to full_astrogator for the actual search.
+   */
   *astrogator(destination: t.body) {
-    const orig = system.orbit_by_turns(this.orig);
+    const orig  = system.orbit_by_turns(this.orig);
     const vInit = Vec.div_scalar(Vec.sub(orig[1], orig[0]), SPT);
     const transits = this.full_astrogator({position: orig[0], velocity: vInit}, destination);
 
@@ -236,17 +280,25 @@ export class NavComp {
     }
   }
 
+  /**
+   * Returns a closure that iterates over future orbital positions and yields
+   * TransitPlans when the required acceleration fits within the ship's limits.
+   *
+   * For each candidate turn count, the fuel budget is split evenly across turns.
+   * The available thrust is proportional to the fuel available per turn.
+   * Transits with monotonically increasing fuel use are skipped (only keep
+   * improving options - there's no point in a longer trip that costs more fuel).
+   */
   full_astrogator(origin: Body, destination: t.body): () => TransitPlan|null {
-    const dest = system.orbit_by_turns(destination);
+    const dest  = system.orbit_by_turns(destination);
     const agent: Body = { position: origin.position, velocity: origin.velocity };
 
-    // these are getters and calculated each call, so save them at the outset
     const fuelrate = this.player.ship.fuelrate;
     const thrust   = this.player.ship.thrust;
 
     let prevFuelUsed: number;
     let turns = 1;
-    let that = this;
+    let that  = this;
 
     return function(): TransitPlan|null {
       while (turns < dest.length) {
@@ -263,12 +315,14 @@ export class NavComp {
         if (a.length > maxAccel)
           continue;
 
-        const fuelUsed = a.length / availAcc * fuelPerTurn * tturns * 0.99; // `* 0.99` to work around rounding error
+        const fuelUsed = a.length / availAcc * fuelPerTurn * tturns * 0.99; // 0.99 corrects rounding error
         const fuelUsedPerTurn = fuelUsed / tturns;
 
         if (fuelUsed > that.fuelTarget)
           continue;
 
+        // Only yield plans with strictly decreasing fuel use to avoid returning
+        // worse options after a good one has already been found.
         if (prevFuelUsed === undefined || prevFuelUsed >= fuelUsed) {
           prevFuelUsed = fuelUsed;
         } else {

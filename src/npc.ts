@@ -1,3 +1,25 @@
+/**
+ * npc - procedurally generated non-player character for combat encounters.
+ *
+ * NPC extends Person with a constructor that randomly assembles a ship from
+ * the provided options: ship class, addons, and cargo. Used by the transit
+ * component to create pirates and patrol ships on-the-fly.
+ *
+ * Construction options:
+ *   ship          - array of ship types to pick from (one is chosen randomly)
+ *   addons        - optional pool of addons; a random subset is installed
+ *   always_addons - addons always installed regardless of randomization
+ *   min_addons    - minimum number of random addons to install (default 0)
+ *   cargo         - optional pool of resource types to fill the hold with
+ *   min_cargo     - minimum cargo units to load (default 0)
+ *
+ * TRANSA-faction NPCs may carry contraband (reflects the lawless outer system).
+ * All other factions only carry legal goods.
+ *
+ * TODO: NPC_Opt.ship is a list to pick from, but is documented ambiguously;
+ * clarify whether it should be a shiptype[] or a single type.
+ */
+
 import data from './data';
 import Ship from './ship';
 import { Person } from './person';
@@ -8,35 +30,22 @@ import * as FastMath from './fastmath';
 interface NPC_Opt {
   name:           string;
   faction:        t.faction;
-  ship:           t.shiptype[];
+  ship:           t.shiptype[];   // pool to randomly select ship class from
 
-  addons?:        t.addon[];
-  always_addons?: t.addon[];
-  min_addons?:    number;
+  addons?:        t.addon[];      // optional addon pool
+  always_addons?: t.addon[];      // addons always installed
+  min_addons?:    number;         // minimum random addons (default 0)
 
-  cargo?:         t.resource[];
-  min_cargo?:     number;
+  cargo?:         t.resource[];   // optional cargo pool (defaults to all legal resources)
+  min_cargo?:     number;         // minimum cargo units (default 0)
 }
 
 class NPC extends Person {
   constructor(opt: NPC_Opt) {
-    /*
-     * Random ship selection; override by explicitly setting opt.ship.
-     * Otherwise, randomly selects one of opt.options.shipclass; if that is
-     * not specified, defaults to all ship classes, excluding those that
-     * are both restricted and are not a faction ship for the NPC's
-     * faction.
-     */
     const ship = new Ship({ type: util.oneOf(opt.ship) });
 
-    /*
-     * Randomly select addons from opt.options.addons, if specified. Will
-     * install between 0 and opt.ship.hardpoints addons; the least number
-     * of addons to install may be specified using opt.options.min_addons.
-     *
-     * TODO Need some way to ensure that the add on mix has at least some
-     * offensive capability.
-     */
+    // Install guaranteed addons first, then fill remaining hardpoints randomly.
+    // TODO: ensure the addon mix has at least some offensive capability.
     if (opt.addons) {
       if (opt.always_addons) {
         for (const addon of opt.always_addons) {
@@ -50,19 +59,14 @@ class NPC extends Person {
 
       for (let i = 0; i < amt_addons; ++i) {
         const addon = util.oneOf(addons);
-
         if (addon) {
           ship.installAddOn(addon);
         }
       }
     }
 
-    /*
-     * Randomly select cargo from opt.options.cargo, defaulting to all
-     * non-contraband cargo (with the exception of TRANSA, which may be
-     * carrying contraband). A minimum count may be specified with
-     * opt.options.min_cargo (default is 0).
-     */
+    // Load cargo up to half the hold capacity, skipping contraband unless
+    // this NPC is TRANSA-aligned (outer-system NPCs may carry contraband).
     const min_cargo = Math.min(opt.min_cargo || 0, ship.cargoLeft);
     const amt_cargo = util.getRandomInt(min_cargo, FastMath.floor(ship.cargoLeft / 2));
     const items     = opt.cargo || t.resources;
@@ -94,4 +98,3 @@ class NPC extends Person {
 }
 
 export = NPC;
-

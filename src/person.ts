@@ -1,3 +1,31 @@
+/**
+ * person - base class for player and NPCs.
+ *
+ * Person holds everything shared between the player character and NPC agents:
+ * ship, money, faction affiliation, faction standing, and accepted contracts.
+ *
+ * Standing system:
+ *   standing is a per-faction numeric score in [-100, 100]. The player starts
+ *   with their home faction's default standings toward all other factions.
+ *   getStanding/incStanding/decStanding/setStanding manage it.
+ *   getStandingLabel maps the numeric value to the Standing label (e.g. 'Neutral').
+ *   getStandingPriceAdjustment returns a small multiplier (standing/1000) used
+ *   to adjust mission payouts and market prices.
+ *
+ * Acceleration:
+ *   maxAcceleration() is the physiological limit based on the player's home
+ *   planet gravity (adapted bodies can tolerate higher g-forces).
+ *   bestAcceleration() returns the lesser of the ship's current capability
+ *   and the physiological max - the real constraint for transit planning.
+ *
+ * Contracts:
+ *   Saved missions are restored via a GameLoaded watcher so that the planet
+ *   and game objects are fully initialized before accept() is called again.
+ *
+ * Default player:
+ *   New games start with Marco Solo, a schooner, on Mars with 1000 credits.
+ */
+
 import data    from './data';
 import system  from './system';
 import Ship    from './ship';
@@ -48,24 +76,27 @@ export class Person {
   faction_name: t.faction;
   money:        number;
   standing:     t.StandingCounter;
-  homeGravity:  number;
+  homeGravity:  number;   // surface gravity of home body, in g (used for acceleration cap)
   contracts:    Mission[] = [];
 
   constructor(init?: SavedPerson) {
     if (init == undefined) {
-      this.name  = 'Marco Solo';
-      this.ship  = new Ship({type: data.initial_ship});
-      this.home  = 'mars';
-      this.money = data.initial_money;
+      // Default new-game character
+      this.name         = 'Marco Solo';
+      this.ship         = new Ship({type: data.initial_ship});
+      this.home         = 'mars';
+      this.money        = data.initial_money;
       this.faction_name = 'MC';
     }
     else {
-      this.name  = init.name;
-      this.ship  = new Ship(init.ship);
-      this.home  = init.home;
-      this.money = FastMath.floor(init.money);
+      this.name         = init.name;
+      this.ship         = new Ship(init.ship);
+      this.home         = init.home;
+      this.money        = FastMath.floor(init.money);
       this.faction_name = init.faction_name;
 
+      // Restore saved missions after game is fully loaded, so that planet
+      // and game objects are available when accept() reinstalls its watchers.
       if (init.contracts) {
         for (const c of init.contracts) {
           watch("gameLoaded", (ev: GameLoaded) => {
@@ -77,6 +108,7 @@ export class Person {
       }
     }
 
+    // Initialize standing from saved state or from the home faction's defaults.
     this.standing = {};
 
     for (const faction of Object.keys(data.factions) as t.faction[]) {
@@ -103,7 +135,7 @@ export class Person {
     return this.getStandingLabel(window.game.here.faction);
   }
 
-  // Returns the number of item that the player has the resources to craft
+  /** Returns the number of `item` the player can craft from current cargo. */
   canCraft(item: t.resource): number {
     const res = resources[item];
 
@@ -131,6 +163,11 @@ export class Person {
     return 0;
   }
 
+  /**
+   * Maximum tolerable acceleration for this person, based on home gravity.
+   * Bodies with lower gravity produce people who are less adapted to high-g
+   * maneuvers (grav_deltav_factor scales this down from 1g).
+   */
   maxAcceleration() {
     return Physics.G * this.homeGravity * data.grav_deltav_factor;
   }
@@ -139,17 +176,13 @@ export class Person {
     return this.ship.currentAcceleration();
   }
 
+  /** The effective acceleration cap: minimum of physiological limit and ship capability. */
   bestAcceleration() {
     return Math.min(this.maxAcceleration(), this.shipAcceleration());
   }
 
-  credit(n: number) {
-    this.money += n;
-  }
-
-  debit(n: number) {
-    this.money = Math.max(0, this.money - n);
-  }
+  credit(n: number) { this.money += n }
+  debit(n: number)  { this.money = Math.max(0, this.money - n) }
 
   getStanding(faction: factionesque): number {
     faction = faction || this.faction;
@@ -194,7 +227,7 @@ export class Person {
   }
 
   incStanding(faction: t.faction, amt: number) {
-    this.standing[faction] = Math.min(data.max_abs_standing, this.getStanding(faction) + amt);
+    this.standing[faction] = Math.min(data.max_abs_standing,  this.getStanding(faction) + amt);
   }
 
   decStanding(faction: t.faction, amt: number) {
@@ -205,15 +238,11 @@ export class Person {
     this.standing[faction] = Math.min(data.max_abs_standing, Math.max(-data.max_abs_standing, amt));
   }
 
+  /** Price adjustment multiplier from standing: standing / 1000 (e.g. +30 -> +3%). */
   getStandingPriceAdjustment(faction: factionesque) {
     return this.getStanding(faction) / 1000;
   }
 
-  acceptMission(mission: Mission) {
-    this.contracts.push(mission);
-  }
-
-  completeMission(mission: Mission) {
-    this.contracts = this.contracts.filter(c => c.title != mission.title);
-  }
+  acceptMission(mission: Mission)   { this.contracts.push(mission) }
+  completeMission(mission: Mission) { this.contracts = this.contracts.filter(c => c.title != mission.title) }
 }
