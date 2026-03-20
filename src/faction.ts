@@ -1,3 +1,19 @@
+/**
+ * faction - runtime faction objects with standing and enforcement logic.
+ *
+ * Each faction wraps its static data.ts definition and handles:
+ *   - Contraband rules (what's illegal, and standing-based exceptions)
+ *   - Smuggling penalties (fine + standing loss on CaughtSmuggling events)
+ *   - Restitution (paying credits to reset negative standing to zero)
+ *   - Trade ban status (checked against active blockade conflicts)
+ *
+ * The module-level `factions` map is populated once at load time and used
+ * as the singleton registry throughout the codebase.
+ *
+ * Faction instances listen for CaughtSmuggling events and apply their own
+ * penalties when the event names them as the arresting faction.
+ */
+
 import data from './data';
 
 import { Person } from './person';
@@ -24,6 +40,11 @@ export class Faction implements t.Faction {
   consumes:   t.ResourceCounter;
   standing:   t.StandingCounter;
 
+  /**
+   * Accepts either a faction abbreviation string or an existing Faction
+   * instance (extracts the abbrev). This lets callers pass either form
+   * without needing to unwrap first.
+   */
   constructor(abbrev: t.faction | Faction) {
     if (typeof abbrev == 'object') {
       abbrev = abbrev.abbrev;
@@ -47,6 +68,7 @@ export class Faction implements t.Faction {
     return data.factions[this.abbrev].desc;
   }
 
+  /** True when another faction has an active blockade against this one. */
   get hasTradeBan() {
     const trade_bans = window.game.get_conflicts({
       target: this.abbrev,
@@ -56,6 +78,11 @@ export class Faction implements t.Faction {
     return trade_bans.length > 0;
   }
 
+  /**
+   * Returns the faction name with a leading "The" when appropriate.
+   * "The Martian Commonwealth" vs "The Most Serene Republic of Ceres"
+   * (which already starts with "The").
+   */
   get properName(): string {
     if (this.full_name.startsWith('The')) {
       return this.full_name;
@@ -68,28 +95,46 @@ export class Faction implements t.Faction {
     return this.abbrev;
   }
 
+  /** Returns true if this faction's standing with `faction` meets or exceeds `label`. */
   hasStanding(faction: Faction, label: t.standing) {
     const [min, max] = t.Standing[label];
     const standing = this.standing[faction.abbrev] || 0;
     return standing >= min;
   }
 
+  /**
+   * Returns true if carrying `item` is a contraband offense for this faction.
+   * Weapons are legal for players with Admired standing (faction-licensed traders).
+   */
   isContraband(item: t.resource, player: Person) {
-    // item is not contraband
     if (!data.resources[item].contraband)
       return false;
 
-    // special case: weapons are not contraband if local standing is Admired
+    // Weapons are not contraband for Admired-standing players.
     if (item == 'weapons' && player.hasStanding(this, 'Admired'))
       return false;
 
     return true;
   }
 
+  /**
+   * Returns the per-item fine for contraband found during inspection.
+   * Scales with how far the player's standing has fallen: deeper negative
+   * standing means harsher fines. Minimum fine is 10 credits.
+   */
   inspectionFine(player: Person) {
     return Math.max(10, data.max_abs_standing - player.getStanding(this));
   }
 
+  /**
+   * Handles a CaughtSmuggling event for this faction.
+   * Applies a credit fine and standing loss proportional to the contraband
+   * found. Re-registers itself (returns complete: false) to stay active for
+   * future events.
+   *
+   * No penalty is applied during an active blockade (hasTradeBan), since
+   * blockades involve different enforcement mechanics handled elsewhere.
+   */
   onCaughtSmuggling(ev: CaughtSmuggling) {
     const {faction, found} = ev.detail;
 
@@ -111,12 +156,14 @@ export class Faction implements t.Faction {
     return {complete: false};
   }
 
-  /*
-   * Returns the amount of money required to zero out a negative standing with
-   * this faction. The rate is based on the sales tax for this faction and the
-   * initial amount of money a player starts with. The rate should be higher
-   * for each successive standing level. If standing is non-negative, the fee
-   * is 0.
+  /**
+   * Computes the credit cost to restore a player's negative standing to zero.
+   *
+   * The fee is based on sales_tax and the game's initial_money constant so
+   * that it scales with the faction's economic weight. Standing further into
+   * negative territory incurs a quadratic penalty (rate = standing / 10),
+   * making it progressively more expensive to recover from serious offenses.
+   * Returns 0 if standing is already non-negative.
    */
   restitutionFee(player: Person): number {
     const standing = player.getStanding(this);
@@ -125,13 +172,14 @@ export class Faction implements t.Faction {
       return 0;
     }
 
-    const tax = this.sales_tax;
+    const tax  = this.sales_tax;
     const base = data.initial_money;
     const rate = standing / 10;
 
     return FastMath.ceil(FastMath.abs(standing * rate * tax * base));
   }
 
+  /** Charges the player the restitution fee and resets their standing to 0. */
   makeRestitution(player: Person): void {
     const fee = this.restitutionFee(player);
     if (fee > 0) {
@@ -142,6 +190,12 @@ export class Faction implements t.Faction {
 }
 
 
+/**
+ * Module-level registry of all faction instances, keyed by abbreviation.
+ * Populated once at load time. Use this map rather than constructing new
+ * Faction instances - each faction should exist as a single object so that
+ * its event listener is registered exactly once.
+ */
 export const factions: { [key: string]: Faction } = {};
 
 for (const abbrev of t.factions) {

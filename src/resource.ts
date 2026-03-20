@@ -1,8 +1,35 @@
+/**
+ * resource - runtime resource objects with computed pricing.
+ *
+ * Wraps the static resource definitions from data.ts into class instances
+ * that carry pre-computed values used throughout the economy system.
+ *
+ * Value calculation:
+ *   - Raw resources: base value from data.mine.value, adjusted upward by mass
+ *     (heavier goods cost more to ship, raising their effective value).
+ *   - Crafted resources: sum of input material values, plus a craft_fee markup,
+ *     plus a time premium (5% per tic of craft time). Also adjusted by mass.
+ *
+ * Price range calculation:
+ *   - Necessity goods (flagged in data.necessity) have tighter price floors
+ *     (harder to find cheap) and higher price ceilings (markets will pay more).
+ *   - Luxury/non-necessity goods have the inverse: wide floors, tight ceilings.
+ *   - Both bounds compress as base value grows (the factor halves per order of
+ *     magnitude), preventing extreme price swings on high-value goods.
+ *
+ * The module-level `resources` map is populated at load time and shared across
+ * the codebase as the single source of truth for resource metadata.
+ */
+
 import data from './data';
 import * as t from './common';
 import * as util from './util';
 import * as FastMath from './fastmath';
 
+
+// Computes the base value of a crafted resource from its recipe.
+// Adds a craft_fee percentage on top of raw material costs, then applies a
+// time premium: each tic of fabrication time adds 5% to the value.
 function craftValue(item: t.Craft): number {
   let value = 0;
 
@@ -12,12 +39,15 @@ function craftValue(item: t.Craft): number {
     value += amt * val;
   }
 
-  value += data.craft_fee * value;                  // craft fee
-  value += value * (1 + (0.05 * item.recipe.tics)); // time to craft
+  value += data.craft_fee * value;                  // fabrication overhead markup
+  value += value * (1 + (0.05 * item.recipe.tics)); // time premium per tic
 
   return value;
 }
 
+// Computes the base value of any resource by type, using the cached resources
+// map for already-computed values to break the recursion for crafted goods
+// whose ingredients are themselves crafted.
 function resourceValue(name: t.resource): number {
   if (resources[name] != undefined) {
     return resources[name].value;
@@ -32,15 +62,13 @@ function resourceValue(name: t.resource): number {
     value = (<t.Raw>item).mine.value;
   }
 
-  // Adjust value due to expense in reaction mass to move it
+  // Heavier goods are more expensive to transport, raising their market value.
   value += value * (0.005 * item.mass);
 
   return value;
 }
 
-/*
- * Global storage of resource objects
- */
+
 export function isRaw(res: Resource): res is Raw {
   return (<Raw>res).mine !== undefined;
 }
@@ -50,13 +78,17 @@ export function isCraft(res: Resource): res is Craft {
 }
 
 
+/**
+ * Base class for all runtime resource objects.
+ * Holds the pre-computed value and price bounds used by the market system.
+ */
 export abstract class Resource {
   readonly name:        t.resource;
   readonly mass:        number;
-  readonly contraband?: number;
-  readonly value:       number;
-  readonly minPrice:    number;
-  readonly maxPrice:    number;
+  readonly contraband?: number;  // fine multiplier if found during inspection; absent if legal
+  readonly value:       number;  // computed base market value in credits
+  readonly minPrice:    number;  // floor price (market will not sell below this)
+  readonly maxPrice:    number;  // ceiling price (market will not buy above this)
 
   constructor(name: t.resource) {
     this.name       = name;
@@ -67,6 +99,9 @@ export abstract class Resource {
     this.maxPrice   = FastMath.ceil(this.calcMaxPrice());
   }
 
+  // Maximum price a market will offer when buying this resource.
+  // Necessity goods (food, fuel, medicine) have a higher ceiling multiplier
+  // since buyers will pay more rather than go without.
   calcMaxPrice() {
     let factor = data.necessity[this.name] ? 9 : 3;
 
@@ -77,6 +112,9 @@ export abstract class Resource {
     return this.value * Math.max(1.2, factor);
   }
 
+  // Minimum price at which a market will sell this resource.
+  // Non-necessity goods have a lower floor (more price competition),
+  // while necessity goods are always in demand and command a higher floor.
   calcMinPrice() {
     let factor = data.necessity[this.name] ? 3 : 9;
 
@@ -87,12 +125,14 @@ export abstract class Resource {
     return this.value / Math.max(1.2, factor);
   }
 
+  /** Clamps a computed price to [minPrice, maxPrice], rounded up. */
   clampPrice(price: number) {
     return FastMath.ceil(util.clamp(price, this.minPrice, this.maxPrice));
   }
 }
 
 
+/** A mineable raw resource. mineTurns is the number of turns to extract one unit. */
 export class Raw extends Resource {
   readonly mine:      t.Mining;
   readonly mineTurns: number;
@@ -111,10 +151,11 @@ export class Raw extends Resource {
 }
 
 
+/** A fabricatable crafted resource. craftTurns is the turns to produce one unit. */
 export class Craft extends Resource {
   readonly recipe:      t.Recipe;
   readonly craftTurns:  number;
-  readonly ingredients: t.resource[];
+  readonly ingredients: t.resource[];  // convenience: keys of recipe.materials
 
   constructor(name: t.resource) {
     super(name);
@@ -131,6 +172,11 @@ export class Craft extends Resource {
 }
 
 
+/**
+ * Module-level registry of all resource instances, keyed by resource name.
+ * Populated once at load time from data.ts. Used by the economy system,
+ * planet markets, and fabricators as the canonical source of resource metadata.
+ */
 export const resources: { [key: string]: Resource } = {};
 
 for (const item of t.resources) {
