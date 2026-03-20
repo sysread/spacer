@@ -1,7 +1,27 @@
+/**
+ * quaternion - unit quaternion math for 3D rotations.
+ *
+ * Used by the orbital mechanics system to apply axial tilts and orbital plane
+ * inclinations when computing body positions. A quaternion [w, x, y, z]
+ * represents a rotation without gimbal lock.
+ *
+ * Rotations here follow the standard right-hand rule. All angles are in radians.
+ */
+
 import * as V from './vector';
 
+/** A unit quaternion represented as [w, x, y, z]. */
 export type quaternion = [number, number, number, number];
 
+/**
+ * Constructs a quaternion from three Euler angles (intrinsic ZXY convention).
+ *   phi   - rotation around Z axis (longitude of ascending node / axial roll)
+ *   theta - rotation around X axis (inclination / tilt)
+ *   psi   - rotation around Y axis (argument of periapsis)
+ *
+ * The result is a unit quaternion representing the composed rotation.
+ * Used in CelestialBody.getPositionAtTime to orient orbital planes.
+ */
 export const from_euler = (phi: number, theta: number, psi: number): quaternion => {
   const _x = theta * 0.5;
   const _y = psi * 0.5;
@@ -23,6 +43,11 @@ export const from_euler = (phi: number, theta: number, psi: number): quaternion 
   return [w, x, y, z];
 };
 
+/**
+ * Hamilton product of two quaternions: a * b.
+ * Composes two rotations - applies b first, then a.
+ * Result is a unit quaternion when both inputs are unit quaternions.
+ */
 export const mul = (a: quaternion, b: quaternion): quaternion => {
   const [w1, x1, y1, z1] = a;
   const [w2, x2, y2, z2] = b;
@@ -35,6 +60,12 @@ export const mul = (a: quaternion, b: quaternion): quaternion => {
   ];
 };
 
+/**
+ * Rotates vector v by quaternion q using the sandwich product: q * [0,v] * q'.
+ * The w=0 terms are elided from the intermediate products as an optimization
+ * (commented-out terms would be multiplied by w2=0 anyway).
+ * Returns the rotated vector as a Point.
+ */
 export const rotate_vector = (q: quaternion, v: V.Point): V.Point => {
   const [w1, x1, y1, z1] = q;
   const w2 = 0, [x2, y2, z2] = v; // [0, v]
@@ -45,6 +76,7 @@ export const rotate_vector = (q: quaternion, v: V.Point): V.Point => {
   const y3 = w1 * y2 + /*y1 * w2 +*/ z1 * x2 - x1 * z2;
   const z3 = w1 * z2 + /*z1 * w2 +*/ x1 * y2 - y1 * x2;
 
+  // (Q * [0, v]) * Q'  (conjugate: negate x,y,z components)
   //const w4 = w3 * w1 + x3 * x1 + y3 * y1 + z3 * z1;
   const x4 = x3 * w1 - w3 * x1 - y3 * z1 + z3 * y1;
   const y4 = y3 * w1 - w3 * y1 - z3 * x1 + x3 * z1;
