@@ -80,4 +80,4 @@ const jupiter: Body = {
   },
 };
 
-export = jupiter;
+export default jupiter;

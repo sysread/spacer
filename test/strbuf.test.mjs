@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { loadAMD } from './helpers/amd.mjs';
-
-const { builder } = loadAMD('www/js/strbuf.js');
+import { builder } from '../src/strbuf';
 
 describe('strbuf', () => {
   it('returns empty string from a fresh builder', () => {

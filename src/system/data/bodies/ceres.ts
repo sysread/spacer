@@ -23,4 +23,4 @@ const ceres: Body = {
   },
 };
 
-export = ceres;
+export default ceres;

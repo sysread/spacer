@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createLoader } from '../helpers/amd.mjs';
-
-const loader = createLoader();
-const SolarSystem = loader.load('www/js/system/SolarSystem.js');
+import SolarSystem from '../../src/system/SolarSystem';
 
 // SolarSystem is a singleton in production but we construct fresh instances here
 // so tests are isolated from each other.

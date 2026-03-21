@@ -17,9 +17,11 @@
     "cordova-browser": "^5.0.4",
     "cordova-plugin-device": "^2.0.3",
     "cordova-plugin-statusbar": "^2.4.3",
+    "hammerjs": "^2.0.8",
     "npm": "^6.14.5",
     "sprintf-js": "^1.1.2",
-    "statusbar": "^0.2.0"
+    "statusbar": "^0.2.0",
+    "vue": "^2.7.16"
   },
   "cordova": {
     "platforms": [
@@ -34,7 +36,7 @@
   "devDependencies": {
     "@types/jquery": "^3.3.32",
     "cordova": "^9.0.0",
-    "typescript": "^3.7.5",
+    "typescript": "^5.9.3",
     "vite": "^8.0.1",
     "vitest": "^4.1.0"
   }

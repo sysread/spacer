@@ -25,4 +25,4 @@ class Deferred<T> {
   }
 }
 
-export = Deferred;
+export default Deferred;

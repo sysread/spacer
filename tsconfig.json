@@ -1,15 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ES2015",
-    "module": "AMD",
-    "outDir": "./www/js",
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
     "allowJs": true,
     "strict": true,
     "esModuleInterop": true,
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
-    "lib": ["DOM", "ES5", "ES6", "ES2017.Object"]
+    "lib": ["DOM", "ES2020"]
   },
   "include": [
     "src"

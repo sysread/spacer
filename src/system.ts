@@ -326,4 +326,4 @@ class System {
   }
 }
 
-export = new System;
+export default new System;

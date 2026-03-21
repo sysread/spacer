@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createLoader } from '../helpers/amd.mjs';
-
-// Each test file gets its own loader so module state doesn't leak between suites.
-const loader = createLoader();
-const { CelestialBody, LaGrangePoint, SpaceThing, isCelestialBody, isLaGrangePoint } =
-  loader.load('www/js/system/CelestialBody.js');
+import { CelestialBody, LaGrangePoint, SpaceThing, isCelestialBody, isLaGrangePoint } from '../../src/system/CelestialBody';
 
 // Minimal sun data: static body with no orbital elements.
 const sunData = {

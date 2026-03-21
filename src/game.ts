@@ -522,4 +522,4 @@ window.game = game;
 window.game.init();
 window.game.arrive();
 
-export = game;
+export default game;

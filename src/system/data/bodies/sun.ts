@@ -29,4 +29,4 @@ const sun: Body = {
   },
 };
 
-export = sun;
+export default sun;

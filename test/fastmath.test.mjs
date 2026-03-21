@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { loadAMD } from './helpers/amd.mjs';
-
-const { abs, ceil, floor, round, sign } = loadAMD('www/js/fastmath.js');
+import { abs, ceil, floor, round, sign } from '../src/fastmath';
 
 describe('fastmath', () => {
   describe('abs', () => {

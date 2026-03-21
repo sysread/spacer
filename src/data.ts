@@ -659,4 +659,4 @@ data.shipclass.barsoom.desc = "The Barsoomian class frigate adopts the latest ad
 data.shipclass.neptune.desc = "Designed and built in TRANSA's own shipyards, the Neptune class cargo hauler has the longest range of any vessel while retaining low mass and reasonable cargo space. A favorite of traders and smugglers on the Long Haul alike due to its low albedo design, it has the armor and hard points to defend itself in the unguarded outer oribts.";
 data.shipclass.rockhopper.desc = "In the true spirit of the belt, the Rock Hopper is a rebuilt schooner class, retrofitted with upgraded armor, increased thrust, and after market hacks to boost fuel efficiency, making it great for hauling moderate sized loads of the heavy materials for which it is named.";
 
-export = data;
+export default data;

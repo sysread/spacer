@@ -16,99 +16,12 @@
     <script src="js/vendor/bootstrap.bundle.min.js"></script>
     <script src="js/vendor/gsap.min.js"></script>
 
-    <!-- Libs -->
-    <script src="js/vendor/require.js"></script>
-
     <title>Spacer</title>
   </head>
   <body id="spacer">
     <!-- Content window -->
     <div id="content" />
 
-    <script>
-    // configure requirejs
-    require(['js/loader'], () => {
-      // wait on deviceready, which configures requirejs to find the correct
-      // vue.js for this environment
-      document.addEventListener("deviceready", (e) => {
-        require(
-          [
-            'vendor/vue',             // base framework
-            'game',                   // game state
-            'component/global',       // global state
-            'component/navbar',       // nav bar
-            'component/content',      // content div
-            'component/statusbar',    // top status bar
-            'component/notification', // notifications
-          ],
-
-          (Vue, game) => {
-            const initial_page
-              = game.turns == 0              ? 'newgame'
-              : game.player.ship.isDestroyed ? 'newgame'
-                                             : 'summary';
-
-            const content_app = new Vue({
-              el: '#content',
-
-              data: {
-                page: initial_page,
-              },
-
-              mounted() {
-                this.override_page();
-              },
-
-              watch: {
-                page() {
-                  this.override_page();
-                },
-              },
-
-              computed: {
-                nav_disabled() { return this.game.is_frozen },
-              },
-
-              methods: {
-                override_page() {
-                  if (this.game.turns == 0) {
-                    this.page = 'newgame';
-                  }
-                  else if (this.game.player.ship.isDestroyed) {
-                    this.page = 'newgame';
-                  }
-                },
-
-                open(page) {
-                  if (this.game.is_frozen && page != 'newgame') {
-                    return;
-                  }
-
-                  this.page = null;
-                  this.$nextTick(() => this.page = page);
-                },
-
-                dismissNotification(msg) {
-                  this.game.dismiss(msg);
-                },
-              },
-
-              template: `
-                <div>
-                  <StatusBar />
-                  <Content @open="open" :page="page" />
-                  <NavBar  @open="open" :page="page" :disabled="nav_disabled" />
-
-                  <div v-if="game.notifications.length > 0" class="fixed-top m-3">
-                    <Notification v-for="[msg, dismiss] in game.notifications" :key="msg" :msg="msg" @dismiss="dismissNotification(msg)" :dismiss="dismiss" />
-                  </div>
-                </div>
-              `,
-            });
-          },
-        );
-      });
-    });
-    </script>
+    <script type="module" src="/main.js"></script>
   </body>
 </html>

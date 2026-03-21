@@ -49,4 +49,4 @@ const neptune: Body = {
   },
 };
 
-export = neptune;
+export default neptune;

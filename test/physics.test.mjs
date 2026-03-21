@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { loadAMD } from './helpers/amd.mjs';
-
-const Physics = loadAMD('www/js/physics.js');
+import Physics from '../src/physics';
 
 describe('Physics', () => {
   describe('constants', () => {

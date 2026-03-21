@@ -97,4 +97,4 @@ class NPC extends Person {
   }
 }
 
-export = NPC;
+export default NPC;

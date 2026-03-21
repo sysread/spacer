@@ -410,4 +410,4 @@ class Ship {
   }
 }
 
-export = Ship;
+export default Ship;

@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { loadAMD } from './helpers/amd.mjs';
-
-const { from_euler, mul, rotate_vector } = loadAMD('www/js/quaternion.js');
+import { from_euler, mul, rotate_vector } from '../src/quaternion';
 
 // Floating-point comparisons need tolerance.
 const EPSILON = 1e-10;

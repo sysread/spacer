@@ -38,7 +38,7 @@
  */
 
 import Physics from './physics';
-import system from 'system';
+import system from './system';
 import { Point } from './vector';
 import * as util from './util';
 

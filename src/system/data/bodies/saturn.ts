@@ -77,4 +77,4 @@ const saturn: Body = {
   },
 };
 
-export = saturn;
+export default saturn;

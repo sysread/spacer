@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createLoader } from './helpers/amd.mjs';
-
-const { bezier } = createLoader().load('www/js/svgpath.js');
+import { bezier } from '../src/svgpath';
 
 // Parse an SVG path string into a sequence of [command, ...args] tokens.
 function parsePathTokens(d) {

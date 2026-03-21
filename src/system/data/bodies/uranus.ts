@@ -48,4 +48,4 @@ const uranus: Body = {
   },
 };
 
-export = uranus;
+export default uranus;

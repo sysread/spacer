@@ -1,12 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { loadAMD } from './helpers/amd.mjs';
-
-const {
+import {
   clone,
   add_scalar, sub_scalar, mul_scalar, div_scalar,
   add, sub, mul, div,
   length_squared, length,
-} = loadAMD('www/js/vector.js');
+} from '../src/vector';
 
 describe('vector', () => {
   const v = [1, 2, 3];

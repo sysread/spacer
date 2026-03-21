@@ -28,4 +28,4 @@ const mercury: Body = {
   },
 };
 
-export = mercury;
+export default mercury;

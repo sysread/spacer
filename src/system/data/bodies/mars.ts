@@ -54,4 +54,4 @@ const mars: Body = {
   },
 };
 
-export = mars;
+export default mars;

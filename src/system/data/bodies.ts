@@ -1,21 +1,8 @@
-import Sun     from './bodies/sun';
-import Mercury from './bodies/mercury';
-import Earth   from './bodies/earth';
-import Mars    from './bodies/mars';
-import Ceres   from './bodies/ceres';
-import Jupiter from './bodies/jupiter';
-import Saturn  from './bodies/saturn';
-import Uranus  from './bodies/uranus';
-import Neptune from './bodies/neptune';
-import Pluto   from './bodies/pluto';
+import sun from './bodies/sun';
 
-export const sun     = Sun;
-export const mercury = Mercury;
-export const earth   = Earth;
-export const mars    = Mars;
-export const ceres   = Ceres;
-export const jupiter = Jupiter;
-export const saturn  = Saturn;
-export const uranus  = Uranus;
-export const neptune = Neptune;
-export const pluto   = Pluto;
+/* Only export the sun. SolarSystem.importBodies() walks the satellite tree
+ * recursively, so all planets and moons are discovered from sun.satellites.
+ * Individual planet re-exports were removed because ESM namespace key order
+ * is not guaranteed to match source order - if a planet was iterated before
+ * the sun, it would be created without an orbital central body. */
+export { sun };

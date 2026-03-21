@@ -88,6 +88,8 @@ class Physics {
 }
 
 // Global alias for component layer access. See module doc comment.
-window.Physics = Physics;
+if (typeof window !== 'undefined') {
+  window.Physics = Physics;
+}
 
-export = Physics;
+export default Physics;

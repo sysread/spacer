@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { loadAMD } from '../helpers/amd.mjs';
-
-const { isBody, isLaGrange } = loadAMD('www/js/system/data/body.js');
+import { isBody, isLaGrange } from '../../src/system/data/body';
 
 describe('body type guards', () => {
   describe('isBody', () => {

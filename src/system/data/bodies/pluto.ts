@@ -31,4 +31,4 @@ const pluto: Body = {
   },
 };
 
-export = pluto;
+export default pluto;

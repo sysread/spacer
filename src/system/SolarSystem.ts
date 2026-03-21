@@ -57,4 +57,4 @@ class SolarSystem {
   }
 }
 
-export = SolarSystem;
+export default SolarSystem;

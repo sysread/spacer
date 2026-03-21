@@ -1,9 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { createLoader } from '../helpers/amd.mjs';
-
-const loader = createLoader();
-const { Frame, Path, Orbit } = loader.load('www/js/system/orbit.js');
-const { CelestialBody } = loader.load('www/js/system/CelestialBody.js');
+import { Frame, Path, Orbit } from '../../src/system/orbit';
+import { CelestialBody } from '../../src/system/CelestialBody';
 
 const J2000 = Date.UTC(2000, 0, 1, 12, 0, 0);
 

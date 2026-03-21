@@ -44,4 +44,4 @@ const earth: Body = {
   },
 };
 
-export = earth;
+export default earth;
