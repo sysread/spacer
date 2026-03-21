@@ -1,3 +1,96 @@
+/**
+ * planet - the economic and social hub of each location in the solar system.
+ *
+ * Planet is the largest class in the game. It manages every aspect of a body's
+ * economy and contract offerings, and is driven by the turn clock via watch("turn").
+ *
+ * ## Economy overview
+ *
+ * Each planet produces and consumes resources every turn. Production and consumption
+ * rates are computed from three stacked sources, each scaled by planet size:
+ *   1. Global market baseline (data.market.produces/consumes)
+ *   2. Faction modifiers (faction.produces/consumes)
+ *   3. Trait modifiers (trait.produces/consumes per active trait)
+ *   4. Active Conditions (temporary modifiers added at runtime)
+ *
+ * Stock levels, supply history, and demand history are tracked per resource.
+ * The `need` metric drives pricing and import/manufacturing decisions.
+ *
+ * ## Pricing
+ *
+ * price(item) computes a market price from:
+ *   - Base resource value (from resource.ts)
+ *   - Need factor: log(need) markup when demand exceeds supply, fractional when surplus
+ *   - Trait adjustments (flat percentage off)
+ *   - Scarcity markup for necessity goods (food, fuel, medicine)
+ *   - Condition markup from active economic events
+ *   - Clamped to [minPrice, maxPrice] from the resource definition
+ *   - Availability markup based on distance to nearest net exporter
+ *   - 5% fuzz for local variation
+ *
+ * Prices are cached per resource and invalidated on a random 3-12 day cycle
+ * to avoid recomputing every turn.
+ *
+ * sellPrice() = price(). buyPrice() adds sales tax and subtracts standing bonus.
+ *
+ * ## Need metric
+ *
+ * getNeed(item) returns a dimensionless ratio comparing demand to effective supply:
+ *   - supply proxy = (stock + 2*avg_supply) / 3 (weighted toward recent history)
+ *   - need > 1: log(10*(1+n)) - escalating shortage signal
+ *   - need < 1: d/s fraction - surplus signal
+ *   - need = 1: balanced
+ *
+ * hasShortage/hasSurplus use configurable thresholds on the need value.
+ * Net exporters have higher shortage thresholds (harder to trigger).
+ *
+ * ## Import and manufacture queues
+ *
+ * When a planet needs resources it can't produce locally, it either:
+ *   - schedules an ImportTask (buys from the best exporter and simulates in-transit
+ *     delivery over time using a turn countdown)
+ *   - schedules a CraftTask (manufactures from raw materials in the local market)
+ *
+ * processQueue() counts down each task's turns and calls sell() when it arrives.
+ * This makes goods appear in the market as if shipped or fabricated in real time.
+ *
+ * ## Turn structure (spread across the day)
+ *
+ * The turn() method uses a fall-through switch on (turn % turns_per_day) to
+ * spread expensive operations across different turns in the day rather than
+ * running everything at once:
+ *   turn 0:  manufacture() - schedule craft tasks
+ *   turn 1:  imports() - schedule import tasks
+ *   turn 2:  refreshContracts(), replenishFabricators(), luxuriate(),
+ *            apply_conditions(), rollups()
+ *   default: produce(), consume(), processQueue() (every turn)
+ *
+ * ## Fabricators
+ *
+ * Planets have a limited fabrication capacity (fab_health) that decreases as
+ * the planet uses its fabricators (both for background manufacture() and for
+ * player-initiated fabrication). When health falls below 50%, the planet buys
+ * cybernetics to replenish. Fabrication with low health takes longer and costs
+ * more (craft_fee_nofab rate).
+ *
+ * ## Contracts
+ *
+ * Planets offer Passengers and Smuggler contracts. refreshContracts() is called
+ * on arrival and periodically (but skipped during transit to save CPU).
+ * Contracts expire after a random number of turns (valid_until).
+ *
+ * The contract restore hack (lines 163-181 in the original) defers contract
+ * restoration to the first Arrived event so that all game objects are ready.
+ * This is acknowledged as bad code in the original; it should be refactored
+ * when planet.ts is decomposed.
+ *
+ * ## Patrol, piracy, and inspection
+ *
+ * These methods compute encounter probabilities based on faction parameters
+ * scaled by planet size and trait modifiers, and decaying with distance.
+ * See faction.ts for the base values and common.ts for the full description.
+ */
+
 import data    from './data';
 import system  from './system';
 import Physics from './physics';
@@ -25,12 +118,15 @@ declare var window: {
 }
 
 
+// Used by neededResources() to return prioritized import/craft demand.
 interface NeededResources {
   prioritized: t.resource[];
   amounts:     { [key: string]: number };
 }
 
 
+// An ImportTask simulates goods in transit from another planet.
+// The planet buys them from the source immediately; they arrive after `turns`.
 interface ImportTask {
   type:  'import';
   turns: number;
@@ -40,6 +136,7 @@ interface ImportTask {
   to:    t.body;
 }
 
+// A CraftTask simulates background manufacturing from local raw materials.
 interface CraftTask {
   type:  'craft';
   turns: number;
@@ -54,13 +151,14 @@ export function isImportTask(task: EconTask): task is ImportTask {
 }
 
 export function isCraftTask(task: EconTask): task is ImportTask {
-  return (<CraftTask>task).type == 'craft';;
+  return (<CraftTask>task).type == 'craft';
 }
 
 
+// A contract is an offered mission with an expiry turn.
 interface Contract {
-  valid_until: number;  // game.turns after which offering expires
-  mission:     Mission; // offered mission
+  valid_until: number;  // game.turns after which the offer expires
+  mission:     Mission;
 }
 
 interface SavedContract {
@@ -81,45 +179,48 @@ export interface SavedPlanet {
 }
 
 export class Planet {
+  // Physical and geographic properties (read-only after construction)
   readonly body:      t.body;
   readonly name:      string;
-  readonly size:      string;
-  readonly kind:      string;
-  readonly central:   string;
-  readonly gravity:   number;
-  readonly traits:    Trait[];
+  readonly size:      string;    // 'tiny'|'small'|'medium'|'large'|'huge' - drives scale()
+  readonly kind:      string;    // display category ('Planet', 'Moon of Jupiter', etc.)
+  readonly central:   string;    // body key of the parent body this orbits
+  readonly gravity:   number;    // surface gravity in g
+  readonly traits:    Trait[];   // all active traits for this body
 
+  // Base production/consumption rates (scaled, combined from all sources)
   readonly produces:  Store;
   readonly consumes:  Store;
-  readonly min_stock: number;
-  readonly avg_stock: number;
+  readonly min_stock: number;    // minimum target stock level (scaled)
+  readonly avg_stock: number;    // average target stock level (scaled)
 
+  // Runtime state
   conditions:         Condition[];
-  work_tasks:         string[];
+  work_tasks:         string[];   // names of Work tasks available here
   contracts:          Contract[];
 
-  max_fab_units:      number;
-  max_fab_health:     number;
-  fab_health:         number;
+  // Fabrication state
+  max_fab_units:      number;     // maximum fabrication capacity units
+  max_fab_health:     number;     // maximum fabrication health (units * fab_health_per_unit)
+  fab_health:         number;     // current fabrication health (decreases as fabricators are used)
 
-  stock:              Store;
-  supply:             History;
-  demand:             History;
-  need:               History;
-  pending:            Store;
-  queue:              EconTask[];
+  // Economic state
+  stock:              Store;      // current inventory of each resource
+  supply:             History;    // rolling history of stock levels (for avg supply)
+  demand:             History;    // rolling history of demand signals
+  need:               History;    // rolling history of need metric
+  pending:            Store;      // units already ordered (in queue, not yet arrived)
+  queue:              EconTask[]; // in-progress import and craft tasks
 
-  _price:             t.Counter;
-  _cycle:             t.Counter;
-  _need:              t.Counter;
-  _exporter:          {[key:string]: boolean};
+  // Cached computed values (cleared periodically)
+  _price:             t.Counter;                  // computed prices, cleared on schedule
+  _cycle:             t.Counter;                  // per-resource price invalidation cycle (turns)
+  _need:              t.Counter;                  // computed need values, cleared each turn
+  _exporter:          {[key:string]: boolean};    // net exporter cache, cleared when conditions change
 
   constructor(body: t.body, init?: SavedPlanet) {
     init = init || {};
 
-    /*
-     * Physical and faction
-     */
     this.body    = body;
     this.name    = data.bodies[this.body].name;
     this.size    = data.bodies[this.body].size;
@@ -128,25 +229,19 @@ export class Planet {
     this.gravity = system.gravity(this.body);
     this.traits  = data.bodies[body].traits.map(t => new Trait(t));
 
-    /*
-     * Temporary conditions
-     */
+    // Restore conditions from saved state, or start with none.
     if (init.conditions) {
       this.conditions = init.conditions.map(c => new Condition(c.name, c));
     } else {
       this.conditions = [];
     }
 
-    /*
-     * Fabrication
-     */
+    // Fabrication capacity is scaled by planet size.
     this.max_fab_units  = FastMath.ceil(this.scale(data.fabricators));
     this.max_fab_health = this.max_fab_units * data.fab_health;
     this.fab_health     = this.max_fab_units * data.fab_health;
 
-    /*
-     * Work
-     */
+    // Build the list of work tasks available based on trait requirements.
     this.work_tasks = [];
     TASK:for (const task of data.work) {
       for (const req of task.avail) {
@@ -160,8 +255,11 @@ export class Planet {
     }
 
     this.contracts = [];
-    // This is perhaps the worst piece of programming I have ever done. I
-    // *really* hope you are not a potential employer reading this hack.
+
+    // Contracts cannot be restored immediately because restoreMission() calls
+    // mission.accept(), which requires window.game to be fully initialized.
+    // Deferred to the first Arrived event as a workaround. This is acknowledged
+    // technical debt - it should be a proper deferred initialization pattern.
     if (init.contracts) {
       watch("arrived", (ev: Arrived) => {
         if (init && init.contracts) {
@@ -178,11 +276,8 @@ export class Planet {
         return {complete: false};
       });
     }
-    // END shame
 
-    /*
-     * Economics
-     */
+    // Build the combined production/consumption stores from all sources.
     this.stock     = new Store(init.stock);
     this.supply    = new History(data.market_history, init.supply);
     this.demand    = new History(data.market_history, init.demand);
@@ -207,9 +302,8 @@ export class Planet {
       }
     }
 
-    // Assign directly in constructor rather than in a method call for
-    // performance reasons. V8's jit will produce more optimized classes by
-    // avoiding dynamic assignment in the constructor.
+    // Initialize caches here rather than in methods so V8 can build a stable
+    // hidden class for Planet instances without dynamic property assignment later.
     this._price    = {};
     this._cycle    = {};
     this._need     = {};
@@ -220,6 +314,8 @@ export class Planet {
       return {complete: false};
     });
 
+    // Refresh contracts on arrival rather than every turn (expensive, and
+    // not needed while the player is in transit).
     watch("arrived", (ev: Arrived) => {
       this.refreshContracts();
       return {complete: false};
@@ -230,72 +326,80 @@ export class Planet {
     return factions[data.bodies[this.body].faction];
   }
 
+  // ---------------------------------------------------------------------------
+  // Turn processing
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Advances the planet's economy by one turn. Expensive operations are
+   * spread across the day using a fall-through switch so not everything
+   * runs on the same turn. The default case (every turn) handles the core
+   * produce/consume/queue cycle.
+   */
   turn(turn: number) {
-    // Spread expensive daily procedures out over multiple turns; note the
-    // fall-through in each case to default, which are actions called on every
-    // turn.
     switch (turn % data.turns_per_day) {
       case 0:
-        this.manufacture();
+        this.manufacture();     // schedule craft tasks from available materials
 
       case 1:
-        this.imports();
+        this.imports();         // schedule import tasks from other planets
 
       case 2:
-        // Refreshing contracts is expensive and generally unnecessary while
-        // the single player is in transit. Instead, we do a single refresh per
-        // market on arrival; the event watcher is registered in the
-        // constructor.
+        // Contract refresh is skipped during transit (frozen game) since the
+        // per-arrival watcher handles it when the player docks.
         if (!window.game.frozen && !window.game.transit_plan) {
           this.refreshContracts();
         }
 
-        this.replenishFabricators();
-        this.luxuriate();
-        this.apply_conditions();
-        this.rollups(turn);
+        this.replenishFabricators();  // buy cybernetics to restore fab health
+        this.luxuriate();             // consume luxuries (economic sink)
+        this.apply_conditions();      // advance and test for new conditions
+        this.rollups(turn);           // update history and clear caches
 
       default:
-        this.produce();
-        this.consume();
-        this.processQueue();
+        this.produce();         // add production output to stock
+        this.consume();         // remove consumption from stock
+        this.processQueue();    // deliver arrived imports and crafted goods
     }
   }
 
+  /**
+   * Updates supply/demand/need history and resets per-turn caches.
+   * Price caches are invalidated on a staggered per-resource cycle (3-12 days)
+   * to avoid all prices changing at once.
+   */
   rollups(turn: number) {
     for (const item of this.stock.keys())
-      this.incSupply(item, this.getStock(item))
+      this.incSupply(item, this.getStock(item));
 
-    this.supply.rollup()
-    this.demand.rollup()
+    this.supply.rollup();
+    this.demand.rollup();
 
     for (const item of this.need.keys())
-      this.need.inc(item, this.getNeed(item))
+      this.need.inc(item, this.getNeed(item));
 
-    this.need.rollup()
-
-    // this is only affected by conditions, so it may be cleared as needed
-    //this._exporter = {};
+    this.need.rollup();
 
     this._need = {};
 
-    // randomly cycle updates to price
     for (const item of t.resources) {
       if (!this._cycle[item] || turn % this._cycle[item]) {
-        // drop the saved price
         delete this._price[item];
-
-        // set a new turn modulus for 3-12 days
         this._cycle[item] = util.getRandomInt(3, 12) * data.turns_per_day;
       }
     }
   }
 
+  /** Clears cached net exporter status for resources affected by a condition change. */
   clearNetExporterCache(items: t.ResourceCounter) {
     for (const item of Object.keys(items)) {
       delete this._exporter[item];
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Physical and faction properties
+  // ---------------------------------------------------------------------------
 
   get desc() {
     return data.bodies[this.body].desc;
@@ -333,38 +437,13 @@ export class Planet {
     return this.hasTrait('capital');
   }
 
-  /*
-   * Piracy rates
-   */
-  piracyRadius() {
-    // jurisdiction is a good enough basis for operating range for now
-    let radius = this.scale(data.jurisdiction * 2);
-    if (this.hasTrait('black market')) radius *= 2;
-    if (this.hasTrait('capital'))      radius *= 0.75;
-    if (this.hasTrait('military'))     radius *= 0.5;
-    return radius;
-  }
+  // ---------------------------------------------------------------------------
+  // Patrol, piracy, and inspection
+  // ---------------------------------------------------------------------------
 
-  // Piracy obeys a similar approximation of the inverse square law, just as
-  // patrols do, but piracy rates peak at the limit of patrol ranges, where
-  // pirates are close enough to remain within operating range of their home
-  // base, but far enough away that patrols are not too problematic.
-  piracyRate(distance=0) {
-    const radius = this.piracyRadius();
-
-    distance = FastMath.abs(distance - radius);
-
-    let rate = this.scale(this.faction.piracy);
-    const intvl = radius / 10;
-    for (let i = 0; i < distance; i += intvl) {
-      rate *= 0.85;
-    }
-
-    return Math.max(0, rate);
-  }
-
-  /*
-   * Patrols and inspections
+  /**
+   * Patrol jurisdiction radius in AU. Expanded for military and capital planets,
+   * contracted for black market planets (patrols avoid openly corrupt areas).
    */
   patrolRadius() {
     let radius = this.scale(data.jurisdiction);
@@ -374,7 +453,10 @@ export class Planet {
     return radius;
   }
 
-  // Distance is in AU
+  /**
+   * Patrol encounter rate at a given distance from this planet (in AU).
+   * Within the patrol radius: full rate. Beyond: decays by half per 0.1 AU.
+   */
   patrolRate(distance=0) {
     const radius = this.patrolRadius();
     let patrol = this.scale(this.faction.patrol);
@@ -393,6 +475,43 @@ export class Planet {
     return Math.max(0, rate);
   }
 
+  /**
+   * Piracy radius: the range at which pirate activity peaks around this planet.
+   * Larger than patrol radius - pirates operate at the edge of patrol coverage.
+   * Black market planets attract more piracy; military planets suppress it.
+   */
+  piracyRadius() {
+    let radius = this.scale(data.jurisdiction * 2);
+    if (this.hasTrait('black market')) radius *= 2;
+    if (this.hasTrait('capital'))      radius *= 0.75;
+    if (this.hasTrait('military'))     radius *= 0.5;
+    return radius;
+  }
+
+  /**
+   * Piracy encounter rate at distance from this planet (in AU).
+   * Peaks at the piracyRadius and decays by 15% per interval away from it.
+   * Pirates prefer to operate near their base but outside patrol coverage.
+   */
+  piracyRate(distance=0) {
+    const radius = this.piracyRadius();
+
+    distance = FastMath.abs(distance - radius);
+
+    let rate = this.scale(this.faction.piracy);
+    const intvl = radius / 10;
+    for (let i = 0; i < distance; i += intvl) {
+      rate *= 0.85;
+    }
+
+    return Math.max(0, rate);
+  }
+
+  /**
+   * Probability of being searched during a patrol encounter.
+   * Scales inversely with standing: better standing = less scrutiny.
+   * At maximum standing: near-zero. At minimum standing: full rate.
+   */
   inspectionRate(player: Person) {
     const standing = 1 - (player.getStanding(this.faction.abbrev) / data.max_abs_standing);
     return this.scale(this.faction.inspection) * standing;
@@ -402,13 +521,20 @@ export class Planet {
     return this.faction.inspectionFine(player);
   }
 
-  /*
-   * Fabrication
-   */
+  // ---------------------------------------------------------------------------
+  // Fabrication
+  // ---------------------------------------------------------------------------
+
+  /** Returns fabricator availability as a percentage [0, 100]. */
   fabricationAvailability() {
     return FastMath.ceil(Math.min(100, this.fab_health / this.max_fab_health * 100));
   }
 
+  /**
+   * The reduction rate applied to fabrication time when fab_health > 0.
+   * Manufacturing hubs are fastest, then tech hubs, then baseline.
+   * A lower rate means faster (and cheaper) fabrication.
+   */
   fabricationReductionRate() {
     if (this.hasTrait('manufacturing hub'))
       return 0.35;
@@ -419,6 +545,11 @@ export class Planet {
     return 0.65;
   }
 
+  /**
+   * Computes the turns required to fabricate `count` units.
+   * While fab_health remains, each unit takes craftTurns * reductionRate turns.
+   * Once health is exhausted, remaining units take the full craftTurns each.
+   */
   fabricationTime(item: t.resource, count=1) {
     const resource = resources[item];
 
@@ -441,6 +572,10 @@ export class Planet {
     return Math.max(1, FastMath.ceil(turns));
   }
 
+  /**
+   * Returns true if fab_health is sufficient to cover `count` units without
+   * falling to zero mid-batch (i.e. the batch won't hit the penalty rate).
+   */
   hasFabricationResources(item: t.resource, count=1) {
     const resource = resources[item];
 
@@ -462,6 +597,12 @@ export class Planet {
     return true;
   }
 
+  /**
+   * Computes the credit fee to fabricate `count` units.
+   * Units produced while fab_health > 0 pay data.craft_fee per unit.
+   * Units produced after health is exhausted pay data.craft_fee_nofab (higher).
+   * Standing discount is applied to the total.
+   */
   fabricationFee(item: t.resource, count=1, player: Person): number {
     const resource = resources[item];
 
@@ -486,6 +627,10 @@ export class Planet {
     return FastMath.ceil(fee * discount);
   }
 
+  /**
+   * Consumes fab_health for one fabrication run. Returns the turns taken.
+   * If health is available, uses the reduction rate. Otherwise uses full turns.
+   */
   fabricate(item: t.resource) {
     const resource = resources[item];
 
@@ -509,6 +654,10 @@ export class Planet {
     return turns_taken;
   }
 
+  /**
+   * Attempts to buy cybernetics to restore fab_health when it falls below 50%.
+   * Each unit of cybernetics restores data.fab_health points of capacity.
+   */
   replenishFabricators() {
     if (this.fab_health < this.max_fab_health / 2) {
       const want = FastMath.ceil((this.max_fab_health - this.fab_health) / data.fab_health);
@@ -519,13 +668,19 @@ export class Planet {
     this.fab_health = Math.min(this.fab_health, this.max_fab_health);
   }
 
-  /*
-   * Work
-   */
+  // ---------------------------------------------------------------------------
+  // Work
+  // ---------------------------------------------------------------------------
+
+  /** True if a workers' strike condition is active, preventing work. */
   hasPicketLine() {
     return this.hasCondition("workers' strike");
   }
 
+  /**
+   * Returns the credit pay rate for a work task, scaled by planet size,
+   * adjusted by player standing (bonus), and reduced by sales tax.
+   */
   payRate(player: Person, task: t.Work) {
     let rate = this.scale(task.pay);
     rate += rate * player.getStandingPriceAdjustment(this.faction.abbrev);
@@ -533,8 +688,13 @@ export class Planet {
     return FastMath.ceil(rate);
   }
 
+  /**
+   * Executes a work task for `days` days. Returns the total pay and any
+   * resources harvested. Resource collection is probabilistic: each turn,
+   * each reward resource has a chance to yield 1 unit if the planet produces it.
+   */
   work(player: Person, task: t.Work, days: number) {
-    const pay       = this.payRate(player, task) * days
+    const pay       = this.payRate(player, task) * days;
     const turns     = days * 24 / data.hours_per_turn;
     const rewards   = task.rewards;
     const collected = new Store;
@@ -548,6 +708,10 @@ export class Planet {
     return {pay: pay, items: collected};
   }
 
+  /**
+   * Probabilistically yields 1 unit of an item from the environment.
+   * Only possible if the planet produces the item; capped at 1 unit per attempt.
+   */
   mine(item: t.resource) {
     if (this.production(item) > 0 && util.chance(data.market.minability)) {
       const amt = util.getRandomNum(0, this.production(item));
@@ -557,8 +721,13 @@ export class Planet {
     return 0;
   }
 
-  /*
-   * Economics
+  // ---------------------------------------------------------------------------
+  // Economy - production, consumption, and stock
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Multiplies n by the planet's size scale factor.
+   * All stock, production, and rate values are relative to planet size.
    */
   scale(n=0) {
     return data.scales[this.size] * n;
@@ -584,6 +753,7 @@ export class Planet {
     return this.supply.avg(item);
   }
 
+  /** Threshold for declaring a shortage. Net exporters have a higher bar (3 vs 6). */
   shortageFactor(item: t.resource) {
     return this.isNetExporter(item) ? 3 : 6;
   }
@@ -596,6 +766,7 @@ export class Planet {
     return this.getNeed(item) >= (this.shortageFactor(item) * 1.5);
   }
 
+  /** Threshold for declaring a surplus. Net exporters have a lower bar (0.3 vs 0.6). */
   surplusFactor(item: t.resource) {
     return this.isNetExporter(item) ? 0.3 : 0.6;
   }
@@ -608,6 +779,10 @@ export class Planet {
     return this.getNeed(item) <= this.surplusFactor(item) * 0.75;
   }
 
+  /**
+   * Returns the per-turn production output for an item, including condition modifiers.
+   * Scaled by data.resource_scale and divided across turns_per_day.
+   */
   production(item: t.resource) {
     let amount = this.produces.get(item) / data.turns_per_day;
 
@@ -618,6 +793,9 @@ export class Planet {
     return amount * data.resource_scale;
   }
 
+  /**
+   * Returns the per-turn consumption amount for an item, including condition modifiers.
+   */
   consumption(item: t.resource) {
     let amount = this.consumes.get(item) / data.turns_per_day;
 
@@ -628,9 +806,11 @@ export class Planet {
     return amount * data.resource_scale;
   }
 
-  // Increases demand by the number of units of item less than amt that
-  // there are in the market. For example, if requesting 5 units of fuel
-  // and only 3 are in the market, demand will increase by 2.
+  /**
+   * Signals that the planet wants `amt` units of `item`.
+   * If stock is below amt, the deficit is added to demand history, which will
+   * drive up price and eventually trigger an import or manufacturing order.
+   */
   requestResource(item: t.resource, amt: number) {
     const avail = this.getStock(item);
 
@@ -639,6 +819,12 @@ export class Planet {
     }
   }
 
+  /**
+   * Increases demand for an item and propagates demand upstream to its ingredients.
+   * For crafted goods in shortage, also increases demand for their raw materials,
+   * so that upstream planets will export those materials to meet the shortage.
+   * Uses a queue (BFS) rather than recursion to avoid stack overflow for deep recipes.
+   */
   incDemand(item: t.resource, amt: number) {
     const queue: [t.resource, number][] = [[item, amt]];
 
@@ -665,6 +851,12 @@ export class Planet {
     this.supply.inc(item, amount);
   }
 
+  /**
+   * Returns true if this planet is a net exporter of item.
+   * For raw resources: netProduction > 1 scaled unit.
+   * For crafted resources: true only if the planet is a net exporter of ALL
+   * required ingredients (recursive, cached in _exporter).
+   */
   isNetExporter(item: t.resource): boolean {
     if (this._exporter[item] === undefined) {
       const res = data.resources[item];
@@ -687,6 +879,18 @@ export class Planet {
     return this._exporter[item];
   }
 
+  /**
+   * Returns the dimensionless need score for an item.
+   * Compares demand to a weighted average of stock and supply history:
+   *   supply proxy = (stock + 2*avg_supply) / 3
+   *
+   * Results:
+   *   need > 1: shortage signal; log(10*(1+n)) grows with severity
+   *   need < 1: surplus signal; d/s fraction below 1
+   *   need = 1: exactly balanced
+   *
+   * Cached in _need until rollups() clears it.
+   */
   getNeed(item: t.resource) {
     if (this._need[item] === undefined) {
       const d = this.getDemand(item);
@@ -701,19 +905,23 @@ export class Planet {
     return this._need[item];
   }
 
+  // ---------------------------------------------------------------------------
+  // Pricing
+  // ---------------------------------------------------------------------------
+
   /**
-   * Returns a price adjustment which accounts for the distance to the nearest
-   * net exporter of the item. Returns a decimal percentage where 1.0 means no
-   * adjustment.
+   * Distance-based price markup for non-exporters.
+   * Net exporters of an item sell at a 20% discount (0.8).
+   * Non-exporters get a markup based on distance to the nearest exporter:
+   *   - Cross-faction source adds 10%
+   *   - Each full AU of distance adds 5% compounded
+   * Returns 1.0 when no exporter exists (no markup, no discount).
    */
   getAvailabilityMarkup(item: t.resource) {
-    // If this planet is a net exporter of the item, easy access results in a
-    // lower price.
     if (this.isNetExporter(item)) {
       return 0.8;
     }
 
-    // Find the nearest exporter of the item
     let distance;
     let nearest;
 
@@ -737,12 +945,10 @@ export class Planet {
     if (distance != undefined && nearest != undefined) {
       let markup = 1;
 
-      // Competing market malus
       if (data.bodies[nearest].faction != data.bodies[this.body].faction) {
         markup += 0.1;
       }
 
-      // Distance malus: compound 10% markup for each AU
       const au = FastMath.ceil(distance / Physics.AU);
       for (let i = 0; i < au; ++i) {
         markup *= 1.05;
@@ -756,11 +962,8 @@ export class Planet {
   }
 
   /**
-   * Percent adjustment to price due to an item being a necessity (see
-   * data.necessity). Returns a decimal percentage, where 1.0 means no
-   * adjustment:
-   *
-   *    price *= this.getScarcityMarkup(item));
+   * Scarcity markup for necessity goods (food, fuel, medicine, etc.).
+   * Returns 1 + data.scarcity_markup for necessities, 1.0 otherwise.
    */
   getScarcityMarkup(item: t.resource) {
     if (data.necessity[item]) {
@@ -771,9 +974,8 @@ export class Planet {
   }
 
   /**
-   * Also factors in temporary deficits between production and consumption of
-   * the item due to Conditions. Returns a decimal percentage, where 1.0
-   * means no adjustment.
+   * Condition-based markup: active conditions that consume an item raise its
+   * price; conditions that produce it lower it.
    */
   getConditionMarkup(item: t.resource) {
     let markup = 1;
@@ -781,13 +983,28 @@ export class Planet {
     for (const condition of this.conditions) {
       const consumption = this.scale(condition.consumes[item] || 0);
       const production  = this.scale(condition.produces[item] || 0);
-      const amount      = consumption - production; // production is generally a malus
+      const amount      = consumption - production;
       markup += amount;
     }
 
     return markup;
   }
 
+  /**
+   * Computes and caches the market price for an item.
+   *
+   * Pipeline:
+   *   1. Base value from resource.ts
+   *   2. Need factor: log(need) markup or fractional discount
+   *   3. Trait price adjustments (flat percentage)
+   *   4. Scarcity markup for necessity goods
+   *   5. Condition markup from active events
+   *   6. Clamped to [minPrice, maxPrice]
+   *   7. Availability markup (distance to nearest exporter, post-clamp)
+   *   8. 5% random fuzz for local variation
+   *
+   * Cached until the per-resource _cycle expires (3-12 days).
+   */
   price(item: t.resource) {
     if (this._price[item] == undefined) {
       const value = resources[item].value;
@@ -803,26 +1020,14 @@ export class Planet {
         price = value;
       }
 
-      // Linear adjustments for market classifications
       for (const trait of this.traits)
         price -= price * (trait.price[item] || 0);
 
-      // Scarcity adjustment for items necessary to survival
       price *= this.getScarcityMarkup(item);
-
-      // Scarcity adjustment due to temporary conditions affecting production
-      // and consumption of resources
       price *= this.getConditionMarkup(item);
-
-      // Set upper and lower boundary to prevent superheating or crashing
-      // markets.
-      price = resources[item].clampPrice(price);
-
-      // Post-clamp adjustments due to distance
+      price  = resources[item].clampPrice(price);
       price *= this.getAvailabilityMarkup(item);
-
-      // Add a bit of "unaccounted for local influences"
-      price = util.fuzz(price, 0.05);
+      price  = util.fuzz(price, 0.05);
 
       this._price[item] = util.R(price);
     }
@@ -830,10 +1035,15 @@ export class Planet {
     return this._price[item];
   }
 
+  /** Price at which this market will buy goods from the player. */
   sellPrice(item: t.resource) {
     return this.price(item);
   }
 
+  /**
+   * Price at which this market sells goods to the player.
+   * Adds sales tax; subtracts a standing discount if a player is provided.
+   */
   buyPrice(item: t.resource, player?: Person): number {
     const price = this.price(item) * (1 + this.faction.sales_tax);
     return player
@@ -841,28 +1051,30 @@ export class Planet {
       : FastMath.ceil(price);
   }
 
+  /** Price per tonne of fuel (buy price / fuel mass), with a 3.5% handling margin. */
   fuelPricePerTonne(player?: Person): number {
     return FastMath.ceil(this.buyPrice('fuel', player) * 1.035 / data.resources.fuel.mass);
   }
 
-  /*
-   * When the player buys or sells an item, this method determines whether an
-   * inspection occurs. Returns true if no inspection is performed.
+  // ---------------------------------------------------------------------------
+  // Commerce - buy and sell
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Checks whether a transaction involves contraband and applies inspection logic.
+   * Returns true if the transaction may proceed. Returns false (and applies fine,
+   * standing loss, and confiscation) if the player is caught.
    *
-   * If an inspection is performed and the player is caught, the player's
-   * contraband cargo is confiscated, the player is fined, and their standing
-   * with the market's faction is decreased. The method then sends a
-   * notification of the fine.
+   * Inspection is per-unit-of-contraband-severity: each severity point is a
+   * separate roll at inspectionRate. Amount is signed (negative = selling to market).
    */
   transactionInspection(item: t.resource, amount: number, player: Person) {
     if (!player || !this.faction.isContraband(item, player))
       return true;
 
-    // the relative level of severity of trading in this item
     const contraband = data.resources[item].contraband || 0;
 
-    // FastMath.abs() is used because amount is negative when selling to market,
-    // positive when buying from market. Fine is per unit of contraband.
+    // FastMath.abs() because amount is negative when selling, positive when buying.
     const fine = FastMath.abs(contraband * amount * this.inspectionFine(player));
     const rate = this.inspectionRate(player);
 
@@ -872,13 +1084,9 @@ export class Planet {
         const csnFine = util.csn(totalFine);
         const csnAmt = util.csn(amount);
 
-        // fine the player
         player.debit(totalFine);
-
-        // decrease standing
         player.decStanding(this.faction.abbrev, contraband);
 
-        // confiscate contraband
         let verb;
         if (amount < 0) {
           player.ship.cargo.set(item, 0);
@@ -889,7 +1097,6 @@ export class Planet {
           verb = 'buying';
         }
 
-        // trigger notification
         const msg = `Busted! ${this.faction.abbrev} agents were tracking your movements and observed you ${verb} ${csnAmt} units of ${item}. `
                   + `You have been fined ${csnFine} credits and your standing wtih this faction has decreased by ${contraband}.`;
 
@@ -902,6 +1109,12 @@ export class Planet {
     return true;
   }
 
+  /**
+   * Player or agent buys `amount` units of `item` from this market.
+   * Returns [units_bought, total_price]. Triggers inspection for contraband.
+   * Fires ItemsBought event for the player (not for agents).
+   * Limited by current stock; demand is still signaled for the full requested amount.
+   */
   buy(item: t.resource, amount: number, player?: Person) {
     if (player && player === window.game.player && !this.transactionInspection(item, amount, player))
       return [0, 0];
@@ -919,9 +1132,9 @@ export class Planet {
       if (player === window.game.player) {
         trigger(new ItemsBought({
           count: bought,
-          body: this.body,
-          item: item,
-          price: price
+          body:  this.body,
+          item:  item,
+          price: price,
         }));
       }
     }
@@ -929,6 +1142,12 @@ export class Planet {
     return [bought, price];
   }
 
+  /**
+   * Player or agent sells `amount` units of `item` to this market.
+   * Returns [units_sold, total_price, standing_gained].
+   * Ending a shortage grants standing; selling during an active condition grants
+   * additional standing. Fires ItemsSold event for the player.
+   */
   sell(item: t.resource, amount: number, player?: Person) {
     if (player && player === window.game.player && !this.transactionInspection(item, amount, player))
       return [0, 0, 0];
@@ -944,18 +1163,16 @@ export class Planet {
       player.credit(price);
 
       if (hasShortage && !resources[item].contraband) {
-        // Player ended a shortage. Increase their standing with our faction.
         if (!this.hasShortage(item)) {
+          // Selling resolved the shortage entirely.
           standing += util.getRandomNum(3, 8);
         }
-        // Player contributed toward ending a shortage. Increase their
-        // standing with our faction slightly.
         else {
+          // Selling contributed toward resolving the shortage.
           standing += util.getRandomNum(1, 3);
         }
       }
 
-      // Player sold items needed as a result of a condition
       for (const c of this.conditions) {
         if (c.consumes[item] != undefined) {
           standing += util.getRandomNum(2, 5);
@@ -965,7 +1182,6 @@ export class Planet {
       if (standing > 0)
         player.incStanding(this.faction.abbrev, standing);
 
-      // only trigger for the player, not for agents
       if (player === window.game.player) {
         trigger(new ItemsSold({
           count:    amount,
@@ -980,17 +1196,22 @@ export class Planet {
     return [amount, price, standing];
   }
 
-  /*
-   * Task processing
-   */
+  // ---------------------------------------------------------------------------
+  // Import and manufacture queue
+  // ---------------------------------------------------------------------------
+
+  /** Adds a task to the economy queue and reserves the item count in pending. */
   schedule(task: EconTask) {
     this.pending.inc(task.item, task.count);
     this.queue.push(task);
   }
 
+  /**
+   * Decrements each queued task's remaining turns. Tasks that expire call sell()
+   * to add the goods to stock and release from pending. Rebuilds the queue array
+   * in-place (faster than Array.filter for large queues).
+   */
   processQueue() {
-    // NOTE: this method of regenerating the queue is *much* faster than
-    // Array.prototype.filter().
     const queue = this.queue;
     this.queue = [];
 
@@ -1005,20 +1226,23 @@ export class Planet {
     }
   }
 
+  /** Target stock level for an item: at least min_stock, scaled by consumption rate. */
   avgStockWanted(item: t.resource) {
     const amount = FastMath.ceil(this.avg_stock * this.consumption(item));
     return Math.max(this.min_stock, amount);
   }
 
   neededResourceAmount(item: Resource) {
-    //const amount = this.getDemand(item.name) - this.getSupply(item.name) - this.pending.get(item.name);
-    //return Math.max(FastMath.ceil(amount), this.avgStockWanted(item.name));
     return FastMath.ceil(this.getNeed(item.name) * 1.5);
   }
 
+  /**
+   * Returns all resources with positive need, sorted by urgency.
+   * Urgency = log(price) * need, so high-value scarce goods are prioritized.
+   */
   neededResources(): NeededResources {
-    const amounts: { [key: string]: number } = {}; // Calculate how many of each item we want
-    const need:    { [key: string]: number } = {}; // Pre-calculate each item's need
+    const amounts: { [key: string]: number } = {};
+    const need:    { [key: string]: number } = {};
 
     for (const item of t.resources) {
       const amount = this.neededResourceAmount(resources[item]);
@@ -1029,7 +1253,6 @@ export class Planet {
       }
     }
 
-    // Sort the greatest needs to the front of the list
     const prioritized = (Object.keys(amounts) as t.resource[]).sort((a, b) => {
       const diff = need[a] - need[b];
       return diff > 0 ? -1
@@ -1043,6 +1266,11 @@ export class Planet {
     };
   }
 
+  /**
+   * Returns all planets that are willing exporters of `item` to this market.
+   * A planet qualifies if it has stock, is not in shortage, and is either in
+   * surplus or a net exporter. Excludes this planet itself.
+   */
   exporters(item: t.resource): t.body[] {
     return t.bodies.filter(name => {
       const p = window.game.planets[name];
@@ -1053,13 +1281,19 @@ export class Planet {
     });
   }
 
+  /**
+   * Selects the best exporter for `amount` units of `item`, balancing distance,
+   * price, and available stock. Scores each candidate on all three axes relative
+   * to the average across candidates; returns the highest composite score.
+   *
+   * Skips cross-faction sources when this planet has a trade ban.
+   */
   selectExporter(item: t.resource, amount: number): t.body | void {
     const exporters = this.exporters(item);
 
     if (exporters.length === 0)
       return;
 
-    // Calculate a rating based on difference from average distance, price, stock
     const dist:  t.Counter = {};
     const price: t.Counter = {};
     const stock: t.Counter = {};
@@ -1072,36 +1306,25 @@ export class Planet {
       stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
     }
 
-    const avgDist
-      = Object.values(dist).reduce((a, b) => {return a + b}, 0)
-      / Object.values(dist).length;
-
-    const avgPrice
-      = Object.values(price).reduce((a, b) => {return a + b}, 0)
-      / Object.values(price).length;
-
-    const avgStock
-      = Object.values(stock).reduce((a, b) => {return a + b}, 0)
-      / Object.values(stock).length;
+    const avgDist  = Object.values(dist).reduce((a, b)  => {return a + b}, 0) / Object.values(dist).length;
+    const avgPrice = Object.values(price).reduce((a, b) => {return a + b}, 0) / Object.values(price).length;
+    const avgStock = Object.values(stock).reduce((a, b) => {return a + b}, 0) / Object.values(stock).length;
 
     const distRating:  t.Counter = {};
     const priceRating: t.Counter = {};
     const stockRating: t.Counter = {};
     for (const body of exporters) {
-      distRating[body]  = avgDist / dist[body];
+      distRating[body]  = avgDist  / dist[body];
       priceRating[body] = avgPrice / price[body];
       stockRating[body] = stock[body] / avgStock;
     }
 
-    // Calculate a rating by comparing distance, price, and number of
-    // available units
     let bestPlanet: t.body | void;
     let bestRating = 0;
 
     const hasTradeBan = this.hasTradeBan;
 
     for (const body of exporters) {
-      // no blockade violations from unaligned markets
       if (hasTradeBan && data.bodies[body].faction != this.faction.abbrev)
         continue;
 
@@ -1117,8 +1340,9 @@ export class Planet {
   }
 
   /**
-   * Returns the number of an item which can be crafted given the resources
-   * available in this market.
+   * Returns how many units of a crafted item the planet can manufacture from
+   * current stock, given that ingredient need must be lower than finished good need.
+   * Returns 0 if any ingredient is in shortage or unavailable.
    */
   canManufacture(item: t.resource): number {
     const res = resources[item];
@@ -1150,10 +1374,16 @@ export class Planet {
     }
   }
 
+  /** Available background manufacturing slots (max_crafts - currently queued crafts). */
   manufactureSlots() {
     return data.max_crafts - this.queue.filter(t => isCraftTask(t)).length;
   }
 
+  /**
+   * Schedules background craft tasks for the most needed crafted resources.
+   * Buys required materials from local stock, then queues a CraftTask.
+   * When materials are insufficient, propagates demand for missing ingredients.
+   */
   manufacture() {
     let slots = this.manufactureSlots();
 
@@ -1196,10 +1426,17 @@ export class Planet {
     }
   }
 
+  /** Available import slots (max_imports - currently queued imports). */
   importSlots(): number {
     return data.max_imports - this.queue.filter(t => isImportTask(t)).length;
   }
 
+  /**
+   * Schedules import tasks for needed resources that this planet doesn't produce.
+   * Items are ordered by urgency. Each import buys from the best exporter,
+   * clamped to hauler cargo bay size (with a minimum of 2).
+   * Transit time is approximated from distance using a log scale.
+   */
   imports() {
     let slots = this.importSlots();
 
@@ -1211,7 +1448,6 @@ export class Planet {
 
     const list = need.prioritized.filter(i => {
       if (this.isNetExporter(i) && !this.hasShortage(i)) {
-        // Remove items that we ourselves export or that we aren't short of
         delete want[i];
         return false;
       }
@@ -1220,8 +1456,6 @@ export class Planet {
     });
 
     ITEM: for (const item of list) {
-      // clamp max amount to the size of a hauler's cargo bay, with a minimum
-      // of 2 units for deliveries
       const amount = util.clamp(want[item], 2, data.shipclass.hauler.cargo);
       const planet = this.selectExporter(item, amount);
 
@@ -1251,13 +1485,18 @@ export class Planet {
     }
   }
 
+  /** Planet buys a small amount of luxuries each turn as a consumption/economic sink. */
   luxuriate() {
     this.buy('luxuries', this.scale(3));
   }
 
+  /**
+   * Adds production output to stock each turn.
+   * Production is suppressed when stock is above min_stock AND in super-surplus,
+   * preventing infinite accumulation of goods nobody needs.
+   */
   produce() {
     for (const item of t.resources) {
-      // allow some surplus to build
       if (this.getStock(item) < this.min_stock || !this.hasSuperSurplus(item)) {
         const amount = this.production(item);
         if (amount > 0) {
@@ -1267,6 +1506,7 @@ export class Planet {
     }
   }
 
+  /** Deducts consumption from stock each turn. */
   consume() {
     for (const item of t.resources) {
       const amt = this.consumption(item);
@@ -1276,10 +1516,16 @@ export class Planet {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Conditions
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Advances all active conditions by one turn; removes those that have expired.
+   * Clears the net exporter cache for resources affected by expired conditions.
+   * Then tests all known conditions for a chance to newly activate.
+   */
   apply_conditions() {
-    // Increment turns on each condition and filter out those which are no
-    // longer active. Where condition triggers no longer exist, conditions'
-    // duration is reduced.
     this.conditions = this.conditions.filter(c => {
       c.turn(this);
 
@@ -1290,7 +1536,6 @@ export class Planet {
       return !c.isOver;
     });
 
-    // Test for chance of new conditions
     for (const cond of Object.keys(data.conditions)) {
       const c = new Condition(cond);
 
@@ -1301,17 +1546,23 @@ export class Planet {
     }
   }
 
-  /*
-   * Contracts
-   */
+  // ---------------------------------------------------------------------------
+  // Contracts
+  // ---------------------------------------------------------------------------
+
   get availableContracts() {
     return this.contracts.filter(c => !c.mission.is_accepted);
   }
 
+  /** Contracts that can be accepted without docking (Smuggler missions only). */
   get availableOffPlanetContracts() {
     return this.availableContracts.filter(c => c.mission instanceof Smuggler);
   }
 
+  /**
+   * Removes expired contracts and refreshes passenger and smuggler offerings.
+   * Called on arrival and (when not in transit) at turn 2 of each day.
+   */
   refreshContracts() {
     if (this.contracts.length > 0 && window.game) {
       this.contracts = this.contracts.filter(c => c.valid_until >= window.game.turns);
@@ -1321,10 +1572,14 @@ export class Planet {
     this.refreshSmugglerContracts();
   }
 
+  /**
+   * Rebuilds the smuggler contract list. Removes contracts for items that are
+   * no longer contraband or under blockade. Generates new contracts for the
+   * most-needed contraband or blockaded items, up to the scaled maximum count.
+   */
   refreshSmugglerContracts() {
     const hasTradeBan = this.hasTradeBan;
 
-    // If the blockade is over, remove smuggling contracts
     if (this.contracts.length > 0 && window.game) {
       this.contracts = this.contracts.filter(c => {
         if (c instanceof Smuggler) {
@@ -1340,7 +1595,7 @@ export class Planet {
     }
 
     const max_count = FastMath.ceil(this.scale(data.smuggler_mission_count));
-    const missions = this.contracts.filter(c => c instanceof Smuggler).slice(0, max_count);
+    const missions  = this.contracts.filter(c => c instanceof Smuggler).slice(0, max_count);
 
     this.contracts = this.contracts.filter(c => !(c instanceof Smuggler));
 
@@ -1358,13 +1613,13 @@ export class Planet {
 
         if (hasTradeBan || data.resources[item].contraband) {
           const batch  = util.clamp(needed.amounts[item], 1, window.game.player.ship.cargoSpace);
-          const amount = util.clamp(util.fuzz(batch, 1.00), 1); // between 1 and 2 * cargo space
+          const amount = util.clamp(util.fuzz(batch, 1.00), 1);
 
           const mission = new Smuggler({
             issuer: this.body,
             item:   item,
             amt:    util.R(amount),
-          })
+          });
 
           missions.push({
             valid_until: util.getRandomInt(30, 60) * data.turns_per_day,
@@ -1377,6 +1632,11 @@ export class Planet {
     this.contracts = this.contracts.concat(missions);
   }
 
+  /**
+   * Fills passenger contract slots up to the scaled maximum.
+   * Destinations are weighted toward same-faction planets and faction capitals.
+   * Each destination is only offered once per refresh.
+   */
   refreshPassengerContracts() {
     const have = this.contracts.filter(c => !(c instanceof Passengers)).length;
     const max  = Math.max(1, util.getRandomInt(0, this.scale(data.passenger_mission_count)));
@@ -1400,12 +1660,11 @@ export class Planet {
 
       dests.push(body);
 
-      // add weight to destinations from our own faction
+      // Weight same-faction and capital destinations more heavily.
       if (data.bodies[body].faction == this.faction.abbrev) {
         dests.push(body);
       }
 
-      // add weight to capitals
       if (data.factions[data.bodies[body].faction].capital == body) {
         dests.push(body);
       }
@@ -1429,6 +1688,7 @@ export class Planet {
     }
   }
 
+  /** Removes an accepted mission from the offered contract list. */
   acceptMission(mission: Mission) {
     this.contracts = this.contracts.filter(c => c.mission.title != mission.title);
   }
@@ -1437,9 +1697,11 @@ export class Planet {
     return this.faction.hasTradeBan;
   }
 
-  /*
-   * Misc
-   */
+  // ---------------------------------------------------------------------------
+  // Misc - repair and addon pricing
+  // ---------------------------------------------------------------------------
+
+  /** Price for an addon at this market: base + tax - standing discount, then trait adjustment. */
   addonPrice(addon: t.addon, player: Person) {
     const base     = data.addons[addon].price;
     const standing = base * player.getStandingPriceAdjustment(this.faction.abbrev);
@@ -1456,10 +1718,11 @@ export class Planet {
     return price;
   }
 
-  /*
-   * Returns the number of turns until the next expected import or fabrication
-   * of the desired resource will arrive. Returns undefined if none are
-   * scheduled in the queue. Does not account for agents.
+  /**
+   * Estimates turns until `item` becomes available (stock > 0).
+   * Returns 0 if in stock, 3 if a raw producer (will produce within a few turns),
+   * or the minimum turns_left of any queued import or craft task for this item.
+   * Returns undefined if nothing is scheduled.
    */
   estimateAvailability(item: t.resource): number|undefined {
     let turns = undefined;
@@ -1490,6 +1753,10 @@ export class Planet {
     return turns;
   }
 
+  /**
+   * Price adjustment factor based on how scarce or surplus a resource dependency is.
+   * Used by repair pricing to reflect current metal market conditions.
+   */
   resourceDependencyPriceAdjustment(resource: t.resource) {
     if (this.hasShortage(resource)) {
       return this.getNeed(resource);
@@ -1500,11 +1767,12 @@ export class Planet {
     }
   }
 
+  /** True if metal is in stock (repairs are possible). */
   hasRepairs() {
-    //return this.resourceDependencyPriceAdjustment('metal') < 10;
     return this.getStock('metal');
   }
 
+  /** Hull repair price: base rate adjusted for tax, standing, and metal scarcity. */
   hullRepairPrice(player: Person) {
     const base     = data.ship.hull.repair;
     const tax      = this.faction.sales_tax;
@@ -1513,6 +1781,7 @@ export class Planet {
     return FastMath.ceil((base + (base * tax) - (base * standing)) * scarcity);
   }
 
+  /** Armor repair price: base rate adjusted for tax, standing, and metal scarcity. */
   armorRepairPrice(player: Person) {
     const base     = data.ship.armor.repair;
     const tax      = this.faction.sales_tax;
