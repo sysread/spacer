@@ -10,12 +10,10 @@
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
-    "lib": ["DOM", "ES2020"]
+    "lib": ["DOM", "ES2020"],
+    "types": ["jquery", "vite/client"]
   },
   "include": [
     "src"
-  ],
-  "types": [
-    "jquery"
   ]
 }
