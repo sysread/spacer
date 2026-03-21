@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build-wasm": "cd src; for file in $(ls *.zig); do zig build-lib $file -target wasm32-freestanding --output-dir ../www/wasm --single-threaded; done; cd ..; rm www/wasm/*.h && rm www/wasm/*.o",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
