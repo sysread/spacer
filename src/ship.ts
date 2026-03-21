@@ -43,9 +43,6 @@ import * as t from './common';
 import * as FastMath from './fastmath';
 
 
-const TonnesInKg = 1000;
-
-
 declare var window: {
   game: any;
 }
@@ -89,7 +86,7 @@ class Ship {
 
     // On arrival, signal demand for repair materials and fuel so the local
     // market has a chance to stock up before the player tries to buy.
-    watch("arrived", (event: Arrived) => {
+    watch("arrived", (_event: Arrived) => {
       if (window && this === window.game.player.ship) {
         if (this.hasDamage()) {
           const want = this.damage.armor + this.damage.hull;

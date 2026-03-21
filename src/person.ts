@@ -35,13 +35,11 @@ import * as t from './common';
 import * as util from './util';
 import * as FastMath from './fastmath';
 import { factions, Faction } from './faction';
-import { resources, isCraft, isRaw } from './resource';
-import { SavedMission, Mission, Status, restoreMission } from './mission';
+import { resources, isCraft } from './resource';
+import { SavedMission, Mission, restoreMission } from './mission';
 import { watch, GameLoaded } from "./events";
 
 
-// Shims for global browser objects
-declare var console: any;
 declare var window: {
   game: any;
 }
@@ -99,7 +97,7 @@ export class Person {
       // and game objects are available when accept() reinstalls its watchers.
       if (init.contracts) {
         for (const c of init.contracts) {
-          watch("gameLoaded", (ev: GameLoaded) => {
+          watch("gameLoaded", (_ev: GameLoaded) => {
             const contract = restoreMission(c, window.game.locus);
             contract.accept();
             return {complete: true};
@@ -201,12 +199,12 @@ export class Person {
   }
 
   hasStanding(faction: factionesque, label: t.standing) {
-    const [min, max] = this.standingRange(label);
+    const [min] = this.standingRange(label);
     return this.getStanding(faction) >= min;
   }
 
   hasStandingOrLower(faction: factionesque, label: t.standing) {
-    const [min, max] = this.standingRange(label);
+    const [, max] = this.standingRange(label);
     return this.getStanding(faction) <= max;
   }
 

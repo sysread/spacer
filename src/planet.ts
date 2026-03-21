@@ -111,8 +111,6 @@ import * as util from './util';
 import * as FastMath from './fastmath';
 
 
-// Shims for global browser objects
-declare var console: any;
 declare var window: {
   game: any;
 }
@@ -261,7 +259,7 @@ export class Planet {
     // Deferred to the first Arrived event as a workaround. This is acknowledged
     // technical debt - it should be a proper deferred initialization pattern.
     if (init.contracts) {
-      watch("arrived", (ev: Arrived) => {
+      watch("arrived", (_ev: Arrived) => {
         if (init && init.contracts) {
           for (const info of init.contracts) {
             this.contracts.push({
@@ -310,13 +308,13 @@ export class Planet {
     this._exporter = {};
 
     watch("turn", (ev: GameTurn) => {
-      this.turn(ev.detail.turn);
+      this.turn(ev.detail.turn);  // ev used for turn number
       return {complete: false};
     });
 
     // Refresh contracts on arrival rather than every turn (expensive, and
     // not needed while the player is in transit).
-    watch("arrived", (ev: Arrived) => {
+    watch("arrived", (_ev: Arrived) => {
       this.refreshContracts();
       return {complete: false};
     });
@@ -611,7 +609,6 @@ export class Planet {
     }
 
     const price    = this.sellPrice(item);
-    const turns    = resource.craftTurns * count;
     const discount = 1.0 - player.getStandingPriceAdjustment(this.faction);
 
     let fee = 0;
@@ -639,7 +636,6 @@ export class Planet {
     }
 
     const reduction = this.fabricationReductionRate() * resource.craftTurns;
-    let health = this.fab_health;
     let turns  = 0;
 
     if (this.fab_health > 0) {
@@ -661,7 +657,7 @@ export class Planet {
   replenishFabricators() {
     if (this.fab_health < this.max_fab_health / 2) {
       const want = FastMath.ceil((this.max_fab_health - this.fab_health) / data.fab_health);
-      const [bought, price] = this.buy('cybernetics', want);
+      const [bought] = this.buy('cybernetics', want);
       this.fab_health += bought * data.fab_health;
     }
 
@@ -1455,7 +1451,7 @@ export class Planet {
       return true;
     });
 
-    ITEM: for (const item of list) {
+    for (const item of list) {
       const amount = util.clamp(want[item], 2, data.shipclass.hauler.cargo);
       const planet = this.selectExporter(item, amount);
 
@@ -1463,7 +1459,7 @@ export class Planet {
         continue;
       }
 
-      const [bought, price] = window.game.planets[planet].buy(item, amount);
+      const [bought] = window.game.planets[planet].buy(item, amount);
 
       if (bought > 0) {
         const distance = this.distance(planet) / Physics.AU;

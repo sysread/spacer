@@ -28,8 +28,8 @@
 
 import data from './data';
 import Physics from './physics';
-import { NavComp, Trajectory, Acceleration, Body, calculate_trajectory } from './navcomp';
-import { Point, length } from './vector';
+import { Trajectory, Acceleration, Body, calculate_trajectory } from './navcomp';
+import { Point } from './vector';
 import * as util from './util';
 import * as t from './common';
 import * as FastMath from './fastmath';
@@ -60,10 +60,6 @@ export interface SavedTransitPlan extends NewTransitPlanArgs {
 }
 
 type TransitPlanArgs = SavedTransitPlan | NewTransitPlanArgs;
-
-function isNewTransitPlan(opt: TransitPlanArgs): opt is NewTransitPlanArgs {
-  return (<SavedTransitPlan>opt).current_turn == undefined;
-}
 
 function isSavedTransitPlan(opt: TransitPlanArgs): opt is SavedTransitPlan {
   return (<SavedTransitPlan>opt).current_turn != undefined;

@@ -32,9 +32,8 @@
  */
 
 import data from './data';
-import Ship from './ship';
 import { NavComp } from './navcomp';
-import { TransitPlan, SavedTransitPlan } from './transitplan';
+import { TransitPlan } from './transitplan';
 import { Person, SavedPerson } from './person';
 import { watch, GameTurn } from "./events";
 import * as t from './common';
@@ -43,7 +42,6 @@ import * as FastMath from './fastmath';
 
 
 // Shims for global browser objects
-declare var console: any;
 declare var window: {
   game: any;
 };
@@ -149,7 +147,7 @@ export class Agent extends Person {
 
           if (routes.length > 0) {
             const { item, count } = routes[0];
-            const [bought, price] = this.here.buy(item, count, this);
+            const [bought] = this.here.buy(item, count, this);
 
             if (bought != routes[0].count) {
               throw new Error(`${bought} != ${count}`);
@@ -237,7 +235,7 @@ export class Agent extends Person {
     if (isDocked(this.action)) {
       const here = window.game.planets[this.action.location];
       const want = FastMath.ceil((this.money - 1000) / here.buyPrice('luxuries', this));
-      const [bought, price] = here.buy('luxuries', want);
+      const [, price] = here.buy('luxuries', want);
       this.debit(price);
     }
   }
@@ -251,7 +249,7 @@ export class Agent extends Person {
         this.credit(result.pay);
 
         for (const item of result.items.keys()) {
-          const [amount, price, standing] = this.here.sell(item, result.items.count(item));
+          const [, price, standing] = this.here.sell(item, result.items.count(item));
           this.incStanding(this.here.faction.abbrev, standing);
           this.credit(price);
         }
@@ -277,7 +275,7 @@ export class Agent extends Person {
         this.action = this.dock(action.dest);
 
         if (action.count > 0) {
-          const [amt, price, standing] = this.here.sell(action.item, action.count, this);
+          this.here.sell(action.item, action.count, this);
         }
       }
 

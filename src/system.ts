@@ -79,7 +79,7 @@ class System {
   constructor() {
     // Clear the position and orbit caches on every turn so stale positions
     // are never used. orbit_by_turns is rolled forward (not cleared).
-    watch("turn", (ev: GameTurn) => {
+    watch("turn", (_ev: GameTurn) => {
       this.reset_orbit_cache();
       return {complete: false};
     });

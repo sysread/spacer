@@ -46,9 +46,8 @@
  * a type field). Use isLaGrangePoint for exclusive discrimination.
  */
 
-import { Body, Elements, ElementsBase, Satellites, LaGrange, LaGranges, Rings, body_type, position } from './data/body';
+import { Body, Elements, ElementsBase, LaGrange, Rings, body_type, position } from './data/body';
 import { Orbit, Frame } from "./orbit";
-import Physics from '../physics';
 import * as Q from '../quaternion';
 import * as FastMath from '../fastmath';
 
@@ -77,9 +76,7 @@ function normalizeRadians(n: number): number {
 }
 
 function kmToMeters(v: number): number  { return v * 1000 }
-function metersToKM(v: number): number  { return v / 1000 }
 function AUToMeters(v: number): number  { return v * 149597870700 }
-function metersToAU(v: number): number  { return v / 149597870700 }
 
 
 interface ElementsAtTime {
@@ -289,7 +286,7 @@ export class CelestialBody extends SpaceThing {
       return new Frame([0, 0, 0], undefined, t);
     }
 
-    let {a, e, i, L, lp, node, w, M, E} = this.getElementsAtTime(t);
+    let {a, e, i, node, w, M, E} = this.getElementsAtTime(t);
 
     i    = normalizeRadians(i);
     node = normalizeRadians(node);
@@ -332,10 +329,8 @@ export class LaGrangePoint extends SpaceThing {
   /**
    * Returns the LaGrange point's position by rotating the parent's position
    * by the offset angle around the Z axis (2D rotation in the orbital plane).
-   * NOTE: the variable `r` is assigned but unused - pre-existing issue.
    */
   getPositionAtTime(t: number): Frame {
-    const r = this.offset;
     let [x, y, z] = this.parent.getPositionAtTime(t).position;
     const x1 = (x * Math.cos(this.offset)) - (y * Math.sin(this.offset));
     const y1 = (x * Math.sin(this.offset)) + (y * Math.cos(this.offset));

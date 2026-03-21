@@ -39,7 +39,7 @@ import Physics from './physics';
 import { resources } from './resource';
 import { Conflict } from './conflict';
 import { NavComp, travel_time } from './navcomp';
-import { trigger, watch, Arrived, CaughtSmuggling } from "./events";
+import { watch, Arrived, CaughtSmuggling } from "./events";
 
 import * as t from './common';
 import * as util from './util';
@@ -471,7 +471,7 @@ export class Smuggler extends Mission {
     // Check immediately in case the player already has the goods.
     this.checkMissionStatus();
 
-    watch('arrived', (event: Arrived) => {
+    watch('arrived', (_event: Arrived) => {
       if (this.checkMissionStatus()) {
         return {complete: true};
       }
@@ -480,7 +480,7 @@ export class Smuggler extends Mission {
     });
 
     // Being caught smuggling automatically cancels the contract.
-    watch('caughtSmuggling', (event: CaughtSmuggling) => {
+    watch('caughtSmuggling', (_event: CaughtSmuggling) => {
       if (!this.is_expired && !this.is_complete) {
         this.cancel();
         return {complete: true};

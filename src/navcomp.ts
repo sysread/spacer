@@ -51,7 +51,6 @@ import { TransitPlan } from './transitplan';
 import { Person } from './person';
 import { Point } from './vector';
 import * as Vec from './vector';
-import * as util from './util';
 import * as t from './common';
 
 const SPT = data.hours_per_turn * 3600; // seconds per turn
@@ -316,7 +315,6 @@ export class NavComp {
           continue;
 
         const fuelUsed = a.length / availAcc * fuelPerTurn * tturns * 0.99; // 0.99 corrects rounding error
-        const fuelUsedPerTurn = fuelUsed / tturns;
 
         if (fuelUsed > that.fuelTarget)
           continue;

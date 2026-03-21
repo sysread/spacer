@@ -66,8 +66,6 @@ import * as t from './common';
 import * as util from './util';
 import * as FastMath from './fastmath';
 
-const HourInMs = 1000 * 60 * 60;
-const TurnInMs = HourInMs * data.hours_per_turn;
 
 // Shims for global browser objects
 interface localStorage {

@@ -39,10 +39,8 @@
 
 import Physics from './physics';
 import system from 'system';
-import game from './game';
 import { Point } from './vector';
 import * as util from './util';
-import * as t from './common';
 
 
 export class Layout {

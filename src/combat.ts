@@ -39,7 +39,6 @@ import * as FastMath from './fastmath';
 
 // Shims for global browser objects
 declare var window: { game: any; }
-declare var console: any;
 
 
 /** All possible outcomes of a single combat action. */
@@ -176,8 +175,8 @@ export class Flight extends Action {
     this.name = 'Flee';
   }
 
-  use(from: Combatant, to: Combatant): ActionResult {
-    const effect = from.tryFlight(to);
+  use(from: Combatant, _to: Combatant): ActionResult {
+    const effect = from.tryFlight(_to);
 
     return {
       type:   this.name,
@@ -196,7 +195,7 @@ export class Surrender extends Action {
     this.name = 'Surrender';
   }
 
-  use(from: Combatant, to: Combatant): ActionResult {
+  use(from: Combatant, _to: Combatant): ActionResult {
     return {
       type:   this.name,
       source: from.name,
@@ -214,7 +213,7 @@ export class Pass extends Action {
     this.name = 'Pass';
   }
 
-  use(from: Combatant, to: Combatant): ActionResult {
+  use(from: Combatant, _to: Combatant): ActionResult {
     return {
       type:   this.name,
       source: from.name,

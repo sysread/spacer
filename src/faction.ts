@@ -97,7 +97,7 @@ export class Faction implements t.Faction {
 
   /** Returns true if this faction's standing with `faction` meets or exceeds `label`. */
   hasStanding(faction: Faction, label: t.standing) {
-    const [min, max] = t.Standing[label];
+    const [min] = t.Standing[label];
     const standing = this.standing[faction.abbrev] || 0;
     return standing >= min;
   }

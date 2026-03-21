@@ -11,9 +11,6 @@
  *     Conflict (abstract) - adds proponent/target faction pair and a unique key
  *       Blockade (concrete) - the only conflict type currently implemented
  *
- * The Effect and Trigger type systems describe what a conflict does and what
- * causes it to fire, though the current implementation only uses them for
- * Blockade. They are forward-looking stubs for future conflict variety.
  *
  * Blockade lifecycle:
  *   1. game.start_conflicts() rolls Blockade.chance() every 3 days per pair
@@ -46,47 +43,6 @@ declare var window: {
   game: any;
 }
 
-
-// Effects describe what an active conflict does to the game world.
-interface Production  { production: t.ResourceCounter }
-interface Consumption { consumption: t.ResourceCounter }
-interface Patrol      { patrol_rate: number, against?: t.faction }
-interface Piracy      { piracy_rate: number, against?: t.faction }
-interface Tariff      { tariff: true, item: t.resource, rate: number }
-interface TradeBan    { trade_ban: true }
-
-type Effect =
-  | Production
-  | Consumption
-  | Patrol
-  | Piracy
-  | Tariff
-  | TradeBan
-;
-
-const isProductionEffect  = (e: Effect): e is Production  => (<Production>e).production   != undefined;
-const isConsumptionEffect = (e: Effect): e is Consumption => (<Consumption>e).consumption != undefined;
-const isPatrolEffect      = (e: Effect): e is Patrol      => (<Patrol>e).patrol_rate      != undefined;
-const isPiracyEffect      = (e: Effect): e is Piracy      => (<Piracy>e).piracy_rate      != undefined;
-const isTradeBan          = (e: Effect): e is TradeBan    => (<TradeBan>e).trade_ban      != undefined;
-const isTariff            = (e: Effect): e is Tariff      => (<Tariff>e).tariff           != undefined;
-
-
-// Triggers describe what causes a conflict to start.
-interface ItemTrigger { item: t.resource; chance: number }
-interface Shortage extends ItemTrigger { shortage: true }
-interface Surplus  extends ItemTrigger { surplus: true }
-interface Random   { random: true, chance: number }
-
-type Trigger =
-  | Shortage
-  | Surplus
-  | Random
-;
-
-const isShortageTrigger = (tr: Trigger): tr is Shortage => (<Shortage>tr).shortage;
-const isSurplusTrigger  = (tr: Trigger): tr is Surplus  => (<Surplus>tr).surplus;
-const isRandomTrigger   = (tr: Trigger): tr is Random   => (<Random>tr).random;
 
 
 interface Duration {
