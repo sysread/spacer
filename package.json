@@ -5,6 +5,7 @@
   "description": "A thing named Spacer",
   "main": "index.js",
   "scripts": {
+    "dev": "vite",
     "build-wasm": "cd src; for file in $(ls *.zig); do zig build-lib $file -target wasm32-freestanding --output-dir ../www/wasm --single-threaded; done; cd ..; rm www/wasm/*.h && rm www/wasm/*.o",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -34,6 +35,7 @@
     "@types/jquery": "^3.3.32",
     "cordova": "^9.0.0",
     "typescript": "^3.7.5",
+    "vite": "^8.0.1",
     "vitest": "^4.1.0"
   }
 }
