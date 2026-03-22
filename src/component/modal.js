@@ -8,10 +8,23 @@ Vue.component('modal', {
   directives: {
     'modal': {
       inserted: function(el, binding, vnode) {
-        new Modal(el).show();
+        const modal = new Modal(el);
+        modal.show();
         el.addEventListener('hidden.bs.modal', () => {
           vnode.context.$emit('close');
         });
+      },
+      unbind: function(el) {
+        // When Vue removes the modal from the DOM, dispose the BS instance
+        // so the backdrop is cleaned up. Without this, the backdrop persists
+        // if the modal is removed by Vue reactivity instead of BS dismiss.
+        const modal = Modal.getInstance(el);
+        if (modal) {
+          modal.hide();
+          modal.dispose();
+        }
+        // Clean up any orphaned backdrops
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
       }
     }
   },
