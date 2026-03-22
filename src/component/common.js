@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import * as bootstrap from 'bootstrap';
 import * as util from '../util';
 import Physics from '../physics';
 import { sprintf } from 'sprintf-js';
@@ -60,8 +61,19 @@ Vue.component('btn', {
 
   methods: {
     activate: function() {
-      if (!this.disabled) {
-        this.$emit('click');
+      if (this.disabled) return;
+
+      this.$emit('click');
+
+      // Dismiss the parent modal programmatically instead of using
+      // data-bs-dismiss. BS5's native dismiss races with Vue's click
+      // handler, causing events to be lost.
+      if (this.close) {
+        const modalEl = this.$el.closest('.modal');
+        if (modalEl) {
+          const modal = bootstrap.Modal.getInstance(modalEl);
+          if (modal) modal.hide();
+        }
       }
     }
   },
@@ -81,7 +93,7 @@ Vue.component('btn', {
   },
 
   template: `
-    <button type="button" :class="classes" :data-bs-dismiss="close ? 'modal' : ''" :disabled="disabled" @click="activate()" >
+    <button type="button" :class="classes" :disabled="disabled" @click="activate()" >
       <slot />
     </button>
   `,

@@ -207,7 +207,7 @@ Vue.component('ship', {
   <p v-if="tradeIn < 0">You will make {{-tradeIn|csn}} profit with this deal. </p>
   <p v-else>You will pay {{tradeIn|csn}} with this deal. </p>
   <p>Do you wish to complete this exchange?</p>
-  <button @click="completeTradeIn" slot="footer" type="button" class="btn btn-dark" data-bs-dismiss="modal">Trade in</button>
+  <btn @click="completeTradeIn" slot="footer" close=1>Trade in</btn>
 </modal>
 </div>
   `,

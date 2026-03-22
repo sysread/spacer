@@ -20,6 +20,13 @@ Vue.component('modal', {
     }
   },
 
+  methods: {
+    dismiss() {
+      const modal = this.$el._bsModal || Modal.getInstance(this.$el);
+      if (modal) modal.hide();
+    },
+  },
+
   beforeDestroy() {
     // Properly dispose the BS Modal when Vue removes the component.
     // Without this, the backdrop persists if the modal is removed by
@@ -43,7 +50,7 @@ Vue.component('modal', {
       <div v-if="title || xclose" class="modal-header">
         <h5 v-if="title" class="modal-title">{{title}}</h5>
         <slot name="header" />
-        <button v-if="xclose" type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <button v-if="xclose" type="button" class="btn-close btn-close-white" @click="dismiss()"></button>
       </div>
       <div class="modal-body" :class="{'p-0':nopad}">
         <slot />
