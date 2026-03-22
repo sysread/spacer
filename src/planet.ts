@@ -479,7 +479,7 @@ export class Planet {
         continue;
       }
 
-      if (!window.game.planets[body].isNetExporter(item)) {
+      if (!window.game.planets[body].economy.isNetExporter(item)) {
         continue;
       }
 
@@ -852,7 +852,7 @@ export class Planet {
 
       dist[body]  = this.distance(body) / Physics.AU * window.game.planets[body].fuelPricePerTonne();
       price[body] = window.game.planets[body].buyPrice(item);
-      stock[body] = Math.min(amount, window.game.planets[body].getStock(item));
+      stock[body] = Math.min(amount, window.game.planets[body].economy.getStock(item));
     }
 
     const avgDist  = Object.values(dist).reduce((a, b)  => {return a + b}, 0) / Object.values(dist).length;
