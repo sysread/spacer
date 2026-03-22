@@ -200,7 +200,7 @@ Vue.component('shipyard-repair', {
     repair() {
       if (this.price_total) {
         const count = this.repair_hull + this.repair_armor;
-        this.game.here.buy('metal', count);
+        this.game.here.commerce.buy('metal', count);
         this.game.player.debit(this.price_total);
         this.game.player.ship.repairDamage(this.repair_hull, this.repair_armor);
         this.game.turn();

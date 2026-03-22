@@ -119,6 +119,7 @@ import { Encounters } from './planet/encounters';
 import { Work } from './planet/work';
 import { Economy } from './planet/economy';
 import { Pricing } from './planet/pricing';
+import { Commerce } from './planet/commerce';
 
 // Re-export for external consumers
 export type { SavedPlanet };
@@ -148,6 +149,7 @@ export class Planet {
   encounters: Encounters;
   economy:    Economy;
   pricing:    Pricing;
+  commerce:   Commerce;
   labor:      Work;
 
   constructor(body: t.body, init?: SavedPlanet) {
@@ -156,6 +158,7 @@ export class Planet {
     this.economy    = new Economy(this.state);
     this.pricing    = new Pricing(this.state, this.economy,
       (body, item) => window.game.planets[body].economy.isNetExporter(item));
+    this.commerce   = new Commerce(this.state, this.economy, this.pricing, this.encounters);
     this.labor      = new Work(this.state, (item) => this.economy.production(item));
 
     // Deferred contract restoration: restoreMission() needs window.game,
@@ -448,7 +451,7 @@ export class Planet {
   replenishFabricators() {
     if (this.fab_health < this.max_fab_health / 2) {
       const want = FastMath.ceil((this.max_fab_health - this.fab_health) / data.fab_health);
-      const [bought] = this.buy('cybernetics', want);
+      const [bought] = this.commerce.buy('cybernetics', want);
       this.fab_health += bought * data.fab_health;
     }
 
@@ -457,146 +460,6 @@ export class Planet {
 
 
   scale(n=0) { return this.state.scale(n); }
-
-  // ---------------------------------------------------------------------------
-  // Commerce - buy and sell
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Checks whether a transaction involves contraband and applies inspection logic.
-   * Returns true if the transaction may proceed. Returns false (and applies fine,
-   * standing loss, and confiscation) if the player is caught.
-   *
-   * Inspection is per-unit-of-contraband-severity: each severity point is a
-   * separate roll at inspectionRate. Amount is signed (negative = selling to market).
-   */
-  transactionInspection(item: t.resource, amount: number, player: Person) {
-    if (!player || !this.faction.isContraband(item, player))
-      return true;
-
-    const contraband = data.resources[item].contraband || 0;
-
-    // FastMath.abs() because amount is negative when selling, positive when buying.
-    const fine = FastMath.abs(contraband * amount * this.encounters.inspectionFine(player));
-    const rate = this.encounters.inspectionRate(player);
-
-    for (let i = 0; i < contraband; ++i) {
-      if (util.chance(rate)) {
-        const totalFine = Math.min(player.money, fine);
-        const csnFine = util.csn(totalFine);
-        const csnAmt = util.csn(amount);
-
-        player.debit(totalFine);
-        player.decStanding(this.faction.abbrev, contraband);
-
-        let verb;
-        if (amount < 0) {
-          player.ship.cargo.set(item, 0);
-          verb = 'selling';
-        }
-        else {
-          this.stock.dec(item, amount);
-          verb = 'buying';
-        }
-
-        const msg = `Busted! ${this.faction.abbrev} agents were tracking your movements and observed you ${verb} ${csnAmt} units of ${item}. `
-                  + `You have been fined ${csnFine} credits and your standing wtih this faction has decreased by ${contraband}.`;
-
-        window.game.notify(msg, true);
-
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Player or agent buys `amount` units of `item` from this market.
-   * Returns [units_bought, total_price]. Triggers inspection for contraband.
-   * Fires ItemsBought event for the player (not for agents).
-   * Limited by current stock; demand is still signaled for the full requested amount.
-   */
-  buy(item: t.resource, amount: number, player?: Person) {
-    if (player && player === window.game.player && !this.transactionInspection(item, amount, player))
-      return [0, 0];
-
-    const bought = Math.min(amount, this.economy.getStock(item));
-    const price  = bought * this.pricing.buyPrice(item, player);
-
-    this.economy.incDemand(item, amount);
-    this.stock.dec(item, bought);
-
-    if (player && bought) {
-      player.debit(price);
-      player.ship.loadCargo(item, bought);
-
-      if (player === window.game.player) {
-        trigger(new ItemsBought({
-          count: bought,
-          body:  this.body,
-          item:  item,
-          price: price,
-        }));
-      }
-    }
-
-    return [bought, price];
-  }
-
-  /**
-   * Player or agent sells `amount` units of `item` to this market.
-   * Returns [units_sold, total_price, standing_gained].
-   * Ending a shortage grants standing; selling during an active condition grants
-   * additional standing. Fires ItemsSold event for the player.
-   */
-  sell(item: t.resource, amount: number, player?: Person) {
-    if (player && player === window.game.player && !this.transactionInspection(item, amount, player))
-      return [0, 0, 0];
-
-    const hasShortage = this.economy.hasShortage(item);
-    const price = amount * this.pricing.sellPrice(item);
-    this.stock.inc(item, amount);
-
-    let standing = 0;
-
-    if (player) {
-      player.ship.unloadCargo(item, amount);
-      player.credit(price);
-
-      if (hasShortage && !resources[item].contraband) {
-        if (!this.economy.hasShortage(item)) {
-          // Selling resolved the shortage entirely.
-          standing += util.getRandomNum(3, 8);
-        }
-        else {
-          // Selling contributed toward resolving the shortage.
-          standing += util.getRandomNum(1, 3);
-        }
-      }
-
-      for (const c of this.conditions) {
-        if (c.consumes[item] != undefined) {
-          standing += util.getRandomNum(2, 5);
-        }
-      }
-
-      if (standing > 0)
-        player.incStanding(this.faction.abbrev, standing);
-
-      if (player === window.game.player) {
-        trigger(new ItemsSold({
-          count:    amount,
-          body:     this.body,
-          item:     item,
-          price:    price,
-          standing: standing,
-        }));
-      }
-    }
-
-    return [amount, price, standing];
-  }
 
   // ---------------------------------------------------------------------------
   // Import and manufacture queue
@@ -622,7 +485,7 @@ export class Planet {
         this.queue.push(task);
       }
       else {
-        this.sell(task.item, task.count);
+        this.commerce.sell(task.item, task.count);
         this.pending.dec(task.item, task.count);
       }
     }
@@ -804,7 +667,7 @@ export class Planet {
 
         if (gets > 0) {
           for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
-            this.buy(mat, gets * (res.recipe.materials[mat] || 0));
+            this.commerce.buy(mat, gets * (res.recipe.materials[mat] || 0));
           }
 
           this.schedule({
@@ -865,12 +728,12 @@ export class Planet {
         continue;
       }
 
-      const [bought] = window.game.planets[planet].buy(item, amount);
+      const [bought] = window.game.planets[planet].commerce.buy(item, amount);
 
       if (bought > 0) {
         const distance = this.distance(planet) / Physics.AU;
         const turns = Math.max(3, FastMath.ceil(Math.log(distance) * 2)) * data.turns_per_day;
-        window.game.planets[planet].buy('fuel', distance);
+        window.game.planets[planet].commerce.buy('fuel', distance);
 
         this.schedule({
           type:  'import',
@@ -889,7 +752,7 @@ export class Planet {
 
   /** Planet buys a small amount of luxuries each turn as a consumption/economic sink. */
   luxuriate() {
-    this.buy('luxuries', this.scale(3));
+    this.commerce.buy('luxuries', this.scale(3));
   }
 
   /**
@@ -902,7 +765,7 @@ export class Planet {
       if (this.economy.getStock(item) < this.min_stock || !this.economy.hasSuperSurplus(item)) {
         const amount = this.economy.production(item);
         if (amount > 0) {
-          this.sell(item, amount);
+          this.commerce.sell(item, amount);
         }
       }
     }
@@ -913,7 +776,7 @@ export class Planet {
     for (const item of t.resources) {
       const amt = this.economy.consumption(item);
       if (amt > 0) {
-        this.buy(item, this.economy.consumption(item));
+        this.commerce.buy(item, this.economy.consumption(item));
       }
     }
   }

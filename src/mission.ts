@@ -442,7 +442,7 @@ export class Smuggler extends Mission {
       if (amt > 0) {
         this.amt_left -= amt;
         window.game.player.ship.unloadCargo(this.item, amt);
-        window.game.planets[this.issuer].sell(this.item, amt);
+        window.game.planets[this.issuer].commerce.sell(this.item, amt);
 
         if (this.amt_left == 0) {
           window.game.notify(`All promised units of ${this.item} have been delivered.`);

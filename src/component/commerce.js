@@ -169,10 +169,10 @@ Vue.component('market-trade', {
       let bought, price, standing;
 
       if (this.count > 0) {
-        [bought, price] = this.game.here.buy(this.item, this.count, this.player);
+        [bought, price] = this.game.here.commerce.buy(this.item, this.count, this.player);
       }
       else {
-        [bought, price, standing] = this.game.here.sell(this.item, -this.count, this.player);
+        [bought, price, standing] = this.game.here.commerce.sell(this.item, -this.count, this.player);
         this.standing = standing >= 3;
       }
 

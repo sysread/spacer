@@ -147,7 +147,7 @@ export class Agent extends Person {
 
           if (routes.length > 0) {
             const { item, count } = routes[0];
-            const [bought] = this.here.buy(item, count, this);
+            const [bought] = this.here.commerce.buy(item, count, this);
 
             if (bought != routes[0].count) {
               throw new Error(`${bought} != ${count}`);
@@ -196,7 +196,7 @@ export class Agent extends Person {
       const price      = this.here.pricing.fuelPricePerTonne(this);
 
       if (fuelNeeded > 0 && this.money > (fuelNeeded * price)) {
-        const [bought, paid] = this.here.buy('fuel', fuelNeeded);
+        const [bought, paid] = this.here.commerce.buy('fuel', fuelNeeded);
         const need  = fuelNeeded - bought;
         const total = paid + (need * price);
 
@@ -235,7 +235,7 @@ export class Agent extends Person {
     if (isDocked(this.action)) {
       const here = window.game.planets[this.action.location];
       const want = FastMath.ceil((this.money - 1000) / here.pricing.buyPrice('luxuries', this));
-      const [, price] = here.buy('luxuries', want);
+      const [, price] = here.commerce.buy('luxuries', want);
       this.debit(price);
     }
   }
@@ -249,7 +249,7 @@ export class Agent extends Person {
         this.credit(result.pay);
 
         for (const item of result.items.keys()) {
-          const [, price, standing] = this.here.sell(item, result.items.count(item));
+          const [, price, standing] = this.here.commerce.sell(item, result.items.count(item));
           this.incStanding(this.here.faction.abbrev, standing);
           this.credit(price);
         }
@@ -275,7 +275,7 @@ export class Agent extends Person {
         this.action = this.dock(action.dest);
 
         if (action.count > 0) {
-          this.here.sell(action.item, action.count, this);
+          this.here.commerce.sell(action.item, action.count, this);
         }
       }
 
