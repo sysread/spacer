@@ -167,7 +167,7 @@ Vue.component('fabricators', {
   computed: {
     planet() { return this.game.here },
     player() { return this.game.player },
-    availability() { return this.planet.fabricationAvailability() },
+    availability() { return this.planet.fabrication.fabricationAvailability() },
 
     resources() {
       return Object.keys(this.data.resources)

@@ -244,7 +244,7 @@ export class Agent extends Person {
   workTurn() {
     if (isJob(this.action)) {
       if (--this.action.turns == 0) {
-        const result = this.here.work(this, this.action.task, this.action.days);
+        const result = this.here.labor.work(this, this.action.task, this.action.days);
 
         this.credit(result.pay);
 
