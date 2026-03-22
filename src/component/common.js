@@ -1,5 +1,4 @@
 import Vue from 'vue';
-import { Modal } from 'bootstrap';
 import * as util from '../util';
 import Physics from '../physics';
 import { sprintf } from 'sprintf-js';
@@ -70,9 +69,8 @@ Vue.component('btn', {
       // handler, causing events to be lost.
       if (this.close) {
         const modalEl = this.$el.closest('.modal');
-        if (modalEl) {
-          const modal = Modal.getInstance(modalEl);
-          if (modal) modal.hide();
+        if (modalEl && modalEl._bsModal) {
+          modalEl._bsModal.hide();
         }
       }
     }

@@ -103,15 +103,15 @@ Vue.component('NavBar', {
     collapse() {
       if (this.is_expanded()) {
         const el = document.getElementById('spacer-nav');
-        const instance = Collapse.getInstance(el);
-        if (instance) instance.hide();
+        if (el) new Collapse(el).hide();
       }
     },
 
     click() {
       const navbar = document.getElementById('spacer-navbar');
       if (navbar && getComputedStyle(navbar).flexFlow == 'row wrap') {
-        new Collapse(document.getElementById('spacer-nav')).toggle();
+        const el = document.getElementById('spacer-nav');
+        if (el) new Collapse(el).toggle();
       }
     },
 

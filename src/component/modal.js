@@ -22,7 +22,7 @@ Vue.component('modal', {
 
   methods: {
     dismiss() {
-      const modal = this.$el._bsModal || Modal.getInstance(this.$el);
+      const modal = this.$el._bsModal;
       if (modal) modal.hide();
     },
   },
@@ -32,7 +32,7 @@ Vue.component('modal', {
     // Without this, the backdrop persists if the modal is removed by
     // Vue reactivity instead of being dismissed via BS5's API.
     const el = this.$el;
-    const modal = el._bsModal || Modal.getInstance(el);
+    const modal = el._bsModal;
     if (modal) {
       modal.hide();
       modal.dispose();
