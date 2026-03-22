@@ -14,12 +14,12 @@ Vue.component('Notification', {
   mounted() {
     if (this.dismiss) {
       window.setTimeout(() => {
-        $(this.$el).alert('close');
+        window.jQuery(this.$el).alert('close');
       }, this.dismiss * 1000);
     }
 
-    $(this.$el).on('click', () => $(this.$el).alert('close'));
-    $(this.$el).on('closed.bs.alert', () => this.$emit('dismiss', this.msg));
+    this.$el.addEventListener('click', () => window.jQuery(this.$el).alert('close'));
+    this.$el.addEventListener('closed.bs.alert', () => this.$emit('dismiss', this.msg));
   },
 
   template: `

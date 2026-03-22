@@ -12,10 +12,10 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   });
 }
 
-/* Vendor libraries. jQuery must be on the window before Bootstrap loads,
- * since Bootstrap attaches its plugins to jQuery's prototype. */
-import $ from 'jquery';
-(window as any).$ = (window as any).jQuery = $;
+/* jQuery is required by Bootstrap 4's JS plugins (modal, collapse, alert).
+ * Once we upgrade to Bootstrap 5, jQuery can be removed entirely. */
+import jQuery from 'jquery';
+(window as any).jQuery = jQuery;
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../www/public/css/index.css';

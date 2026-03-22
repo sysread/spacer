@@ -87,7 +87,8 @@ Vue.component('NavBar', {
 
   methods: {
     is_expanded() {
-      return $('#spacer-nav').hasClass('show');
+      const nav = document.getElementById('spacer-nav');
+      return nav && nav.classList.contains('show');
     },
 
     open(page) {
@@ -100,13 +101,14 @@ Vue.component('NavBar', {
 
     collapse() {
       if (this.is_expanded()) {
-        $('#spacer-nav').collapse('hide');
+        window.jQuery('#spacer-nav').collapse('hide');
       }
     },
 
     click() {
-      if ($('#spacer-navbar').css('flex-flow') == 'row wrap') {
-        $('#spacer-nav').collapse('toggle');
+      const navbar = document.getElementById('spacer-navbar');
+      if (navbar && getComputedStyle(navbar).flexFlow == 'row wrap') {
+        window.jQuery('#spacer-nav').collapse('toggle');
       }
     },
 

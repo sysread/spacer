@@ -307,16 +307,18 @@ export class Layout {
     if (!this.elt)
       return 0;
 
+    const elHeight = (id: string) => document.getElementById(id)?.getBoundingClientRect().height || 0;
+
     const height
       = window.innerHeight
       + window.scrollY
       - this.elt.getBoundingClientRect().top
-      - ($('#spacer-status').height() || 0)
-      - ($('#spacer-navbar').height() || 0)
-      - ($('#navcomp-toolbar').height() || 0)
-      - ($('#navcomp-transit-info').outerHeight() || 0);
+      - elHeight('spacer-status')
+      - elHeight('spacer-navbar')
+      - elHeight('navcomp-toolbar')
+      - elHeight('navcomp-transit-info');
 
-    const width   = $(this.elt).parent().width() || 0;
+    const width = this.elt.parentElement?.getBoundingClientRect().width || 0;
     const changed = width != this.width_px || height != this.height_px;
 
     this.clear_zero();

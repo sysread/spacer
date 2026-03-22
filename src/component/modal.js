@@ -7,8 +7,9 @@ Vue.component('modal', {
   directives: {
     'modal': {
       inserted: function(el, binding, vnode) {
-        $(el).modal('show');
-        $(el).on('hidden.bs.modal', (e) => {
+        // Bootstrap 4 jQuery plugin; will become bootstrap.Modal(el) in BS5
+        window.jQuery(el).modal('show');
+        el.addEventListener('hidden.bs.modal', () => {
           vnode.context.$emit('close');
         });
       }

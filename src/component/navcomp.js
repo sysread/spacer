@@ -114,10 +114,11 @@ Vue.component('NavComp', {
       }
     }
 
-    if ($('#spacer-nav').hasClass('collapsing')) {
-      $('#spacer-nav').one('hidden.bs.collapse', () => {
+    const nav = document.getElementById('spacer-nav');
+    if (nav && nav.classList.contains('collapsing')) {
+      nav.addEventListener('hidden.bs.collapse', () => {
         this.is_ready = true;
-      });
+      }, { once: true });
     }
     else {
       this.is_ready = true;
