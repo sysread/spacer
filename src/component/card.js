@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import * as bootstrap from 'bootstrap';
+import { Modal } from 'bootstrap';
 
 Vue.component('deck',          { template: '<div class="row row-cols-1 row-cols-md-2 g-4"><slot /></div>'});
 Vue.component('card-text',     { template: '<p class="card-text"><slot /></p>'});
@@ -16,7 +16,7 @@ Vue.component('card-btn', {
       if (this.close) {
         const modalEl = this.$el.closest('.modal');
         if (modalEl) {
-          const modal = bootstrap.Modal.getInstance(modalEl);
+          const modal = Modal.getInstance(modalEl);
           if (modal) modal.hide();
         }
       }

@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import * as bootstrap from 'bootstrap';
+import { Modal } from 'bootstrap';
 import * as util from '../util';
 import Physics from '../physics';
 import { sprintf } from 'sprintf-js';
@@ -71,7 +71,7 @@ Vue.component('btn', {
       if (this.close) {
         const modalEl = this.$el.closest('.modal');
         if (modalEl) {
-          const modal = bootstrap.Modal.getInstance(modalEl);
+          const modal = Modal.getInstance(modalEl);
           if (modal) modal.hide();
         }
       }
