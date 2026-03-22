@@ -115,6 +115,7 @@ import {
   EconTask, ImportTask, CraftTask,
   isImportTask, isCraftTask,
 } from './planet/state';
+import { Encounters } from './planet/encounters';
 
 // Re-export for external consumers
 export { SavedPlanet, isImportTask, isCraftTask };
@@ -139,10 +140,12 @@ interface Contract {
 }
 
 export class Planet {
-  state: PlanetState;
+  state:      PlanetState;
+  encounters: Encounters;
 
   constructor(body: t.body, init?: SavedPlanet) {
-    this.state = new PlanetState(body, init);
+    this.state      = new PlanetState(body, init);
+    this.encounters = new Encounters(this.state);
 
     // Deferred contract restoration: restoreMission() needs window.game,
     // which isn't ready during construction. Wait for the first Arrived event.
@@ -296,88 +299,15 @@ export class Planet {
   isCapitol()                    { return this.state.isCapitol(); }
 
   // ---------------------------------------------------------------------------
-  // Patrol, piracy, and inspection
+  // Patrol, piracy, and inspection (delegated to Encounters)
   // ---------------------------------------------------------------------------
 
-  /**
-   * Patrol jurisdiction radius in AU. Expanded for military and capital planets,
-   * contracted for black market planets (patrols avoid openly corrupt areas).
-   */
-  patrolRadius() {
-    let radius = this.scale(data.jurisdiction);
-    if (this.hasTrait('military'))     radius *= 1.75;
-    if (this.hasTrait('capital'))      radius *= 1.5;
-    if (this.hasTrait('black market')) radius *= 0.5;
-    return radius;
-  }
-
-  /**
-   * Patrol encounter rate at a given distance from this planet (in AU).
-   * Within the patrol radius: full rate. Beyond: decays by half per 0.1 AU.
-   */
-  patrolRate(distance=0) {
-    const radius = this.patrolRadius();
-    let patrol = this.scale(this.faction.patrol);
-
-    if (distance < radius) {
-      return patrol;
-    }
-
-    distance -= radius;
-
-    let rate = patrol;
-    for (let i = 0; i < distance; i += 0.1) {
-      rate /= 2;
-    }
-
-    return Math.max(0, rate);
-  }
-
-  /**
-   * Piracy radius: the range at which pirate activity peaks around this planet.
-   * Larger than patrol radius - pirates operate at the edge of patrol coverage.
-   * Black market planets attract more piracy; military planets suppress it.
-   */
-  piracyRadius() {
-    let radius = this.scale(data.jurisdiction * 2);
-    if (this.hasTrait('black market')) radius *= 2;
-    if (this.hasTrait('capital'))      radius *= 0.75;
-    if (this.hasTrait('military'))     radius *= 0.5;
-    return radius;
-  }
-
-  /**
-   * Piracy encounter rate at distance from this planet (in AU).
-   * Peaks at the piracyRadius and decays by 15% per interval away from it.
-   * Pirates prefer to operate near their base but outside patrol coverage.
-   */
-  piracyRate(distance=0) {
-    const radius = this.piracyRadius();
-
-    distance = FastMath.abs(distance - radius);
-
-    let rate = this.scale(this.faction.piracy);
-    const intvl = radius / 10;
-    for (let i = 0; i < distance; i += intvl) {
-      rate *= 0.85;
-    }
-
-    return Math.max(0, rate);
-  }
-
-  /**
-   * Probability of being searched during a patrol encounter.
-   * Scales inversely with standing: better standing = less scrutiny.
-   * At maximum standing: near-zero. At minimum standing: full rate.
-   */
-  inspectionRate(player: Person) {
-    const standing = 1 - (player.getStanding(this.faction.abbrev) / data.max_abs_standing);
-    return this.scale(this.faction.inspection) * standing;
-  }
-
-  inspectionFine(player: Person) {
-    return this.faction.inspectionFine(player);
-  }
+  patrolRadius()              { return this.encounters.patrolRadius(); }
+  patrolRate(distance=0)      { return this.encounters.patrolRate(distance); }
+  piracyRadius()              { return this.encounters.piracyRadius(); }
+  piracyRate(distance=0)      { return this.encounters.piracyRate(distance); }
+  inspectionRate(player: Person) { return this.encounters.inspectionRate(player); }
+  inspectionFine(player: Person) { return this.encounters.inspectionFine(player); }
 
   // ---------------------------------------------------------------------------
   // Fabrication
