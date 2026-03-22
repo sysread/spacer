@@ -298,16 +298,6 @@ export class Planet {
   hasCondition(condition: string) { return this.state.hasCondition(condition); }
   isCapitol()                    { return this.state.isCapitol(); }
 
-  // ---------------------------------------------------------------------------
-  // Patrol, piracy, and inspection (delegated to Encounters)
-  // ---------------------------------------------------------------------------
-
-  patrolRadius()              { return this.encounters.patrolRadius(); }
-  patrolRate(distance=0)      { return this.encounters.patrolRate(distance); }
-  piracyRadius()              { return this.encounters.piracyRadius(); }
-  piracyRate(distance=0)      { return this.encounters.piracyRate(distance); }
-  inspectionRate(player: Person) { return this.encounters.inspectionRate(player); }
-  inspectionFine(player: Person) { return this.encounters.inspectionFine(player); }
 
   // ---------------------------------------------------------------------------
   // Fabrication
@@ -855,8 +845,8 @@ export class Planet {
     const contraband = data.resources[item].contraband || 0;
 
     // FastMath.abs() because amount is negative when selling, positive when buying.
-    const fine = FastMath.abs(contraband * amount * this.inspectionFine(player));
-    const rate = this.inspectionRate(player);
+    const fine = FastMath.abs(contraband * amount * this.encounters.inspectionFine(player));
+    const rate = this.encounters.inspectionRate(player);
 
     for (let i = 0; i < contraband; ++i) {
       if (util.chance(rate)) {

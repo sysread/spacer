@@ -184,27 +184,27 @@ describe('Planet', () => {
    * cannot be unit tested without a full game state mock. They will be
    * testable after the planet/ restructure decouples the pricing pipeline. */
 
-  describe('encounters', () => {
+  describe('encounters (via planet.encounters)', () => {
     it('patrolRadius is positive', () => {
-      expect(makePlanet().patrolRadius()).toBeGreaterThan(0);
+      expect(makePlanet().encounters.patrolRadius()).toBeGreaterThan(0);
     });
 
     it('patrolRate decays with distance', () => {
-      const p = makePlanet();
-      expect(p.patrolRate(0)).toBeGreaterThan(p.patrolRate(10));
+      const e = makePlanet().encounters;
+      expect(e.patrolRate(0)).toBeGreaterThan(e.patrolRate(10));
     });
 
     it('piracyRadius is positive', () => {
-      expect(makePlanet().piracyRadius()).toBeGreaterThan(0);
+      expect(makePlanet().encounters.piracyRadius()).toBeGreaterThan(0);
     });
 
     it('piracyRate decays with distance', () => {
-      const p = makePlanet();
-      expect(p.piracyRate(0)).toBeGreaterThan(p.piracyRate(10));
+      const e = makePlanet().encounters;
+      expect(e.piracyRate(0)).toBeGreaterThan(e.piracyRate(10));
     });
 
     it('inspectionFine is positive', () => {
-      expect(makePlanet().inspectionFine(makePlayer())).toBeGreaterThan(0);
+      expect(makePlanet().encounters.inspectionFine(makePlayer())).toBeGreaterThan(0);
     });
   });
 

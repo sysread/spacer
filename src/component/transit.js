@@ -128,7 +128,7 @@ Vue.component('Transit', {
 
       for (const body of Object.keys(ranges)) {
         const au = ranges[body] / Physics.AU;
-        rates[body] = this.game.planets[body].patrolRate(au);
+        rates[body] = this.game.planets[body].encounters.patrolRate(au);
       }
 
       return rates;
@@ -165,7 +165,7 @@ Vue.component('Transit', {
 
             // Use the nearby body's piracy rate as the base, since it is
             // calculated based on its patrol rate at this range.
-            const rate = game.planets[body].piracyRate(au);
+            const rate = game.planets[body].encounters.piracyRate(au);
 
             for (const ban of bans.filter(c => c.target == target)) {
               const faction = ban.proponent;
@@ -195,7 +195,7 @@ Vue.component('Transit', {
 
       for (const body of Object.keys(ranges)) {
         const au = ranges[body] / Physics.AU;
-        total += this.game.planets[body].piracyRate(au);
+        total += this.game.planets[body].encounters.piracyRate(au);
       }
 
       const patrols = this.patrolRates;
@@ -520,7 +520,7 @@ Vue.component('Transit', {
         if (rate > 0) {
           // Encountered a patrol
           if (util.chance(rate)) {
-            let inspection = this.game.planets[body].inspectionRate(this.game.player);
+            let inspection = this.game.planets[body].encounters.inspectionRate(this.game.player);
 
             for (let i = 0; i < this.encounters; ++i)
               inspection /= 2;

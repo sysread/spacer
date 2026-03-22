@@ -924,7 +924,7 @@ Vue.component('SvgPatrolRadius', {
 
     radius_au() {
       return this.game.planets[this.body]
-        ? this.game.planets[this.body].patrolRadius()
+        ? this.game.planets[this.body].encounters.patrolRadius()
         : 0;
     },
 
