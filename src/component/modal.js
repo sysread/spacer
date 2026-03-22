@@ -5,29 +5,37 @@ import './common';
 
 Vue.component('modal', {
   props: ['title', 'footer', 'close', 'xclose', 'static', 'nopad', 'size'],
+
   directives: {
     'modal': {
       inserted: function(el, binding, vnode) {
         const modal = new Modal(el);
+        // Store the instance on the element for cleanup
+        el._bsModal = modal;
         modal.show();
         el.addEventListener('hidden.bs.modal', () => {
           vnode.context.$emit('close');
         });
-      },
-      unbind: function(el) {
-        // When Vue removes the modal from the DOM, dispose the BS instance
-        // so the backdrop is cleaned up. Without this, the backdrop persists
-        // if the modal is removed by Vue reactivity instead of BS dismiss.
-        const modal = Modal.getInstance(el);
-        if (modal) {
-          modal.hide();
-          modal.dispose();
-        }
-        // Clean up any orphaned backdrops
-        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
       }
     }
   },
+
+  beforeDestroy() {
+    // Properly dispose the BS Modal when Vue removes the component.
+    // Without this, the backdrop persists if the modal is removed by
+    // Vue reactivity instead of being dismissed via BS5's API.
+    const el = this.$el;
+    const modal = el._bsModal || Modal.getInstance(el);
+    if (modal) {
+      modal.hide();
+      modal.dispose();
+    }
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+  },
+
   template: `
 <div v-modal class="modal" tabindex="-1" :data-bs-backdrop="(!static && (xclose || close)) ? true : 'static'">
   <div class="modal-dialog" :class="{'modal-sm': size && size === 'sm', 'modal-lg': size && size === 'lg'}">

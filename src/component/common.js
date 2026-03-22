@@ -91,10 +91,18 @@ Vue.component('btn', {
 Vue.component('ask', {
   props: ['choices'],
   data: function() { return { choice: null } },
+  methods: {
+    pick(id) {
+      this.choice = id;
+      // Emit immediately rather than waiting for modal hidden event.
+      // BS5's native dismiss can race with Vue's click handler.
+      this.$emit('pick', id);
+    }
+  },
   template: `
 <modal @close="$emit('pick', choice)" static=true>
   <p><slot/></p>
-  <btn v-for="(msg, id) in choices" :key="id" @click="choice=id" block=1 close=1>
+  <btn v-for="(msg, id) in choices" :key="id" @click="pick(id)" block=1 close=1>
     {{msg}}
   </btn>
 </modal>
