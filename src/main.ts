@@ -18,14 +18,15 @@ import $ from 'jquery';
 (window as any).$ = (window as any).jQuery = $;
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import '../www/public/css/index.css';
 import { gsap } from 'gsap';
 (window as any).gsap = gsap;
 
 import Vue from 'vue';
 import game from './game';
 
-/* Globals provided by Cordova plugins */
-declare const StatusBar: any;
+/* DEV flag: enables debug UI elements (navbar debug link, etc.) */
+(window as any).DEV = !import.meta.env.PROD;
 
 /* Component imports: order matters. Global mixin and shared primitives first,
  * then page components. Each file self-registers via Vue.component(). */
@@ -57,36 +58,6 @@ import './component/navbar';
 import './component/statusbar';
 import './component/notification';
 import './component/content';
-
-/* Hide the Cordova status bar if present. */
-document.addEventListener("deviceready", () => {
-  if (typeof StatusBar !== 'undefined' && StatusBar.isVisible) {
-    StatusBar.hide();
-  }
-}, false);
-
-/* Confirm before exiting app via back button (Cordova) */
-document.addEventListener("backbutton", (e) => {
-  if (confirm('Are you sure you want to quit?')) {
-    return (navigator as any).app.exitApp();
-  }
-
-  e.preventDefault();
-}, false);
-
-/*
- * When running outside Cordova (e.g. Vite dev server), the deviceready
- * event never fires because cordova.js is absent. Detect this and
- * synthesize the event so the app can bootstrap normally.
- */
-setTimeout(() => {
-  if ((window as any).device) return;
-
-  (window as any).DEV = true;
-  (window as any).device = { platform: 'browser', isVirtual: true };
-
-  document.dispatchEvent(new Event('deviceready'));
-}, 500);
 
 /*
  * Bootstrap the Vue application. The global mixin (component/global.js)

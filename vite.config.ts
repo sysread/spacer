@@ -1,13 +1,15 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   root: 'www',
-  base: '/spacer/',
 
-  // Static files in www/ (images, sw.js, css/index.css, fonts) are copied
-  // to dist/ as-is. Vite skips files it processes (index.html, imported JS/CSS).
-  publicDir: '.',
+  // GitHub Pages serves from /spacer/. In dev mode, serve from /.
+  base: command === 'build' ? '/spacer/' : '/',
+
+  // Static assets (images, sw.js, css/index.css) live in www/public/ and are
+  // copied to the build root as-is. Vite's default publicDir is 'public'
+  // relative to root, which resolves to www/public/.
 
   build: {
     outDir: resolve(__dirname, 'dist'),
@@ -36,4 +38,4 @@ export default defineConfig({
     // not in www/. Override so vitest can find test/*.mjs.
     root: resolve(__dirname, '.'),
   },
-});
+}));
