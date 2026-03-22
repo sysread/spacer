@@ -37,5 +37,12 @@ export default defineConfig(({ command }) => ({
     // Vitest inherits root from Vite, but tests live in the project root,
     // not in www/. Override so vitest can find test/*.mjs.
     root: resolve(__dirname, '.'),
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,js}'],
+      exclude: ['src/component/**', 'src/main.ts'],
+      reporter: ['text', 'html'],
+      reportsDirectory: './coverage',
+    },
   },
 }));

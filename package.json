@@ -11,7 +11,8 @@
     "build-wasm": "cd src; for file in $(ls *.zig); do zig build-lib $file -target wasm32-freestanding --output-dir ../www/wasm --single-threaded; done; cd ..; rm www/wasm/*.h && rm www/wasm/*.o",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "author": "Jeff Ober",
   "license": "Apache-2.0",
@@ -41,6 +42,7 @@
   },
   "devDependencies": {
     "@types/jquery": "^3.3.32",
+    "@vitest/coverage-v8": "^4.1.0",
     "cordova": "^9.0.0",
     "jsdom": "^29.0.1",
     "typescript": "^5.9.3",
