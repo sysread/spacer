@@ -37,7 +37,6 @@ import data from './data';
 import system from './system';
 import Physics from './physics';
 import { resources } from './resource';
-import { Conflict } from './conflict';
 import { NavComp, travel_time } from './navcomp';
 import { watch, Arrived, CaughtSmuggling } from "./events";
 
@@ -406,11 +405,6 @@ export class Smuggler extends Mission {
 
   get description(): string {
     const reward = util.csn(this.price);
-
-    const factions = window.game.get_conflicts({
-      name:   'blockade',
-      target: this.issuer,
-    }).map((c: Conflict) => c.proponent);
 
     const lines: string[] = [];
 
