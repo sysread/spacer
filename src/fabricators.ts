@@ -96,12 +96,12 @@ export class FabricationQueue {
 
   /** Turns required to fabricate the next unit at current planet conditions. */
   get next_turns() {
-    return this.planet.fabricationTime(this.item, 1);
+    return this.planet.fabrication.fabricationTime(this.item, 1);
   }
 
   /** Credit cost to fabricate the next unit, adjusted for standing and planet state. */
   get next_fee() {
-    return this.planet.fabricationFee(this.item, 1, this.player);
+    return this.planet.fabrication.fabricationFee(this.item, 1, this.player);
   }
 
   /** True if the player's cargo holds all required materials for one unit. */
@@ -120,7 +120,7 @@ export class FabricationQueue {
 
   /** True if fabricator health is sufficient to fully cover the batch without penalty. */
   get has_fab_resources() {
-    return this.planet.hasFabricationResources(this.item, this.goal);
+    return this.planet.fabrication.hasFabricationResources(this.item, this.goal);
   }
 
   /**
@@ -158,7 +158,7 @@ export class FabricationQueue {
       this.player.ship.unloadCargo(mat, this.recipe[mat] || 0);
     }
 
-    this.planet.fabricate(this.item);
+    this.planet.fabrication.fabricate(this.item);
     this.player.ship.loadCargo(this.item, 1);
     this.game.turn(turns);
 

@@ -207,22 +207,19 @@ describe('Planet', () => {
     });
   });
 
-  describe('fabrication', () => {
+  describe('fabrication (via planet.fabrication)', () => {
     it('fabricationAvailability starts at 100', () => {
-      expect(makePlanet().fabricationAvailability()).toBe(100);
+      expect(makePlanet().fabrication.fabricationAvailability()).toBe(100);
     });
 
     it('fabricationTime is positive for craftable items', () => {
       const item = aCraftableResource();
-      expect(makePlanet().fabricationTime(item)).toBeGreaterThan(0);
+      expect(makePlanet().fabrication.fabricationTime(item)).toBeGreaterThan(0);
     });
-
-    /* fabricationFee calls sellPrice internally, which hits window.game.
-     * Testable after pricing is decoupled. */
 
     it('hasFabricationResources is true at full health', () => {
       const item = aCraftableResource();
-      expect(makePlanet().hasFabricationResources(item, 1)).toBe(true);
+      expect(makePlanet().fabrication.hasFabricationResources(item, 1)).toBe(true);
     });
   });
 

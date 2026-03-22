@@ -120,6 +120,7 @@ import { Work } from './planet/work';
 import { Economy } from './planet/economy';
 import { Pricing } from './planet/pricing';
 import { Commerce } from './planet/commerce';
+import { Fabrication } from './planet/fabrication';
 
 // Re-export for external consumers
 export type { SavedPlanet };
@@ -145,12 +146,13 @@ interface Contract {
 }
 
 export class Planet {
-  state:      PlanetState;
-  encounters: Encounters;
-  economy:    Economy;
-  pricing:    Pricing;
-  commerce:   Commerce;
-  labor:      Work;
+  state:       PlanetState;
+  encounters:  Encounters;
+  economy:     Economy;
+  pricing:     Pricing;
+  commerce:    Commerce;
+  fabrication: Fabrication;
+  labor:       Work;
 
   constructor(body: t.body, init?: SavedPlanet) {
     this.state      = new PlanetState(body, init);
@@ -159,6 +161,7 @@ export class Planet {
     this.pricing    = new Pricing(this.state, this.economy,
       (body, item) => window.game.planets[body].economy.isNetExporter(item));
     this.commerce   = new Commerce(this.state, this.economy, this.pricing, this.encounters);
+    this.fabrication = new Fabrication(this.state, this.pricing, this.commerce);
     this.labor      = new Work(this.state, (item) => this.economy.production(item));
 
     // Deferred contract restoration: restoreMission() needs window.game,
@@ -256,7 +259,7 @@ export class Planet {
           this.refreshContracts();
         }
 
-        this.replenishFabricators();  // buy cybernetics to restore fab health
+        this.fabrication.replenishFabricators();  // buy cybernetics to restore fab health
         this.luxuriate();             // consume luxuries (economic sink)
         this.apply_conditions();      // advance and test for new conditions
         this.rollups(turn);           // update history and clear caches
@@ -313,150 +316,6 @@ export class Planet {
   isCapitol()                    { return this.state.isCapitol(); }
 
 
-  // ---------------------------------------------------------------------------
-  // Fabrication
-  // ---------------------------------------------------------------------------
-
-  /** Returns fabricator availability as a percentage [0, 100]. */
-  fabricationAvailability() {
-    return FastMath.ceil(Math.min(100, this.fab_health / this.max_fab_health * 100));
-  }
-
-  /**
-   * The reduction rate applied to fabrication time when fab_health > 0.
-   * Manufacturing hubs are fastest, then tech hubs, then baseline.
-   * A lower rate means faster (and cheaper) fabrication.
-   */
-  fabricationReductionRate() {
-    if (this.hasTrait('manufacturing hub'))
-      return 0.35;
-
-    if (this.hasTrait('tech hub'))
-      return 0.5;
-
-    return 0.65;
-  }
-
-  /**
-   * Computes the turns required to fabricate `count` units.
-   * While fab_health remains, each unit takes craftTurns * reductionRate turns.
-   * Once health is exhausted, remaining units take the full craftTurns each.
-   */
-  fabricationTime(item: t.resource, count=1) {
-    const resource = resources[item];
-
-    if (!isCraft(resource)) {
-      throw new Error(`${item} is not craftable`);
-    }
-
-    const reduction = this.fabricationReductionRate();
-    let health = this.fab_health;
-    let turns  = 0;
-
-    while (count > 0 && health > 0) {
-      turns  += resource.craftTurns * reduction;
-      health -= resource.craftTurns * reduction;
-      --count;
-    }
-
-    turns += count * resource.craftTurns;
-
-    return Math.max(1, FastMath.ceil(turns));
-  }
-
-  /**
-   * Returns true if fab_health is sufficient to cover `count` units without
-   * falling to zero mid-batch (i.e. the batch won't hit the penalty rate).
-   */
-  hasFabricationResources(item: t.resource, count=1) {
-    const resource = resources[item];
-
-    if (!isCraft(resource)) {
-      throw new Error(`${item} is not craftable`);
-    }
-
-    const reduction = this.fabricationReductionRate();
-    let health = this.fab_health;
-
-    for (let i = 0; i < count && health > 0; ++i) {
-      health -= resource.craftTurns * reduction;
-
-      if (health == 0) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Computes the credit fee to fabricate `count` units.
-   * Units produced while fab_health > 0 pay data.craft_fee per unit.
-   * Units produced after health is exhausted pay data.craft_fee_nofab (higher).
-   * Standing discount is applied to the total.
-   */
-  fabricationFee(item: t.resource, count=1, player: Person): number {
-    const resource = resources[item];
-
-    if (!isCraft(resource)) {
-      throw new Error(`${item} is not craftable`);
-    }
-
-    const price    = this.pricing.sellPrice(item);
-    const discount = 1.0 - player.getStandingPriceAdjustment(this.faction);
-
-    let fee = 0;
-
-    for (let i = 0, health = this.fab_health; i < count; ++i, --health) {
-      if (health > 0) {
-        fee += price * data.craft_fee;
-      } else {
-        fee += price * data.craft_fee_nofab;
-      }
-    }
-
-    return FastMath.ceil(fee * discount);
-  }
-
-  /**
-   * Consumes fab_health for one fabrication run. Returns the turns taken.
-   * If health is available, uses the reduction rate. Otherwise uses full turns.
-   */
-  fabricate(item: t.resource) {
-    const resource = resources[item];
-
-    if (!isCraft(resource)) {
-      throw new Error(`${item} is not craftable`);
-    }
-
-    const reduction = this.fabricationReductionRate() * resource.craftTurns;
-    let turns  = 0;
-
-    if (this.fab_health > 0) {
-      turns += reduction;
-      this.fab_health -= Math.min(this.fab_health, reduction);
-    }
-    else {
-      turns += resource.craftTurns;
-    }
-
-    const turns_taken = Math.max(1, FastMath.ceil(turns));
-    return turns_taken;
-  }
-
-  /**
-   * Attempts to buy cybernetics to restore fab_health when it falls below 50%.
-   * Each unit of cybernetics restores data.fab_health points of capacity.
-   */
-  replenishFabricators() {
-    if (this.fab_health < this.max_fab_health / 2) {
-      const want = FastMath.ceil((this.max_fab_health - this.fab_health) / data.fab_health);
-      const [bought] = this.commerce.buy('cybernetics', want);
-      this.fab_health += bought * data.fab_health;
-    }
-
-    this.fab_health = Math.min(this.fab_health, this.max_fab_health);
-  }
 
 
   scale(n=0) { return this.state.scale(n); }
@@ -672,7 +531,7 @@ export class Planet {
 
           this.schedule({
             type:  'craft',
-            turns: this.fabricate(item),
+            turns: this.fabrication.fabricate(item),
             item:  item,
             count: gets,
           });
