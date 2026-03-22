@@ -3,6 +3,16 @@ import { resolve } from 'path';
 
 export default defineConfig({
   root: 'www',
+  base: '/spacer/',
+
+  // Static files in www/ (images, sw.js, css/index.css, fonts) are copied
+  // to dist/ as-is. Vite skips files it processes (index.html, imported JS/CSS).
+  publicDir: '.',
+
+  build: {
+    outDir: resolve(__dirname, 'dist'),
+    emptyOutDir: true,
+  },
 
   server: {
     port: 5173,

@@ -7,23 +7,13 @@
  * GSAP vars (e.g. x, y, opacity).
  */
 
-declare var Linear: {
-  easeNone: any;
-}
-
-type Easing = typeof Linear;
+import { gsap, Linear } from 'gsap';
 
 interface TweenArgs {
   [key: string]: any;
-  ease: Easing;
-  lazy: boolean;
-  duration: number;
-}
-
-declare var gsap: {
-  to: (elt: any, vars: TweenArgs) => any;
-  play: () => void;
-  kill: () => void;
+  ease?: any;
+  lazy?: boolean;
+  duration?: number;
 }
 
 export default function tween(elt: any, intvl: number, vars: TweenArgs) : any {

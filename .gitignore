@@ -12,3 +12,4 @@ scratch/*
 .mcp.json
 .envrc
 www/.vite
+dist

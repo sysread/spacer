@@ -7,17 +7,25 @@
 /* Register the service worker for offline capability. Only in production
  * builds - in dev mode, Vite's on-the-fly transforms conflict with SW caching. */
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch((err) => {
+  navigator.serviceWorker.register(import.meta.env.BASE_URL + 'sw.js').catch((err) => {
     console.warn('SW registration failed:', err);
   });
 }
 
+/* Vendor libraries. jQuery must be on the window before Bootstrap loads,
+ * since Bootstrap attaches its plugins to jQuery's prototype. */
+import $ from 'jquery';
+(window as any).$ = (window as any).jQuery = $;
+import 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { gsap } from 'gsap';
+(window as any).gsap = gsap;
+
 import Vue from 'vue';
 import game from './game';
 
-/* Globals provided by Cordova plugins and vendor script tags */
+/* Globals provided by Cordova plugins */
 declare const StatusBar: any;
-declare const FastClick: any;
 
 /* Component imports: order matters. Global mixin and shared primitives first,
  * then page components. Each file self-registers via Vue.component(). */
@@ -50,18 +58,10 @@ import './component/statusbar';
 import './component/notification';
 import './component/content';
 
-/*
- * Initialize system-level integrations on deviceready.
- * StatusBar and FastClick are Cordova plugins; guard against their
- * absence when running under a plain dev server.
- */
+/* Hide the Cordova status bar if present. */
 document.addEventListener("deviceready", () => {
   if (typeof StatusBar !== 'undefined' && StatusBar.isVisible) {
     StatusBar.hide();
-  }
-
-  if (typeof FastClick !== 'undefined') {
-    FastClick.attach(document.body);
   }
 }, false);
 
