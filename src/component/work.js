@@ -185,7 +185,7 @@ Vue.component('work', {
   with the only real benefit being the opportunity to keep any materials
   harvested over the daily quota.</p>
 
-  <p v-if="hasPicketLine" class="font-italic text-warning">
+  <p v-if="hasPicketLine" class="fst-italic text-warning">
     Preventing access to the terminal, a sizable group of local workers are
     lined up to form a physical barrier. A few security personal are in
     evidence, hanging around the edges and ensuring that the protests do not
@@ -200,7 +200,7 @@ Vue.component('work', {
     </btn>
   </p>
 
-  <p v-else class="font-italic text-warning">
+  <p v-else class="fst-italic text-warning">
     There are no jobs currently available. A wall screen displays the face of a
     local council member assuring you that another soon-to-be-passed tax cut
     for job producers practically guarantees more jobs in the future.
@@ -235,7 +235,7 @@ Vue.component('work', {
 </Section>
 
 <Section title="Contracts" class="col-12 col-md-6">
-  <p v-if="contracts.length == 0" class="font-italic text-warning">
+  <p v-if="contracts.length == 0" class="fst-italic text-warning">
     There are no contracts available at this time.
   </p>
 

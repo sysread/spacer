@@ -31,7 +31,7 @@ Vue.component('red',   { template: '<span class="text-danger"><slot /></span>'  
 
 Vue.component('badge', {
   props: ['right'],
-  template: '<span class="badge badge-pill" :class="{\'float-right\': right}"><slot /></span>',
+  template: '<span class="badge rounded-pill" :class="{\'float-end\': right}"><slot /></span>',
 });
 
 
@@ -74,14 +74,14 @@ Vue.component('btn', {
         'btn-highlight': !this.disabled && this.highlight,
         'btn-secondary': this.muted,
         'disabled':      this.disabled,
-        'btn-block':     this.block,
+        'w-100':         this.block,
         'text-muted':    this.muted,
       };
     },
   },
 
   template: `
-    <button type="button" :class="classes" :data-dismiss="close ? 'modal' : ''" :disabled="disabled" @click="activate()" >
+    <button type="button" :class="classes" :data-bs-dismiss="close ? 'modal' : ''" :disabled="disabled" @click="activate()" >
       <slot />
     </button>
   `,
@@ -136,7 +136,7 @@ Vue.component('Opt', {
   },
 
   template: `
-<btn block=1 :close="final" :disabled="disabled" @click="onClick" class="text-left">
+<btn block=1 :close="final" :disabled="disabled" @click="onClick" class="text-start">
   <slot />
 </btn>
   `,

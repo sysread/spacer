@@ -114,15 +114,15 @@ Vue.component('melee', {
   template: `
 <div>
 <row>
-  <div class="col-4 text-left font-weight-bold">You</div>
-  <small class="col-4 text-center text-weight-light font-italic">{{combat.player.faction.abbrev}} vs. {{combat.opponent.faction.abbrev}}</small>
-  <div class="col-4 text-right font-weight-bold">{{combat.opponent.name}}</div>
+  <div class="col-4 text-start fw-bold">You</div>
+  <small class="col-4 text-center text-weight-light fst-italic">{{combat.player.faction.abbrev}} vs. {{combat.opponent.faction.abbrev}}</small>
+  <div class="col-4 text-end fw-bold">{{combat.opponent.name}}</div>
 </row>
 
 <row>
-  <div class="col-4 text-left font-weight-light font-italic">{{combat.player.ship.type|caps}}</div>
-  <small class="col-4 text-center text-weight-light font-italic">Round {{combat.currentRound}}</small>
-  <div class="col-4 text-right font-weight-light font-italic">{{combat.opponent.ship.type|caps}}</div>
+  <div class="col-4 text-start fw-light fst-italic">{{combat.player.ship.type|caps}}</div>
+  <small class="col-4 text-center text-weight-light fst-italic">Round {{combat.currentRound}}</small>
+  <div class="col-4 text-end fw-light fst-italic">{{combat.opponent.ship.type|caps}}</div>
 </row>
 
 <row>
@@ -169,19 +169,19 @@ Vue.component('melee', {
       </modal>
     </div>
 
-    <div v-else-if="escaped === combat.player.name" class="my-3 large font-italic text-center">
+    <div v-else-if="escaped === combat.player.name" class="my-3 large fst-italic text-center">
       You have escaped your opponent.
     </div>
 
-    <div v-else-if="escaped === combat.opponent.name" class="my-3 large font-italic text-center">
+    <div v-else-if="escaped === combat.opponent.name" class="my-3 large fst-italic text-center">
       Your opponent has escaped.
     </div>
 
-    <div v-else-if="surrendered == combat.player.name" class="my-3 large font-italic text-center">
+    <div v-else-if="surrendered == combat.player.name" class="my-3 large fst-italic text-center">
       You surrendered to your opponent.
     </div>
 
-    <div v-else-if="surrendered == combat.opponent.name" class="my-3 large font-italic text-center">
+    <div v-else-if="surrendered == combat.opponent.name" class="my-3 large fst-italic text-center">
       Your opponent has surrendered.
     </div>
 
@@ -211,7 +211,7 @@ Vue.component('combat-log', {
 
   <div class="col-5">
     <transition name="fade">
-      <combat-log-entry v-show="actions.opponent" who="The enemy" :entry="actions.opponent" class="text-right" />
+      <combat-log-entry v-show="actions.opponent" who="The enemy" :entry="actions.opponent" class="text-end" />
     </transition>
   </div>
 </div>
@@ -232,7 +232,7 @@ Vue.component('combat-log-entry', {
   },
 
   template: `
-<div class="font-italic small py-2 px-1 border-danger" style="border-top: 1px solid">
+<div class="fst-italic small py-2 px-1 border-danger" style="border-top: 1px solid">
 <div v-if="entry" :class="{'text-warning': isHit && !isHaymaker, 'text-danger': isHaymaker || isDestroyed}">
   <div v-if="entry.effect === 'flee'" class="text-success">
     {{who}} fled the battle!
@@ -266,7 +266,7 @@ Vue.component('combat-action', {
   props: ['action', 'disabled'],
 
   template: `
-<card-btn @click="$emit('click')" :disabled="disabled || !action.isReady" class="btn-sm text-left" block=1>
+<card-btn @click="$emit('click')" :disabled="disabled || !action.isReady" class="btn-sm text-start" block=1>
 {{action.name|caps}}
 
 <template v-if="action.count">
@@ -307,8 +307,8 @@ Vue.component('combat-stat', {
 
   template: `
 <row class="p-0 m-0">
-<div class="col-6 p-0 m-0 font-weight-bold text-right">{{k}}</div>
-<div class="col-6 p-0 m-0 text-right"><slot /></div>
+<div class="col-6 p-0 m-0 fw-bold text-end">{{k}}</div>
+<div class="col-6 p-0 m-0 text-end"><slot /></div>
 </row>
   `,
 });

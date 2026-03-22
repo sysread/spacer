@@ -75,11 +75,11 @@ Vue.component('NewsFeeds', {
         <Conflicts />
       </modal>
 
-      <btn block=1 @click="next_body" class="text-left">
+      <btn block=1 @click="next_body" class="text-start">
         {{name}}
-        <span v-if="body == game.locus" class="m-1 text-warning font-weight-bold">&target;</span>
+        <span v-if="body == game.locus" class="m-1 text-warning fw-bold">&target;</span>
         <badge right=1 class="mx-1">{{faction}}</badge>
-        <badge right=1 v-if="is_moon" class="ml-1">{{kind}}</badge>
+        <badge right=1 v-if="is_moon" class="ms-1">{{kind}}</badge>
       </btn>
 
       <News :body="body" />
@@ -206,7 +206,7 @@ Vue.component('News', {
           <ul>
             <li v-for="item of shortages[body]" class="text-warning">
               {{item|caps}}
-              <span v-if="shipments[item] && shipments[item][body]" class="mx-1 font-italic text-muted">
+              <span v-if="shipments[item] && shipments[item][body]" class="mx-1 fst-italic text-muted">
                 &mdash; relief arriving in {{shipments[item][body]|csn}} days
               </span>
             </li>

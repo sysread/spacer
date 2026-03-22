@@ -115,7 +115,7 @@ Vue.component('addon', {
 
   template: `
 <div>
-<button @click="detail=!detail" type="button" class="btn btn-block my-3"
+<button @click="detail=!detail" type="button" class="btn w-100 my-3"
   :class="{
     'text-success': hasUpgrade,
     'text-secondary': !hasUpgrade && !isAvailable,
@@ -123,17 +123,17 @@ Vue.component('addon', {
     'btn-secondary': !detail
   }">
     {{info.name|caps}}
-    <span class="badge badge-pill float-right">{{price|csn}}</span>
+    <span class="badge rounded-pill float-end">{{price|csn}}</span>
 </button>
 
 <Section v-if="detail" class="my-3" :notitle=1 :title="info.name|caps">
-  <p class="font-italic">{{info.desc}}</p>
+  <p class="fst-italic">{{info.desc}}</p>
 
-  <p v-if="!marketHasUpgrade" class="text-warning font-italic">
+  <p v-if="!marketHasUpgrade" class="text-warning fst-italic">
     This upgrade is not available here.
   </p>
 
-  <p v-if="marketHasUpgrade && !isAvailable" class="text-warning font-italic">
+  <p v-if="marketHasUpgrade && !isAvailable" class="text-warning fst-italic">
     <span v-if="isRestricted">
       Your reputation with this faction precludes the sale of this equipment to you.
       That does not prevent you from salivating from the show room window, however.
@@ -175,12 +175,12 @@ Vue.component('addon', {
 
 <modal v-if="buy" @close="buy=false" close='No'>
   Purchase and install <b>{{info.name}}</b> for {{price|csn}} credits?
-  <button @click="buyAddOn" slot="footer" data-dismiss="modal" class="btn btn-dark">Yes</button>
+  <button @click="buyAddOn" slot="footer" data-bs-dismiss="modal" class="btn btn-dark">Yes</button>
 </modal>
 
 <modal v-if="sell" @close="sell=false" close='No'>
   Remove and sell your <b>{{info.name}}</b> for {{sellPrice|csn}} credits?
-  <button @click="sellAddOn" slot="footer" data-dismiss="modal" class="btn btn-dark">Yes</button>
+  <button @click="sellAddOn" slot="footer" data-bs-dismiss="modal" class="btn btn-dark">Yes</button>
 </modal>
 </div>
   `,

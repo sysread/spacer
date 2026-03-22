@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import { Collapse } from 'bootstrap';
 
 import './global';
 
@@ -101,14 +102,16 @@ Vue.component('NavBar', {
 
     collapse() {
       if (this.is_expanded()) {
-        window.jQuery('#spacer-nav').collapse('hide');
+        const el = document.getElementById('spacer-nav');
+        const instance = Collapse.getInstance(el);
+        if (instance) instance.hide();
       }
     },
 
     click() {
       const navbar = document.getElementById('spacer-navbar');
       if (navbar && getComputedStyle(navbar).flexFlow == 'row wrap') {
-        window.jQuery('#spacer-nav').collapse('toggle');
+        new Collapse(document.getElementById('spacer-nav')).toggle();
       }
     },
 
@@ -118,15 +121,15 @@ Vue.component('NavBar', {
   },
 
   template: `
-    <nav @click="click" id="spacer-navbar" data-toggle="collapse" class="fixed-bottom navbar navbar-dark navbar-expand-sm border-danger border border-left-0 border-right-0 border-bottom-0">
+    <nav @click="click" id="spacer-navbar" data-bs-toggle="collapse" class="fixed-bottom navbar navbar-dark navbar-expand-sm border-danger border border-start-0 border-end-0 border-bottom-0">
       <span class="navbar-brand d-block d-sm-none">Spacer</span>
 
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#spacer-nav">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#spacer-nav">
         <span class="navbar-toggler-icon"></span>
       </button>
 
       <div class="collapse navbar-collapse" id="spacer-nav">
-        <ul class="navbar-nav mr-auto">
+        <ul class="navbar-nav me-auto">
           <NavItem v-for="target of menu" :key="target" :active="is_open(target)" @click="open(target)">
             <div class="d-sm-none">{{ long_names[target] }}</div>
             <div class="d-none d-sm-block">{{ short_names[target] }}</div>

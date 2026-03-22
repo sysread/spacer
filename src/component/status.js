@@ -124,7 +124,7 @@ Vue.component('faction-status', {
     factionStanding: function(faction) {
       const label    = this.game.player.getStandingLabel(faction);
       const standing = this.game.player.getStanding(faction);
-      return `${label} <span class="badge badge-pill">${standing}</span>`;
+      return `${label} <span class="badge rounded-pill">${standing}</span>`;
     },
     standing: function(faction) {
       return this.game.player.getStanding(faction);
@@ -138,7 +138,7 @@ Vue.component('faction-status', {
 <def v-for="faction of factions" :key="faction" caps="true" :term="faction">
   <span slot="def">
     {{label(faction)}}
-    <span class="badge badge-pill ml-2">{{standing(faction)|R}}</span>
+    <span class="badge rounded-pill ms-2">{{standing(faction)|R}}</span>
   </span>
 </def>
 </Section>

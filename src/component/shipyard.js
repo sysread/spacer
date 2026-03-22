@@ -236,7 +236,7 @@ Vue.component('shipyard-repair', {
   <btn slot="footer" @click="repair" close=1>Repair ship</btn>
 </template>
 
-<div v-else class="font-italic text-warning">
+<div v-else class="fst-italic text-warning">
   <p>The shipyard is currently unable to effect repairs due to a shortage of refined metal.</p>
 
   <p>

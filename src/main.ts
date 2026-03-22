@@ -12,10 +12,6 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   });
 }
 
-/* jQuery is required by Bootstrap 4's JS plugins (modal, collapse, alert).
- * Once we upgrade to Bootstrap 5, jQuery can be removed entirely. */
-import jQuery from 'jquery';
-(window as any).jQuery = jQuery;
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../www/public/css/index.css';

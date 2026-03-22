@@ -143,7 +143,7 @@ Vue.component('ship', {
   template: `
 <div>
 <btn v-if="!detail" @click="$emit('click')" :block=1 :muted="!isAvailable" class="my-2">
-  {{name|caps}} <span class="badge badge-pill float-right">{{price|csn}}</span>
+  {{name|caps}} <span class="badge rounded-pill float-end">{{price|csn}}</span>
 </btn>
 
 <Section v-else :title="name|caps" class="m-3">
@@ -151,9 +151,9 @@ Vue.component('ship', {
     <button @click="buy=true" type="button" class="btn btn-dark">Purchase</button>
   </p>
 
-  <p v-if="shipClass.desc" class="font-italic">{{shipClass.desc}}</p>
+  <p v-if="shipClass.desc" class="fst-italic">{{shipClass.desc}}</p>
 
-  <p v-if="!isAvailable" class="text-warning font-italic">
+  <p v-if="!isAvailable" class="text-warning fst-italic">
     <span v-if="!hasShip || isNonFaction">This ship is not available here.</span>
     <span v-else-if="isRestricted">
       Your reputation with this faction precludes the sale of this ship to you.
@@ -207,7 +207,7 @@ Vue.component('ship', {
   <p v-if="tradeIn < 0">You will make {{-tradeIn|csn}} profit with this deal. </p>
   <p v-else>You will pay {{tradeIn|csn}} with this deal. </p>
   <p>Do you wish to complete this exchange?</p>
-  <button @click="completeTradeIn" slot="footer" type="button" class="btn btn-dark" data-dismiss="modal">Trade in</button>
+  <button @click="completeTradeIn" slot="footer" type="button" class="btn btn-dark" data-bs-dismiss="modal">Trade in</button>
 </modal>
 </div>
   `,

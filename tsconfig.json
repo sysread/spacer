@@ -11,7 +11,7 @@
     "downlevelIteration": true,
     "experimentalDecorators": true,
     "lib": ["DOM", "ES2020"],
-    "types": ["jquery", "vite/client"]
+    "types": ["vite/client"]
   },
   "include": [
     "src"

@@ -115,7 +115,7 @@ Vue.component('Debug', {
   template: `
 <card>
 <div class="input-group input-group-sm my-1">
-<div class="input-group-prepend btn-group">
+<div class="btn-group">
   <btn :disabled="show == 'items'" @click="show='items'">Resources</btn>
   <btn :disabled="show == 'bodies'" @click="show='bodies'">Markets</btn>
 </div>
@@ -144,7 +144,7 @@ Vue.component('Debug', {
 </div>
 
 <div class="input-group input-group-sm my-1">
-<div class="input-group-prepend btn-group">
+<div class="btn-group">
   <span class="input-group-text">Turns</span>
   <btn @click="gameTurns(1)">1</btn>
   <btn @click="gameTurns(3)">3</btn>
@@ -153,13 +153,13 @@ Vue.component('Debug', {
   <btn @click="gameTurns(90)">90</btn>
 </div>
 
-<div class="input-group-prepend btn-group mx-3">
+<div class="btn-group mx-3">
   <span class="input-group-text">Speed</span>
   <btn :disabled="slow" @click="slow=true">Slow</btn>
   <btn :disabled="!slow" @click="slow=false">Fast</btn>
 </div>
 
-<div class="input-group-append btn-group">
+<div class="btn-group">
   <span class="input-group-text">Misc</span>
   <btn @click="fixMe">Fix me</btn>
   <btn @click="show='pirate'">Pirate</btn>
@@ -170,26 +170,26 @@ Vue.component('Debug', {
 <thead>
   <tr>
     <th>Loc</th>
-    <th class="text-right">Price</th>
-    <th class="text-right">Stock</th>
-    <th class="text-right">Demand</th>
-    <th class="text-right">Supply</th>
-    <th class="text-right">Need</th>
-    <th class="text-right">Net</th>
-    <th class="text-right">Avg</th>
+    <th class="text-end">Price</th>
+    <th class="text-end">Stock</th>
+    <th class="text-end">Demand</th>
+    <th class="text-end">Supply</th>
+    <th class="text-end">Need</th>
+    <th class="text-end">Net</th>
+    <th class="text-end">Avg</th>
   </tr>
 </thead>
 <tbody>
   <template v-for="place in places">
   <tr :class="{'text-info': placeIsNetExporter(place, item)}">
     <td>{{place.name|caps}}</td>
-    <td class="text-right">{{placePrice(place, item)|csn}}</td>
-    <td class="text-right">{{placeGetStock(place, item)}}</td>
-    <td class="text-right">{{placeGetDemand(place, item)|R(2)}}</td>
-    <td class="text-right">{{placeGetSupply(place, item)|R(2)}}</td>
-    <td class="text-right" :class="{'text-success': placeHasSurplus(place, item), 'text-danger': placeHasShortage(place, item)}">{{placeGetNeed(place, item)|R(2)}}</td>
-    <td class="text-right">{{placeNetProduction(place, item)|R(2)}}</td>
-    <td class="text-right">{{placeAvgProduction(place, item)|R(2)}}</td>
+    <td class="text-end">{{placePrice(place, item)|csn}}</td>
+    <td class="text-end">{{placeGetStock(place, item)}}</td>
+    <td class="text-end">{{placeGetDemand(place, item)|R(2)}}</td>
+    <td class="text-end">{{placeGetSupply(place, item)|R(2)}}</td>
+    <td class="text-end" :class="{'text-success': placeHasSurplus(place, item), 'text-danger': placeHasShortage(place, item)}">{{placeGetNeed(place, item)|R(2)}}</td>
+    <td class="text-end">{{placeNetProduction(place, item)|R(2)}}</td>
+    <td class="text-end">{{placeAvgProduction(place, item)|R(2)}}</td>
   </tr>
   </template>
 </tbody>
@@ -199,26 +199,26 @@ Vue.component('Debug', {
 <thead>
   <tr>
     <th>Item</th>
-    <th class="text-right">Price</th>
-    <th class="text-right">Stock</th>
-    <th class="text-right">Demand</th>
-    <th class="text-right">Supply</th>
-    <th class="text-right">Need</th>
-    <th class="text-right">Net</th>
-    <th class="text-right">Avg</th>
+    <th class="text-end">Price</th>
+    <th class="text-end">Stock</th>
+    <th class="text-end">Demand</th>
+    <th class="text-end">Supply</th>
+    <th class="text-end">Need</th>
+    <th class="text-end">Net</th>
+    <th class="text-end">Avg</th>
   </tr>
 </thead>
 <tbody>
   <template v-for="item in resources">
   <tr :class="{'text-info': placeIsNetExporter(place, item)}">
     <td>{{item|caps}}</td>
-    <td class="text-right">{{placePrice(place, item)|csn}}</td>
-    <td class="text-right">{{placeGetStock(place, item)}}</td>
-    <td class="text-right">{{placeGetDemand(place, item)|R(2)}}</td>
-    <td class="text-right">{{placeGetSupply(place, item)|R(2)}}</td>
-    <td class="text-right" :class="{'text-success': placeHasSurplus(place, item), 'text-danger': placeHasShortage(place, item)}">{{placeGetNeed(place, item)|R(2)}}</td>
-    <td class="text-right">{{placeNetProduction(place, item)|R(2)}}</td>
-    <td class="text-right">{{placeAvgProduction(place, item)|R(2)}}</td>
+    <td class="text-end">{{placePrice(place, item)|csn}}</td>
+    <td class="text-end">{{placeGetStock(place, item)}}</td>
+    <td class="text-end">{{placeGetDemand(place, item)|R(2)}}</td>
+    <td class="text-end">{{placeGetSupply(place, item)|R(2)}}</td>
+    <td class="text-end" :class="{'text-success': placeHasSurplus(place, item), 'text-danger': placeHasShortage(place, item)}">{{placeGetNeed(place, item)|R(2)}}</td>
+    <td class="text-end">{{placeNetProduction(place, item)|R(2)}}</td>
+    <td class="text-end">{{placeAvgProduction(place, item)|R(2)}}</td>
   </tr>
   </template>
 </tbody>

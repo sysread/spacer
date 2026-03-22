@@ -68,7 +68,7 @@ Vue.component('restitution', {
     Make restitution
   </btn>
 
-  <span v-else class="font-italic text-warning">
+  <span v-else class="fst-italic text-warning">
     You cannot afford to make restitution at this time.
   </span>
 </template>

@@ -574,9 +574,9 @@ Vue.component('Transit', {
       <template v-else>
         <table id="navcomp-transit-info" class="table table-sm m-0" :style="{width: show_plot() && layout ? layout.width_px + 'px' : '100%'}">
           <tr>
-            <td class="text-left border-0">{{plan.days_left|unit('days')}}</td>
+            <td class="text-start border-0">{{plan.days_left|unit('days')}}</td>
             <td class="text-center border-0">{{plan.velocity/1000|R|csn|unit('km/s')}}</td>
-            <td class="text-right border-0">{{plan.auRemaining()|R(2)|sprintf('%0.2f')|unit('AU')}}</td>
+            <td class="text-end border-0">{{plan.auRemaining()|R(2)|sprintf('%0.2f')|unit('AU')}}</td>
           </tr>
           <tr v-if="!show_plot()">
             <td colspan="3">
@@ -985,9 +985,9 @@ Vue.component('PirateEncounter', {
           Before long, the radio begins to chirp, notifying you of the pirate's ultimatum.
         </p>
 
-        <button type="button" class="btn btn-dark btn-block" @click="setChoice('flee')">Flee</button>
-        <button type="button" class="btn btn-dark btn-block" @click="setChoice('submit')">Surrender ship</button>
-        <button type="button" class="btn btn-dark btn-block" @click="setChoice('attack')">Defend yourself</button>
+        <button type="button" class="btn btn-dark w-100" @click="setChoice('flee')">Flee</button>
+        <button type="button" class="btn btn-dark w-100" @click="setChoice('submit')">Surrender ship</button>
+        <button type="button" class="btn btn-dark w-100" @click="setChoice('attack')">Defend yourself</button>
       </div>
 
       <melee v-if="choice=='attack'" :opponent="npc" :init_flee="init_flee" @complete="done" />

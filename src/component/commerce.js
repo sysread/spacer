@@ -187,7 +187,7 @@ Vue.component('market-trade', {
   },
   template: `
 <div>
-<p v-if="contraband" class="text-warning font-italic">
+<p v-if="contraband" class="text-warning fst-italic">
   Trade in contraband goods may result in fines and loss of standing.
 </p>
 
@@ -298,9 +298,9 @@ Vue.component('resource-report', {
   <thead>
     <tr>
       <th>Market</th>
-      <th class="text-right">Buy</th>
-      <th class="text-right">Sell</th>
-      <th class="text-right d-none d-sm-table-cell">Stock</th>
+      <th class="text-end">Buy</th>
+      <th class="text-end">Sell</th>
+      <th class="text-end d-none d-sm-table-cell">Stock</th>
     </tr>
   </thead>
   <tbody>
@@ -312,7 +312,7 @@ Vue.component('resource-report', {
   <thead>
     <tr>
       <th>To</th>
-      <th class="text-right">Amt.</th>
+      <th class="text-end">Amt.</th>
       <th>In</th>
       <th class="d-none d-sm-table-cell">From</th>
       <th class="d-none d-sm-table-cell">AU</th>
@@ -322,7 +322,7 @@ Vue.component('resource-report', {
     <tr v-for="[from, to, shipment] of routes"
         :class="{'text-warning': shipment.warning}">
       <th scope="row">{{to|caps}}</th>
-      <td class="text-right">{{shipment.amount|csn}}</td>
+      <td class="text-end">{{shipment.amount|csn}}</td>
       <td>{{shipment.arrives}}</td>
       <td class="d-none d-sm-table-cell">{{from|caps}}</td>
       <td class="d-none d-sm-table-cell">{{shipment.distance}}</td>
@@ -353,17 +353,17 @@ Vue.component('resource-report-row', {
 <tr :class="{'bg-dark': isHere}">
 <th scope="row">
   {{body|caps}}
-  <badge v-if="central != 'sun'" right=1 class="ml-1">{{central|caps}}</badge>
+  <badge v-if="central != 'sun'" right=1 class="ms-1">{{central|caps}}</badge>
 </th>
-<td class="text-right" :class="{'text-success': stock && relBuy < 0, 'text-muted': !stock}">
+<td class="text-end" :class="{'text-success': stock && relBuy < 0, 'text-muted': !stock}">
   <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{relBuy|csn}}</span>
   <span v-else>{{rBuy|csn}}</span>
 </td>
-<td class="text-right" :class="{'text-success': relSell > 0}">
+<td class="text-end" :class="{'text-success': relSell > 0}">
   <span v-if="relprices"><span v-if="relSell > 0">+</span>{{relSell|csn}}</span>
   <span v-else>{{rSell|csn}}</span>
 </td>
-<td class="text-right d-none d-sm-table-cell">{{stock}}</td>
+<td class="text-end d-none d-sm-table-cell">{{stock}}</td>
 </tr>
   `,
 });
@@ -380,9 +380,9 @@ Vue.component('market-report', {
   <thead>
     <tr>
       <th>Resource</th>
-      <th class="text-right">Buy</th>
-      <th class="text-right">Sell</th>
-      <th class="text-right d-none d-sm-table-cell">Stock</th>
+      <th class="text-end">Buy</th>
+      <th class="text-end">Sell</th>
+      <th class="text-end d-none d-sm-table-cell">Stock</th>
     </tr>
   </thead>
   <tbody>
@@ -410,16 +410,16 @@ Vue.component('market-report-row', {
 <tr>
 <th scope="row">{{resource|caps}}</th>
 
-<td class="text-right" :class="{'text-success': stock && relBuy < 0, 'text-muted': !stock}">
+<td class="text-end" :class="{'text-success': stock && relBuy < 0, 'text-muted': !stock}">
   <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{relBuy|csn}}</span>
   <span v-else>{{rBuy|csn}}</span>
 </td>
 
-<td class="text-right" :class="{'text-success': relSell > 0}">
+<td class="text-end" :class="{'text-success': relSell > 0}">
   <span v-if="relprices"><span v-if="relSell > 0">+</span>{{relSell|csn}}</span>
   <span v-else>{{rSell|csn}}</span>
 </td>
-<td class="text-right d-none d-sm-table-cell">{{stock}}</td>
+<td class="text-end d-none d-sm-table-cell">{{stock}}</td>
 </tr>
   `,
 });

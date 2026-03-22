@@ -35,7 +35,7 @@ Vue.component('def', {
   },
   template: `
 <row :y="y">
-  <cell :brkpt="brkpt" :size="termSize" :y="y" class="font-weight-bold" :class="{'text-capitalize': caps}">
+  <cell :brkpt="brkpt" :size="termSize" :y="y" class="fw-bold" :class="{'text-capitalize': caps}">
     {{term}}
     <slot name="term" />
     <info v-if="info || show_info" :title="term">

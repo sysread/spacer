@@ -116,10 +116,9 @@ Vue.component('NavComp', {
 
     const nav = document.getElementById('spacer-nav');
     if (nav && nav.classList.contains('collapsing')) {
-      // Bootstrap 4 fires jQuery events for collapse, not native DOM events
-      window.jQuery(nav).one('hidden.bs.collapse', () => {
+      nav.addEventListener('hidden.bs.collapse', () => {
         this.is_ready = true;
-      });
+      }, { once: true });
     }
     else {
       this.is_ready = true;
@@ -505,8 +504,8 @@ Vue.component('NavDestOpt', {
 
       <slot />
 
-      <badge right=1 class="ml-1">{{dist}}</badge>
-      <badge right=1 v-if="is_moon" class="ml-1">{{kind}}</badge>
+      <badge right=1 class="ms-1">{{dist}}</badge>
+      <badge right=1 v-if="is_moon" class="ms-1">{{kind}}</badge>
     </Opt>
   `,
 });
@@ -522,7 +521,7 @@ Vue.component('NavDestMenu', {
   'template': `
     <Menu title="Select a destination">
       <NavDestOpt v-for="body in bodies" :key="body" :body="body" @answer="$emit('answer', body)">
-        <span v-if="body == prev" class="m-1 text-warning font-weight-bold">&target;</span>
+        <span v-if="body == prev" class="m-1 text-warning fw-bold">&target;</span>
       </NavDestOpt>
     </Menu>
   `,
@@ -594,7 +593,7 @@ Vue.component('NavRoutePlanner', {
           </cell>
         </row>
       </div>
-      <p v-else class="text-warning font-italic">
+      <p v-else class="text-warning fst-italic">
         Your ship, as loaded, cannot reach this destination in less than 1 year with available fuel.
       </p>
     </div>

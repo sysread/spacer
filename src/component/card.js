@@ -1,6 +1,6 @@
 import Vue from 'vue';
 
-Vue.component('deck',          { template: '<div class="card-deck"><slot /></div>'});
+Vue.component('deck',          { template: '<div class="row row-cols-1 row-cols-md-2 g-4"><slot /></div>'});
 Vue.component('card-text',     { template: '<p class="card-text"><slot /></p>'});
 Vue.component('card-title',    { template: '<h4 class="card-title"><slot /></h4>'});
 Vue.component('card-subtitle', { template: '<h6 class="card-subtitle mb-2 text-muted"><slot /></h6>'});
@@ -13,7 +13,7 @@ Vue.component('card-btn', {
 <a :href="href || '#'"
     class="btn btn-dark"
     :class="{'btn-secondary': muted, 'disabled': disabled, 'btn-block': block}"
-    :data-dismiss="close ? 'modal' : ''"
+    :data-bs-dismiss="close ? 'modal' : ''"
     @click="$emit('click')" >
   <slot />
 </a>

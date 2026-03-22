@@ -91,12 +91,12 @@ Vue.component('fabrication', {
         {{queue.result}}
       </p>
 
-      <p v-else-if="amount == 0" class="font-italic text-warning">
+      <p v-else-if="amount == 0" class="fst-italic text-warning">
         You do not have the resources necessary to fabricate this item.
       </p>
 
       <template v-else>
-        <p class="font-italic text-success">
+        <p class="fst-italic text-success">
           You have the resources and cargo space to fabricate {{amount|csn}} of this item.
         </p>
 

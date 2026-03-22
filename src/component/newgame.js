@@ -83,12 +83,12 @@ Vue.component('new-game', {
   </card-header>
 
   <form>
-    <div class="form-group">
+    <div class="mb-3">
       <label for="name">Captain's name</label>
       <input class="form-control" type="text" v-model="name" />
     </div>
 
-    <div class="form-group">
+    <div class="mb-3">
       <label for="home">Home</label>
       <select class="form-control" v-model="home">
         <option v-for="(body, id) of bodies" :key="id" :value="id">{{body.name}}</option>
@@ -96,11 +96,11 @@ Vue.component('new-game', {
     </div>
 
     <card class="my-3">
-      <card-text v-for="line of homeDesc" :key="line" class="font-italic">{{line}}</card-text>
+      <card-text v-for="line of homeDesc" :key="line" class="fst-italic">{{line}}</card-text>
     </card>
 
     <card class="my-3">
-      <card-text class="text-warning font-italic">
+      <card-text class="text-warning fst-italic">
         As a native growing up under {{gravity|R(3)|unit('G')}} of gravity,
         your physiology can tolerate a maximum sustained acceleration of
         {{deltaV|R(3)|unit('G')}}.
@@ -112,7 +112,7 @@ Vue.component('new-game', {
 
       <Flag :faction="body.faction" :width="200" style="margin-left: auto; margin-right: auto; display: block" class="my-3" />
 
-      <card-text v-for="line of factionDesc" :key="line" class="font-italic">
+      <card-text v-for="line of factionDesc" :key="line" class="fst-italic">
         {{line}}
       </card-text>
     </card>

@@ -17,14 +17,13 @@
   "author": "Jeff Ober",
   "license": "Apache-2.0",
   "dependencies": {
-    "bootstrap": "~4.6",
+    "bootstrap": "~5.3",
     "cordova-android": "^7.1.4",
     "cordova-browser": "^5.0.4",
     "cordova-plugin-device": "^2.0.3",
     "cordova-plugin-statusbar": "^2.4.3",
     "gsap": "~3.1",
     "hammerjs": "^2.0.8",
-    "jquery": "~3.7",
     "npm": "^6.14.5",
     "sprintf-js": "^1.1.2",
     "statusbar": "^0.2.0",
@@ -41,7 +40,6 @@
     }
   },
   "devDependencies": {
-    "@types/jquery": "^3.3.32",
     "@vitest/coverage-v8": "^4.1.0",
     "cordova": "^9.0.0",
     "jsdom": "^29.0.1",

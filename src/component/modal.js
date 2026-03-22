@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import { Modal } from 'bootstrap';
 
 import './common';
 
@@ -7,24 +8,21 @@ Vue.component('modal', {
   directives: {
     'modal': {
       inserted: function(el, binding, vnode) {
-        // Bootstrap 4 fires jQuery events, not native DOM events, so the
-        // event listener must also use jQuery. This converts to native
-        // addEventListener when we upgrade to Bootstrap 5.
-        window.jQuery(el).modal('show');
-        window.jQuery(el).on('hidden.bs.modal', () => {
+        new Modal(el).show();
+        el.addEventListener('hidden.bs.modal', () => {
           vnode.context.$emit('close');
         });
       }
     }
   },
   template: `
-<div v-modal class="modal" tabindex="-1" :data-backdrop="(!static && (xclose || close)) ? true : 'static'">
+<div v-modal class="modal" tabindex="-1" :data-bs-backdrop="(!static && (xclose || close)) ? true : 'static'">
   <div class="modal-dialog" :class="{'modal-sm': size && size === 'sm', 'modal-lg': size && size === 'lg'}">
     <div class="modal-content">
       <div v-if="title || xclose" class="modal-header">
         <h5 v-if="title" class="modal-title">{{title}}</h5>
         <slot name="header" />
-        <button v-if="xclose" type="button" class="close text-light" data-dismiss="modal">&times;</button>
+        <button v-if="xclose" type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body" :class="{'p-0':nopad}">
         <slot />

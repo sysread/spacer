@@ -123,7 +123,7 @@ Vue.component('planet-summary', {
 
     <Section :notitle="!showtitle" :title="planet.name" class="col-12 col-md-6">
       <Flag slot="title-pre" v-if="showtitle" :faction="planet.faction.abbrev" :width="50" class="m-1" />
-      <img slot="title-post" v-if="showtitle && is_home" src="img/home.png" class="circle-thingy circle-thingy-big mx-2 float-right" />
+      <img slot="title-post" v-if="showtitle && is_home" src="img/home.png" class="circle-thingy circle-thingy-big mx-2 float-end" />
 
       <def y=1 v-if="isThere" term="Location" def="Docked" />
       <def y=1 v-else term="Distance" :def="distance|R(2)|csn|unit('AU')" />
@@ -138,7 +138,7 @@ Vue.component('planet-summary', {
       <def y=1 term="Environ" :def="kind|caps" />
 
       <def y=1 term="Details">
-        <div slot="def" v-if="traits" v-for="trait in traits" :key="trait" class="font-italic">
+        <div slot="def" v-if="traits" v-for="trait in traits" :key="trait" class="fst-italic">
           {{trait|caps}}
         </div>
         <span v-else slot="def">N/A</span>
@@ -149,7 +149,7 @@ Vue.component('planet-summary', {
       <News :body="planet.body" title="Local news" />
 
       <Section v-if="!mini" :title="'About ' + planet.name">
-        <p v-for="(line, idx) of desc" :key="idx" class="font-italic">{{line}}</p>
+        <p v-for="(line, idx) of desc" :key="idx" class="fst-italic">{{line}}</p>
       </Section>
     </div>
   </div>
