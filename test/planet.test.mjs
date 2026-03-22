@@ -1,12 +1,33 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { Planet } from '../src/planet';
+import { Person } from '../src/person';
+import { resources } from '../src/resource';
+import * as t from '../src/common';
 
-/* Tests for Planet construction and PlanetState properties.
- * Delegate-specific tests live in test/planet/<domain>.test.mjs. */
+/* Integration tests: verify Planet delegates are wired correctly.
+ * Delegate-specific unit tests live in test/planet/<domain>.test.mjs. */
 
 function makePlanet(body = 'ceres') {
   return new Planet(body);
+}
+
+function makePlayer() {
+  return new Person({
+    name: 'Test',
+    ship: { type: 'schooner' },
+    faction_name: 'CERES',
+    home: 'ceres',
+    money: 10000,
+    standing: {},
+  });
+}
+
+function aCraftableResource() {
+  for (const [name, res] of Object.entries(resources)) {
+    if ('recipe' in res) return name;
+  }
+  throw new Error('no craftable resource found');
 }
 
 describe('Planet', () => {
@@ -66,6 +87,69 @@ describe('Planet', () => {
 
     it('isCapitol is true for capital planets', () => {
       expect(makePlanet('ceres').isCapitol()).toBe(true);
+    });
+  });
+
+  /* Integration: verify delegates are accessible and return sane values
+   * through the Planet wrapper. Delegate internals are tested in
+   * test/planet/<domain>.test.mjs. */
+
+  describe('delegate wiring: economy', () => {
+    it('getStock accessible', () => {
+      expect(makePlanet().economy.getStock('fuel')).toBe(0);
+    });
+
+    it('production returns values', () => {
+      const e = makePlanet().economy;
+      let any = false;
+      for (const item of t.resources) {
+        if (e.production(item) > 0) { any = true; break; }
+      }
+      expect(any).toBe(true);
+    });
+
+    it('getNeed returns a number', () => {
+      expect(typeof makePlanet().economy.getNeed('fuel')).toBe('number');
+    });
+
+    it('isNetExporter returns boolean', () => {
+      expect(typeof makePlanet().economy.isNetExporter('fuel')).toBe('boolean');
+    });
+  });
+
+  describe('delegate wiring: encounters', () => {
+    it('patrolRadius accessible', () => {
+      expect(makePlanet().encounters.patrolRadius()).toBeGreaterThan(0);
+    });
+
+    it('piracyRadius accessible', () => {
+      expect(makePlanet().encounters.piracyRadius()).toBeGreaterThan(0);
+    });
+  });
+
+  describe('delegate wiring: fabrication', () => {
+    it('fabricationAvailability accessible', () => {
+      expect(makePlanet().fabrication.fabricationAvailability()).toBe(100);
+    });
+
+    it('fabricationTime accessible', () => {
+      expect(makePlanet().fabrication.fabricationTime(aCraftableResource())).toBeGreaterThan(0);
+    });
+  });
+
+  describe('delegate wiring: repair', () => {
+    it('hullRepairPrice accessible', () => {
+      expect(makePlanet().repair.hullRepairPrice(makePlayer())).toBeGreaterThan(0);
+    });
+
+    it('hasRepairs accessible', () => {
+      expect(makePlanet().repair.hasRepairs()).toBeFalsy();
+    });
+  });
+
+  describe('delegate wiring: labor', () => {
+    it('hasPicketLine accessible', () => {
+      expect(makePlanet().labor.hasPicketLine()).toBe(false);
     });
   });
 });
