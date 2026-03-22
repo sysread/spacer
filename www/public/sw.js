@@ -10,7 +10,7 @@
  * (e.g. served from /spacer/ on GitHub Pages or / locally).
  */
 
-const CACHE_VERSION = 'spacer-v2';
+const CACHE_VERSION = 'spacer-v3';
 
 /* App shell files to pre-cache on install. Vendor JS and CSS are bundled
  * by Vite into the hashed assets/ files, so we cache the index page (which
@@ -19,12 +19,44 @@ const CACHE_VERSION = 'spacer-v2';
 const PRECACHE_URLS = [
   './',
   './css/index.css',
+  './img/bg.jpg',
+  './img/callisto.png',
+  './img/ceres.png',
+  './img/compass.png',
+  './img/earth.png',
+  './img/enceladus.png',
+  './img/europa.png',
+  './img/flag-ceres.png',
+  './img/flag-jft.png',
+  './img/flag-mc.png',
+  './img/flag-transa.png',
+  './img/flag-un.png',
+  './img/ganymede.png',
+  './img/home.png',
   './img/icon-192.png',
   './img/icon-512.png',
-  './img/compass.png',
-  './img/home.png',
+  './img/jupiter.png',
+  './img/launch.png',
+  './img/logo.png',
   './img/market.png',
+  './img/mars.png',
+  './img/mercury.png',
+  './img/milkyway.jpg',
+  './img/moon.png',
+  './img/neptune.png',
+  './img/phobos.png',
+  './img/planet.png',
+  './img/pluto.png',
+  './img/rhea.png',
+  './img/saturn.png',
   './img/summary.png',
+  './img/sun.png',
+  './img/target.png',
+  './img/titan.png',
+  './img/titania.png',
+  './img/triton.png',
+  './img/trojans.png',
+  './img/uranus.png',
 ];
 
 function isStaticAsset(url) {
