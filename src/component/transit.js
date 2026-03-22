@@ -207,7 +207,7 @@ Vue.component('Transit', {
     },
 
     piracyEvasionMalusCargo() {
-      const cargo = this.game.player.ship.cargoValue(this.game.here);
+      const cargo = this.game.player.ship.cargoValue(this.game.here.pricing);
       if (cargo >= 1) {
         return Math.log10(cargo) / 200;
       } else {
@@ -845,7 +845,7 @@ Vue.component('PirateEncounter', {
       min_addons:    2,
     });
 
-    const ship_value = npc.ship.shipValue(window.game.here) + npc.ship.addOnValue();
+    const ship_value = npc.ship.shipValue(window.game.here.pricing) + npc.ship.addOnValue();
     const bounty = Math.ceil(ship_value / 20);
 
     return {
