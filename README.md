@@ -1,5 +1,8 @@
 # Spacer
 
+[![CI](https://github.com/sysread/spacer/actions/workflows/ci.yml/badge.svg)](https://github.com/sysread/spacer/actions/workflows/ci.yml)
+[![Deploy](https://github.com/sysread/spacer/actions/workflows/deploy.yml/badge.svg)](https://github.com/sysread/spacer/actions/workflows/deploy.yml)
+
 A space trading and combat sim inspired by TradeWars, Elite, The Expanse, and Firefly.
 
 **Play it:** https://sysread.github.io/spacer/
