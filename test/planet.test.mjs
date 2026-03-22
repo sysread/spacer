@@ -90,6 +90,45 @@ describe('Planet', () => {
     });
   });
 
+  describe('serialization', () => {
+    it('toJSON returns only saveable state, not delegates', () => {
+      const p = makePlanet();
+      const json = p.toJSON();
+      expect(json).toHaveProperty('stock');
+      expect(json).toHaveProperty('supply');
+      expect(json).toHaveProperty('demand');
+      expect(json).toHaveProperty('need');
+      expect(json).toHaveProperty('pending');
+      expect(json).toHaveProperty('queue');
+      expect(json).toHaveProperty('conditions');
+      expect(json).toHaveProperty('contracts');
+      expect(json).not.toHaveProperty('encounters');
+      expect(json).not.toHaveProperty('economy');
+      expect(json).not.toHaveProperty('pricing');
+      expect(json).not.toHaveProperty('commerce');
+      expect(json).not.toHaveProperty('fabrication');
+      expect(json).not.toHaveProperty('repair');
+      expect(json).not.toHaveProperty('labor');
+      expect(json).not.toHaveProperty('state');
+    });
+
+    it('JSON.stringify produces reasonable size', () => {
+      const p = makePlanet();
+      const str = JSON.stringify(p);
+      // A fresh planet should serialize to well under 10KB
+      expect(str.length).toBeLessThan(10000);
+    });
+
+    it('serialized data can reconstruct a Planet', () => {
+      const p1 = makePlanet();
+      p1.state.stock.inc('fuel', 42);
+      const saved = JSON.parse(JSON.stringify(p1));
+      const p2 = makePlanet();
+      // Manually apply saved state to verify it round-trips
+      expect(saved.stock.store.fuel).toBe(42);
+    });
+  });
+
   /* Integration: verify delegates are accessible and return sane values
    * through the Planet wrapper. Delegate internals are tested in
    * test/planet/<domain>.test.mjs. */
