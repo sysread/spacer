@@ -116,9 +116,10 @@ Vue.component('NavComp', {
 
     const nav = document.getElementById('spacer-nav');
     if (nav && nav.classList.contains('collapsing')) {
-      nav.addEventListener('hidden.bs.collapse', () => {
+      // Bootstrap 4 fires jQuery events for collapse, not native DOM events
+      window.jQuery(nav).one('hidden.bs.collapse', () => {
         this.is_ready = true;
-      }, { once: true });
+      });
     }
     else {
       this.is_ready = true;

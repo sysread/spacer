@@ -7,9 +7,11 @@ Vue.component('modal', {
   directives: {
     'modal': {
       inserted: function(el, binding, vnode) {
-        // Bootstrap 4 jQuery plugin; will become bootstrap.Modal(el) in BS5
+        // Bootstrap 4 fires jQuery events, not native DOM events, so the
+        // event listener must also use jQuery. This converts to native
+        // addEventListener when we upgrade to Bootstrap 5.
         window.jQuery(el).modal('show');
-        el.addEventListener('hidden.bs.modal', () => {
+        window.jQuery(el).on('hidden.bs.modal', () => {
           vnode.context.$emit('close');
         });
       }

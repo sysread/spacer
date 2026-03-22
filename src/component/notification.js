@@ -19,7 +19,7 @@ Vue.component('Notification', {
     }
 
     this.$el.addEventListener('click', () => window.jQuery(this.$el).alert('close'));
-    this.$el.addEventListener('closed.bs.alert', () => this.$emit('dismiss', this.msg));
+    window.jQuery(this.$el).on('closed.bs.alert', () => this.$emit('dismiss', this.msg));
   },
 
   template: `
