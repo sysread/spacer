@@ -3,29 +3,22 @@
  * Game state lives in localStorage, which is unaffected by SW caching.
  *
  * Strategy:
- *   cache-first for static assets (images, CSS, fonts, vendor JS)
+ *   cache-first for static assets (images, CSS)
  *   network-first for HTML and application JS (picks up updates when online)
  *
  * All URLs are relative so this works regardless of the base path
  * (e.g. served from /spacer/ on GitHub Pages or / locally).
  */
 
-const CACHE_VERSION = 'spacer-v1';
+const CACHE_VERSION = 'spacer-v2';
 
-/* App shell files to pre-cache on install. Planet images are omitted to
- * keep the install payload small; they get cached on first view via the
- * cache-first runtime strategy. Paths are relative to the SW scope. */
+/* App shell files to pre-cache on install. Vendor JS and CSS are bundled
+ * by Vite into the hashed assets/ files, so we cache the index page (which
+ * references them) and key images. The bundled JS/CSS gets cached at runtime
+ * via the network-first fetch handler. */
 const PRECACHE_URLS = [
   './',
   './css/index.css',
-  './css/vendor/bootstrap.min.css',
-  './css/fonts/glyphicons-halflings-regular.woff2',
-  './css/fonts/glyphicons-halflings-regular.woff',
-  './js/vendor/jquery.min.js',
-  './js/vendor/bootstrap.bundle.min.js',
-  './js/vendor/gsap.min.js',
-  './js/vendor/fastclick.js',
-  './img/logo.png',
   './img/icon-192.png',
   './img/icon-512.png',
   './img/compass.png',
@@ -38,7 +31,7 @@ function isStaticAsset(url) {
   const path = new URL(url).pathname;
   return path.includes('/css/')
       || path.includes('/img/')
-      || path.includes('/js/vendor/');
+      || path.includes('/assets/');
 }
 
 /* Pre-cache the app shell on install, then activate immediately. */
