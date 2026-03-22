@@ -1315,7 +1315,7 @@ export class Planet {
       stockRating[body] = stock[body] / avgStock;
     }
 
-    let bestPlanet: t.body | void;
+    let bestPlanet: t.body | undefined = undefined;
     let bestRating = 0;
 
     const hasTradeBan = this.hasTradeBan;
@@ -1578,8 +1578,8 @@ export class Planet {
 
     if (this.contracts.length > 0 && window.game) {
       this.contracts = this.contracts.filter(c => {
-        if (c instanceof Smuggler) {
-          if (hasTradeBan || data.resources[c.item].contraband) {
+        if (c.mission instanceof Smuggler) {
+          if (hasTradeBan || data.resources[c.mission.item].contraband) {
             return true;
           }
 
@@ -1591,9 +1591,9 @@ export class Planet {
     }
 
     const max_count = FastMath.ceil(this.scale(data.smuggler_mission_count));
-    const missions  = this.contracts.filter(c => c instanceof Smuggler).slice(0, max_count);
+    const missions  = this.contracts.filter(c => c.mission instanceof Smuggler).slice(0, max_count);
 
-    this.contracts = this.contracts.filter(c => !(c instanceof Smuggler));
+    this.contracts = this.contracts.filter(c => !(c.mission instanceof Smuggler));
 
     const threshold = FastMath.ceil(this.scale(6));
 
@@ -1634,7 +1634,7 @@ export class Planet {
    * Each destination is only offered once per refresh.
    */
   refreshPassengerContracts() {
-    const have = this.contracts.filter(c => !(c instanceof Passengers)).length;
+    const have = this.contracts.filter(c => c.mission instanceof Passengers).length;
     const max  = Math.max(1, util.getRandomInt(0, this.scale(data.passenger_mission_count)));
     const want = Math.max(0, max - have);
 
@@ -1721,7 +1721,7 @@ export class Planet {
    * Returns undefined if nothing is scheduled.
    */
   estimateAvailability(item: t.resource): number|undefined {
-    let turns = undefined;
+    let turns: number | undefined = undefined;
 
     if (this.getStock(item) > 0)
       return 0;
