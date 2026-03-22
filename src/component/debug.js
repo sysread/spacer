@@ -109,6 +109,7 @@ Vue.component('Debug', {
     placeIsNetExporter(place, item) { return place.economy.isNetExporter(item) },
     placeHasShortage(place, item)   { return place.economy.hasShortage(item) },
     placeHasSurplus(place, item)    { return place.economy.hasSurplus(item) },
+    placePrice(place, item)         { return place.pricing.price(item) },
   },
 
   template: `
@@ -182,7 +183,7 @@ Vue.component('Debug', {
   <template v-for="place in places">
   <tr :class="{'text-info': placeIsNetExporter(place, item)}">
     <td>{{place.name|caps}}</td>
-    <td class="text-right">{{place.price(item)|csn}}</td>
+    <td class="text-right">{{placePrice(place, item)|csn}}</td>
     <td class="text-right">{{placeGetStock(place, item)}}</td>
     <td class="text-right">{{placeGetDemand(place, item)|R(2)}}</td>
     <td class="text-right">{{placeGetSupply(place, item)|R(2)}}</td>
@@ -211,7 +212,7 @@ Vue.component('Debug', {
   <template v-for="item in resources">
   <tr :class="{'text-info': placeIsNetExporter(place, item)}">
     <td>{{item|caps}}</td>
-    <td class="text-right">{{place.price(item)|csn}}</td>
+    <td class="text-right">{{placePrice(place, item)|csn}}</td>
     <td class="text-right">{{placeGetStock(place, item)}}</td>
     <td class="text-right">{{placeGetDemand(place, item)|R(2)}}</td>
     <td class="text-right">{{placeGetSupply(place, item)|R(2)}}</td>

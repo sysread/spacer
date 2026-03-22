@@ -26,7 +26,7 @@ Vue.component('fabrication', {
     turns()   { return this.queue.next_turns },
     hours()   { return this.data.hours_per_turn * this.turns },
     percent() { return 100 * this.queue.completed / this.queue.goal },
-    price()   { return this.game.here.sellPrice(this.item) },
+    price()   { return this.game.here.pricing.sellPrice(this.item) },
 
     amount() {
       return Math.min(

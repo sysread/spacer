@@ -193,7 +193,7 @@ export class Agent extends Person {
   refuel() {
     if (isDocked(this.action)) {
       const fuelNeeded = this.ship.refuelUnits();
-      const price      = this.here.fuelPricePerTonne(this);
+      const price      = this.here.pricing.fuelPricePerTonne(this);
 
       if (fuelNeeded > 0 && this.money > (fuelNeeded * price)) {
         const [bought, paid] = this.here.buy('fuel', fuelNeeded);
@@ -234,7 +234,7 @@ export class Agent extends Person {
   buyLuxuries() {
     if (isDocked(this.action)) {
       const here = window.game.planets[this.action.location];
-      const want = FastMath.ceil((this.money - 1000) / here.buyPrice('luxuries', this));
+      const want = FastMath.ceil((this.money - 1000) / here.pricing.buyPrice('luxuries', this));
       const [, price] = here.buy('luxuries', want);
       this.debit(price);
     }
@@ -302,7 +302,7 @@ export class Agent extends Person {
 
       for (const item of t.resources) {
         const stock    = here.economy.getStock(item);
-        const buyPrice = here.buyPrice(item, this);
+        const buyPrice = here.pricing.buyPrice(item, this);
         const canBuy   = Math.min(stock, cargoSpace, FastMath.floor(this.money / buyPrice));
 
         if (canBuy == 0) {
@@ -313,7 +313,7 @@ export class Agent extends Person {
           if (game.planets[dest].hasTradeBan)
             continue;
 
-          const sellPrice     = game.planets[dest].sellPrice(item);
+          const sellPrice     = game.planets[dest].pricing.sellPrice(item);
           const profitPerUnit = sellPrice - buyPrice;
 
           if (profitPerUnit <= 0) {
@@ -326,7 +326,7 @@ export class Agent extends Person {
             continue;
           }
 
-          const fuelPrice   = game.planets[dest].fuelPricePerTonne(this);
+          const fuelPrice   = game.planets[dest].pricing.fuelPricePerTonne(this);
           const fuelCost    = transit.fuel * fuelPrice;
           const grossProfit = profitPerUnit * canBuy;
           const netProfit   = (grossProfit - fuelCost) / transit.turns;

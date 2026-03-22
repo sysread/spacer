@@ -313,7 +313,7 @@ export class Passengers extends Mission {
       const fuzz  = util.fuzz(2, 0.5);
       const turns = FastMath.ceil(transit.turns * fuzz);
       const fuel  = window.game.player.ship.burnRate(transit.accel) * transit.turns;
-      const rate  = util.fuzz(window.game.planets[orig].fuelPricePerTonne() * 3, 0.1);
+      const rate  = util.fuzz(window.game.planets[orig].pricing.fuelPricePerTonne() * 3, 0.1);
       const cost  = FastMath.ceil(fuel * rate * fuzz);
       return {reward: cost, turns: turns};
     }

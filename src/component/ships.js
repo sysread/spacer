@@ -82,7 +82,7 @@ Vue.component('ship', {
     name:            function() { return this.type.replace('_', '-') },
     planet:          function() { return this.game.here },
     player:          function() { return this.game.player },
-    playerShipValue: function() { return this.player.ship.price(true, this.game.here) },
+    playerShipValue: function() { return this.player.ship.price(true, this.game.here.pricing) },
     tradeIn:         function() { return this.price - this.playerShipValue },
     shipClass:       function() { return this.data.shipclass[this.type] },
     ship:            function() { return new Ship({type: this.type}) },
@@ -116,7 +116,7 @@ Vue.component('ship', {
     },
 
     price: function() {
-      let price = this.ship.price(false, this.game.here);
+      let price = this.ship.price(false, this.game.here.pricing);
       price *= 1 + this.player.getStandingPriceAdjustment(this.planet.faction);
       price *= 1 + this.planet.faction.sales_tax;
       return Math.ceil(price);

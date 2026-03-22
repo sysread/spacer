@@ -118,6 +118,7 @@ import type { SavedPlanet, EconTask, ImportTask, CraftTask } from './planet/stat
 import { Encounters } from './planet/encounters';
 import { Work } from './planet/work';
 import { Economy } from './planet/economy';
+import { Pricing } from './planet/pricing';
 
 // Re-export for external consumers
 export type { SavedPlanet };
@@ -146,12 +147,15 @@ export class Planet {
   state:      PlanetState;
   encounters: Encounters;
   economy:    Economy;
+  pricing:    Pricing;
   labor:      Work;
 
   constructor(body: t.body, init?: SavedPlanet) {
     this.state      = new PlanetState(body, init);
     this.encounters = new Encounters(this.state);
     this.economy    = new Economy(this.state);
+    this.pricing    = new Pricing(this.state, this.economy,
+      (body, item) => window.game.planets[body].economy.isNetExporter(item));
     this.labor      = new Work(this.state, (item) => this.economy.production(item));
 
     // Deferred contract restoration: restoreMission() needs window.game,
@@ -395,7 +399,7 @@ export class Planet {
       throw new Error(`${item} is not craftable`);
     }
 
-    const price    = this.sellPrice(item);
+    const price    = this.pricing.sellPrice(item);
     const discount = 1.0 - player.getStandingPriceAdjustment(this.faction);
 
     let fee = 0;
@@ -453,157 +457,6 @@ export class Planet {
 
 
   scale(n=0) { return this.state.scale(n); }
-
-  // ---------------------------------------------------------------------------
-  // Pricing
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Distance-based price markup for non-exporters.
-   * Net exporters of an item sell at a 20% discount (0.8).
-   * Non-exporters get a markup based on distance to the nearest exporter:
-   *   - Cross-faction source adds 10%
-   *   - Each full AU of distance adds 5% compounded
-   * Returns 1.0 when no exporter exists (no markup, no discount).
-   */
-  getAvailabilityMarkup(item: t.resource) {
-    if (this.economy.isNetExporter(item)) {
-      return 0.8;
-    }
-
-    let distance;
-    let nearest;
-
-    for (const body of t.bodies) {
-      if (body == this.body) {
-        continue;
-      }
-
-      if (!window.game.planets[body].economy.isNetExporter(item)) {
-        continue;
-      }
-
-      const d = system.distance(this.body, body);
-
-      if (distance == undefined || distance > d) {
-        nearest  = body;
-        distance = d;
-      }
-    }
-
-    if (distance != undefined && nearest != undefined) {
-      let markup = 1;
-
-      if (data.bodies[nearest].faction != data.bodies[this.body].faction) {
-        markup += 0.1;
-      }
-
-      const au = FastMath.ceil(distance / Physics.AU);
-      for (let i = 0; i < au; ++i) {
-        markup *= 1.05;
-      }
-
-      return markup;
-    }
-    else {
-      return 1;
-    }
-  }
-
-  /**
-   * Scarcity markup for necessity goods (food, fuel, medicine, etc.).
-   * Returns 1 + data.scarcity_markup for necessities, 1.0 otherwise.
-   */
-  getScarcityMarkup(item: t.resource) {
-    if (data.necessity[item]) {
-      return 1 + data.scarcity_markup;
-    } else {
-      return 1;
-    }
-  }
-
-  /**
-   * Condition-based markup: active conditions that consume an item raise its
-   * price; conditions that produce it lower it.
-   */
-  getConditionMarkup(item: t.resource) {
-    let markup = 1;
-
-    for (const condition of this.conditions) {
-      const consumption = this.scale(condition.consumes[item] || 0);
-      const production  = this.scale(condition.produces[item] || 0);
-      const amount      = consumption - production;
-      markup += amount;
-    }
-
-    return markup;
-  }
-
-  /**
-   * Computes and caches the market price for an item.
-   *
-   * Pipeline:
-   *   1. Base value from resource.ts
-   *   2. Need factor: log(need) markup or fractional discount
-   *   3. Trait price adjustments (flat percentage)
-   *   4. Scarcity markup for necessity goods
-   *   5. Condition markup from active events
-   *   6. Clamped to [minPrice, maxPrice]
-   *   7. Availability markup (distance to nearest exporter, post-clamp)
-   *   8. 5% random fuzz for local variation
-   *
-   * Cached until the per-resource _cycle expires (3-12 days).
-   */
-  price(item: t.resource) {
-    if (this._price[item] == undefined) {
-      const value = resources[item].value;
-      const need  = this.economy.getNeed(item);
-
-      let price = 0;
-
-      if (need > 1) {
-        price = value + (value * Math.log(need));
-      } else if (need < 1) {
-        price = value * need;
-      } else {
-        price = value;
-      }
-
-      for (const trait of this.traits)
-        price -= price * (trait.price[item] || 0);
-
-      price *= this.getScarcityMarkup(item);
-      price *= this.getConditionMarkup(item);
-      price  = resources[item].clampPrice(price);
-      price *= this.getAvailabilityMarkup(item);
-      price  = util.fuzz(price, 0.05);
-
-      this._price[item] = util.R(price);
-    }
-
-    return this._price[item];
-  }
-
-  /** Price at which this market will buy goods from the player. */
-  sellPrice(item: t.resource) {
-    return this.price(item);
-  }
-
-  /**
-   * Price at which this market sells goods to the player.
-   * Adds sales tax; subtracts a standing discount if a player is provided.
-   */
-  buyPrice(item: t.resource, player?: Person): number {
-    const price = this.price(item) * (1 + this.faction.sales_tax);
-    return player
-      ? FastMath.ceil(price * (1 - player.getStandingPriceAdjustment(this.faction.abbrev)))
-      : FastMath.ceil(price);
-  }
-
-  /** Price per tonne of fuel (buy price / fuel mass), with a 3.5% handling margin. */
-  fuelPricePerTonne(player?: Person): number {
-    return FastMath.ceil(this.buyPrice('fuel', player) * 1.035 / data.resources.fuel.mass);
-  }
 
   // ---------------------------------------------------------------------------
   // Commerce - buy and sell
@@ -669,7 +522,7 @@ export class Planet {
       return [0, 0];
 
     const bought = Math.min(amount, this.economy.getStock(item));
-    const price  = bought * this.buyPrice(item, player);
+    const price  = bought * this.pricing.buyPrice(item, player);
 
     this.economy.incDemand(item, amount);
     this.stock.dec(item, bought);
@@ -702,7 +555,7 @@ export class Planet {
       return [0, 0, 0];
 
     const hasShortage = this.economy.hasShortage(item);
-    const price = amount * this.sellPrice(item);
+    const price = amount * this.pricing.sellPrice(item);
     this.stock.inc(item, amount);
 
     let standing = 0;
@@ -798,7 +651,7 @@ export class Planet {
 
       if (amount > 0) {
         amounts[item] = amount;
-        need[item] = Math.log(this.price(item)) * this.economy.getNeed(item);
+        need[item] = Math.log(this.pricing.price(item)) * this.economy.getNeed(item);
       }
     }
 
@@ -850,8 +703,8 @@ export class Planet {
       if (window.game.planets[body].hasTradeBan)
         continue;
 
-      dist[body]  = this.distance(body) / Physics.AU * window.game.planets[body].fuelPricePerTonne();
-      price[body] = window.game.planets[body].buyPrice(item);
+      dist[body]  = this.distance(body) / Physics.AU * window.game.planets[body].pricing.fuelPricePerTonne();
+      price[body] = window.game.planets[body].pricing.buyPrice(item);
       stock[body] = Math.min(amount, window.game.planets[body].economy.getStock(item));
     }
 

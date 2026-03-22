@@ -667,7 +667,7 @@ Vue.component('PatrolEncounter', {
     canAffordBribe() { return this.bribeAmount <= this.game.player.money },
 
     bribeAmount() {
-      const base = Math.ceil(this.game.player.ship.price(false, this.planet) * 0.03);
+      const base = Math.ceil(this.game.player.ship.price(false, this.planet.pricing) * 0.03);
       return this.isBlockade ? base * 2 : base;
     },
 

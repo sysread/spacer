@@ -18,7 +18,7 @@ Vue.component('shipyard', {
     };
   },
   methods: {
-    affordFuel() { return this.game.player.money >= this.game.here.fuelPricePerTonne(this.game.player) },
+    affordFuel() { return this.game.player.money >= this.game.here.pricing.fuelPricePerTonne(this.game.player) },
     needsFuel()  { return !this.game.player.ship.tankIsFull() },
     hasFuel()    { return this.game.player.ship.cargo.count('fuel') > 0 },
     hasDamage()  { return this.game.player.ship.hasDamage() },
@@ -71,7 +71,7 @@ Vue.component('shipyard-refuel', {
   computed: {
     need()  { return this.game.player.ship.refuelUnits() },
     max()   { return Math.min(this.need, Math.floor(this.game.player.money / this.price)) },
-    price() { return this.game.here.fuelPricePerTonne(this.game.player) },
+    price() { return this.game.here.pricing.fuelPricePerTonne(this.game.player) },
   },
 
   methods: {
