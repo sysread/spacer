@@ -1,15 +1,17 @@
 # Spacer
-Like a cross between TradeWars, Elite, The Expanse, and Firefly.
 
-# Testing
+A space trading and combat sim inspired by TradeWars, Elite, The Expanse, and Firefly.
 
-## Chrome
-    cordova serve
+**Play it:** https://sysread.github.io/spacer/
 
-## Android
-    cordova platform add android
-    cordova build android
-    adb install -r /path/to/generated/apk
+Installable as a PWA on mobile and desktop.
 
-## iOS
-    cordova run ios
+## Development
+
+    npm install
+    npm run dev         # Vite dev server at localhost:5173
+    npm test            # run tests
+    npm run test:watch  # watch mode
+    npm run typecheck   # tsc --noEmit
+    npm run build       # production build to dist/
+    npm run preview     # serve production build locally
