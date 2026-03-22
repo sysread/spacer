@@ -227,7 +227,7 @@ export abstract class Mission {
    */
   accept() {
     if (this.status < Status.Accepted) {
-      window.game.planets[this.issuer].acceptMission(this);
+      window.game.planets[this.issuer].contractMgr.acceptMission(this);
       this.deadline = window.game.turns + this.turns;
     }
 

@@ -121,6 +121,7 @@ import { Economy } from './planet/economy';
 import { Pricing } from './planet/pricing';
 import { Commerce } from './planet/commerce';
 import { Fabrication } from './planet/fabrication';
+import { Contracts as ContractsDelegate } from './planet/contracts';
 
 // Re-export for external consumers
 export type { SavedPlanet };
@@ -152,6 +153,7 @@ export class Planet {
   pricing:     Pricing;
   commerce:    Commerce;
   fabrication: Fabrication;
+  contractMgr: ContractsDelegate;
   labor:       Work;
 
   constructor(body: t.body, init?: SavedPlanet) {
@@ -162,6 +164,7 @@ export class Planet {
       (body, item) => window.game.planets[body].economy.isNetExporter(item));
     this.commerce   = new Commerce(this.state, this.economy, this.pricing, this.encounters);
     this.fabrication = new Fabrication(this.state, this.pricing, this.commerce);
+    this.contractMgr = new ContractsDelegate(this.state, () => this.neededResources());
     this.labor      = new Work(this.state, (item) => this.economy.production(item));
 
     // Deferred contract restoration: restoreMission() needs window.game,
@@ -189,7 +192,7 @@ export class Planet {
     });
 
     watch("arrived", (_ev: Arrived) => {
-      this.refreshContracts();
+      this.contractMgr.refreshContracts();
       return {complete: false};
     });
   }
@@ -256,7 +259,7 @@ export class Planet {
         // Contract refresh is skipped during transit (frozen game) since the
         // per-arrival watcher handles it when the player docks.
         if (!window.game.frozen && !window.game.transit_plan) {
-          this.refreshContracts();
+          this.contractMgr.refreshContracts();
         }
 
         this.fabrication.replenishFabricators();  // buy cybernetics to restore fab health
@@ -670,152 +673,6 @@ export class Planet {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Contracts
-  // ---------------------------------------------------------------------------
-
-  get availableContracts() {
-    return this.contracts.filter(c => !c.mission.is_accepted);
-  }
-
-  /** Contracts that can be accepted without docking (Smuggler missions only). */
-  get availableOffPlanetContracts() {
-    return this.availableContracts.filter(c => c.mission instanceof Smuggler);
-  }
-
-  /**
-   * Removes expired contracts and refreshes passenger and smuggler offerings.
-   * Called on arrival and (when not in transit) at turn 2 of each day.
-   */
-  refreshContracts() {
-    if (this.contracts.length > 0 && window.game) {
-      this.contracts = this.contracts.filter(c => c.valid_until >= window.game.turns);
-    }
-
-    this.refreshPassengerContracts();
-    this.refreshSmugglerContracts();
-  }
-
-  /**
-   * Rebuilds the smuggler contract list. Removes contracts for items that are
-   * no longer contraband or under blockade. Generates new contracts for the
-   * most-needed contraband or blockaded items, up to the scaled maximum count.
-   */
-  refreshSmugglerContracts() {
-    const hasTradeBan = this.hasTradeBan;
-
-    if (this.contracts.length > 0 && window.game) {
-      this.contracts = this.contracts.filter(c => {
-        if (c.mission instanceof Smuggler) {
-          if (hasTradeBan || data.resources[c.mission.item].contraband) {
-            return true;
-          }
-
-          return false;
-        }
-
-        return true;
-      });
-    }
-
-    const max_count = FastMath.ceil(this.scale(data.smuggler_mission_count));
-    const missions  = this.contracts.filter(c => c.mission instanceof Smuggler).slice(0, max_count);
-
-    this.contracts = this.contracts.filter(c => !(c.mission instanceof Smuggler));
-
-    const threshold = FastMath.ceil(this.scale(6));
-
-    if (missions.length < max_count) {
-      const needed = this.neededResources();
-
-      for (const item of needed.prioritized) {
-        if (missions.length >= max_count)
-          break;
-
-        if (needed.amounts[item] < threshold)
-          continue;
-
-        if (hasTradeBan || data.resources[item].contraband) {
-          const batch  = util.clamp(needed.amounts[item], 1, window.game.player.ship.cargoSpace);
-          const amount = util.clamp(util.fuzz(batch, 1.00), 1);
-
-          const mission = new Smuggler({
-            issuer: this.body,
-            item:   item,
-            amt:    util.R(amount),
-          });
-
-          missions.push({
-            valid_until: util.getRandomInt(30, 60) * data.turns_per_day,
-            mission: mission,
-          });
-        }
-      }
-    }
-
-    this.contracts = this.contracts.concat(missions);
-  }
-
-  /**
-   * Fills passenger contract slots up to the scaled maximum.
-   * Destinations are weighted toward same-faction planets and faction capitals.
-   * Each destination is only offered once per refresh.
-   */
-  refreshPassengerContracts() {
-    const have = this.contracts.filter(c => c.mission instanceof Passengers).length;
-    const max  = Math.max(1, util.getRandomInt(0, this.scale(data.passenger_mission_count)));
-    const want = Math.max(0, max - have);
-
-    if (this.contracts.length >= want) {
-      return;
-    }
-
-    const skip:  {[key: string]: boolean} = { [this.body]: true };
-    const dests: t.body[] = [];
-
-    for (const c of this.contracts) {
-      skip[(<Passengers>c.mission).dest] = true;
-    }
-
-    for (const body of t.bodies) {
-      if (skip[body]) {
-        continue;
-      }
-
-      dests.push(body);
-
-      // Weight same-faction and capital destinations more heavily.
-      if (data.bodies[body].faction == this.faction.abbrev) {
-        dests.push(body);
-      }
-
-      if (data.factions[data.bodies[body].faction].capital == body) {
-        dests.push(body);
-      }
-    }
-
-    for (let i = 0; i < want; ++i) {
-      const dest = util.oneOf(dests.filter(d => !skip[d]));
-
-      if (!dest) {
-        break;
-      }
-
-      const mission = new Passengers({ orig: this.body, dest: dest });
-
-      this.contracts.push({
-        valid_until: util.getRandomInt(10, 30) * data.turns_per_day,
-        mission:     mission,
-      });
-
-      skip[dest] = true;
-    }
-  }
-
-  /** Removes an accepted mission from the offered contract list. */
-  acceptMission(mission: Mission) {
-    this.contracts = this.contracts.filter(c => c.mission.title != mission.title);
-  }
 
 
   // ---------------------------------------------------------------------------
