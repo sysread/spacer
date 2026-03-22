@@ -16,8 +16,12 @@ Vue.component('fabrication', {
     return {
       show_confirm: false,
       running: false,
-      queue:   new FabricationQueue({item: this.item, game: this.game}),
+      queue:   null,
     };
+  },
+
+  created() {
+    this.queue = new FabricationQueue({item: this.item, game: this.game});
   },
 
   computed: {
