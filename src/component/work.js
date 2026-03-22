@@ -1,7 +1,8 @@
-import * as util from '../util';
 import Vue from 'vue';
-import { Smuggler } from '../mission';
-import { Blockade } from '../conflict';
+import {
+  gatherContracts, computePayRate, computeTotalPay,
+  daysToTurns, workProgress, turnsToTimeSpent, executeWork,
+} from './work-controller';
 
 import './global';
 import './common';
@@ -28,77 +29,21 @@ Vue.component('work', {
     raise()         { return this.player.getStandingPriceAdjustment(this.planet.faction.abbrev) },
     planet()        { return this.game.here },
     tasks()         { return this.planet.work_tasks.map(name => this.data.work.find(work => work.name == name)) },
-    payRate()       { if (this.task) return this.getPayRate(this.task) },
-    pay()           { if (this.task) return this.payRate * this.days },
-    turns()         { return this.days * (24 / this.data.hours_per_turn) },
-    percent()       { return Math.min(100, Math.ceil(this.turnsWorked / this.turns * 100)) },
-    timeSpent()     { return Math.floor(this.turnsWorked / this.data.turns_per_day) },
+    payRate()       { if (this.task) return computePayRate(this.planet, this.player, this.task) },
+    pay()           { if (this.task) return computeTotalPay(this.payRate, this.days) },
+    turns()         { return daysToTurns(this.days) },
+    percent()       { return workProgress(this.turnsWorked, this.turns) },
+    timeSpent()     { return turnsToTimeSpent(this.turnsWorked) },
     hasPicketLine() { return this.planet.labor.hasPicketLine() },
 
     contracts() {
-      const contracts = {};
-
-      for (const c of this.planet.contracts) {
-        if (c.mission.is_accepted) continue;
-
-        if (!contracts[c.mission.mission_type]) {
-          contracts[c.mission.mission_type] = [];
-        }
-
-        contracts[c.mission.mission_type].push(c);
-      }
-
-      // Include contracts that can be accepted remotely (like smuggling) for
-      // other friendly factions.
-      const conflicts = game.get_conflicts();
-      PLANET: for (const p of Object.values(this.game.planets)) {
-        if (p.body == this.planet.body)
-          continue;
-
-        if (!this.planet.hasTrait('black market')
-         && !this.planet.faction.hasStanding(p.faction, 'Friendly'))
-            continue;
-
-        for (const conflict of conflicts) {
-          if (conflict.target == this.planet.faction.abbrev
-           && conflict.proponent == p.faction.abbrev
-           && conflict instanceof Blockade) {
-            continue PLANET;
-          }
-        }
-
-        for (const c of p.contracts) {
-          if (c.mission.is_accepted)
-            continue;
-
-          if (!c.mission.can_accept_remotely)
-            continue;
-
-          if (!contracts[c.mission.mission_type]) {
-            contracts[c.mission.mission_type] = [];
-          }
-
-          contracts[c.mission.mission_type].push(c);
-        }
-      }
-
-      for (const type of Object.keys(contracts)) {
-        contracts[type] = contracts[type].sort((a, b) => {
-          const a_key = this.planet.distance(a.mission.issuer);
-          const b_key = this.planet.distance(b.mission.issuer);
-          return a_key < b_key ? -1
-               : a_key > b_key ?  1
-                               :  0;
-        });
-      }
-
-      return contracts;
+      return gatherContracts(this.planet, this.game.planets, this.game.get_conflicts());
     },
   },
 
   methods: {
     getPayRate: function(task) {
-      return this.planet.labor.payRate(this.player, task);
+      return computePayRate(this.planet, this.player, task);
     },
 
     hasTask: function(task) {
@@ -125,7 +70,7 @@ Vue.component('work', {
     performWork: function() {
       if (this.isReady && !this.isFinished) {
         this.isReady = false;
-        const reward = this.planet.labor.work(this.player, this.task, this.days);
+        const reward = executeWork(this.planet, this.player, this.task, this.days);
         this.hitQuota = Math.floor(reward.items.sum()) > 0 ? true : false;
 
         let timer; timer = window.setInterval(() => {
