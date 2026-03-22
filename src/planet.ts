@@ -240,6 +240,23 @@ export class Planet {
 
   get faction()        { return this.state.faction; }
 
+  /** Controls JSON.stringify output. Returns only the serializable state,
+   * excluding delegates and transient caches. Without this, JSON.stringify
+   * would traverse all delegate objects (each holding a PlanetState reference),
+   * duplicating the state data 9x and blowing the localStorage quota. */
+  toJSON() {
+    return {
+      conditions: this.state.conditions,
+      stock:      this.state.stock,
+      supply:     this.state.supply,
+      demand:     this.state.demand,
+      need:       this.state.need,
+      pending:    this.state.pending,
+      queue:      this.state.queue,
+      contracts:  this.state.contracts,
+    };
+  }
+
   // ---------------------------------------------------------------------------
   // Turn processing
   // ---------------------------------------------------------------------------
