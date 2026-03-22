@@ -164,9 +164,9 @@ Vue.component('shipyard-repair', {
     money()            { return this.game.player.money },
     need_hull()        { return Math.ceil(this.game.player.ship.damage.hull) },
     need_armor()       { return Math.ceil(this.game.player.ship.damage.armor) },
-    has_repairs()      { return this.game.here.hasRepairs() },
-    price_hull_each()  { return this.game.here.hullRepairPrice(this.game.player) },
-    price_armor_each() { return this.game.here.armorRepairPrice(this.game.player) },
+    has_repairs()      { return this.game.here.repair.hasRepairs() },
+    price_hull_each()  { return this.game.here.repair.hullRepairPrice(this.game.player) },
+    price_armor_each() { return this.game.here.repair.armorRepairPrice(this.game.player) },
     price_hull()       { return this.price_hull_each * this.repair_hull },
     price_armor()      { return this.price_armor_each * this.repair_armor },
     price_total()      { return this.price_hull + this.price_armor },
@@ -188,7 +188,7 @@ Vue.component('shipyard-repair', {
     },
 
     next_availability() {
-      const turns = this.game.here.estimateAvailability('metal');
+      const turns = this.game.here.repair.estimateAvailability('metal');
 
       if (turns != undefined) {
         return Math.ceil(turns / this.data.turns_per_day);

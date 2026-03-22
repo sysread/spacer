@@ -61,7 +61,7 @@ Vue.component('addon', {
     },
 
     price() {
-      return Math.ceil(this.planet.addonPrice(this.type, this.player));
+      return Math.ceil(this.planet.repair.addonPrice(this.type, this.player));
     },
 
     isRestricted() {

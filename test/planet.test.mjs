@@ -223,42 +223,42 @@ describe('Planet', () => {
     });
   });
 
-  describe('repair and addons', () => {
+  describe('repair and addons (via planet.repair)', () => {
     it('hullRepairPrice is positive', () => {
-      expect(makePlanet().hullRepairPrice(makePlayer())).toBeGreaterThan(0);
+      expect(makePlanet().repair.hullRepairPrice(makePlayer())).toBeGreaterThan(0);
     });
 
     it('armorRepairPrice is positive', () => {
-      expect(makePlanet().armorRepairPrice(makePlayer())).toBeGreaterThan(0);
+      expect(makePlanet().repair.armorRepairPrice(makePlayer())).toBeGreaterThan(0);
     });
 
     it('hasRepairs is falsy with no metal stock', () => {
-      expect(makePlanet().hasRepairs()).toBeFalsy();
+      expect(makePlanet().repair.hasRepairs()).toBeFalsy();
     });
 
     it('hasRepairs is truthy when metal is stocked', () => {
       const p = makePlanet();
-      p.stock.inc('metal', 10);
-      expect(p.hasRepairs()).toBeTruthy();
+      p.state.stock.inc('metal', 10);
+      expect(p.repair.hasRepairs()).toBeTruthy();
     });
 
     it('addonPrice is positive', () => {
-      expect(makePlanet().addonPrice('armor', makePlayer())).toBeGreaterThan(0);
+      expect(makePlanet().repair.addonPrice('armor', makePlayer())).toBeGreaterThan(0);
     });
   });
 
-  describe('estimateAvailability', () => {
+  describe('estimateAvailability (via planet.repair)', () => {
     it('returns 0 when resource is in stock', () => {
       const p = makePlanet();
-      p.stock.inc('fuel', 10);
-      expect(p.estimateAvailability('fuel')).toBe(0);
+      p.state.stock.inc('fuel', 10);
+      expect(p.repair.estimateAvailability('fuel')).toBe(0);
     });
 
     it('returns 3 for a produced raw resource', () => {
       const p = makePlanet();
       const raw = aRawResource();
       if (p.economy.netProduction(raw) > 0) {
-        expect(p.estimateAvailability(raw)).toBe(3);
+        expect(p.repair.estimateAvailability(raw)).toBe(3);
       }
     });
 
@@ -266,7 +266,7 @@ describe('Planet', () => {
       const p = makePlanet();
       for (const item of t.resources) {
         if (p.economy.netProduction(item) <= 0 && p.economy.getStock(item) === 0) {
-          expect(p.estimateAvailability(item)).toBeUndefined();
+          expect(p.repair.estimateAvailability(item)).toBeUndefined();
           break;
         }
       }
