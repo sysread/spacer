@@ -84,24 +84,24 @@ describe('Planet', () => {
     });
   });
 
-  describe('economy queries', () => {
+  describe('economy queries (via planet.economy)', () => {
     it('getStock returns 0 for a fresh planet', () => {
-      expect(makePlanet().getStock('fuel')).toBe(0);
+      expect(makePlanet().economy.getStock('fuel')).toBe(0);
     });
 
     it('getDemand returns 0 for a fresh planet', () => {
-      expect(makePlanet().getDemand('fuel')).toBe(0);
+      expect(makePlanet().economy.getDemand('fuel')).toBe(0);
     });
 
     it('getSupply returns 0 for a fresh planet', () => {
-      expect(makePlanet().getSupply('fuel')).toBe(0);
+      expect(makePlanet().economy.getSupply('fuel')).toBe(0);
     });
 
     it('production returns values for resources the planet produces', () => {
-      const p = makePlanet();
+      const e = makePlanet().economy;
       let hasProduction = false;
       for (const item of t.resources) {
-        if (p.production(item) > 0) {
+        if (e.production(item) > 0) {
           hasProduction = true;
           break;
         }
@@ -110,72 +110,71 @@ describe('Planet', () => {
     });
 
     it('netProduction equals production minus consumption', () => {
-      const p = makePlanet();
+      const e = makePlanet().economy;
       const item = 'fuel';
-      expect(p.netProduction(item)).toBeCloseTo(
-        p.production(item) - p.consumption(item), 5
+      expect(e.netProduction(item)).toBeCloseTo(
+        e.production(item) - e.consumption(item), 5
       );
     });
   });
 
-  describe('need and shortage/surplus', () => {
+  describe('need and shortage/surplus (via planet.economy)', () => {
     it('getNeed returns a number for any resource', () => {
-      const p = makePlanet();
-      const need = p.getNeed('fuel');
+      const need = makePlanet().economy.getNeed('fuel');
       expect(typeof need).toBe('number');
       expect(isNaN(need)).toBe(false);
     });
 
     it('isNetExporter returns boolean', () => {
-      expect(typeof makePlanet().isNetExporter('fuel')).toBe('boolean');
+      expect(typeof makePlanet().economy.isNetExporter('fuel')).toBe('boolean');
     });
 
     it('shortageFactor is 3 for net exporters', () => {
-      const p = makePlanet();
+      const e = makePlanet().economy;
       for (const item of t.resources) {
-        if (p.isNetExporter(item)) {
-          expect(p.shortageFactor(item)).toBe(3);
+        if (e.isNetExporter(item)) {
+          expect(e.shortageFactor(item)).toBe(3);
           break;
         }
       }
     });
 
     it('shortageFactor is 6 for non-exporters', () => {
-      const p = makePlanet();
+      const e = makePlanet().economy;
       for (const item of t.resources) {
-        if (!p.isNetExporter(item)) {
-          expect(p.shortageFactor(item)).toBe(6);
+        if (!e.isNetExporter(item)) {
+          expect(e.shortageFactor(item)).toBe(6);
           break;
         }
       }
     });
 
     it('surplusFactor is 0.3 for net exporters', () => {
-      const p = makePlanet();
+      const e = makePlanet().economy;
       for (const item of t.resources) {
-        if (p.isNetExporter(item)) {
-          expect(p.surplusFactor(item)).toBe(0.3);
+        if (e.isNetExporter(item)) {
+          expect(e.surplusFactor(item)).toBe(0.3);
           break;
         }
       }
     });
 
     it('surplusFactor is 0.6 for non-exporters', () => {
-      const p = makePlanet();
+      const e = makePlanet().economy;
       for (const item of t.resources) {
-        if (!p.isNetExporter(item)) {
-          expect(p.surplusFactor(item)).toBe(0.6);
+        if (!e.isNetExporter(item)) {
+          expect(e.surplusFactor(item)).toBe(0.6);
           break;
         }
       }
     });
 
     it('hasShortage is false with no stock history', () => {
-      expect(makePlanet().hasShortage('fuel')).toBe(false);
+      expect(makePlanet().economy.hasShortage('fuel')).toBe(false);
     });
 
     it('hasSurplus is false with no stock history', () => {
-      expect(makePlanet().hasSurplus('fuel')).toBe(false);
+      expect(makePlanet().economy.hasSurplus('fuel')).toBe(false);
     });
   });
 
@@ -261,17 +260,15 @@ describe('Planet', () => {
     it('returns 3 for a produced raw resource', () => {
       const p = makePlanet();
       const raw = aRawResource();
-      // Only returns 3 if this planet produces it
-      if (p.netProduction(raw) > 0) {
+      if (p.economy.netProduction(raw) > 0) {
         expect(p.estimateAvailability(raw)).toBe(3);
       }
     });
 
     it('returns undefined when nothing is scheduled and not produced', () => {
       const p = makePlanet();
-      // Find a resource this planet doesn't produce
       for (const item of t.resources) {
-        if (p.netProduction(item) <= 0 && p.getStock(item) === 0) {
+        if (p.economy.netProduction(item) <= 0 && p.economy.getStock(item) === 0) {
           expect(p.estimateAvailability(item)).toBeUndefined();
           break;
         }

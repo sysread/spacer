@@ -301,7 +301,7 @@ export class Agent extends Person {
       navComp.dt = 10;
 
       for (const item of t.resources) {
-        const stock    = here.getStock(item);
+        const stock    = here.economy.getStock(item);
         const buyPrice = here.buyPrice(item, this);
         const canBuy   = Math.min(stock, cargoSpace, FastMath.floor(this.money / buyPrice));
 

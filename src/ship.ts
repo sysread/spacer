@@ -90,12 +90,12 @@ class Ship {
       if (window && this === window.game.player.ship) {
         if (this.hasDamage()) {
           const want = this.damage.armor + this.damage.hull;
-          window.game.here.requestResource('metal', want);
+          window.game.here.economy.requestResource('metal', want);
         }
 
         if (this.needsFuel()) {
           const want = this.refuelUnits();
-          window.game.here.requestResource('fuel', want);
+          window.game.here.economy.requestResource('fuel', want);
         }
       }
 

@@ -23,7 +23,7 @@ Vue.component('market', {
     title()     { return util.ucfirst(this.trade || 'Commerce') },
   },
   methods: {
-    dock(item)          { return this.planet.getStock(item) },
+    dock(item)          { return this.planet.economy.getStock(item) },
     hold(item)          { return this.player.ship.cargo.count(item) },
     buy(item)           { return this.planet.buyPrice(item, this.player) },
     sell(item)          { return this.planet.sellPrice(item) },
@@ -92,7 +92,7 @@ Vue.component('market-trade', {
 
     dock: {
       get() {
-        if (this.tx_dock === null) this.tx_dock = this.game.here.getStock(this.item);
+        if (this.tx_dock === null) this.tx_dock = this.game.here.economy.getStock(this.item);
         return this.tx_dock;
       },
 
@@ -145,7 +145,7 @@ Vue.component('market-trade', {
     max: function() {
       const cred  = this.player.money;
       const hold  = this.player.ship.cargo.count(this.item);
-      const dock  = this.planet.getStock(this.item);
+      const dock  = this.planet.economy.getStock(this.item);
       const cargo = this.player.ship.cargoLeft;
       return hold + Math.min(dock, Math.floor(cred / this.buy), cargo);
     },
@@ -158,7 +158,7 @@ Vue.component('market-trade', {
     updateState: function() {
       const cred   = this.player.money;
       const hold   = this.player.ship.cargo.get(this.item);
-      const dock   = this.planet.getStock(this.item);
+      const dock   = this.planet.economy.getStock(this.item);
       const diff   = this.hold - hold;
       this.dock    = dock - diff;
       this.credits = 0 - (diff * (diff > 0 ? this.buy : this.sell));
@@ -340,7 +340,7 @@ Vue.component('resource-report-row', {
     isHere:  function() { return this.body === this.game.locus },
     remote:  function() { return this.game.planets[this.body] },
     local:   function() { return this.game.here },
-    stock:   function() { return this.remote.getStock(this.item) },
+    stock:   function() { return this.remote.economy.getStock(this.item) },
     rBuy:    function() { return this.remote.buyPrice(this.item, this.player) },
     rSell:   function() { return this.remote.sellPrice(this.item) },
     lBuy:    function() { return this.local.buyPrice(this.item, this.player) },
@@ -398,7 +398,7 @@ Vue.component('market-report-row', {
   computed: {
     player:  function() { return this.game.player },
     local:   function() { return this.game.here },
-    stock:   function() { return this.planet.getStock(this.resource) },
+    stock:   function() { return this.planet.economy.getStock(this.resource) },
     rBuy:    function() { return this.planet.buyPrice(this.resource, this.player) },
     rSell:   function() { return this.planet.sellPrice(this.resource) },
     lBuy:    function() { return this.local.buyPrice(this.resource, this.player) },

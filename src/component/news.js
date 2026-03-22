@@ -138,8 +138,8 @@ Vue.component('News', {
       for (const body of this.bodies) {
         data[body] = this.resources
           .filter(i => !this.data.resources[i].contraband)
-          .filter(i => game.planets[body].hasSuperShortage(i))
-          .filter(i => game.planets[body].getStock(i) == 0);
+          .filter(i => game.planets[body].economy.hasSuperShortage(i))
+          .filter(i => game.planets[body].economy.getStock(i) == 0);
       }
 
       return data;
@@ -151,8 +151,8 @@ Vue.component('News', {
       for (const body of this.bodies) {
         data[body] = this.resources
           .filter(i => !this.data.resources[i].contraband)
-          .filter(i => game.planets[body].hasSuperSurplus(i))
-          .filter(i => game.planets[body].getStock(i) > 0);
+          .filter(i => game.planets[body].economy.hasSuperSurplus(i))
+          .filter(i => game.planets[body].economy.getStock(i) > 0);
       }
 
       return data;

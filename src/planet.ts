@@ -117,6 +117,7 @@ import {
 } from './planet/state';
 import { Encounters } from './planet/encounters';
 import { Work } from './planet/work';
+import { Economy } from './planet/economy';
 
 // Re-export for external consumers
 export { SavedPlanet, isImportTask, isCraftTask };
@@ -143,12 +144,14 @@ interface Contract {
 export class Planet {
   state:      PlanetState;
   encounters: Encounters;
+  economy:    Economy;
   labor:      Work;
 
   constructor(body: t.body, init?: SavedPlanet) {
     this.state      = new PlanetState(body, init);
     this.encounters = new Encounters(this.state);
-    this.labor      = new Work(this.state, (item) => this.production(item));
+    this.economy    = new Economy(this.state);
+    this.labor      = new Work(this.state, (item) => this.economy.production(item));
 
     // Deferred contract restoration: restoreMission() needs window.game,
     // which isn't ready during construction. Wait for the first Arrived event.
@@ -264,13 +267,13 @@ export class Planet {
    */
   rollups(turn: number) {
     for (const item of this.stock.keys())
-      this.incSupply(item, this.getStock(item));
+      this.economy.incSupply(item, this.economy.getStock(item));
 
     this.supply.rollup();
     this.demand.rollup();
 
     for (const item of this.need.keys())
-      this.need.inc(item, this.getNeed(item));
+      this.need.inc(item, this.economy.getNeed(item));
 
     this.need.rollup();
 
@@ -448,183 +451,7 @@ export class Planet {
   }
 
 
-  // ---------------------------------------------------------------------------
-  // Economy - production, consumption, and stock
-  // ---------------------------------------------------------------------------
-
   scale(n=0) { return this.state.scale(n); }
-
-  getStock(item: t.resource) {
-    return this.stock.count(item);
-  }
-
-  avgProduction(item: t.resource) {
-    return this.getSupply(item) - this.consumption(item);
-  }
-
-  netProduction(item: t.resource) {
-    return this.production(item) - this.consumption(item);
-  }
-
-  getDemand(item: t.resource) {
-    return this.demand.avg(item);
-  }
-
-  getSupply(item: t.resource) {
-    return this.supply.avg(item);
-  }
-
-  /** Threshold for declaring a shortage. Net exporters have a higher bar (3 vs 6). */
-  shortageFactor(item: t.resource) {
-    return this.isNetExporter(item) ? 3 : 6;
-  }
-
-  hasShortage(item: t.resource) {
-    return this.getNeed(item) >= this.shortageFactor(item);
-  }
-
-  hasSuperShortage(item: t.resource) {
-    return this.getNeed(item) >= (this.shortageFactor(item) * 1.5);
-  }
-
-  /** Threshold for declaring a surplus. Net exporters have a lower bar (0.3 vs 0.6). */
-  surplusFactor(item: t.resource) {
-    return this.isNetExporter(item) ? 0.3 : 0.6;
-  }
-
-  hasSurplus(item: t.resource) {
-    return this.getNeed(item) <= this.surplusFactor(item);
-  }
-
-  hasSuperSurplus(item: t.resource) {
-    return this.getNeed(item) <= this.surplusFactor(item) * 0.75;
-  }
-
-  /**
-   * Returns the per-turn production output for an item, including condition modifiers.
-   * Scaled by data.resource_scale and divided across turns_per_day.
-   */
-  production(item: t.resource) {
-    let amount = this.produces.get(item) / data.turns_per_day;
-
-    for (const condition of this.conditions) {
-      amount += this.scale(condition.produces[item] || 0);
-    }
-
-    return amount * data.resource_scale;
-  }
-
-  /**
-   * Returns the per-turn consumption amount for an item, including condition modifiers.
-   */
-  consumption(item: t.resource) {
-    let amount = this.consumes.get(item) / data.turns_per_day;
-
-    for (const condition of this.conditions) {
-      amount += this.scale(condition.consumes[item] || 0);
-    }
-
-    return amount * data.resource_scale;
-  }
-
-  /**
-   * Signals that the planet wants `amt` units of `item`.
-   * If stock is below amt, the deficit is added to demand history, which will
-   * drive up price and eventually trigger an import or manufacturing order.
-   */
-  requestResource(item: t.resource, amt: number) {
-    const avail = this.getStock(item);
-
-    if (amt > avail) {
-      this.incDemand(item, amt - avail);
-    }
-  }
-
-  /**
-   * Increases demand for an item and propagates demand upstream to its ingredients.
-   * For crafted goods in shortage, also increases demand for their raw materials,
-   * so that upstream planets will export those materials to meet the shortage.
-   * Uses a queue (BFS) rather than recursion to avoid stack overflow for deep recipes.
-   */
-  incDemand(item: t.resource, amt: number) {
-    const queue: [t.resource, number][] = [[item, amt]];
-
-    while (queue.length > 0) {
-      const elt = queue.shift();
-
-      if (elt != undefined) {
-        const [item, amt] = elt;
-
-        this.demand.inc(item, amt);
-
-        const res = data.resources[item];
-
-        if (t.isCraft(res) && this.hasShortage(item)) {
-          for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
-            queue.push([ mat, (res.recipe.materials[mat] || 0) * amt ]);
-          }
-        }
-      }
-    }
-  }
-
-  incSupply(item: t.resource, amount: number) {
-    this.supply.inc(item, amount);
-  }
-
-  /**
-   * Returns true if this planet is a net exporter of item.
-   * For raw resources: netProduction > 1 scaled unit.
-   * For crafted resources: true only if the planet is a net exporter of ALL
-   * required ingredients (recursive, cached in _exporter).
-   */
-  isNetExporter(item: t.resource): boolean {
-    if (this._exporter[item] === undefined) {
-      const res = data.resources[item];
-
-      if (t.isCraft(res)) {
-        this._exporter[item] = true;
-
-        for (const mat of Object.keys(res.recipe.materials)) {
-          if (!this.isNetExporter(mat as t.resource)) {
-            this._exporter[item] = false;
-            break;
-          }
-        }
-      }
-      else {
-        this._exporter[item] = this.netProduction(item) > this.scale(1);
-      }
-    }
-
-    return this._exporter[item];
-  }
-
-  /**
-   * Returns the dimensionless need score for an item.
-   * Compares demand to a weighted average of stock and supply history:
-   *   supply proxy = (stock + 2*avg_supply) / 3
-   *
-   * Results:
-   *   need > 1: shortage signal; log(10*(1+n)) grows with severity
-   *   need < 1: surplus signal; d/s fraction below 1
-   *   need = 1: exactly balanced
-   *
-   * Cached in _need until rollups() clears it.
-   */
-  getNeed(item: t.resource) {
-    if (this._need[item] === undefined) {
-      const d = this.getDemand(item);
-      const s = (this.getStock(item) + (2 * this.getSupply(item))) / 3;
-      const n = d - s;
-      this._need[item] =
-            n == 0 ? 1
-          : n > 0  ? Math.log(10 * (1 + n))
-                   : d / s;
-    }
-
-    return this._need[item];
-  }
 
   // ---------------------------------------------------------------------------
   // Pricing
@@ -639,7 +466,7 @@ export class Planet {
    * Returns 1.0 when no exporter exists (no markup, no discount).
    */
   getAvailabilityMarkup(item: t.resource) {
-    if (this.isNetExporter(item)) {
+    if (this.economy.isNetExporter(item)) {
       return 0.8;
     }
 
@@ -729,7 +556,7 @@ export class Planet {
   price(item: t.resource) {
     if (this._price[item] == undefined) {
       const value = resources[item].value;
-      const need  = this.getNeed(item);
+      const need  = this.economy.getNeed(item);
 
       let price = 0;
 
@@ -840,10 +667,10 @@ export class Planet {
     if (player && player === window.game.player && !this.transactionInspection(item, amount, player))
       return [0, 0];
 
-    const bought = Math.min(amount, this.getStock(item));
+    const bought = Math.min(amount, this.economy.getStock(item));
     const price  = bought * this.buyPrice(item, player);
 
-    this.incDemand(item, amount);
+    this.economy.incDemand(item, amount);
     this.stock.dec(item, bought);
 
     if (player && bought) {
@@ -873,7 +700,7 @@ export class Planet {
     if (player && player === window.game.player && !this.transactionInspection(item, amount, player))
       return [0, 0, 0];
 
-    const hasShortage = this.hasShortage(item);
+    const hasShortage = this.economy.hasShortage(item);
     const price = amount * this.sellPrice(item);
     this.stock.inc(item, amount);
 
@@ -884,7 +711,7 @@ export class Planet {
       player.credit(price);
 
       if (hasShortage && !resources[item].contraband) {
-        if (!this.hasShortage(item)) {
+        if (!this.economy.hasShortage(item)) {
           // Selling resolved the shortage entirely.
           standing += util.getRandomNum(3, 8);
         }
@@ -949,12 +776,12 @@ export class Planet {
 
   /** Target stock level for an item: at least min_stock, scaled by consumption rate. */
   avgStockWanted(item: t.resource) {
-    const amount = FastMath.ceil(this.avg_stock * this.consumption(item));
+    const amount = FastMath.ceil(this.avg_stock * this.economy.consumption(item));
     return Math.max(this.min_stock, amount);
   }
 
   neededResourceAmount(item: Resource) {
-    return FastMath.ceil(this.getNeed(item.name) * 1.5);
+    return FastMath.ceil(this.economy.getNeed(item.name) * 1.5);
   }
 
   /**
@@ -970,7 +797,7 @@ export class Planet {
 
       if (amount > 0) {
         amounts[item] = amount;
-        need[item] = Math.log(this.price(item)) * this.getNeed(item);
+        need[item] = Math.log(this.price(item)) * this.economy.getNeed(item);
       }
     }
 
@@ -1070,14 +897,14 @@ export class Planet {
     const counts: number[] = [];
 
     if (isCraft(res)) {
-      const need = this.getNeed(item);
+      const need = this.economy.getNeed(item);
 
       for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
-        if (this.getNeed(mat) > need) {
+        if (this.economy.getNeed(mat) > need) {
           return 0;
         }
 
-        const avail = this.getStock(mat);
+        const avail = this.economy.getStock(mat);
 
         if (avail == 0) {
           return 0;
@@ -1137,7 +964,7 @@ export class Planet {
         if (gets < want) {
           const diff = want - gets;
           for (const mat of Object.keys(res.recipe.materials) as t.resource[]) {
-            this.incDemand(mat, diff * (res.recipe.materials[mat] || 0));
+            this.economy.incDemand(mat, diff * (res.recipe.materials[mat] || 0));
           }
         }
       }
@@ -1168,7 +995,7 @@ export class Planet {
     const want = need.amounts;
 
     const list = need.prioritized.filter(i => {
-      if (this.isNetExporter(i) && !this.hasShortage(i)) {
+      if (this.economy.isNetExporter(i) && !this.economy.hasShortage(i)) {
         delete want[i];
         return false;
       }
@@ -1218,8 +1045,8 @@ export class Planet {
    */
   produce() {
     for (const item of t.resources) {
-      if (this.getStock(item) < this.min_stock || !this.hasSuperSurplus(item)) {
-        const amount = this.production(item);
+      if (this.economy.getStock(item) < this.min_stock || !this.economy.hasSuperSurplus(item)) {
+        const amount = this.economy.production(item);
         if (amount > 0) {
           this.sell(item, amount);
         }
@@ -1230,9 +1057,9 @@ export class Planet {
   /** Deducts consumption from stock each turn. */
   consume() {
     for (const item of t.resources) {
-      const amt = this.consumption(item);
+      const amt = this.economy.consumption(item);
       if (amt > 0) {
-        this.buy(item, this.consumption(item));
+        this.buy(item, this.economy.consumption(item));
       }
     }
   }
@@ -1445,11 +1272,11 @@ export class Planet {
   estimateAvailability(item: t.resource): number|undefined {
     let turns: number | undefined = undefined;
 
-    if (this.getStock(item) > 0)
+    if (this.economy.getStock(item) > 0)
       return 0;
 
     const res = resources[item];
-    if (isRaw(res) && this.netProduction(item) > 0) {
+    if (isRaw(res) && this.economy.netProduction(item) > 0) {
       return 3;
     }
 
@@ -1476,10 +1303,10 @@ export class Planet {
    * Used by repair pricing to reflect current metal market conditions.
    */
   resourceDependencyPriceAdjustment(resource: t.resource) {
-    if (this.hasShortage(resource)) {
-      return this.getNeed(resource);
-    } else if (this.hasSurplus(resource)) {
-      return 1 / this.getNeed(resource);
+    if (this.economy.hasShortage(resource)) {
+      return this.economy.getNeed(resource);
+    } else if (this.economy.hasSurplus(resource)) {
+      return 1 / this.economy.getNeed(resource);
     } else {
       return 1;
     }
@@ -1487,7 +1314,7 @@ export class Planet {
 
   /** True if metal is in stock (repairs are possible). */
   hasRepairs() {
-    return this.getStock('metal');
+    return this.economy.getStock('metal');
   }
 
   /** Hull repair price: base rate adjusted for tax, standing, and metal scarcity. */

@@ -98,6 +98,17 @@ Vue.component('Debug', {
       this.game.player.ship.fuel = this.game.player.ship.tank;
       this.game.save_game();
     },
+
+    // Economy method helpers for use in templates
+    placeGetStock(place, item)      { return place.economy.getStock(item) },
+    placeGetDemand(place, item)     { return place.economy.getDemand(item) },
+    placeGetSupply(place, item)     { return place.economy.getSupply(item) },
+    placeGetNeed(place, item)       { return place.economy.getNeed(item) },
+    placeNetProduction(place, item) { return place.economy.netProduction(item) },
+    placeAvgProduction(place, item) { return place.economy.avgProduction(item) },
+    placeIsNetExporter(place, item) { return place.economy.isNetExporter(item) },
+    placeHasShortage(place, item)   { return place.economy.hasShortage(item) },
+    placeHasSurplus(place, item)    { return place.economy.hasSurplus(item) },
   },
 
   template: `
@@ -169,15 +180,15 @@ Vue.component('Debug', {
 </thead>
 <tbody>
   <template v-for="place in places">
-  <tr :class="{'text-info': place.isNetExporter(item)}">
+  <tr :class="{'text-info': placeIsNetExporter(place, item)}">
     <td>{{place.name|caps}}</td>
     <td class="text-right">{{place.price(item)|csn}}</td>
-    <td class="text-right">{{place.getStock(item)}}</td>
-    <td class="text-right">{{place.getDemand(item)|R(2)}}</td>
-    <td class="text-right">{{place.getSupply(item)|R(2)}}</td>
-    <td class="text-right" :class="{'text-success': place.hasSurplus(item), 'text-danger': place.hasShortage(item)}">{{place.getNeed(item)|R(2)}}</td>
-    <td class="text-right">{{place.netProduction(item)|R(2)}}</td>
-    <td class="text-right">{{place.avgProduction(item)|R(2)}}</td>
+    <td class="text-right">{{placeGetStock(place, item)}}</td>
+    <td class="text-right">{{placeGetDemand(place, item)|R(2)}}</td>
+    <td class="text-right">{{placeGetSupply(place, item)|R(2)}}</td>
+    <td class="text-right" :class="{'text-success': placeHasSurplus(place, item), 'text-danger': placeHasShortage(place, item)}">{{placeGetNeed(place, item)|R(2)}}</td>
+    <td class="text-right">{{placeNetProduction(place, item)|R(2)}}</td>
+    <td class="text-right">{{placeAvgProduction(place, item)|R(2)}}</td>
   </tr>
   </template>
 </tbody>
@@ -198,15 +209,15 @@ Vue.component('Debug', {
 </thead>
 <tbody>
   <template v-for="item in resources">
-  <tr :class="{'text-info': place.isNetExporter(item)}">
+  <tr :class="{'text-info': placeIsNetExporter(place, item)}">
     <td>{{item|caps}}</td>
     <td class="text-right">{{place.price(item)|csn}}</td>
-    <td class="text-right">{{place.getStock(item)}}</td>
-    <td class="text-right">{{place.getDemand(item)|R(2)}}</td>
-    <td class="text-right">{{place.getSupply(item)|R(2)}}</td>
-    <td class="text-right" :class="{'text-success': place.hasSurplus(item), 'text-danger': place.hasShortage(item)}">{{place.getNeed(item)|R(2)}}</td>
-    <td class="text-right">{{place.netProduction(item)|R(2)}}</td>
-    <td class="text-right">{{place.avgProduction(item)|R(2)}}</td>
+    <td class="text-right">{{placeGetStock(place, item)}}</td>
+    <td class="text-right">{{placeGetDemand(place, item)|R(2)}}</td>
+    <td class="text-right">{{placeGetSupply(place, item)|R(2)}}</td>
+    <td class="text-right" :class="{'text-success': placeHasSurplus(place, item), 'text-danger': placeHasShortage(place, item)}">{{placeGetNeed(place, item)|R(2)}}</td>
+    <td class="text-right">{{placeNetProduction(place, item)|R(2)}}</td>
+    <td class="text-right">{{placeAvgProduction(place, item)|R(2)}}</td>
   </tr>
   </template>
 </tbody>

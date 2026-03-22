@@ -93,13 +93,13 @@ export class Condition {
    */
   turn(p: Planet) {
     for (const item of Object.keys(this.triggers.shortage) as t.resource[]) {
-      if (!p.hasShortage(item)) {
+      if (!p.economy.hasShortage(item)) {
         this.reduceDuration(0.8);
       }
     }
 
     for (const item of Object.keys(this.triggers.surplus) as t.resource[]) {
-      if (!p.hasSurplus(item)) {
+      if (!p.economy.hasSurplus(item)) {
         this.reduceDuration(0.8);
       }
     }
@@ -125,7 +125,7 @@ export class Condition {
     }
 
     for (const item of Object.keys(this.triggers.shortage) as t.resource[]) {
-      if (p.hasShortage(item)) {
+      if (p.economy.hasShortage(item)) {
         if (util.chance(this.triggers.shortage[item])) {
           return true;
         }
@@ -133,7 +133,7 @@ export class Condition {
     }
 
     for (const item of Object.keys(this.triggers.surplus) as t.resource[]) {
-      if (p.hasSurplus(item)) {
+      if (p.economy.hasSurplus(item)) {
         if (util.chance(this.triggers.surplus[item])) {
           return true;
         }

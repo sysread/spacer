@@ -160,7 +160,7 @@ Vue.component('shipyard-repair', {
   },
 
   computed: {
-    avail()            { return this.game.here.getStock('metal') },
+    avail()            { return this.game.here.economy.getStock('metal') },
     money()            { return this.game.player.money },
     need_hull()        { return Math.ceil(this.game.player.ship.damage.hull) },
     need_armor()       { return Math.ceil(this.game.player.ship.damage.armor) },
