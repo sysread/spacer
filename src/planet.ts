@@ -110,6 +110,15 @@ import * as t from './common';
 import * as util from './util';
 import * as FastMath from './fastmath';
 
+import {
+  PlanetState, SavedPlanet,
+  EconTask, ImportTask, CraftTask,
+  isImportTask, isCraftTask,
+} from './planet/state';
+
+// Re-export for external consumers
+export { SavedPlanet, isImportTask, isCraftTask };
+
 
 declare var window: {
   game: any;
@@ -123,146 +132,25 @@ interface NeededResources {
 }
 
 
-// An ImportTask simulates goods in transit from another planet.
-// The planet buys them from the source immediately; they arrive after `turns`.
-interface ImportTask {
-  type:  'import';
-  turns: number;
-  item:  t.resource;
-  count: number;
-  from:  t.body;
-  to:    t.body;
-}
-
-// A CraftTask simulates background manufacturing from local raw materials.
-interface CraftTask {
-  type:  'craft';
-  turns: number;
-  item:  t.resource;
-  count: number;
-}
-
-type EconTask = ImportTask | CraftTask;
-
-export function isImportTask(task: EconTask): task is ImportTask {
-  return (<ImportTask>task).type == 'import';
-}
-
-export function isCraftTask(task: EconTask): task is ImportTask {
-  return (<CraftTask>task).type == 'craft';
-}
-
-
 // A contract is an offered mission with an expiry turn.
 interface Contract {
   valid_until: number;  // game.turns after which the offer expires
   mission:     Mission;
 }
 
-interface SavedContract {
-  valid_until: number;
-  mission:     SavedMission;
-}
-
-
-export interface SavedPlanet {
-  conditions?: SavedCondition[];
-  stock?:      any;
-  supply?:     any;
-  demand?:     any;
-  need?:       any;
-  pending?:    any;
-  queue?:      any;
-  contracts?:  SavedContract[];
-}
-
 export class Planet {
-  // Physical and geographic properties (read-only after construction)
-  readonly body:      t.body;
-  readonly name:      string;
-  readonly size:      string;    // 'tiny'|'small'|'medium'|'large'|'huge' - drives scale()
-  readonly kind:      string;    // display category ('Planet', 'Moon of Jupiter', etc.)
-  readonly central:   string;    // body key of the parent body this orbits
-  readonly gravity:   number;    // surface gravity in g
-  readonly traits:    Trait[];   // all active traits for this body
-
-  // Base production/consumption rates (scaled, combined from all sources)
-  readonly produces:  Store;
-  readonly consumes:  Store;
-  readonly min_stock: number;    // minimum target stock level (scaled)
-  readonly avg_stock: number;    // average target stock level (scaled)
-
-  // Runtime state
-  conditions:         Condition[];
-  work_tasks:         string[];   // names of Work tasks available here
-  contracts:          Contract[];
-
-  // Fabrication state
-  max_fab_units:      number;     // maximum fabrication capacity units
-  max_fab_health:     number;     // maximum fabrication health (units * fab_health_per_unit)
-  fab_health:         number;     // current fabrication health (decreases as fabricators are used)
-
-  // Economic state
-  stock:              Store;      // current inventory of each resource
-  supply:             History;    // rolling history of stock levels (for avg supply)
-  demand:             History;    // rolling history of demand signals
-  need:               History;    // rolling history of need metric
-  pending:            Store;      // units already ordered (in queue, not yet arrived)
-  queue:              EconTask[]; // in-progress import and craft tasks
-
-  // Cached computed values (cleared periodically)
-  _price:             t.Counter;                  // computed prices, cleared on schedule
-  _cycle:             t.Counter;                  // per-resource price invalidation cycle (turns)
-  _need:              t.Counter;                  // computed need values, cleared each turn
-  _exporter:          {[key:string]: boolean};    // net exporter cache, cleared when conditions change
+  state: PlanetState;
 
   constructor(body: t.body, init?: SavedPlanet) {
-    init = init || {};
+    this.state = new PlanetState(body, init);
 
-    this.body    = body;
-    this.name    = data.bodies[this.body].name;
-    this.size    = data.bodies[this.body].size;
-    this.kind    = system.kind(this.body);
-    this.central = system.central(this.body);
-    this.gravity = system.gravity(this.body);
-    this.traits  = data.bodies[body].traits.map(t => new Trait(t));
-
-    // Restore conditions from saved state, or start with none.
-    if (init.conditions) {
-      this.conditions = init.conditions.map(c => new Condition(c.name, c));
-    } else {
-      this.conditions = [];
-    }
-
-    // Fabrication capacity is scaled by planet size.
-    this.max_fab_units  = FastMath.ceil(this.scale(data.fabricators));
-    this.max_fab_health = this.max_fab_units * data.fab_health;
-    this.fab_health     = this.max_fab_units * data.fab_health;
-
-    // Build the list of work tasks available based on trait requirements.
-    this.work_tasks = [];
-    TASK:for (const task of data.work) {
-      for (const req of task.avail) {
-        for (const trait of this.traits) {
-          if (req === trait.name) {
-            this.work_tasks.push(task.name);
-            continue TASK;
-          }
-        }
-      }
-    }
-
-    this.contracts = [];
-
-    // Contracts cannot be restored immediately because restoreMission() calls
-    // mission.accept(), which requires window.game to be fully initialized.
-    // Deferred to the first Arrived event as a workaround. This is acknowledged
-    // technical debt - it should be a proper deferred initialization pattern.
-    if (init.contracts) {
+    // Deferred contract restoration: restoreMission() needs window.game,
+    // which isn't ready during construction. Wait for the first Arrived event.
+    if (init && init.contracts) {
       watch("arrived", (_ev: Arrived) => {
         if (init && init.contracts) {
           for (const info of init.contracts) {
-            this.contracts.push({
+            this.state.contracts.push({
               valid_until: info.valid_until,
               mission: restoreMission(info.mission, this.body),
             });
@@ -275,54 +163,56 @@ export class Planet {
       });
     }
 
-    // Build the combined production/consumption stores from all sources.
-    this.stock     = new Store(init.stock);
-    this.supply    = new History(data.market_history, init.supply);
-    this.demand    = new History(data.market_history, init.demand);
-    this.need      = new History(data.market_history, init.need);
-    this.pending   = new Store(init.pending);
-    this.queue     = init.queue || [];
-    this.min_stock = this.scale(data.min_stock_count);
-    this.avg_stock = this.scale(data.avg_stock_count);
-
-    this.produces = new Store;
-    this.consumes = new Store;
-    for (const item of t.resources) {
-      this.produces.inc(item, this.scale(data.market.produces[item]));
-      this.consumes.inc(item, this.scale(data.market.consumes[item]));
-
-      this.produces.inc(item, this.scale(this.faction.produces[item] || 0));
-      this.consumes.inc(item, this.scale(this.faction.consumes[item] || 0));
-
-      for (const trait of this.traits) {
-        this.produces.inc(item, this.scale(trait.produces[item]));
-        this.consumes.inc(item, this.scale(trait.consumes[item]));
-      }
-    }
-
-    // Initialize caches here rather than in methods so V8 can build a stable
-    // hidden class for Planet instances without dynamic property assignment later.
-    this._price    = {};
-    this._cycle    = {};
-    this._need     = {};
-    this._exporter = {};
-
     watch("turn", (ev: GameTurn) => {
-      this.turn(ev.detail.turn);  // ev used for turn number
+      this.turn(ev.detail.turn);
       return {complete: false};
     });
 
-    // Refresh contracts on arrival rather than every turn (expensive, and
-    // not needed while the player is in transit).
     watch("arrived", (_ev: Arrived) => {
       this.refreshContracts();
       return {complete: false};
     });
   }
 
-  get faction() {
-    return factions[data.bodies[this.body].faction];
-  }
+  // Delegate state access so the public API stays unchanged.
+  // Planet methods and external callers continue using this.body, this.stock, etc.
+  get body()           { return this.state.body; }
+  get name()           { return this.state.name; }
+  get size()           { return this.state.size; }
+  get kind()           { return this.state.kind; }
+  get central()        { return this.state.central; }
+  get gravity()        { return this.state.gravity; }
+  get traits()         { return this.state.traits; }
+  get produces()       { return this.state.produces; }
+  get consumes()       { return this.state.consumes; }
+  get min_stock()      { return this.state.min_stock; }
+  get avg_stock()      { return this.state.avg_stock; }
+  get conditions()     { return this.state.conditions; }
+  set conditions(v)    { this.state.conditions = v; }
+  get work_tasks()     { return this.state.work_tasks; }
+  get contracts()      { return this.state.contracts; }
+  set contracts(v)     { this.state.contracts = v; }
+  get max_fab_units()  { return this.state.max_fab_units; }
+  get max_fab_health() { return this.state.max_fab_health; }
+  get fab_health()     { return this.state.fab_health; }
+  set fab_health(v)    { this.state.fab_health = v; }
+  get stock()          { return this.state.stock; }
+  get supply()         { return this.state.supply; }
+  get demand()         { return this.state.demand; }
+  get need()           { return this.state.need; }
+  get pending()        { return this.state.pending; }
+  get queue()          { return this.state.queue; }
+  set queue(v)         { this.state.queue = v; }
+  get _price()         { return this.state._price; }
+  set _price(v)        { this.state._price = v; }
+  get _cycle()         { return this.state._cycle; }
+  set _cycle(v)        { this.state._cycle = v; }
+  get _need()          { return this.state._need; }
+  set _need(v)         { this.state._need = v; }
+  get _exporter()      { return this.state._exporter; }
+  set _exporter(v)     { this.state._exporter = v; }
+
+  get faction()        { return this.state.faction; }
 
   // ---------------------------------------------------------------------------
   // Turn processing
@@ -388,52 +278,22 @@ export class Planet {
     }
   }
 
-  /** Clears cached net exporter status for resources affected by a condition change. */
   clearNetExporterCache(items: t.ResourceCounter) {
-    for (const item of Object.keys(items)) {
-      delete this._exporter[item];
-    }
+    this.state.clearNetExporterCache(items);
   }
 
   // ---------------------------------------------------------------------------
-  // Physical and faction properties
+  // Physical and faction properties (delegated to PlanetState)
   // ---------------------------------------------------------------------------
 
-  get desc() {
-    return data.bodies[this.body].desc;
-  }
+  get desc()        { return this.state.desc; }
+  get position()    { return this.state.position; }
+  get hasTradeBan() { return this.state.hasTradeBan; }
 
-  get position() {
-    return system.position(this.body);
-  }
-
-  distance(toBody: t.body): number {
-    return system.distance(this.body, toBody);
-  }
-
-  hasTrait(trait: string) {
-    for (const t of this.traits) {
-      if (t.name == trait) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  hasCondition(condition: string) {
-    for (const c of this.conditions) {
-      if (c.name == condition) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  isCapitol(): boolean {
-    return this.hasTrait('capital');
-  }
+  distance(toBody: t.body)       { return this.state.distance(toBody); }
+  hasTrait(trait: string)        { return this.state.hasTrait(trait); }
+  hasCondition(condition: string) { return this.state.hasCondition(condition); }
+  isCapitol()                    { return this.state.isCapitol(); }
 
   // ---------------------------------------------------------------------------
   // Patrol, piracy, and inspection
@@ -721,13 +581,7 @@ export class Planet {
   // Economy - production, consumption, and stock
   // ---------------------------------------------------------------------------
 
-  /**
-   * Multiplies n by the planet's size scale factor.
-   * All stock, production, and rate values are relative to planet size.
-   */
-  scale(n=0) {
-    return data.scales[this.size] * n;
-  }
+  scale(n=0) { return this.state.scale(n); }
 
   getStock(item: t.resource) {
     return this.stock.count(item);
@@ -1689,9 +1543,6 @@ export class Planet {
     this.contracts = this.contracts.filter(c => c.mission.title != mission.title);
   }
 
-  get hasTradeBan(): boolean {
-    return this.faction.hasTradeBan;
-  }
 
   // ---------------------------------------------------------------------------
   // Misc - repair and addon pricing
