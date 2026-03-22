@@ -115,13 +115,13 @@ Vue.component('melee', {
 <div>
 <row>
   <div class="col-4 text-start fw-bold">You</div>
-  <small class="col-4 text-center text-weight-light fst-italic">{{combat.player.faction.abbrev}} vs. {{combat.opponent.faction.abbrev}}</small>
+  <small class="col-4 text-center fw-light fst-italic">{{combat.player.faction.abbrev}} vs. {{combat.opponent.faction.abbrev}}</small>
   <div class="col-4 text-end fw-bold">{{combat.opponent.name}}</div>
 </row>
 
 <row>
   <div class="col-4 text-start fw-light fst-italic">{{combat.player.ship.type|caps}}</div>
-  <small class="col-4 text-center text-weight-light fst-italic">Round {{combat.currentRound}}</small>
+  <small class="col-4 text-center fw-light fst-italic">Round {{combat.currentRound}}</small>
   <div class="col-4 text-end fw-light fst-italic">{{combat.opponent.ship.type|caps}}</div>
 </row>
 

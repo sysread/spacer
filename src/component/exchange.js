@@ -55,7 +55,7 @@ Vue.component('slider', {
 
   template: `
     <div>
-      <div class="form-row">
+      <div class="row g-3">
         <div class="col">
           <input class="form-control"
               ref="slider"
@@ -68,7 +68,7 @@ Vue.component('slider', {
         </div>
       </div>
 
-      <div class="form-row">
+      <div class="row g-3">
         <div class="col-6">
           <slot name="pre" />
           <span @click="setMin" v-if="minmax" class="float-start"><btn class="fw-bold btn">Min</btn></span>
