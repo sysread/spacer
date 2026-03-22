@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bezier } from '../src/svgpath';
+import { bezier, line } from '../src/svgpath';
 
 // Parse an SVG path string into a sequence of [command, ...args] tokens.
 function parsePathTokens(d) {
@@ -47,7 +47,7 @@ describe('svgpath.bezier', () => {
     }
   });
 
-  it('collinear horizontal points produce a flat curve', () => {
+  it('collinear horizontal points produce a nearly flat curve', () => {
     // Three points on a horizontal line - the curve should stay at y=0.
     const d = bezier([[0, 0], [50, 0], [100, 0]]);
     const nums = d.match(/[\d.]+/g).map(Number);
@@ -56,5 +56,26 @@ describe('svgpath.bezier', () => {
     for (const n of nums) {
       expect(Math.abs(n)).toBeLessThan(200); // sanity bound
     }
+  });
+});
+
+describe('svgpath.line', () => {
+  it('single point produces a bare M command', () => {
+    expect(line([[10, 20]])).toMatch(/^M 10,20$/);
+  });
+
+  it('two points produces M + L', () => {
+    const d = line([[0, 0], [100, 50]]);
+    expect(d).toBe('M 0,0 L 100,50');
+  });
+
+  it('three points produces M + two L segments', () => {
+    const d = line([[0, 0], [50, 25], [100, 0]]);
+    expect(d).toBe('M 0,0 L 50,25 L 100,0');
+  });
+
+  it('coordinates are rounded', () => {
+    const d = line([[1.234, 5.678], [9.012, 3.456]]);
+    expect(d).toBe('M 1.2,5.7 L 9,3.5');
   });
 });

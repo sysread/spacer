@@ -68,6 +68,24 @@ function ctrlpt_y(y: number, length: number, angle: number): number {
  * @param points - array of [x, y] screen-space coordinates
  * @returns SVG path data string (M ... C ... C ...)
  */
+/** Converts a sequence of 2D points into a straight-line SVG path string. */
+export function line(points: point[]): string {
+  const path = builder();
+  path.append('M ');
+  path.append(round(points[0][0]));
+  path.append(',');
+  path.append(round(points[0][1]));
+
+  for (let i = 1; i < points.length; ++i) {
+    path.append(' L ');
+    path.append(round(points[i][0]));
+    path.append(',');
+    path.append(round(points[i][1]));
+  }
+
+  return path.getbuffer();
+}
+
 export function bezier(points: point[]): string {
   const path = builder();
   path.append('M ');
