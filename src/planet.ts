@@ -824,9 +824,9 @@ export class Planet {
     return t.bodies.filter(name => {
       const p = window.game.planets[name];
       return name !== this.body
-          && p.getStock(item) >= 1
-          && !p.hasShortage(item)
-          && (p.hasSurplus(item) || p.isNetExporter(item));
+          && p.economy.getStock(item) >= 1
+          && !p.economy.hasShortage(item)
+          && (p.economy.hasSurplus(item) || p.economy.isNetExporter(item));
     });
   }
 
