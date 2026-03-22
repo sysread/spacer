@@ -33,7 +33,7 @@ Vue.component('work', {
     turns()         { return this.days * (24 / this.data.hours_per_turn) },
     percent()       { return Math.min(100, Math.ceil(this.turnsWorked / this.turns * 100)) },
     timeSpent()     { return Math.floor(this.turnsWorked / this.data.turns_per_day) },
-    hasPicketLine() { return this.planet.hasPicketLine() },
+    hasPicketLine() { return this.planet.labor.hasPicketLine() },
 
     contracts() {
       const contracts = {};
@@ -98,7 +98,7 @@ Vue.component('work', {
 
   methods: {
     getPayRate: function(task) {
-      return this.planet.payRate(this.player, task);
+      return this.planet.labor.payRate(this.player, task);
     },
 
     hasTask: function(task) {
@@ -125,7 +125,7 @@ Vue.component('work', {
     performWork: function() {
       if (this.isReady && !this.isFinished) {
         this.isReady = false;
-        const reward = this.planet.work(this.player, this.task, this.days);
+        const reward = this.planet.labor.work(this.player, this.task, this.days);
         this.hitQuota = Math.floor(reward.items.sum()) > 0 ? true : false;
 
         let timer; timer = window.setInterval(() => {

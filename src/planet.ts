@@ -116,6 +116,7 @@ import {
   isImportTask, isCraftTask,
 } from './planet/state';
 import { Encounters } from './planet/encounters';
+import { Work } from './planet/work';
 
 // Re-export for external consumers
 export { SavedPlanet, isImportTask, isCraftTask };
@@ -142,10 +143,12 @@ interface Contract {
 export class Planet {
   state:      PlanetState;
   encounters: Encounters;
+  labor:      Work;
 
   constructor(body: t.body, init?: SavedPlanet) {
     this.state      = new PlanetState(body, init);
     this.encounters = new Encounters(this.state);
+    this.labor      = new Work(this.state, (item) => this.production(item));
 
     // Deferred contract restoration: restoreMission() needs window.game,
     // which isn't ready during construction. Wait for the first Arrived event.
@@ -444,58 +447,6 @@ export class Planet {
     this.fab_health = Math.min(this.fab_health, this.max_fab_health);
   }
 
-  // ---------------------------------------------------------------------------
-  // Work
-  // ---------------------------------------------------------------------------
-
-  /** True if a workers' strike condition is active, preventing work. */
-  hasPicketLine() {
-    return this.hasCondition("workers' strike");
-  }
-
-  /**
-   * Returns the credit pay rate for a work task, scaled by planet size,
-   * adjusted by player standing (bonus), and reduced by sales tax.
-   */
-  payRate(player: Person, task: t.Work) {
-    let rate = this.scale(task.pay);
-    rate += rate * player.getStandingPriceAdjustment(this.faction.abbrev);
-    rate -= rate * this.faction.sales_tax;
-    return FastMath.ceil(rate);
-  }
-
-  /**
-   * Executes a work task for `days` days. Returns the total pay and any
-   * resources harvested. Resource collection is probabilistic: each turn,
-   * each reward resource has a chance to yield 1 unit if the planet produces it.
-   */
-  work(player: Person, task: t.Work, days: number) {
-    const pay       = this.payRate(player, task) * days;
-    const turns     = days * 24 / data.hours_per_turn;
-    const rewards   = task.rewards;
-    const collected = new Store;
-
-    for (let turn = 0; turn < turns; ++turn) {
-      for (const item of rewards) {
-        collected.inc(item, this.mine(item));
-      }
-    }
-
-    return {pay: pay, items: collected};
-  }
-
-  /**
-   * Probabilistically yields 1 unit of an item from the environment.
-   * Only possible if the planet produces the item; capped at 1 unit per attempt.
-   */
-  mine(item: t.resource) {
-    if (this.production(item) > 0 && util.chance(data.market.minability)) {
-      const amt = util.getRandomNum(0, this.production(item));
-      return Math.min(1, amt);
-    }
-
-    return 0;
-  }
 
   // ---------------------------------------------------------------------------
   // Economy - production, consumption, and stock
