@@ -25,20 +25,25 @@
  *
  * result and success are set after each call for the UI to display feedback.
  *
- * NOTE: fabricators.ts imports `game` as a default (singleton) import, which
- * creates a potential circular dependency. This should be resolved during the
- * ESM migration.
  */
 
 import data from "./data";
-import game from "./game";
 import { Person } from "./person";
 import { Planet } from "./planet";
 import * as t from "./common";
 
 
+/** Minimal interface for the game methods FabricationQueue needs.
+ * Avoids importing the game singleton directly (circular dep). */
+interface GameShim {
+  player: Person;
+  here:   Planet;
+  turn(n: number): void;
+}
+
 interface FabricationQueueOpts {
   item:  t.resource;
+  game:  GameShim;
   goal?: number;  // number of units to fabricate (default 1)
 }
 
@@ -47,6 +52,7 @@ export class FabricationQueue {
   goal:      number;
   player:    Person;
   planet:    Planet;
+  game:      GameShim;
   recipe:    t.ResourceCounter;   // input materials per unit
   completed: number;
   result:    any;    // human-readable outcome message for the UI
@@ -61,8 +67,9 @@ export class FabricationQueue {
     if (t.isCraft(res)) {
       this.item                = opt.item;
       this.goal                = opt.goal || 1;
-      this.player              = game.player;
-      this.planet              = game.here;
+      this.game                = opt.game;
+      this.player              = opt.game.player;
+      this.planet              = opt.game.here;
       this.recipe              = res.recipe.materials;
       this.completed           = 0;
       this.result              = null;
@@ -153,7 +160,7 @@ export class FabricationQueue {
 
     this.planet.fabricate(this.item);
     this.player.ship.loadCargo(this.item, 1);
-    game.turn(turns);
+    this.game.turn(turns);
 
     ++this.completed;
 

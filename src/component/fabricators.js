@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import data from '../data';
-import game from '../game';
 import * as util from '../util';
 import { FabricationQueue } from '../fabricators';
 
@@ -17,7 +16,7 @@ Vue.component('fabrication', {
     return {
       show_confirm: false,
       running: false,
-      queue:   new FabricationQueue({item: this.item}),
+      queue:   new FabricationQueue({item: this.item, game: this.game}),
     };
   },
 
