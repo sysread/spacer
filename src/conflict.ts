@@ -36,7 +36,7 @@ import { Smuggler } from './mission';
 
 import * as t from './common';
 import * as util from './util';
-import * as FastMath from './fastmath';
+import { blockadeChance as calcBlockadeChance } from './conflict-formulas';
 
 
 declare var window: {
@@ -141,17 +141,7 @@ export class Blockade extends Conflict {
       return false;
 
     const standing = data.factions[this.proponent].standing[this.target] || 0;
-    let chance = 0;
-
-    if (standing < 0) {
-      chance = FastMath.abs(standing) / 2000;
-    } else if (standing > 0) {
-      chance = (Math.log(100) - Math.log(standing)) / 2000;
-    } else {
-      chance = 0.00025;
-    }
-
-    return util.chance(chance);
+    return util.chance(calcBlockadeChance(standing));
   }
 
   /**

@@ -34,7 +34,7 @@ import { Person } from './person';
 
 import * as util from './util';
 import * as t from './common';
-import * as FastMath from './fastmath';
+import * as cf from './combat-formulas';
 
 
 // Shims for global browser objects
@@ -152,7 +152,7 @@ export class Attack extends Action {
                                                 : 'hit';
 
     const pct = effect === 'hit'
-      ? damage / (to.fullHull + to.fullArmor) * 100
+      ? cf.damagePct(damage, to.fullHull, to.fullArmor)
       : 0;
 
     return {
@@ -271,10 +271,10 @@ export class Combatant {
   get attacks()     { return Object.values(this._actions).filter(a => a.isReady) }
 
   /** Intercept chance, reduced by hull damage. */
-  get intercept() { return Math.max(0, this.ship.intercept - this.ship.damageMalus()) }
+  get intercept() { return cf.effectiveIntercept(this.ship.intercept, this.ship.damageMalus()) }
 
   /** Dodge chance, reduced by hull damage. */
-  get dodge() { return Math.max(0, this.ship.dodge - this.ship.damageMalus()) }
+  get dodge() { return cf.effectiveDodge(this.ship.dodge, this.ship.damageMalus()) }
 
   get actions(): Action[] {
     return [...Object.values(this._actions), this.flight, this.surrender, this.pass];
@@ -286,7 +286,7 @@ export class Combatant {
    * always will.
    */
   get flightRisk() {
-    return (1 - this.pctHull) / 2;
+    return cf.flightRisk(this.pctHull);
   }
 
   nextRound() {
@@ -307,8 +307,7 @@ export class Combatant {
    * TODO: adjust based on pilot skill
    */
   tryFlight(opponent: Combatant) {
-    const chance = this.dodge / opponent.rawDodge / 5;
-    return util.chance(chance);
+    return util.chance(cf.flightChance(this.dodge, opponent.rawDodge));
   }
 }
 
@@ -396,15 +395,11 @@ export class Combat {
 
   /** The current full-round number (each full round = 2 half-rounds). */
   get currentRound() {
-    return FastMath.ceil(this.round / 2);
+    return cf.currentRound(this.round);
   }
 
   get isPlayerTurn() {
-    if (this.initiative === 'player') {
-      return (this.round + 2) % 2 !== 0;
-    } else {
-      return (this.round + 2) % 2 === 0;
-    }
+    return cf.isPlayerTurn(this.initiative, this.round);
   }
 
   addLogEntry(entry: ActionResult) {
