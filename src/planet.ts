@@ -111,16 +111,17 @@ import * as util from './util';
 import * as FastMath from './fastmath';
 
 import {
-  PlanetState, SavedPlanet,
-  EconTask, ImportTask, CraftTask,
+  PlanetState,
   isImportTask, isCraftTask,
 } from './planet/state';
+import type { SavedPlanet, EconTask, ImportTask, CraftTask } from './planet/state';
 import { Encounters } from './planet/encounters';
 import { Work } from './planet/work';
 import { Economy } from './planet/economy';
 
 // Re-export for external consumers
-export { SavedPlanet, isImportTask, isCraftTask };
+export type { SavedPlanet };
+export { isImportTask, isCraftTask };
 
 
 declare var window: {
