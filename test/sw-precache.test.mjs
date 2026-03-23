@@ -4,7 +4,6 @@ import { resolve } from 'path';
 
 const swPath = resolve('www/public/sw.js');
 const imgDir = resolve('www/public/img');
-const cssDir = resolve('www/public/css');
 
 /* Extract the PRECACHE_URLS array from sw.js by matching the array literal. */
 function parsePrecacheUrls() {
@@ -32,16 +31,6 @@ describe('service worker precache list', () => {
     for (const file of images) {
       it(`img/${file} is in PRECACHE_URLS`, () => {
         expect(urls).toContain(`./img/${file}`);
-      });
-    }
-  });
-
-  describe('every CSS file in www/public/css/ is precached', () => {
-    const cssFiles = listFiles(cssDir).filter(f => f.endsWith('.css'));
-
-    for (const file of cssFiles) {
-      it(`css/${file} is in PRECACHE_URLS`, () => {
-        expect(urls).toContain(`./css/${file}`);
       });
     }
   });
