@@ -30,7 +30,7 @@ body {
   background-attachment: fixed;*/
   color: #eee;
   line-height: 1.25;
-  font-size: 0.9rem;
+  font-size: 0.81rem;
 }
 
 .section-wrapper {
@@ -54,6 +54,11 @@ body {
 
 .text-muted, .mute {
   color: #bbb !important;
+}
+
+.btn {
+  font-weight: normal;
+  font-size: inherit;
 }
 
 .bg-black {
@@ -211,6 +216,7 @@ a.info:hover {
   background-color: #101010;
   color: rgb(200, 140, 50) !important;
   font-size: 12px;
+  font-weight: normal;
 }
 
 svg.plot {
