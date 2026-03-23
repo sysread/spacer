@@ -58,6 +58,7 @@
 <script>
 import Layout from './layout';
 import { NavComp } from '../navcomp';
+import system from '../system';
 import * as nc from './navcomp-controller';
 
 export default {

@@ -8,6 +8,7 @@ html {
 html .card {
   --bs-card-bg: #000;
   --bs-card-cap-bg: #000;
+  --bs-card-color: #eee;
 }
 
 html .modal-content {
@@ -63,7 +64,8 @@ body {
 
 .section-content {
   padding: 4px 2px;
-  background-color: rgb(0,0,0,0.5);
+  background-color: rgb(0,0,0,0.6);
+  text-shadow: 0 0 4px #000, 0 0 4px #000;
 }
 
 .mini {

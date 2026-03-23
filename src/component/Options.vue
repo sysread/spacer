@@ -7,15 +7,15 @@
 
     <div>
       <def term="Hide map background" info="Disables the Milky Way background in the map." split=8>
-        <input type="checkbox" :checked="options.hideMapBackground" @change="update('hideMapBackground', !options.hideMapBackground)" />
+        <input type="checkbox" :checked="options.hideMapBackground || null" @change="update('hideMapBackground', !options.hideMapBackground)" />
       </def>
 
       <def term="Hide patrol radius" info="Disables the patrol radius bubbles in the map." split=8>
-        <input type="checkbox" :checked="options.hidePatrolRadius" @change="update('hidePatrolRadius', !options.hidePatrolRadius)" />
+        <input type="checkbox" :checked="options.hidePatrolRadius || null" @change="update('hidePatrolRadius', !options.hidePatrolRadius)" />
       </def>
 
       <def term="Hide orbit paths" info="Disables the display of orbits in the map." split=8>
-        <input type="checkbox" :checked="options.hideOrbitPaths" @change="update('hideOrbitPaths', !options.hideOrbitPaths)" />
+        <input type="checkbox" :checked="options.hideOrbitPaths || null" @change="update('hideOrbitPaths', !options.hideOrbitPaths)" />
       </def>
     </div>
   </Section>

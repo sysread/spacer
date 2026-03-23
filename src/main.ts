@@ -26,6 +26,8 @@ configureCompat({
   CONFIG_WHITESPACE: false,
   WATCH_ARRAY: false,
   COMPILER_V_IF_V_FOR_PRECEDENCE: false,
+  RENDER_FUNCTION: false,
+  ATTR_FALSE_VALUE: false,
 });
 
 /* DEV flag: enables debug UI elements (navbar debug link, etc.) */

@@ -70,7 +70,8 @@ export default {
 
 
       /*
-       * Scale the map using the mouse wheel
+       * Scale the map using the mouse wheel. Must be non-passive because
+       * the handler calls stopPropagation.
        */
       let wheel_tween;
       this.layout.elt.addEventListener('wheel', ev => {
@@ -85,7 +86,7 @@ export default {
         wheel_tween = Tween(this.layout, intvl, {
           fov_au: util.clamp(this.layout.fov_au + amount, Layout.SCALE_MIN_AU, Layout.SCALE_MAX_AU),
         });
-      });
+      }, { passive: false });
 
 
       /*
