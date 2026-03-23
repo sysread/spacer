@@ -11,12 +11,14 @@
 </template>
 
 <script>
+import game from '../game';
+
 export default {
   data() {
     const initial_page
-      = this.game.turns == 0              ? 'newgame'
-      : this.game.player.ship.isDestroyed ? 'newgame'
-                                          : 'summary';
+      = game.turns == 0              ? 'newgame'
+      : game.player.ship.isDestroyed ? 'newgame'
+                                     : 'summary';
     return { page: initial_page };
   },
 
