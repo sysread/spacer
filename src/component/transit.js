@@ -6,13 +6,12 @@ import Vue from 'vue';
 import data from '../data';
 import game from '../game';
 import * as util from '../util';
-import * as t from '../common';
-import * as resource from '../resource';
 import { factions } from '../faction';
 import { NavComp } from '../navcomp';
 import * as Event from '../events';
 import Tween from '../tween';
 import Layout from './layout';
+import * as tc from './transit-controller';
 
 import './global';
 import './common';
@@ -123,127 +122,45 @@ Vue.component('Transit', {
     },
 
     patrolRates() {
-      const ranges = this.nearby();
-      const rates  = {};
-
-      for (const body of Object.keys(ranges)) {
-        const au = ranges[body] / Physics.AU;
-        rates[body] = this.game.planets[body].encounters.patrolRate(au);
-      }
-
-      return rates;
+      return tc.computePatrolRates(this.nearby(), this.game.planets);
     },
 
     patrolRate() {
-      const rate = Object.values(this.patrolRates).reduce((a, b) => a + b, 0);
-      return util.clamp(rate, 0, 1);
+      return tc.totalPatrolRate(this.patrolRates);
     },
 
-    // TODO implement this as its own version of the pirate encounter and
-    // remove trade bans from inspection/patrol rates.
     privateerRates() {
-      const bans  = this.game.get_conflicts({name: 'blockade'});
-      const rates = {};
-
-      if (bans.length > 0) {
-        const ranges = this.nearby();
-
-        // for nearby bodies
-        for (const body of Object.keys(ranges)) {
-          if (!game.planets[body].hasTradeBan)
-            continue;
-
-          // targeted faction
-          const target          = this.data.bodies[body].faction;
-          const isPlayerFaction = target == this.game.player.faction.abbrev;
-          const isDestFaction   = target == this.data.bodies[this.plan.dest].faction;
-          const isOriginFaction = target == this.data.bodies[this.plan.origin].faction;
-
-          if (isPlayerFaction || isDestFaction || isOriginFaction) {
-            // distance to nearby body
-            const au = ranges[body] / Physics.AU;
-
-            // Use the nearby body's piracy rate as the base, since it is
-            // calculated based on its patrol rate at this range.
-            const rate = game.planets[body].encounters.piracyRate(au);
-
-            for (const ban of bans.filter(c => c.target == target)) {
-              const faction = ban.proponent;
-              const patrol = data.factions[faction].patrol;
-
-              // Add half the banning faction's patrol rate to the piracy
-              // rate to get the privateering rate.
-              const total = rate + (patrol / 2);
-
-              if (rates[faction] == undefined || rates[faction] < total) {
-                rates[faction] = {
-                  rate:   total,
-                  target: target,
-                }
-              }
-            }
-          }
-        }
-      }
-
-      return rates;
+      return tc.computePrivateerRates(
+        this.nearby(),
+        this.game.planets,
+        this.game.get_conflicts({name: 'blockade'}),
+        this.game.player.faction.abbrev,
+        this.plan.origin,
+        this.plan.dest,
+      );
     },
 
     piracyRate() {
-      const ranges = this.nearby();
-      let total = 0;
-
-      for (const body of Object.keys(ranges)) {
-        const au = ranges[body] / Physics.AU;
-        total += this.game.planets[body].encounters.piracyRate(au);
-      }
-
-      const patrols = this.patrolRates;
-      for (const body of Object.keys(patrols)) {
-        total *= 1 - patrols[body];
-      }
-
-      return util.clamp(total, 0, 1);
+      return tc.computePiracyRate(this.nearby(), this.patrolRates, this.game.planets);
     },
 
     piracyEvasionMalusCargo() {
-      const cargo = this.game.player.ship.cargoValue(this.game.here.pricing);
-      if (cargo >= 1) {
-        return Math.log10(cargo) / 200;
-      } else {
-        return 0;
-      }
+      return tc.piracyEvasionMalusCargo(this.game.player.ship.cargoValue(this.game.here.pricing));
     },
 
     piracyEvasionBonusSpeed() {
-      if (this.plan.velocity > this.data.piracy_max_velocity) {
-        return Math.log(this.plan.velocity / this.data.piracy_max_velocity) / 200;
-      } else {
-        return 0;
-      }
+      return tc.piracyEvasionBonusSpeed(this.plan.velocity);
     },
 
     adjustedPiracyRate() {
-      if (this.game.player.ship.holdIsEmpty) {
-        return 0;
-      }
-
-      const baseRate   = this.piracyRate;
-      const stealth    = this.game.player.ship.stealth;
-      const cargoMalus = this.piracyEvasionMalusCargo;
-      const speedBonus = this.piracyEvasionBonusSpeed;
-
-      let chance = baseRate;
-      chance *= 1 - stealth;
-      chance += cargoMalus // Increase chance of piracy if the ship has valuable cargo
-      chance -= speedBonus // Reduce chance of an encounter at higher velocities
-      chance -= stealth    // Reduce based on ship's own stealth rating;
-
-      // Reduce chances for each previous encounter this trip
-      for (let i = 0; i < this.encounters; ++i)
-        chance /= 2;
-
-      return util.clamp(chance, 0, 1);
+      return tc.adjustedPiracyRate(
+        this.piracyRate,
+        this.game.player.ship.stealth,
+        this.game.player.ship.cargoValue(this.game.here.pricing),
+        this.plan.velocity,
+        this.game.player.ship.holdIsEmpty,
+        this.encounters,
+      );
     },
 
     nearest() {
@@ -468,13 +385,7 @@ Vue.component('Transit', {
 
       for (const faction of Object.keys(rates)) {
         let {target, rate} = rates[faction];
-
-        // Apply evasion bonus due to stealth
-        rate *= 1 - this.game.player.ship.stealth;
-
-        // Apply evasion bonus for each time the player has already been stopped
-        for (let i = 0; i < this.encounters; ++i)
-          rate /= 2;
+        rate = tc.applyEncounterReduction(rate, this.game.player.ship.stealth, this.encounters);
 
         if (rate > 0 && util.chance(rate)) {
           ++this.encounters;
@@ -510,20 +421,14 @@ Vue.component('Transit', {
 
         const faction = this.data.bodies[body].faction;
 
-        let rate = patrols[body];
-        rate *= 1 - this.game.player.ship.stealth;
-
-        // Reduce chances for each previous encounter this trip
-        for (let i = 0; i < this.encounters; ++i)
-          rate /= 2;
+        let rate = tc.applyEncounterReduction(patrols[body], this.game.player.ship.stealth, this.encounters);
 
         if (rate > 0) {
-          // Encountered a patrol
           if (util.chance(rate)) {
-            let inspection = this.game.planets[body].encounters.inspectionRate(this.game.player);
-
-            for (let i = 0; i < this.encounters; ++i)
-              inspection /= 2;
+            let inspection = tc.applyEncounterReduction(
+              this.game.planets[body].encounters.inspectionRate(this.game.player),
+              0, this.encounters,
+            );
 
             if (util.chance(inspection)) {
               ++this.encounters;
@@ -879,77 +784,7 @@ Vue.component('PirateEncounter', {
     },
 
     plunder() {
-      const player = this.game.player.ship;
-      const npc    = this.npc.ship;
-      const value  = item => resource.resources[item].value;
-      const took   = {};
-      const gave   = {};
-
-      for (const item of t.resources) {
-        took[item] = 0;
-        gave[item] = 0;
-      }
-
-      // List of items in player's hold, sorted by value from highest to
-      // lowest.
-      const avail = player.cargo.keys()
-        .filter(i => player.cargo.count(i) > 0)
-        .sort((a, b) => value(a) > value(b) ? -1 : 1);
-
-      for (const item of avail) {
-        let count = player.cargo.count(item);
-
-        // Load whatever there is room for on the npc's ship
-        while (count > 0 && !npc.holdIsFull) {
-          player.unloadCargo(item, 1);
-          npc.loadCargo(item, 1);
-          --count;
-          ++took[item];
-        }
-
-        // If the npc's hold is full but holds items of lesser value, swap
-        // them out for what is in the player's hold.
-        if (count > 0 && npc.holdIsFull) {
-          // List of items of lesser value in the npc's hold, sorted from
-          // lowest value to highest.
-          const has = npc.cargo.keys()
-            .filter(i => npc.cargo.count(i) > 0)
-            .filter(i => value(i) < value(item))
-            .sort((a, b) => value(a) < value(b) ? -1 : 1);
-
-          for (const npc_item of has) {
-            let npc_count = npc.cargo.count(npc_item);
-
-            while (npc_count > 0 && count > 0) {
-              // Replace the item on the player's ship with the item of
-              // lesser value from the npc's.
-              player.unloadCargo(item, 1);
-              player.loadCargo(npc_item, 1);
-
-              // Do the reverse for the npc.
-              npc.unloadCargo(npc_item, 1);
-              npc.loadCargo(item, 1);
-
-              --count;
-              --npc_count;
-
-              ++took[item];
-              ++gave[npc_item];
-            }
-          }
-        }
-      }
-
-      return {
-        took: {
-          count: Object.values(took).reduce((a, b) => a + b),
-          items: took,
-        },
-        gave: {
-          count: Object.values(gave).reduce((a, b) => a + b),
-          items: gave,
-        },
-      };
+      return tc.executePlunder(this.game.player.ship, this.npc.ship);
     },
 
     done(result, rounds) {
