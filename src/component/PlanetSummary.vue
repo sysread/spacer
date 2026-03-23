@@ -5,7 +5,7 @@
 
     <Section :notitle="!showtitle" :title="planet.name" class="col-12 col-md-6">
       <template #title-pre><Flag v-if="showtitle" :faction="planet.faction.abbrev" :width="50" class="m-1" /></template>
-      <template #title-post><img v-if="showtitle && is_home" src="img/home.png" class="circle-thingy circle-thingy-big mx-2 float-end" /></template>
+      <template #title-post><img v-if="showtitle && is_home" :src="'img/home.png'" class="circle-thingy circle-thingy-big mx-2 float-end" /></template>
 
       <def y=1 v-if="isThere" term="Location" def="Docked" />
       <def y=1 v-else term="Distance" :def="$unit($csn($R(distance, 2)), 'AU')" />
