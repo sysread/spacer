@@ -126,22 +126,22 @@ Vue.component('planet-summary', {
       <template #title-post><img v-if="showtitle && is_home" src="img/home.png" class="circle-thingy circle-thingy-big mx-2 float-end" /></template>
 
       <def y=1 v-if="isThere" term="Location" def="Docked" />
-      <def y=1 v-else term="Distance" :def="unit(csn(R(distance, 2)), 'AU')" />
+      <def y=1 v-else term="Distance" :def="$unit($csn($R(distance, 2)), 'AU')" />
 
-      <def y=1 term="Faction" :def="caps(faction)" />
+      <def y=1 term="Faction" :def="$caps(faction)" />
 
       <def y=1 term="Standing">
-        Your standing with this faction is <span :class="standing_color_class">{{lower(standing)}}</span>
+        Your standing with this faction is <span :class="standing_color_class">{{$lower(standing)}}</span>
       </def>
 
-      <def y=1 term="Economy" :def="caps(planet.size)" />
-      <def y=1 term="Environ" :def="caps(kind)" />
+      <def y=1 term="Economy" :def="$caps(planet.size)" />
+      <def y=1 term="Environ" :def="$caps(kind)" />
 
       <def y=1 term="Details">
         <template #def>
           <template v-if="traits">
             <div v-for="trait in traits" :key="trait" class="fst-italic">
-              {{caps(trait)}}
+              {{$caps(trait)}}
             </div>
           </template>
           <span v-else>N/A</span>

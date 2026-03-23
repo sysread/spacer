@@ -90,9 +90,9 @@ Vue.component('shipyard-refuel', {
   A dock worker wearing worn, grey coveralls approaches gingerly. A patch on
   his uniform identifies him as "Ray". He nods at your ship, "Fill 'er up?"
 </p>
-<def term="Price" :def="unit(csn(price), 'cr / tonne')" />
-<def term="Fuel" :def="unit(csn(change), 'tonnes')" />
-<def term="Total" :def="unit(csn(price * change), 'cr')" />
+<def term="Price" :def="$unit($csn(price), 'cr / tonne')" />
+<def term="Fuel" :def="$unit($csn(change), 'tonnes')" />
+<def term="Total" :def="$unit($csn(price * change), 'cr')" />
 <slider class="my-3" :value.sync="change" min=0 :max="max" step="1" minmax=true />
 <template #footer><btn @click="fillHerUp" close=1>Purchase fuel</btn></template>
 </modal>
@@ -133,15 +133,15 @@ Vue.component('shipyard-transfer', {
 <p>You may transfer fuel purchased in the market from your cargo hold to your ship's fuel tank here.</p>
 
 <def term="Cargo">
-  {{unit(R(hold, 2), 'tonnes')}} ({{unit(R(left, 2), 'cu')}})
+  {{$unit($R(hold, 2), 'tonnes')}} ({{$unit($R(left, 2), 'cu')}})
 </def>
 
 <def term="Tank">
-  {{unit(R(tank, 2), 'tonnes')}} ({{unit(R(used, 2), 'cu')}})
+  {{$unit($R(tank, 2), 'tonnes')}} ({{$unit($R(used, 2), 'cu')}})
 </def>
 
 <def term="Waste">
-  {{unit(R(waste, 2), 'tonnes')}}
+  {{$unit($R(waste, 2), 'tonnes')}}
 </def>
 
 <slider class="my-3" :value.sync="change" min=0 :max="max" step=1 minmax=true />
@@ -213,24 +213,24 @@ Vue.component('shipyard-repair', {
 <template v-if="has_repairs">
   <p>
     The shipyard is capable of repairing most structural damage to a ship.
-    There are {{csn(avail)}} units of metal in the market available for repairs.
-    You have {{unit(csn(money), 'c')}} available for repairs.
+    There are {{$csn(avail)}} units of metal in the market available for repairs.
+    You have {{$unit($csn(money), 'c')}} available for repairs.
   </p>
 
-  <def term="Total price"  :def="unit(csn(R(price_total, 1)), 'c')"      />
-  <def term="Hull repair"  :def="unit(csn(R(price_hull_each, 1)), 'c')"  />
-  <def term="Armor repair" :def="unit(csn(R(price_armor_each, 1)), 'c')" />
+  <def term="Total price"  :def="$unit($csn($R(price_total, 1)), 'c')"      />
+  <def term="Hull repair"  :def="$unit($csn($R(price_hull_each, 1)), 'c')"  />
+  <def term="Armor repair" :def="$unit($csn($R(price_armor_each, 1)), 'c')" />
 
-  <def term="Hull" :def="unit(csn(R(price_hull, 1)), 'c')" />
-  <slider class="my-3" :value.sync="repair_hull"  min=0 :max="R(max_hull, 1)"  step=1 minmax=true>
-    <template #pre><span class="btn btn-dark">{{R(need_hull - repair_hull, 1)}}</span></template>
-    <template #post><span class="btn btn-dark">{{R(repair_hull, 1)}}</span></template>
+  <def term="Hull" :def="$unit($csn($R(price_hull, 1)), 'c')" />
+  <slider class="my-3" :value.sync="repair_hull"  min=0 :max="$R(max_hull, 1)"  step=1 minmax=true>
+    <template #pre><span class="btn btn-dark">{{$R(need_hull - repair_hull, 1)}}</span></template>
+    <template #post><span class="btn btn-dark">{{$R(repair_hull, 1)}}</span></template>
   </slider>
 
-  <def term="Armor" :def="unit(csn(R(price_armor, 1)), 'c')" />
-  <slider class="my-3" :value.sync="repair_armor" min=0 :max="R(max_armor, 1)" step=1 minmax=true>
-    <template #pre><span class="btn btn-dark">{{R(need_armor - repair_armor, 1)}}</span></template>
-    <template #post><span class="btn btn-dark">{{R(repair_armor, 1)}}</span></template>
+  <def term="Armor" :def="$unit($csn($R(price_armor, 1)), 'c')" />
+  <slider class="my-3" :value.sync="repair_armor" min=0 :max="$R(max_armor, 1)" step=1 minmax=true>
+    <template #pre><span class="btn btn-dark">{{$R(need_armor - repair_armor, 1)}}</span></template>
+    <template #post><span class="btn btn-dark">{{$R(repair_armor, 1)}}</span></template>
   </slider>
 
   <template #footer><btn @click="repair" close=1>Repair ship</btn></template>

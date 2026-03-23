@@ -179,7 +179,7 @@ Vue.component('News', {
     <Section :title="title" :notitle="!title">
       <template v-if="hasNews">
         <div v-if="hasConditions" v-for="cond of conditions[body]" class="my-2">
-          <h6 class="text-danger">{{caps(cond.name)}}</h6>
+          <h6 class="text-danger">{{$caps(cond.name)}}</h6>
           <p v-if="cond.left < 7">Local sources claim efforts to deal with the {{cond.name}} have been successful and are winding down.</p>
           <p v-if="cond.left < 30">Unnamed government officials say efforts to combat the {{cond.name}} are underway but have been largely unsuccessful thus far.</p>
           <p v-else>
@@ -205,9 +205,9 @@ Vue.component('News', {
           <h6>High market demand reported</h6>
           <ul>
             <li v-for="item of shortages[body]" class="text-warning">
-              {{caps(item)}}
+              {{$caps(item)}}
               <span v-if="shipments[item] && shipments[item][body]" class="mx-1 fst-italic text-muted">
-                &mdash; relief arriving in {{csn(shipments[item][body])}} days
+                &mdash; relief arriving in {{$csn(shipments[item][body])}} days
               </span>
             </li>
           </ul>
@@ -216,7 +216,7 @@ Vue.component('News', {
         <div v-if="hasSurpluses" class="my-2">
           <h6>Surpluses reported</h6>
           <ul>
-            <li v-for="item of surpluses[body]" class="text-success">{{caps(item)}}</li>
+            <li v-for="item of surpluses[body]" class="text-success">{{$caps(item)}}</li>
           </ul>
         </div>
       </template>

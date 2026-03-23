@@ -35,9 +35,9 @@ Vue.component('StatusBar', {
     {{locus}}
   </span>
 
-  <span class="navbar-text">{{csn(money)}} c</span>
+  <span class="navbar-text">{{$csn(money)}} c</span>
   <span class="navbar-text">{{cargoUsed}}/{{cargoSpace}} cu</span>
-  <span class="navbar-text d-none d-sm-inline">{{csn(mass)}} tonnes</span>
+  <span class="navbar-text d-none d-sm-inline">{{$csn(mass)}} tonnes</span>
   <span class="navbar-text">Fuel {{fuelPct}}%</span>
   <span class="navbar-text">{{date}}</span>
 </nav>

@@ -197,7 +197,7 @@ Vue.component('work', {
       <p>
         <btn v-for="c in list" :key="c.mission.title" v-if="!c.mission.is_accepted" @click="setContract(c)" block=1>
           {{c.mission.short_title}}
-          <badge right=1>{{csn(c.mission.price)}}c</badge>
+          <badge right=1>{{$csn(c.mission.price)}}c</badge>
         </btn>
       </p>
     </div>

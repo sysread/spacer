@@ -86,7 +86,7 @@ Vue.component('fabrication', {
   },
 
   template: `
-    <modal :title="caps(item)" close="Close" xclose=1 size="lg" @close="$emit('close')">
+    <modal :title="$caps(item)" close="Close" xclose=1 size="lg" @close="$emit('close')">
       <p v-if="queue.result">
         {{queue.result}}
       </p>
@@ -97,7 +97,7 @@ Vue.component('fabrication', {
 
       <template v-else>
         <p class="fst-italic text-success">
-          You have the resources and cargo space to fabricate {{csn(amount)}} of this item.
+          You have the resources and cargo space to fabricate {{$csn(amount)}} of this item.
         </p>
 
         <p>
@@ -134,27 +134,27 @@ Vue.component('fabrication', {
         <tr v-if="amount">
           <th>Count</th>
           <td>1</td>
-          <td>{{csn(left)}} / {{csn(queue.goal)}}</td>
+          <td>{{$csn(left)}} / {{$csn(queue.goal)}}</td>
         </tr>
         <tr>
           <th>Market value</th>
-          <td>{{unit(csn(price), 'credits')}}</td>
-          <td v-if="amount" class="text-success">{{unit(csn(price*queue.goal), 'credits')}}</td>
+          <td>{{$unit($csn(price), 'credits')}}</td>
+          <td v-if="amount" class="text-success">{{$unit($csn(price*queue.goal), 'credits')}}</td>
         </tr>
         <tr>
           <th>Fee</th>
-          <td>{{unit(csn(fee), 'credits')}}</td>
-          <td v-if="amount" class="text-success">{{unit(csn(fee*queue.goal), 'credits')}}</td>
+          <td>{{$unit($csn(fee), 'credits')}}</td>
+          <td v-if="amount" class="text-success">{{$unit($csn(fee*queue.goal), 'credits')}}</td>
         </tr>
         <tr>
           <th>Time</th>
-          <td>{{unit(csn(hours), 'hours')}}</td>
-          <td v-if="amount" class="text-success">{{unit(csn(hours*queue.goal), 'hours')}}</td>
+          <td>{{$unit($csn(hours), 'hours')}}</td>
+          <td v-if="amount" class="text-success">{{$unit($csn(hours*queue.goal), 'hours')}}</td>
         </tr>
         <tr v-for="(amt, item) of queue.recipe">
-          <th>{{caps(item)}}</th>
-          <td>{{csn(amt)}}</td>
-          <td v-if="amount" class="text-success">{{csn(amt*queue.goal)}}</td>
+          <th>{{$caps(item)}}</th>
+          <td>{{$csn(amt)}}</td>
+          <td v-if="amount" class="text-success">{{$csn(amt*queue.goal)}}</td>
         </tr>
       </table>
     </modal>
@@ -215,7 +215,7 @@ Vue.component('fabricators', {
 
         <template v-for="item of resources">
           <btn block=1 @click="select(item)" class="my-2 py-2" :muted="!can_craft(item)">
-            {{caps(item)}}
+            {{$caps(item)}}
           </btn>
         </template>
       </template>

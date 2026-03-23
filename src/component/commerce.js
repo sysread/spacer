@@ -47,14 +47,14 @@ Vue.component('market', {
   <row v-for="item of resources" :key="item" class="p-1 rounded" :style="{'background-color': hold(item) > 0 ? '#400A0A' : '#000000'}">   <!-- :class="{'text-muted':dock(item) == 0 && hold(item) == 0}">-->
     <cell size=4 brkpt="sm" y=0 class="px-0 my-1">
       <btn @click="trade=item" block=1 :class="{'btn-secondary': dock(item) == 0 && hold(item) == 0, 'text-warning': is_contraband(item)}">
-        {{caps(item)}}
+        {{$caps(item)}}
       </btn>
     </cell>
     <cell size=8 brkpt="sm" y=0>
       <table class="table table-sm table-mini table-noborder">
         <tr>
-          <th scope="col" class="w-25">Buy</th><td class="w-25">{{csn(buy(item))}} c</td>
-          <th scope="col" class="w-25">Sell</th><td class="w-25">{{csn(sell(item))}} c</td>
+          <th scope="col" class="w-25">Buy</th><td class="w-25">{{$csn(buy(item))}} c</td>
+          <th scope="col" class="w-25">Sell</th><td class="w-25">{{$csn(sell(item))}} c</td>
         </tr>
         <tr>
           <th scope="col" class="w-25">Dock</th><td class="w-25" :class="{'text-warning': dock(item) > 0}">{{dock(item)}}</td>
@@ -196,34 +196,34 @@ Vue.component('market-trade', {
 <table class="table table-sm table-mini table-noborder">
   <tr>
     <th scope="col" class="w-25">Total</th>
-    <td class="w-25" :class="{'text-success': count < 0, 'text-warning': count > 0}">{{csn(R(abs(credits)))}} c</td>
+    <td class="w-25" :class="{'text-success': count < 0, 'text-warning': count > 0}">{{$csn($R($abs(credits)))}} c</td>
 
     <th scope="col" class="w-25">Count</th>
-    <td class="w-25" :class="{'text-success': count < 0, 'text-warning': count > 0}">{{csn(abs(count))}} cu</td>
+    <td class="w-25" :class="{'text-success': count < 0, 'text-warning': count > 0}">{{$csn($abs(count))}} cu</td>
   </tr>
 
   <tr>
     <th scope="col" class="w-25">Sell</th>
-    <td class="w-25">{{csn(sell)}} c</td>
+    <td class="w-25">{{$csn(sell)}} c</td>
 
     <th scope="col" class="w-25">Ship</th>
-    <td class="w-25">{{csn(hold)}}</td>
+    <td class="w-25">{{$csn(hold)}}</td>
   </tr>
 
   <tr>
     <th scope="col" class="w-25">Buy</th>
-    <td class="w-25">{{csn(buy)}} c</td>
+    <td class="w-25">{{$csn(buy)}} c</td>
 
     <th scope="col" class="w-25">Dock</th>
-    <td class="w-25">{{csn(dock)}}</td>
+    <td class="w-25">{{$csn(dock)}}</td>
   </tr>
 
   <tr>
     <th scope="col" class="w-25">Mass</th>
-    <td class="w-25">{{csn(mass)}} tonnes</td>
+    <td class="w-25">{{$csn(mass)}} tonnes</td>
 
     <th scope="col" class="w-25">Acceleration</th>
-    <td class="w-25">{{ R(deltav, 3) }} G</td>
+    <td class="w-25">{{ $R(deltav, 3) }} G</td>
   </tr>
 
   <tr>
@@ -287,7 +287,7 @@ Vue.component('resource-report', {
     },
   },
   template: `
-<modal xclose=true :title="caps(item)" @close="$emit('close')">
+<modal xclose=true :title="$caps(item)" @close="$emit('close')">
 <div class="button-group row justify-content-end">
   <btn class="col" @click="show_routes=false;relprices=false" :disabled="!show_routes && !relprices">Absolute Prices</btn>
   <btn class="col" @click="show_routes=false;relprices=true" :disabled="!show_routes && relprices">Relative Prices</btn>
@@ -321,10 +321,10 @@ Vue.component('resource-report', {
   <tbody>
     <tr v-for="[from, to, shipment] of routes"
         :class="{'text-warning': shipment.warning}">
-      <th scope="row">{{caps(to)}}</th>
-      <td class="text-end">{{csn(shipment.amount)}}</td>
+      <th scope="row">{{$caps(to)}}</th>
+      <td class="text-end">{{$csn(shipment.amount)}}</td>
       <td>{{shipment.arrives}}</td>
-      <td class="d-none d-sm-table-cell">{{caps(from)}}</td>
+      <td class="d-none d-sm-table-cell">{{$caps(from)}}</td>
       <td class="d-none d-sm-table-cell">{{shipment.distance}}</td>
     </tr>
   </tbody>
@@ -352,16 +352,16 @@ Vue.component('resource-report-row', {
   template: `
 <tr :class="{'bg-dark': isHere}">
 <th scope="row">
-  {{caps(body)}}
-  <badge v-if="central != 'sun'" right=1 class="ms-1">{{caps(central)}}</badge>
+  {{$caps(body)}}
+  <badge v-if="central != 'sun'" right=1 class="ms-1">{{$caps(central)}}</badge>
 </th>
 <td class="text-end" :class="{'text-success': stock && relBuy < 0, 'text-muted': !stock}">
-  <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{csn(relBuy)}}</span>
-  <span v-else>{{csn(rBuy)}}</span>
+  <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{$csn(relBuy)}}</span>
+  <span v-else>{{$csn(rBuy)}}</span>
 </td>
 <td class="text-end" :class="{'text-success': relSell > 0}">
-  <span v-if="relprices"><span v-if="relSell > 0">+</span>{{csn(relSell)}}</span>
-  <span v-else>{{csn(rSell)}}</span>
+  <span v-if="relprices"><span v-if="relSell > 0">+</span>{{$csn(relSell)}}</span>
+  <span v-else>{{$csn(rSell)}}</span>
 </td>
 <td class="text-end d-none d-sm-table-cell">{{stock}}</td>
 </tr>
@@ -408,16 +408,16 @@ Vue.component('market-report-row', {
   },
   template: `
 <tr>
-<th scope="row">{{caps(resource)}}</th>
+<th scope="row">{{$caps(resource)}}</th>
 
 <td class="text-end" :class="{'text-success': stock && relBuy < 0, 'text-muted': !stock}">
-  <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{csn(relBuy)}}</span>
-  <span v-else>{{csn(rBuy)}}</span>
+  <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{$csn(relBuy)}}</span>
+  <span v-else>{{$csn(rBuy)}}</span>
 </td>
 
 <td class="text-end" :class="{'text-success': relSell > 0}">
-  <span v-if="relprices"><span v-if="relSell > 0">+</span>{{csn(relSell)}}</span>
-  <span v-else>{{csn(rSell)}}</span>
+  <span v-if="relprices"><span v-if="relSell > 0">+</span>{{$csn(relSell)}}</span>
+  <span v-else>{{$csn(rSell)}}</span>
 </td>
 <td class="text-end d-none d-sm-table-cell">{{stock}}</td>
 </tr>

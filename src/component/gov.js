@@ -60,7 +60,7 @@ Vue.component('restitution', {
 
   <p>
     If you make restitution to the local party leadership in the form of a
-    {{unit(csn(restitutionFee), 'credit')}} donation, your record will be
+    {{$unit($csn(restitutionFee), 'credit')}} donation, your record will be
     annotated and your reputation cleared.
   </p>
 
@@ -81,7 +81,7 @@ Vue.component('restitution', {
 </template>
 
 <confirm v-if="state=='confirm'" @confirm="confirmTransaction">
-  You are about to "donate" {{unit(csn(restitutionFee), 'credit')}} to {{faction.properName}}
+  You are about to "donate" {{$unit($csn(restitutionFee), 'credit')}} to {{faction.properName}}
   to "make ammends". This transaction cannot be undone. Are you sure you wish to continue?
 </confirm>
 </div>

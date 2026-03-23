@@ -339,13 +339,13 @@ Vue.component('NavComp', {
       </div>
 
       <confirm v-if="confirm" yes="Yes" no="No" @confirm="confirm_transit">
-        <h4>{{game.here.name}} to {{caps(planet.name)}}</h4>
+        <h4>{{game.here.name}} to {{$caps(planet.name)}}</h4>
 
         <def split=4 term="Arrival"      :def="transit.str_arrival_date" />
         <def split=4 term="Distance"     :def="transit_display_distance" />
-        <def split=4 term="Max Velocity" :def="unit(csn(R(transit.maxVelocity/1000)), 'km/s')" />
-        <def split=4 term="Acceleration" :def="unit(R(transit.accel_g, 3), 'G')" />
-        <def split=4 term="Fuel"         :def="unit(R(transit.fuel, 2), 'tonnes')" />
+        <def split=4 term="Max Velocity" :def="$unit($csn($R(transit.maxVelocity/1000)), 'km/s')" />
+        <def split=4 term="Acceleration" :def="$unit($R(transit.accel_g, 3), 'G')" />
+        <def split=4 term="Fuel"         :def="$unit($R(transit.fuel, 2), 'tonnes')" />
       </confirm>
 
       <NavPlot v-layout v-if="show_map" :layout="layout" :transit="transit" :style="layout_css_dimensions">
@@ -388,7 +388,7 @@ Vue.component('NavDestOpt', {
     <Opt :val="body" final=1 :disabled="is_here" :class="color">
       <Flag :width="35" :faction="faction" class="m-1 d-none d-sm-inline" />
 
-      <span class="d-inline d-sm-none">{{caps(body)}}</span>
+      <span class="d-inline d-sm-none">{{$caps(body)}}</span>
       <span class="d-none d-sm-inline">{{name}}</span>
 
       <slot />
@@ -450,24 +450,24 @@ Vue.component('NavRoutePlanner', {
       </p>
 
       <p>
-        Being born on {{caps(home)}}, your body is adapted to
-        {{R(gravity, 2)}}G, allowing you to endure a maximum sustained burn of
-        {{R(max_accel, 2)}}G.
+        Being born on {{$caps(home)}}, your body is adapted to
+        {{$R(gravity, 2)}}G, allowing you to endure a maximum sustained burn of
+        {{$R(max_accel, 2)}}G.
       </p>
 
       <p>
-        Carrying {{unit(csn(R(ship_mass)), 'metric tonnes')}}, your ship is
-        capable of {{unit(R(ship_accel, 2), 'G')}} of acceleraction. With
-        {{csn(R(ship_fuel, 2))}} tonnes of fuel, your ship has a maximum burn
-        time of {{csn(R(ship_burn_time))}} hours at maximum thrust.
+        Carrying {{$unit($csn($R(ship_mass)), 'metric tonnes')}}, your ship is
+        capable of {{$unit($R(ship_accel, 2), 'G')}} of acceleraction. With
+        {{$csn($R(ship_fuel, 2))}} tonnes of fuel, your ship has a maximum burn
+        time of {{$csn($R(ship_burn_time))}} hours at maximum thrust.
       </p>
 
       <div v-if="has_route">
-        <def split=4 term="Destination"  :def="caps(transit.dest)" />
+        <def split=4 term="Destination"  :def="$caps(transit.dest)" />
         <def split=4 term="Distance"     :def="distance" />
-        <def split=4 term="Acceleration" :def="unit(R(transit.accel_g, 3), 'G')" />
-        <def split=4 term="Max velocity" :def="unit(csn(R(transit.maxVelocity/1000)), 'km/s')" />
-        <def split=4 term="Fuel"         :def="unit(R(transit.fuel, 2), 'tonnes')" />
+        <def split=4 term="Acceleration" :def="$unit($R(transit.accel_g, 3), 'G')" />
+        <def split=4 term="Max velocity" :def="$unit($csn($R(transit.maxVelocity/1000)), 'km/s')" />
+        <def split=4 term="Fuel"         :def="$unit($R(transit.fuel, 2), 'tonnes')" />
         <def split=4 term="Arrival"      :def="transit.str_arrival_date" />
 
         <row y=1>
@@ -622,7 +622,7 @@ Vue.component('SvgPlotPoint', {
       <SvgImg v-if="img" :src="img" :height="d" :width="d" :x="x" :y="y" />
 
       <SvgText v-if="show_label" :class="label_class" :x="label_x" :y="label_y">
-        {{caps(body)}}
+        {{$caps(body)}}
       </SvgText>
     </g>
   `,
@@ -916,14 +916,14 @@ Vue.component('NavPlot', {
       <div class="plot-root-bg" :class="bg_class()" :style="bg_css()"></div>
 
       <SvgPlot v-if="layout" :width="layout.width_px" :height="layout.height_px">
-        <PlotLegend :x="x" :y="y(1)">FoV:&nbsp;&nbsp;{{unit(R(layout.fov_au * 2, 4), 'AU')}}</PlotLegend>
+        <PlotLegend :x="x" :y="y(1)">FoV:&nbsp;&nbsp;{{$unit($R(layout.fov_au * 2, 4), 'AU')}}</PlotLegend>
 
         <template v-if="transit">
-          <PlotLegend :x="x" :y="y(2)" style="fill: yellow">Dest.&nbsp;{{caps(transit.dest)}}</PlotLegend>
-          <PlotLegend :x="x" :y="y(3)">Dist.&nbsp;{{unit(R(transit.segment_au, 4), 'AU')}}</PlotLegend>
-          <PlotLegend :x="x" :y="y(4)">&Delta;V:&nbsp;&nbsp;&nbsp;{{unit(R(transit.accel_g, 3), 'G')}}</PlotLegend>
-          <PlotLegend :x="x" :y="y(5)">MaxV:&nbsp;{{unit(csn(R(transit.maxVelocity/1000)), 'km/s')}}</PlotLegend>
-          <PlotLegend :x="x" :y="y(6)">Fuel:&nbsp;{{R(transit.fuel, 2)}}</PlotLegend>
+          <PlotLegend :x="x" :y="y(2)" style="fill: yellow">Dest.&nbsp;{{$caps(transit.dest)}}</PlotLegend>
+          <PlotLegend :x="x" :y="y(3)">Dist.&nbsp;{{$unit($R(transit.segment_au, 4), 'AU')}}</PlotLegend>
+          <PlotLegend :x="x" :y="y(4)">&Delta;V:&nbsp;&nbsp;&nbsp;{{$unit($R(transit.accel_g, 3), 'G')}}</PlotLegend>
+          <PlotLegend :x="x" :y="y(5)">MaxV:&nbsp;{{$unit($csn($R(transit.maxVelocity/1000)), 'km/s')}}</PlotLegend>
+          <PlotLegend :x="x" :y="y(6)">Fuel:&nbsp;{{$R(transit.fuel, 2)}}</PlotLegend>
           <PlotLegend :x="x" :y="y(7)">Time:&nbsp;{{transit.str_arrival}}</PlotLegend>
         </template>
 

@@ -47,7 +47,7 @@ Vue.component('progress-bar', {
   template: `
     <div class="progress bg-dark">
       <div class="progress-bar bg-warning text-dark" :style="{'width': percent + '%'}">
-        <template v-if="!hide_pct">{{R(percent||0)}}%</template>
+        <template v-if="!hide_pct">{{$R(percent||0)}}%</template>
         <slot />
       </div>
     </div>

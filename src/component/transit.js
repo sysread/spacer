@@ -479,9 +479,9 @@ Vue.component('Transit', {
       <template v-else>
         <table id="navcomp-transit-info" class="table table-sm m-0" :style="{width: show_plot() && layout ? layout.width_px + 'px' : '100%'}">
           <tr>
-            <td class="text-start border-0">{{unit(plan.days_left, 'days')}}</td>
-            <td class="text-center border-0">{{unit(csn(R(plan.velocity/1000)), 'km/s')}}</td>
-            <td class="text-end border-0">{{unit(sprintf(R(plan.auRemaining(), 2), '%0.2f'), 'AU')}}</td>
+            <td class="text-start border-0">{{$unit(plan.days_left, 'days')}}</td>
+            <td class="text-center border-0">{{$unit($csn($R(plan.velocity/1000)), 'km/s')}}</td>
+            <td class="text-end border-0">{{$unit($sprintf($R(plan.auRemaining(), 2), '%0.2f'), 'AU')}}</td>
           </tr>
           <tr v-if="!show_plot()">
             <td colspan="3">
@@ -495,14 +495,14 @@ Vue.component('Transit', {
 
           <SvgPlot v-if="layout" :width="layout.width_px" :height="layout.height_px">
             <line x1=130 y1=13 :x2="patrolpct * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
-            <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{pct(patrolRate, 2)}}</text>
+            <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{$pct(patrolRate, 2)}}</text>
 
             <line x1=130 y1=30 :x2="piracypct * layout.width_px + 130" y2=30 stroke="red" stroke-width="14" />
-            <text style="fill:red; font:12px monospace" x=5 y=34>Piracy:&nbsp;{{pct(piracyRate, 2)}}</text>
+            <text style="fill:red; font:12px monospace" x=5 y=34>Piracy:&nbsp;{{$pct(piracyRate, 2)}}</text>
 
             <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{displayFoV}}</text>
             <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{displayFoV}}</text>
-            <text style="fill:red; font:12px monospace" x=5 y=68>&Delta;V:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{unit(R(plan.accel_g, 3), 'G')}}</text>
+            <text style="fill:red; font:12px monospace" x=5 y=68>&Delta;V:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{$unit($R(plan.accel_g, 3), 'G')}}</text>
 
             <g v-for="body in system.all_bodies()" :key="body">
               <SvgPatrolRadius :body="body" :coords="orbits[body][0]" :layout="layout" :intvl="intvl" />
@@ -537,8 +537,8 @@ Vue.component('Transit', {
             class="my-3" />
 
         <ok v-if="encounterTimeCost > 0" title="Consequences" @ok="ackTimeCost">
-          This encounter took {{csn(R(encounterTimeCost/60, 0))}} minutes.
-          As a result, you drifted {{csn(R(encounterDistCost/1000, 0))}} km off course.
+          This encounter took {{$csn($R(encounterTimeCost/60, 0))}} minutes.
+          As a result, you drifted {{$csn($R(encounterDistCost/1000, 0))}} km off course.
           Your course has been adjusted accordingly.
         </ok>
 
@@ -664,7 +664,7 @@ Vue.component('PatrolEncounter', {
 <h5>
   <Flag :faction="faction" width="75" />
   <template v-if="isBlockade">Blockade: {{faction}}</template>
-  <template v-else>Police inspection: {{caps(body)}}</template>
+  <template v-else>Police inspection: {{$caps(body)}}</template>
 </h5>
 
 <template v-if="choice=='ready'">
@@ -676,7 +676,7 @@ Vue.component('PatrolEncounter', {
   </p>
   <p v-else>
     You are being hailed by a {{faction}} patrol ship operating {{distance}} AU
-    out of {{caps(body)}}. The captain orders you to cease acceleration and
+    out of {{$caps(body)}}. The captain orders you to cease acceleration and
     peacefully submit to an inspection. Any contraband on board will be seized
     and result in a fine and loss of standing with {{faction}}.
   </p>
@@ -696,7 +696,7 @@ Vue.component('PatrolEncounter', {
 
 <div v-if="choice=='submit-fined'">
   <!--Your contraband cargo was found and confiscated.
-  You have been fined {{csn(fine)}} credits.
+  You have been fined {{$csn(fine)}} credits.
   Your reputation with {{faction}} has taken a serious hit.-->
   <btn block=1 @click="done">Ok</btn>
 </div>
@@ -713,7 +713,7 @@ Vue.component('PatrolEncounter', {
 </div>
 
 <ask v-if="choice=='bribe'" @pick="setChoice" :choices="{'bribe-yes': 'Yes, it is my duty as a fellow captain', 'ready': 'No, that would be dishonest'}">
-  After a bit of subtle back and forth, the patrol's captain intimates that they could use {{csn(bribeAmount)}} for "repairs to their tracking systems".
+  After a bit of subtle back and forth, the patrol's captain intimates that they could use {{$csn(bribeAmount)}} for "repairs to their tracking systems".
   While making said repairs, they might miss a ship like yours passing by.
   Do you wish to contribute to the captain's maintenance efforts?
 </ask>
@@ -812,7 +812,7 @@ Vue.component('PirateEncounter', {
       <div v-if="choice=='ready'">
         <p>
           The lights go dim as an emergency klaxxon warns you that your ship has been
-          targeted by an incoming pirate <b class="text-warning">{{caps(npc.ship.type)}}</b>.
+          targeted by an incoming pirate <b class="text-warning">{{$caps(npc.ship.type)}}</b>.
           Its transponder is off, but its make and markings suggest that may be aligned
           with {{npc.faction.abbrev}}, indicating that it might be a privateer. Of course,
           the ship could just as easily have been stolen.
@@ -874,7 +874,7 @@ Vue.component('PirateEncounter', {
       <ok v-if="choice=='bounty'" @ok="done">
         According to the last data dump before your departure, there is a
         bounty for the elimination of this pirate. Your account has been
-        credited {{csn(bounty)}} credits, effective as soon as light from
+        credited {{$csn(bounty)}} credits, effective as soon as light from
         the event reaches the nearest patrol. As a result, your standing
         with {{nearest_faction}} has increased.
       </ok>

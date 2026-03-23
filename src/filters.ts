@@ -54,7 +54,12 @@ export function fmt(value: any, format: string, ...args: any[]): string {
   return sprintf(format, value, ...args);
 }
 
-/** All filters as a methods object for Vue mixin registration. */
+/** All filters as a methods object for Vue mixin registration.
+ * Prefixed with $ to avoid colliding with component props/computed
+ * names (e.g., 'caps' collides with def component's caps prop,
+ * 'name' collides with news component's name computed). */
 export const filterMethods = {
-  csn, R, pct, unit, name, caps, lower, AU, yn, abs, sprintf: fmt,
+  $csn: csn, $R: R, $pct: pct, $unit: unit, $name: name,
+  $caps: caps, $lower: lower, $AU: AU, $yn: yn, $abs: abs,
+  $sprintf: fmt,
 };
