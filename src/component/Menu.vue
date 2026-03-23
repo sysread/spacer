@@ -1,5 +1,5 @@
 <template>
-  <div @answer="onAnswer" class="py-3">
+  <div class="py-3">
     <slot />
   </div>
 </template>
@@ -8,10 +8,10 @@
 export default {
   props: ['title', 'close'],
 
-  methods: {
-    onAnswer(val) {
-      this.$emit('answer', val);
-    },
+  provide() {
+    return {
+      menuAnswer: (val) => this.$emit('answer', val),
+    };
   },
 };
 </script>

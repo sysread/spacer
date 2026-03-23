@@ -7,11 +7,14 @@
 <script>
 export default {
   props: ['val', 'final', 'disabled'],
+  inject: ['menuAnswer'],
 
   methods: {
     onClick() {
       this.$emit('click', this.val);
-      this.$parent.$emit('answer', this.val);
+      if (this.menuAnswer) {
+        this.menuAnswer(this.val);
+      }
     },
   },
 };

@@ -36,12 +36,7 @@ export default defineConfig(({ command }) => ({
   },
 
   resolve: {
-    alias: {
-      // @vue/compat provides Vue 2 API compatibility on top of Vue 3.
-      // The full build includes the runtime template compiler needed for
-      // string templates in Vue.component() calls.
-      'vue': '@vue/compat',
-    },
+    alias: {},
   },
 
   test: {

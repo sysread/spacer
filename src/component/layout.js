@@ -1,5 +1,4 @@
 import * as util from '../util';
-import Vue from 'vue';
 import Hammer from 'hammerjs';
 import { Layout } from '../layout';
 import Tween from '../tween';
