@@ -1,16 +1,26 @@
-:root {
+/* BS5 dark theme overrides. Use html prefix for specificity over
+ * Bootstrap's own :root and element selectors. */
+html {
   --bs-body-bg: #000;
   --bs-body-color: #eee;
+}
+
+html .card {
   --bs-card-bg: #000;
   --bs-card-cap-bg: #000;
-  --bs-table-bg: transparent;
-  --bs-table-striped-bg: transparent;
+}
+
+html .modal-content {
   --bs-modal-bg: #000;
 }
 
-.table, .table th, .table td, thead, tbody {
-  background-color: transparent !important;
-  --bs-table-bg: transparent;
+html .table,
+html .table > :not(caption) > * > * {
+  --bs-table-bg: #000;
+  --bs-table-color: #eee;
+  --bs-table-accent-bg: #000;
+  background-color: #000 !important;
+  box-shadow: none !important;
 }
 
 body {
@@ -53,6 +63,8 @@ body {
 .spacer-header {
   font-size: 0.8rem;
   background-color: rgb(0,0,0);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
 }
 
 .spacer-header .navbar-text {
