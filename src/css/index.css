@@ -26,6 +26,11 @@ html .modal-header {
   border-bottom-color: rgb(200,0,0);
 }
 
+html .btn-close-white {
+  filter: invert(1) grayscale(100%) brightness(200%);
+  opacity: 0.8;
+}
+
 html .modal-footer {
   border-top-color: rgb(200,0,0);
 }
@@ -80,6 +85,9 @@ body {
 .btn {
   font-weight: normal;
   font-size: inherit;
+  margin-bottom: 0.25rem;
+  margin-left: 0.125rem;
+  margin-right: 0.125rem;
 }
 
 .bg-black {
@@ -145,6 +153,12 @@ body {
 
 .table.table-mini td, .table.table-mini th {
   padding: 0.1rem;
+}
+
+.table.table-mini .btn {
+  margin-bottom: 0;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .table td, .table th {
