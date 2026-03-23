@@ -175,12 +175,12 @@ Vue.component('addon', {
 
 <modal v-if="buy" @close="buy=false" close='No'>
   Purchase and install <b>{{info.name}}</b> for {{price|csn}} credits?
-  <btn @click="buyAddOn" slot="footer" close=1>Yes</btn>
+  <template #footer><btn @click="buyAddOn" close=1>Yes</btn></template>
 </modal>
 
 <modal v-if="sell" @close="sell=false" close='No'>
   Remove and sell your <b>{{info.name}}</b> for {{sellPrice|csn}} credits?
-  <btn @click="sellAddOn" slot="footer" close=1>Yes</btn>
+  <template #footer><btn @click="sellAddOn" close=1>Yes</btn></template>
 </modal>
 </div>
   `,

@@ -137,12 +137,12 @@ Vue.component('exchange', {
 
   template: `
 <div>
-  <def brkpt="sm" term="Cargo"><span slot="def">{{cargoUsed}} / {{cargoSpace}}</span></def>
+  <def brkpt="sm" term="Cargo"><template #def><span>{{cargoUsed}} / {{cargoSpace}}</span></template></def>
   <div v-for="item in items" :key="item" v-if="count(item) > 0" class="my-3">
     <h4 class="text-capitalize">{{item}}</h4>
     <slider @update:value="amt => update(item, amt)" minmax=true :value="cargo.count(item)" min=0 :max="count(item)" step=1>
-      <span slot="pre" class="float-start mx-2"><btn class="fw-bold btn">{{store.count(item)}}</btn></span>
-      <span slot="post" class="float-end mx-2"><btn class="fw-bold btn">{{cargo.count(item)}}</btn></span>
+      <template #pre><span class="float-start mx-2"><btn class="fw-bold btn">{{store.count(item)}}</btn></span></template>
+      <template #post><span class="float-end mx-2"><btn class="fw-bold btn">{{cargo.count(item)}}</btn></span></template>
     </slider>
   </div>
 </div>

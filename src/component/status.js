@@ -46,7 +46,7 @@ Vue.component('person-status', {
 
   template: `
 <Section title="Player">
-<Flag slot="title-pre" :width="50" :faction="person.faction.abbrev" class="m-1" />
+<template #title-pre><Flag :width="50" :faction="person.faction.abbrev" class="m-1" /></template>
 
 <def term="Name" :def="name" />
 <def term="Money" :def="money|csn|unit('c')" />
@@ -136,10 +136,10 @@ Vue.component('faction-status', {
   template: `
 <Section title="Politics">
 <def v-for="faction of factions" :key="faction" caps="true" :term="faction">
-  <span slot="def">
+  <template #def><span>
     {{label(faction)}}
     <span class="badge rounded-pill ms-2">{{standing(faction)|R}}</span>
-  </span>
+  </span></template>
 </def>
 </Section>
   `,
@@ -224,12 +224,12 @@ Vue.component('ship-status', {
 <Section notitle=1>
   <def term="Class" :def="type" />
   <def term="Cargo" info="Cargo is measured in cargo units (cu), each enough to hold a standard-sized container of material. Mass for one cu varies by material.">
-    <div slot="def">
+    <template #def><div>
       {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
       <div v-if="ship.cargoUsed" v-for="item in cargo" :key="item.name">
         {{item.amount|csn}} units of {{item.name}} ({{item.mass|csn}} tonnes)
       </div>
-    </div>
+    </div></template>
   </def>
 
   <def term="Mass" :def="mass|unit('tonnes')" />
@@ -250,18 +250,20 @@ Vue.component('ship-status', {
   <def term="Evasion" :def="dodge + '%'" info="The chance of dodging an attack based on the mass to thrust ratio of the ship" />
 
   <def term="Upgrades">
-    <div slot="def" v-if="Object.keys(addons).length > 0">
-      <btn v-for="addon of addons" :key="addon" block=1 @click="toggleAddOn(addon)" class="text-truncate">
-        <template v-if="addOnCount(addon) > 1">[{{addOnCount(addon)}}]</template>
-        {{addOnName(addon)|caps}}
-      </btn>
-      <modal v-if="showAddOn" @close="toggleAddOn(showAddOn)" close="Close" :title="addOnName(showAddOn)">
-        <def term="Installed" :def="addOnCount(showAddOn)" />
-        <def v-for="(value, key) of addOnData" v-if="key != 'price' && key != 'markets' && !key.startsWith('is_')" :key="key" :term="key|caps|name" :def="value" />
-        <def term="Price" :def="addOnData.price|csn" />
-      </modal>
-    </div>
-    <span slot="def" v-else>None</span>
+    <template #def>
+      <div v-if="Object.keys(addons).length > 0">
+        <btn v-for="addon of addons" :key="addon" block=1 @click="toggleAddOn(addon)" class="text-truncate">
+          <template v-if="addOnCount(addon) > 1">[{{addOnCount(addon)}}]</template>
+          {{addOnName(addon)|caps}}
+        </btn>
+        <modal v-if="showAddOn" @close="toggleAddOn(showAddOn)" close="Close" :title="addOnName(showAddOn)">
+          <def term="Installed" :def="addOnCount(showAddOn)" />
+          <def v-for="(value, key) of addOnData" v-if="key != 'price' && key != 'markets' && !key.startsWith('is_')" :key="key" :term="key|caps|name" :def="value" />
+          <def term="Price" :def="addOnData.price|csn" />
+        </modal>
+      </div>
+      <span v-else>None</span>
+    </template>
   </def>
 </Section>
 </Section>

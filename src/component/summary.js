@@ -122,8 +122,8 @@ Vue.component('planet-summary', {
     <div :style="img_css"></div>
 
     <Section :notitle="!showtitle" :title="planet.name" class="col-12 col-md-6">
-      <Flag slot="title-pre" v-if="showtitle" :faction="planet.faction.abbrev" :width="50" class="m-1" />
-      <img slot="title-post" v-if="showtitle && is_home" src="img/home.png" class="circle-thingy circle-thingy-big mx-2 float-end" />
+      <template #title-pre><Flag v-if="showtitle" :faction="planet.faction.abbrev" :width="50" class="m-1" /></template>
+      <template #title-post><img v-if="showtitle && is_home" src="img/home.png" class="circle-thingy circle-thingy-big mx-2 float-end" /></template>
 
       <def y=1 v-if="isThere" term="Location" def="Docked" />
       <def y=1 v-else term="Distance" :def="distance|R(2)|csn|unit('AU')" />
@@ -138,10 +138,14 @@ Vue.component('planet-summary', {
       <def y=1 term="Environ" :def="kind|caps" />
 
       <def y=1 term="Details">
-        <div slot="def" v-if="traits" v-for="trait in traits" :key="trait" class="fst-italic">
-          {{trait|caps}}
-        </div>
-        <span v-else slot="def">N/A</span>
+        <template #def>
+          <template v-if="traits">
+            <div v-for="trait in traits" :key="trait" class="fst-italic">
+              {{trait|caps}}
+            </div>
+          </template>
+          <span v-else>N/A</span>
+        </template>
       </def>
     </Section>
 

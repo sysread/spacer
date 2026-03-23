@@ -94,7 +94,7 @@ Vue.component('shipyard-refuel', {
 <def term="Fuel" :def="change|csn|unit('tonnes')" />
 <def term="Total" :def="(price * change)|csn|unit('cr')" />
 <slider class="my-3" :value.sync="change" min=0 :max="max" step="1" minmax=true />
-<btn slot="footer" @click="fillHerUp" close=1>Purchase fuel</btn>
+<template #footer><btn @click="fillHerUp" close=1>Purchase fuel</btn></template>
 </modal>
   `,
 });
@@ -145,7 +145,7 @@ Vue.component('shipyard-transfer', {
 </def>
 
 <slider class="my-3" :value.sync="change" min=0 :max="max" step=1 minmax=true />
-<btn slot="footer" @click="fillHerUp" close=1>Transfer fuel</btn>
+<template #footer><btn @click="fillHerUp" close=1>Transfer fuel</btn></template>
 </modal>
   `,
 });
@@ -223,17 +223,17 @@ Vue.component('shipyard-repair', {
 
   <def term="Hull" :def="price_hull|R(1)|csn|unit('c')" />
   <slider class="my-3" :value.sync="repair_hull"  min=0 :max="max_hull|R(1)"  step=1 minmax=true>
-    <span class="btn btn-dark" slot="pre">{{need_hull - repair_hull|R(1)}}</span>
-    <span class="btn btn-dark" slot="post">{{repair_hull|R(1)}}</span>
+    <template #pre><span class="btn btn-dark">{{need_hull - repair_hull|R(1)}}</span></template>
+    <template #post><span class="btn btn-dark">{{repair_hull|R(1)}}</span></template>
   </slider>
 
   <def term="Armor" :def="price_armor|R(1)|csn|unit('c')" />
   <slider class="my-3" :value.sync="repair_armor" min=0 :max="max_armor|R(1)" step=1 minmax=true>
-    <span class="btn btn-dark" slot="pre">{{need_armor - repair_armor|R(1)}}</span>
-    <span class="btn btn-dark" slot="post">{{repair_armor|R(1)}}</span>
+    <template #pre><span class="btn btn-dark">{{need_armor - repair_armor|R(1)}}</span></template>
+    <template #post><span class="btn btn-dark">{{repair_armor|R(1)}}</span></template>
   </slider>
 
-  <btn slot="footer" @click="repair" close=1>Repair ship</btn>
+  <template #footer><btn @click="repair" close=1>Repair ship</btn></template>
 </template>
 
 <div v-else class="fst-italic text-warning">

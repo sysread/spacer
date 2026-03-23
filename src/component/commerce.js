@@ -31,7 +31,7 @@ Vue.component('market', {
   },
   template: `
 <Section :title="title">
-<span slot="title-pre" v-if="trade" class="d-none d-sm-inline">Exchange of</span>
+<template #title-pre><span v-if="trade" class="d-none d-sm-inline">Exchange of</span></template>
 
 <p v-show="!trade">
   There are endless warehouses along the docks. As you approach the resource

@@ -165,11 +165,11 @@ Vue.component('ship', {
   </p>
 
   <def y=1 brkpt="sm" term="Price">
-    <span slot="def">
+    <template #def><span>
       {{price|csn|unit('c')}}
       <span v-if="tradeIn >= 0">({{tradeIn|csn|unit('c')}} after trade in)</span>
       <span v-if="tradeIn < 0">({{-tradeIn|csn|unit('c')}} profit after trade in)</span>
-    </span>
+    </span></template>
   </def>
 
   <def y=1 brkpt="sm" term="Cargo"       :def="shipClass.cargo" />
@@ -187,7 +187,7 @@ Vue.component('ship', {
   <def y=1 brkpt="sm" term="Hard points" :def="shipClass.hardpoints" />
 
   <def y=1 brkpt="sm" term="Range">
-    <div slot="def">
+    <template #def><div>
       <def split=4 term="Cargo mass" :def="massForRange|csn|unit('tonnes')" />
       <slider :value.sync="massForRange" min=0 :max="maxCargoMass" step=1 minmax=true class="my-1" />
 
@@ -197,7 +197,7 @@ Vue.component('ship', {
       <slider :value.sync="deltaVforRange" min=0.01 :max="deltaVinG|R(2)" step=0.01 minmax=true class="my-1" />
 
       <def split=4 term="Range" :def="maxRange()|R(2)|unit('AU')" />
-    </div>
+    </div></template>
   </def>
 </Section>
 
@@ -207,7 +207,7 @@ Vue.component('ship', {
   <p v-if="tradeIn < 0">You will make {{-tradeIn|csn}} profit with this deal. </p>
   <p v-else>You will pay {{tradeIn|csn}} with this deal. </p>
   <p>Do you wish to complete this exchange?</p>
-  <btn @click="completeTradeIn" slot="footer" close=1>Trade in</btn>
+  <template #footer><btn @click="completeTradeIn" close=1>Trade in</btn></template>
 </modal>
 </div>
   `,

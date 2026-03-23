@@ -75,12 +75,12 @@ Vue.component('new-game', {
 </card>
 
 <card v-else>
-  <card-header slot="header">
+  <template #header><card-header>
     <h3>
       New Game
       <btn @click="startGame">Start game</btn>
     </h3>
-  </card-header>
+  </card-header></template>
 
   <form>
     <div class="mb-3">

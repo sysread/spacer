@@ -349,7 +349,7 @@ Vue.component('NavComp', {
       </confirm>
 
       <NavPlot v-layout v-if="show_map" :layout="layout" :transit="transit" :style="layout_css_dimensions">
-        <template slot="svg">
+        <template #svg>
           <NavBodies :layout="layout" :focus="dest || game.locus" @click="set_dest" />
           <SvgTransitPath v-if="transit" :layout="layout" :transit="transit" />
         </template>

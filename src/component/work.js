@@ -173,9 +173,11 @@ Vue.component('work', {
       </progress-bar>
     </div>
 
-    <btn slot="footer" v-if="isReady" @click="performWork">Get to work</btn>
-    <btn slot="footer" v-if="isFinished && hitQuota" close=1>Complete transfer</btn>
-    <btn slot="footer" v-if="isFinished && !hitQuota" close=1>Grumble, grumble...</btn>
+    <template #footer>
+      <btn v-if="isReady" @click="performWork">Get to work</btn>
+      <btn v-if="isFinished && hitQuota" close=1>Complete transfer</btn>
+      <btn v-if="isFinished && !hitQuota" close=1>Grumble, grumble...</btn>
+    </template>
   </modal>
 </Section>
 
@@ -204,8 +206,10 @@ Vue.component('work', {
       <h5>{{contract.mission.title}}</h5>
       <div>{{ contract.mission.description }}</div>
 
-      <btn slot="footer" @click="acceptContract" close=1>Accept contract</btn>
-      <btn slot="footer" @click="clearContract" close=1>No thank you</btn>
+      <template #footer>
+        <btn @click="acceptContract" close=1>Accept contract</btn>
+        <btn @click="clearContract" close=1>No thank you</btn>
+      </template>
     </modal>
 
   </template>
