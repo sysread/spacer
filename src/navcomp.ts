@@ -69,9 +69,10 @@ export interface Trajectory {
 }
 
 export interface Acceleration {
-  vector: Point;   // acceleration vector [ax, ay, az] in m/s²
-  length: number;  // magnitude of acceleration (m/s²)
-  maxvel: number;  // peak velocity at flip point (m/s)
+  vector:      Point;   // boost acceleration vector [a1x, a1y, a1z] in m/s²
+  brakeVector: Point;   // brake acceleration vector [a2x, a2y, a2z] in m/s²
+  length:      number;  // effective acceleration magnitude (avg of boost+brake)
+  maxvel:      number;  // peak velocity at flip point (m/s)
 }
 
 export interface Body {
@@ -93,66 +94,91 @@ export function travel_time(ts: number, a: number): number {
 }
 
 /**
- * Solves for the constant acceleration needed along one axis to travel from
- * pi to pf in total time tt, matching initial velocity vi and final velocity vf.
- * Uses the flip-point (tt/2) as the reference for velocity matching.
+ * Solves for the acceleration during phase 1 (boost) along one axis.
+ *
+ * The trajectory has two phases of equal duration T/2:
+ *   Phase 1 (boost):  accel = a1, from t=0 to t=T/2
+ *   Phase 2 (brake):  accel = a2, from t=T/2 to t=T
+ *
+ * Given start (pi, vi) and end (pf, vf), we solve for a1 and a2 per axis.
+ *
+ * From the velocity constraint:  vf = vi + a1*h + a2*h  (where h = T/2)
+ *   => a2 = (vf - vi)/h - a1
+ *
+ * From the position constraint:
+ *   pf = pi + vi*T + a1*h²/2 + (vi + a1*h)*h + a2*h²/2
+ *
+ * Substituting a2 and solving for a1:
+ *   a1 = (4*(pf - pi) - 2*T*(vi + vf)) / T²
  */
-function linear_acceleration(tt: number, pi: number, pf: number, vi: number, vf: number): number {
-  const t   = tt / 2;        // time to flip point
-  const dvf = vf * 2 / t;    // portion of final velocity to match by flip point
-  const dvi = (vi - dvf) * 2 / t; // portion of initial velocity change to apply
-  return (pf - pi) / (t * t) - dvi;
+function solve_boost_brake(tt: number, pi: number, pf: number, vi: number, vf: number): [number, number] {
+  const h  = tt / 2;
+  const a1 = (4 * (pf - pi) - 2 * tt * (vi + vf)) / (tt * tt);
+  const a2 = (vf - vi) / h - a1;
+  return [a1, a2];
 }
 
 /**
- * Computes the 3D acceleration vector needed to travel from `initial` to
- * `final` in exactly `turns` turns. Solves each axis independently for speed.
- * Returns the vector, its magnitude, and the peak velocity at the flip point.
+ * Computes the 3D acceleration needed to travel from `initial` to `final`
+ * in exactly `turns` turns. Each axis is solved independently for a two-phase
+ * boost/brake trajectory that correctly matches both endpoint positions and
+ * velocities.
+ *
+ * Returns the per-phase acceleration vectors, the effective magnitude (average
+ * of the two phases for fuel/feasibility calculations), and the true peak
+ * velocity at the flip point (including initial velocity contribution).
  */
 function calculate_acceleration(turns: number, initial: Body, final: Body): Acceleration {
   const t  = SPT * turns;
-  const t2 = t / 2;
+  const h  = t / 2;
 
-  const ax = linear_acceleration(t, initial.position[0], final.position[0], initial.velocity[0], final.velocity[0]);
-  const ay = linear_acceleration(t, initial.position[1], final.position[1], initial.velocity[1], final.velocity[1]);
-  const az = linear_acceleration(t, initial.position[2], final.position[2], initial.velocity[2], final.velocity[2]);
+  const [a1x, a2x] = solve_boost_brake(t, initial.position[0], final.position[0], initial.velocity[0], final.velocity[0]);
+  const [a1y, a2y] = solve_boost_brake(t, initial.position[1], final.position[1], initial.velocity[1], final.velocity[1]);
+  const [a1z, a2z] = solve_boost_brake(t, initial.position[2], final.position[2], initial.velocity[2], final.velocity[2]);
 
-  const vx = ax * t2;
-  const vy = ay * t2;
-  const vz = az * t2;
+  // Effective acceleration: average of boost and brake magnitudes.
+  // This gives the correct fuel budget since total delta-v = (|a1| + |a2|) * h.
+  const a1mag = Math.hypot(a1x, a1y, a1z);
+  const a2mag = Math.hypot(a2x, a2y, a2z);
+  const a = (a1mag + a2mag) / 2;
 
-  const a = Math.hypot(ax, ay, az);
-  const v = Math.hypot(vx, vy, vz);
+  // Peak velocity at flip point, including initial velocity.
+  const vmx = initial.velocity[0] + a1x * h;
+  const vmy = initial.velocity[1] + a1y * h;
+  const vmz = initial.velocity[2] + a1z * h;
+  const v = Math.hypot(vmx, vmy, vmz);
 
   return {
     maxvel: v,
     length: a,
-    vector: [ax, ay, az],
+    vector: [a1x, a1y, a1z],
+    brakeVector: [a2x, a2y, a2z],
   };
 }
 
 /**
  * Integrates the trajectory for a transit using Euler integration.
- * Each turn is subdivided into DT frames. Acceleration is applied forward
- * before the flip point and reversed after.
+ * Each turn is subdivided into DT frames. Phase 1 (boost) uses the boost
+ * acceleration vector; phase 2 (brake) uses the brake vector. The two
+ * phases have equal duration (T/2) but potentially different magnitudes,
+ * which is what allows matching both endpoint position and velocity.
  *
- * The final position/velocity are forced to match the destination exactly,
- * correcting for integration error that accumulates at multi-AU distances.
+ * The final position/velocity are clamped to the destination to correct
+ * for accumulated Euler integration error at multi-AU distances.
  */
 export function calculate_trajectory(turns: number, initial: Body, final: Body): Trajectory {
   const tflip = turns * SPT / 2;
 
   const acc = calculate_acceleration(turns, initial, final);
-  const [ax, ay, az] = acc.vector;
+  const [a1x, a1y, a1z] = acc.vector;
+  const [a2x, a2y, a2z] = acc.brakeVector;
 
-  // Pre-compute per-frame deltas for efficiency in the inner loop.
-  const dvx = ax * TI;
-  const dvy = ay * TI;
-  const dvz = az * TI;
+  // Pre-compute per-frame deltas for boost and brake phases.
+  const dv1x = a1x * TI, dv1y = a1y * TI, dv1z = a1z * TI;
+  const dv2x = a2x * TI, dv2y = a2y * TI, dv2z = a2z * TI;
 
-  const dsx = ax * (TI * TI) / 2;
-  const dsy = ay * (TI * TI) / 2;
-  const dsz = az * (TI * TI) / 2;
+  const ds1x = a1x * (TI * TI) / 2, ds1y = a1y * (TI * TI) / 2, ds1z = a1z * (TI * TI) / 2;
+  const ds2x = a2x * (TI * TI) / 2, ds2y = a2y * (TI * TI) / 2, ds2z = a2z * (TI * TI) / 2;
 
   let [px, py, pz] = initial.position.slice(0);
   let [vx, vy, vz] = initial.velocity.slice(0);
@@ -167,16 +193,17 @@ export function calculate_trajectory(turns: number, initial: Body, final: Body):
     for (let e = 0; e < DT; ++e) {
       t += TI;
 
-      // Flip at the midpoint: decelerate for the second half.
       if (t < tflip) {
-        vx += dvx, vy += dvy, vz += dvz;
+        vx += dv1x, vy += dv1y, vz += dv1z;
+        px += ds1x + vx * TI;
+        py += ds1y + vy * TI;
+        pz += ds1z + vz * TI;
       } else {
-        vx -= dvx, vy -= dvy, vz -= dvz;
+        vx += dv2x, vy += dv2y, vz += dv2z;
+        px += ds2x + vx * TI;
+        py += ds2y + vy * TI;
+        pz += ds2z + vz * TI;
       }
-
-      px += dsx + vx * TI;
-      py += dsy + vy * TI;
-      pz += dsz + vz * TI;
     }
 
     // Clamp final position/velocity to destination to correct integration error.
