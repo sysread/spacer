@@ -5,6 +5,7 @@ import * as util from '../util';
 import Tween from '../tween';
 import { NavComp } from '../navcomp';
 import Layout from './layout';
+import * as nc from './navcomp-controller';
 
 import './global';
 import './common';
@@ -14,17 +15,6 @@ import './summary';
 import './svg';
 
 
-function transit_display_distance(transit) {
-  if (!transit)
-    return;
-
-  const au = util.R(transit.au, 2);
-
-  if (au > 0)
-    return au + ' AU';
-  else
-    return util.csn(util.R(transit.km, 0)) + ' km';
-}
 
 
 Vue.component('NavBtn', {
@@ -166,113 +156,27 @@ Vue.component('NavComp', {
     },
 
     isSubSystemTransit() {
-      if (this.dest) {
-        const dest_central = system.central(this.dest);
-        const orig_central = system.central(this.game.locus);
-
-        if ((dest_central == orig_central && dest_central != 'sun') // moon to moon in same system
-            || window.game.locus == dest_central                    // central to its own moon
-            || this.dest == orig_central)                           // moon to its host planet
-          return true;
-
-        return false;
-      }
-
-      return false;
+      return nc.isSubSystemTransit(this.dest, this.game.locus, (b) => system.central(b));
     },
 
     map_center_point() {
-      if (this.dest) {
-        return this.map_center_point_transit;
-      }
-
-      const central = this.system.central(this.game.locus);
-      const is_moon = central != 'sun';
-      return is_moon ? this.system.position(central) : [0, 0];
-    },
-
-    map_center_point_transit() {
-      let center;
-
-      const dest_central = this.system.central(this.dest);
-      const orig_central = this.system.central(this.game.locus);
-      const bodies = [];
-
-      if (this.isSubSystemTransit) {
-        // For subsystem transits, center on the central body of the
-        // subsystem, rather than the entire solar system.
-        const central = dest_central == 'sun'
-          ? orig_central
-          : dest_central;
-
-        bodies.push(this.system.position(central));
-      }
-      else {
-        bodies.push(this.system.position(this.dest));
-        bodies.push(this.system.position(this.game.locus));
-      }
-
-      // Figure in transit
-      if (this.transit) {
-        bodies.push(this.transit.flip_point);
-        bodies.push(this.transit.start);
-        bodies.push(this.transit.end);
-      }
-
-      return Physics.centroid(...bodies);
+      return nc.computeMapCenter(
+        this.dest, this.game.locus, this.transit, this.isSubSystemTransit,
+        (b) => this.system.position(b), (b) => system.central(b),
+      );
     },
 
     map_fov_au() {
-      if (this.dest) {
-        return this.map_fov_au_transit;
-      }
-
-      const distance = this.system.distance(this.game.locus, 'sun');
-      return distance / Physics.AU * 1.5;
-    },
-
-    map_fov_au_transit() {
-      const points = [];
-      const dest_central = this.system.central(this.dest);
-      const orig_central = this.system.central(this.game.locus);
-
-      if (this.isSubSystemTransit) {
-        // Determine the central body of the subsystem transit
-        const central = dest_central == 'sun'
-          ? orig_central
-          : dest_central;
-
-        points.push(this.system.position(central));
-
-        // Select all of the bodies orbiting that central body
-        for (const body of this.system.all_bodies()) {
-          if (system.central(body) == central) {
-            points.push(this.system.position(body));
-          }
-        }
-      }
-      // Cross system path
-      else {
-        points.push(this.system.position(this.game.locus));
-        points.push(this.system.position(this.dest));
-      }
-
-      if (this.transit) {
-        points.push(this.transit.end);
-      }
-
-      // Lop off z to prevent it from affecting the distance calculation
-      // since it's being displayed on a 2d map.
-      const center    = this.map_center_point;
-      const center_2d = [center[0], center[1], 0];
-      const points_2d = points.map(p => [p[0], p[1], 0]);
-      const distances = points_2d.map(p => Physics.distance(p, center_2d));
-      const max       = Math.max(...distances);
-      return 1.1 * (max / Physics.AU);
+      return nc.computeMapFovAU(
+        this.dest, this.game.locus, this.transit, this.isSubSystemTransit,
+        this.map_center_point,
+        (b) => this.system.position(b), (b) => system.central(b),
+        (a, b) => this.system.distance(a, b), () => this.system.all_bodies(),
+      );
     },
 
     transit_display_distance() {
-      return transit_display_distance(this.transit);
+      return nc.transitDisplayDistance(this.transit);
     },
   },
 
@@ -468,30 +372,15 @@ Vue.component('NavDestOpt', {
     is_here() { return this.game.locus == this.body          },
 
     dist() {
-      const p0 = this.system.position(this.game.locus);
-      const p1 = this.system.position(this.body);
-      const d  = Physics.distance(p0, p1);
-
-      if (d < Physics.AU * 0.01) {
-        return util.csn(util.R(d / 1000)) + ' km';
-      } else {
-        return util.R(d / Physics.AU, 2) + ' AU';
-      }
+      const d = Physics.distance(
+        this.system.position(this.game.locus),
+        this.system.position(this.body),
+      );
+      return nc.formatDistance(d);
     },
 
     color() {
-      let color;
-
-      switch (this.faction) {
-        case 'UN':     color = 'text-success';   break;
-        case 'MC':     color = 'text-danger';    break;
-        case 'JFT':    color = 'text-warning';   break;
-        case 'TRANSA': color = 'text-secondary'; break;
-        case 'CERES':  color = 'text-info';      break;
-        default:       color = '';               break;
-      }
-
-      return color;
+      return nc.factionColorClass(this.faction);
     },
   },
 
