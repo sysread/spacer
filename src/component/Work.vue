@@ -22,7 +22,7 @@
   </p>
 
   <p v-else-if="tasks.length > 0">
-    <btn v-for="t in tasks" :key="t.name" @click="setTask(t)" block=1>
+    <btn v-for="t in tasks" :key="t.name" @click="setTask(t)" block=1 class="text-start">
       {{t.name}} <badge right=1>{{getPayRate(t)}}c</badge>
     </btn>
   </p>
@@ -77,7 +77,7 @@
     <div v-for="(list, type) in contracts" :key="type">
       <h4>{{type}}</h4>
       <p>
-        <template v-for="c in list" :key="c.mission.title"><btn v-if="!c.mission.is_accepted" @click="setContract(c)" block=1>
+        <template v-for="c in list" :key="c.mission.title"><btn v-if="!c.mission.is_accepted" @click="setContract(c)" block=1 class="text-start">
           {{c.mission.short_title}}
           <badge right=1>{{$csn(c.mission.price)}}c</badge>
         </btn></template>

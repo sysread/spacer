@@ -32,7 +32,7 @@
     </Section>
 
     <div class="col-12 col-md-6">
-      <News :body="planet.body" title="Local news" />
+      <Section title="Local news"><News :body="planet.body" /></Section>
 
       <Section v-if="!mini" :title="'About ' + planet.name">
         <p v-for="(line, idx) of desc" :key="idx" class="fst-italic">{{line}}</p>

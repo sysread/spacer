@@ -12,14 +12,22 @@
       <Conflicts />
     </modal>
 
-    <btn block=1 @click="next_body" class="text-start">
-      {{name}}
-      <span v-if="body == game.locus" class="m-1 text-warning fw-bold">&target;</span>
-      <badge right=1 class="mx-1">{{faction}}</badge>
-      <badge right=1 v-if="is_moon" class="ms-1">{{kind}}</badge>
-    </btn>
+    <div v-for="faction in factions" :key="faction" class="my-3">
+      <h4 class="section-title d-flex justify-content-between align-items-center">
+        <span>{{factionName(faction)}}</span>
+        <Flag :faction="faction" :width="30" />
+      </h4>
 
-    <News :body="body" />
+      <div v-if="factionHasNews(faction)" class="section-content">
+        <div v-for="body in factionBodies[faction]" :key="body">
+          <template v-if="bodyHasNews(body)">
+            <News :body="body" :title="planetName(body)" />
+          </template>
+        </div>
+      </div>
+
+      <p v-else class="fst-italic text-muted section-content">Nothing to report.</p>
+    </div>
   </Section>
 </template>
 
@@ -27,32 +35,73 @@
 export default {
   data() {
     return {
-      index: null,
       show_conflicts: false,
     };
   },
 
   computed: {
-    bodies()  { return Object.keys(this.data.bodies)               },
-    name()    { return this.game.planets[this.body].name           },
-    faction() { return this.game.planets[this.body].faction.abbrev },
-    is_moon() { return this.system.type(this.body) == 'moon'       },
-    kind()    { return this.system.kind(this.body)                 },
+    bodies() { return Object.keys(this.data.bodies) },
 
-    body() {
-      if (this.index === null) {
-        this.index = this.bodies.findIndex(b => b == game.locus);
+    factions() {
+      const seen = new Set();
+      const result = [];
+      for (const body of this.bodies) {
+        const f = this.game.planets[body].faction.abbrev;
+        if (!seen.has(f)) {
+          seen.add(f);
+          result.push(f);
+        }
       }
+      return result.sort();
+    },
 
-      return this.bodies[this.index];
+    factionBodies() {
+      const map = {};
+      for (const f of this.factions) {
+        map[f] = this.bodies
+          .filter(b => this.game.planets[b].faction.abbrev === f)
+          .sort((a, b) => this.planetName(a).localeCompare(this.planetName(b)));
+      }
+      return map;
     },
   },
 
   methods: {
-    next_body() {
-      if (++this.index == this.bodies.length) {
-        this.index = 0;
-      }
+    planetName(body) {
+      return this.game.planets[body].name;
+    },
+
+    factionName(abbrev) {
+      return this.data.factions[abbrev].full_name;
+    },
+
+    bodyHasNews(body) {
+      const p = this.game.planets[body];
+      const resources = Object.keys(this.data.resources);
+
+      const hasConditions = p.conditions && p.conditions.length > 0;
+
+      const hasShortages = resources.some(i =>
+        !this.data.resources[i].contraband
+        && p.economy.hasSuperShortage(i)
+        && p.economy.getStock(i) == 0
+      );
+
+      const hasSurpluses = resources.some(i =>
+        !this.data.resources[i].contraband
+        && p.economy.hasSuperSurplus(i)
+        && p.economy.getStock(i) > 0
+      );
+
+      const faction = p.faction.abbrev;
+      const hasConflicts = this.game.get_conflicts()
+        .some(c => c.target == faction || c.proponent == faction);
+
+      return hasConditions || hasShortages || hasSurpluses || hasConflicts;
+    },
+
+    factionHasNews(faction) {
+      return this.factionBodies[faction].some(b => this.bodyHasNews(b));
     },
   },
 };

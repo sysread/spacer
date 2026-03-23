@@ -166,7 +166,7 @@ export default {
         return 0;
       }
 
-      const min   = 0.05;
+      const min   = 0.10;
       const max   = 0.80;
       const intvl = max / (this.layout.fov_au * 2);
       return util.clamp(intvl, min, max);

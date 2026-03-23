@@ -1,6 +1,7 @@
 <template>
-  <Section :title="title" :notitle="!title">
-    <template v-if="hasNews">
+  <div class="my-3">
+    <h6 v-if="title" class="text-capitalize fw-bold my-2" style="font-size:1rem; border-top:1px solid #444; border-bottom:1px solid #444; padding:4px 0">{{title}}</h6>
+    <div v-if="hasNews" class="ms-2 px-2">
       <template v-if="hasConditions"><div v-for="cond of conditions[body]" :key="cond.name" class="my-2">
         <h6 class="text-danger">{{$caps(cond.name)}}</h6>
         <p v-if="cond.left < 7">Local sources claim efforts to deal with the {{cond.name}} have been successful and are winding down.</p>
@@ -14,7 +15,7 @@
       </div></template>
 
       <div v-if="hasConflicts" class="my-2">
-        <h6>Politics</h6>
+        <h6 class="mini">Politics</h6>
         <ul>
           <template v-for="conflict in conflicts">
             <li :class="{'text-warning': conflict.target == faction}">
@@ -25,7 +26,7 @@
       </div>
 
       <div v-if="hasShortages" class="my-2">
-        <h6>High market demand reported</h6>
+        <h6 class="mini">High market demand reported</h6>
         <ul>
           <li v-for="item of shortages[body]" class="text-warning">
             {{$caps(item)}}
@@ -37,17 +38,17 @@
       </div>
 
       <div v-if="hasSurpluses" class="my-2">
-        <h6>Surpluses reported</h6>
+        <h6 class="mini">Surpluses reported</h6>
         <ul>
           <li v-for="item of surpluses[body]" class="text-success">{{$caps(item)}}</li>
         </ul>
       </div>
-    </template>
+    </div>
 
-    <p v-else>
+    <p v-else class="ms-2">
       Nothing significant to report.
     </p>
-  </Section>
+  </div>
 </template>
 
 <script>
