@@ -6,7 +6,7 @@
   [{{action.count}}]
 </template>
 
-<badge right=1 class="mx-2">
+<badge v-if="action.magazine != null" right=1 class="mx-2">
   {{action.magazineRemaining}}/{{action.magazine}}
 </badge>
 

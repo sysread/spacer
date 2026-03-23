@@ -166,7 +166,7 @@ export default {
         return 0;
       }
 
-      const min   = 0.10;
+      const min   = 0.08;
       const max   = 0.80;
       const intvl = max / (this.layout.fov_au * 2);
       return util.clamp(intvl, min, max);
@@ -183,8 +183,12 @@ export default {
     },
 
     center() {
-      const body = this.isSubSystemTransit
-        ? system.central(this.plan.dest)
+      // For sub-system transits, center on the common parent body.
+      // For long-range transits to a satellite, also center on the
+      // parent body once zoomed in so both the moon and ship stay visible.
+      const central = system.central(this.plan.dest);
+      const body = (this.isSubSystemTransit || (central != 'sun' && this.is_zoomed_in))
+        ? central
         : this.plan.dest;
 
       // use system.position_on_turn so vuejs picks up that this property
@@ -275,9 +279,11 @@ export default {
 
     fov() {
       const central = system.central(this.plan.dest);
+      // Always include both the destination and the ship's current position
       const points = [this.plan.end, this.plan.coords];
 
-      // For sub-system transits, center on the common central body.
+      // For sub-system transits, center on the common central body
+      // and include all sibling bodies in the frame.
       if (this.isSubSystemTransit) {
         for (const body of this.system.all_bodies()) {
           if (system.central(body) == central || body == central) {
@@ -305,7 +311,8 @@ export default {
       const points_2d = points.map(p => [p[0], p[1], 0]);
       const distances = points_2d.map(p => Physics.distance(p, center_2d));
       const max       = Math.max(...distances);
-      return 1.1 * (max / Physics.AU);
+      // 1.25x margin keeps the ship and destination from hugging the edge
+      return 1.25 * (max / Physics.AU);
     },
 
     layout_resize() {
