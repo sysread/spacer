@@ -1,0 +1,155 @@
+<template>
+  <modal :title="$caps(item)" close="Close" xclose=1 size="lg" @close="$emit('close')">
+    <p v-if="queue.result">
+      {{queue.result}}
+    </p>
+
+    <p v-else-if="amount == 0" class="fst-italic text-warning">
+      You do not have the resources necessary to fabricate this item.
+    </p>
+
+    <template v-else>
+      <p class="fst-italic text-success">
+        You have the resources and cargo space to fabricate {{$csn(amount)}} of this item.
+      </p>
+
+      <p>
+        The fabricators may be scheduled to continuously create as many items as you have the resources for.
+        Each use of the fabricators reduces their available capacity, resulting in higher fees and fabrication times.
+        As cybernetics become available in the market, they may be used to replenish the fabricators.
+      </p>
+
+      <template v-if="show_confirm">
+        <confirm yes="Confirm" no="Cancel" @confirm="confirm_start">
+          The fabricators are too low on resources to complete the full batch. Unless replenished,
+          they will need to be supplemented with more traditional, less efficient techniques, resulting
+          in higher fees and a longer fabrication time.
+        </confirm>
+      </template>
+
+      <template v-if="!running">
+        <slider class="my-3" v-model:value="queue.goal" min=1 :max="amount" minmax=1 step=1 />
+        <btn block=1 @click="confirm" class="my-3">Push the big red button</btn>
+      </template>
+
+      <template v-else>
+        <progress-bar :percent="percent" @ready="turn" />
+        <btn block=1 @click="finish" class="my-3">Stop</btn>
+      </template>
+    </template>
+
+    <table v-if="!queue.result" class="table my-2"><tbody>
+      <tr v-if="amount">
+        <th>&nbsp;</th>
+        <th>Each</th>
+        <th>Total (est)</th>
+      </tr>
+      <tr v-if="amount">
+        <th>Count</th>
+        <td>1</td>
+        <td>{{$csn(left)}} / {{$csn(queue.goal)}}</td>
+      </tr>
+      <tr>
+        <th>Market value</th>
+        <td>{{$unit($csn(price), 'credits')}}</td>
+        <td v-if="amount" class="text-success">{{$unit($csn(price*queue.goal), 'credits')}}</td>
+      </tr>
+      <tr>
+        <th>Fee</th>
+        <td>{{$unit($csn(fee), 'credits')}}</td>
+        <td v-if="amount" class="text-success">{{$unit($csn(fee*queue.goal), 'credits')}}</td>
+      </tr>
+      <tr>
+        <th>Time</th>
+        <td>{{$unit($csn(hours), 'hours')}}</td>
+        <td v-if="amount" class="text-success">{{$unit($csn(hours*queue.goal), 'hours')}}</td>
+      </tr>
+      <tr v-for="(amt, item) of queue.recipe">
+        <th>{{$caps(item)}}</th>
+        <td>{{$csn(amt)}}</td>
+        <td v-if="amount" class="text-success">{{$csn(amt*queue.goal)}}</td>
+      </tr>
+    </tbody></table>
+  </modal>
+</template>
+
+<script>
+import { FabricationQueue } from '../fabricators';
+
+export default {
+  props: ['item'],
+
+  data() {
+    return {
+      show_confirm: false,
+      running: false,
+      queue:   null,
+    };
+  },
+
+  created() {
+    this.queue = new FabricationQueue({item: this.item, game: this.game});
+  },
+
+  computed: {
+    left()    { return this.queue.remaining },
+    fee()     { return this.queue.next_fee },
+    turns()   { return this.queue.next_turns },
+    hours()   { return this.data.hours_per_turn * this.turns },
+    percent() { return 100 * this.queue.completed / this.queue.goal },
+    price()   { return this.game.here.pricing.sellPrice(this.item) },
+
+    amount() {
+      return Math.min(
+        Math.floor(this.game.player.money / this.fee),
+        this.game.player.canCraft(this.item),
+      );
+    },
+  },
+
+  methods: {
+    confirm() {
+      if (this.queue.has_fab_resources) {
+        this.start();
+      }
+      else {
+        this.show_confirm = true;
+      }
+    },
+
+    confirm_start(confirmed) {
+      this.show_confirm = false;
+
+      if (confirmed) {
+        this.queue.ignore_fab_health = true;
+        this.start();
+      }
+    },
+
+    start() {
+      this.game.freeze();
+      this.running = true;
+      this.$nextTick(() => this.turn());
+    },
+
+    finish() {
+      this.game.save_game();
+      this.running = false;
+      this.game.unfreeze();
+    },
+
+    turn() {
+      setTimeout(() => {
+        this.running = this.queue.fabricate();
+        if (!this.running) {
+          this.finish();
+        }
+      }, 400);
+    },
+
+    reset() {
+      this.queue.set_goal(1);
+    },
+  },
+};
+</script>
