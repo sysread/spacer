@@ -115,7 +115,7 @@ Vue.component('fabrication', {
         </template>
 
         <template v-if="!running">
-          <slider class="my-3" :value.sync="queue.goal" min=1 :max="amount" minmax=1 step=1 />
+          <slider class="my-3" v-model:value="queue.goal" min=1 :max="amount" minmax=1 step=1 />
           <btn block=1 @click="confirm" class="my-3">Push the big red button</btn>
         </template>
 

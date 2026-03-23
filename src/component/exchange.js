@@ -29,7 +29,7 @@ Vue.component('slider', {
     }, 100);
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     window.clearTimeout(this.monitor);
   },
 

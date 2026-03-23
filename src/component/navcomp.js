@@ -474,7 +474,7 @@ Vue.component('NavRoutePlanner', {
 
         <row y=1>
           <cell size=12>
-            <slider minmax=true step="1" min="0" :max="num_routes - 1" :value.sync="selected" />
+            <slider minmax=true step="1" min="0" :max="num_routes - 1" v-model:value="selected" />
           </cell>
         </row>
 
@@ -615,7 +615,7 @@ Vue.component('SvgPlotPoint', {
   },
 
   watch: {
-    point:    function() { this.update() },
+    point:    { deep: true, handler() { this.update() } },
     diameter: function() { this.update() },
   },
 
@@ -873,7 +873,7 @@ Vue.component('SvgPatrolRadius', {
   },
 
   watch: {
-    point:  function() { this.update() },
+    point:  { deep: true, handler() { this.update() } },
     radius: function() { this.update() },
   },
 

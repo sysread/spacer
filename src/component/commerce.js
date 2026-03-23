@@ -41,7 +41,7 @@ Vue.component('market', {
   contraband.
 </p>
 
-<market-trade v-if="trade" :item.sync="trade" />
+<market-trade v-if="trade" v-model:item="trade" />
 
 <div class="container-fluid" v-else>
   <row v-for="item of resources" :key="item" class="p-1 rounded" :style="{'background-color': hold(item) > 0 ? '#400A0A' : '#000000'}">   <!-- :class="{'text-muted':dock(item) == 0 && hold(item) == 0}">-->
@@ -228,7 +228,7 @@ Vue.component('market-trade', {
 
   <tr>
     <td colspan=4 class="py-3">
-      <slider minmax=true :value.sync="tx_hold" min=0 :max="max" step=1 @update:value="updateState" />
+      <slider minmax=true v-model:value="tx_hold" min=0 :max="max" step=1 @update:value="updateState" />
     </td>
   </tr>
 

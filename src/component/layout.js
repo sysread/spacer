@@ -17,7 +17,7 @@ export default {
 
   directives: {
     layout: {
-      inserted(el, binding, vnode) {
+      mounted(el, binding, vnode) {
         const vm = binding.instance || vnode.context;
         vm.layout = new Layout(
           vm.layout_target_id,

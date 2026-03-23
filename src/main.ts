@@ -14,12 +14,19 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 
 import 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import '../www/public/css/index.css';
+import './css/index.css';
 import { gsap } from 'gsap';
 (window as any).gsap = gsap;
 
 import Vue from 'vue';
+const { configureCompat } = Vue as any;
 import game from './game';
+
+configureCompat({
+  CONFIG_WHITESPACE: false,
+  WATCH_ARRAY: false,
+  COMPILER_V_IF_V_FOR_PRECEDENCE: false,
+});
 
 /* DEV flag: enables debug UI elements (navbar debug link, etc.) */
 (window as any).DEV = !import.meta.env.PROD;
@@ -68,8 +75,8 @@ function boot() {
   new Vue({
     el: '#content',
 
-    data: {
-      page: initial_page,
+    data() {
+      return { page: initial_page };
     },
 
     mounted() {

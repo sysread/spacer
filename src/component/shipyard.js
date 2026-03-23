@@ -93,7 +93,7 @@ Vue.component('shipyard-refuel', {
 <def term="Price" :def="$unit($csn(price), 'cr / tonne')" />
 <def term="Fuel" :def="$unit($csn(change), 'tonnes')" />
 <def term="Total" :def="$unit($csn(price * change), 'cr')" />
-<slider class="my-3" :value.sync="change" min=0 :max="max" step="1" minmax=true />
+<slider class="my-3" v-model:value="change" min=0 :max="max" step="1" minmax=true />
 <template #footer><btn @click="fillHerUp" close=1>Purchase fuel</btn></template>
 </modal>
   `,
@@ -144,7 +144,7 @@ Vue.component('shipyard-transfer', {
   {{$unit($R(waste, 2), 'tonnes')}}
 </def>
 
-<slider class="my-3" :value.sync="change" min=0 :max="max" step=1 minmax=true />
+<slider class="my-3" v-model:value="change" min=0 :max="max" step=1 minmax=true />
 <template #footer><btn @click="fillHerUp" close=1>Transfer fuel</btn></template>
 </modal>
   `,
@@ -222,13 +222,13 @@ Vue.component('shipyard-repair', {
   <def term="Armor repair" :def="$unit($csn($R(price_armor_each, 1)), 'c')" />
 
   <def term="Hull" :def="$unit($csn($R(price_hull, 1)), 'c')" />
-  <slider class="my-3" :value.sync="repair_hull"  min=0 :max="$R(max_hull, 1)"  step=1 minmax=true>
+  <slider class="my-3" v-model:value="repair_hull"  min=0 :max="$R(max_hull, 1)"  step=1 minmax=true>
     <template #pre><span class="btn btn-dark">{{$R(need_hull - repair_hull, 1)}}</span></template>
     <template #post><span class="btn btn-dark">{{$R(repair_hull, 1)}}</span></template>
   </slider>
 
   <def term="Armor" :def="$unit($csn($R(price_armor, 1)), 'c')" />
-  <slider class="my-3" :value.sync="repair_armor" min=0 :max="$R(max_armor, 1)" step=1 minmax=true>
+  <slider class="my-3" v-model:value="repair_armor" min=0 :max="$R(max_armor, 1)" step=1 minmax=true>
     <template #pre><span class="btn btn-dark">{{$R(need_armor - repair_armor, 1)}}</span></template>
     <template #post><span class="btn btn-dark">{{$R(repair_armor, 1)}}</span></template>
   </slider>

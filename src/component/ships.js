@@ -189,12 +189,12 @@ Vue.component('ship', {
   <def y=1 brkpt="sm" term="Range">
     <template #def><div>
       <def split=4 term="Cargo mass" :def="$unit($csn(massForRange), 'tonnes')" />
-      <slider :value.sync="massForRange" min=0 :max="maxCargoMass" step=1 minmax=true class="my-1" />
+      <slider v-model:value="massForRange" min=0 :max="maxCargoMass" step=1 minmax=true class="my-1" />
 
       <def split=4 term="Acc">
         {{$unit($R(deltaVforRange, 2), 'G')}} ({{deltaVinPctOfMax}}%)
       </def>
-      <slider :value.sync="deltaVforRange" min=0.01 :max="$R(deltaVinG, 2)" step=0.01 minmax=true class="my-1" />
+      <slider v-model:value="deltaVforRange" min=0.01 :max="$R(deltaVinG, 2)" step=0.01 minmax=true class="my-1" />
 
       <def split=4 term="Range" :def="$unit($R(maxRange(), 2), 'AU')" />
     </div></template>

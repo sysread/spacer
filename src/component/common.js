@@ -1,24 +1,6 @@
 import Vue from 'vue';
-import * as util from '../util';
-import Physics from '../physics';
-import { sprintf } from 'sprintf-js';
 
 import './modal';
-
-window.sprintf = sprintf;
-
-Vue.filter('sprintf', (value, format, ...args) => sprintf(format, value, ...args));
-
-Vue.filter('csn',   function(value) { return util.csn((value || 0).toString()) });
-Vue.filter('R',     function(value, places) { return util.R((value || 0).toString(), places) });
-Vue.filter('pct',   function(value, places) { return util.pct((value || 0).toString(), places) });
-Vue.filter('unit',  function(value, unit) { return (value || 0).toString() + ' ' + unit });
-Vue.filter('name',  function(value) { return value.toString().replace(/_/g, ' ') }),
-Vue.filter('caps',  function(value) { return util.ucfirst(value) }),
-Vue.filter('lower', function(value) { return value.toString().replace(/\b([A-Z])/g, function(str) { return str.toLowerCase() }) });
-Vue.filter('AU',    function(value) { return value / Physics.AU });
-Vue.filter('yn',    function(value) { return value ? 'yes' : 'no' });
-Vue.filter('abs',   function(value) { return Math.abs(value || 0) });
 
 Vue.component('caps', { template: '<span class="text-capitalize"><slot /></span>' });
 Vue.component('lc',   { template: '<span class="text-lowercase"><slot /></span>'  });

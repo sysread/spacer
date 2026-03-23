@@ -8,7 +8,7 @@ Vue.component('modal', {
 
   directives: {
     'modal': {
-      inserted: function(el, binding, vnode) {
+      mounted: function(el, binding, vnode) {
         const modal = new Modal(el);
         // Store the instance on the element for cleanup
         el._bsModal = modal;
@@ -27,7 +27,7 @@ Vue.component('modal', {
     },
   },
 
-  beforeDestroy() {
+  beforeUnmount() {
     // Properly dispose the BS Modal when Vue removes the component.
     // Without this, the backdrop persists if the modal is removed by
     // Vue reactivity instead of being dismissed via BS5's API.

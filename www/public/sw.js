@@ -18,7 +18,6 @@ const CACHE_VERSION = 'spacer-v3';
  * via the network-first fetch handler. */
 const PRECACHE_URLS = [
   './',
-  './css/index.css',
   './img/bg.jpg',
   './img/callisto.png',
   './img/ceres.png',
