@@ -207,7 +207,8 @@ svg.plot {
   fill: red;
 }
 
-#navcomp-transit-info td {
+#navcomp-transit-info td,
+#spacer-status .navbar-text {
   font-variant-numeric: tabular-nums;
   font-family: monospace;
 }
