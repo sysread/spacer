@@ -116,13 +116,13 @@ export default {
         choice = 'attack';
       }
 
-      this.choice = choice || 'ready';
-
-      if (this.choice == 'submit-yes') {
+      if (choice == 'submit-yes') {
         const plunder = this.plunder();
         this.took = plunder.took;
         this.gave = plunder.gave;
       }
+
+      this.choice = choice || 'ready';
     },
 
     plunder() {
