@@ -122,13 +122,13 @@ Vue.component('Debug', {
 
 <select v-if="show == 'bodies'" v-model="body" class="form-control">
   <option value="">Market</option>
-  <option v-for="body in bodies" :key="body" :value="body">{{body|caps}}</option>
+  <option v-for="body in bodies" :key="body" :value="body">{{caps(body)}}</option>
 </select>
 
 <select v-if="show == 'items'" v-model="item" class="form-control">
   <option value="">Resource</option>
   <option v-for="item in resources" :key="item" :value="item">
-    {{item|caps}}
+    {{caps(item)}}
     [ {{itemValue(item)}} c ]
   </option>
 </select>
@@ -182,14 +182,14 @@ Vue.component('Debug', {
 <tbody>
   <template v-for="place in places">
   <tr :class="{'text-info': placeIsNetExporter(place, item)}">
-    <td>{{place.name|caps}}</td>
-    <td class="text-end">{{placePrice(place, item)|csn}}</td>
+    <td>{{caps(place.name)}}</td>
+    <td class="text-end">{{csn(placePrice(place, item))}}</td>
     <td class="text-end">{{placeGetStock(place, item)}}</td>
-    <td class="text-end">{{placeGetDemand(place, item)|R(2)}}</td>
-    <td class="text-end">{{placeGetSupply(place, item)|R(2)}}</td>
-    <td class="text-end" :class="{'text-success': placeHasSurplus(place, item), 'text-danger': placeHasShortage(place, item)}">{{placeGetNeed(place, item)|R(2)}}</td>
-    <td class="text-end">{{placeNetProduction(place, item)|R(2)}}</td>
-    <td class="text-end">{{placeAvgProduction(place, item)|R(2)}}</td>
+    <td class="text-end">{{R(placeGetDemand(place, item), 2)}}</td>
+    <td class="text-end">{{R(placeGetSupply(place, item), 2)}}</td>
+    <td class="text-end" :class="{'text-success': placeHasSurplus(place, item), 'text-danger': placeHasShortage(place, item)}">{{R(placeGetNeed(place, item), 2)}}</td>
+    <td class="text-end">{{R(placeNetProduction(place, item), 2)}}</td>
+    <td class="text-end">{{R(placeAvgProduction(place, item), 2)}}</td>
   </tr>
   </template>
 </tbody>
@@ -211,14 +211,14 @@ Vue.component('Debug', {
 <tbody>
   <template v-for="item in resources">
   <tr :class="{'text-info': placeIsNetExporter(place, item)}">
-    <td>{{item|caps}}</td>
-    <td class="text-end">{{placePrice(place, item)|csn}}</td>
+    <td>{{caps(item)}}</td>
+    <td class="text-end">{{csn(placePrice(place, item))}}</td>
     <td class="text-end">{{placeGetStock(place, item)}}</td>
-    <td class="text-end">{{placeGetDemand(place, item)|R(2)}}</td>
-    <td class="text-end">{{placeGetSupply(place, item)|R(2)}}</td>
-    <td class="text-end" :class="{'text-success': placeHasSurplus(place, item), 'text-danger': placeHasShortage(place, item)}">{{placeGetNeed(place, item)|R(2)}}</td>
-    <td class="text-end">{{placeNetProduction(place, item)|R(2)}}</td>
-    <td class="text-end">{{placeAvgProduction(place, item)|R(2)}}</td>
+    <td class="text-end">{{R(placeGetDemand(place, item), 2)}}</td>
+    <td class="text-end">{{R(placeGetSupply(place, item), 2)}}</td>
+    <td class="text-end" :class="{'text-success': placeHasSurplus(place, item), 'text-danger': placeHasShortage(place, item)}">{{R(placeGetNeed(place, item), 2)}}</td>
+    <td class="text-end">{{R(placeNetProduction(place, item), 2)}}</td>
+    <td class="text-end">{{R(placeAvgProduction(place, item), 2)}}</td>
   </tr>
   </template>
 </tbody>

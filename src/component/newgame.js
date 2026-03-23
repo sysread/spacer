@@ -101,9 +101,9 @@ Vue.component('new-game', {
 
     <card class="my-3">
       <card-text class="text-warning fst-italic">
-        As a native growing up under {{gravity|R(3)|unit('G')}} of gravity,
+        As a native growing up under {{unit(R(gravity, 3), 'G')}} of gravity,
         your physiology can tolerate a maximum sustained acceleration of
-        {{deltaV|R(3)|unit('G')}}.
+        {{unit(R(deltaV, 3), 'G')}}.
       </card-text>
     </card>
 

@@ -49,10 +49,10 @@ Vue.component('person-status', {
 <template #title-pre><Flag :width="50" :faction="person.faction.abbrev" class="m-1" /></template>
 
 <def term="Name" :def="name" />
-<def term="Money" :def="money|csn|unit('c')" />
-<def term="Home" :def="home|caps" />
-<def term="Faction" :def="faction|caps" />
-<def term="Thrust endurance" :def="accel|R(2)|unit('G')" />
+<def term="Money" :def="unit(csn(money), 'c')" />
+<def term="Home" :def="caps(home)" />
+<def term="Faction" :def="caps(faction)" />
+<def term="Thrust endurance" :def="unit(R(accel, 2), 'G')" />
 
 <div class="my-2">
   <btn @click="openOptions">Options</btn>
@@ -138,7 +138,7 @@ Vue.component('faction-status', {
 <def v-for="faction of factions" :key="faction" caps="true" :term="faction">
   <template #def><span>
     {{label(faction)}}
-    <span class="badge rounded-pill ms-2">{{standing(faction)|R}}</span>
+    <span class="badge rounded-pill ms-2">{{R(standing(faction))}}</span>
   </span></template>
 </def>
 </Section>
@@ -227,23 +227,23 @@ Vue.component('ship-status', {
     <template #def><div>
       {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
       <div v-if="ship.cargoUsed" v-for="item in cargo" :key="item.name">
-        {{item.amount|csn}} units of {{item.name}} ({{item.mass|csn}} tonnes)
+        {{csn(item.amount)}} units of {{item.name}} ({{csn(item.mass)}} tonnes)
       </div>
     </div></template>
   </def>
 
-  <def term="Mass" :def="mass|unit('tonnes')" />
-  <def term="Thrust" :def="thrust|unit('kN')" />
-  <def term="Max Acc." :def="acc|unit('G')" />
-  <def term="Fuel" :def="tank|unit('tonnes')" />
-  <def term="Drive" :def="ship.drives|unit(ship.drive.name)" />
-  <def term="Range" :def="burn|unit('hours at max thrust')" />
-  <def term="Fuel rate" :def="fuelRate|R(4)|unit('tonnes/hr at max thrust')" />
+  <def term="Mass" :def="unit(mass, 'tonnes')" />
+  <def term="Thrust" :def="unit(thrust, 'kN')" />
+  <def term="Max Acc." :def="unit(acc, 'G')" />
+  <def term="Fuel" :def="unit(tank, 'tonnes')" />
+  <def term="Drive" :def="unit(ship.drives, ship.drive.name)" />
+  <def term="Range" :def="unit(burn, 'hours at max thrust')" />
+  <def term="Fuel rate" :def="unit(R(fuelRate, 4), 'tonnes/hr at max thrust')" />
 </Section>
 
 <Section notitle=1>
-  <def term="Hull">{{ship.hull|R(2)}} / {{ship.fullHull}}</def>
-  <def term="Armor">{{ship.armor|R(2)}} / {{ship.fullArmor}}</def>
+  <def term="Hull">{{R(ship.hull, 2)}} / {{ship.fullHull}}</def>
+  <def term="Armor">{{R(ship.armor, 2)}} / {{ship.fullArmor}}</def>
   <def term="Hard points">{{ship.hardpoints - ship.availableHardPoints()}} / {{ship.hardpoints}}</def>
   <def term="Stealth" :def="stealth + '%'" info="Reduction in the chance of being noticed by patrols and pirates while en route" />
   <def term="Intercept" :def="intercept + '%'" info="The chance of intercepting a missile attack with defensive armaments" />
@@ -254,12 +254,12 @@ Vue.component('ship-status', {
       <div v-if="Object.keys(addons).length > 0">
         <btn v-for="addon of addons" :key="addon" block=1 @click="toggleAddOn(addon)" class="text-truncate">
           <template v-if="addOnCount(addon) > 1">[{{addOnCount(addon)}}]</template>
-          {{addOnName(addon)|caps}}
+          {{caps(addOnName(addon))}}
         </btn>
         <modal v-if="showAddOn" @close="toggleAddOn(showAddOn)" close="Close" :title="addOnName(showAddOn)">
           <def term="Installed" :def="addOnCount(showAddOn)" />
-          <def v-for="(value, key) of addOnData" v-if="key != 'price' && key != 'markets' && !key.startsWith('is_')" :key="key" :term="key|caps|name" :def="value" />
-          <def term="Price" :def="addOnData.price|csn" />
+          <def v-for="(value, key) of addOnData" v-if="key != 'price' && key != 'markets' && !key.startsWith('is_')" :key="key" :term="name(caps(key))" :def="value" />
+          <def term="Price" :def="csn(addOnData.price)" />
         </modal>
       </div>
       <span v-else>None</span>

@@ -143,10 +143,10 @@ Vue.component('ship', {
   template: `
 <div>
 <btn v-if="!detail" @click="$emit('click')" :block=1 :muted="!isAvailable" class="my-2">
-  {{name|caps}} <span class="badge rounded-pill float-end">{{price|csn}}</span>
+  {{caps(name)}} <span class="badge rounded-pill float-end">{{csn(price)}}</span>
 </btn>
 
-<Section v-else :title="name|caps" class="m-3">
+<Section v-else :title="caps(name)" class="m-3">
   <p v-if="isAvailable">
     <button @click="buy=true" type="button" class="btn btn-dark">Purchase</button>
   </p>
@@ -166,46 +166,46 @@ Vue.component('ship', {
 
   <def y=1 brkpt="sm" term="Price">
     <template #def><span>
-      {{price|csn|unit('c')}}
-      <span v-if="tradeIn >= 0">({{tradeIn|csn|unit('c')}} after trade in)</span>
-      <span v-if="tradeIn < 0">({{-tradeIn|csn|unit('c')}} profit after trade in)</span>
+      {{unit(csn(price), 'c')}}
+      <span v-if="tradeIn >= 0">({{unit(csn(tradeIn), 'c')}} after trade in)</span>
+      <span v-if="tradeIn < 0">({{unit(csn(-tradeIn), 'c')}} profit after trade in)</span>
     </span></template>
   </def>
 
   <def y=1 brkpt="sm" term="Cargo"       :def="shipClass.cargo" />
-  <def y=1 brkpt="sm" term="Fuel"        :def="shipClass.tank|csn|unit('tonnes')" />
+  <def y=1 brkpt="sm" term="Fuel"        :def="unit(csn(shipClass.tank), 'tonnes')" />
   <def y=1 brkpt="sm" term="Drive"       :def="shipClass.drives + ' ' + ship.drive.name" />
-  <def y=1 brkpt="sm" term="Thrust"      :def="ship.thrust|csn|unit('kN')" />
+  <def y=1 brkpt="sm" term="Thrust"      :def="unit(csn(ship.thrust), 'kN')" />
 
   <def y=1 brkpt="sm" term="Fuel rate">
-    {{fuelRate|R(3)|unit('tonnes/hr')}} at maximum thrust
+    {{unit(R(fuelRate, 3), 'tonnes/hr')}} at maximum thrust
   </def>
 
-  <def y=1 brkpt="sm" term="Mass"        :def="ship.currentMass()|csn|unit('tonnes (fueled)')" />
+  <def y=1 brkpt="sm" term="Mass"        :def="unit(csn(ship.currentMass()), 'tonnes (fueled)')" />
   <def y=1 brkpt="sm" term="Hull"        :def="shipClass.hull" />
   <def y=1 brkpt="sm" term="Armor"       :def="shipClass.armor" />
   <def y=1 brkpt="sm" term="Hard points" :def="shipClass.hardpoints" />
 
   <def y=1 brkpt="sm" term="Range">
     <template #def><div>
-      <def split=4 term="Cargo mass" :def="massForRange|csn|unit('tonnes')" />
+      <def split=4 term="Cargo mass" :def="unit(csn(massForRange), 'tonnes')" />
       <slider :value.sync="massForRange" min=0 :max="maxCargoMass" step=1 minmax=true class="my-1" />
 
       <def split=4 term="Acc">
-        {{deltaVforRange|R(2)|unit('G')}} ({{deltaVinPctOfMax}}%)
+        {{unit(R(deltaVforRange, 2), 'G')}} ({{deltaVinPctOfMax}}%)
       </def>
-      <slider :value.sync="deltaVforRange" min=0.01 :max="deltaVinG|R(2)" step=0.01 minmax=true class="my-1" />
+      <slider :value.sync="deltaVforRange" min=0.01 :max="R(deltaVinG, 2)" step=0.01 minmax=true class="my-1" />
 
-      <def split=4 term="Range" :def="maxRange()|R(2)|unit('AU')" />
+      <def split=4 term="Range" :def="unit(R(maxRange(), 2), 'AU')" />
     </div></template>
   </def>
 </Section>
 
 <modal v-if="buy" title="Purchase" @close="buy=false" close="Cancel" xclose=true>
-  <p>You will pay {{price|csn}} credits for a shiny, new {{type}}.</p>
-  <p>You will receive {{playerShipValue|csn}} credits for trading in your ship.</p>
-  <p v-if="tradeIn < 0">You will make {{-tradeIn|csn}} profit with this deal. </p>
-  <p v-else>You will pay {{tradeIn|csn}} with this deal. </p>
+  <p>You will pay {{csn(price)}} credits for a shiny, new {{type}}.</p>
+  <p>You will receive {{csn(playerShipValue)}} credits for trading in your ship.</p>
+  <p v-if="tradeIn < 0">You will make {{csn(-tradeIn)}} profit with this deal. </p>
+  <p v-else>You will pay {{csn(tradeIn)}} with this deal. </p>
   <p>Do you wish to complete this exchange?</p>
   <template #footer><btn @click="completeTradeIn" close=1>Trade in</btn></template>
 </modal>

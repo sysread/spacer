@@ -122,11 +122,11 @@ Vue.component('addon', {
     'btn-dark': detail,
     'btn-secondary': !detail
   }">
-    {{info.name|caps}}
-    <span class="badge rounded-pill float-end">{{price|csn}}</span>
+    {{caps(info.name)}}
+    <span class="badge rounded-pill float-end">{{csn(price)}}</span>
 </button>
 
-<Section v-if="detail" class="my-3" :notitle=1 :title="info.name|caps">
+<Section v-if="detail" class="my-3" :notitle=1 :title="caps(info.name)">
   <p class="fst-italic">{{info.desc}}</p>
 
   <p v-if="!marketHasUpgrade" class="text-warning fst-italic">
@@ -148,38 +148,38 @@ Vue.component('addon', {
     <button :disabled="!hasUpgrade"  @click="sell=true" type="button" class="btn btn-dark">Sell</button>
   </p>
 
-  <def y=0 split="5" term="Buy" :def="price|csn" />
-  <def y=0 split="5" term="Sell" :def="sellPrice|csn" />
-  <def y=0 split="5" term="Mass" :def="info.mass|csn" />
+  <def y=0 split="5" term="Buy" :def="csn(price)" />
+  <def y=0 split="5" term="Sell" :def="csn(sellPrice)" />
+  <def y=0 split="5" term="Mass" :def="csn(info.mass)" />
 
   <def v-if="info.cargo" y=0 split="5" term="Cargo space" :def="info.cargo" />
   <def v-if="info.tank" y=0 split="5" term="Fuel tank" :def="info.tank" />
 
-  <def v-if="info.thrust" y=0 split="5" term="Max thrust" :def="info.thrust|unit('kN')" />
+  <def v-if="info.thrust" y=0 split="5" term="Max thrust" :def="unit(info.thrust, 'kN')" />
 
   <def v-if="fuelRate" y=0 split="5" term="Fuel rate">
     {{fuelRate}}
   </def>
 
   <def v-if="info.damage" y=0 split="5" term="Damage" :def="info.damage" />
-  <def v-if="info.reload" y=0 split="5" term="Reloads every" :def="info.reload|unit('rounds')" />
-  <def v-if="info.interceptable" y=0 split="5" term="Interceptable" :def="info.interceptable|yn|caps" />
+  <def v-if="info.reload" y=0 split="5" term="Reloads every" :def="unit(info.reload, 'rounds')" />
+  <def v-if="info.interceptable" y=0 split="5" term="Interceptable" :def="caps(yn(info.interceptable))" />
   <def v-if="info.rate" y=0 split="5" term="Rate of fire">{{info.rate}} / round</def>
-  <def v-if="info.accuracy" y=0 split=5 term="Accuracy">{{info.accuracy*100|R}}%</def>
+  <def v-if="info.accuracy" y=0 split=5 term="Accuracy">{{R(info.accuracy*100)}}%</def>
 
   <def v-if="info.armor" y=0 split="5" term="Armor" :def="info.armor" />
-  <def v-if="info.dodge" y=0 split="5" term="Dodge" :def="info.dodge|pct(2)" />
-  <def v-if="info.intercept" y=0 split="5" term="Intercept" :def="info.intercept|pct(2)" />
-  <def v-if="info.stealth" y=0 split=5 term="Stealth" :def="info.stealth|pct(2)" />
+  <def v-if="info.dodge" y=0 split="5" term="Dodge" :def="pct(info.dodge, 2)" />
+  <def v-if="info.intercept" y=0 split="5" term="Intercept" :def="pct(info.intercept, 2)" />
+  <def v-if="info.stealth" y=0 split=5 term="Stealth" :def="pct(info.stealth, 2)" />
 </Section>
 
 <modal v-if="buy" @close="buy=false" close='No'>
-  Purchase and install <b>{{info.name}}</b> for {{price|csn}} credits?
+  Purchase and install <b>{{info.name}}</b> for {{csn(price)}} credits?
   <template #footer><btn @click="buyAddOn" close=1>Yes</btn></template>
 </modal>
 
 <modal v-if="sell" @close="sell=false" close='No'>
-  Remove and sell your <b>{{info.name}}</b> for {{sellPrice|csn}} credits?
+  Remove and sell your <b>{{info.name}}</b> for {{csn(sellPrice)}} credits?
   <template #footer><btn @click="sellAddOn" close=1>Yes</btn></template>
 </modal>
 </div>

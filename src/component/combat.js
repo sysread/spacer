@@ -120,9 +120,9 @@ Vue.component('melee', {
 </row>
 
 <row>
-  <div class="col-4 text-start fw-light fst-italic">{{combat.player.ship.type|caps}}</div>
+  <div class="col-4 text-start fw-light fst-italic">{{caps(combat.player.ship.type)}}</div>
   <small class="col-4 text-center fw-light fst-italic">Round {{combat.currentRound}}</small>
-  <div class="col-4 text-end fw-light fst-italic">{{combat.opponent.ship.type|caps}}</div>
+  <div class="col-4 text-end fw-light fst-italic">{{caps(combat.opponent.ship.type)}}</div>
 </row>
 
 <row>
@@ -267,7 +267,7 @@ Vue.component('combat-action', {
 
   template: `
 <card-btn @click="$emit('click')" :disabled="disabled || !action.isReady" class="btn-sm text-start" block=1>
-{{action.name|caps}}
+{{caps(action.name)}}
 
 <template v-if="action.count">
   [{{action.count}}]
