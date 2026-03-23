@@ -27,9 +27,10 @@ export default defineConfig(({ command }) => ({
 
   resolve: {
     alias: {
-      // Vue 2 full build (includes template compiler, required for
-      // string templates in Vue.component() calls)
-      'vue': 'vue/dist/vue.esm.js',
+      // @vue/compat provides Vue 2 API compatibility on top of Vue 3.
+      // The full build includes the runtime template compiler needed for
+      // string templates in Vue.component() calls.
+      'vue': '@vue/compat',
     },
   },
 

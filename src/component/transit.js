@@ -845,9 +845,9 @@ Vue.component('PirateEncounter', {
             The pirates plundered the following resources from your ship:
           </p>
           <ul>
-            <li v-for="(count, item) of took.items" v-if="count > 0">
+            <template v-for="(count, item) of took.items" :key="item"><li v-if="count > 0">
               {{count}} {{item}}
-            </li>
+            </li></template>
           </ul>
 
           <template v-if="gave.count > 0">
@@ -856,9 +856,9 @@ Vue.component('PirateEncounter', {
               were put into your hold:
             </p>
             <ul>
-              <li v-for="(count, item) of gave.items" v-if="count > 0">
+              <template v-for="(count, item) of gave.items" :key="item"><li v-if="count > 0">
                 {{count}} {{item}}
-              </li>
+              </li></template>
             </ul>
           </template>
         </template>

@@ -195,10 +195,10 @@ Vue.component('work', {
     <div v-for="(list, type) in contracts" :key="type">
       <h4>{{type}}</h4>
       <p>
-        <btn v-for="c in list" :key="c.mission.title" v-if="!c.mission.is_accepted" @click="setContract(c)" block=1>
+        <template v-for="c in list" :key="c.mission.title"><btn v-if="!c.mission.is_accepted" @click="setContract(c)" block=1>
           {{c.mission.short_title}}
           <badge right=1>{{$csn(c.mission.price)}}c</badge>
-        </btn>
+        </btn></template>
       </p>
     </div>
 

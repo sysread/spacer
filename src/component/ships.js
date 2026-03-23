@@ -45,7 +45,7 @@ Vue.component('ships', {
   <btn @click="clearSelection" v-if="selected">Show room</btn>
 </div>
 
-<ship v-for="ship in ships" v-if="!selected || selected == ship" :key="ship" :type="ship" :detail="ship == selected" @click="selectShip(ship)" />
+<template v-for="ship in ships" :key="ship"><ship v-if="!selected || selected == ship" :type="ship" :detail="ship == selected" @click="selectShip(ship)" /></template>
 </Section>
   `,
 });

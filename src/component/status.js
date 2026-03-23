@@ -226,10 +226,10 @@ Vue.component('ship-status', {
   <def term="Cargo" info="Cargo is measured in cargo units (cu), each enough to hold a standard-sized container of material. Mass for one cu varies by material.">
     <template #def><div>
       {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
-      <div v-if="ship.cargoUsed" v-for="item in cargo" :key="item.name">
+      <template v-if="ship.cargoUsed"><div v-for="item in cargo" :key="item.name">
         {{$csn(item.amount)}} units of {{item.name}} ({{$csn(item.mass)}} tonnes)
-      </div>
-    </div></template>
+      </div></template>
+    </div>
   </def>
 
   <def term="Mass" :def="$unit(mass, 'tonnes')" />
@@ -258,7 +258,7 @@ Vue.component('ship-status', {
         </btn>
         <modal v-if="showAddOn" @close="toggleAddOn(showAddOn)" close="Close" :title="addOnName(showAddOn)">
           <def term="Installed" :def="addOnCount(showAddOn)" />
-          <def v-for="(value, key) of addOnData" v-if="key != 'price' && key != 'markets' && !key.startsWith('is_')" :key="key" :term="$name($caps(key))" :def="value" />
+          <template v-for="(value, key) of addOnData" :key="key"><def v-if="key != 'price' && key != 'markets' && !key.startsWith('is_')" :term="$name($caps(key))" :def="value" /></template>
           <def term="Price" :def="$csn(addOnData.price)" />
         </modal>
       </div>

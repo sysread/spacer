@@ -178,7 +178,7 @@ Vue.component('News', {
   template: `
     <Section :title="title" :notitle="!title">
       <template v-if="hasNews">
-        <div v-if="hasConditions" v-for="cond of conditions[body]" class="my-2">
+        <template v-if="hasConditions"><div v-for="cond of conditions[body]" :key="cond.name" class="my-2">
           <h6 class="text-danger">{{$caps(cond.name)}}</h6>
           <p v-if="cond.left < 7">Local sources claim efforts to deal with the {{cond.name}} have been successful and are winding down.</p>
           <p v-if="cond.left < 30">Unnamed government officials say efforts to combat the {{cond.name}} are underway but have been largely unsuccessful thus far.</p>
@@ -188,7 +188,7 @@ Vue.component('News', {
           </p>
 
           <p v-if="cond.need.length">Officials are asking for any available shipping to assist with deliveries of {{cond.need.join(', ')}}.</p>
-        </div>
+        </div></template>
 
         <div v-if="hasConflicts" class="my-2">
           <h6>Politics</h6>
