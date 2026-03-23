@@ -2,8 +2,15 @@
   --bs-body-bg: #000;
   --bs-body-color: #eee;
   --bs-card-bg: #000;
+  --bs-card-cap-bg: #000;
   --bs-table-bg: transparent;
+  --bs-table-striped-bg: transparent;
   --bs-modal-bg: #000;
+}
+
+.table, .table th, .table td, thead, tbody {
+  background-color: transparent !important;
+  --bs-table-bg: transparent;
 }
 
 body {
