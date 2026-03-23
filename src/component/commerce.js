@@ -51,7 +51,7 @@ Vue.component('market', {
       </btn>
     </cell>
     <cell size=8 brkpt="sm" y=0>
-      <table class="table table-sm table-mini table-noborder">
+      <table class="table table-sm table-mini table-noborder"><tbody>
         <tr>
           <th scope="col" class="w-25">Buy</th><td class="w-25">{{$csn(buy(item))}} c</td>
           <th scope="col" class="w-25">Sell</th><td class="w-25">{{$csn(sell(item))}} c</td>
@@ -60,7 +60,7 @@ Vue.component('market', {
           <th scope="col" class="w-25">Dock</th><td class="w-25" :class="{'text-warning': dock(item) > 0}">{{dock(item)}}</td>
           <th scope="col" class="w-25">Ship</th><td class="w-25" :class="{'text-warning': hold(item) > 0}">{{hold(item)}}</td>
         </tr>
-      </table>
+      </tbody></table>
     </cell>
   </row>
 </div>
@@ -193,7 +193,7 @@ Vue.component('market-trade', {
 
 <resource-report v-if="report" :item="item" @close="report=false" class="p-3" />
 
-<table class="table table-sm table-mini table-noborder">
+<table class="table table-sm table-mini table-noborder"><tbody>
   <tr>
     <th scope="col" class="w-25">Total</th>
     <td class="w-25" :class="{'text-success': count < 0, 'text-warning': count > 0}">{{$csn($R($abs(credits)))}} c</td>
@@ -239,7 +239,7 @@ Vue.component('market-trade', {
       <btn block=1 @click="close_trade" class="my-2">Back</btn>
     </td>
   </tr>
-</table>
+</tbody></table>
 
 <ok v-if="standing" @ok="close_trade">
   You ended the local supply shortage of {{item}}!

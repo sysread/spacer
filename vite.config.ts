@@ -18,7 +18,7 @@ export default defineConfig(({ command }) => ({
 
   server: {
     port: 5173,
-    open: true,
+    open: false,
     fs: {
       // Allow Vite to follow imports above root (www/) into src/
       allow: ['..'],

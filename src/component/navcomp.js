@@ -348,12 +348,14 @@ Vue.component('NavComp', {
         <def split=4 term="Fuel"         :def="$unit($R(transit.fuel, 2), 'tonnes')" />
       </confirm>
 
-      <NavPlot v-layout v-if="show_map" :layout="layout" :transit="transit" :style="layout_css_dimensions">
-        <template #svg>
-          <NavBodies :layout="layout" :focus="dest || game.locus" @click="set_dest" />
-          <SvgTransitPath v-if="transit" :layout="layout" :transit="transit" />
-        </template>
-      </NavPlot>
+      <div v-layout v-if="show_map">
+        <NavPlot :layout="layout" :transit="transit" :style="layout_css_dimensions">
+          <template #svg>
+            <NavBodies :layout="layout" :focus="dest || game.locus" @click="set_dest" />
+            <SvgTransitPath v-if="transit" :layout="layout" :transit="transit" />
+          </template>
+        </NavPlot>
+      </div>
 
     </Section>
   `,

@@ -226,10 +226,10 @@ Vue.component('ship-status', {
   <def term="Cargo" info="Cargo is measured in cargo units (cu), each enough to hold a standard-sized container of material. Mass for one cu varies by material.">
     <template #def><div>
       {{ship.cargoUsed}}/{{ship.cargoSpace}} bays full
-      <template v-if="ship.cargoUsed"><div v-for="item in cargo" :key="item.name">
+      <div v-if="ship.cargoUsed" v-for="item in cargo" :key="item.name">
         {{$csn(item.amount)}} units of {{item.name}} ({{$csn(item.mass)}} tonnes)
-      </div></template>
-    </div>
+      </div>
+    </div></template>
   </def>
 
   <def term="Mass" :def="$unit(mass, 'tonnes')" />

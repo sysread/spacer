@@ -18,18 +18,19 @@ export default {
   directives: {
     layout: {
       inserted(el, binding, vnode) {
-        vnode.context.layout = new Layout(
-          vnode.context.layout_target_id,
-          () => { vnode.context.layout_scale()  },
-          () => { vnode.context.layout_pan()    },
-          () => { vnode.context.layout_resize() },
+        const vm = binding.instance || vnode.context;
+        vm.layout = new Layout(
+          vm.layout_target_id,
+          () => { vm.layout_scale()  },
+          () => { vm.layout_pan()    },
+          () => { vm.layout_resize() },
         );
 
-        vnode.context.$emit('update:layout', vnode.context.layout);
+        vm.$emit('update:layout', vm.layout);
 
-        vnode.context.$nextTick(() => {
-          vnode.context.layout.update_width();
-          vnode.context.layout_set();
+        vm.$nextTick(() => {
+          vm.layout.update_width();
+          vm.layout_set();
         });
       }
     },

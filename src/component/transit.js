@@ -477,7 +477,7 @@ Vue.component('Transit', {
       </card>
 
       <template v-else>
-        <table id="navcomp-transit-info" class="table table-sm m-0" :style="{width: show_plot() && layout ? layout.width_px + 'px' : '100%'}">
+        <table id="navcomp-transit-info" class="table table-sm m-0" :style="{width: show_plot() && layout ? layout.width_px + 'px' : '100%'}"><tbody>
           <tr>
             <td class="text-start border-0">{{$unit(plan.days_left, 'days')}}</td>
             <td class="text-center border-0">{{$unit($csn($R(plan.velocity/1000)), 'km/s')}}</td>
@@ -488,7 +488,7 @@ Vue.component('Transit', {
               <progress-bar width=100 :percent="percent" />
             </td>
           </tr>
-        </table>
+        </tbody></table>
 
         <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
           <div class="plot-root-bg" :class="bg_class()" :style="bg_css()"></div>

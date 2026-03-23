@@ -125,7 +125,7 @@ Vue.component('fabrication', {
         </template>
       </template>
 
-      <table v-if="!queue.result" class="table my-2">
+      <table v-if="!queue.result" class="table my-2"><tbody>
         <tr v-if="amount">
           <th>&nbsp;</th>
           <th>Each</th>
@@ -156,7 +156,7 @@ Vue.component('fabrication', {
           <td>{{$csn(amt)}}</td>
           <td v-if="amount" class="text-success">{{$csn(amt*queue.goal)}}</td>
         </tr>
-      </table>
+      </tbody></table>
     </modal>
   `,
 });

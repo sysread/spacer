@@ -12,6 +12,24 @@ html .card {
 
 html .modal-content {
   --bs-modal-bg: #000;
+  --bs-modal-color: #eee;
+}
+
+html .modal-title {
+  font-weight: bold;
+  color: #fff;
+}
+
+html .modal-header {
+  border-bottom-color: rgb(200,0,0);
+}
+
+html .modal-footer {
+  border-top-color: rgb(200,0,0);
+}
+
+html .modal-body .fw-bold {
+  color: #fff;
 }
 
 html .table,
