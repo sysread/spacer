@@ -89,7 +89,7 @@ class NPC extends Person {
       ship:         {
         type:   ship.type,
         addons: ship.addons,
-        cargo:  ship.cargo.store,
+        cargo:  ship.cargo,
       },
     };
 

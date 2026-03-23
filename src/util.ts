@@ -137,7 +137,7 @@ export function fuzz(n: number, pct: number): number {
 
 /** Returns a random element from options. */
 export function oneOf<T>(options: T[]): T {
-  return options[getRandomInt(0, options.length - 1)];
+  return options[getRandomInt(0, options.length)];
 }
 
 /**

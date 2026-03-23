@@ -60,7 +60,7 @@ interface SavedShip {
   addons?: string[];
   damage?: t.ShipDamage;
   fuel?:   number;
-  cargo?:  t.ResourceCounter;
+  cargo?:  t.ResourceCounter | { store: t.ResourceCounter };
 }
 
 
