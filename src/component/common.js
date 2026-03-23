@@ -85,6 +85,7 @@ Vue.component('btn', {
         'btn-secondary': this.muted,
         'disabled':      this.disabled,
         'w-100':         this.block,
+        'd-block':       this.block,
         'text-muted':    this.muted,
       };
     },
