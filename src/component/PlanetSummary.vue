@@ -72,11 +72,12 @@ export default {
         background-size:     200px 200px;
         height:              200px;
         width:               200px;
-        opacity:             0.5;
-        color:               black;
+        opacity:             0.3;
         position:            fixed;
         top:                 120px;
         right:               60px;
+        z-index:             0;
+        pointer-events:      none;
       `
     },
 
