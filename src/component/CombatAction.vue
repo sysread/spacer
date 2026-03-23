@@ -19,5 +19,6 @@
 <script>
 export default {
   props: ['action', 'disabled'],
+  emits: ['click'],
 };
 </script>

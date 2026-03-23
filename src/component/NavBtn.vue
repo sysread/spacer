@@ -7,6 +7,7 @@
 <script>
 export default {
   props: ['name', 'active', 'disabled'],
+  emits: ['click'],
 
   computed: {
     src()       { return 'img/' + this.name + '.png' },

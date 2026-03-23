@@ -5,6 +5,7 @@
 <script>
 export default {
   props: ['to'],
+  emits: ['click'],
   computed: {
     href() { return this.to || '#' },
   },

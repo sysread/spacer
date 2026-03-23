@@ -14,6 +14,7 @@ import Tween from '../tween';
 
 export default {
   props: ['layout', 'body', 'label', 'img', 'focus', 'coords', 'intvl'],
+  emits: ['click'],
 
   data() {
     const [x, y] = this.layout.scale_point(system.position(this.body));

@@ -7,6 +7,7 @@
 <script>
 export default {
   props: ['disabled', 'muted', 'highlight', 'block', 'close'],
+  emits: ['click'],
 
   methods: {
     activate() {

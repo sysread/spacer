@@ -77,6 +77,7 @@ import * as util from '../util';
 
 export default {
   props: ['type', 'detail'],
+  emits: ['click'],
 
   data: function() {
     return {

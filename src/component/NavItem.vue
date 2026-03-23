@@ -9,5 +9,6 @@
 <script>
 export default {
   props: ['active'],
+  emits: ['click'],
 };
 </script>

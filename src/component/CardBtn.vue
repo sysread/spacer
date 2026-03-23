@@ -10,6 +10,7 @@
 <script>
 export default {
   props: ['disabled', 'muted', 'block', 'close', 'href'],
+  emits: ['click'],
   methods: {
     activate() {
       this.$emit('click');
