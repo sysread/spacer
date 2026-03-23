@@ -438,7 +438,7 @@ Vue.component('NavRoutePlanner', {
     has_route()      { return this.transits.length > 0 },
     num_routes()     { return this.transits.length },
     transit()        { if (this.has_route) return this.transits[this.selected] },
-    distance()       { return transit_display_distance(this.transit) },
+    distance()       { return nc.transitDisplayDistance(this.transit) },
   },
 
   'template': `
