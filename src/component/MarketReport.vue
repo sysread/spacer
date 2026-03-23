@@ -1,6 +1,6 @@
 <template>
 <div>
-<table class="table table-sm">
+<table class="table table-sm table-noborder">
   <thead>
     <tr>
       <th>Resource</th>

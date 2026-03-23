@@ -20,10 +20,10 @@
         <span @click="dec" class="float-start mx-2"><btn class="fw-bold btn">-1</btn></span>
       </div>
 
-      <div class="col-6">
+      <div class="col-6 text-end">
         <slot name="post" />
-        <span @click="setMax" v-if="minmax" class="float-end"><btn class="fw-bold btn">Max</btn></span>
-        <span @click="inc" class="float-end mx-2"><btn class="fw-bold btn">+1</btn></span>
+        <span @click="inc" class="mx-2"><btn class="fw-bold btn">+1</btn></span>
+        <span @click="setMax" v-if="minmax"><btn class="fw-bold btn">Max</btn></span>
       </div>
     </div>
   </div>

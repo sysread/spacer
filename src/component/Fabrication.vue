@@ -38,7 +38,7 @@
       </template>
     </template>
 
-    <table v-if="!queue.result" class="table my-2"><tbody>
+    <table v-if="!queue.result" class="table table-noborder my-2"><tbody>
       <tr v-if="amount">
         <th>&nbsp;</th>
         <th>Each</th>

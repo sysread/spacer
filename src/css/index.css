@@ -89,8 +89,7 @@ body {
 .spacer-header {
   font-size: 0.8rem;
   background-color: rgb(0,0,0);
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+  padding: 0.15rem 1rem;
 }
 
 .spacer-header .navbar-text {

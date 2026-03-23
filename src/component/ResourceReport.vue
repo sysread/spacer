@@ -6,7 +6,7 @@
   <btn class="col" @click="show_routes=true" :disabled="show_routes">Pending</btn>
 </div>
 
-<table class="table table-sm" v-if="!show_routes">
+<table class="table table-sm table-noborder" v-if="!show_routes">
   <thead>
     <tr>
       <th>Market</th>
@@ -20,7 +20,7 @@
   </tbody>
 </table>
 
-<table class="table table-sm" v-else>
+<table class="table table-sm table-noborder" v-else>
   <thead>
     <tr>
       <th>To</th>
