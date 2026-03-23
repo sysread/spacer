@@ -1,11 +1,20 @@
 import Vue from 'vue';
 
-Vue.component('deck',          { template: '<div class="row row-cols-1 row-cols-md-2 g-4"><slot /></div>'});
-Vue.component('card-text',     { template: '<p class="card-text"><slot /></p>'});
-Vue.component('card-title',    { template: '<h4 class="card-title"><slot /></h4>'});
-Vue.component('card-subtitle', { template: '<h6 class="card-subtitle mb-2 text-muted"><slot /></h6>'});
-Vue.component('card-header',   { template: '<div class="card-header"><slot /></div>'});
-Vue.component('card-footer',   { template: '<div class="card-footer"><slot /></div>'});
+import Deck from './Deck.vue';
+import CardText from './CardText.vue';
+import CardTitle from './CardTitle.vue';
+import CardSubtitle from './CardSubtitle.vue';
+import CardHeader from './CardHeader.vue';
+import CardFooter from './CardFooter.vue';
+import CardImg from './CardImg.vue';
+
+Vue.component('deck', Deck);
+Vue.component('card-text', CardText);
+Vue.component('card-title', CardTitle);
+Vue.component('card-subtitle', CardSubtitle);
+Vue.component('card-header', CardHeader);
+Vue.component('card-footer', CardFooter);
+Vue.component('card-img', CardImg);
 
 Vue.component('card-btn', {
   props: ['disabled', 'muted', 'block', 'close', 'href'],
@@ -36,11 +45,6 @@ Vue.component('card-link', {
     href: function() { return this.to || '#' },
   },
   template: `<a @click="$emit('click')" class="card-link" :href="href"><slot /></a>`
-});
-
-Vue.component('card-img', {
-  props: ['src', 'alt'],
-  template: '<img class="card-img-top" :src="src" :alt="alt">',
 });
 
 Vue.component('card', {

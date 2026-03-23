@@ -17,6 +17,7 @@
   "author": "Jeff Ober",
   "license": "Apache-2.0",
   "dependencies": {
+    "@vitejs/plugin-vue": "^6.0.5",
     "@vue/compat": "^3.5.30",
     "bootstrap": "~5.3",
     "gsap": "~3.14",

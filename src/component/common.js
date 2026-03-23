@@ -2,19 +2,21 @@ import Vue from 'vue';
 
 import './modal';
 
-Vue.component('caps', { template: '<span class="text-capitalize"><slot /></span>' });
-Vue.component('lc',   { template: '<span class="text-lowercase"><slot /></span>'  });
-Vue.component('uc',   { template: '<span class="text-uppercase"><slot /></span>'  });
+import Caps from './Caps.vue';
+import Lc from './Lc.vue';
+import Uc from './Uc.vue';
+import Green from './Green.vue';
+import Gold from './Gold.vue';
+import Red from './Red.vue';
+import Badge from './Badge.vue';
 
-Vue.component('green', { template: '<span class="text-success"><slot /></span>' });
-Vue.component('gold',  { template: '<span class="text-warning"><slot /></span>' });
-Vue.component('red',   { template: '<span class="text-danger"><slot /></span>'  });
-
-
-Vue.component('badge', {
-  props: ['right'],
-  template: '<span class="badge rounded-pill" :class="{\'float-end\': right}"><slot /></span>',
-});
+Vue.component('caps', Caps);
+Vue.component('lc', Lc);
+Vue.component('uc', Uc);
+Vue.component('green', Green);
+Vue.component('gold', Gold);
+Vue.component('red', Red);
+Vue.component('badge', Badge);
 
 
 Vue.component('progress-bar', {
