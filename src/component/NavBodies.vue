@@ -24,6 +24,7 @@ import Physics from '../physics';
 
 export default {
   props: ['focus', 'layout'],
+  emits: ['click'],
 
   computed: {
     fov() { return this.layout.fov_au },

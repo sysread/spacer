@@ -7,6 +7,7 @@
 <script>
 export default {
   props: ['val', 'final', 'disabled'],
+  emits: ['click'],
   inject: ['menuAnswer'],
 
   methods: {
