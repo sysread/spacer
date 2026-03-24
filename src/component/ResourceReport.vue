@@ -1,9 +1,9 @@
 <template>
 <modal xclose=true :title="$caps(item)" @close="$emit('close')">
 <div class="button-group row justify-content-end mb-3">
-  <btn class="col" @click="show_routes=false;relprices=false" :highlight="!show_routes && !relprices" :muted="show_routes || relprices">Absolute Prices</btn>
-  <btn class="col" @click="show_routes=false;relprices=true" :highlight="!show_routes && relprices" :muted="show_routes || !relprices">Relative Prices</btn>
-  <btn class="col" @click="show_routes=true" :highlight="show_routes" :muted="!show_routes">Pending</btn>
+  <btn class="col" @click="show_routes=false;relprices=false" :highlight="!show_routes && !relprices">Absolute Prices</btn>
+  <btn class="col" @click="show_routes=false;relprices=true" :highlight="!show_routes && relprices">Relative Prices</btn>
+  <btn class="col" @click="show_routes=true" :highlight="show_routes">Pending</btn>
 </div>
 
 <table class="table table-sm" v-if="!show_routes">

@@ -208,6 +208,7 @@ body {
 }
 
 .btn-highlight {
+  background-color: #530D0D;
   border: 1px solid #323232;
   border-bottom: 1px solid rgb(200,0,0);
 }

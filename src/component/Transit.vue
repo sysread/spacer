@@ -116,6 +116,7 @@ export default {
       encounterTimeCost: null,
       encounterDistCost: null,
       encounterFuelCost: null,
+      enteredParentTerritory: false,
 
       // animated values
       patrolpct:         0,
@@ -135,9 +136,7 @@ export default {
     },
 
     'plan.current_turn': function() {
-      if (!this.isSubSystemTransit && !this.is_zoomed_in)
-        this.layout.set_fov_au(this.fov());
-
+      this.layout.set_fov_au(this.fov());
       this.update();
     },
   },
@@ -166,9 +165,14 @@ export default {
         return 0;
       }
 
-      const min   = 0.08;
-      const max   = 0.80;
-      const intvl = max / (this.layout.fov_au * 2);
+      // Log scale: compresses the range so zoomed-in views (small FOV)
+      // don't slow to a crawl. The log of a small FOV produces a large
+      // negative number; we negate and scale to get a positive interval
+      // that grows slowly as FOV shrinks.
+      const min   = 0.15;
+      const max   = 0.55;
+      const fov   = this.layout.fov_au * 2;
+      const intvl = min + (max - min) * Math.max(0, -Math.log10(fov)) / 3;
       return util.clamp(intvl, min, max);
     },
 
@@ -182,12 +186,28 @@ export default {
       }
     },
 
-    center() {
-      // For sub-system transits, center on the common parent body.
-      // For long-range transits to a satellite, also center on the
-      // parent body once zoomed in so both the moon and ship stay visible.
+    // True once the ship enters the patrol radius of the destination's
+    // parent body. Latches on — once entered, stays true for the rest of
+    // the transit to prevent the camera from jittering back and forth.
+    inParentTerritory() {
+      if (this.enteredParentTerritory) return true;
+
       const central = system.central(this.plan.dest);
-      const body = (this.isSubSystemTransit || (central != 'sun' && this.is_zoomed_in))
+      if (central == 'sun' || !this.game.planets[central]) return false;
+      const parentPos = system.position(central);
+      const dist = Physics.distance(this.plan.coords, parentPos) / Physics.AU;
+      const radius = this.game.planets[central].encounters.patrolRadius();
+
+      if (dist <= radius) {
+        this.enteredParentTerritory = true;
+        return true;
+      }
+      return false;
+    },
+
+    center() {
+      const central = system.central(this.plan.dest);
+      const body = (this.isSubSystemTransit || this.inParentTerritory)
         ? central
         : this.plan.dest;
 
@@ -279,30 +299,47 @@ export default {
 
     fov() {
       const central = system.central(this.plan.dest);
-      // Always include both the destination and the ship's current position
-      const points = [this.plan.end, this.plan.coords];
+      const turn = Math.min(this.plan.current_turn, this.plan.turns - 1);
 
-      // For sub-system transits, center on the common central body
-      // and include all sibling bodies in the frame.
+      // Use the destination's current orbital position (not the final
+      // arrival position, which may be on the far side of its orbit).
+      const destOrbit = this.orbits[this.plan.dest];
+      const destPos = destOrbit ? destOrbit[Math.min(turn, destOrbit.length - 1)] : this.plan.end;
+      const points = [destPos, this.plan.coords];
+
       if (this.isSubSystemTransit) {
+        // Sub-system transit: include all sibling moons and the parent
         for (const body of this.system.all_bodies()) {
           if (system.central(body) == central || body == central) {
-            points.push(this.orbits[body][0]);
+            const orbit = this.orbits[body];
+            points.push(orbit[Math.min(turn, orbit.length - 1)]);
           }
         }
       }
+      else if (this.inParentTerritory) {
+        // Long-range approach to a satellite: use current live positions,
+        // not cached orbits (which drift over long transits).
+        const parentPos = system.position(central);
+        const moonPos   = system.position(this.plan.dest);
+        const shipDist  = Physics.distance(this.plan.coords, parentPos) / Physics.AU;
+        const moonDist  = Physics.distance(moonPos, parentPos) / Physics.AU;
+        return 1.10 * Math.max(shipDist, moonDist);
+      }
       else {
-        const frame = system.central(this.plan.dest) == 'sun' ? this.plan.dest : system.central(this.plan.dest);
+        const frame = central == 'sun' ? this.plan.dest : central;
         const closest = this.system.all_bodies()
           .filter(b => b != this.plan.dest && system.central(b) != frame)
           .reduce((a, b) => {
             if (a == undefined) return b;
-            const da = Physics.distance(this.orbits[a][0], this.plan.coords);
-            const db = Physics.distance(this.orbits[b][0], this.plan.coords);
+            const orbA = this.orbits[a];
+            const orbB = this.orbits[b];
+            const da = Physics.distance(orbA[Math.min(turn, orbA.length - 1)], this.plan.coords);
+            const db = Physics.distance(orbB[Math.min(turn, orbB.length - 1)], this.plan.coords);
             return da < db ? a : b;
           }, undefined);
 
-        points.push(this.orbits[closest][0]);
+        const orbC = this.orbits[closest];
+        points.push(orbC[Math.min(turn, orbC.length - 1)]);
       }
 
       // Lop off z to prevent it from affecting the distance calculation
@@ -311,8 +348,7 @@ export default {
       const points_2d = points.map(p => [p[0], p[1], 0]);
       const distances = points_2d.map(p => Physics.distance(p, center_2d));
       const max       = Math.max(...distances);
-      // 1.25x margin keeps the ship and destination from hugging the edge
-      return 1.25 * (max / Physics.AU);
+      return 1.15 * (max / Physics.AU);
     },
 
     layout_resize() {
