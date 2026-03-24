@@ -28,7 +28,7 @@
         <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
           <div class="plot-root-bg" :class="bg_class()" :style="bg_css()"></div>
 
-          <SvgPlot v-if="layout" :width="layout.width_px" :height="layout.height_px">
+          <SvgPlot v-if="layout && layout.width_px > 0 && started" :width="layout.width_px" :height="layout.height_px">
             <line x1=130 y1=13 :x2="patrolpct * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
             <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{$pct(patrolRate, 2)}}</text>
 
@@ -134,7 +134,6 @@ export default {
       const [x, y] = this.layout.scale_point(this.plan.coords);
       this.shipx = x;
       this.shipy = y;
-      console.log('transit starting');
       setTimeout(() => this.resume(), 300);
     },
 
@@ -171,10 +170,13 @@ export default {
       // don't slow to a crawl. The log of a small FOV produces a large
       // negative number; we negate and scale to get a positive interval
       // that grows slowly as FOV shrinks.
-      const min   = 0.15;
-      const max   = 0.55;
+      const min   = 0.12;
+      const max   = 0.45;
       const fov   = this.layout.fov_au * 2;
-      const intvl = min + (max - min) * Math.max(0, -Math.log10(fov)) / 3;
+      // Spread the log curve over a wider range so close-in views
+      // don't hit the max as quickly. /4 instead of /3 gives a
+      // gentler ramp from cruise speed to approach speed.
+      const intvl = min + (max - min) * Math.max(0, -Math.log10(fov)) / 4;
       return util.clamp(intvl, min, max);
     },
 
@@ -245,20 +247,15 @@ export default {
     },
 
     center() {
+      if (!this.plan) return [0, 0, 0];
+
       const _turn = this.game.turns; // reactive trigger
 
       switch (this.transitPhase) {
         case 'depart': {
-          // Center on the midpoint between origin body and ship,
-          // gradually panning away from the origin as the ship departs.
+          // Mirror of arrive: center on origin body (or parent for moons)
           const body = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
-          const bodyPos = this.bodyPosition(body);
-          const shipPos = this.plan.coords;
-          return [
-            (bodyPos[0] + shipPos[0]) / 2,
-            (bodyPos[1] + shipPos[1]) / 2,
-            (bodyPos[2] + shipPos[2]) / 2,
-          ];
+          return this.bodyPosition(body);
         }
 
         case 'cruise': {
@@ -429,48 +426,67 @@ export default {
       }).play();
     },
 
+    // Cruise FOV: shows both origin and destination with margin.
+    // Computed separately so depart/arrive can blend toward it.
+    cruiseFov() {
+      if (!this.plan) return 1;
+      const origBody = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
+      const destBody = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
+      const origPos = this.bodyPosition(origBody);
+      const destPos = this.bodyPosition(destBody);
+      const centerPos = this.center;
+      const shipDist = Physics.distance(this.plan.coords, centerPos) / Physics.AU;
+      const halfDist = Physics.distance(origPos, destPos) / Physics.AU / 2;
+      return Math.max(halfDist, shipDist) * 1.10;
+    },
+
     /**
      * FOV (half-width in AU) for each transit phase.
      *
-     * depart: ship distance from center + 20% margin (ensures ship is
-     *         clearly visible, not clipped at the edge)
-     * cruise: half the distance between origin and dest + 10% margin
-     * arrive: for planets, ship distance + 20% margin
-     *         for moons, max(ship dist, moon orbital radius) * 1.15
+     * The APPROACH_MARGIN constant controls the buffer around the ship
+     * and destination during depart and arrive phases.
+     *
+     * Depart and arrive FOVs are floored at the cruise FOV to prevent
+     * abrupt zoom changes at phase transitions — the view smoothly
+     * zooms out from close-in to cruise scale, then back in.
      */
     fov() {
+      if (!this.plan) return 1; // default 1 AU before transit plan exists
+
+      const APPROACH_MARGIN = 1.30;
+
       const centerPos = this.center;
       const shipDist = Physics.distance(this.plan.coords, centerPos) / Physics.AU;
 
       switch (this.transitPhase) {
         case 'depart': {
-          // FOV covers both the origin body and the ship from the midpoint center.
-          // Since center is the midpoint, the distance from center to either
-          // endpoint is half the ship-to-body distance. Add 20% margin.
-          const body = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
-          const bodyPos = this.bodyPosition(body);
-          const halfDist = Physics.distance(this.plan.coords, bodyPos) / Physics.AU / 2;
-          // Floor at a small value so we don't start at zero FOV on turn 0
-          return Math.max(halfDist * 1.20, 0.002);
+          let localFov;
+          if (this.origIsMoon) {
+            const moonPos = this.bodyPosition(this.plan.origin);
+            const moonDist = Physics.distance(moonPos, centerPos) / Physics.AU;
+            localFov = Math.max(shipDist, moonDist) * APPROACH_MARGIN;
+          } else {
+            localFov = Math.max(shipDist * APPROACH_MARGIN, 0.002);
+          }
+          // Smooth transition: never exceed cruise FOV (zoom out gradually)
+          return Math.min(localFov, this.cruiseFov());
         }
 
         case 'cruise': {
-          const origBody = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
-          const destBody = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
-          const origPos = this.bodyPosition(origBody);
-          const destPos = this.bodyPosition(destBody);
-          const halfDist = Physics.distance(origPos, destPos) / Physics.AU / 2;
-          return Math.max(halfDist, shipDist) * 1.10;
+          return this.cruiseFov();
         }
 
         case 'arrive': {
+          let localFov;
           if (this.destIsMoon) {
             const moonPos = this.bodyPosition(this.plan.dest);
             const moonDist = Physics.distance(moonPos, centerPos) / Physics.AU;
-            return Math.max(shipDist * 1.20, moonDist * 1.15);
+            localFov = Math.max(shipDist, moonDist) * APPROACH_MARGIN;
           } else {
-            return Math.max(shipDist * 1.20, 0.001);
+            localFov = Math.max(shipDist * APPROACH_MARGIN, 0.001);
           }
+          // Smooth transition: never exceed cruise FOV (zoom in gradually)
+          return Math.min(localFov, this.cruiseFov());
         }
       }
     },
@@ -480,9 +496,19 @@ export default {
     },
 
     layout_set() {
+      // Set center and FOV first so the layout is at the correct scale
+      // when the SVG components mount.
       this.layout.set_center(this.center);
       this.layout.set_fov_au(this.fov());
-      this.started = true;
+
+      // Delay setting started so the layout has time to render at the
+      // correct scale before the transit begins animating.
+      setTimeout(() => {
+        // Re-apply in case the layout dimensions changed during the delay
+        this.layout.set_center(this.center);
+        this.layout.set_fov_au(this.fov());
+        this.started = true;
+      }, 500);
     },
 
     bg_css() {
@@ -521,8 +547,9 @@ export default {
      * such as a patrol or piracy encounter.
      */
     interval() {
-      if (this.plan.is_complete) {
+      if (!this.plan || this.plan.is_complete) {
         this.complete();
+        return;
       }
 
       if (this.game.player.ship.isDestroyed) {

@@ -12,12 +12,14 @@ export default {
   props: ['body', 'layout', 'coords', 'intvl'],
 
   data() {
-    const [x, y] = this.layout.scale_point(system.position(this.body));
+    const pos = this.coords || system.position(this.body);
+    const [x, y] = this.layout.scale_point(pos);
     return {
-      x: x,
-      y: y,
-      r: this.radius,
+      x: isFinite(x) ? x : 0,
+      y: isFinite(y) ? y : 0,
+      r: isFinite(this.radius) ? this.radius : 0,
       tween: null,
+      _mounted: false,
     };
   },
 
@@ -88,11 +90,18 @@ export default {
     update() {
       const [x, y] = this.point;
       const r = this.radius;
+      const target = { x, y, r };
 
       if (this.tween)
         this.tween.kill();
 
-      this.tween = Tween(this.$data, this.intvl, {x: x, y: y, r: r});
+      if (!this._mounted || !this.intvl) {
+        Object.assign(this.$data, target);
+        this._mounted = true;
+        return;
+      }
+
+      this.tween = Tween(this.$data, this.intvl, target);
       this.tween.play();
     },
   },

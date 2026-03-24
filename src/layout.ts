@@ -125,7 +125,9 @@ export class Layout {
 
   /** Pixels per meter at current zoom level. */
   get px_per_meter() {
-    return this.scale_px / (this.fov_au * Physics.AU);
+    const fov_m = this.fov_au * Physics.AU;
+    if (!fov_m) return 0;
+    return this.scale_px / fov_m;
   }
 
   /** Current viewport center as a 3D point [offset_x, offset_y, 0]. */
@@ -191,7 +193,9 @@ export class Layout {
   /** Converts a distance in meters to pixels at the current zoom level. */
   scale(n: number): number {
     const fov_m = this.fov_au * Physics.AU;
-    return n / fov_m * this.zero;
+    if (!fov_m || !this.zero) return 0;
+    const result = n / fov_m * this.zero;
+    return isFinite(result) ? result : 0;
   }
 
   scale_x(n: number, no_offset: boolean=false): number {

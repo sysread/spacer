@@ -17,15 +17,20 @@ export default {
   emits: ['click'],
 
   data() {
-    const [x, y] = this.layout.scale_point(system.position(this.body));
+    const pos = this.coords || system.position(this.body);
+    const [px, py] = this.layout.scale_point(pos);
     const d = this.layout.scale_body_diameter(this.body);
+    const x = isFinite(px) ? px : 0;
+    const y = isFinite(py) ? py : 0;
+    const dd = isFinite(d) ? d : 0;
     return {
-      x: x,
-      y: y,
-      d: d,
-      label_x: 0,
-      label_y: 0,
+      x: x - (dd / 2),
+      y: y - (dd / 2),
+      d: dd,
+      label_x: x + dd + 10,
+      label_y: y + dd / 3,
       tween: null,
+      _mounted: false,
     };
   },
 
@@ -71,14 +76,22 @@ export default {
       if (this.tween)
         this.tween.kill();
 
-      this.tween = Tween(this.$data, this.intvl, {
+      const target = {
         d: d,
         x: x - (d / 2),
         y: y - (d / 2),
         label_x: x + d + 10,
         label_y: y + d / 3,
-      });
+      };
 
+      // Snap on first update to avoid fly-in from initial position
+      if (!this._mounted || !this.intvl) {
+        Object.assign(this.$data, target);
+        this._mounted = true;
+        return;
+      }
+
+      this.tween = Tween(this.$data, this.intvl, target);
       this.tween.play();
     },
   },
