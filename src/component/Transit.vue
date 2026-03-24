@@ -66,7 +66,7 @@
               <circle v-if="i <= plan.current_turn && i > plan.current_turn - 8"
                 :cx="layout.scale_point(seg.position)[0]"
                 :cy="layout.scale_point(seg.position)[1]"
-                r="1.5" fill="#ffdd44" filter="url(#glow)"
+                r="1.5" :fill="flareColor(i)" filter="url(#glow)"
                 class="transit-flash"
                 :style="'animation-delay: -' + (plan.current_turn - i) * 0.3 + 's'" />
 
@@ -439,11 +439,34 @@ export default {
       return 0;
     },
 
-    // Trajectory dot color: current turn flashes yellow, past is blue, future is grey
+    // Trajectory dot color: past dots colored by speed, future is grey
     dotColor(i) {
-      if (i === this.plan.current_turn) return '#ffdd44';
       if (i < this.plan.current_turn) return '#6af';
       return '#555';
+    },
+
+    // Flare color based on ship's velocity at that turn.
+    // Blue at low speed → white at mid → yellow/orange at peak.
+    flareColor(i) {
+      const seg = this.plan.path[i];
+      if (!seg) return '#ffdd44';
+      const maxVel = this.plan.maxVelocity || 1;
+      const t = Math.min(seg.velocity / maxVel, 1); // 0..1
+
+      // Interpolate: blue(0) → white(0.5) → orange(1)
+      if (t < 0.5) {
+        const u = t * 2; // 0..1 within first half
+        const r = Math.round(100 + 155 * u);
+        const g = Math.round(170 + 85 * u);
+        const b = Math.round(255 - 55 * u);
+        return `rgb(${r},${g},${b})`;
+      } else {
+        const u = (t - 0.5) * 2; // 0..1 within second half
+        const r = Math.round(255);
+        const g = Math.round(255 - 80 * u);
+        const b = Math.round(200 - 156 * u);
+        return `rgb(${r},${g},${b})`;
+      }
     },
 
     // Trajectory dot opacity: comet tail fades behind the ship.
@@ -472,10 +495,24 @@ export default {
     },
 
     update() {
-      // Set center and FOV for this turn first, then compute ship position
-      // in the updated coordinate frame.
-      this.layout.set_center(this.center);
-      this.layout.set_fov_au(this.fov());
+      // Smoothly interpolate center and FOV toward their targets rather
+      // than snapping. This prevents jarring jumps during phase transitions.
+      const targetCenter = this.center;
+      const targetFov = this.fov();
+      const blend = 0.15; // 15% toward target each turn
+
+      const curCenter = [
+        this.layout.offset_x !== undefined ? targetCenter[0] : 0,
+        this.layout.offset_y !== undefined ? targetCenter[1] : 0,
+        targetCenter[2],
+      ];
+
+      // Lerp current layout FOV toward target
+      const curFov = this.layout.fov_au || targetFov;
+      const newFov = curFov + (targetFov - curFov) * blend;
+
+      this.layout.set_center(targetCenter);
+      this.layout.set_fov_au(newFov);
 
       const [x, y] = this.layout.scale_point(this.plan.coords);
 
@@ -828,10 +865,11 @@ export default {
 
 <style>
 @keyframes transit-pulse {
-  0%   { r: 1; opacity: 0.8; }
-  10%  { r: 3; opacity: 1; }
-  30%  { r: 2.5; opacity: 0.9; }
-  60%  { r: 2; opacity: 0.5; }
+  0%   { r: 0.5; opacity: 0.3; }
+  5%   { r: 2; opacity: 0.7; }
+  15%  { r: 3; opacity: 1; }
+  35%  { r: 2.5; opacity: 0.9; }
+  65%  { r: 1.5; opacity: 0.4; }
   100% { r: 0; opacity: 0; }
 }
 
