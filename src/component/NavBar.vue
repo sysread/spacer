@@ -88,7 +88,10 @@ export default {
     collapse() {
       if (this.is_expanded()) {
         const el = document.getElementById('spacer-nav');
-        if (el) new Collapse(el).hide();
+        if (el) {
+          const instance = Collapse.getOrCreateInstance(el);
+          instance.hide();
+        }
       }
     },
 
@@ -96,7 +99,7 @@ export default {
       const navbar = document.getElementById('spacer-navbar');
       if (navbar && getComputedStyle(navbar).flexFlow == 'row wrap') {
         const el = document.getElementById('spacer-nav');
-        if (el) new Collapse(el).toggle();
+        if (el) Collapse.getOrCreateInstance(el).toggle();
       }
     },
 
