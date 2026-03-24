@@ -39,6 +39,11 @@
             <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{displayFoV}}</text>
             <text style="fill:red; font:12px monospace" x=5 y=68>&Delta;V:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{$unit($R(plan.accel_g, 3), 'G')}}</text>
 
+            <!-- Destination orbital arc for the transit period -->
+            <SvgPath
+              :points="layout.scale_path(destOrbitArc, 200)"
+              color="#622" line="0.5px" />
+
             <g v-for="body in system.all_bodies()" :key="body">
               <SvgPatrolRadius :body="body" :coords="bodyPosition(body)" :layout="layout" :intvl="intvl" />
               <SvgPlotPoint :body="body" :coords="bodyPosition(body)" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" />
@@ -48,17 +53,34 @@
                  Past segments in light blue, future in light grey.
                  Scaled live via layout.scale_point to stay in sync with
                  the current center/FOV. -->
-            <circle v-for="(seg, i) in plan.path" :key="'path-'+i"
-              :cx="layout.scale_point(seg.position)[0]"
-              :cy="layout.scale_point(seg.position)[1]"
-              r="1.5"
-              :fill="i <= plan.current_turn ? '#6af' : '#555'" />
+            <!-- Trajectory dots: future=grey, past=fading comet tail, current=flash -->
+            <defs>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
 
-            <text text-anchor="middle" alignment-baseline="middle"
-                style="fill: yellow; font: bold 8px monospace;"
-                :x="shipx" :y="shipy">
-              &tridot;
-            </text>
+            <template v-for="(seg, i) in plan.path" :key="'path-'+i">
+              <!-- Flare ring: persists after the turn advances, fades via its own animation -->
+              <circle v-if="i <= plan.current_turn && i > plan.current_turn - 8"
+                :cx="layout.scale_point(seg.position)[0]"
+                :cy="layout.scale_point(seg.position)[1]"
+                r="1.5" fill="#ffdd44" filter="url(#glow)"
+                class="transit-flash"
+                :style="'animation-delay: -' + (plan.current_turn - i) * 0.3 + 's'" />
+
+              <!-- Base dot -->
+              <circle
+                :cx="layout.scale_point(seg.position)[0]"
+                :cy="layout.scale_point(seg.position)[1]"
+                r="0.75"
+                :fill="dotColor(i)"
+                :opacity="dotOpacity(i)" />
+            </template>
+
+            <!-- Ship icon removed; the flare dot on the current turn serves
+                 as the ship's visual position. -->
           </SvgPlot>
         </div>
 
@@ -140,15 +162,8 @@ export default {
   },
 
   watch: {
-    'started': function() {
-      const [x, y] = this.layout.scale_point(this.plan.coords);
-      this.shipx = x;
-      this.shipy = y;
-      setTimeout(() => this.resume(), 300);
-    },
-
     'plan.current_turn': function() {
-      this.update();
+      if (this.started) this.update();
     },
   },
 
@@ -180,13 +195,12 @@ export default {
       // don't slow to a crawl. The log of a small FOV produces a large
       // negative number; we negate and scale to get a positive interval
       // that grows slowly as FOV shrinks.
-      const min   = 0.12;
-      const max   = 0.45;
+      const min   = 0.20;
+      const max   = 0.65;
       const fov   = this.layout.fov_au * 2;
       // Spread the log curve over a wider range so close-in views
-      // don't hit the max as quickly. /4 instead of /3 gives a
-      // gentler ramp from cruise speed to approach speed.
-      const intvl = min + (max - min) * Math.max(0, -Math.log10(fov)) / 4;
+      // don't hit the max as quickly. /5 gives a gentle ramp.
+      const intvl = min + (max - min) * Math.max(0, -Math.log10(fov)) / 5;
       return util.clamp(intvl, min, max);
     },
 
@@ -246,6 +260,25 @@ export default {
       if (shipToOrig <= origPatrol) return 'depart';
 
       return 'cruise';
+    },
+
+    // Bodies whose orbital paths are drawn on the transit map
+    orbitBodies() {
+      const bodies = new Set();
+      bodies.add(this.plan.origin);
+      bodies.add(this.plan.dest);
+      if (this.destIsMoon) bodies.add(system.central(this.plan.dest));
+      if (this.origIsMoon) bodies.add(system.central(this.plan.origin));
+      // Filter out sun (stationary at origin) and bodies without orbit data
+      return [...bodies].filter(b => b !== 'sun' && this.orbits[b]);
+    },
+
+    // Destination orbit arc: from the current turn to the end of transit
+    destOrbitArc() {
+      if (!this.plan) return [];
+      const orbit = this.orbits[this.plan.dest];
+      if (!orbit) return [];
+      return orbit.slice(this.plan.current_turn, this.plan.turns + 1);
     },
 
     destIsMoon() {
@@ -406,6 +439,28 @@ export default {
       return 0;
     },
 
+    // Trajectory dot color: current turn flashes yellow, past is blue, future is grey
+    dotColor(i) {
+      if (i === this.plan.current_turn) return '#ffdd44';
+      if (i < this.plan.current_turn) return '#6af';
+      return '#555';
+    },
+
+    // Trajectory dot opacity: comet tail fades behind the ship.
+    // The most recent 20 turns are fully visible, then fade over the next 30.
+    dotOpacity(i) {
+      if (i >= this.plan.current_turn) return 1; // future dots: full opacity
+
+      const age = this.plan.current_turn - i;
+      const tailLength = 20; // fully visible portion
+      const fadeLength = 30; // fading portion
+
+      if (age <= tailLength) return 1;
+      if (age >= tailLength + fadeLength) return 0;
+
+      return 1 - (age - tailLength) / fadeLength;
+    },
+
     // Body position from the orbit cache at the current transit turn.
     // Uses the same pre-computed orbital data as the ship trajectory,
     // keeping bodies and ship in the same reference frame.
@@ -417,11 +472,8 @@ export default {
     },
 
     update() {
-      // Update center and FOV BEFORE computing pixel coords so the ship
-      // position is calculated in the correct coordinate frame.
-      this.layout.set_center(this.center);
-      this.layout.set_fov_au(this.fov());
-
+      // Compute target ship position in the CURRENT coordinate frame
+      // (before changing center/FOV) so the tween animates smoothly.
       const [x, y] = this.layout.scale_point(this.plan.coords);
 
       Tween(this.$data, this.intvl, {
@@ -430,6 +482,11 @@ export default {
         shipx:      x,
         shipy:      y,
         onComplete: () => {
+          // Update center and FOV after the tween completes.
+          // All elements (dots, orbits, bodies) re-render in the new
+          // coordinate frame simultaneously on the next paint.
+          this.layout.set_center(this.center);
+          this.layout.set_fov_au(this.fov());
           requestAnimationFrame(() => this.interval());
         },
       }).play();
@@ -462,7 +519,9 @@ export default {
     fov() {
       if (!this.plan) return 1; // default 1 AU before transit plan exists
 
-      const APPROACH_MARGIN = 1.50;
+      // How far to zoom out beyond the farthest element (ship or moon orbit).
+      // Higher = more zoomed out during approach/departure.
+      const APPROACH_MARGIN = 3.0;
 
       const centerPos = this.center;
       const shipDist = Physics.distance(this.plan.coords, centerPos) / Physics.AU;
@@ -503,20 +562,45 @@ export default {
     },
 
     layout_set() {
-      // Set center and FOV first so the layout is at the correct scale
-      // when the SVG components mount.
-      this.layout.set_center(this.center);
-      this.layout.set_fov_au(this.fov());
+      // Start with a full solar system view so all SVG elements mount
+      // in a stable coordinate frame before any animation begins.
+      this.layout.set_center([0, 0, 0]);
+      this.layout.set_fov_au(6);
+      this.started = true;
 
-      // Delay setting started so the layout has time to render at the
-      // correct scale before the transit begins animating.
+      const targetCenter = this.center;
+      const targetFov = this.fov();
+
+      // After a short delay for the initial render to stabilize,
+      // animate from the solar system view to the departure view.
       setTimeout(() => {
-        // Re-apply in case the layout dimensions changed during the delay
-        this.layout.set_center(this.center);
-        this.layout.set_fov_au(this.fov());
+        const state = {
+          cx: 0, cy: 0, cz: 0,
+          fov: 6,
+        };
 
-        this.started = true;
-      }, 500);
+        Tween(state, 1.5, {
+          cx: targetCenter[0],
+          cy: targetCenter[1],
+          cz: targetCenter[2],
+          fov: targetFov,
+          onUpdate: () => {
+            this.layout.set_center([state.cx, state.cy, state.cz]);
+            this.layout.set_fov_au(state.fov);
+          },
+          onComplete: () => {
+            this.layout.set_center(targetCenter);
+            this.layout.set_fov_au(targetFov);
+
+            const [x, y] = this.layout.scale_point(this.plan.coords);
+            this.shipx = x;
+            this.shipy = y;
+
+            this.$forceUpdate();
+            setTimeout(() => this.resume(), 300);
+          },
+        }).play();
+      }, 200);
     },
 
     bg_css() {
@@ -739,3 +823,17 @@ export default {
   },
 };
 </script>
+
+<style>
+@keyframes transit-pulse {
+  0%   { r: 1; opacity: 0.8; }
+  10%  { r: 3; opacity: 1; }
+  30%  { r: 2.5; opacity: 0.9; }
+  60%  { r: 2; opacity: 0.5; }
+  100% { r: 0; opacity: 0; }
+}
+
+.transit-flash {
+  animation: transit-pulse 1.2s ease-out forwards;
+}
+</style>
