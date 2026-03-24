@@ -453,7 +453,7 @@ export default {
     fov() {
       if (!this.plan) return 1; // default 1 AU before transit plan exists
 
-      const APPROACH_MARGIN = 1.30;
+      const APPROACH_MARGIN = 1.50;
 
       const centerPos = this.center;
       const shipDist = Physics.distance(this.plan.coords, centerPos) / Physics.AU;
