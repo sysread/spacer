@@ -191,16 +191,17 @@ export default {
         return 0;
       }
 
-      // Log scale: compresses the range so zoomed-in views (small FOV)
-      // don't slow to a crawl. The log of a small FOV produces a large
-      // negative number; we negate and scale to get a positive interval
-      // that grows slowly as FOV shrinks.
-      const min   = 0.20;
-      const max   = 0.65;
-      const fov   = this.layout.fov_au * 2;
-      // Spread the log curve over a wider range so close-in views
-      // don't hit the max as quickly. /5 gives a gentle ramp.
-      const intvl = min + (max - min) * Math.max(0, -Math.log10(fov)) / 5;
+      // Speed-based turn rate: fast cruise = short intervals (fast animation),
+      // slow approach/departure = long intervals (slow, cinematic).
+      // Inverted: high speed → low interval, low speed → high interval.
+      const min = 0.15;
+      const max = 0.60;
+      const seg = this.plan.path[this.plan.current_turn];
+      const maxVel = this.plan.maxVelocity || 1;
+      const speed = seg ? seg.velocity / maxVel : 0.5; // 0..1
+
+      // Invert: speed=1 (peak) → min interval, speed=0 (stopped) → max interval
+      const intvl = max - (max - min) * speed;
       return util.clamp(intvl, min, max);
     },
 
