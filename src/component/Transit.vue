@@ -229,8 +229,9 @@ export default {
         return 'arrive';
       }
 
-      // Depart: still within origin's influence sphere
-      if (shipToOrig <= this.origInfluenceRadius) return 'depart';
+      // Depart: still within origin's patrol radius (the visible sphere)
+      const origPatrol = this._patrolRadius(this.plan.origin, this.origIsMoon);
+      if (shipToOrig <= origPatrol) return 'depart';
 
       return 'cruise';
     },
@@ -248,8 +249,16 @@ export default {
 
       switch (this.transitPhase) {
         case 'depart': {
+          // Center on the midpoint between origin body and ship,
+          // gradually panning away from the origin as the ship departs.
           const body = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
-          return this.bodyPosition(body);
+          const bodyPos = this.bodyPosition(body);
+          const shipPos = this.plan.coords;
+          return [
+            (bodyPos[0] + shipPos[0]) / 2,
+            (bodyPos[1] + shipPos[1]) / 2,
+            (bodyPos[2] + shipPos[2]) / 2,
+          ];
         }
 
         case 'cruise': {
@@ -365,6 +374,32 @@ export default {
       return 0;
     },
 
+    // Patrol radius (the visible sphere) for phase transition detection.
+    // Same fallback logic as _influenceRadius but uses patrolRadius.
+    _patrolRadius(body, isMoon) {
+      const target = isMoon ? system.central(body) : body;
+
+      if (this.game.planets[target]) {
+        return this.game.planets[target].encounters.patrolRadius() * Physics.AU;
+      }
+
+      if (isMoon) {
+        let maxDist = 0;
+        for (const b of this.system.all_bodies()) {
+          if (system.central(b) === target && this.game.planets[b]) {
+            const parentPos = this.bodyPosition(target);
+            const moonPos = this.bodyPosition(b);
+            const dist = Physics.distance(moonPos, parentPos);
+            const radius = dist + this.game.planets[b].encounters.patrolRadius() * Physics.AU;
+            if (radius > maxDist) maxDist = radius;
+          }
+        }
+        return maxDist;
+      }
+
+      return 0;
+    },
+
     // Body position from the orbit cache at the current transit turn.
     // Uses the same pre-computed orbital data as the ship trajectory,
     // keeping bodies and ship in the same reference frame.
@@ -409,10 +444,14 @@ export default {
 
       switch (this.transitPhase) {
         case 'depart': {
-          // Start at the origin's influence radius and zoom out as ship departs.
-          // This keeps the origin's patrol sphere visible during departure.
-          const influenceFov = this.origInfluenceRadius / Physics.AU;
-          return Math.max(shipDist * 1.20, influenceFov);
+          // FOV covers both the origin body and the ship from the midpoint center.
+          // Since center is the midpoint, the distance from center to either
+          // endpoint is half the ship-to-body distance. Add 20% margin.
+          const body = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
+          const bodyPos = this.bodyPosition(body);
+          const halfDist = Physics.distance(this.plan.coords, bodyPos) / Physics.AU / 2;
+          // Floor at a small value so we don't start at zero FOV on turn 0
+          return Math.max(halfDist * 1.20, 0.002);
         }
 
         case 'cruise': {
