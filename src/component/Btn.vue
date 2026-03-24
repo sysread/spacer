@@ -8,6 +8,7 @@
 export default {
   props: ['disabled', 'muted', 'highlight', 'block', 'close'],
   emits: ['click'],
+  inject: { modalDismiss: { default: null } },
 
   methods: {
     activate() {
@@ -15,14 +16,8 @@ export default {
 
       this.$emit('click');
 
-      // Dismiss the parent modal programmatically instead of using
-      // data-bs-dismiss. BS5's native dismiss races with Vue's click
-      // handler, causing events to be lost.
-      if (this.close) {
-        const modalEl = this.$el.closest('.modal');
-        if (modalEl && modalEl._bsModal) {
-          modalEl._bsModal.hide();
-        }
+      if (this.close && this.modalDismiss) {
+        this.modalDismiss();
       }
     },
   },

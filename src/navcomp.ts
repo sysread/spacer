@@ -94,26 +94,28 @@ export function travel_time(ts: number, a: number): number {
 }
 
 /**
- * Solves for the acceleration during phase 1 (boost) along one axis.
+ * Solves for the per-phase accelerations along one axis.
  *
- * The trajectory has two phases of equal duration T/2:
- *   Phase 1 (boost):  accel = a1, from t=0 to t=T/2
- *   Phase 2 (brake):  accel = a2, from t=T/2 to t=T
+ * The trajectory has two phases of equal duration h = T/2:
+ *   Phase 1 (boost):  accel = a1, from t=0 to t=h
+ *   Phase 2 (brake):  accel = a2, from t=h to t=T
  *
- * Given start (pi, vi) and end (pf, vf), we solve for a1 and a2 per axis.
+ * Given start (pi, vi) and end (pf, vf):
  *
- * From the velocity constraint:  vf = vi + a1*h + a2*h  (where h = T/2)
+ * Velocity at flip:  v_mid = vi + a1*h
+ * Velocity at end:   vf = v_mid + a2*h = vi + (a1+a2)*h
  *   => a2 = (vf - vi)/h - a1
  *
- * From the position constraint:
- *   pf = pi + vi*T + a1*h²/2 + (vi + a1*h)*h + a2*h²/2
+ * Position at flip:  p_mid = pi + vi*h + a1*h²/2
+ * Position at end:   pf = p_mid + v_mid*h + a2*h²/2
+ *                       = pi + 2*vi*h + 3/2*a1*h² + a2*h²/2
  *
  * Substituting a2 and solving for a1:
- *   a1 = (4*(pf - pi) - 2*T*(vi + vf)) / T²
+ *   a1 = (4*(pf - pi) - 3*vi*T - vf*T) / T²
  */
 function solve_boost_brake(tt: number, pi: number, pf: number, vi: number, vf: number): [number, number] {
   const h  = tt / 2;
-  const a1 = (4 * (pf - pi) - 2 * tt * (vi + vf)) / (tt * tt);
+  const a1 = (4 * (pf - pi) - 3 * vi * tt - vf * tt) / (tt * tt);
   const a2 = (vf - vi) / h - a1;
   return [a1, a2];
 }

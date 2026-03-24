@@ -4,11 +4,11 @@
   {{$caps(body)}}
   <badge v-if="central != 'sun'" right=1 class="ms-1">{{$caps(central)}}</badge>
 </th>
-<td class="text-end" :class="{'text-success': stock && relBuy < 0, 'text-muted': !stock}">
+<td class="text-end" :class="{'text-success': stock && relBuy < 0, 'text-danger': stock && relBuy > 0, 'text-muted': !stock}">
   <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{$csn(relBuy)}}</span>
   <span v-else>{{$csn(rBuy)}}</span>
 </td>
-<td class="text-end" :class="{'text-success': relSell > 0}">
+<td class="text-end" :class="{'text-success': relSell > 0, 'text-danger': relSell < 0}">
   <span v-if="relprices"><span v-if="relSell > 0">+</span>{{$csn(relSell)}}</span>
   <span v-else>{{$csn(rSell)}}</span>
 </td>

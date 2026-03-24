@@ -209,7 +209,12 @@ body {
 
 .btn-highlight {
   border: 1px solid #323232;
-  border-bottom: 1px solid #ffc107;
+  border-bottom: 1px solid rgb(200,0,0);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #530D0D !important;
+  border-bottom: 1px solid rgb(200,0,0);
 }
 
 .circle-thingy {
@@ -304,7 +309,7 @@ svg.plot {
 }
 
 .plot-root-with-galaxy {
-  background-image: url('../../www/public/img/milkyway.jpg');
+  background-image: url('/img/milkyway.jpg');
   background-size: auto 100%;
   background-position: center;
   background-repeat: no-repeat;

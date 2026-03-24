@@ -11,14 +11,12 @@
 export default {
   props: ['disabled', 'muted', 'block', 'close', 'href'],
   emits: ['click'],
+  inject: { modalDismiss: { default: null } },
   methods: {
     activate() {
       this.$emit('click');
-      if (this.close) {
-        const modalEl = this.$el.closest('.modal');
-        if (modalEl && modalEl._bsModal) {
-          modalEl._bsModal.hide();
-        }
+      if (this.close && this.modalDismiss) {
+        this.modalDismiss();
       }
     },
   },

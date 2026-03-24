@@ -444,6 +444,7 @@ export default {
     },
 
     ackTimeCost() {
+      this.encounterTimeCost = null;
       this.resume();
     },
 
