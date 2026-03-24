@@ -472,8 +472,11 @@ export default {
     },
 
     update() {
-      // Compute target ship position in the CURRENT coordinate frame
-      // (before changing center/FOV) so the tween animates smoothly.
+      // Set center and FOV for this turn first, then compute ship position
+      // in the updated coordinate frame.
+      this.layout.set_center(this.center);
+      this.layout.set_fov_au(this.fov());
+
       const [x, y] = this.layout.scale_point(this.plan.coords);
 
       Tween(this.$data, this.intvl, {
@@ -482,11 +485,6 @@ export default {
         shipx:      x,
         shipy:      y,
         onComplete: () => {
-          // Update center and FOV after the tween completes.
-          // All elements (dots, orbits, bodies) re-render in the new
-          // coordinate frame simultaneously on the next paint.
-          this.layout.set_center(this.center);
-          this.layout.set_fov_au(this.fov());
           requestAnimationFrame(() => this.interval());
         },
       }).play();
@@ -534,7 +532,10 @@ export default {
             const moonDist = Physics.distance(moonPos, centerPos) / Physics.AU;
             localFov = Math.max(shipDist, moonDist) * APPROACH_MARGIN;
           } else {
-            localFov = Math.max(shipDist * APPROACH_MARGIN, 0.002);
+            // Floor at the origin's patrol radius so we start zoomed out
+            // enough to see the patrol sphere, not deep inside the planet
+            const minFov = this._patrolRadius(this.plan.origin, false) / Physics.AU;
+            localFov = Math.max(shipDist * APPROACH_MARGIN, minFov);
           }
           return Math.min(localFov, this.cruiseFov());
         }
@@ -550,7 +551,8 @@ export default {
             const moonDist = Physics.distance(moonPos, centerPos) / Physics.AU;
             localFov = Math.max(shipDist, moonDist) * APPROACH_MARGIN;
           } else {
-            localFov = Math.max(shipDist * APPROACH_MARGIN, 0.001);
+            const minFov = this._patrolRadius(this.plan.dest, false) / Physics.AU;
+            localFov = Math.max(shipDist * APPROACH_MARGIN, minFov);
           }
           return Math.min(localFov, this.cruiseFov());
         }
