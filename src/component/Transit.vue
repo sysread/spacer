@@ -136,7 +136,6 @@ export default {
     },
 
     'plan.current_turn': function() {
-      this.layout.set_fov_au(this.fov());
       this.update();
     },
   },
@@ -186,34 +185,77 @@ export default {
       }
     },
 
-    // True once the ship enters the patrol radius of the destination's
-    // parent body. Latches on — once entered, stays true for the rest of
-    // the transit to prevent the camera from jittering back and forth.
-    inParentTerritory() {
-      if (this.enteredParentTerritory) return true;
+    /**
+     * Transit phase determines the camera behavior:
+     *   'depart'  - leaving origin system (centered on origin parent or origin)
+     *   'cruise'  - mid-transit (centered on midpoint, shows both endpoints)
+     *   'arrive'  - approaching destination (centered on dest parent or dest)
+     *
+     * Transitions:
+     *   depart → cruise: when ship is farther from origin than destination
+     *   cruise → arrive: when ship enters destination's patrol radius
+     *                    (or dest parent's patrol radius for moons)
+     */
+    transitPhase() {
+      // Once we latch into arrive phase, stay there
+      if (this.enteredParentTerritory) return 'arrive';
 
-      const central = system.central(this.plan.dest);
-      if (central == 'sun' || !this.game.planets[central]) return false;
-      const parentPos = system.position(central);
-      const dist = Physics.distance(this.plan.coords, parentPos) / Physics.AU;
-      const radius = this.game.planets[central].encounters.patrolRadius();
+      const origPos = system.position_on_turn(this.plan.origin, this.game.turns);
+      const destBody = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
+      const destPos = system.position_on_turn(destBody, this.game.turns);
 
-      if (dist <= radius) {
-        this.enteredParentTerritory = true;
-        return true;
+      const shipToOrig = Physics.distance(this.plan.coords, origPos);
+      const shipToDest = Physics.distance(this.plan.coords, destPos);
+
+      // Check if we've entered the destination's patrol radius
+      if (this.game.planets[destBody]) {
+        const radius = this.game.planets[destBody].encounters.patrolRadius() * Physics.AU;
+        if (shipToDest <= radius) {
+          this.enteredParentTerritory = true;
+          return 'arrive';
+        }
       }
-      return false;
+
+      // Depart until we're farther from origin than destination
+      if (shipToOrig < shipToDest) return 'depart';
+      return 'cruise';
+    },
+
+    destIsMoon() {
+      return system.central(this.plan.dest) != 'sun';
+    },
+
+    origIsMoon() {
+      return system.central(this.plan.origin) != 'sun';
     },
 
     center() {
-      const central = system.central(this.plan.dest);
-      const body = (this.isSubSystemTransit || this.inParentTerritory)
-        ? central
-        : this.plan.dest;
+      const _turn = this.game.turns; // reactive trigger
 
-      // use system.position_on_turn so vuejs picks up that this property
-      // changes on each turn
-      return system.position_on_turn(body, this.game.turns);
+      switch (this.transitPhase) {
+        case 'depart': {
+          const body = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
+          return system.position_on_turn(body, this.game.turns);
+        }
+
+        case 'cruise': {
+          // Midpoint between origin and destination current positions
+          const origBody = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
+          const destBody = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
+          const origPos = system.position_on_turn(origBody, this.game.turns);
+          const destPos = system.position_on_turn(destBody, this.game.turns);
+          return [
+            (origPos[0] + destPos[0]) / 2,
+            (origPos[1] + destPos[1]) / 2,
+            (origPos[2] + destPos[2]) / 2,
+          ];
+        }
+
+        case 'arrive': {
+          const body = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
+          return system.position_on_turn(body, this.game.turns);
+        }
+      }
     },
 
     patrolRates() {
@@ -288,67 +330,58 @@ export default {
         shipx:      x,
         shipy:      y,
         onComplete: () => {
-          this.$nextTick(() => {
-            this.layout.set_center(this.center);
-            this.layout.set_fov_au(this.fov());
-            this.interval();
-          });
+          this.layout.set_center(this.center);
+          this.layout.set_fov_au(this.fov());
+          // Give the browser a paint frame before starting the next turn.
+          // Without this, the layout update is invisible because the next
+          // tween starts immediately.
+          requestAnimationFrame(() => this.interval());
         },
       }).play();
     },
 
+    /**
+     * FOV (half-width in AU) for each transit phase.
+     *
+     * depart: ship distance from origin center + 5% margin, zooming out
+     * cruise: half the distance between origin and destination + 5% margin
+     * arrive: for planets, ship distance from dest + 5% margin (zooming in)
+     *         for moons, max(ship dist, moon orbital radius) * 1.15
+     */
     fov() {
-      const central = system.central(this.plan.dest);
-      const turn = Math.min(this.plan.current_turn, this.plan.turns - 1);
+      const margin = 1.05;
+      const centerPos = this.center;
+      const shipDist = Physics.distance(this.plan.coords, centerPos) / Physics.AU;
 
-      // Use the destination's current orbital position (not the final
-      // arrival position, which may be on the far side of its orbit).
-      const destOrbit = this.orbits[this.plan.dest];
-      const destPos = destOrbit ? destOrbit[Math.min(turn, destOrbit.length - 1)] : this.plan.end;
-      const points = [destPos, this.plan.coords];
+      switch (this.transitPhase) {
+        case 'depart': {
+          return shipDist * margin;
+        }
 
-      if (this.isSubSystemTransit) {
-        // Sub-system transit: include all sibling moons and the parent
-        for (const body of this.system.all_bodies()) {
-          if (system.central(body) == central || body == central) {
-            const orbit = this.orbits[body];
-            points.push(orbit[Math.min(turn, orbit.length - 1)]);
+        case 'cruise': {
+          // Show both origin and destination with margin
+          const origBody = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
+          const destBody = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
+          const origPos = system.position_on_turn(origBody, this.game.turns);
+          const destPos = system.position_on_turn(destBody, this.game.turns);
+          const halfDist = Physics.distance(origPos, destPos) / Physics.AU / 2;
+          // Also ensure the ship is visible (it might be off the midpoint axis)
+          return Math.max(halfDist, shipDist) * margin;
+        }
+
+        case 'arrive': {
+          if (this.destIsMoon) {
+            // For moons: zoom to the moon's orbital distance from parent + 15%
+            const moonPos = system.position_on_turn(this.plan.dest, this.game.turns);
+            const moonDist = Physics.distance(moonPos, centerPos) / Physics.AU;
+            // Floor at moon's orbital radius so we don't zoom past it
+            return Math.max(shipDist, moonDist * 1.15);
+          } else {
+            // For planets: zoom to ship distance, shrinking as we approach
+            return Math.max(shipDist * margin, 0.001); // min 0.001 AU
           }
         }
       }
-      else if (this.inParentTerritory) {
-        // Long-range approach to a satellite: use current live positions,
-        // not cached orbits (which drift over long transits).
-        const parentPos = system.position(central);
-        const moonPos   = system.position(this.plan.dest);
-        const shipDist  = Physics.distance(this.plan.coords, parentPos) / Physics.AU;
-        const moonDist  = Physics.distance(moonPos, parentPos) / Physics.AU;
-        return 1.10 * Math.max(shipDist, moonDist);
-      }
-      else {
-        const frame = central == 'sun' ? this.plan.dest : central;
-        const closest = this.system.all_bodies()
-          .filter(b => b != this.plan.dest && system.central(b) != frame)
-          .reduce((a, b) => {
-            if (a == undefined) return b;
-            const orbA = this.orbits[a];
-            const orbB = this.orbits[b];
-            const da = Physics.distance(orbA[Math.min(turn, orbA.length - 1)], this.plan.coords);
-            const db = Physics.distance(orbB[Math.min(turn, orbB.length - 1)], this.plan.coords);
-            return da < db ? a : b;
-          }, undefined);
-
-        const orbC = this.orbits[closest];
-        points.push(orbC[Math.min(turn, orbC.length - 1)]);
-      }
-
-      // Lop off z to prevent it from affecting the distance calculation
-      const center    = this.center;
-      const center_2d = [center[0], center[1], 0];
-      const points_2d = points.map(p => [p[0], p[1], 0]);
-      const distances = points_2d.map(p => Physics.distance(p, center_2d));
-      const max       = Math.max(...distances);
-      return 1.15 * (max / Physics.AU);
     },
 
     layout_resize() {
