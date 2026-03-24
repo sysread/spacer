@@ -44,6 +44,16 @@
               <SvgPlotPoint :body="body" :coords="bodyPosition(body)" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" />
             </g>
 
+            <!-- Trajectory path: dots for each turn of the pre-computed path.
+                 Past segments in light blue, future in light grey.
+                 Scaled live via layout.scale_point to stay in sync with
+                 the current center/FOV. -->
+            <circle v-for="(seg, i) in plan.path" :key="'path-'+i"
+              :cx="layout.scale_point(seg.position)[0]"
+              :cy="layout.scale_point(seg.position)[1]"
+              r="1.5"
+              :fill="i <= plan.current_turn ? '#6af' : '#555'" />
+
             <text text-anchor="middle" alignment-baseline="middle"
                 style="fill: yellow; font: bold 8px monospace;"
                 :x="shipx" :y="shipy">
@@ -253,7 +263,6 @@ export default {
 
       switch (this.transitPhase) {
         case 'depart': {
-          // Mirror of arrive: center on origin body (or parent for moons)
           const body = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
           return this.bodyPosition(body);
         }
@@ -468,7 +477,6 @@ export default {
           } else {
             localFov = Math.max(shipDist * APPROACH_MARGIN, 0.002);
           }
-          // Smooth transition: never exceed cruise FOV (zoom out gradually)
           return Math.min(localFov, this.cruiseFov());
         }
 
@@ -485,7 +493,6 @@ export default {
           } else {
             localFov = Math.max(shipDist * APPROACH_MARGIN, 0.001);
           }
-          // Smooth transition: never exceed cruise FOV (zoom in gradually)
           return Math.min(localFov, this.cruiseFov());
         }
       }
@@ -507,6 +514,7 @@ export default {
         // Re-apply in case the layout dimensions changed during the delay
         this.layout.set_center(this.center);
         this.layout.set_fov_au(this.fov());
+
         this.started = true;
       }, 500);
     },
