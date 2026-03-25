@@ -57,7 +57,7 @@
                  dots to give visual continuity to the trajectory at all zoom levels. -->
             <SvgPath
               :points="layout.scale_path(plan.path.map(s => s.position), 300)"
-              color="#333" line="0.5px" />
+              color="#333" line="0.5px" smooth />
 
             <defs>
               <filter id="glow">
