@@ -136,9 +136,34 @@ export default {
     // Snapshot the orbit positions at transit start. The system's orbit cache
     // rolls forward each turn (shift+push), so we must copy the arrays to
     // prevent them from drifting out from under us during the transit.
-    const orbits = {};
-    for (const body of system.all_bodies())
-      orbits[body] = [...system.orbit_by_turns(body)];
+    // Build high-resolution orbit data by interpolating between per-turn
+    // positions. At close zoom, the linear tweens between per-turn orbit
+    // points are visibly jerky (especially for fast-orbiting moons like Luna).
+    // Interpolating 4x gives smooth curved motion at all zoom levels.
+    const ORBIT_SUBSTEPS = 4;
+    const orbitsRaw = {};
+    const orbitsHiRes = {};
+    for (const body of system.all_bodies()) {
+      const raw = [...system.orbit_by_turns(body)];
+      orbitsRaw[body] = raw;
+
+      const hiRes = [];
+      for (let i = 0; i < raw.length - 1; i++) {
+        const a = raw[i];
+        const b = raw[i + 1];
+        for (let s = 0; s < ORBIT_SUBSTEPS; s++) {
+          const t = s / ORBIT_SUBSTEPS;
+          hiRes.push([
+            a[0] + (b[0] - a[0]) * t,
+            a[1] + (b[1] - a[1]) * t,
+            a[2] + (b[2] - a[2]) * t,
+          ]);
+        }
+      }
+      hiRes.push(raw[raw.length - 1]);
+      orbitsHiRes[body] = hiRes;
+    }
+    const orbits = orbitsRaw;
 
     const turns = game.transit_plan.turns;
     const plan = game.transit_plan;
@@ -150,7 +175,7 @@ export default {
     // compress the mid-transit pacing into a frantic rush.
     const turnIntervals = (() => {
       const SEC_PER_AU = 3.5;
-      const CLOSE_INTERVAL = 0.45;  // fixed interval for close-range turns
+      const CLOSE_INTERVAL = 0.60;  // fixed interval for close-range turns
       const distAU = Physics.distance(plan.path[0].position, plan.path[turns].position) / Physics.AU;
       const cruiseTarget = Math.max(distAU * SEC_PER_AU, 5);
 
@@ -207,6 +232,9 @@ export default {
       paused:            true,
       encounter:         null,
       encounters:        0,
+      orbitsHiRes:       orbitsHiRes,
+      orbitSubsteps:     ORBIT_SUBSTEPS,
+      bodySubStep:       0, // 0..ORBIT_SUBSTEPS-1, advanced during tween
       orbits:            orbits,
       started:           false,
       arriving:          false,
@@ -302,8 +330,8 @@ export default {
 
       const origBody = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
       const destBody = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
-      const origPos = this.bodyPosition(origBody);
-      const destPos = this.bodyPosition(destBody);
+      const origPos = this.bodyPositionTurn(origBody);
+      const destPos = this.bodyPositionTurn(destBody);
 
       const shipToOrig = Physics.distance(this.plan.coords, origPos);
       const shipToDest = Physics.distance(this.plan.coords, destPos);
@@ -356,14 +384,14 @@ export default {
       switch (this.transitPhase) {
         case 'depart': {
           const body = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
-          return this.bodyPosition(body);
+          return this.bodyPositionTurn(body);
         }
 
         case 'cruise': {
           const origBody = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
           const destBody = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
-          const origPos = this.bodyPosition(origBody);
-          const destPos = this.bodyPosition(destBody);
+          const origPos = this.bodyPositionTurn(origBody);
+          const destPos = this.bodyPositionTurn(destBody);
           return [
             (origPos[0] + destPos[0]) / 2,
             (origPos[1] + destPos[1]) / 2,
@@ -373,7 +401,7 @@ export default {
 
         case 'arrive': {
           const body = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
-          return this.bodyPosition(body);
+          return this.bodyPositionTurn(body);
         }
       }
     },
@@ -458,8 +486,8 @@ export default {
         let maxDist = 0;
         for (const b of this.system.all_bodies()) {
           if (system.central(b) === target && this.game.planets[b]) {
-            const parentPos = this.bodyPosition(target);
-            const moonPos = this.bodyPosition(b);
+            const parentPos = this.bodyPositionTurn(target);
+            const moonPos = this.bodyPositionTurn(b);
             const dist = Physics.distance(moonPos, parentPos);
             // Use the moon's piracy radius added to its orbital distance
             const radius = dist + this.game.planets[b].encounters.piracyRadius() * Physics.AU;
@@ -485,8 +513,8 @@ export default {
         let maxDist = 0;
         for (const b of this.system.all_bodies()) {
           if (system.central(b) === target && this.game.planets[b]) {
-            const parentPos = this.bodyPosition(target);
-            const moonPos = this.bodyPosition(b);
+            const parentPos = this.bodyPositionTurn(target);
+            const moonPos = this.bodyPositionTurn(b);
             const dist = Physics.distance(moonPos, parentPos);
             const radius = dist + this.game.planets[b].encounters.patrolRadius() * Physics.AU;
             if (radius > maxDist) maxDist = radius;
@@ -496,6 +524,24 @@ export default {
       }
 
       return 0;
+    },
+
+    // Returns the orbital radius (in AU) of the outermost moon orbiting
+    // the given parent body. Used to set the FOV floor during approach/departure
+    // so that all moons in a system (e.g. all Jovian moons) are visible.
+    _maxMoonOrbitRadius(parentBody) {
+      const centerPos = this.bodyPositionTurn(parentBody);
+      let maxDist = 0;
+
+      for (const body of this.system.all_bodies()) {
+        if (system.central(body) === parentBody) {
+          const moonPos = this.bodyPositionTurn(body);
+          const dist = Physics.distance(moonPos, centerPos) / Physics.AU;
+          if (dist > maxDist) maxDist = dist;
+        }
+      }
+
+      return maxDist;
     },
 
     // Trajectory dot color: past dots colored by speed, future is grey
@@ -544,9 +590,24 @@ export default {
     },
 
     // Body position from the orbit cache at the current transit turn.
-    // Uses the same pre-computed orbital data as the ship trajectory,
-    // keeping bodies and ship in the same reference frame.
+    // Returns the body's position from the high-resolution orbit cache,
+    // using the current turn + sub-step for smooth inter-turn motion.
+    // Falls back to the per-turn cache for center/FOV calculations that
+    // don't need sub-step resolution (via bodyPositionTurn).
     bodyPosition(body) {
+      const orbit = this.orbitsHiRes[body];
+      if (!orbit) return system.position(body);
+      // bodySubStep is tweened as a float; floor it for array indexing.
+      const idx = Math.min(
+        Math.floor(this.plan.current_turn * this.orbitSubsteps + this.bodySubStep),
+        orbit.length - 1
+      );
+      return orbit[idx];
+    },
+
+    // Per-turn resolution position, used by center/FOV calculations where
+    // sub-step precision isn't needed and would cause jitter.
+    bodyPositionTurn(body) {
       const orbit = this.orbits[body];
       if (!orbit) return system.position(body);
       const turn = Math.min(this.plan.current_turn, orbit.length - 1);
@@ -607,18 +668,25 @@ export default {
       this.lastPhase = currentPhase;
       this._lastCenter = targetCenter;
 
-      // Normal turn: set center/FOV and animate ship position
+      // Normal turn: set center/FOV and animate ship position.
+      // Body sub-steps advance during the tween so planet/moon positions
+      // update smoothly between turns instead of jumping linearly.
       this.layout.set_center(targetCenter);
       this.layout.set_fov_au(targetFov);
+      this.bodySubStep = 0;
 
       const [x, y] = this.layout.scale_point(this.plan.coords);
 
+      // Tween bodySubStep from 0 to ORBIT_SUBSTEPS-1 alongside the ship
+      // position, so body orbit positions advance smoothly between turns.
       Tween(this.$data, this.intvl, {
-        patrolpct:  this.patrolRate,
-        piracypct:  this.piracyRate,
-        shipx:      x,
-        shipy:      y,
+        patrolpct:    this.patrolRate,
+        piracypct:    this.piracyRate,
+        shipx:        x,
+        shipy:        y,
+        bodySubStep:  this.orbitSubsteps - 1,
         onComplete: () => {
+          this.bodySubStep = 0;
           requestAnimationFrame(() => this.interval());
         },
       }).play();
@@ -630,8 +698,8 @@ export default {
       if (!this.plan) return 1;
       const origBody = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
       const destBody = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
-      const origPos = this.bodyPosition(origBody);
-      const destPos = this.bodyPosition(destBody);
+      const origPos = this.bodyPositionTurn(origBody);
+      const destPos = this.bodyPositionTurn(destBody);
       const centerPos = this.center;
       const shipDist = Physics.distance(this.plan.coords, centerPos) / Physics.AU;
       const halfDist = Physics.distance(origPos, destPos) / Physics.AU / 2;
@@ -664,18 +732,15 @@ export default {
 
       switch (this.transitPhase) {
         case 'depart': {
-          if (this.origIsMoon) {
-            // For moons: floor at the moon's orbital radius so the parent
-            // and sibling moons stay visible during departure.
-            const moonPos = this.bodyPosition(this.plan.origin);
-            const moonDist = Physics.distance(moonPos, centerPos) / Physics.AU;
-            return Math.min(Math.max(shipDist * EDGE_BUFFER, moonDist * EDGE_BUFFER), this.cruiseFov());
-          } else {
-            // For planets: floor at the patrol radius so the visible sphere
-            // is shown at the start, then zoom out as the ship departs.
-            const minFov = this._patrolRadius(this.plan.origin, false) / Physics.AU;
-            return Math.min(Math.max(shipDist * EDGE_BUFFER, minFov), this.cruiseFov());
-          }
+          // Floor the FOV at the outermost moon's orbit so all moons in the
+          // system are visible during departure. For planets without moons,
+          // fall back to the patrol radius.
+          const origParent = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
+          const systemRadius = this._maxMoonOrbitRadius(origParent);
+          const minFov = systemRadius > 0
+            ? systemRadius * EDGE_BUFFER
+            : this._patrolRadius(this.plan.origin, false) / Physics.AU;
+          return Math.min(Math.max(shipDist * EDGE_BUFFER, minFov), this.cruiseFov());
         }
 
         case 'cruise': {
@@ -683,19 +748,15 @@ export default {
         }
 
         case 'arrive': {
-          if (this.destIsMoon) {
-            // For moons: floor at the moon's orbital radius so the player
-            // can see the moons orbiting the parent as they approach.
-            const moonPos = this.bodyPosition(this.plan.dest);
-            const moonDist = Physics.distance(moonPos, centerPos) / Physics.AU;
-            return Math.min(Math.max(shipDist * EDGE_BUFFER, moonDist * EDGE_BUFFER), this.cruiseFov());
-          } else {
-            // For planets: keep zooming in as the ship approaches. Unlike
-            // depart (which needs a patrol radius floor to avoid starting
-            // inside the planet), arrive tracks the ship's shrinking distance.
-            // Floor at a small minimum to prevent zero/tiny FOV at the very end.
-            return Math.min(Math.max(shipDist * EDGE_BUFFER, 0.001), this.cruiseFov());
-          }
+          // Floor the FOV at the outermost moon's orbit so all moons in the
+          // destination system are visible on approach. For planets without
+          // moons, zoom all the way in to the ship's distance.
+          const destParent = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
+          const destSystemRadius = this._maxMoonOrbitRadius(destParent);
+          const arriveMinFov = destSystemRadius > 0
+            ? destSystemRadius * EDGE_BUFFER
+            : 0.001;
+          return Math.min(Math.max(shipDist * EDGE_BUFFER, arriveMinFov), this.cruiseFov());
         }
       }
     },
@@ -714,9 +775,10 @@ export default {
       const targetCenter = this.center;
       const targetFov = this.fov();
 
-      // After a short delay for the initial render to stabilize,
-      // animate from the solar system view to the departure view.
-      setTimeout(() => {
+      // Wait for Vue to render the initial solar system view, then
+      // animate from it to the departure view. Using $nextTick ensures
+      // the DOM is stable before the tween starts — no arbitrary delays.
+      this.$nextTick(() => {
         const state = {
           cx: 0, cy: 0, cz: 0,
           fov: 6,
@@ -732,6 +794,7 @@ export default {
             this.layout.set_fov_au(state.fov);
           },
           onComplete: () => {
+            // Snap to exact target values after tween finishes
             this.layout.set_center(targetCenter);
             this.layout.set_fov_au(targetFov);
 
@@ -746,11 +809,14 @@ export default {
             this.lastPhase = this.transitPhase;
             this._lastCenter = targetCenter;
 
+            // Start transit on the next animation frame after the tween's
+            // final state has been rendered. No setTimeout — the tween's
+            // onComplete is the deterministic "go signal".
             this.$forceUpdate();
-            setTimeout(() => this.resume(), 300);
+            requestAnimationFrame(() => this.resume());
           },
         }).play();
-      }, 200);
+      });
     },
 
     bg_css() {
