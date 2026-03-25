@@ -272,7 +272,7 @@ export class Layout {
 
     const factor = this.fov_au + Math.log2(Math.max(1, this.fov_au));
     const amount = util.clamp(adjust * factor, 1);
-    const min    = is_tiny ? 3 : 6;
+    const min    = is_tiny ? 1 : 3;
     const result = util.clamp(diameter * this.px_per_meter * amount, min, this.scale_px);
     return result;
   }
