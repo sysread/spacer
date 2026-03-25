@@ -53,7 +53,12 @@
                  Past segments in light blue, future in light grey.
                  Scaled live via layout.scale_point to stay in sync with
                  the current center/FOV. -->
-            <!-- Trajectory dots: future=grey, past=fading comet tail, current=flash -->
+            <!-- Thin line connecting all transit path points, rendered behind the
+                 dots to give visual continuity to the trajectory at all zoom levels. -->
+            <SvgPath
+              :points="layout.scale_path(plan.path.map(s => s.position), 300)"
+              color="#333" line="0.5px" />
+
             <defs>
               <filter id="glow">
                 <feGaussianBlur stdDeviation="3" result="blur" />
@@ -136,6 +141,64 @@ export default {
       orbits[body] = [...system.orbit_by_turns(body)];
 
     const turns = game.transit_plan.turns;
+    const plan = game.transit_plan;
+
+    // Pre-compute per-turn animation intervals. Close-range turns (first/last
+    // ~3 days) get a fixed cinematic pace outside the time budget. Cruise turns
+    // share a distance-proportional time budget (1 AU ≈ 3.5s). This prevents
+    // the serene approach/departure from stealing time from cruise, which would
+    // compress the mid-transit pacing into a frantic rush.
+    const turnIntervals = (() => {
+      const SEC_PER_AU = 3.5;
+      const CLOSE_INTERVAL = 0.45;  // fixed interval for close-range turns
+      const distAU = Physics.distance(plan.path[0].position, plan.path[turns].position) / Physics.AU;
+      const cruiseTarget = Math.max(distAU * SEC_PER_AU, 5);
+
+      const maxVel = plan.maxVelocity || 1;
+      const closeRange = data.turns_per_day * 3;
+
+      // Classify each turn as close-range or cruise, and compute raw
+      // cruise intervals based on velocity (fast ship = short interval).
+      const intervals = [];
+      const cruiseRaw = [];
+
+      for (let i = 0; i <= turns; i++) {
+        const fromEdge = Math.min(i, turns - i);
+
+        if (fromEdge < closeRange) {
+          // Close-range: fixed pace with smoothstep easing toward cruise.
+          // Turns right at the edge are slowest; turns near closeRange
+          // boundary blend toward the cruise speed.
+          const t = fromEdge / closeRange;
+          const ease = t * t * (3 - 2 * t);
+          intervals.push({ type: 'close', ease });
+        } else {
+          // Cruise: interval based on velocity, will be scaled to fit budget
+          const seg = plan.path[i];
+          const speed = seg ? seg.velocity / maxVel : 0.5;
+          // Invert: high speed → small raw value (fast), low speed → large
+          const raw = 1 - speed * 0.9; // 0.1 at peak, 1.0 at zero speed
+          intervals.push({ type: 'cruise', raw });
+          cruiseRaw.push({ idx: i, raw });
+        }
+      }
+
+      // Scale cruise intervals to fit the distance-proportional time budget
+      const cruiseRawTotal = cruiseRaw.reduce((a, b) => a + b.raw, 0) || 1;
+      const cruiseScale = cruiseTarget / cruiseRawTotal;
+
+      // Build final interval array
+      return intervals.map(entry => {
+        if (entry.type === 'close') {
+          // Blend from CLOSE_INTERVAL at the edge toward the average cruise
+          // interval at the boundary, so there's no sharp speed change.
+          const avgCruise = cruiseTarget / (cruiseRaw.length || 1);
+          return CLOSE_INTERVAL + (avgCruise - CLOSE_INTERVAL) * entry.ease;
+        } else {
+          return entry.raw * cruiseScale;
+        }
+      });
+    })();
 
     return {
       layout_scaling:    false,
@@ -148,10 +211,12 @@ export default {
       started:           false,
       arriving:          false,
 
+      lastPhase:         null, // track phase transitions
       encounterTimeCost: null,
       encounterDistCost: null,
       encounterFuelCost: null,
       enteredParentTerritory: false,
+      turnIntervals:         turnIntervals,
 
       // animated values
       patrolpct:         0,
@@ -191,18 +256,11 @@ export default {
         return 0;
       }
 
-      // Speed-based turn rate: fast cruise = short intervals (fast animation),
-      // slow approach/departure = long intervals (slow, cinematic).
-      // Inverted: high speed → low interval, low speed → high interval.
-      const min = 0.15;
-      const max = 0.60;
-      const seg = this.plan.path[this.plan.current_turn];
-      const maxVel = this.plan.maxVelocity || 1;
-      const speed = seg ? seg.velocity / maxVel : 0.5; // 0..1
-
-      // Invert: speed=1 (peak) → min interval, speed=0 (stopped) → max interval
-      const intvl = max - (max - min) * speed;
-      return util.clamp(intvl, min, max);
+      // Per-turn intervals are pre-computed in data() so the total
+      // animation time is proportional to the trip distance (1 AU ≈ 3s).
+      // The curve uses smoothstep for steep transitions at the edges
+      // and a fast plateau in the middle.
+      return this.turnIntervals[this.plan.current_turn] || 0.1;
     },
 
     displayFoV() {
@@ -495,25 +553,63 @@ export default {
       return orbit[turn];
     },
 
+    // Tween the view from current center/FOV to new targets, then resume transit.
+    // Without this, phase transitions (depart→cruise, cruise→arrive) cause the
+    // center and FOV to snap instantly while the turn animation is still running,
+    // creating a race where the ship and destination get pushed off-screen because
+    // the pan hasn't finished before the next turn's animation batch starts.
+    transitionView(targetCenter, targetFov, callback) {
+      const state = {
+        cx: this._lastCenter ? this._lastCenter[0] : targetCenter[0],
+        cy: this._lastCenter ? this._lastCenter[1] : targetCenter[1],
+        cz: this._lastCenter ? this._lastCenter[2] : targetCenter[2],
+        fov: this.layout.fov_au || targetFov,
+      };
+
+      Tween(state, 1.5, {
+        cx: targetCenter[0],
+        cy: targetCenter[1],
+        cz: targetCenter[2],
+        fov: targetFov,
+        onUpdate: () => {
+          this.layout.set_center([state.cx, state.cy, state.cz]);
+          this.layout.set_fov_au(state.fov);
+        },
+        onComplete: () => {
+          this.layout.set_center(targetCenter);
+          this.layout.set_fov_au(targetFov);
+          this.$forceUpdate();
+          callback();
+        },
+      }).play();
+    },
+
     update() {
-      // Smoothly interpolate center and FOV toward their targets rather
-      // than snapping. This prevents jarring jumps during phase transitions.
       const targetCenter = this.center;
       const targetFov = this.fov();
-      const blend = 0.15; // 15% toward target each turn
+      const currentPhase = this.transitPhase;
 
-      const curCenter = [
-        this.layout.offset_x !== undefined ? targetCenter[0] : 0,
-        this.layout.offset_y !== undefined ? targetCenter[1] : 0,
-        targetCenter[2],
-      ];
+      // When the transit phase changes (e.g. depart→cruise), the center point
+      // and FOV target change drastically. If we let normal turn processing
+      // handle this, the center/FOV snap while the ship tween is mid-flight,
+      // causing elements to fly off-screen. Instead, pause the transit and
+      // smoothly tween the view to the new phase's targets before resuming.
+      if (this.lastPhase && this.lastPhase !== currentPhase) {
+        this.lastPhase = currentPhase;
+        this.transitionView(targetCenter, targetFov, () => {
+          // Resume transit after the view transition completes
+          this._lastCenter = targetCenter;
+          requestAnimationFrame(() => this.interval());
+        });
+        return;
+      }
 
-      // Lerp current layout FOV toward target
-      const curFov = this.layout.fov_au || targetFov;
-      const newFov = curFov + (targetFov - curFov) * blend;
+      this.lastPhase = currentPhase;
+      this._lastCenter = targetCenter;
 
+      // Normal turn: set center/FOV and animate ship position
       this.layout.set_center(targetCenter);
-      this.layout.set_fov_au(newFov);
+      this.layout.set_fov_au(targetFov);
 
       const [x, y] = this.layout.scale_point(this.plan.coords);
 
@@ -545,37 +641,41 @@ export default {
     /**
      * FOV (half-width in AU) for each transit phase.
      *
-     * The APPROACH_MARGIN constant controls the buffer around the ship
-     * and destination during depart and arrive phases.
+     * Depart/arrive: FOV tracks the ship's distance from center with a
+     * small buffer (20%), dynamically zooming in as the ship approaches.
+     * For moons, the FOV floors at the moon's orbital radius so the
+     * parent planet and orbiting moons remain visible. For planets,
+     * the FOV floors at the patrol radius (the inner visible sphere).
      *
-     * Depart and arrive FOVs are floored at the cruise FOV to prevent
-     * abrupt zoom changes at phase transitions — the view smoothly
-     * zooms out from close-in to cruise scale, then back in.
+     * The phase transition tween in transitionView() handles the
+     * smooth pan-and-zoom between phases — fov() just returns the
+     * target for the current phase, not a blended value.
      */
     fov() {
-      if (!this.plan) return 1; // default 1 AU before transit plan exists
+      if (!this.plan) return 1;
 
-      // How far to zoom out beyond the farthest element (ship or moon orbit).
-      // Higher = more zoomed out during approach/departure.
-      const APPROACH_MARGIN = 3.0;
+      // 20% buffer keeps the ship from sitting right at the viewport edge.
+      // This is deliberately smaller than the old APPROACH_MARGIN (3.0) so
+      // the view zooms close enough to see planet/moon images during approach.
+      const EDGE_BUFFER = 1.20;
 
       const centerPos = this.center;
       const shipDist = Physics.distance(this.plan.coords, centerPos) / Physics.AU;
 
       switch (this.transitPhase) {
         case 'depart': {
-          let localFov;
           if (this.origIsMoon) {
+            // For moons: floor at the moon's orbital radius so the parent
+            // and sibling moons stay visible during departure.
             const moonPos = this.bodyPosition(this.plan.origin);
             const moonDist = Physics.distance(moonPos, centerPos) / Physics.AU;
-            localFov = Math.max(shipDist, moonDist) * APPROACH_MARGIN;
+            return Math.min(Math.max(shipDist * EDGE_BUFFER, moonDist * EDGE_BUFFER), this.cruiseFov());
           } else {
-            // Floor at the origin's patrol radius so we start zoomed out
-            // enough to see the patrol sphere, not deep inside the planet
+            // For planets: floor at the patrol radius so the visible sphere
+            // is shown at the start, then zoom out as the ship departs.
             const minFov = this._patrolRadius(this.plan.origin, false) / Physics.AU;
-            localFov = Math.max(shipDist * APPROACH_MARGIN, minFov);
+            return Math.min(Math.max(shipDist * EDGE_BUFFER, minFov), this.cruiseFov());
           }
-          return Math.min(localFov, this.cruiseFov());
         }
 
         case 'cruise': {
@@ -583,16 +683,19 @@ export default {
         }
 
         case 'arrive': {
-          let localFov;
           if (this.destIsMoon) {
+            // For moons: floor at the moon's orbital radius so the player
+            // can see the moons orbiting the parent as they approach.
             const moonPos = this.bodyPosition(this.plan.dest);
             const moonDist = Physics.distance(moonPos, centerPos) / Physics.AU;
-            localFov = Math.max(shipDist, moonDist) * APPROACH_MARGIN;
+            return Math.min(Math.max(shipDist * EDGE_BUFFER, moonDist * EDGE_BUFFER), this.cruiseFov());
           } else {
-            const minFov = this._patrolRadius(this.plan.dest, false) / Physics.AU;
-            localFov = Math.max(shipDist * APPROACH_MARGIN, minFov);
+            // For planets: keep zooming in as the ship approaches. Unlike
+            // depart (which needs a patrol radius floor to avoid starting
+            // inside the planet), arrive tracks the ship's shrinking distance.
+            // Floor at a small minimum to prevent zero/tiny FOV at the very end.
+            return Math.min(Math.max(shipDist * EDGE_BUFFER, 0.001), this.cruiseFov());
           }
-          return Math.min(localFov, this.cruiseFov());
         }
       }
     },
@@ -635,6 +738,13 @@ export default {
             const [x, y] = this.layout.scale_point(this.plan.coords);
             this.shipx = x;
             this.shipy = y;
+
+            // Initialize phase tracking so the first call to update() sees
+            // the current phase as "already active" and doesn't trigger a
+            // transition animation. Without this, the depart phase would
+            // immediately detect a lastPhase mismatch and re-tween the view.
+            this.lastPhase = this.transitPhase;
+            this._lastCenter = targetCenter;
 
             this.$forceUpdate();
             setTimeout(() => this.resume(), 300);

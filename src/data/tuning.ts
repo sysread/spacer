@@ -3,7 +3,7 @@
  * Thrust in kiloNewtons
  * Production/consumption are *daily* rates
  */
-const hoursPerTurn = 8;
+const hoursPerTurn = 6;
 const turnsPerDay  = 24 / hoursPerTurn;
 
 export default {
