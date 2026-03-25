@@ -73,26 +73,15 @@ export default {
       const [x, y] = this.point;
       const d = this.diameter;
 
-      if (this.tween)
-        this.tween.kill();
-
-      const target = {
-        d: d,
-        x: x - (d / 2),
-        y: y - (d / 2),
-        label_x: x + d + 10,
-        label_y: y + d / 3,
-      };
-
-      // Snap on first update to avoid fly-in from initial position
-      if (!this._mounted || !this.intvl) {
-        Object.assign(this.$data, target);
-        this._mounted = true;
-        return;
-      }
-
-      this.tween = Tween(this.$data, this.intvl, target);
-      this.tween.play();
+      // Always snap to position rather than tweening. The high-resolution
+      // orbit sub-steps (4x per turn) provide smooth inter-turn motion;
+      // adding a tween on top causes elastic effects when multiple sub-step
+      // updates overlap with the previous tween still in flight.
+      this.d = d;
+      this.x = x - (d / 2);
+      this.y = y - (d / 2);
+      this.label_x = x + d + 10;
+      this.label_y = y + d / 3;
     },
   },
 

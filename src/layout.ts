@@ -304,18 +304,18 @@ export class Layout {
     const rawLogScaled = pxMin + (pxMax - pxMin) * t;
 
     // Scale the log minimum by FOV to prevent overlap at wider views.
-    // At close zoom (FOV < 0.02 AU) the full log sizes apply — you're
-    // looking at one body or a tight cluster. As FOV grows, the log sizes
-    // shrink so bodies separate visually. At wide FOV (> 5 AU) bodies
-    // approach their pixel floor.
+    // Full log sizes apply up to ~0.05 AU (approach/departure zoom).
+    // Beyond that, sizes taper so bodies separate visually at wider FOVs.
+    // The numerator (0.05) controls where full size kicks in; the exponent
+    // (0.7) controls how fast sizes shrink beyond that.
     //
-    //   FOV 0.02 → 1.00 (full log size)
-    //   FOV 0.1  → 0.45 (Saturn visible, moons distinct)
-    //   FOV 0.5  → 0.20 (inner solar system)
-    //   FOV 1.0  → 0.14
-    //   FOV 5.0  → 0.06
-    //   FOV 34   → 0.02
-    const fovScale = Math.min(1, 0.02 / Math.pow(Math.max(this.fov_au, 0.02), 0.7));
+    //   FOV 0.03 → 1.00 (full log size — close approach)
+    //   FOV 0.1  → 0.40 (moon system — planets visible, moons distinct)
+    //   FOV 0.5  → 0.12
+    //   FOV 1.0  → 0.08
+    //   FOV 5.0  → 0.024
+    //   FOV 34   → 0.005
+    const fovScale = Math.min(1, 0.05 / Math.pow(Math.max(this.fov_au, 0.03), 0.7));
     const logScaled = Math.max(floor, rawLogScaled * fovScale);
 
     // Real physical pixel size at the current zoom level

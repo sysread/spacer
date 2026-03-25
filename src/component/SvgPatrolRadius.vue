@@ -88,21 +88,12 @@ export default {
 
   methods: {
     update() {
+      // Snap to position. Sub-step interpolation provides smooth motion;
+      // tweening on top causes elastic overlap between sub-step updates.
       const [x, y] = this.point;
-      const r = this.radius;
-      const target = { x, y, r };
-
-      if (this.tween)
-        this.tween.kill();
-
-      if (!this._mounted || !this.intvl) {
-        Object.assign(this.$data, target);
-        this._mounted = true;
-        return;
-      }
-
-      this.tween = Tween(this.$data, this.intvl, target);
-      this.tween.play();
+      this.x = x;
+      this.y = y;
+      this.r = this.radius;
     },
   },
 

@@ -1,15 +1,36 @@
 <template>
   <nav id="spacer-status" class="spacer-header fixed-top navbar navbar-dark">
-    <span class="navbar-text text-capitalize" id="spacer-location">
-      <template v-if="inTransit">&#10147;</template>
-      {{locus}}
-    </span>
+    <!-- Desktop: single row of items -->
+    <div class="d-none d-sm-flex w-100 justify-content-between">
+      <span class="navbar-text text-capitalize">
+        <template v-if="inTransit">&#10147;</template>
+        {{locus}}
+      </span>
+      <span class="navbar-text">{{$csn(money)}} c</span>
+      <span class="navbar-text">{{cargoUsed}}/{{cargoSpace}} cu</span>
+      <span class="navbar-text">{{$csn(mass)}} tonnes</span>
+      <span class="navbar-text">Fuel {{fuelPct}}%</span>
+      <span class="navbar-text">{{date}}</span>
+    </div>
 
-    <span class="navbar-text">{{$csn(money)}} c</span>
-    <span class="navbar-text">{{cargoUsed}}/{{cargoSpace}} cu</span>
-    <span class="navbar-text d-none d-sm-inline">{{$csn(mass)}} tonnes</span>
-    <span class="navbar-text">Fuel {{fuelPct}}%</span>
-    <span class="navbar-text">{{date}}</span>
+    <!-- Mobile: two-row grid layout.
+         Left side: 2x2 grid of money/cargo/mass/fuel.
+         Right side: 1x2 stack of location and date. -->
+    <div class="d-flex d-sm-none w-100 status-mobile">
+      <div class="status-mobile-stats">
+        <span class="navbar-text">{{$csn(money)}} c</span>
+        <span class="navbar-text">{{cargoUsed}}/{{cargoSpace}} cu</span>
+        <span class="navbar-text">{{$csn(mass)}} t</span>
+        <span class="navbar-text">Fuel {{fuelPct}}%</span>
+      </div>
+      <div class="status-mobile-info">
+        <span class="navbar-text text-capitalize">
+          <template v-if="inTransit">&#10147;</template>
+          {{locus}}
+        </span>
+        <span class="navbar-text">{{date}}</span>
+      </div>
+    </div>
   </nav>
 </template>
 
@@ -36,3 +57,34 @@ export default {
   },
 };
 </script>
+
+<style>
+/* Mobile status bar: 2x2 stats grid on left, location/date stack on right */
+.status-mobile {
+  align-items: center;
+}
+
+.status-mobile-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 0.75rem;
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+  font-family: monospace;
+}
+
+.status-mobile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.status-mobile-info .navbar-text,
+.status-mobile-stats .navbar-text {
+  font-size: 0.7rem;
+  padding: 0;
+  line-height: 1.3;
+}
+</style>
