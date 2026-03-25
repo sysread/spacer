@@ -71,7 +71,11 @@ export default {
 
     update() {
       const [x, y] = this.point;
-      const d = this.diameter;
+      // Compute diameter directly from layout instead of using the cached
+      // computed property. The layout's fov_au changes in GSAP's onUpdate
+      // which isn't visible to Vue's reactivity — the computed would
+      // return a stale value, causing the label to lag behind the body.
+      const d = this.layout.scale_body_diameter(this.body);
 
       // Always snap to position rather than tweening. The high-resolution
       // orbit sub-steps (4x per turn) provide smooth inter-turn motion;

@@ -68,12 +68,12 @@
 
             <template v-for="(seg, i) in plan.path" :key="'path-'+i">
               <!-- Flare ring: persists after the turn advances, fades via its own animation -->
-              <circle v-if="i <= plan.current_turn && i > plan.current_turn - 8"
+              <circle v-if="i <= visualTurn && i > visualTurn - 8"
                 :cx="layout.scale_point(seg.position)[0]"
                 :cy="layout.scale_point(seg.position)[1]"
                 r="1.5" :fill="flareColor(i)" filter="url(#glow)"
                 class="transit-flash"
-                :style="'animation-delay: -' + (plan.current_turn - i) * 0.3 + 's'" />
+                :style="'animation-delay: -' + (visualTurn - i) * 0.3 + 's'" />
 
               <!-- Base dot -->
               <circle
@@ -254,6 +254,11 @@ export default {
       enteredParentTerritory: false,
       turnIntervals:         turnIntervals,
 
+      // Visual turn: used for dot rendering instead of plan.current_turn.
+      // Updated inside the tween's onComplete so dots change at the same
+      // moment the ship arrives at the new position, not before.
+      visualTurn:        0,
+
       // animated values
       patrolpct:         0,
       piracypct:         0,
@@ -262,11 +267,11 @@ export default {
     };
   },
 
-  watch: {
-    'plan.current_turn': function() {
-      if (this.started) this.update();
-    },
-  },
+  /* No watcher on plan.current_turn. The animation loop is driven by
+   * interval() → update() → tween onComplete → interval(). A watcher
+   * would fire synchronously when interval() advances the turn, starting
+   * a new tween before the current one completes — causing overlapping
+   * animations and jerkiness. */
 
   computed: {
     plan()         { return this.game.transit_plan },
@@ -623,7 +628,7 @@ export default {
 
     // Trajectory dot color: past dots colored by speed, future is grey
     dotColor(i) {
-      if (i < this.plan.current_turn) return '#6af';
+      if (i < this.visualTurn) return '#6af';
       return '#555';
     },
 
@@ -654,9 +659,9 @@ export default {
     // Trajectory dot opacity: comet tail fades behind the ship.
     // The most recent 20 turns are fully visible, then fade over the next 30.
     dotOpacity(i) {
-      if (i >= this.plan.current_turn) return 1; // future dots: full opacity
+      if (i >= this.visualTurn) return 1; // future dots: full opacity
 
-      const age = this.plan.current_turn - i;
+      const age = this.visualTurn - i;
       const tailLength = 20; // fully visible portion
       const fadeLength = 30; // fading portion
 
@@ -674,12 +679,24 @@ export default {
     bodyPosition(body) {
       const orbit = this.orbitsHiRes[body];
       if (!orbit) return system.position(body);
-      // bodySubStep is tweened as a float; floor it for array indexing.
-      const idx = Math.min(
-        Math.floor(this.plan.current_turn * this.orbitSubsteps + this.bodySubStep),
-        orbit.length - 1
-      );
-      return orbit[idx];
+
+      // bodySubStep is tweened as a float by GSAP. Instead of flooring to a
+      // discrete index (which causes visible jumps), interpolate between the
+      // two adjacent hi-res positions for perfectly smooth motion that stays
+      // in sync with the ship's tween.
+      const rawIdx = this.plan.current_turn * this.orbitSubsteps + this.bodySubStep;
+      const maxIdx = orbit.length - 1;
+      const lo = Math.min(Math.floor(rawIdx), maxIdx);
+      const hi = Math.min(lo + 1, maxIdx);
+      const frac = rawIdx - Math.floor(rawIdx);
+
+      const a = orbit[lo];
+      const b = orbit[hi];
+      return [
+        a[0] + (b[0] - a[0]) * frac,
+        a[1] + (b[1] - a[1]) * frac,
+        a[2] + (b[2] - a[2]) * frac,
+      ];
     },
 
     // Per-turn resolution position, used by center/FOV calculations where
@@ -722,7 +739,7 @@ export default {
       }).play();
     },
 
-    update() {
+    update(preTurnCenter, preTurnFov) {
       const targetCenter = this.center;
       const targetFov = this.fov();
       const currentPhase = this.transitPhase;
@@ -735,7 +752,6 @@ export default {
       if (this.lastPhase && this.lastPhase !== currentPhase) {
         this.lastPhase = currentPhase;
         this.transitionView(targetCenter, targetFov, () => {
-          // Resume transit after the view transition completes
           this._lastCenter = targetCenter;
           requestAnimationFrame(() => this.interval());
         });
@@ -745,33 +761,52 @@ export default {
       this.lastPhase = currentPhase;
       this._lastCenter = targetCenter;
 
-      // During depart/arrive, interpolate center and FOV toward targets
-      // rather than snapping. This prevents the view from lurching as the
-      // ship moves and the FOV shrinks/grows each turn. During cruise the
-      // center barely changes so snapping is fine.
-      if (currentPhase === 'cruise') {
-        this.layout.set_center(targetCenter);
-        this.layout.set_fov_au(targetFov);
-      } else {
-        const blend = 0.40;
-        const curFov = this.layout.fov_au || targetFov;
-        this.layout.set_fov_au(curFov + (targetFov - curFov) * blend);
-        this.layout.set_center(targetCenter);
-      }
+      // Use the pre-turn center/FOV as the starting point for interpolation.
+      // These were captured BEFORE the game state advanced, so they match
+      // what was on screen when the previous tween finished. This eliminates
+      // the per-turn jerk caused by the layout jumping to the new turn's
+      // values before the tween starts interpolating.
+      const startFov = preTurnFov || this.layout.fov_au || targetFov;
+      const startCenter = preTurnCenter || this._lastCenter || targetCenter;
+      // Single unified tween driving a progress value (0→1). The onUpdate
+      // callback synchronously updates ALL visual state — center, FOV, ship
+      // position, and bodySubStep — in a single operation, then triggers one
+      // Vue re-render. This prevents the jerk caused by GSAP and Vue's
+      // reactive system updating different things at different times.
+      const tweenState = { p: 0 };
       this.bodySubStep = 0;
 
-      const [x, y] = this.layout.scale_point(this.plan.coords);
+      Tween(tweenState, this.intvl, {
+        p: 1,
+        onUpdate: () => {
+          const p = tweenState.p;
 
-      // Tween bodySubStep from 0 to ORBIT_SUBSTEPS-1 alongside the ship
-      // position, so body orbit positions advance smoothly between turns.
-      Tween(this.$data, this.intvl, {
-        patrolpct:    this.patrolRate,
-        piracypct:    this.piracyRate,
-        shipx:        x,
-        shipy:        y,
-        bodySubStep:  this.orbitSubsteps - 1,
+          // Center and FOV
+          const cx = startCenter[0] + (targetCenter[0] - startCenter[0]) * p;
+          const cy = startCenter[1] + (targetCenter[1] - startCenter[1]) * p;
+          const cz = startCenter[2] + (targetCenter[2] - startCenter[2]) * p;
+          this.layout.set_center([cx, cy, cz]);
+          this.layout.set_fov_au(startFov + (targetFov - startFov) * p);
+
+          // Body sub-step (drives bodyPosition interpolation)
+          this.bodySubStep = p * (this.orbitSubsteps - 1);
+
+          // Ship screen position in the updated coordinate frame
+          const [sx, sy] = this.layout.scale_point(this.plan.coords);
+          this.shipx = sx;
+          this.shipy = sy;
+
+          // Patrol/piracy indicators
+          this.patrolpct = this.patrolRate;
+          this.piracypct = this.piracyRate;
+        },
         onComplete: () => {
+          this.layout.set_center(targetCenter);
+          this.layout.set_fov_au(targetFov);
           this.bodySubStep = 0;
+          // Advance visual turn AFTER the tween completes, so dots change
+          // color at the same moment the ship reaches the new position.
+          this.visualTurn = this.plan.current_turn;
           requestAnimationFrame(() => this.interval());
         },
       }).play();
@@ -981,10 +1016,20 @@ export default {
         }
       }
 
+      // Capture pre-turn layout state so the tween can interpolate
+      // smoothly from the current visual state to the new turn's target.
+      // Must happen before plan.turn() advances the game state.
+      const preTurnCenter = [...this.center];
+      const preTurnFov = this.layout.fov_au;
+
       this.plan.turn();
       this.game.player.ship.burn(this.plan.accel);
+      this.game.turn(1, true);
 
-      this.$nextTick(() => this.game.turn(1, true));
+      // Drive the animation directly rather than via a watcher on
+      // plan.current_turn, which would fire synchronously and start
+      // a new tween before the current one completes.
+      this.update(preTurnCenter, preTurnFov);
     },
 
     complete() {
