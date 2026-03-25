@@ -260,21 +260,70 @@ export class Layout {
    * its true scaled size; moons and asteroids get a large boost to remain
    * visible when zoomed out.
    */
+  /**
+   * Displayed body diameter in pixels. Uses a logarithmic scale for the
+   * minimum display size so bodies are always visible and proportional to
+   * each other, regardless of zoom level. When zoomed in close enough that
+   * the body's real physical size exceeds the log minimum, the real size
+   * takes over seamlessly.
+   *
+   * This replaces the old boost-factor approach (200x/80x/10x) which was
+   * brittle and caused moons to appear as large as their parent planets
+   * at close zoom. The log scale naturally compresses the enormous diameter
+   * range (Phobos 22km → Sun 1.4M km) into a manageable pixel range while
+   * preserving relative proportions.
+   *
+   * Hierarchy: displayed = max(pixel_floor, log_scaled, real_physical)
+   *   - Zoomed out: log_scaled wins (always visible, proportional)
+   *   - Medium zoom: still log_scaled
+   *   - Close zoom: real_physical takes over naturally
+   *   - Any zoom: pixel_floor prevents sub-pixel invisibility
+   */
   scale_body_diameter(body: string) {
-    const diameter = system.body(body).radius * 2;
+    const diameter = system.body(body).radius * 2; // meters
     const is_tiny  = diameter < 3200000;
-    const is_huge  = diameter > 10000000;
 
-    const adjust = body == 'sun' ? 1
-                 : is_huge ? 10
-                 : is_tiny ? 200
-                 : 80;
+    // Absolute minimum pixel size to ensure visibility at any zoom
+    const floor = is_tiny ? 1 : 3;
 
-    const factor = this.fov_au + Math.log2(Math.max(1, this.fov_au));
-    const amount = util.clamp(adjust * factor, 1);
-    const min    = is_tiny ? 1 : 3;
-    const result = util.clamp(diameter * this.px_per_meter * amount, min, this.scale_px);
-    return result;
+    // Log-scaled minimum: maps the body's physical diameter to a
+    // proportional pixel size. log10 compresses the range:
+    //   Phobos (22km):       log10(22000)      ≈ 4.3  →  ~1px
+    //   Moon (3,474km):      log10(3474000)     ≈ 6.5  →  ~2px
+    //   Mars (6,779km):      log10(6779000)     ≈ 6.8  →  ~5px
+    //   Earth (12,742km):    log10(12742000)    ≈ 7.1  →  ~9px
+    //   Jupiter (139,820km): log10(139820000)   ≈ 8.1  →  ~25px
+    //   Sun (1,392,000km):   log10(1392000000)  ≈ 9.1  →  ~40px
+    const logDiam = Math.log10(Math.max(diameter, 1));
+    const logMin = 4.0;   // log10 of smallest tracked body (~10km)
+    const logMax = 9.5;   // log10 of the sun
+    const pxMin  = 1;     // pixels at the smallest log value
+    const pxMax  = 40;    // pixels at the largest log value
+
+    const t = util.clamp((logDiam - logMin) / (logMax - logMin), 0, 1);
+    const rawLogScaled = pxMin + (pxMax - pxMin) * t;
+
+    // Scale the log minimum by FOV to prevent overlap at wider views.
+    // At close zoom (FOV < 0.02 AU) the full log sizes apply — you're
+    // looking at one body or a tight cluster. As FOV grows, the log sizes
+    // shrink so bodies separate visually. At wide FOV (> 5 AU) bodies
+    // approach their pixel floor.
+    //
+    //   FOV 0.02 → 1.00 (full log size)
+    //   FOV 0.1  → 0.45 (Saturn visible, moons distinct)
+    //   FOV 0.5  → 0.20 (inner solar system)
+    //   FOV 1.0  → 0.14
+    //   FOV 5.0  → 0.06
+    //   FOV 34   → 0.02
+    const fovScale = Math.min(1, 0.02 / Math.pow(Math.max(this.fov_au, 0.02), 0.7));
+    const logScaled = Math.max(floor, rawLogScaled * fovScale);
+
+    // Real physical pixel size at the current zoom level
+    const realPx = diameter * this.px_per_meter;
+
+    // Use whichever is larger: the proportional log minimum or the real size.
+    // Capped at scale_px so bodies can't exceed the viewport.
+    return util.clamp(Math.max(floor, logScaled, realPx), floor, this.scale_px);
   }
 
   /** Returns true if the scaled screen position is within the viewport bounds. */

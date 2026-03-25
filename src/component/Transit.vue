@@ -56,7 +56,7 @@
             <!-- Thin line connecting all transit path points, rendered behind the
                  dots to give visual continuity to the trajectory at all zoom levels. -->
             <SvgPath
-              :points="layout.scale_path(plan.path.map(s => s.position), 300)"
+              :points="plan.path.map(s => layout.scale_point(s.position))"
               color="#333" line="0.5px" smooth />
 
             <defs>
@@ -177,7 +177,7 @@ export default {
       const SEC_PER_AU = 3.5;
       const CLOSE_INTERVAL = 0.60;  // fixed interval for close-range turns
       const distAU = Physics.distance(plan.path[0].position, plan.path[turns].position) / Physics.AU;
-      const cruiseTarget = Math.max(distAU * SEC_PER_AU, 5);
+      const cruiseTarget = util.clamp(distAU * SEC_PER_AU, 5, 30);
 
       const maxVel = plan.maxVelocity || 1;
       const closeRange = data.turns_per_day * 3;
@@ -544,6 +544,50 @@ export default {
       return maxDist;
     },
 
+    // Returns the distance (in AU) from centerPos to the farthest remaining
+    // transit path point. Used to prevent the FOV from clipping the trajectory
+    // during stern chases where the ship trails the destination.
+    _farthestRemainingPathDist(centerPos) {
+      let maxDist = 0;
+      for (let i = this.plan.current_turn; i <= this.plan.turns; i++) {
+        const seg = this.plan.path[i];
+        if (seg) {
+          const dist = Physics.distance(seg.position, centerPos) / Physics.AU;
+          if (dist > maxDist) maxDist = dist;
+        }
+      }
+      return maxDist;
+    },
+
+    // Finds the FOV at which the body's displayed image fills `fraction`
+    // of the viewport's smaller dimension. Uses binary search because
+    // scale_body_diameter is non-linear (boost factors + log scaling).
+    // Temporarily mutates layout._fov_au during the search and restores it.
+    _bodyProminenceFov(body, isMoon) {
+      const target = isMoon ? system.central(body) : body;
+      const targetPx = 0.175 * (this.layout.scale_px || 400);
+      const origFov = this.layout._fov_au;
+
+      // Binary search for the FOV where displayed diameter >= targetPx.
+      // lo = most zoomed in (smallest FOV), hi = most zoomed out.
+      let lo = 0.0001;
+      let hi = 2.0;
+
+      for (let i = 0; i < 30; i++) {
+        const mid = (lo + hi) / 2;
+        this.layout._fov_au = mid;
+        const diam = this.layout.scale_body_diameter(target);
+        if (diam >= targetPx) {
+          lo = mid; // body still big enough, try zooming out more
+        } else {
+          hi = mid; // body too small, zoom in
+        }
+      }
+
+      this.layout._fov_au = origFov;
+      return lo;
+    },
+
     // Trajectory dot color: past dots colored by speed, future is grey
     dotColor(i) {
       if (i < this.plan.current_turn) return '#6af';
@@ -668,11 +712,19 @@ export default {
       this.lastPhase = currentPhase;
       this._lastCenter = targetCenter;
 
-      // Normal turn: set center/FOV and animate ship position.
-      // Body sub-steps advance during the tween so planet/moon positions
-      // update smoothly between turns instead of jumping linearly.
-      this.layout.set_center(targetCenter);
-      this.layout.set_fov_au(targetFov);
+      // During depart/arrive, interpolate center and FOV toward targets
+      // rather than snapping. This prevents the view from lurching as the
+      // ship moves and the FOV shrinks/grows each turn. During cruise the
+      // center barely changes so snapping is fine.
+      if (currentPhase === 'cruise') {
+        this.layout.set_center(targetCenter);
+        this.layout.set_fov_au(targetFov);
+      } else {
+        const blend = 0.25;
+        const curFov = this.layout.fov_au || targetFov;
+        this.layout.set_fov_au(curFov + (targetFov - curFov) * blend);
+        this.layout.set_center(targetCenter);
+      }
       this.bodySubStep = 0;
 
       const [x, y] = this.layout.scale_point(this.plan.coords);
@@ -732,14 +784,16 @@ export default {
 
       switch (this.transitPhase) {
         case 'depart': {
-          // Floor the FOV at the outermost moon's orbit so all moons in the
-          // system are visible during departure. For planets without moons,
-          // fall back to the patrol radius.
+          // Three competing constraints for the FOV floor:
+          // 1) All moons in the system must be visible
+          // 2) The central body should fill ~17.5% of the viewport
+          // 3) The patrol radius should be visible
+          // We take the largest (most zoomed out) to satisfy all three,
+          // but cap at cruiseFov so we don't zoom past the full transit view.
           const origParent = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
-          const systemRadius = this._maxMoonOrbitRadius(origParent);
-          const minFov = systemRadius > 0
-            ? systemRadius * EDGE_BUFFER
-            : this._patrolRadius(this.plan.origin, false) / Physics.AU;
+          const moonFov = this._maxMoonOrbitRadius(origParent) * EDGE_BUFFER;
+          const bodyFov = this._bodyProminenceFov(this.plan.origin, this.origIsMoon);
+          const minFov = Math.max(moonFov, bodyFov);
           return Math.min(Math.max(shipDist * EDGE_BUFFER, minFov), this.cruiseFov());
         }
 
@@ -748,15 +802,21 @@ export default {
         }
 
         case 'arrive': {
-          // Floor the FOV at the outermost moon's orbit so all moons in the
-          // destination system are visible on approach. For planets without
-          // moons, zoom all the way in to the ship's distance.
+          // Four constraints for the arrive FOV floor:
+          // 1) All moons in the destination system visible
+          // 2) Central body fills ~17.5% of viewport
+          // 3) Patrol radius visible
+          // 4) All remaining transit path points visible (stern chase)
           const destParent = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
-          const destSystemRadius = this._maxMoonOrbitRadius(destParent);
-          const arriveMinFov = destSystemRadius > 0
-            ? destSystemRadius * EDGE_BUFFER
-            : 0.001;
-          return Math.min(Math.max(shipDist * EDGE_BUFFER, arriveMinFov), this.cruiseFov());
+          const destMoonFov = this._maxMoonOrbitRadius(destParent) * EDGE_BUFFER;
+          const destBodyFov = this._bodyProminenceFov(this.plan.dest, this.destIsMoon);
+          const farthestPathDist = this._farthestRemainingPathDist(centerPos) * EDGE_BUFFER;
+          const arriveMinFov = Math.max(destMoonFov, destBodyFov, farthestPathDist);
+
+          return Math.min(
+            Math.max(shipDist * EDGE_BUFFER, arriveMinFov),
+            this.cruiseFov()
+          );
         }
       }
     },
