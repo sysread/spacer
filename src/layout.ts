@@ -362,14 +362,15 @@ export class Layout {
 
     const elHeight = (id: string) => document.getElementById(id)?.getBoundingClientRect().height || 0;
 
+    // Available height: from the element's top edge to the bottom of the
+    // viewport, minus the fixed bottom navbar. The element's top position
+    // already accounts for the status bar and toolbar above it — don't
+    // subtract those again (that was a double-counting bug that made the
+    // plot area nearly square instead of using the full available height).
     const height
       = window.innerHeight
-      + window.scrollY
       - this.elt.getBoundingClientRect().top
-      - elHeight('spacer-status')
-      - elHeight('spacer-navbar')
-      - elHeight('navcomp-toolbar')
-      - elHeight('navcomp-transit-info');
+      - elHeight('spacer-navbar');
 
     const width = this.elt.parentElement?.getBoundingClientRect().width || 0;
     const changed = width != this.width_px || height != this.height_px;

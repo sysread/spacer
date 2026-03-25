@@ -58,6 +58,15 @@ body {
   font-size: 0.81rem;
 }
 
+/* Bump font size on mobile so text is readable on small screens.
+   0.81rem is tuned for desktop; mobile needs ~0.9rem to compensate
+   for the smaller viewport and typical viewing distance. */
+@media (max-width: 575.98px) {
+  body {
+    font-size: 0.9rem;
+  }
+}
+
 .section-wrapper {
   margin-bottom: 15px;
   position: relative;
