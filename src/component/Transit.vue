@@ -573,26 +573,13 @@ export default {
       return maxDist;
     },
 
-    // Returns a FOV that provides a visually close zoom on the body.
-    // For moons, uses the moon's orbital radius around its parent —
-    // this is the physical scale of the system (e.g. Triton orbits
-    // Neptune at 0.0024 AU). Patrol radius would be ~100x larger and
-    // force the view so wide that the moon hides behind its parent.
-    // For planets, uses a fraction of the patrol radius as the
-    // reference scale.
-    _bodyProminenceFov(body, isMoon) {
-      if (isMoon) {
-        const parent = system.central(body);
-        const moonPos = this.bodyPositionTurn(body);
-        const parentPos = this.bodyPositionTurn(parent);
-        const orbitAU = Physics.distance(moonPos, parentPos) / Physics.AU;
-        // 3x the orbital radius gives comfortable context around
-        // the moon system without zooming so far that bodies compress.
-        return orbitAU * 3;
-      }
-
-      const patrolAU = this._patrolRadius(body, false) / Physics.AU;
-      return patrolAU / 3;
+    // Minimum FOV for a body based on its physical size. Uses 7.5x
+    // the diameter (in AU) so the body image fills a comfortable
+    // fraction of the viewport at maximum zoom. Matches the navcomp
+    // initial zoom formula. Floor of 0.0001 AU for tiny bodies.
+    _bodyFovFloor(body) {
+      const radius = system.body(body).radius; // meters
+      return Math.max(radius * 2 * 7.5 / Physics.AU, 0.0001);
     },
 
     // Trajectory dot color: past dots colored by speed, future is grey
@@ -853,8 +840,7 @@ export default {
           // initial FOV ~100x wider than the moon system.
           const origParent = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
           const moonFov = this._maxMoonOrbitRadius(origParent) * EDGE_BUFFER;
-          const bodyFov = this._bodyProminenceFov(this.plan.origin, this.origIsMoon);
-          const minFov = Math.max(moonFov, bodyFov);
+          const minFov = Math.max(moonFov, 0.01);
           return Math.min(Math.max(shipDist * EDGE_BUFFER, minFov), this.cruiseFov());
         }
 
@@ -863,14 +849,14 @@ export default {
         }
 
         case 'arrive': {
-          // Two constraints for the arrive FOV floor:
-          // 1) All moons in the destination system visible
-          // 2) The body should be at a comfortable visual size
-          // shipDist * EDGE_BUFFER tracks the ship's approach naturally.
+          // The FOV tracks shipDist as it shrinks, progressively zooming
+          // in on the destination. The floor ensures we stop zooming at
+          // a useful level: the outermost moon orbit (so all satellites
+          // are visible) or 0.01 AU (a comfortable close-up), whichever
+          // is wider.
           const destParent = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
           const destMoonFov = this._maxMoonOrbitRadius(destParent) * EDGE_BUFFER;
-          const destBodyFov = this._bodyProminenceFov(this.plan.dest, this.destIsMoon);
-          const arriveMinFov = Math.max(destMoonFov, destBodyFov);
+          const arriveMinFov = Math.max(destMoonFov, 0.01);
           return Math.min(
             Math.max(shipDist * EDGE_BUFFER, arriveMinFov),
             this.cruiseFov()

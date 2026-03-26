@@ -118,17 +118,9 @@ export function computeMapFovAU(
   allBodiesFn: () => string[],
 ): number {
   if (!dest) {
-    // Start zoomed in on the local area. For moons, show the moon
-    // system (3x orbital radius to parent). For planets, use a
-    // tight initial view centered on the body's position.
-    const central = centralFn(locus);
-    if (central !== 'sun') {
-      // Moon: FOV from orbital distance to parent, with margin
-      const locusPos = positionFn(locus);
-      const centralPos = positionFn(central);
-      const orbitDist = Physics.distance(locusPos, centralPos) / Physics.AU;
-      return Math.max(orbitDist * 3, 0.01);
-    }
+    // Initial FOV without a destination is handled by the caller
+    // (NavCompPanel.map_fov_au) which has direct access to body
+    // radius data. This fallback should not normally be reached.
     return 0.01;
   }
 

@@ -58,6 +58,7 @@
 <script>
 import Layout from './layout';
 import { NavComp } from '../navcomp';
+import Physics from '../physics';
 import system from '../system';
 import * as nc from './navcomp-controller';
 
@@ -158,6 +159,26 @@ export default {
     },
 
     map_fov_au() {
+      // No destination: zoom proportional to body size so the body
+      // image fills a comfortable fraction of the viewport. ~15x the
+      // diameter in AU gives good results across the size range:
+      //   Ceres (952km)   → ~0.0001 AU
+      //   Mars (6,780km)  → ~0.0007 AU
+      //   Jupiter (140Mm) → ~0.014 AU
+      if (!this.dest) {
+        const central = system.central(this.game.locus);
+        if (central !== 'sun') {
+          const locusPos = this.system.position(this.game.locus);
+          const centralPos = this.system.position(central);
+          const orbitDist = Physics.distance(locusPos, centralPos) / Physics.AU;
+          return Math.max(orbitDist * 3, 0.0001);
+        }
+        // fov_au is half-width; display shows fov_au * 2. Use 7.5x
+        // diameter so the displayed FOV is ~15x diameter.
+        const radius = this.system.body(this.game.locus).radius;
+        return Math.max(radius * 2 * 7.5 / Physics.AU, 0.0001);
+      }
+
       return nc.computeMapFovAU(
         this.dest, this.game.locus, this.transit, this.isSubSystemTransit,
         this.map_center_point,
