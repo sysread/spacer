@@ -7,11 +7,7 @@
         </div>
       </div>
 
-      <card v-if="arriving" title="Arriving">
-        <h4>Docking at your reserved berth</h4>
-      </card>
-
-      <template v-else>
+      <template v-if="plan">
         <table id="navcomp-transit-info" class="table table-sm m-0" :style="{width: show_plot() && layout ? layout.width_px + 'px' : '100%'}"><tbody>
           <tr>
             <td class="text-start border-0">{{$unit(plan.days_left, 'days')}}</td>
@@ -28,7 +24,9 @@
         <div v-layout ref="plot" v-show="show_plot()" id="transit-plot-root" :style="layout_css_dimensions" class="plot-root border border-dark">
           <div class="plot-root-bg" :class="bg_class()" :style="bg_css()"></div>
 
-          <SvgPlot v-if="layout && layout.width_px > 0 && started" :width="layout.width_px" :height="layout.height_px">
+          <!-- _renderTick dependency forces Vue to re-render when the tween
+               updates non-reactive state (layout center/FOV, _bodySubStep). -->
+          <SvgPlot v-if="layout && layout.width_px > 0 && started" :width="layout.width_px + _renderTick * 0" :height="layout.height_px">
             <line x1=130 y1=13 :x2="patrolpct * layout.width_px + 130" y2=13 stroke="green" stroke-width="14" />
             <text style="fill:red; font:12px monospace" x=5 y=17>Patrol:&nbsp;{{$pct(patrolRate, 2)}}</text>
 
@@ -87,6 +85,9 @@
             <!-- Ship icon removed; the flare dot on the current turn serves
                  as the ship's visual position. -->
           </SvgPlot>
+
+          <!-- Docking overlay: shown on the frozen map after the final turn -->
+          <div v-if="docking" class="transit-docking">Docking</div>
         </div>
 
         <PatrolEncounter
@@ -242,10 +243,10 @@ export default {
       orbitsHiRes:       orbitsHiRes,
       orbitSubsteps:     ORBIT_SUBSTEPS,
       closeRange:        CLOSE_RANGE,
-      bodySubStep:       0, // 0..ORBIT_SUBSTEPS-1, advanced during tween
       orbits:            orbits,
       started:           false,
       arriving:          false,
+      docking:           false,
 
       lastPhase:         null, // track phase transitions
       encounterTimeCost: null,
@@ -259,12 +260,25 @@ export default {
       // moment the ship arrives at the new position, not before.
       visualTurn:        0,
 
+      // Reactive render trigger. Incremented in onUpdate to force Vue to
+      // re-render the template after ALL non-reactive state (layout center/FOV,
+      // _bodySubStep) has been set. Using a single counter instead of multiple
+      // reactive values prevents partial-state re-renders.
+      _renderTick:       0,
+
       // animated values
       patrolpct:         0,
       piracypct:         0,
-      shipx:             0,
-      shipy:             0,
     };
+  },
+
+  // Non-reactive body sub-step. Stored outside Vue's reactivity system
+  // so that changes during the tween don't trigger premature re-renders.
+  // Body positions are updated imperatively in the tween's onUpdate,
+  // which prevents the one-frame backward jump that occurred when Vue
+  // re-rendered between setting bodySubStep=0 and the first onUpdate.
+  created() {
+    this._bodySubStep = 0;
   },
 
   /* No watcher on plan.current_turn. The animation loop is driven by
@@ -377,10 +391,10 @@ export default {
     // Uses the hi-res orbit data so the arc tracks smoothly with the body's
     // displayed position (which also uses hi-res sub-steps).
     destOrbitArc() {
-      if (!this.plan) return [];
+      if (!this.plan || this.arriving) return [];
       const orbit = this.orbitsHiRes[this.plan.dest];
       if (!orbit) return [];
-      const startIdx = Math.floor(this.plan.current_turn * this.orbitSubsteps + this.bodySubStep);
+      const startIdx = Math.floor(this.plan.current_turn * this.orbitSubsteps + this._bodySubStep);
       const endIdx = this.plan.turns * this.orbitSubsteps;
       return orbit.slice(
         Math.min(startIdx, orbit.length - 1),
@@ -684,7 +698,7 @@ export default {
       // discrete index (which causes visible jumps), interpolate between the
       // two adjacent hi-res positions for perfectly smooth motion that stays
       // in sync with the ship's tween.
-      const rawIdx = this.plan.current_turn * this.orbitSubsteps + this.bodySubStep;
+      const rawIdx = this.plan.current_turn * this.orbitSubsteps + this._bodySubStep;
       const maxIdx = orbit.length - 1;
       const lo = Math.min(Math.floor(rawIdx), maxIdx);
       const hi = Math.min(lo + 1, maxIdx);
@@ -774,7 +788,7 @@ export default {
       // Vue re-render. This prevents the jerk caused by GSAP and Vue's
       // reactive system updating different things at different times.
       const tweenState = { p: 0 };
-      this.bodySubStep = 0;
+      this._bodySubStep = 0;
 
       Tween(tweenState, this.intvl, {
         p: 1,
@@ -789,24 +803,23 @@ export default {
           this.layout.set_fov_au(startFov + (targetFov - startFov) * p);
 
           // Body sub-step (drives bodyPosition interpolation)
-          this.bodySubStep = p * (this.orbitSubsteps - 1);
+          this._bodySubStep = p * (this.orbitSubsteps - 1);
 
-          // Ship screen position in the updated coordinate frame
-          const [sx, sy] = this.layout.scale_point(this.plan.coords);
-          this.shipx = sx;
-          this.shipy = sy;
-
-          // Patrol/piracy indicators
-          this.patrolpct = this.patrolRate;
-          this.piracypct = this.piracyRate;
+          // Single reactive trigger AFTER all non-reactive state is set.
+          // Vue batches this with the next render cycle, which will see
+          // consistent layout center/FOV and _bodySubStep values.
+          this._renderTick++;
         },
         onComplete: () => {
           this.layout.set_center(targetCenter);
           this.layout.set_fov_au(targetFov);
-          this.bodySubStep = 0;
-          // Advance visual turn AFTER the tween completes, so dots change
-          // color at the same moment the ship reaches the new position.
+          // Don't reset _bodySubStep here — leave it at substeps-1 until
+          // the next update() sets it to 0 synchronously before the new
+          // tween starts. Resetting here caused a one-frame backward jump
+          // because Vue would re-render with _bodySubStep=0 before the
+          // next tween's onUpdate could advance it.
           this.visualTurn = this.plan.current_turn;
+          this._renderTick++;
           requestAnimationFrame(() => this.interval());
         },
       }).play();
@@ -938,10 +951,6 @@ export default {
             this.layout.set_center(targetCenter);
             this.layout.set_fov_au(targetFov);
 
-            const [x, y] = this.layout.scale_point(this.plan.coords);
-            this.shipx = x;
-            this.shipy = y;
-
             // Initialize phase tracking so the first call to update() sees
             // the current phase as "already active" and doesn't trigger a
             // transition animation. Without this, the depart phase would
@@ -1034,12 +1043,30 @@ export default {
 
     complete() {
       this.arriving = true;
-      this.$nextTick(() => {
+
+      // Freeze the map at the exact final transit position. Set
+      // _bodySubStep to 0 with current_turn at the final turn so
+      // bodyPosition() returns the clamped final orbit position,
+      // matching where the transit path ends. Then trigger one last
+      // render so the map shows the correct frozen state.
+      this._bodySubStep = 0;
+      this.visualTurn = this.plan.current_turn;
+
+      // Set center/FOV to the final arrival state
+      const finalCenter = this.center;
+      const finalFov = this.fov();
+      this.layout.set_center(finalCenter);
+      this.layout.set_fov_au(finalFov);
+      this._renderTick++;
+
+      // Show "Docking" overlay on the frozen map, then transition.
+      this.docking = true;
+      setTimeout(() => {
         this.game.arrive();
         this.game.unfreeze();
         this.game.save_game();
         this.$emit('open', 'summary');
-      });
+      }, 2500);
     },
 
     pause() {
@@ -1202,5 +1229,24 @@ export default {
 
 .transit-flash {
   animation: transit-pulse 1.2s ease-out forwards;
+}
+
+@keyframes docking-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+
+.transit-docking {
+  position: absolute;
+  top: 15%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font: bold 1.5rem monospace;
+  color: #ffdd44;
+  text-shadow: 0 0 8px #ffdd44, 0 0 16px #aa8800;
+  animation: docking-blink 1s ease-in-out infinite;
+  z-index: 10;
+  pointer-events: none;
 }
 </style>
