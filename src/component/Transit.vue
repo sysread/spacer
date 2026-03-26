@@ -83,10 +83,13 @@
 
           <!-- Docking overlay: shown on the frozen map after the final turn -->
           <div v-if="docking" class="transit-docking">DOCKING</div>
+
+          <!-- Encounter alert: klaxon flash before the encounter UI appears -->
+          <div v-if="alerting" class="transit-alert">AWOOOOGA!&nbsp; AWOOOOGA!</div>
         </div>
 
         <PatrolEncounter
-            v-if="encounter && (encounter.type == 'inspection' || encounter.type == 'privateer')"
+            v-if="encounter && !alerting && (encounter.type == 'inspection' || encounter.type == 'privateer')"
             @done="complete_encounter"
             @dead="dead"
             :body="encounter.body"
@@ -97,7 +100,7 @@
             class="my-3" />
 
         <PirateEncounter
-            v-if="encounter && encounter.type == 'pirate'"
+            v-if="encounter && !alerting && encounter.type == 'pirate'"
             @done="complete_encounter"
             @dead="dead"
             :nearest="nearest"
@@ -242,6 +245,7 @@ export default {
       started:           false,
       arriving:          false,
       docking:           false,
+      alerting:          false,
 
       lastPhase:         null, // track phase transitions
       encounterTimeCost: null,
@@ -496,7 +500,7 @@ export default {
 
   methods: {
     dead() { this.$emit('open', 'newgame') },
-    show_plot() { return this.layout && !this.encounter },
+    show_plot() { return this.layout && (!this.encounter || this.alerting) },
 
     // Compute influence radius for a body. For moons whose parent isn't
     // a game planet (e.g. Jupiter), use the largest piracy radius among
@@ -972,7 +976,9 @@ export default {
 
       if (this.plan.is_started && this.is_next_day) {
         if (this.inspectionChance() || this.piracyChance() || this.privateerChance()) {
+          this.alerting = true;
           this.pause();
+          setTimeout(() => { this.alerting = false; }, 1500);
           return;
         }
       }
@@ -1197,6 +1203,26 @@ export default {
   color: #ffdd44;
   text-shadow: 0 0 8px #ffdd44, 0 0 16px #aa8800;
   animation: docking-blink 1s ease-in-out infinite;
+  z-index: 10;
+  pointer-events: none;
+}
+
+@keyframes alert-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.2; }
+}
+
+.transit-alert {
+  position: absolute;
+  top: 15%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font: bold 1.5rem monospace;
+  letter-spacing: 0.3em;
+  color: #ff3333;
+  text-shadow: 0 0 10px #ff3333, 0 0 20px #aa0000;
+  animation: alert-pulse 0.7s ease-in-out infinite;
   z-index: 10;
   pointer-events: none;
 }
