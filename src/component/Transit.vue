@@ -802,8 +802,14 @@ export default {
           this.layout.set_center([cx, cy, cz]);
           this.layout.set_fov_au(startFov + (targetFov - startFov) * p);
 
-          // Body sub-step (drives bodyPosition interpolation)
-          this._bodySubStep = p * (this.orbitSubsteps - 1);
+          // Body sub-step (drives bodyPosition interpolation).
+          // On the final turn, don't advance — the body should stay at
+          // the exact transit endpoint position. Advancing would put it
+          // (substeps-1)/substeps of a turn past where the path ends,
+          // since the hi-res orbit has positions beyond the transit.
+          if (this.plan.left > 0) {
+            this._bodySubStep = p * (this.orbitSubsteps - 1);
+          }
 
           // Single reactive trigger AFTER all non-reactive state is set.
           // Vue batches this with the next render cycle, which will see
@@ -1066,7 +1072,7 @@ export default {
         this.game.unfreeze();
         this.game.save_game();
         this.$emit('open', 'summary');
-      }, 2500);
+      }, 2000);
     },
 
     pause() {
