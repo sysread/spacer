@@ -39,6 +39,7 @@
 
 import Physics from './physics';
 import system from './system';
+import { isCelestialBody } from './system/CelestialBody';
 import { Point } from './vector';
 import * as util from './util';
 
@@ -318,12 +319,38 @@ export class Layout {
     const fovScale = Math.min(1, 0.1 / Math.pow(Math.max(this.fov_au, 0.05), 0.8));
     const logScaled = Math.max(floor, rawLogScaled * fovScale);
 
+    // Cap the log-scaled size by orbital separation so a moon and its
+    // parent planet never visually overlap. Uses the semi-major axis
+    // (already in meters after CelestialBody.adaptData) as the orbital
+    // distance proxy. Each body may occupy at most 40% of the pixel
+    // separation, leaving a 20% gap between neighbors.
+    const bodyObj = system.body(body);
+    let minSepMeters = Infinity;
+
+    if (isCelestialBody(bodyObj)) {
+      // Moon → parent: orbital semi-major axis is the separation
+      if (bodyObj.central && bodyObj.elements) {
+        minSepMeters = bodyObj.elements.base.a;
+      }
+
+      // Planet → closest satellite: closest moon's orbit caps the planet
+      for (const sat of Object.values(bodyObj.satellites || {})) {
+        if (sat.elements) {
+          minSepMeters = Math.min(minSepMeters, sat.elements.base.a);
+        }
+      }
+    }
+
+    const sepCapped = isFinite(minSepMeters)
+      ? Math.max(floor, Math.min(logScaled, minSepMeters * this.px_per_meter * 0.4))
+      : logScaled;
+
     // Real physical pixel size at the current zoom level
     const realPx = diameter * this.px_per_meter;
 
     // Use whichever is larger: the proportional log minimum or the real size.
     // Capped at scale_px so bodies can't exceed the viewport.
-    return util.clamp(Math.max(floor, logScaled, realPx), floor, this.scale_px);
+    return util.clamp(Math.max(floor, sepCapped, realPx), floor, this.scale_px);
   }
 
   /** Returns true if the scaled screen position is within the viewport bounds. */

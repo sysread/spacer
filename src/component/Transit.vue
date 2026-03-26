@@ -573,49 +573,25 @@ export default {
       return maxDist;
     },
 
-    // Returns the distance (in AU) from centerPos to the farthest remaining
-    // transit path point. Used to prevent the FOV from clipping the trajectory
-    // during stern chases where the ship trails the destination.
-    _farthestRemainingPathDist(centerPos) {
-      let maxDist = 0;
-      for (let i = this.plan.current_turn; i <= this.plan.turns; i++) {
-        const seg = this.plan.path[i];
-        if (seg) {
-          const dist = Physics.distance(seg.position, centerPos) / Physics.AU;
-          if (dist > maxDist) maxDist = dist;
-        }
-      }
-      return maxDist;
-    },
-
-    // Returns the distance (in AU) from centerPos to the farthest path point
-    // within the close-range window at the START of the transit. Used during
-    // depart phase so the FOV includes the initial trajectory segment,
-    // preventing the origin from flying off-screen as the ship's vector
-    // diverges from the origin's orbit.
-    _farthestDepartPathDist(centerPos) {
-      let maxDist = 0;
-      const endTurn = Math.min(this.plan.current_turn + this.closeRange, this.plan.turns);
-      for (let i = this.plan.current_turn; i <= endTurn; i++) {
-        const seg = this.plan.path[i];
-        if (seg) {
-          const dist = Physics.distance(seg.position, centerPos) / Physics.AU;
-          if (dist > maxDist) maxDist = dist;
-        }
-      }
-      return maxDist;
-    },
-
     // Returns a FOV that provides a visually close zoom on the body.
-    // With the log-scaled body sizing, bodies never fill a large fraction
-    // of the viewport (they're designed to stay small and proportional).
-    // Instead, use the patrol radius as a reference — zooming to 1/3 of
-    // the patrol radius puts the body at a comfortable visual size with
-    // the patrol sphere partially visible for context.
+    // For moons, uses the moon's orbital radius around its parent —
+    // this is the physical scale of the system (e.g. Triton orbits
+    // Neptune at 0.0024 AU). Patrol radius would be ~100x larger and
+    // force the view so wide that the moon hides behind its parent.
+    // For planets, uses a fraction of the patrol radius as the
+    // reference scale.
     _bodyProminenceFov(body, isMoon) {
-      const patrolAU = this._patrolRadius(body, isMoon) / Physics.AU;
-      // 1/3 of patrol radius gives a close-up that makes the body
-      // clearly visible while showing some surrounding context.
+      if (isMoon) {
+        const parent = system.central(body);
+        const moonPos = this.bodyPositionTurn(body);
+        const parentPos = this.bodyPositionTurn(parent);
+        const orbitAU = Physics.distance(moonPos, parentPos) / Physics.AU;
+        // 3x the orbital radius gives comfortable context around
+        // the moon system without zooming so far that bodies compress.
+        return orbitAU * 3;
+      }
+
+      const patrolAU = this._patrolRadius(body, false) / Physics.AU;
       return patrolAU / 3;
     },
 
@@ -720,12 +696,12 @@ export default {
         cz: targetCenter[2],
         fov: targetFov,
         onUpdate: () => {
-          this.layout.set_center([state.cx, state.cy, state.cz]);
           this.layout.set_fov_au(state.fov);
+          this.layout.set_center([state.cx, state.cy, state.cz]);
         },
         onComplete: () => {
-          this.layout.set_center(targetCenter);
           this.layout.set_fov_au(targetFov);
+          this.layout.set_center(targetCenter);
           this.$forceUpdate();
           callback();
         },
@@ -774,12 +750,16 @@ export default {
         onUpdate: () => {
           const p = tweenState.p;
 
-          // Center and FOV
+          // FOV first, then center. set_fov_au adjusts offsets to
+          // stabilize the pan center during zoom — but when we're about
+          // to overwrite the center anyway, that adjustment corrupts the
+          // offsets set_center is about to compute. Setting FOV first
+          // ensures set_center uses the correct scale.
+          this.layout.set_fov_au(startFov + (targetFov - startFov) * p);
           const cx = startCenter[0] + (targetCenter[0] - startCenter[0]) * p;
           const cy = startCenter[1] + (targetCenter[1] - startCenter[1]) * p;
           const cz = startCenter[2] + (targetCenter[2] - startCenter[2]) * p;
           this.layout.set_center([cx, cy, cz]);
-          this.layout.set_fov_au(startFov + (targetFov - startFov) * p);
 
           // Body sub-step (drives bodyPosition interpolation).
           // On the final turn, don't advance — the body should stay at
@@ -800,8 +780,8 @@ export default {
           this._renderTick++;
         },
         onComplete: () => {
-          this.layout.set_center(targetCenter);
           this.layout.set_fov_au(targetFov);
+          this.layout.set_center(targetCenter);
           // Don't reset _bodySubStep here — leave it at substeps-1 until
           // the next update() sets it to 0 synchronously before the new
           // tween starts. Resetting here caused a one-frame backward jump
@@ -864,18 +844,17 @@ export default {
 
       switch (this.transitPhase) {
         case 'depart': {
-          // Four constraints for the depart FOV floor:
+          // Two constraints for the depart FOV floor:
           // 1) All moons in the system must be visible
-          // 2) The central body should fill ~17.5% of the viewport
-          // 3) The initial trajectory segment (closeRange turns) must be
-          //    visible so the origin doesn't fly off-screen as the ship's
-          //    departure vector diverges from the origin's orbital path
-          // 4) Ship must be visible with buffer
+          // 2) The body should be at a comfortable visual size
+          // The ship's distance from center (shipDist * EDGE_BUFFER)
+          // naturally zooms out as the ship accelerates away — no need
+          // to pre-compute the path lookahead, which was forcing the
+          // initial FOV ~100x wider than the moon system.
           const origParent = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
           const moonFov = this._maxMoonOrbitRadius(origParent) * EDGE_BUFFER;
           const bodyFov = this._bodyProminenceFov(this.plan.origin, this.origIsMoon);
-          const pathFov = this._farthestDepartPathDist(centerPos) * EDGE_BUFFER;
-          const minFov = Math.max(moonFov, bodyFov, pathFov);
+          const minFov = Math.max(moonFov, bodyFov);
           return Math.min(Math.max(shipDist * EDGE_BUFFER, minFov), this.cruiseFov());
         }
 
@@ -884,16 +863,14 @@ export default {
         }
 
         case 'arrive': {
-          // Four constraints for the arrive FOV floor:
+          // Two constraints for the arrive FOV floor:
           // 1) All moons in the destination system visible
-          // 2) Central body fills ~17.5% of viewport
-          // 3) Patrol radius visible
-          // 4) All remaining transit path points visible (stern chase)
+          // 2) The body should be at a comfortable visual size
+          // shipDist * EDGE_BUFFER tracks the ship's approach naturally.
           const destParent = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
           const destMoonFov = this._maxMoonOrbitRadius(destParent) * EDGE_BUFFER;
           const destBodyFov = this._bodyProminenceFov(this.plan.dest, this.destIsMoon);
-          const farthestPathDist = this._farthestRemainingPathDist(centerPos) * EDGE_BUFFER;
-          const arriveMinFov = Math.max(destMoonFov, destBodyFov, farthestPathDist);
+          const arriveMinFov = Math.max(destMoonFov, destBodyFov);
           return Math.min(
             Math.max(shipDist * EDGE_BUFFER, arriveMinFov),
             this.cruiseFov()
@@ -931,13 +908,13 @@ export default {
           cz: targetCenter[2],
           fov: targetFov,
           onUpdate: () => {
-            this.layout.set_center([state.cx, state.cy, state.cz]);
             this.layout.set_fov_au(state.fov);
+            this.layout.set_center([state.cx, state.cy, state.cz]);
           },
           onComplete: () => {
             // Snap to exact target values after tween finishes
-            this.layout.set_center(targetCenter);
             this.layout.set_fov_au(targetFov);
+            this.layout.set_center(targetCenter);
 
             // Initialize phase tracking so the first call to update() sees
             // the current phase as "already active" and doesn't trigger a
