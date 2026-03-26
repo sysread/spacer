@@ -606,33 +606,17 @@ export default {
       return maxDist;
     },
 
-    // Finds the FOV at which the body's displayed image fills `fraction`
-    // of the viewport's smaller dimension. Uses binary search because
-    // scale_body_diameter is non-linear (boost factors + log scaling).
-    // Temporarily mutates layout._fov_au during the search and restores it.
+    // Returns a FOV that provides a visually close zoom on the body.
+    // With the log-scaled body sizing, bodies never fill a large fraction
+    // of the viewport (they're designed to stay small and proportional).
+    // Instead, use the patrol radius as a reference — zooming to 1/3 of
+    // the patrol radius puts the body at a comfortable visual size with
+    // the patrol sphere partially visible for context.
     _bodyProminenceFov(body, isMoon) {
-      const target = isMoon ? system.central(body) : body;
-      const targetPx = 0.175 * (this.layout.scale_px || 400);
-      const origFov = this.layout._fov_au;
-
-      // Binary search for the FOV where displayed diameter >= targetPx.
-      // lo = most zoomed in (smallest FOV), hi = most zoomed out.
-      let lo = 0.0001;
-      let hi = 2.0;
-
-      for (let i = 0; i < 30; i++) {
-        const mid = (lo + hi) / 2;
-        this.layout._fov_au = mid;
-        const diam = this.layout.scale_body_diameter(target);
-        if (diam >= targetPx) {
-          lo = mid; // body still big enough, try zooming out more
-        } else {
-          hi = mid; // body too small, zoom in
-        }
-      }
-
-      this.layout._fov_au = origFov;
-      return lo;
+      const patrolAU = this._patrolRadius(body, isMoon) / Physics.AU;
+      // 1/3 of patrol radius gives a close-up that makes the body
+      // clearly visible while showing some surrounding context.
+      return patrolAU / 3;
     },
 
     // Trajectory dot color: past dots colored by speed, future is grey
@@ -806,9 +790,13 @@ export default {
             this._bodySubStep = p * (this.orbitSubsteps - 1);
           }
 
-          // Single reactive trigger AFTER all non-reactive state is set.
-          // Vue batches this with the next render cycle, which will see
-          // consistent layout center/FOV and _bodySubStep values.
+          // Update patrol/piracy progress bars
+          this.patrolpct = this.patrolRate;
+          this.piracypct = this.piracyRate;
+
+          // Reactive trigger AFTER all state is set. patrolpct/piracypct
+          // above are also reactive, but _renderTick ensures the render
+          // happens even if patrol/piracy values haven't changed.
           this._renderTick++;
         },
         onComplete: () => {
@@ -906,7 +894,6 @@ export default {
           const destBodyFov = this._bodyProminenceFov(this.plan.dest, this.destIsMoon);
           const farthestPathDist = this._farthestRemainingPathDist(centerPos) * EDGE_BUFFER;
           const arriveMinFov = Math.max(destMoonFov, destBodyFov, farthestPathDist);
-
           return Math.min(
             Math.max(shipDist * EDGE_BUFFER, arriveMinFov),
             this.cruiseFov()

@@ -298,24 +298,24 @@ export class Layout {
     const logMin = 4.0;   // log10 of smallest tracked body (~10km)
     const logMax = 9.5;   // log10 of the sun
     const pxMin  = 1;     // pixels at the smallest log value
-    const pxMax  = 40;    // pixels at the largest log value
+    const pxMax  = 80;    // pixels at the largest log value
 
     const t = util.clamp((logDiam - logMin) / (logMax - logMin), 0, 1);
     const rawLogScaled = pxMin + (pxMax - pxMin) * t;
 
     // Scale the log minimum by FOV to prevent overlap at wider views.
-    // Full log sizes apply up to ~0.05 AU (approach/departure zoom).
+    // Full log sizes apply up to ~0.1 AU (approach/departure zoom level).
     // Beyond that, sizes taper so bodies separate visually at wider FOVs.
-    // The numerator (0.05) controls where full size kicks in; the exponent
-    // (0.7) controls how fast sizes shrink beyond that.
+    // The numerator (0.1) controls where full size kicks in; the exponent
+    // (0.8) controls how fast sizes shrink beyond that.
     //
-    //   FOV 0.03 → 1.00 (full log size — close approach)
-    //   FOV 0.1  → 0.40 (moon system — planets visible, moons distinct)
-    //   FOV 0.5  → 0.12
-    //   FOV 1.0  → 0.08
-    //   FOV 5.0  → 0.024
+    //   FOV 0.05 → 1.00 (full log size — close approach)
+    //   FOV 0.1  → 0.56 (moon system)
+    //   FOV 0.5  → 0.15
+    //   FOV 1.0  → 0.10
+    //   FOV 5.0  → 0.026
     //   FOV 34   → 0.005
-    const fovScale = Math.min(1, 0.05 / Math.pow(Math.max(this.fov_au, 0.03), 0.7));
+    const fovScale = Math.min(1, 0.1 / Math.pow(Math.max(this.fov_au, 0.05), 0.8));
     const logScaled = Math.max(floor, rawLogScaled * fovScale);
 
     // Real physical pixel size at the current zoom level
