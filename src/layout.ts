@@ -301,8 +301,13 @@ export class Layout {
     const pxMin  = 1;     // pixels at the smallest log value
     const pxMax  = 80;    // pixels at the largest log value
 
+    // Squaring t amplifies the visual difference between large and small
+    // bodies. Pure linear-on-log compresses the enormous diameter range
+    // too aggressively: Neptune and Triton (18:1 real ratio) display at
+    // 1.5:1. With t², they display at ~2.2:1 — not realistic, but enough
+    // for parents to be visibly larger than their satellites.
     const t = util.clamp((logDiam - logMin) / (logMax - logMin), 0, 1);
-    const rawLogScaled = pxMin + (pxMax - pxMin) * t;
+    const rawLogScaled = pxMin + (pxMax - pxMin) * t * t;
 
     // Scale the log minimum by FOV to prevent overlap at wider views.
     // Full log sizes apply up to ~0.1 AU (approach/departure zoom level).
@@ -345,12 +350,24 @@ export class Layout {
       ? Math.max(floor, Math.min(logScaled, minSepMeters * this.px_per_meter * 0.4))
       : logScaled;
 
+    // Moons must never exceed half their parent's displayed size. Without
+    // this, the separation constraint allocates 40% of the same pixel
+    // distance to both parent and moon, making them converge to equal
+    // size at mid-range FOVs. One recursion level is safe — the parent
+    // is always a planet (orbits the sun), never a nested moon.
+    const MAX_MOON_RATIO = 0.5;
+    let moonCapped = sepCapped;
+    if (isCelestialBody(bodyObj) && bodyObj.central && bodyObj.central.key !== 'sun') {
+      const parentSize = this.scale_body_diameter(bodyObj.central.key);
+      moonCapped = Math.max(floor, Math.min(sepCapped, parentSize * MAX_MOON_RATIO));
+    }
+
     // Real physical pixel size at the current zoom level
     const realPx = diameter * this.px_per_meter;
 
     // Use whichever is larger: the proportional log minimum or the real size.
     // Capped at scale_px so bodies can't exceed the viewport.
-    return util.clamp(Math.max(floor, sepCapped, realPx), floor, this.scale_px);
+    return util.clamp(Math.max(floor, moonCapped, realPx), floor, this.scale_px);
   }
 
   /** Returns true if the scaled screen position is within the viewport bounds. */
