@@ -15,6 +15,7 @@
       :pos="info.point"
       :img="'img/' + body + '.png'"
       :focus="is_focus(body)"
+      :glow="body === 'trojans' ? '#dda030' : null"
       @click="click(body)" />
   </g>
 </template>

@@ -2,12 +2,12 @@
 <tr>
 <th scope="row">{{$caps(resource)}}</th>
 
-<td class="text-end" :class="{'text-success': stock && relBuy < 0, 'text-muted': !stock}">
+<td class="text-end" :class="{'text-success': stock && relprices && relBuy < 0, 'warn': stock && relprices && relBuy > 0, 'text-muted': !stock}">
   <span v-if="relprices"><span v-if="relBuy > 0">+</span>{{$csn(relBuy)}}</span>
   <span v-else>{{$csn(rBuy)}}</span>
 </td>
 
-<td class="text-end" :class="{'text-success': relSell > 0}">
+<td class="text-end" :class="{'text-success': relprices && relSell > 0, 'warn': relprices && relSell < 0}">
   <span v-if="relprices"><span v-if="relSell > 0">+</span>{{$csn(relSell)}}</span>
   <span v-else>{{$csn(rSell)}}</span>
 </td>

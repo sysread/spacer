@@ -39,7 +39,7 @@
 
             <g v-for="body in system.all_bodies()" :key="body">
               <SvgPatrolRadius :body="body" :coords="bodyPosition(body)" :layout="layout" :intvl="intvl" />
-              <SvgPlotPoint :body="body" :coords="bodyPosition(body)" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" />
+              <SvgPlotPoint :body="body" :coords="bodyPosition(body)" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" :glow="body === 'trojans' ? '#dda030' : null" />
             </g>
 
             <!-- Trajectory path: dots for each turn of the pre-computed path.
@@ -82,7 +82,7 @@
           </SvgPlot>
 
           <!-- Docking overlay: shown on the frozen map after the final turn -->
-          <div v-if="docking" class="transit-docking">Docking</div>
+          <div v-if="docking" class="transit-docking">DOCKING</div>
         </div>
 
         <PatrolEncounter
@@ -1208,6 +1208,7 @@ export default {
   right: 0;
   text-align: center;
   font: bold 1.5rem monospace;
+  letter-spacing: 0.5em;
   color: #ffdd44;
   text-shadow: 0 0 8px #ffdd44, 0 0 16px #aa8800;
   animation: docking-blink 1s ease-in-out infinite;

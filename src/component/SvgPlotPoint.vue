@@ -1,5 +1,16 @@
 <template>
   <g @click="click">
+    <!-- Soft radial glow behind dark/transparent body images that
+         would otherwise be invisible against the starfield background. -->
+    <defs v-if="glow && d > 0">
+      <radialGradient :id="'glow-' + body">
+        <stop offset="0%" :stop-color="glow" stop-opacity="0.5" />
+        <stop offset="100%" :stop-color="glow" stop-opacity="0" />
+      </radialGradient>
+    </defs>
+    <circle v-if="glow && d > 0"
+      :cx="x + d/2" :cy="y + d/2" :r="d * 0.9"
+      :fill="'url(#glow-' + body + ')'" />
     <SvgImg v-if="img" :src="img" :height="d" :width="d" :x="x" :y="y" />
 
     <SvgText v-if="show_label" :class="label_class" :x="label_x" :y="label_y">
@@ -13,7 +24,7 @@ import system from '../system';
 import Tween from '../tween';
 
 export default {
-  props: ['layout', 'body', 'label', 'img', 'focus', 'coords', 'intvl'],
+  props: ['layout', 'body', 'label', 'img', 'focus', 'coords', 'intvl', 'glow'],
   emits: ['click'],
 
   data() {
