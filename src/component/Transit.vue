@@ -636,11 +636,14 @@ export default {
       const orbit = this.orbitsHiRes[body];
       if (!orbit) return system.position(body);
 
-      // bodySubStep is tweened as a float by GSAP. Instead of flooring to a
-      // discrete index (which causes visible jumps), interpolate between the
-      // two adjacent hi-res positions for perfectly smooth motion that stays
-      // in sync with the ship's tween.
-      const rawIdx = this.plan.current_turn * this.orbitSubsteps + this._bodySubStep;
+      // bodySubStep is tweened 0→SUBSTEPS by GSAP. The base turn is
+      // current_turn - 1 because plan.turn() has already advanced
+      // current_turn before the tween starts, but the tween interpolates
+      // FROM the pre-turn state. This keeps the body's screen position
+      // in sync with the center, which also starts at the pre-turn
+      // position and interpolates to the post-turn position.
+      const baseTurn = Math.max(0, this.plan.current_turn - 1);
+      const rawIdx = baseTurn * this.orbitSubsteps + this._bodySubStep;
       const maxIdx = orbit.length - 1;
       const lo = Math.min(Math.floor(rawIdx), maxIdx);
       const hi = Math.min(lo + 1, maxIdx);
@@ -748,14 +751,12 @@ export default {
           const cz = startCenter[2] + (targetCenter[2] - startCenter[2]) * p;
           this.layout.set_center([cx, cy, cz]);
 
-          // Body sub-step (drives bodyPosition interpolation).
-          // On the final turn, don't advance — the body should stay at
-          // the exact transit endpoint position. Advancing would put it
-          // (substeps-1)/substeps of a turn past where the path ends,
-          // since the hi-res orbit has positions beyond the transit.
-          if (this.plan.left > 0) {
-            this._bodySubStep = p * (this.orbitSubsteps - 1);
-          }
+          // Body sub-step drives bodyPosition interpolation. With
+          // baseTurn = current_turn - 1, the sub-step spans the full
+          // turn from pre-turn to post-turn position. At p=1,
+          // _bodySubStep = SUBSTEPS, landing at exactly current_turn's
+          // orbit position — including the final turn.
+          this._bodySubStep = p * this.orbitSubsteps;
 
           // Update patrol/piracy progress bars
           this.patrolpct = this.patrolRate;
@@ -769,7 +770,7 @@ export default {
         onComplete: () => {
           this.layout.set_fov_au(targetFov);
           this.layout.set_center(targetCenter);
-          // Don't reset _bodySubStep here — leave it at substeps-1 until
+          // Don't reset _bodySubStep here — leave it at SUBSTEPS until
           // the next update() sets it to 0 synchronously before the new
           // tween starts. Resetting here caused a one-frame backward jump
           // because Vue would re-render with _bodySubStep=0 before the
@@ -995,12 +996,10 @@ export default {
     complete() {
       this.arriving = true;
 
-      // Freeze the map at the exact final transit position. Set
-      // _bodySubStep to 0 with current_turn at the final turn so
-      // bodyPosition() returns the clamped final orbit position,
-      // matching where the transit path ends. Then trigger one last
-      // render so the map shows the correct frozen state.
-      this._bodySubStep = 0;
+      // Freeze the map at the exact final transit position.
+      // bodyPosition uses baseTurn = current_turn - 1, so subStep
+      // must be SUBSTEPS to reach current_turn's orbit position.
+      this._bodySubStep = this.orbitSubsteps;
       this.visualTurn = this.plan.current_turn;
 
       // Set center/FOV to the final arrival state
