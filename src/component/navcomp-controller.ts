@@ -73,9 +73,11 @@ export function computeMapCenter(
   centralFn: (body: string) => string,
 ): number[] {
   if (!dest) {
+    // Center on the local system. For moons, center on the parent
+    // planet so all sibling moons are visible. For planets, center
+    // on the planet itself (zoomed in close).
     const central = centralFn(locus);
-    const is_moon = central !== 'sun';
-    return is_moon ? positionFn(central) : [0, 0];
+    return central !== 'sun' ? positionFn(central) : positionFn(locus);
   }
 
   const bodies: number[][] = [];
@@ -116,8 +118,18 @@ export function computeMapFovAU(
   allBodiesFn: () => string[],
 ): number {
   if (!dest) {
-    const distance = distanceFn(locus, 'sun');
-    return distance / Physics.AU * 1.5;
+    // Start zoomed in on the local area. For moons, show the moon
+    // system (3x orbital radius to parent). For planets, use a
+    // tight initial view centered on the body's position.
+    const central = centralFn(locus);
+    if (central !== 'sun') {
+      // Moon: FOV from orbital distance to parent, with margin
+      const locusPos = positionFn(locus);
+      const centralPos = positionFn(central);
+      const orbitDist = Physics.distance(locusPos, centralPos) / Physics.AU;
+      return Math.max(orbitDist * 3, 0.01);
+    }
+    return 0.01;
   }
 
   const points: number[][] = [];
