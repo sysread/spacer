@@ -8,7 +8,7 @@
           <div v-if="title || xclose" class="modal-header">
             <h5 v-if="title" class="modal-title">{{title}}</h5>
             <slot name="header" />
-            <button v-if="xclose" type="button" class="btn-close btn-close-white" @click="dismiss()"></button>
+            <button v-if="xclose" type="button" class="modal-xclose" @click="dismiss()">&times;</button>
           </div>
           <div class="modal-body" :class="{'p-0':nopad}">
             <slot />
@@ -135,6 +135,21 @@ export default {
 .spacer-modal .modal-header {
   padding: 0.75rem 1rem;
   flex-shrink: 0;
+}
+
+.modal-xclose {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 1.4rem;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+  margin-left: auto;
+  cursor: pointer;
+}
+
+.modal-xclose:hover {
+  color: #fff;
 }
 
 .spacer-modal .modal-body {
