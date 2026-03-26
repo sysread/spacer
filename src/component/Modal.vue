@@ -119,22 +119,33 @@ export default {
 .spacer-modal .modal-dialog {
   width: 80% !important;
   max-width: 80% !important;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
+/* Constrain modal height so header/footer remain visible. The body
+   scrolls internally when content exceeds the available space. */
 .spacer-modal .modal-content {
   padding: 0.5rem;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .spacer-modal .modal-header {
   padding: 0.75rem 1rem;
+  flex-shrink: 0;
 }
 
 .spacer-modal .modal-body {
   padding: 0.75rem 1rem;
+  overflow-y: auto;
+  flex: 1 1 auto;
 }
 
 .spacer-modal .modal-footer {
   padding: 0.75rem 1rem;
+  flex-shrink: 0;
 }
 
 .spacer-modal .table thead th {
@@ -150,6 +161,10 @@ export default {
   vertical-align: middle;
 }
 
+/* The modal overlay covers the viewport and scrolls internally when
+   content exceeds the available height. Using align-items: flex-start
+   with auto margins on the dialog lets flexbox center short modals
+   vertically while allowing tall ones to scroll from the top. */
 .spacer-modal {
   position: fixed;
   top: 0;
@@ -158,8 +173,10 @@ export default {
   height: 100%;
   z-index: 1050;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   overflow-y: auto;
+  padding: 5vh 0;
 }
+
 </style>
