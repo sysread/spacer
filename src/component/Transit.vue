@@ -38,8 +38,8 @@
             <text style="fill:red; font:12px monospace" x=5 y=68>&Delta;V:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{$unit($R(plan.accel_g, 3), 'G')}}</text>
 
             <g v-for="body in system.all_bodies()" :key="body">
-              <SvgPatrolRadius :body="body" :coords="bodyPosition(body)" :layout="layout" :intvl="intvl" />
-              <SvgPlotPoint :body="body" :coords="bodyPosition(body)" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" :glow="body === 'trojans' ? '#dda030' : null" />
+              <SvgPatrolRadius :body="body" :coords="bodyPosition(body)" :layout="layout" :intvl="intvl" :tick="_renderTick" />
+              <SvgPlotPoint :body="body" :coords="bodyPosition(body)" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" :glow="body === 'trojans' ? '#dda030' : null" :tick="_renderTick" />
             </g>
 
             <!-- Trajectory path: dots for each turn of the pre-computed path.

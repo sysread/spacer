@@ -21,56 +21,44 @@
 
 <script>
 import system from '../system';
-import Tween from '../tween';
 
 export default {
-  props: ['layout', 'body', 'label', 'img', 'focus', 'coords', 'intvl', 'glow'],
+  props: ['layout', 'body', 'label', 'img', 'focus', 'coords', 'intvl', 'glow', 'tick'],
   emits: ['click'],
-
-  data() {
-    const pos = this.coords || system.position(this.body);
-    const [px, py] = this.layout.scale_point(pos);
-    const d = this.layout.scale_body_diameter(this.body);
-    const x = isFinite(px) ? px : 0;
-    const y = isFinite(py) ? py : 0;
-    const dd = isFinite(d) ? d : 0;
-    return {
-      x: x - (dd / 2),
-      y: y - (dd / 2),
-      d: dd,
-      label_x: x + dd + 10,
-      label_y: y + dd / 3,
-      tween: null,
-      _mounted: false,
-    };
-  },
 
   computed: {
     label_class() { return this.focus ? 'plot-label-hi' : 'plot-label' },
-    diameter()    { return this.layout.scale_body_diameter(this.body) },
 
-    point() {
-      if (this.layout) {
-        if (this.coords) {
-          return this.layout.scale_point(this.coords);
-        } else {
-          return this.layout.scale_point(this.system.position(this.body))
-        }
-      }
-      else {
-        return [0, 0];
-      }
+    // Screen position and diameter are computed properties that depend
+    // on `tick`. The layout's fov_au and offsets are set by GSAP outside
+    // Vue's reactivity — without the tick dependency, these computeds
+    // would serve stale cached values. The tick prop (from Transit's
+    // _renderTick) changes every GSAP frame, forcing re-evaluation in
+    // the SAME render pass as the parent's transit path dots. This
+    // eliminates the one-frame lag that watcher-based updates had.
+    screenPos() {
+      void this.tick; // force re-evaluation each GSAP frame
+      const pos = this.coords || system.position(this.body);
+      return this.layout.scale_point(pos);
     },
+
+    d() {
+      void this.tick;
+      return this.layout.scale_body_diameter(this.body);
+    },
+
+    x()       { return this.screenPos[0] - this.d / 2 },
+    y()       { return this.screenPos[1] - this.d / 2 },
+    label_x() { return this.screenPos[0] + this.d + 10 },
+    label_y() { return this.screenPos[1] + this.d / 3 },
 
     show_label() {
       if (this.label) {
-        if (this.diameter >= this.layout.width_px * 0.75) {
+        if (this.d >= this.layout.width_px * 0.75) {
           return false;
         }
-
         return true;
       }
-
       return false;
     },
   },
@@ -79,30 +67,6 @@ export default {
     click() {
       this.$emit('click');
     },
-
-    update() {
-      const [x, y] = this.point;
-      // Compute diameter directly from layout instead of using the cached
-      // computed property. The layout's fov_au changes in GSAP's onUpdate
-      // which isn't visible to Vue's reactivity — the computed would
-      // return a stale value, causing the label to lag behind the body.
-      const d = this.layout.scale_body_diameter(this.body);
-
-      // Always snap to position rather than tweening. The high-resolution
-      // orbit sub-steps (4x per turn) provide smooth inter-turn motion;
-      // adding a tween on top causes elastic effects when multiple sub-step
-      // updates overlap with the previous tween still in flight.
-      this.d = d;
-      this.x = x - (d / 2);
-      this.y = y - (d / 2);
-      this.label_x = x + d + 10;
-      this.label_y = y + d / 3;
-    },
-  },
-
-  watch: {
-    point:    { deep: true, handler() { this.update() } },
-    diameter: function() { this.update() },
   },
 };
 </script>

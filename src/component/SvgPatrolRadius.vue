@@ -6,49 +6,35 @@
 import Physics from '../physics';
 import system from '../system';
 import * as util from '../util';
-import Tween from '../tween';
 
 export default {
-  props: ['body', 'layout', 'coords', 'intvl'],
-
-  data() {
-    const pos = this.coords || system.position(this.body);
-    const [x, y] = this.layout.scale_point(pos);
-    return {
-      x: isFinite(x) ? x : 0,
-      y: isFinite(y) ? y : 0,
-      r: isFinite(this.radius) ? this.radius : 0,
-      tween: null,
-      _mounted: false,
-    };
-  },
+  props: ['body', 'layout', 'coords', 'intvl', 'tick'],
 
   computed: {
-    faction() {
-      return this.data.bodies[this.body].faction;
+    // Screen position driven by tick for same-frame evaluation as
+    // sibling transit dots. See SvgPlotPoint for explanation.
+    screenPos() {
+      void this.tick;
+      const pos = this.coords || system.position(this.body);
+      return this.layout.scale_point(pos);
     },
 
-    point() {
-      if (this.layout) {
-        if (this.coords) {
-          return this.layout.scale_point(this.coords);
-        } else {
-          return this.layout.scale_point(this.system.position(this.body));
-        }
-      }
-      else {
-        return [0, 0];
-      }
+    x() { return this.screenPos[0] },
+    y() { return this.screenPos[1] },
+
+    r() {
+      void this.tick;
+      return this.layout.scale_length(this.radius_au * Physics.AU);
+    },
+
+    faction() {
+      return this.data.bodies[this.body].faction;
     },
 
     radius_au() {
       return this.game.planets[this.body]
         ? this.game.planets[this.body].encounters.patrolRadius()
         : 0;
-    },
-
-    radius() {
-      return this.layout.scale_length(this.radius_au * Physics.AU);
     },
 
     opacity() {
@@ -86,20 +72,5 @@ export default {
     },
   },
 
-  methods: {
-    update() {
-      // Snap to position. Sub-step interpolation provides smooth motion;
-      // tweening on top causes elastic overlap between sub-step updates.
-      const [x, y] = this.point;
-      this.x = x;
-      this.y = y;
-      this.r = this.radius;
-    },
-  },
-
-  watch: {
-    point:  { deep: true, handler() { this.update() } },
-    radius: function() { this.update() },
-  },
 };
 </script>
