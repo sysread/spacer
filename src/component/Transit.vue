@@ -37,11 +37,6 @@
             <text style="fill:red; font:12px monospace" x=5 y=51>FoV:&nbsp;&nbsp;&nbsp;&nbsp;{{displayFoV}}</text>
             <text style="fill:red; font:12px monospace" x=5 y=68>&Delta;V:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{$unit($R(plan.accel_g, 3), 'G')}}</text>
 
-            <!-- Destination orbital arc for the transit period -->
-            <SvgPath
-              :points="destOrbitArc.filter(p => p).map(p => layout.scale_point(p))"
-              color="#844" line="0.75px" smooth />
-
             <g v-for="body in system.all_bodies()" :key="body">
               <SvgPatrolRadius :body="body" :coords="bodyPosition(body)" :layout="layout" :intvl="intvl" />
               <SvgPlotPoint :body="body" :coords="bodyPosition(body)" :layout="layout" :img="'img/'+body+'.png'" :label="show_label(body)" :intvl="intvl" />
@@ -964,11 +959,11 @@ export default {
             this.lastPhase = this.transitPhase;
             this._lastCenter = targetCenter;
 
-            // Start transit on the next animation frame after the tween's
-            // final state has been rendered. No setTimeout — the tween's
-            // onComplete is the deterministic "go signal".
+            // Pause briefly after the intro zoom so the player can orient
+            // themselves before the transit animation begins. The tween has
+            // completed and the layout is at the departure view.
             this.$forceUpdate();
-            requestAnimationFrame(() => this.resume());
+            setTimeout(() => this.resume(), 1000);
           },
         }).play();
       });
