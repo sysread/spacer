@@ -127,7 +127,23 @@ export default {
 }
 
 .news-faction {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Ornamental scene break between faction sections */
+.news-faction::after {
+  content: '══╡ ◈ ╞══';
+  display: block;
+  text-align: center;
+  color: #bb8833;
+  text-shadow: 0 0 6px rgba(255, 140, 50, 0.8), 0 0 14px rgba(255, 120, 40, 0.5);
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  margin-top: 1.5rem;
+}
+
+.news-faction:last-child::after {
+  display: none;
 }
 
 /* Faction masthead: styled as a news source header with a thin

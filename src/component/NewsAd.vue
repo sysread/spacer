@@ -97,6 +97,7 @@ export default {
   font-size: 0.85rem;
   line-height: 1.4;
   color: #ccc;
+  text-align: center;
 }
 
 /* Fine print: slow horizontal scroll like a disclaimer ticker */
