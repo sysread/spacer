@@ -22,6 +22,9 @@
     nice older lady...
   </p>
 
+  <btn block=1 :muted="!needsFuel() || !affordFuel()" @click="topHerOff">
+    Top her off<template v-if="needsFuel() && affordFuel()">: {{$csn(maxFuel * fuelPrice)}} c</template>
+  </btn>
   <btn block=1 :muted="!needsFuel() || !affordFuel()" @click="modal='refuel'">Refuel</btn>
   <btn block=1 :muted="!needsFuel() || !hasFuel()" @click="modal='transfer'">Transfer fuel</btn>
   <btn block=1 :muted="!hasDamage()" @click="modal='repair'">Repairs</btn>
@@ -42,12 +45,26 @@ export default {
       modal: '',
     };
   },
+  computed: {
+    fuelPrice() { return this.game.here.pricing.fuelPricePerTonne(this.game.player) },
+    fuelNeed()  { return this.game.player.ship.refuelUnits() },
+    maxFuel()   { return Math.min(this.fuelNeed, Math.floor(this.game.player.money / this.fuelPrice)) },
+  },
+
   methods: {
-    affordFuel() { return this.game.player.money >= this.game.here.pricing.fuelPricePerTonne(this.game.player) },
+    affordFuel() { return this.game.player.money >= this.fuelPrice },
     needsFuel()  { return !this.game.player.ship.tankIsFull() },
     hasFuel()    { return this.game.player.ship.cargo.count('fuel') > 0 },
     hasDamage()  { return this.game.player.ship.hasDamage() },
     open(loc)    { this.$emit('open', loc) },
+
+    topHerOff() {
+      if (this.maxFuel > 0) {
+        this.game.player.debit(this.maxFuel * this.fuelPrice);
+        this.game.player.ship.refuel(this.maxFuel);
+        this.game.turn();
+      }
+    },
   },
 };
 </script>
