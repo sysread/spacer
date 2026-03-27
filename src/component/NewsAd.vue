@@ -5,7 +5,8 @@
       <span class="news-ad-label">SPONSORED CONTENT</span>
       <span class="news-ad-stars">★ ★ ★</span>
     </div>
-    <pre v-if="ad.art" class="news-ad-art" :style="ad.artColor ? {color: ad.artColor} : {}">{{ad.art}}</pre>
+    <div v-if="ad.svg" class="news-ad-art" :style="ad.artColor ? {color: ad.artColor} : {}" v-html="ad.svg"></div>
+    <pre v-else-if="ad.art" class="news-ad-art" :style="ad.artColor ? {color: ad.artColor} : {}">{{ad.art}}</pre>
     <div class="news-ad-text" :style="ad.color ? {color: ad.color} : {}">
       <span v-html="ad.text"></span>
     </div>
@@ -83,6 +84,13 @@ export default {
   margin: 0.4rem 0;
   text-align: center;
   color: #888;
+}
+
+/* Inline SVG art: inherit color from artColor, constrain size */
+.news-ad-art :deep(svg) {
+  max-width: 80%;
+  height: auto;
+  display: inline-block;
 }
 
 .news-ad-text {
