@@ -416,8 +416,16 @@ export default {
 
       switch (this.transitPhase) {
         case 'depart': {
+          // Midpoint between the origin system and the ship, keeping
+          // both visible as the ship accelerates away.
           const body = this.origIsMoon ? system.central(this.plan.origin) : this.plan.origin;
-          return this.bodyPositionTurn(body);
+          const bodyPos = this.bodyPositionTurn(body);
+          const shipPos = this.plan.coords;
+          return [
+            (bodyPos[0] + shipPos[0]) / 2,
+            (bodyPos[1] + shipPos[1]) / 2,
+            (bodyPos[2] + shipPos[2]) / 2,
+          ];
         }
 
         case 'cruise': {
@@ -433,8 +441,16 @@ export default {
         }
 
         case 'arrive': {
+          // Midpoint between the destination system and the ship,
+          // keeping both visible as the ship approaches.
           const body = this.destIsMoon ? system.central(this.plan.dest) : this.plan.dest;
-          return this.bodyPositionTurn(body);
+          const bodyPos = this.bodyPositionTurn(body);
+          const shipPos = this.plan.coords;
+          return [
+            (bodyPos[0] + shipPos[0]) / 2,
+            (bodyPos[1] + shipPos[1]) / 2,
+            (bodyPos[2] + shipPos[2]) / 2,
+          ];
         }
       }
     },
