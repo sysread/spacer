@@ -1,4 +1,5 @@
 <template>
+  <div class="news-ad-flourish">══╡ ◈ ╞══</div>
   <div class="news-ad" :class="[ad.style || randomStyle]">
     <div class="news-ad-chrome">
       <span class="news-ad-stars">★ ★ ★</span>
@@ -18,6 +19,7 @@
       <span class="news-ad-x" :style="xStyle" @click.stop="dodgeX" title="Close ad">✕</span>
     </div>
   </div>
+  <div class="news-ad-flourish">══╡ ◈ ╞══</div>
 </template>
 
 <script>
@@ -46,10 +48,20 @@ export default {
 </script>
 
 <style>
+/* Ornamental scene break flanking the ad */
+.news-ad-flourish {
+  text-align: center;
+  color: #daa520;
+  text-shadow: 0 0 6px rgba(255, 140, 50, 0.8), 0 0 14px rgba(255, 120, 40, 0.5);
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  margin: 0.5rem 0;
+}
+
 /* Base ad container */
 .news-ad {
   padding: 0.6rem 0.75rem;
-  margin: 1rem 0;
+  margin: 2.5rem 0;
   position: relative;
   overflow: hidden;
 }

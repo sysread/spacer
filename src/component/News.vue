@@ -1,12 +1,12 @@
 <template>
   <div v-if="hasNews">
+    <div class="news-dateline">{{title}}</div>
     <div class="news-masthead-org" v-if="newsOrg">
       <span class="news-flourish">※</span>
       <span class="news-org-name">{{newsOrg}}</span>
       <span class="news-flourish">※</span>
       <div class="news-tagline">{{tagline}}</div>
     </div>
-    <div class="news-dateline">{{title}}</div>
 
     <template v-if="hasConditions">
       <div v-for="cond of conditions[body]" :key="cond.name" class="news-story news-story-crisis">
@@ -158,9 +158,10 @@ export default {
 
 .news-org-name {
   font: bold 0.75rem monospace;
-  color: #888;
+  color: #daa520;
   text-transform: uppercase;
   letter-spacing: 0.15em;
+  text-shadow: 0 0 5px rgba(255, 140, 50, 0.5), 0 0 10px rgba(255, 120, 40, 0.25);
 }
 
 .news-flourish {

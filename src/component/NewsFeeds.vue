@@ -8,7 +8,7 @@
     </p>
 
     <template v-for="(faction, idx) in factions" :key="faction">
-    <NewsAd v-if="idx > 0 && idx % 2 === 0" :key="'ad-'+idx" />
+    <NewsAd v-if="idx > 0" :key="'ad-'+idx" />
     <div class="news-faction">
       <div class="news-masthead">
         <Flag :faction="faction" :width="22" />
@@ -127,23 +127,7 @@ export default {
 }
 
 .news-faction {
-  margin-bottom: 2.5rem;
-}
-
-/* Ornamental scene break between faction sections */
-.news-faction::after {
-  content: '══╡ ◈ ╞══';
-  display: block;
-  text-align: center;
-  color: #bb8833;
-  text-shadow: 0 0 6px rgba(255, 140, 50, 0.8), 0 0 14px rgba(255, 120, 40, 0.5);
-  font-size: 0.8rem;
-  letter-spacing: 0.15em;
-  margin-top: 1.5rem;
-}
-
-.news-faction:last-child::after {
-  display: none;
+  margin-bottom: 0.5rem;
 }
 
 /* Faction masthead: styled as a news source header with a thin
@@ -241,6 +225,7 @@ export default {
 .news-dateline {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   font: bold 0.8rem monospace;
   color: #fff;
   text-transform: uppercase;

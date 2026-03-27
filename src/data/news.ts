@@ -79,6 +79,8 @@ export const newsOrgs: Record<string, NewsOrg[]> = {
     { name: 'The Instrumentality Monitor',  tagline: 'Watching over mankind since the Rediscovery' },     // Cordwainer Smith
     { name: 'Terra Norstrilia Wire',        tagline: 'Worth its weight in stroon' },                      // Cordwainer Smith
     { name: 'Old Earth Examiner',           tagline: 'Mother of worlds, mother of news' },                // Cordwainer Smith
+    { name: 'Pandora\'s Post',             tagline: 'You can\'t put it back in the box' },                // Christopher Anvil — Pandora's Planet
+    { name: 'The Unisphere',               tagline: 'Every world, one network' },                         // Peter Hamilton — Commonwealth Saga
   ],
   moon: [
     { name: 'Luna Free Press',             tagline: 'TANSTAAFL' },                                       // Heinlein
@@ -89,6 +91,8 @@ export const newsOrgs: Record<string, NewsOrg[]> = {
     { name: 'The Domir Gazette',           tagline: 'Agent-verified reporting' },                         // James Schmitz
     { name: 'Barsoom Helium Herald',       tagline: 'Two moons, one truth' },                             // Burroughs
     { name: 'Red Sands Intelligencer',     tagline: 'Sifting truth from the dust' },
+    { name: 'The Underhill Register',      tagline: 'First settlement, first paper' },                    // Kim Stanley Robinson — Red Mars
+    { name: 'The Zodangan Post',           tagline: 'News worth fighting for' },                          // Burroughs — city of Zodanga
   ],
   phobos: [
     { name: 'The Stickney Sentinel',       tagline: 'Standing watch in the crater' },
@@ -102,7 +106,7 @@ export const newsOrgs: Record<string, NewsOrg[]> = {
   ],
   trojans: [
     { name: 'Dorlian Signal',             tagline: 'Clear transmissions from the Atoll' },                // James Schmitz
-    { name: 'The Lagrange Intelligencer',  tagline: 'Perfectly balanced reporting' },
+    { name: 'The G\'bserver',             tagline: 'All the news that isn\'t g\'babble' },                // David Weber — Safehold
     { name: 'Tycho Manufacturing Bulletin', tagline: 'Building tomorrow\'s headlines today' },             // Expanse
   ],
   europa: [
