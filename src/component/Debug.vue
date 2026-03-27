@@ -52,6 +52,16 @@
 </div>
 </div>
 
+<div class="input-group input-group-sm my-1">
+<div class="btn-group">
+  <span class="input-group-text">Event</span>
+  <select v-model="condName" class="form-control">
+    <option v-for="c in conditionNames" :key="c" :value="c">{{$caps(c)}}</option>
+  </select>
+  <btn @click="triggerCondition">Trigger</btn>
+</div>
+</div>
+
 <table v-if="show == 'items' && item" class="table table-sm mini">
 <thead>
   <tr>
@@ -118,6 +128,7 @@
 <script>
 import * as util from '../util';
 import { resources } from '../resource';
+import { Condition } from '../condition';
 import Physics from '../physics';
 import system from '../system';
 
@@ -131,6 +142,7 @@ export default {
       body: window.game.locus,
       item: 'water',
       slow: false,
+      condName: 'plague',
     };
   },
 
@@ -138,7 +150,8 @@ export default {
     turns:     function() { return this.game.turns },
     resources: function() { return Object.keys(this.data.resources) },
     bodies:    function() { return Object.keys(this.game.planets) },
-    places:    function() { return Object.values(this.game.planets) },
+    places:         function() { return Object.values(this.game.planets) },
+    conditionNames: function() { return Object.keys(this.data.conditions) },
     resource:  function() { return resources[this.item] },
 
     value: function() {
@@ -202,6 +215,14 @@ export default {
 
         this.$forceUpdate();
       }, this.slow ? 500 : 200);
+    },
+
+    triggerCondition() {
+      const planet = this.game.planets[this.game.locus];
+      if (planet && this.condName) {
+        planet.conditions.push(new Condition(this.condName));
+        this.$forceUpdate();
+      }
     },
 
     fixMe() {

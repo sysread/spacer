@@ -21,6 +21,17 @@ export default {
     },
   },
 
+  'grey goo': {
+    days:     [10, 60] as [number, number],
+    consumes: {electronics: 2, cybernetics: 1, machines: 2},
+    produces: {ore: -2, minerals: -1, ceramics: -1},
+    triggers: {
+      shortage:  {},
+      surplus:   {'cybernetics': 0.0004, 'electronics': 0.0003},
+      condition: {'tech hub': 0.0005, 'manufacturing hub': 0.0003},
+    },
+  },
+
   "workers' strike": {
     days:     [7, 30] as [number, number],
     consumes: {},

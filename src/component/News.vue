@@ -11,7 +11,17 @@
     <template v-if="hasConditions">
       <div v-for="cond of conditions[body]" :key="cond.name" class="news-story news-story-crisis">
         <span class="news-tag news-tag-crisis">CRISIS</span>
-        <div class="news-headline">{{$caps(cond.name)}}</div>
+        <div v-if="cond.name === 'grey goo'" class="news-headline news-headline-goo">
+          <svg width="0" height="0" class="goo-filter-defs">
+            <filter id="goo-particles" x="-20%" y="-40%" width="150%" height="180%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="4" seed="3" result="noise"/>
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="25" xChannelSelector="R" yChannelSelector="G"/>
+            </filter>
+          </svg>
+          <span class="goo-solid">Grey Goo</span>
+          <span class="goo-scattered">Grey Goo</span>
+        </div>
+        <div v-else class="news-headline">{{$caps(cond.name)}}</div>
         <p class="news-body" v-if="cond.left < 7">Local sources claim efforts to deal with the {{cond.name}} have been successful and are winding down.</p>
         <p class="news-body" v-else-if="cond.left < 30">Unnamed government officials say efforts to combat the {{cond.name}} are underway but have been largely unsuccessful thus far.</p>
         <p class="news-body" v-else>
@@ -126,6 +136,7 @@ export default {
       return data;
     },
   },
+
 };
 </script>
 
@@ -154,6 +165,32 @@ export default {
 .news-masthead-org {
   text-align: center;
   margin-bottom: 0.25rem;
+}
+
+/* Grey goo particle disintegration: solid text on left dissolves
+ * into scattered particles on the right via SVG displacement filter. */
+.goo-filter-defs {
+  position: absolute;
+}
+
+.news-headline-goo {
+  position: relative;
+  display: inline-block;
+}
+
+.goo-solid {
+  -webkit-mask-image: linear-gradient(to right, black 15%, transparent 65%);
+  mask-image: linear-gradient(to right, black 15%, transparent 65%);
+}
+
+.goo-scattered {
+  position: absolute;
+  left: 0;
+  top: 0;
+  filter: url(#goo-particles);
+  -webkit-mask-image: linear-gradient(to right, transparent 5%, black 40%, black 70%, transparent 95%);
+  mask-image: linear-gradient(to right, transparent 5%, black 40%, black 70%, transparent 95%);
+  opacity: 0.7;
 }
 
 .news-org-name {
