@@ -135,11 +135,14 @@ export default {
     // Snapshot the orbit positions at transit start. The system's orbit cache
     // rolls forward each turn (shift+push), so we must copy the arrays to
     // prevent them from drifting out from under us during the transit.
-    // Build high-resolution orbit data by interpolating between per-turn
-    // positions. At close zoom, the linear tweens between per-turn orbit
-    // points are visibly jerky (especially for fast-orbiting moons like Luna).
-    // Interpolating 4x gives smooth curved motion at all zoom levels.
-    const ORBIT_SUBSTEPS = 4;
+    // Build high-resolution orbit data by computing actual orbital positions
+    // at sub-step intervals. Linear interpolation between per-turn positions
+    // creates straight-line segments — fast-orbiting moons (e.g. Enceladus,
+    // ~5 turns/orbit) trace visible polygons instead of smooth curves.
+    // Computing real positions via Kepler's equation at each sub-step
+    // produces correct arcs at any orbital period.
+    const ORBIT_SUBSTEPS = 8;
+    const ms_per_substep = data.hours_per_turn * 3600000 / ORBIT_SUBSTEPS;
 
     // Shared between the speed curve and the FOV calculation: number of
     // turns at the start/end of transit that get cinematic treatment
@@ -149,24 +152,21 @@ export default {
     const CLOSE_RANGE = data.turns_per_day * 5;
     const orbitsRaw = {};
     const orbitsHiRes = {};
+    const baseDate = window.game.date.getTime();
     for (const body of system.all_bodies()) {
       const raw = [...system.orbit_by_turns(body)];
       orbitsRaw[body] = raw;
 
+      // Compute actual orbital position at each sub-step rather than
+      // linearly interpolating. One position per sub-step interval
+      // (e.g. 45 min at 8 substeps/turn) across the full orbit cache.
       const hiRes = [];
-      for (let i = 0; i < raw.length - 1; i++) {
-        const a = raw[i];
-        const b = raw[i + 1];
+      for (let i = 0; i < raw.length; i++) {
         for (let s = 0; s < ORBIT_SUBSTEPS; s++) {
-          const t = s / ORBIT_SUBSTEPS;
-          hiRes.push([
-            a[0] + (b[0] - a[0]) * t,
-            a[1] + (b[1] - a[1]) * t,
-            a[2] + (b[2] - a[2]) * t,
-          ]);
+          const date = baseDate + (i * ORBIT_SUBSTEPS + s) * ms_per_substep;
+          hiRes.push(system.position(body, date));
         }
       }
-      hiRes.push(raw[raw.length - 1]);
       orbitsHiRes[body] = hiRes;
     }
     const orbits = orbitsRaw;
