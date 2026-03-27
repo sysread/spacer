@@ -14,7 +14,7 @@
     </div>
     <div class="news-ad-cta">
       <span class="news-ad-cta-btn">▶ LEARN MORE ◀</span>
-      <span class="news-ad-x" title="lol no">✕</span>
+      <span class="news-ad-x" :style="xStyle" @click.stop="dodgeX" title="Close ad">✕</span>
     </div>
   </div>
 </template>
@@ -122,7 +122,18 @@ export default {
     return {
       ad: ads[util.getRandomInt(0, ads.length)],
       randomStyle: styles[util.getRandomInt(0, styles.length)],
+      xStyle: {},
     };
+  },
+
+  methods: {
+    dodgeX() {
+      this.xStyle = {
+        position: 'absolute',
+        top:  util.getRandomInt(5, 85) + '%',
+        left: util.getRandomInt(5, 90) + '%',
+      };
+    },
   },
 };
 </script>
@@ -218,15 +229,22 @@ export default {
   50%      { opacity: 1.0; }
 }
 
-/* Fake close button that does nothing */
+/* Close button that dodges your clicks */
 .news-ad-x {
-  font-size: 0.7rem;
-  color: #333;
-  cursor: default;
+  font-size: 0.75rem;
+  color: #c33;
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+  border: 1px solid #c33;
+  border-radius: 2px;
+  transition: top 0.15s, left 0.15s;
+  z-index: 1;
 }
 
 .news-ad-x:hover {
-  color: #555;
+  color: #f44;
+  border-color: #f44;
+  background: #200;
 }
 
 /* ═══ Ad style variants ═══ */
