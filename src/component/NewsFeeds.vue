@@ -7,7 +7,9 @@
       from the public news feeds.
     </p>
 
-    <div v-for="faction in factions" :key="faction" class="news-faction">
+    <template v-for="(faction, idx) in factions" :key="faction">
+    <NewsAd v-if="idx > 0 && idx % 2 === 0" :key="'ad-'+idx" />
+    <div class="news-faction">
       <div class="news-masthead">
         <Flag :faction="faction" :width="22" />
         <span class="news-masthead-name">{{factionName(faction)}}</span>
@@ -29,6 +31,7 @@
 
       <div v-else class="news-quiet">All quiet on the {{factionName(faction)}} front.</div>
     </div>
+    </template>
   </Section>
 </template>
 
