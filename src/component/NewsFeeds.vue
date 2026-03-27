@@ -1,38 +1,33 @@
 <template>
   <Section title="News feeds">
-    <p>
+    <p class="news-intro">
       As you walk through the public concourse, your eye is drawn to an ad,
       which proceeds to follow you from screen to screen. Between impassioned
       pleas for your hard-earned scrip, you are able to glean a few tidbits
       from the public news feeds.
     </p>
 
-    <div v-for="faction in factions" :key="faction" class="my-3">
-      <h4 class="section-title d-flex justify-content-between align-items-center">
-        <span>{{factionName(faction)}}</span>
-        <Flag :faction="faction" :width="30" />
-      </h4>
-
-      <div v-if="factionHasNews(faction)" class="section-content">
-        <!-- Faction-level: active conflicts involving this faction -->
-        <div v-if="factionConflicts(faction).length > 0" class="my-2 ms-2 px-2">
-          <ul>
-            <li v-for="c in factionConflicts(faction)" :key="c.name + c.proponent"
-                :class="{'text-warning': c.target == faction, 'text-success': c.proponent == faction}">
-              {{c.proponent}} has declared a {{c.name}} against {{c.target}}
-            </li>
-          </ul>
-        </div>
-
-        <!-- Body-level: conditions, shortages, surpluses -->
-        <div v-for="body in factionBodies[faction]" :key="body">
-          <template v-if="bodyHasNews(body)">
-            <News :body="body" :title="planetName(body)" />
-          </template>
-        </div>
+    <div v-for="faction in factions" :key="faction" class="news-faction">
+      <div class="news-masthead">
+        <Flag :faction="faction" :width="22" />
+        <span class="news-masthead-name">{{factionName(faction)}}</span>
+        <span class="news-masthead-date">{{game.date_str}}</span>
       </div>
 
-      <p v-else class="fst-italic text-muted section-content">Nothing to report.</p>
+      <div v-if="factionHasNews(faction)" class="news-stories">
+        <!-- Faction-level: active conflicts -->
+        <div v-for="c in factionConflicts(faction)" :key="c.name + c.proponent" class="news-story news-story-conflict">
+          <span class="news-tag news-tag-conflict">CONFLICT</span>
+          <div class="news-headline">{{c.proponent}} declares {{c.name}} against {{c.target}}</div>
+        </div>
+
+        <!-- Body-level news -->
+        <template v-for="body in factionBodies[faction]" :key="body">
+          <News v-if="bodyHasNews(body)" :body="body" :title="planetName(body)" />
+        </template>
+      </div>
+
+      <div v-else class="news-quiet">All quiet on the {{factionName(faction)}} front.</div>
     </div>
   </Section>
 </template>
@@ -108,3 +103,123 @@ export default {
   },
 };
 </script>
+
+<style>
+.news-intro {
+  color: #999;
+  font-style: italic;
+  margin-bottom: 1.5rem;
+}
+
+.news-faction {
+  margin-bottom: 1.5rem;
+}
+
+/* Faction masthead: styled as a news source header with a thin
+   colored rule underneath to suggest a digital news terminal. */
+.news-masthead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 2px solid rgb(200, 0, 0);
+  margin-bottom: 0.75rem;
+}
+
+.news-masthead-name {
+  font: bold 1.1rem monospace;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.news-masthead-date {
+  margin-left: auto;
+  font: 0.75rem monospace;
+  color: #666;
+}
+
+.news-stories {
+  padding-left: 0.5rem;
+}
+
+/* Individual story card: left accent border color-coded by type */
+.news-story {
+  border-left: 3px solid #444;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.news-story-conflict {
+  border-left-color: #c44;
+}
+
+.news-story-crisis {
+  border-left-color: #c44;
+}
+
+.news-story-market {
+  border-left-color: rgb(200, 140, 50);
+}
+
+.news-story-surplus {
+  border-left-color: #4a4;
+}
+
+/* Tag labels */
+.news-tag {
+  font: bold 0.65rem monospace;
+  padding: 0.1rem 0.4rem;
+  margin-right: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.news-tag-conflict {
+  color: #c44;
+  border: 1px solid #c44;
+}
+
+.news-tag-crisis {
+  color: #c44;
+  border: 1px solid #c44;
+}
+
+.news-tag-market {
+  color: rgb(200, 140, 50);
+  border: 1px solid rgb(200, 140, 50);
+}
+
+.news-tag-surplus {
+  color: #4a4;
+  border: 1px solid #4a4;
+}
+
+.news-headline {
+  font: bold 0.9rem monospace;
+  color: #ddd;
+  display: inline;
+}
+
+.news-body {
+  color: #aaa;
+  margin-top: 0.3rem;
+  line-height: 1.4;
+}
+
+.news-dateline {
+  font: bold 0.8rem monospace;
+  color: #fff;
+  text-transform: uppercase;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #333;
+  margin-bottom: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.news-quiet {
+  color: #555;
+  font-style: italic;
+  padding: 0.4rem 0.5rem;
+}
+</style>
