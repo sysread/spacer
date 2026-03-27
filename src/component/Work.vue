@@ -37,7 +37,7 @@
     <div v-if="isReady">
       <p><i>{{task.desc}}</i></p>
       <p>Working at a daily wage of <gold>{{payRate}}</gold> credits for <gold>{{days}}</gold> days will earn <gold>{{pay}}</gold> credits.</p>
-      <p><slider v-model:value="days" minmax=true min=1 max=7 step=1 /></p>
+      <p><stepper v-model:value="days" minmax=true min=1 max=7 step=1 /></p>
     </div>
 
     <div v-else-if="isFinished && hitQuota">

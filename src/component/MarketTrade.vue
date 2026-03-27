@@ -41,7 +41,7 @@
 
   <tr>
     <td colspan=4 class="py-3">
-      <slider minmax=true v-model:value="tx_hold" min=0 :max="max" step=1 @update:value="updateState" />
+      <stepper minmax=true v-model:value="tx_hold" min=0 :max="max" step=1 :capacity="player.ship.cargoSpace" @update:value="updateState" />
     </td>
   </tr>
 
@@ -145,6 +145,7 @@ export default {
       const cargo = this.player.ship.cargoLeft;
       return hold + Math.min(dock, Math.floor(cred / this.buy), cargo);
     },
+
   },
   methods: {
     agentGender: function() {

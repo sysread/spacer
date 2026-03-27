@@ -14,7 +14,7 @@
       {{$unit($R(waste, 2), 'tonnes')}}
     </def>
 
-    <slider class="my-3" v-model:value="change" min=0 :max="max" step=1 minmax=true />
+    <stepper class="my-3" v-model:value="change" min=0 :max="max" step=1 :capacity="game.player.ship.cargoSpace" minmax=true />
     <template #footer><btn @click="fillHerUp" close=1>Transfer fuel</btn></template>
   </modal>
 </template>

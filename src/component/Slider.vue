@@ -1,77 +1,51 @@
 <template>
   <div>
-    <div class="row g-3">
+    <div class="row g-3 mb-1">
       <div class="col">
         <input class="form-control"
-            ref="slider"
-            @change="update"
+            @input="onRangeInput"
             :value="value || 0"
             :min="min"
             :max="max"
-            :step="stepValue || 1"
+            :step="step || 1"
             type="range" />
       </div>
     </div>
 
-    <div class="row g-3 mt-1">
-      <div class="col-6">
-        <slot name="pre" />
-        <span @click="setMin" v-if="minmax" class="float-start"><btn class="fw-bold btn">Min</btn></span>
-        <span @click="dec" class="float-start mx-2"><btn class="fw-bold btn">-1</btn></span>
-      </div>
-
-      <div class="col-6 text-end">
-        <slot name="post" />
-        <span @click="inc" class="mx-2"><btn class="fw-bold btn">+1</btn></span>
-        <span @click="setMax" v-if="minmax"><btn class="fw-bold btn">Max</btn></span>
-      </div>
-    </div>
+    <Stepper
+      :value="value" :min="min" :max="max"
+      :step="step" :min-step="minStep" :max-step="maxStep"
+      :capacity="capacity" :minmax="minmax"
+      @update:value="onStepperUpdate"
+      @change="v => $emit('change', v)">
+      <template v-if="$slots.pre" #pre><slot name="pre" /></template>
+      <template v-if="$slots.post" #post><slot name="post" /></template>
+    </Stepper>
   </div>
 </template>
 
 <script>
 export default {
-  props: ['value', 'min', 'max', 'step', 'minmax'],
-
-  data() {
-    return {
-      timer: null,
-      monitor: null,
-    };
-  },
-
-  /* Uses an interval timer to track the value of the input, as @changed is
-   * only emitted after the user releases the slider. */
-  mounted() {
-    this.monitor = window.setInterval(() => {
-      if (this.$refs.slider.value != this.value) {
-        this.setValue(this.$refs.slider.value);
-        this.$refs.slider.value = this.value;
-      }
-    }, 100);
-  },
-
-  beforeUnmount() {
-    window.clearTimeout(this.monitor);
-  },
-
-  computed: {
-    minValue()  { return parseFloat(`${this.min}`)  },
-    maxValue()  { return parseFloat(`${this.max}`)  },
-    stepValue() { return parseFloat(`${this.step}`) || 1 },
+  props: {
+    value:    { default: 0 },
+    min:      { default: 0 },
+    max:      { default: 100 },
+    step:     { default: null },
+    minStep:  { default: null },
+    maxStep:  { default: null },
+    capacity: { default: null },
+    minmax:   { default: false },
   },
 
   methods: {
-    inc()      { this.setValue(Math.min(this.maxValue, this.value + this.stepValue)) },
-    dec()      { this.setValue(Math.max(this.minValue, this.value - this.stepValue)) },
-    setMin()   { this.setValue(this.minValue) },
-    setMax()   { this.setValue(this.maxValue) },
-    update(ev) { this.setValue(ev.target.value) },
-
-    setValue(value) {
-      value = parseFloat(`${value}`);
+    onRangeInput(ev) {
+      const value = parseFloat(ev.target.value);
       this.$emit('update:value', value);
       this.$emit('change', value);
+    },
+
+    onStepperUpdate(value) {
+      this.$emit('update:value', value);
     },
   },
 };

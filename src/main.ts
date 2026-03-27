@@ -75,6 +75,7 @@ import SvgImg from './component/SvgImg.vue';
 import SvgCircle from './component/SvgCircle.vue';
 import SvgPath from './component/SvgPath.vue';
 
+import Stepper from './component/Stepper.vue';
 import Slider from './component/Slider.vue';
 import Exchange from './component/Exchange.vue';
 
@@ -206,6 +207,7 @@ app.component('SvgImg', SvgImg);
 app.component('SvgCircle', SvgCircle);
 app.component('SvgPath', SvgPath);
 
+app.component('stepper', Stepper);
 app.component('slider', Slider);
 app.component('exchange', Exchange);
 

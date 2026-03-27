@@ -7,7 +7,7 @@
     <def term="Price" :def="$unit($csn(price), 'cr / tonne')" />
     <def term="Fuel" :def="$unit($csn(change), 'tonnes')" />
     <def term="Total" :def="$unit($csn(price * change), 'cr')" />
-    <slider class="my-3" v-model:value="change" min=0 :max="max" step="1" minmax=true />
+    <stepper class="my-3" v-model:value="change" min=0 :max="max" step="1" :max-step="3" minmax=true />
     <btn block=1 class="my-2 text-start" :disabled="max <= 0" @click="topHerOff" close=1>
       Top her off
       <badge right=1>{{$csn(max)}} cu | {{$csn(max * price)}} c</badge>

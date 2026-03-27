@@ -3,10 +3,10 @@
     <def brkpt="sm" term="Cargo"><template #def><span>{{cargoUsed}} / {{cargoSpace}}</span></template></def>
     <template v-for="item in items" :key="item"><div v-if="count(item) > 0" class="my-3">
       <h4 class="text-capitalize">{{item}}</h4>
-      <slider @update:value="amt => update(item, amt)" minmax=true :value="cargo.count(item)" min=0 :max="count(item)" step=1>
+      <stepper @update:value="amt => update(item, amt)" minmax=true :value="cargo.count(item)" min=0 :max="count(item)" step=1 :capacity="cargoSpace">
         <template #pre><span class="float-start mx-2"><btn class="fw-bold btn">{{store.count(item)}}</btn></span></template>
         <template #post><span class="float-end mx-2"><btn class="fw-bold btn">{{cargo.count(item)}}</btn></span></template>
-      </slider>
+      </stepper>
     </div></template>
   </div>
 </template>
