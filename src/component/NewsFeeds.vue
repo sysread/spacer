@@ -7,11 +7,6 @@
       from the public news feeds.
     </p>
 
-    <btn block=1 @click="show_conflicts=true" class="my-3">Active Conflicts</btn>
-    <modal v-if="show_conflicts" xclose=1 title="Active Conflicts" @close="show_conflicts=false">
-      <Conflicts />
-    </modal>
-
     <div v-for="faction in factions" :key="faction" class="my-3">
       <h4 class="section-title d-flex justify-content-between align-items-center">
         <span>{{factionName(faction)}}</span>
@@ -19,6 +14,17 @@
       </h4>
 
       <div v-if="factionHasNews(faction)" class="section-content">
+        <!-- Faction-level: active conflicts involving this faction -->
+        <div v-if="factionConflicts(faction).length > 0" class="my-2 ms-2 px-2">
+          <ul>
+            <li v-for="c in factionConflicts(faction)" :key="c.name + c.proponent"
+                :class="{'text-warning': c.target == faction, 'text-success': c.proponent == faction}">
+              {{c.proponent}} has declared a {{c.name}} against {{c.target}}
+            </li>
+          </ul>
+        </div>
+
+        <!-- Body-level: conditions, shortages, surpluses -->
         <div v-for="body in factionBodies[faction]" :key="body">
           <template v-if="bodyHasNews(body)">
             <News :body="body" :title="planetName(body)" />
@@ -33,12 +39,6 @@
 
 <script>
 export default {
-  data() {
-    return {
-      show_conflicts: false,
-    };
-  },
-
   computed: {
     bodies() { return Object.keys(this.data.bodies) },
 
@@ -75,6 +75,11 @@ export default {
       return this.data.factions[abbrev].full_name;
     },
 
+    factionConflicts(faction) {
+      return this.game.get_conflicts()
+        .filter(c => c.target == faction || c.proponent == faction);
+    },
+
     bodyHasNews(body) {
       const p = this.game.planets[body];
       const resources = Object.keys(this.data.resources);
@@ -93,15 +98,12 @@ export default {
         && p.economy.getStock(i) > 0
       );
 
-      const faction = p.faction.abbrev;
-      const hasConflicts = this.game.get_conflicts()
-        .some(c => c.target == faction || c.proponent == faction);
-
-      return hasConditions || hasShortages || hasSurpluses || hasConflicts;
+      return hasConditions || hasShortages || hasSurpluses;
     },
 
     factionHasNews(faction) {
-      return this.factionBodies[faction].some(b => this.bodyHasNews(b));
+      return this.factionConflicts(faction).length > 0
+          || this.factionBodies[faction].some(b => this.bodyHasNews(b));
     },
   },
 };
