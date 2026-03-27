@@ -25,7 +25,7 @@
 
         <!-- Body-level news -->
         <template v-for="body in factionBodies[faction]" :key="body">
-          <News v-if="bodyHasNews(body)" :body="body" :title="planetName(body)" />
+          <News v-if="bodyHasNews(body)" :body="body" :title="planetName(body)" :newsOrg="bodyNewsOrg[body].name" :tagline="bodyNewsOrg[body].tagline" />
         </template>
       </div>
 
@@ -36,6 +36,9 @@
 </template>
 
 <script>
+import * as util from '../util';
+import { newsOrgs } from '../data/news';
+
 export default {
   computed: {
     bodies() { return Object.keys(this.data.bodies) },
@@ -51,6 +54,15 @@ export default {
         }
       }
       return result.sort();
+    },
+
+    bodyNewsOrg() {
+      const map = {};
+      for (const body of this.bodies) {
+        const orgs = newsOrgs[body];
+        map[body] = orgs ? orgs[util.getRandomInt(0, orgs.length)] : null;
+      }
+      return map;
     },
 
     factionBodies() {
@@ -211,6 +223,8 @@ export default {
 }
 
 .news-dateline {
+  display: flex;
+  align-items: center;
   font: bold 0.8rem monospace;
   color: #fff;
   text-transform: uppercase;

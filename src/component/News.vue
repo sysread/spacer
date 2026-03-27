@@ -1,5 +1,11 @@
 <template>
   <div v-if="hasNews">
+    <div class="news-masthead-org" v-if="newsOrg">
+      <span class="news-flourish">※</span>
+      <span class="news-org-name">{{newsOrg}}</span>
+      <span class="news-flourish">※</span>
+      <div class="news-tagline">{{tagline}}</div>
+    </div>
     <div class="news-dateline">{{title}}</div>
 
     <template v-if="hasConditions">
@@ -43,7 +49,7 @@
 
 <script>
 export default {
-  props: ['body', 'title'],
+  props: ['body', 'title', 'newsOrg', 'tagline'],
 
   computed: {
     bodies()    { return Object.keys(this.data.bodies) },
@@ -143,5 +149,29 @@ export default {
   color: #666;
   font-style: italic;
   font-size: 0.85em;
+}
+
+.news-masthead-org {
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.news-org-name {
+  font: bold 0.75rem monospace;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.news-flourish {
+  color: #555;
+  margin: 0 0.5rem;
+  font-size: 0.7rem;
+}
+
+.news-tagline {
+  font: italic 0.65rem monospace;
+  color: #666;
+  margin-top: 0.1rem;
 }
 </style>
