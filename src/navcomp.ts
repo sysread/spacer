@@ -224,6 +224,37 @@ export function calculate_trajectory(turns: number, initial: Body, final: Body):
   };
 }
 
+/** Minimum squared distance from point P to the line segment A→B. */
+function pointToSegmentDist2(p: Point, a: Point, b: Point): number {
+  const abx = b[0] - a[0], aby = b[1] - a[1], abz = b[2] - a[2];
+  const apx = p[0] - a[0], apy = p[1] - a[1], apz = p[2] - a[2];
+  const ab2 = abx*abx + aby*aby + abz*abz;
+  if (ab2 === 0) return apx*apx + apy*apy + apz*apz;
+  const t = Math.max(0, Math.min(1, (apx*abx + apy*aby + apz*abz) / ab2));
+  const cx = a[0] + t * abx - p[0];
+  const cy = a[1] + t * aby - p[1];
+  const cz = a[2] + t * abz - p[2];
+  return cx*cx + cy*cy + cz*cz;
+}
+
+/** Checks whether a straight-line path from origin to dest passes
+ *  through any celestial body. Returns true if a collision is detected.
+ *  Body positions are sampled at the transit midpoint from orbit_by_turns. */
+function pathCollides(origin: Point, dest: Point, midTurn: number): boolean {
+  try {
+    for (const name of system.all_bodies()) {
+      const bp = system.orbit_by_turns(name)[midTurn];
+      if (!bp) continue;
+      const body = system.body(name);
+      const r2 = body.radius * body.radius;
+      if (pointToSegmentDist2(bp, origin, dest) < r2) return true;
+    }
+  } catch (_) {
+    // system not initialized (unit tests)
+  }
+  return false;
+}
+
 export class NavComp {
   player:     Person;
   orig:       t.body;
@@ -338,6 +369,10 @@ export class NavComp {
         const a             = calculate_acceleration(tturns, agent, target);
 
         if (a.length > maxAccel)
+          continue;
+
+        // Reject paths that pass through any celestial body.
+        if (pathCollides(origin.position, dest[tturns], Math.floor(tturns / 2)))
           continue;
 
         const fuelUsed = a.length / availAcc * fuelPerTurn * tturns * 0.99; // 0.99 corrects rounding error
