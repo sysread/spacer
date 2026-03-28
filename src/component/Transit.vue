@@ -128,108 +128,95 @@ import Tween from '../tween';
 import Layout from './layout';
 import * as tc from './transit-controller';
 
+// Snapshot orbit positions and pre-compute animation intervals for the
+// current transit plan. Called at transit start and again after an encounter
+// replaces the plan, so that body rendering stays in sync with the new
+// trajectory. Returns { orbits, orbitsHiRes, orbitSubsteps, closeRange,
+// turnIntervals }.
+function buildTransitCache(plan) {
+  const ORBIT_SUBSTEPS = 8;
+  const ms_per_substep = data.hours_per_turn * 3600000 / ORBIT_SUBSTEPS;
+  const CLOSE_RANGE = data.turns_per_day * 5;
+
+  // Snapshot orbit positions at sub-step resolution. The system's orbit
+  // cache rolls forward each turn (shift+push), so we copy the arrays to
+  // prevent them from drifting out from under us during the transit.
+  const orbitsRaw = {};
+  const orbitsHiRes = {};
+  const baseDate = window.game.date.getTime();
+  for (const body of system.all_bodies()) {
+    const raw = [...system.orbit_by_turns(body)];
+    orbitsRaw[body] = raw;
+
+    const hiRes = [];
+    for (let i = 0; i < raw.length; i++) {
+      for (let s = 0; s < ORBIT_SUBSTEPS; s++) {
+        const date = baseDate + (i * ORBIT_SUBSTEPS + s) * ms_per_substep;
+        hiRes.push(system.position(body, date));
+      }
+    }
+    orbitsHiRes[body] = hiRes;
+  }
+
+  // Pre-compute per-turn animation intervals. Close-range turns (first/last
+  // ~5 days) get a fixed cinematic pace outside the time budget. Cruise turns
+  // share a distance-proportional time budget (1 AU ≈ 3.5s).
+  const turns = plan.turns;
+  const turnIntervals = (() => {
+    const SEC_PER_AU = 3.5;
+    const CLOSE_INTERVAL = 0.60;
+    const distAU = Physics.distance(plan.path[0].position, plan.path[turns].position) / Physics.AU;
+    const cruiseTarget = util.clamp(distAU * SEC_PER_AU, 5, 30);
+
+    const maxVel = plan.maxVelocity || 1;
+    const closeRange = CLOSE_RANGE;
+
+    const intervals = [];
+    const cruiseRaw = [];
+
+    for (let i = 0; i <= turns; i++) {
+      const fromEdge = Math.min(i, turns - i);
+
+      if (fromEdge < closeRange) {
+        const t = fromEdge / closeRange;
+        const ease = t * t * (3 - 2 * t);
+        intervals.push({ type: 'close', ease });
+      } else {
+        const seg = plan.path[i];
+        const speed = seg ? seg.velocity / maxVel : 0.5;
+        const raw = 1 - speed * 0.9;
+        intervals.push({ type: 'cruise', raw });
+        cruiseRaw.push({ idx: i, raw });
+      }
+    }
+
+    const cruiseRawTotal = cruiseRaw.reduce((a, b) => a + b.raw, 0) || 1;
+    const cruiseScale = cruiseTarget / cruiseRawTotal;
+
+    return intervals.map(entry => {
+      if (entry.type === 'close') {
+        const avgCruise = cruiseTarget / (cruiseRaw.length || 1);
+        return CLOSE_INTERVAL + (avgCruise - CLOSE_INTERVAL) * entry.ease;
+      } else {
+        return entry.raw * cruiseScale;
+      }
+    });
+  })();
+
+  return {
+    orbits: orbitsRaw,
+    orbitsHiRes,
+    orbitSubsteps: ORBIT_SUBSTEPS,
+    closeRange: CLOSE_RANGE,
+    turnIntervals,
+  };
+}
+
 export default {
   mixins: [ Layout ],
 
   data() {
-    // Snapshot the orbit positions at transit start. The system's orbit cache
-    // rolls forward each turn (shift+push), so we must copy the arrays to
-    // prevent them from drifting out from under us during the transit.
-    // Build high-resolution orbit data by computing actual orbital positions
-    // at sub-step intervals. Linear interpolation between per-turn positions
-    // creates straight-line segments — fast-orbiting moons (e.g. Enceladus,
-    // ~5 turns/orbit) trace visible polygons instead of smooth curves.
-    // Computing real positions via Kepler's equation at each sub-step
-    // produces correct arcs at any orbital period.
-    const ORBIT_SUBSTEPS = 8;
-    const ms_per_substep = data.hours_per_turn * 3600000 / ORBIT_SUBSTEPS;
-
-    // Shared between the speed curve and the FOV calculation: number of
-    // turns at the start/end of transit that get cinematic treatment
-    // (slower animation, tighter zoom including nearby path points).
-    // 5 days gives ~20 turns at 6h/turn — enough granularity for smooth
-    // zoom transitions during approach/departure.
-    const CLOSE_RANGE = data.turns_per_day * 5;
-    const orbitsRaw = {};
-    const orbitsHiRes = {};
-    const baseDate = window.game.date.getTime();
-    for (const body of system.all_bodies()) {
-      const raw = [...system.orbit_by_turns(body)];
-      orbitsRaw[body] = raw;
-
-      // Compute actual orbital position at each sub-step rather than
-      // linearly interpolating. One position per sub-step interval
-      // (e.g. 45 min at 8 substeps/turn) across the full orbit cache.
-      const hiRes = [];
-      for (let i = 0; i < raw.length; i++) {
-        for (let s = 0; s < ORBIT_SUBSTEPS; s++) {
-          const date = baseDate + (i * ORBIT_SUBSTEPS + s) * ms_per_substep;
-          hiRes.push(system.position(body, date));
-        }
-      }
-      orbitsHiRes[body] = hiRes;
-    }
-    const orbits = orbitsRaw;
-
-    const turns = game.transit_plan.turns;
-    const plan = game.transit_plan;
-
-    // Pre-compute per-turn animation intervals. Close-range turns (first/last
-    // ~3 days) get a fixed cinematic pace outside the time budget. Cruise turns
-    // share a distance-proportional time budget (1 AU ≈ 3.5s). This prevents
-    // the serene approach/departure from stealing time from cruise, which would
-    // compress the mid-transit pacing into a frantic rush.
-    const turnIntervals = (() => {
-      const SEC_PER_AU = 3.5;
-      const CLOSE_INTERVAL = 0.60;  // fixed interval for close-range turns
-      const distAU = Physics.distance(plan.path[0].position, plan.path[turns].position) / Physics.AU;
-      const cruiseTarget = util.clamp(distAU * SEC_PER_AU, 5, 30);
-
-      const maxVel = plan.maxVelocity || 1;
-      const closeRange = CLOSE_RANGE;
-
-      // Classify each turn as close-range or cruise, and compute raw
-      // cruise intervals based on velocity (fast ship = short interval).
-      const intervals = [];
-      const cruiseRaw = [];
-
-      for (let i = 0; i <= turns; i++) {
-        const fromEdge = Math.min(i, turns - i);
-
-        if (fromEdge < closeRange) {
-          // Close-range: fixed pace with smoothstep easing toward cruise.
-          // Turns right at the edge are slowest; turns near closeRange
-          // boundary blend toward the cruise speed.
-          const t = fromEdge / closeRange;
-          const ease = t * t * (3 - 2 * t);
-          intervals.push({ type: 'close', ease });
-        } else {
-          // Cruise: interval based on velocity, will be scaled to fit budget
-          const seg = plan.path[i];
-          const speed = seg ? seg.velocity / maxVel : 0.5;
-          // Invert: high speed → small raw value (fast), low speed → large
-          const raw = 1 - speed * 0.9; // 0.1 at peak, 1.0 at zero speed
-          intervals.push({ type: 'cruise', raw });
-          cruiseRaw.push({ idx: i, raw });
-        }
-      }
-
-      // Scale cruise intervals to fit the distance-proportional time budget
-      const cruiseRawTotal = cruiseRaw.reduce((a, b) => a + b.raw, 0) || 1;
-      const cruiseScale = cruiseTarget / cruiseRawTotal;
-
-      // Build final interval array
-      return intervals.map(entry => {
-        if (entry.type === 'close') {
-          // Blend from CLOSE_INTERVAL at the edge toward the average cruise
-          // interval at the boundary, so there's no sharp speed change.
-          const avgCruise = cruiseTarget / (cruiseRaw.length || 1);
-          return CLOSE_INTERVAL + (avgCruise - CLOSE_INTERVAL) * entry.ease;
-        } else {
-          return entry.raw * cruiseScale;
-        }
-      });
-    })();
+    const cache = buildTransitCache(game.transit_plan);
 
     return {
       layout_scaling:    false,
@@ -238,10 +225,10 @@ export default {
       paused:            true,
       encounter:         null,
       encounters:        0,
-      orbitsHiRes:       orbitsHiRes,
-      orbitSubsteps:     ORBIT_SUBSTEPS,
-      closeRange:        CLOSE_RANGE,
-      orbits:            orbits,
+      orbitsHiRes:       cache.orbitsHiRes,
+      orbitSubsteps:     cache.orbitSubsteps,
+      closeRange:        cache.closeRange,
+      orbits:            cache.orbits,
       started:           false,
       arriving:          false,
       docking:           false,
@@ -252,7 +239,7 @@ export default {
       encounterDistCost: null,
       encounterFuelCost: null,
       enteredParentTerritory: false,
-      turnIntervals:         turnIntervals,
+      turnIntervals:         cache.turnIntervals,
 
       // Visual turn: used for dot rendering instead of plan.current_turn.
       // Updated inside the tween's onComplete so dots change at the same
@@ -1078,6 +1065,14 @@ export default {
           this.encounterTimeCost = time;
           this.encounterDistCost = drift;
           this.game.transit_plan = transit;
+
+          // Rebuild orbit snapshots and animation intervals to match the
+          // new plan. Without this, body positions are rendered from the
+          // old orbit cache, causing the ship path to miss the destination.
+          const cache = buildTransitCache(transit);
+          this.orbits = cache.orbits;
+          this.orbitsHiRes = cache.orbitsHiRes;
+          this.turnIntervals = cache.turnIntervals;
           break;
         }
 

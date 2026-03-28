@@ -208,9 +208,9 @@ app.component('SvgImg', SvgImg);
 app.component('SvgCircle', SvgCircle);
 app.component('SvgPath', SvgPath);
 
-app.component('stepper', Stepper);
-app.component('slider', Slider);
-app.component('exchange', Exchange);
+app.component('Stepper', Stepper);
+app.component('Slider', Slider);
+app.component('Exchange', Exchange);
 
 app.component('Notification', Notification);
 app.component('StatusBar', StatusBar);

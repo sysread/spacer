@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="row g-3 mb-1">
+    <div class="row g-3 mb-3">
       <div class="col">
         <input class="form-control"
             @input="onRangeInput"
