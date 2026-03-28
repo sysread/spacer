@@ -24,12 +24,13 @@
 
 <script>
 import * as util from '../util';
-import { ads, adStyles } from '../data/news';
+import { adStyles } from '../data/news';
 
 export default {
+  props: ['ad'],
+
   data() {
     return {
-      ad: ads[util.getRandomInt(0, ads.length)],
       randomStyle: adStyles[util.getRandomInt(0, adStyles.length)],
       xStyle: {},
     };
@@ -125,7 +126,7 @@ export default {
   font: italic 0.6rem monospace;
   color: #444;
   white-space: nowrap;
-  animation: ad-scroll 20s linear infinite;
+  animation: ad-scroll 30s linear infinite;
 }
 
 @keyframes ad-scroll {

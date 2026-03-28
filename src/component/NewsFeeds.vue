@@ -8,7 +8,7 @@
     </p>
 
     <template v-for="(faction, idx) in factions" :key="faction">
-    <NewsAd v-if="idx > 0" :key="'ad-'+idx" />
+    <NewsAd v-if="idx > 0" :key="'ad-'+idx" :ad="shuffledAds[(idx - 1) % shuffledAds.length]" />
     <div class="news-faction">
       <div class="news-masthead">
         <Flag :faction="faction" :width="22" />
@@ -37,7 +37,7 @@
 
 <script>
 import * as util from '../util';
-import { newsOrgs } from '../data/news';
+import { newsOrgs, ads } from '../data/news';
 
 export default {
   computed: {
@@ -54,6 +54,17 @@ export default {
         }
       }
       return result.sort();
+    },
+
+    /* Shuffled copy of the ads array so each NewsAd slot on the page
+     * gets a unique ad. Wraps around if there are more slots than ads. */
+    shuffledAds() {
+      const copy = ads.slice();
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = util.getRandomInt(0, i + 1);
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
     },
 
     bodyNewsOrg() {

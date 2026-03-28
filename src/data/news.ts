@@ -42,19 +42,19 @@ const svgSiriusCybernetics = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0
   <text x="100" y="30" text-anchor="middle" font-family="monospace" font-size="11" font-weight="bold" fill="currentColor" letter-spacing="1">SHARE AND ENJOY!</text>
 </svg>`;
 
-const svgSoylentClear = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 80" width="220" height="80">
+const svgCrystalClearSoylent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-5 0 230 90" width="230" height="90">
   <!-- Crystal/diamond shapes flanking the logo — 90s "clear = pure" aesthetic -->
-  <polygon points="30,40 42,28 54,40 42,52" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>
-  <polygon points="166,40 178,28 190,40 178,52" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+  <polygon points="-5,45 7,33 19,45 7,57" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+  <polygon points="201,45 213,33 225,45 213,57" fill="none" stroke="currentColor" stroke-width="1" opacity="0.6"/>
   <!-- Inner diamonds -->
-  <polygon points="34,40 42,33 50,40 42,47" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="0.5" opacity="0.8"/>
-  <polygon points="170,40 178,33 186,40 178,47" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="0.5" opacity="0.8"/>
+  <polygon points="-1,45 7,38 15,45 7,52" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="0.5" opacity="0.8"/>
+  <polygon points="205,45 213,38 221,45 213,52" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="0.5" opacity="0.8"/>
   <!-- Brand name -->
-  <text x="110" y="30" text-anchor="middle" font-family="monospace" font-size="9" fill="currentColor" letter-spacing="4" opacity="0.7">S O Y L E N T</text>
-  <text x="110" y="50" text-anchor="middle" font-family="monospace" font-size="16" font-weight="bold" fill="currentColor" letter-spacing="3">C L E A R</text>
+  <text x="110" y="22" text-anchor="middle" font-family="monospace" font-size="8" fill="currentColor" letter-spacing="3" opacity="0.6">C R Y S T A L ◆ C L E A R</text>
+  <text x="110" y="50" text-anchor="middle" font-family="monospace" font-size="16" font-weight="bold" fill="currentColor" letter-spacing="3">S O Y L E N T</text>
   <!-- Tagline underline -->
-  <line x1="70" y1="58" x2="150" y2="58" stroke="currentColor" stroke-width="0.5" opacity="0.4"/>
-  <text x="110" y="70" text-anchor="middle" font-family="monospace" font-size="7" fill="currentColor" letter-spacing="2" opacity="0.5">YOU ARE WHAT YOU EAT</text>
+  <line x1="60" y1="58" x2="160" y2="58" stroke="currentColor" stroke-width="0.5" opacity="0.4"/>
+  <text x="110" y="75" text-anchor="middle" font-family="monospace" font-size="7" fill="currentColor" letter-spacing="2" opacity="0.5">YOU ARE WHAT YOU EAT</text>
 </svg>`;
 
 const svgOcp = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70" width="200" height="70">
@@ -189,8 +189,8 @@ export const ads = [
     style: 'news-ad-hot',
   },
   {
-    svg: svgSoylentClear,
-    text: `<b>SOYLENT CLEAR™</b> — The refreshing new meal replacement from Soylent Corp!<br>"It's got everything your body needs!"<br>New <span class="text-success">Soylent Green</span> flavor — <i>now with that unmistakable taste of home.</i>`,
+    svg: svgCrystalClearSoylent,
+    text: `<b>CRYSTAL CLEAR SOYLENT™</b> — The refreshing new meal replacement from Soylent Corp!<br>"It's got everything your body needs!"<br>New <span class="text-success">Soylent Green</span> flavor — <i>now with that unmistakable taste of home.</i>`,
     fine: '⚠ Soylent Corp: Feeding the future, one citizen at a time. Ingredients may vary by region. Do not investigate ingredients.',
     artColor: '#cce8cc',
     style: 'news-ad-retro',
