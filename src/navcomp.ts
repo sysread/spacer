@@ -159,14 +159,14 @@ function calculate_acceleration(turns: number, initial: Body, final: Body): Acce
 }
 
 /**
- * Integrates the trajectory for a transit using Euler integration.
- * Each turn is subdivided into DT frames. Phase 1 (boost) uses the boost
- * acceleration vector; phase 2 (brake) uses the brake vector. The two
- * phases have equal duration (T/2) but potentially different magnitudes,
- * which is what allows matching both endpoint position and velocity.
+ * Integrates the trajectory for a transit using symplectic Euler
+ * (kick-drift): compute thrust acceleration at the current position,
+ * update velocity (kick), then update position with the new velocity
+ * (drift). This ordering conserves energy better than standard Euler,
+ * which is important for future gravity integration.
  *
  * The final position/velocity are clamped to the destination to correct
- * for accumulated Euler integration error at multi-AU distances.
+ * for accumulated integration error at multi-AU distances.
  */
 export function calculate_trajectory(turns: number, initial: Body, final: Body): Trajectory {
   const tflip = turns * SPT / 2;
@@ -174,13 +174,6 @@ export function calculate_trajectory(turns: number, initial: Body, final: Body):
   const acc = calculate_acceleration(turns, initial, final);
   const [a1x, a1y, a1z] = acc.vector;
   const [a2x, a2y, a2z] = acc.brakeVector;
-
-  // Pre-compute per-frame deltas for boost and brake phases.
-  const dv1x = a1x * TI, dv1y = a1y * TI, dv1z = a1z * TI;
-  const dv2x = a2x * TI, dv2y = a2y * TI, dv2z = a2z * TI;
-
-  const ds1x = a1x * (TI * TI) / 2, ds1y = a1y * (TI * TI) / 2, ds1z = a1z * (TI * TI) / 2;
-  const ds2x = a2x * (TI * TI) / 2, ds2y = a2y * (TI * TI) / 2, ds2z = a2z * (TI * TI) / 2;
 
   let [px, py, pz] = initial.position.slice(0);
   let [vx, vy, vz] = initial.velocity.slice(0);
@@ -195,17 +188,21 @@ export function calculate_trajectory(turns: number, initial: Body, final: Body):
     for (let e = 0; e < DT; ++e) {
       t += TI;
 
+      // Kick: apply thrust acceleration to velocity
       if (t < tflip) {
-        vx += dv1x, vy += dv1y, vz += dv1z;
-        px += ds1x + vx * TI;
-        py += ds1y + vy * TI;
-        pz += ds1z + vz * TI;
+        vx += a1x * TI;
+        vy += a1y * TI;
+        vz += a1z * TI;
       } else {
-        vx += dv2x, vy += dv2y, vz += dv2z;
-        px += ds2x + vx * TI;
-        py += ds2y + vy * TI;
-        pz += ds2z + vz * TI;
+        vx += a2x * TI;
+        vy += a2y * TI;
+        vz += a2z * TI;
       }
+
+      // Drift: update position with fully-updated velocity
+      px += vx * TI;
+      py += vy * TI;
+      pz += vz * TI;
     }
 
     // Clamp final position/velocity to destination to correct integration error.
